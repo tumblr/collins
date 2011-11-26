@@ -1,0 +1,8 @@
+# Messages
+
+# --- Constraints
+constraint.required = The field is required
+constraint.minLength = The minimum length is {0}
+
+# --- Errors
+error.minLength = The minimum length is {0}

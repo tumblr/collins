@@ -1,0 +1,32 @@
+@(loginForm: Form[(String,String)])(implicit flash: Flash, request: Request[play.api.mvc.AnyContent])
+
+@import helper._
+
+@main("Login") {
+
+<div class="page-header"><h1>Login <small>enter your credentials</small></h1></div>
+<div class="row">
+  <div class="span14">
+@flash.get("success").map { message =>
+    <div class="alert-message success">
+      @message
+    </div>
+}
+
+@form(routes.Application.authenticate) {
+    @inputText(loginForm("username"), 'label -> "Username")(twitterBootstrapInput)
+    @inputPassword(loginForm("password"), 'label -> "Password")(twitterBootstrapInput)
+    @loginForm.globalError.map { error =>
+      <div class="alert-message error">
+        <strong>Unable to login</strong> @error.message
+      </div>
+    }
+    <div class="actions">
+      <input type="submit" class="btn primary" value="Sign in">
+      <button type="reset" class="btn">Cancel</button>
+    </div>
+}
+  </div>
+</div>
+
+}

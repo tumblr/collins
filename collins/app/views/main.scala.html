@@ -1,15 +1,49 @@
-@(title: String)(content: Html)
+@(title: String)(content: Html)(implicit request: Request[play.api.mvc.AnyContent])
+
+@import helper._
 
 <!DOCTYPE html>
 
 <html>
-    <head>
-        <title>@title</title>
-        <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
-        <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
-        <script src="@routes.Assets.at("javascripts/jquery-1.6.4.min.js")" type="text/javascript"></script>
-    </head>
-    <body>
+  <head>
+    <title>@title</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.at("stylesheets/bootstrap-1.4.0.min.css")"> 
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+    <link rel="shortcut icon" type="image/png" href="@routes.Assets.at("images/favicon.png")">
+    <script src="@routes.Assets.at("javascripts/jquery-1.6.4.min.js")" type="text/javascript"></script>
+  </head>
+  <body>
+
+    <div class="topbar">
+      <div class="fill">
+        <div class="container">
+          <a class="brand" href="@routes.Application.home">Collins Resource Manager</a>
+          @if(Application.isLoggedIn) {
+          <ul class="nav" style="float: right">
+            <li><a href="@routes.Application.logout">Logout</a></li>
+          </ul>
+          } else {
+          <form action="@routes.Application.authenticate" method="post" class="pull-right">
+            <input class="input-small" type="text" name="username" placeholder="Username">
+            <input class="input-small" type="password" name="password" placeholder="Password">
+            <button class="btn" type="submit">Sign in</button>
+          </form>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="content">
         @content
-    </body>
+      </div>
+
+      <footer>
+        <p>&copy; Tumblr, 2011</p>
+      </footer>
+    </div>
+
+
+  </body>
 </html>
