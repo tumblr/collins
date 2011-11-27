@@ -1,4 +1,4 @@
-@(title: String)(content: Html)(implicit request: Request[play.api.mvc.AnyContent])
+@(title: String, loggedIn: Boolean = true)(content: Html)
 
 @import helper._
 
@@ -17,12 +17,13 @@
     <div class="topbar">
       <div class="fill">
         <div class="container">
-          <a class="brand" href="@routes.Application.home">Collins Resource Manager</a>
-          @if(Application.isLoggedIn) {
+          @if(loggedIn) {
+          <a class="brand" href="@routes.Resources.index">Collins Resource Manager</a>
           <ul class="nav" style="float: right">
             <li><a href="@routes.Application.logout">Logout</a></li>
           </ul>
           } else {
+          <a class="brand" href="@routes.Application.login">Collins Resource Manager</a>
           <form action="@routes.Application.authenticate" method="post" class="pull-right">
             <input class="input-small" type="text" name="username" placeholder="Username">
             <input class="input-small" type="password" name="password" placeholder="Password">
