@@ -3,12 +3,18 @@
 @**************************************************
 * Generate input according twitter bootsrap rules *
 **************************************************@
-<div class="clearfix @if(!el.field.errors.isEmpty) {error}">
-    @el.label
-    <div class="input">
-      @el.input
-      @if(!el.field.errors.isEmpty) {
-        <span class="help-inline">@el.field.errors.mkString(" &amp; ")</span>
-      }
-    </div>
+
+@infos = @{
+  if(el.showInfo) {
+    el.field.constraints.map(c => Messages(c._1, c._2:_*)) ++
+    el.field.format.map(f => Messages(f._1, f._2:_*))
+  } else Nil
+}
+
+<div class="clearfix @if(el.field.hasErrors) {error}">
+  <label for="@el.id">@el.label.getOrElse(el.field.name)</label>
+  <div class="input">
+    @el.input
+    <span class="help-inline">@infos.headOption.getOrElse("")</span>
+  </div>
 </div>

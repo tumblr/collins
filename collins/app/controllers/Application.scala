@@ -26,10 +26,10 @@ object Application extends SecureWebController {
 
   def authenticate = Action { implicit req =>
     loginForm.bindFromRequest.fold(
-      formWithErrors =>
-        BadRequest(html.login(
-          formWithErrors.bind(formWithErrors.data - "password")
-        )),
+      formWithErrors => {
+        val tmp: Map[String,String] = formWithErrors.data - "password"
+        BadRequest(html.login(formWithErrors.copy(data = tmp)))
+      },
       user => {
         val u = User.toMap(User.authenticate(user._1, user._2))
         Redirect(routes.Resources.index).withSession(u.toSeq:_*)
