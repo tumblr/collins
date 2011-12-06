@@ -1,0 +1,2 @@
+scalacOptions ++= Seq("-deprecation")
+

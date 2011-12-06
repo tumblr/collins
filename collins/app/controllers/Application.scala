@@ -5,16 +5,18 @@ import play.api.data._
 import play.api.mvc._
 
 import models._
+import util.SecuritySpec
 import views._
 
-object Application extends Controller {
+object Application extends SecureWebController {
  
   val loginForm = Form(
     of(
       "username" -> requiredText(1),
       "password" -> requiredText(3)
       ) verifying ("Invalid username or password", result => result match {
-        case(username,password) => User.authenticate(username, password)
+        case(username,password) =>
+          User.authenticate(username, password).isDefined
       })
   )
 
@@ -28,16 +30,17 @@ object Application extends Controller {
         BadRequest(html.login(
           formWithErrors.bind(formWithErrors.data - "password")
         )),
-      user => Redirect(routes.Resources.index).withSession(Security.USERNAME -> user._1)
+      user => {
+        val u = User.toMap(User.authenticate(user._1, user._2))
+        Redirect(routes.Resources.index).withSession(u.toSeq:_*)
+      }
     )
   }
 
-  def logout = Security.Authenticated {
-    Action { implicit req =>
-      Redirect(routes.Application.login).withNewSession.flashing(
-        "success" -> "You have been logged out"
-      )
-    }
-  }
+  def logout = SecureAction { implicit req =>
+    Redirect(routes.Application.login).withNewSession.flashing(
+      "success" -> "You have been logged out"
+    )
+  }(SecuritySpec(isSecure = true, Nil))
 
 }

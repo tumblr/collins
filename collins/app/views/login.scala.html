@@ -11,6 +11,11 @@
     <div class="alert-message success">
       @message
     </div>
+    }
+@flash.get("security").map { message =>
+    <div class="alert-message error">
+      @message
+    </div>
 }
 
 @form(routes.Application.authenticate) {
