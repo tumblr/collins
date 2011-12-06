@@ -1,25 +1,28 @@
 package models
 
 import util.AuthenticationProvider
-import play.api._
 import org.specs2.mutable._
+import java.io.File
 
 object UserSpec extends Specification {
 
-  "A User" should {
+  "The User Model" should {
     "handle authentication" in {
-      "console mode" >> {
+      "with default authentication" in {
         val provider = AuthenticationProvider.Default
         User.authenticate("blake", "admin:first", Some(provider)) must beSome[User]
+        User.authenticate("no", "suchuser", Some(provider)) must beNone
       }
-      "api mode" >> {
-        val configString = """
-        authentication.type=ldap
-        authentication.host=admin02.jfk01.tumblr.net
-        """
-        val config = Configuration.load(configString)
-        val provider = AuthenticationProvider.get("ldap", config.getSub("authentication"))
-      }.pendingUntilFixed
+    }
+    "serialize/deserialize" in {
+      val u = UserImpl("blake", "*", Seq("engineering"), 125, true)
+      val uMap = u.toMap()
+      val newU = User.fromMap(uMap).get
+      newU.username mustEqual u.username
+      newU.isAuthenticated mustEqual u.isAuthenticated
+      newU.id mustEqual u.id
+      newU.roles mustEqual u.roles
     }
   }
+
 }

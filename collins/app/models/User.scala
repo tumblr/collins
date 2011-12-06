@@ -4,6 +4,7 @@ import play.api._
 import util.{AuthenticationAccessor, AuthenticationProvider}
 
 case class UserException(message: String) extends Exception(message)
+
 abstract class User(val username: String, val password: String) {
   def authenticate(username: String, password: String) = User.authenticate(username, password)
   def isAuthenticated(): Boolean
@@ -15,6 +16,13 @@ abstract class User(val username: String, val password: String) {
     User.IS_AUTHENTICATED -> isAuthenticated().toString,
     User.ROLES -> roles().mkString(",")
     )
+}
+case class UserImpl(_username: String, _password: String, _roles: Seq[String], _id: Int, _authenticated: Boolean)
+  extends User(_username, _password)
+{
+  override def id() = _id
+  override def roles() = _roles
+  override def isAuthenticated() = _authenticated
 }
 
 object User {
