@@ -6,7 +6,7 @@
 <div class="page-header"><h1>Resource Manager</h1></div>
 <div class="row">
   <div class="span14">
-@form(routes.Resources.index) {
+@form(routes.Resources.find) {
     @assetMeta.map { case(asset) =>
     <div class="clearfix">
       <label for="@asset.id">@asset.name</label>

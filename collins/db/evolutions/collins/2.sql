@@ -28,6 +28,13 @@ insert into asset_meta values (8, 5, 'Power Port', 'Power port of asset');
 insert into asset_meta values (9, 5, 'Switch Port', 'Switch port that asset is connected to');
 insert into asset_meta values (10, 6, 'Size', 'Hardware size');
 
+insert into asset values (1, 'tumblrtag1', 1, 1, CURRENT_TIMESTAMP, null, null);
+
+insert into asset_meta_value values(1, 1, 'asset tag 123');
+insert into asset_meta_value values(1, 2, 'chassis tag abc');
+insert into asset_meta_value values(1, 4, '10.0.0.1');
+insert into asset_meta_value values(1, 5, 'test.tumblr.test');
+
 # --- !Downs
 
 delete from asset_meta_value;

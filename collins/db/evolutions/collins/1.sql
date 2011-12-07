@@ -3,14 +3,14 @@
 # --- !Ups
 
 create table status (
-  id                            tinyint,
+  id                            integer,
   name                          varchar(16) not null,
   description                   varchar(255) not null,
   constraint uniq_status_name unique (name),
   constraint pk_status primary key (id))
 ;
 create table asset_type (
-  id                            smallint,
+  id                            integer,
   name                          varchar(255) not null,
   constraint uniq_asset_type_name unique (name),
   constraint pk_id primary key (id))
@@ -18,8 +18,8 @@ create table asset_type (
 create table asset (
   id                            bigint not null,
   secondary_id                  varchar(255) not null,
-  status                        tinyint not null,
-  asset_type                    smallint not null,
+  status                        integer not null,
+  asset_type                    integer not null,
   created                       timestamp not null default CURRENT_TIMESTAMP,
   updated                       timestamp,
   deleted                       timestamp,

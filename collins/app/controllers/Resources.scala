@@ -4,7 +4,7 @@ import play.api._
 import play.api.mvc._
 import views._
 import util.SecuritySpec
-import models.AssetMeta
+import models._
 
 object Resources extends SecureWebController {
 
@@ -12,6 +12,10 @@ object Resources extends SecureWebController {
 
   def index = SecureAction { implicit req =>
     Ok(html.resources.index(AssetMeta.getAll()))
+  }
+
+  def find = SecureAction { implicit req =>
+    Ok(html.resources.list(Asset.findByMeta(req.queryString)))
   }
 
 }

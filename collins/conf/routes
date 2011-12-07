@@ -4,6 +4,7 @@
 
 # Home page
 GET     /                           controllers.Resources.index
+GET     /resources                  controllers.Resources.find
 
 # Authentication
 GET     /login                      controllers.Application.login
