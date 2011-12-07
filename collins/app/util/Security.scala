@@ -114,7 +114,7 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
 
 class MockAuthenticationProvider extends AuthenticationProvider {
   val users = Map(
-    "blake" -> UserImpl("blake", "admin:first", Seq("engineering"), 1024, false),
+    "blake" -> UserImpl("blake", "admin:first", Seq("engineering","infra","ops"), 1024, false),
     "matt" -> UserImpl("matt", "foobar", Seq("engineering", "management"), 1025, false),
     "test" -> UserImpl("test", "fizz", Nil, 1026, false)
   )

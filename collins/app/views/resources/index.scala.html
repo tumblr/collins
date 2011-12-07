@@ -1,4 +1,4 @@
-@(message: String)
+@(assetMeta: Seq[AssetMeta])
 
 @import helper._
 
@@ -6,7 +6,21 @@
 <div class="page-header"><h1>Resource Manager</h1></div>
 <div class="row">
   <div class="span14">
-    @message
+@form(routes.Resources.index) {
+    @assetMeta.map { case(asset) =>
+    <div class="clearfix">
+      <label for="@asset.id">@asset.name</label>
+      <div class="input">
+        <input type="text" id="@asset.id" name="@asset.name">
+        <span class="help-inline">@asset.description</span>
+      </div>
+    </div>
+    }
+    <div class="actions">
+      <input type="submit" class="btn primary" value="Search">
+      <button type="reset" class="btn">Reset</button>
+    </div>
+}
   </div>
 </div>
 }
