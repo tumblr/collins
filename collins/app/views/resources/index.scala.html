@@ -1,17 +1,29 @@
-@(assetMeta: Seq[AssetMeta])
+@(assetMeta: Seq[AssetMeta])(implicit flash: Flash)
 
 @import helper._
+@import util._
 
-@main("Resources") {
-<div class="page-header"><h1>Resource Manager</h1></div>
+@main("Asset Search") {
+<div class="page-header"><h1>Asset Search</h1></div>
 <div class="row">
   <div class="span14">
-@form(routes.Resources.find) {
+
+    @notice("message", Some("notice"))
+    @notice("error")
+
+    @form(routes.Resources.find) {
+    <div class="clearfix">
+      <label for="TUMBLR_TAG">Tumblr Tag</label>
+      <div class="input">
+        <input type="text" id="TUMBLR_TAG" name="TUMBLR_TAG">
+        <span class="help-inline">Tumblr Asset Tag</span>
+      </div>
+    </div>
     @assetMeta.map { case(asset) =>
     <div class="clearfix">
-      <label for="@asset.id">@asset.name</label>
+      <label for="@asset.name">@asset.label</label>
       <div class="input">
-        <input type="text" id="@asset.id" name="@asset.name">
+        <input type="text" id="@asset.name" name="@asset.name">
         <span class="help-inline">@asset.description</span>
       </div>
     </div>
@@ -20,7 +32,7 @@
       <input type="submit" class="btn primary" value="Search">
       <button type="reset" class="btn">Reset</button>
     </div>
-}
+    }
   </div>
 </div>
 }

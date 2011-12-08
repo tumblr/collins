@@ -30,8 +30,9 @@ create table asset (
 ;
 create table asset_meta (
   id                            integer not null,
-  priority                      integer not null default -1,
   name                          varchar(255) not null,
+  priority                      integer not null default -1,
+  label                         varchar(255) not null,
   description                   varchar(255) not null,
   constraint uniq_meta_name unique (name),
   constraint pk_type primary key(id))

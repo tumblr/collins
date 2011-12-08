@@ -98,6 +98,8 @@ trait SecureWebController extends SecureController {
   override def onUnauthorized(request: RequestHeader) =
     Results.Redirect(unauthorizedRoute).flashing(securityMessage(request))
 
+  def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
+
   /** Use sessions storage for authenticate/etc */
   override def authenticate(request: RequestHeader) = User.fromMap(request.session.data) match {
     case Some(user) => user.isAuthenticated match {

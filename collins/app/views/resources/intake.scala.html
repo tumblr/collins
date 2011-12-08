@@ -1,0 +1,20 @@
+@(asset: Asset)(implicit flash: Flash)
+
+@import helper._
+
+@main("Intake Step 1 - " + asset.secondaryId) {
+<div class="page-header">
+  <h1>Asset Intake Step 1 <small>Verify IPMI Light for @asset.secondaryId</small></h1>
+</div>
+<div class="row">
+  <div class="span14">
+    <div class="alert-message block-message warning">
+      <p><strong>Did the correct light come on?</strong></p>
+      <div class="alert-actions">
+        <a class="btn primary" href="@routes.Resources.intake(asset.id.get, 2)">Yes</a>
+        <a class="btn" href="@routes.Resources.help(Resources.Help.Ipmi)">No</a>
+      </div>
+    </div>
+  </div>
+</div>
+}

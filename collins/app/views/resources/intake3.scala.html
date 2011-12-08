@@ -1,0 +1,19 @@
+@(asset: Asset, chassisId: String)(implicit flash: Flash)
+
+@import helper._
+
+@main("Intake Step 3 - " + asset.secondaryId) {
+<div class="page-header">
+  <h1>Asset Intake Step 3 <small>Verify Information for @asset.secondaryId</small></h1>
+</div>
+<div class="row">
+  <div class="span14">
+    <div class="alert-message block-message warning">
+      <p><strong>Are you done?</strong></p>
+      <div class="alert-actions">
+        <a class="btn primary" href="@routes.Resources.intake(asset.id.get, 4)">Done &rarr;</a>
+      </div>
+    </div>
+  </div>
+</div>
+}

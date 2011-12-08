@@ -1,0 +1,25 @@
+@(asset: Asset)(implicit flash: Flash)
+
+@import helper._
+
+@main("Intake Step 2 - " + asset.secondaryId) {
+<div class="page-header">
+  <h1>Asset Intake Step 2 <small>Verify Chassis ID for @asset.secondaryId</small></h1>
+</div>
+<div class="row">
+  <div class="span14">
+    @form(routes.Resources.intake(asset.id.get, 3), 'class -> "form-stacked") {
+    <div class="clearfix">
+      <label for="CHASSIS_ID"><strong>Scan the Chassis ID</strong></label>
+      <div class="input">
+        <input type="text" id="CHASSIS_ID" name="CHASSIS_ID">
+      </div>
+      <input type="hidden" name="stage" value="3">
+    </div>
+    <div class="actions">
+      <input type="submit" class="btn primary" value="Next &rarr;">
+    </div>
+    }
+  </div>
+</div>
+}

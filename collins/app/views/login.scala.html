@@ -1,22 +1,15 @@
 @(loginForm: Form[(String,String)])(implicit flash: Flash)
 
 @import helper._
+@import util._
 
 @main("Login", false) {
 
 <div class="page-header"><h1>Login <small>enter your credentials</small></h1></div>
 <div class="row">
   <div class="span14">
-@flash.get("success").map { message =>
-    <div class="alert-message success">
-      @message
-    </div>
-    }
-@flash.get("security").map { message =>
-    <div class="alert-message error">
-      @message
-    </div>
-}
+    @notice("success")
+    @notice("security", Some("error"))
 
 @form(routes.Application.authenticate) {
     @inputText(loginForm("username"), 'label -> "Username")(twitterBootstrapInput)

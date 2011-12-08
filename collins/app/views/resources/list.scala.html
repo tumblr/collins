@@ -1,10 +1,31 @@
-@(assetWithMeta: Seq[(Asset, AssetMeta, AssetMetaValue)])
+@(assets: Seq[Asset])
 
-@main("Asset Search") {
-<div class="page-header"><h1>Resource Manager</h1></div>
+@main("Asset Search Results") {
+<div class="page-header"><h1>Search Results</h1></div>
 <div class="row">
   <div class="span14">
-    @println(assetWithMeta)
+    <table class="condensed-table zebra-striped">
+      <thead>
+        <tr>
+          <th>Asset Tag</th>
+          <th>Status</th>
+          <th>Type</th>
+          <th>Created</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        @assets.map { asset =>
+        <tr>
+          <td>@asset.secondaryId</td>
+          <td>@asset.getStatus().name</td>
+          <td>@asset.getType().name</td>
+          <td>@asset.created.format("dd MMM yyyy")</td>
+          <td>@asset.updated.map(_.format("dd MMM yyyy")).getOrElse { <em>-</em> }</td>
+        </tr>
+        }
+      </tbody>
+    </table>
   </div>
 </div>
 }
