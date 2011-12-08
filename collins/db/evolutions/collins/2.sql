@@ -8,6 +8,7 @@ insert into status values (3, 'Allocated', 'Asset is in use or is ready for use'
 insert into status values (4, 'Cancelled', 'Asset is scheduled for decommissioning');
 insert into status values (5, 'Maintenace', 'Asset is scheduled for maintenance');
 insert into status values (6, 'Decommissioned', 'Asset is gone');
+insert into status values (7, 'Incomplete', 'Asset has not been finalized');
 
 insert into asset_type values (1, 'Server Node');
 insert into asset_type values (2, 'Server Chassis');
@@ -26,7 +27,7 @@ insert into asset_meta values (6, 'MAC_ADDRESS', 1, 'MAC Address', 'MAC Address 
 insert into asset_meta values (7, 'RACK_POSITION', 3, 'Rack Position', 'Position of asset in rack');
 insert into asset_meta values (8, 'POWER_PORT', 4, 'Power Port', 'Power port of asset');
 insert into asset_meta values (9, 'SWITCH_PORT', 4, 'Switch Port', 'Switch port that asset is connected to');
-insert into asset_meta values (10, 'SIZE', 5, 'Size', 'Hardware size');
+insert into asset_meta values (10, 'IPMI_CREDENTIALS', -1, 'IPMI Credentials', 'IPMI Credentials for host');
 
 insert into asset values (1, 'tumblrtag1', 1, 1, CURRENT_TIMESTAMP, null, null);
 

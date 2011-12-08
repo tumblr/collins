@@ -3,6 +3,25 @@ package util
 import play.api._
 import models.{User, UserImpl}
 
+object CryptoCodec {
+  protected def combiner(values: String*) = values.mkString(":")
+  protected def splitter(value: String) = value.split(":")
+
+  object Decode {
+    def apply(value: Array[Byte]) = {
+    }
+  }
+  object Encode {
+
+    def apply(username: String, password: String): String = {
+      apply(combiner(username, password).getBytes)
+    }
+    def apply(value: Array[Byte]): String = {
+      new String(value)
+    }
+  }
+}
+
 trait SecuritySpecification {
   val isSecure: Boolean
   val requiredCredentials: Seq[String]

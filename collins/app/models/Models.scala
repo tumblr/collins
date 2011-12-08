@@ -22,7 +22,7 @@ object Status extends BasicQueries[Status,Int] {
 
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {
-    val New, Unallocated, Allocated, Cancelled, Maintenance, Decommissioned = Value
+    val New, Unallocated, Allocated, Cancelled, Maintenance, Decommissioned, Incomplete = Value
   }
 
 }
@@ -115,7 +115,10 @@ object Asset extends BasicQueries[Asset,Long] {
           (symbol, toParameterValue(value))
         }:_*
       ).as(scalar[Long] *)
-      Asset.findByIds(ids)
+      ids.isEmpty match {
+        case true => Seq.empty
+        case false => Asset.findByIds(ids)
+      }
     }
   }
 
@@ -156,7 +159,7 @@ object AssetMeta extends BasicQueries[AssetMeta,Long] {
     val RackPosition = Value("RACK_POSITION")
     val PowerPort = Value("POWER_PORT")
     val SwitchPort = Value("SWITCH_PORT")
-    val Size = Value("SIZE")
+    val IpmiCredentials = Value("IPMI_CREDENTIALS")
   }
 
 }

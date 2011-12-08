@@ -49,8 +49,8 @@ create index assetMeta_name_value on asset_meta_value (value);
 
 create sequence asset_seq start with 1000;
 create sequence asset_meta_seq start with 1000;
-create sequence asset_type_seq start with 10;
-create sequence status_seq start with 5;
+create sequence asset_type_seq start with 50;
+create sequence status_seq start with 50;
 
 # --- !Downs
 

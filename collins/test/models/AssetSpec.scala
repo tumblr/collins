@@ -10,7 +10,7 @@ class AssetSpec extends DatabaseSpec {
       val criteria = List(
           AssetMeta.Enum.IpmiAddress -> "10.0.0.1"
         )
-      val assets = Asset.findByMeta2(criteria)
+      val assets = Asset.findByMeta(criteria)
       assets must haveSize(1)
       assets(0).getAttributes().foreach { attrib =>
         attrib.getNameEnum() match {
@@ -30,7 +30,12 @@ class AssetSpec extends DatabaseSpec {
       _asset.secondaryId mustEqual "tumblrtag1"
       _asset.getStatus.name mustEqual "New"
       _asset.getType.name mustEqual "Server Node"
-      val attribs = _asset.getAttributes
+      val attribs = _asset.getAttributes(Set(
+        AssetMeta.Enum.ServiceTag,
+        AssetMeta.Enum.ChassisTag,
+        AssetMeta.Enum.IpmiAddress,
+        AssetMeta.Enum.Hostname
+        ))
       attribs.foreach { attrib =>
         val enum = attrib.getNameEnum()
         enum must beSome
