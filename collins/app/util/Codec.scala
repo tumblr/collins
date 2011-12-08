@@ -3,14 +3,26 @@ package util
 import java.security._
 import javax.crypto._
 import javax.crypto.spec._
+import scala.util.Random
 
 object CryptoCodec {
   private val kgen = KeyGenerator.getInstance("AES")
-  kgen.init(256)
-  val keySize = 256/8 // 256 bit AES key is 32 bytes
+  val aesKeySize = 256
+  kgen.init(aesKeySize)
+  private val keySize = aesKeySize/8 // 256 bit AES key is 32 bytes
 
   protected def combiner(values: String*) = values.mkString(":")
   protected def splitter(value: String) = value.split(":")
+
+  private val allowedChars = Vector(
+    ('a' to 'z'),
+    ('A' to 'Z'),
+    ('0' to '9')).flatten
+  private val allowedCharsSz = allowedChars.length
+  def randomString(length: Int = 12): String = {
+    val chars = for (i <- 0 until length) yield allowedChars(Random.nextInt(allowedCharsSz))
+    chars.mkString
+  }
 
   object Decode {
     def toUsernamePassword(value: String): Option[(String,String)] = {

@@ -7,6 +7,12 @@ object CodecSpec extends Specification {
   val password = "hello:world"
 
   "The Crypto Codec" should {
+    "generate random strings" >> {
+      val passwords = (1 to 100).map { _ => CryptoCodec.randomString(13) }
+      passwords must have size(100)
+      passwords.foreach { _ must have size(13) }
+      passwords.distinct must have size(100)
+    }
     "encode" >> {
       val message = "Hello World"
       val array = message.getBytes("UTF-8")
