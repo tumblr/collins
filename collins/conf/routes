@@ -5,7 +5,7 @@
 # Home page
 GET     /                           controllers.Resources.index
 GET     /resources                  controllers.Resources.find
-GET     /resource/:id               controllers.Resources.intake(id: Long, stage: Int ?= 1, CHASSIS_ID: String ?= "")
+GET     /resource/:id               controllers.Resources.intake(id: Long, stage: Int ?= 1)
 GET     /resources/help             controllers.Resources.help(t: controllers.Resources.Help)
 
 # Authentication

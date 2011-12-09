@@ -204,8 +204,28 @@ object AssetMetaValue {
     case assetMetaValue~assetMeta => MetaWrapper(assetMeta, assetMetaValue)
   }
 
-  def findSomeByAssetId(spec: Set[AssetMeta.Enum], id: Long): Seq[MetaWrapper] = {
-    Nil
+  def findSomeByAssetId(spec: Set[AssetMeta.Enum], asset_id: Long): Seq[MetaWrapper] = {
+    val query = """
+    select
+      *
+    from 
+      asset_meta, asset_meta_value
+    where
+      asset_meta_value.asset_id = {id}
+        and
+      asset_meta.id = asset_meta_value.asset_meta_id
+    """
+    val constraints = spec.map { e =>
+      "asset_meta_value.asset_meta_id = %d".format(e.id)
+    }.mkString(" or ")
+    val extra = constraints.isEmpty match {
+      case true => ""
+      case false => " and (%s)".format(constraints)
+    }
+    val finalQuery = query + extra
+    DB.withConnection("collins") { implicit connection =>
+      SQL(finalQuery).on('id -> asset_id).as(AssetMetaValue.withAssetMeta *)
+    }
   }
   def findAllByAssetId(id: Long): Seq[MetaWrapper] = {
     val query = """

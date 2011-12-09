@@ -23,6 +23,17 @@ class AssetSpec extends DatabaseSpec {
       success
     }
 
+    "support getAttributes" in {
+      val _asset = Asset.findById(1)
+      _asset must beSome[Asset]
+      val asset = _asset.get
+      val attribs = asset.getAttributes(Set(AssetMeta.Enum.ChassisTag))
+      attribs must haveSize(1)
+      val attrib = attribs.head
+      attrib.getValue mustEqual("chassis tag abc")
+      attrib.getNameEnum must beSome(AssetMeta.Enum.ChassisTag)
+    }
+
     "support findById" in {
       val asset = Asset.findById(1)
       asset must beSome[Asset]
@@ -36,6 +47,8 @@ class AssetSpec extends DatabaseSpec {
         AssetMeta.Enum.IpmiAddress,
         AssetMeta.Enum.Hostname
         ))
+      attribs must not be empty
+      attribs must haveSize(4)
       attribs.foreach { attrib =>
         val enum = attrib.getNameEnum()
         enum must beSome

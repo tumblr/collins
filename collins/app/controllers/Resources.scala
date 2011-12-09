@@ -2,6 +2,7 @@ package controllers
 
 import play.api._
 import play.api.mvc._
+import play.api.data._
 import play.core.QueryStringBindable
 
 import models._
@@ -9,12 +10,11 @@ import util.SecuritySpec
 import views._
 
 object Resources extends SecureWebController {
-
   implicit val spec = SecuritySpec(isSecure = true, Nil)
 
   type Help = Help.Value
   object Help extends Enumeration {
-    val Ipmi = Value(1)
+    val IpmiLight = Value(1)
   }
 
   def help(htype: Help) = SecureAction { implicit req =>
@@ -40,7 +40,43 @@ object Resources extends SecureWebController {
     }
   }
 
-  def intake(id: Long, stage: Int = 1, extra: String = "") = SecureAction { implicit req =>
+  protected def intakeStage3(asset: Asset)(implicit req: Request[AnyContent]) = {
+    Form("CHASSIS_TAG" -> text).bindFromRequest.fold(
+      errors => {
+        val flash  = Flash(Map("warning" -> "No CHASSIS_TAG submitted"))
+        BadRequest(html.resources.intake2(asset)(flash))
+      },
+      chassis_tag => asset.getAttributes(Set(AssetMeta.Enum.ChassisTag)) match {
+        case Nil =>
+          val msg = "Asset %s does not have an associated chassis tag".format(
+            asset.secondaryId
+          )
+          val flash = Flash(Map("error" -> msg))
+          Ok(html.resources.intake2(asset)(flash))
+        case one :: Nil =>
+          chassis_tag == one.getValue match {
+            case true =>
+              Ok(html.resources.intake3(asset, chassis_tag))
+            case false =>
+              val msg = "Asset %s has chassis tag '%s', not '%s'".format(
+                asset.secondaryId, one.getValue, chassis_tag)
+              val flash = Flash(Map("error" -> msg))
+              Ok(html.resources.intake2(asset)(flash))
+          }
+        case many =>
+          val msg = "Asset %s has multiple chassis tags associated with it.".format(
+            asset.secondaryId
+          )
+          val flash = Flash(Map("error" -> msg))
+          logger.error(msg)
+          InternalServerError(
+            html.resources.intake2(asset)(flash)
+          )
+      }
+    )
+  }
+
+  def intake(id: Long, stage: Int = 1) = SecureAction { implicit req =>
     Asset.findById(id).flatMap { asset =>
       intakeAllowed(asset) match {
         case true => Some(asset)
@@ -51,12 +87,16 @@ object Resources extends SecureWebController {
         Redirect(routes.Resources.index).flashing("error" -> "Can not intake host that isn't New")
       case Some(asset) => stage match {
         case 2 =>
+          logger.debug("intake stage 2")
           Ok(html.resources.intake2(asset))
         case 3 =>
-          Ok(html.resources.intake3(asset, req.queryString("CHASSIS_ID").head))
+          logger.debug("intake stage 3")
+          intakeStage3(asset)
         case 4 =>
+          logger.debug("intake stage 4")
           Ok("Done")
         case n =>
+          logger.debug("intake stage " + n)
           Ok(html.resources.intake(asset))
       }
     }
@@ -76,7 +116,7 @@ object Resources extends SecureWebController {
     }
   }
 
-  protected def intakeAllowed[A](asset: Asset)(implicit r: Request[A]) = {
+  protected def intakeAllowed[A](asset: Asset)(implicit r: Request[A]): Boolean = {
     asset.isNew && hasRole(getUser(r), Seq("infra"))
   }
 
