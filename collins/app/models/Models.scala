@@ -9,7 +9,7 @@ import play.api.Play.current
 import anorm._
 import anorm.SqlParser._
 
-case class Status(id: Pk[Int], name: String, description: String)
+case class Status(pk: Pk[Int], name: String, description: String) extends BasicModel[Int]
 object Status extends BasicQueries[Status,Int] {
   val tableName = "status"
   val simple = {
@@ -27,7 +27,7 @@ object Status extends BasicQueries[Status,Int] {
 
 }
 
-case class AssetType(id: Pk[Int], name: String)
+case class AssetType(pk: Pk[Int], name: String) extends BasicModel[Int]
 object AssetType extends BasicQueries[AssetType,Int] {
   val tableName = "asset_type"
   val simple = {
@@ -50,11 +50,12 @@ object AssetType extends BasicQueries[AssetType,Int] {
 }
 
 case class Asset(
-  id: Pk[Long],
-  secondaryId: String,
-  status: Int,
-  assetType: Int,
-  created: Date, updated: Option[Date], deleted: Option[Date])
+    pk: Pk[Long],
+    secondaryId: String,
+    status: Int,
+    assetType: Int,
+    created: Date, updated: Option[Date], deleted: Option[Date])
+  extends BasicModel[Long]
 {
   def isNew(): Boolean = {
     status == Status.Enum.New.id
@@ -68,9 +69,9 @@ case class Asset(
   def getAttributes(specs: Set[AssetMeta.Enum] = Set.empty): List[MetaWrapper] = {
     specs.isEmpty match {
       case true =>
-        AssetMetaValue.findAllByAssetId(id.get).toList
+        AssetMetaValue.findAllByAssetId(id).toList
       case false =>
-        AssetMetaValue.findSomeByAssetId(specs, id.get).toList
+        AssetMetaValue.findSomeByAssetId(specs, id).toList
     }
   }
 }
@@ -121,10 +122,15 @@ object Asset extends BasicQueries[Asset,Long] {
       }
     }
   }
-
 }
 
-case class AssetMeta(id: Pk[Long], name: String, priority: Int, label: String, description: String)
+case class AssetMeta(
+    pk: Pk[Long],
+    name: String,
+    priority: Int,
+    label: String,
+    description: String)
+  extends BasicModel[Long]
 object AssetMeta extends BasicQueries[AssetMeta,Long] {
   val tableName = "asset_meta"
   val simple = {
@@ -161,11 +167,11 @@ object AssetMeta extends BasicQueries[AssetMeta,Long] {
     val SwitchPort = Value("SWITCH_PORT")
     val IpmiCredentials = Value("IPMI_CREDENTIALS")
   }
-
 }
+
 case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getAssetId(): Long = _value.asset_id
-  def getMetaId(): Long = _meta.id.get
+  def getMetaId(): Long = _meta.id
   def getId(): (Long,Long) = (getAssetId(), getMetaId())
   def getName(): String = _meta.name
   def getNameEnum(): Option[AssetMeta.Enum] = try {
@@ -216,6 +222,11 @@ object AssetMetaValue {
       SQL(query).on('id -> id).as(AssetMetaValue.withAssetMeta *)
     }
   }
+}
+
+trait BasicModel[T] {
+  val pk: Pk[T]
+  lazy val id: T = pk.get
 }
 
 trait BasicQueries[T,PK] { self =>

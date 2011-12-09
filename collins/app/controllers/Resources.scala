@@ -41,39 +41,43 @@ object Resources extends SecureWebController {
   }
 
   def intake(id: Long, stage: Int = 1, extra: String = "") = SecureAction { implicit req =>
-    val asset = Asset.findById(id)
-    if (!asset.isDefined || !asset.get.isNew) {
-      Redirect(routes.Resources.index).flashing("error" -> "Can not intake host that isn't New")
-    } else {
-      stage match {
+    Asset.findById(id).flatMap { asset =>
+      intakeAllowed(asset) match {
+        case true => Some(asset)
+        case false => None
+      }
+    } match {
+      case None =>
+        Redirect(routes.Resources.index).flashing("error" -> "Can not intake host that isn't New")
+      case Some(asset) => stage match {
         case 2 =>
-          Ok(html.resources.intake2(asset.get))
+          Ok(html.resources.intake2(asset))
         case 3 =>
-          Ok(html.resources.intake3(asset.get, req.queryString("CHASSIS_ID").head))
+          Ok(html.resources.intake3(asset, req.queryString("CHASSIS_ID").head))
         case 4 =>
           Ok("Done")
         case n =>
-          Ok(html.resources.intake(asset.get))
+          Ok(html.resources.intake(asset))
       }
     }
   }(SecuritySpec(isSecure = true, Seq("infra")))
 
-  private def findBySecondaryId[A](id: String)(implicit r: Request[A]) = {
+  protected def findBySecondaryId[A](id: String)(implicit r: Request[A]) = {
     Asset.findBySecondaryId(id) match {
       case None =>
         Redirect(routes.Resources.index).flashing("message" -> "Could not find asset with specified tumblr tag")
       case Some(asset) =>
-        asset.isNew match {
-          case true => hasRole(getUser(r), Seq("infra")) match {
-            case true =>
-              Redirect(routes.Resources.intake(asset.id.get, 1))
-            case false =>
-              Ok(html.resources.list(Seq(asset)))
-          }
+        intakeAllowed(asset) match {
+          case true =>
+            Redirect(routes.Resources.intake(asset.id, 1))
           case false =>
             Ok(html.resources.list(Seq(asset)))
         }
     }
+  }
+
+  protected def intakeAllowed[A](asset: Asset)(implicit r: Request[A]) = {
+    asset.isNew && hasRole(getUser(r), Seq("infra"))
   }
 
   private def rewriteQuery(request: Map[String,Seq[String]]): List[(AssetMeta.Enum, String)] = {
@@ -82,7 +86,7 @@ object Resources extends SecureWebController {
     }.toList
   }
 
-  private def findByMeta[A](query: List[(AssetMeta.Enum, String)])(implicit r: Request[A]) = {
+  protected def findByMeta[A](query: List[(AssetMeta.Enum, String)])(implicit r: Request[A]) = {
     Asset.findByMeta(query) match {
       case Nil =>
         Redirect(routes.Resources.index).flashing("message" -> "No results found")
