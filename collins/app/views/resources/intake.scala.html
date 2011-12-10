@@ -1,6 +1,7 @@
 @(asset: Asset)(implicit flash: Flash)
 
 @import helper._
+@import controllers.conversions._
 
 @main("Intake Step 1 - " + asset.secondaryId) {
 <div class="page-header">
@@ -11,8 +12,8 @@
     <div class="alert-message block-message warning">
       <p><strong>Did the correct light come on?</strong></p>
       <div class="alert-actions">
-        <a class="btn primary" alt-key="yes" href="@routes.Resources.intake(asset.id, 2)">Yes</a>
-        <a class="btn" alt-key="no" href="@routes.Resources.help(Resources.Help.IpmiLight)">No</a>
+        <a class="btn primary" alt-key="yes" href="@App.routes.Resources.intake(asset.id, 2)">Yes</a>
+        <a class="btn" alt-key="no" href="@routes.HelpPage.index(Help.IpmiLight())">No</a>
       </div>
     </div>
   </div>

@@ -2,7 +2,9 @@ package util
 
 import play.api._
 import models.{User, UserImpl}
+import annotation.implicitNotFound
 
+@implicitNotFound(msg = "Didn't find an implicit SecuritySpecification but expected one")
 trait SecuritySpecification {
   val isSecure: Boolean
   val requiredCredentials: Seq[String]

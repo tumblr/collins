@@ -3,25 +3,17 @@ package controllers
 import play.api._
 import play.api.mvc._
 import play.api.data._
-import play.core.QueryStringBindable
 
 import models._
 import util.SecuritySpec
 import util.Helpers.formatPowerPort
 import views._
 
-object Resources extends SecureWebController {
+trait Resources extends Controller {
+  this: SecureController =>
+
   import AssetMeta.Enum.ChassisTag
   implicit val spec = SecuritySpec(isSecure = true, Nil)
-
-  type Help = Help.Value
-  object Help extends Enumeration {
-    val IpmiLight = Value(1)
-  }
-
-  def help(htype: Help) = SecureAction { implicit req =>
-    Ok(html.resources.help(htype))
-  }
 
   def index = SecureAction { implicit req =>
     Ok(html.resources.index(AssetMeta.getViewable()))
@@ -34,7 +26,7 @@ object Resources extends SecureWebController {
     Form("TUMBLR_TAG" -> requiredText).bindFromRequest.fold(
       noTag => rewriteQuery(req) match {
         case Nil =>
-          Redirect(routes.Resources.index).flashing(
+          Redirect(App.routes.Resources.index).flashing(
             "message" -> "No query specified"
           )
         case q => findByMeta(q)
@@ -57,7 +49,7 @@ object Resources extends SecureWebController {
       }
     } match {
       case None =>
-        Redirect(routes.Resources.index).flashing("error" -> "Can not intake host that isn't New")
+        Redirect(App.routes.Resources.index).flashing("error" -> "Can not intake host that isn't New")
       case Some(asset) => stage match {
         case 2 =>
           logger.debug("intake stage 2")
@@ -112,7 +104,7 @@ object Resources extends SecureWebController {
           AssetMetaValue.create(AssetMetaValue(asset.id, PowerPort.id, portA))
           AssetMetaValue.create(AssetMetaValue(asset.id, PowerPort.id, portB))
           Asset.update(asset.copy(status = models.Status.Enum.Unallocated.id)) // FIXME
-          Redirect(routes.Resources.index).flashing(
+          Redirect(App.routes.Resources.index).flashing(
             "success" -> "Successfull intake of %s".format(asset.secondaryId)
           )
         }
@@ -175,11 +167,11 @@ object Resources extends SecureWebController {
   protected def findBySecondaryId[A](id: String)(implicit r: Request[A]) = {
     Asset.findBySecondaryId(id) match {
       case None =>
-        Redirect(routes.Resources.index).flashing("message" -> "Could not find asset with specified tumblr tag")
+        Redirect(App.routes.Resources.index).flashing("message" -> "Could not find asset with specified tumblr tag")
       case Some(asset) =>
         intakeAllowed(asset) match {
           case true =>
-            Redirect(routes.Resources.intake(asset.id, 1))
+            Redirect(App.routes.Resources.intake(asset.id, 1))
           case false =>
             Ok(html.resources.list(Seq(asset)))
         }
@@ -207,24 +199,10 @@ object Resources extends SecureWebController {
   protected def findByMeta[A](query: List[(AssetMeta.Enum, String)])(implicit r: Request[A]) = {
     Asset.findByMeta(query) match {
       case Nil =>
-        Redirect(routes.Resources.index).flashing("message" -> "No results found")
+        Redirect(App.routes.Resources.index).flashing("message" -> "No results found")
       case r =>
         Ok(html.resources.list(r))
     }
-  }
-
-  // Implicit exists to allow for controller binding of routes that leverage Help
-  implicit def bindableHelp = new QueryStringBindable[Resources.Help] {
-    def bind(key: String, params: Map[String, Seq[String]]) = 
-      params.get(key).flatMap(_.headOption).map { i =>
-        try {
-          Right(Resources.Help(Integer.parseInt(i)))
-        } catch {
-          case e: Exception => Left("Cannot parse parameter " + key + " as Help")
-        }
-      }
-
-    def unbind(key: String, value: Resources.Help) = key + "=" + value.id
   }
 
 }

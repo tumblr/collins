@@ -3,10 +3,14 @@
 # ~~~~
 
 # Home page
-GET     /                           controllers.Resources.index
-GET     /resources                  controllers.Resources.find
-GET     /resource/:id               controllers.Resources.intake(id: Long, stage: Int ?= 1)
-GET     /resources/help             controllers.Resources.help(t: controllers.Resources.Help)
+GET     /                           App.Resources.index
+
+# Resources/Assets
+GET     /resources                  App.Resources.find
+GET     /resource/:id               App.Resources.intake(id: Long, stage: Int ?= 1)
+
+# Help
+GET     /help                       controllers.HelpPage.index(t: Int ?= controllers.Help.Default)
 
 # Authentication
 GET     /login                      controllers.Application.login
