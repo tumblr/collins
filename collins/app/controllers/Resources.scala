@@ -6,12 +6,12 @@ import play.api.data._
 import play.core.QueryStringBindable
 
 import models._
-import AssetMeta.Enum._
 import util.SecuritySpec
 import util.Helpers.formatPowerPort
 import views._
 
 object Resources extends SecureWebController {
+  import AssetMeta.Enum.ChassisTag
   implicit val spec = SecuritySpec(isSecure = true, Nil)
 
   type Help = Help.Value
@@ -75,18 +75,21 @@ object Resources extends SecureWebController {
     }
   }(SecuritySpec(isSecure = true, Seq("infra")))
 
-  def intakeStage3Form(asset: Asset): Form[(String,String,String,String)] = Form(
-    of(
-      ChassisTag.toString -> requiredText(1),
-      RackPosition.toString -> requiredText(1),
-      formatPowerPort("A") -> requiredText(1),
-      formatPowerPort("B") -> requiredText(1)
-    ) verifying ("Port A must not equal Port B", result => result match {
-      case(c,r,pA,pB) => pA != pB
-    }) verifying ("Chassis must match actual chassis", result => result match {
-      case(c,r,pA,pB) => asset.getAttribute(ChassisTag).isDefined
-    })
-  )
+  private def intakeStage3Form(asset: Asset): Form[(String,String,String,String)] = {
+    import models.AssetMeta.Enum._
+    Form(
+      of(
+        ChassisTag.toString -> requiredText(1),
+        RackPosition.toString -> requiredText(1),
+        formatPowerPort("A") -> requiredText(1),
+        formatPowerPort("B") -> requiredText(1)
+      ) verifying ("Port A must not equal Port B", result => result match {
+        case(c,r,pA,pB) => pA != pB
+      }) verifying ("Chassis must match actual chassis", result => result match {
+        case(c,r,pA,pB) => asset.getAttribute(ChassisTag).isDefined
+      })
+    )
+  }
 
   /**
    * Handle stage 4 validation
@@ -97,6 +100,7 @@ object Resources extends SecureWebController {
    * Validate that RACK_POSITION is a rack we know about
    */
   protected def intakeStage4(asset: Asset)(implicit req: Request[AnyContent]) = {
+    import AssetMeta.Enum._
     intakeStage3Form(asset).bindFromRequest.fold(
       formWithErrors => {
         val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
@@ -104,7 +108,13 @@ object Resources extends SecureWebController {
       },
       success => success match {
         case(tag, position, portA, portB) => {
-          Ok("good :)")
+          AssetMetaValue.create(AssetMetaValue(asset.id, RackPosition.id, position))
+          AssetMetaValue.create(AssetMetaValue(asset.id, PowerPort.id, portA))
+          AssetMetaValue.create(AssetMetaValue(asset.id, PowerPort.id, portB))
+          Asset.update(asset.copy(status = models.Status.Enum.Unallocated.id)) // FIXME
+          Redirect(routes.Resources.index).flashing(
+            "success" -> "Successfull intake of %s".format(asset.secondaryId)
+          )
         }
       }
     )

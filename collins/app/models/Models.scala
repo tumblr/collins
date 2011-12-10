@@ -100,6 +100,20 @@ object Asset extends BasicQueries[Asset,Long] {
     }
   }
 
+  def update(asset: Asset): Int = {
+    DB.withConnection(db) { implicit con =>
+      SQL(
+        """
+          update asset
+          set status = {status}, updated = CURRENT_TIMESTAMP
+          where id = {id}
+        """
+      ).on(
+        'id -> asset.id,
+        'status -> asset.status
+      ).executeUpdate()
+    }
+  }
   def findBySecondaryId(id: String): Option[Asset] = {
     val query = "select * from asset where secondary_id = {id}"
     DB.withConnection(db) { implicit connection =>
@@ -209,6 +223,22 @@ object AssetMetaValue {
 
   val withAssetMeta = AssetMetaValue.simple ~/ AssetMeta.simple ^^ {
     case assetMetaValue~assetMeta => MetaWrapper(assetMeta, assetMetaValue)
+  }
+
+  def create(mv: AssetMetaValue): Int = {
+    DB.withConnection("collins") { implicit con =>
+      SQL(
+        """
+          insert into asset_meta_value values (
+            {amv_aid}, {amv_amid}, {value}
+          )
+        """
+      ).on(
+        'amv_aid -> mv.asset_id,
+        'amv_amid -> mv.meta_id,
+        'value -> mv.value
+      ).executeUpdate()
+    }
   }
 
   def findSomeByAssetId(spec: Set[AssetMeta.Enum], asset_id: Long): Seq[MetaWrapper] = {
