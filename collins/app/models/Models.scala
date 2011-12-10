@@ -66,6 +66,15 @@ case class Asset(
   def getType(): AssetType = {
     AssetType.findById(assetType).get
   }
+  def getAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
+    AssetMetaValue.findSomeByAssetId(Set(spec), id).toList match {
+      case Nil => None
+      case one :: Nil =>
+        Some(one)
+      case other =>
+        throw new IndexOutOfBoundsException("Expected one value, if any")
+    }
+  }
   def getAttributes(specs: Set[AssetMeta.Enum] = Set.empty): List[MetaWrapper] = {
     specs.isEmpty match {
       case true =>
@@ -105,16 +114,14 @@ object Asset extends BasicQueries[Asset,Long] {
       val id: String = k.toString + "_" + count
       count += 1
       val fragment = "asset_meta_value.asset_meta_id = %d and asset_meta_value.value like {%s}".format(k.id, id)
-      (fragment, (Symbol(id), v))
+      (fragment, (Symbol(id), toParameterValue(v)))
     }
     val nq = query + params.map { _._1 }.mkString(" and ")
     DB.withConnection(db) { implicit connection =>
       val ids = SQL(
         nq
       ).on(
-        params.map { case(s, (symbol, value)) =>
-          (symbol, toParameterValue(value))
-        }:_*
+        params.map{ _._2 }:_*
       ).as(scalar[Long] *)
       ids.isEmpty match {
         case true => Seq.empty

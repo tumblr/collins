@@ -25,57 +25,28 @@ object Resources extends SecureWebController {
     Ok(html.resources.index(AssetMeta.getViewable()))
   }
 
+  /**
+   * Find assets by query parameters, special care for TUMBLR_TAG
+   */
   def find = SecureAction { implicit req =>
-    val initialQuery = req.queryString.filter { case(k,vs) => vs.nonEmpty && vs.head.nonEmpty }
-    initialQuery.contains("TUMBLR_TAG") match {
-      case true =>
-        findBySecondaryId(initialQuery("TUMBLR_TAG").head)
-      case false =>
-        rewriteQuery(initialQuery) match {
-          case Nil =>
-            Redirect(routes.Resources.index).flashing("message" -> "No query specified")
-          case q =>
-            findByMeta(q)
-        }
-    }
-  }
-
-  protected def intakeStage3(asset: Asset)(implicit req: Request[AnyContent]) = {
-    Form("CHASSIS_TAG" -> text).bindFromRequest.fold(
-      errors => {
-        val flash  = Flash(Map("warning" -> "No CHASSIS_TAG submitted"))
-        BadRequest(html.resources.intake2(asset)(flash))
-      },
-      chassis_tag => asset.getAttributes(Set(AssetMeta.Enum.ChassisTag)) match {
+    Form("TUMBLR_TAG" -> text).bindFromRequest.fold(
+      noTag => rewriteQuery(req) match {
         case Nil =>
-          val msg = "Asset %s does not have an associated chassis tag".format(
-            asset.secondaryId
+          Redirect(routes.Resources.index).flashing(
+            "message" -> "No query specified"
           )
-          val flash = Flash(Map("error" -> msg))
-          Ok(html.resources.intake2(asset)(flash))
-        case one :: Nil =>
-          chassis_tag == one.getValue match {
-            case true =>
-              Ok(html.resources.intake3(asset, chassis_tag))
-            case false =>
-              val msg = "Asset %s has chassis tag '%s', not '%s'".format(
-                asset.secondaryId, one.getValue, chassis_tag)
-              val flash = Flash(Map("error" -> msg))
-              Ok(html.resources.intake2(asset)(flash))
-          }
-        case many =>
-          val msg = "Asset %s has multiple chassis tags associated with it.".format(
-            asset.secondaryId
-          )
-          val flash = Flash(Map("error" -> msg))
-          logger.error(msg)
-          InternalServerError(
-            html.resources.intake2(asset)(flash)
-          )
+        case q => findByMeta(q)
+      },
+      tumblr_tag => {
+        logger.debug("Tumblr Tag: " + tumblr_tag)
+        findBySecondaryId(tumblr_tag)
       }
     )
   }
 
+  /**
+   * Manage 4 stage asset intake process
+   */
   def intake(id: Long, stage: Int = 1) = SecureAction { implicit req =>
     Asset.findById(id).flatMap { asset =>
       intakeAllowed(asset) match {
@@ -102,6 +73,58 @@ object Resources extends SecureWebController {
     }
   }(SecuritySpec(isSecure = true, Seq("infra")))
 
+  /**
+   * Handle stage 3 validation
+   *
+   * Lookup CHASSIS_TAG in HTTP parameters
+   * On error, back to intake2
+   * On success, retrieve ChassisTag for asset
+   * Check equality of specified tag and actual tag
+   * Special cases where:
+   *   - Specified tag and stored tag don't match
+   *     - Display error to user
+   *   - No tag is associated with the asset
+   *     - Display error to user
+   *   - Multiple chassis tags are associated with an asset
+   *     - 500, this should not happen
+   */
+  protected def intakeStage3(asset: Asset)(implicit req: Request[AnyContent]) = try {
+    Form("CHASSIS_TAG" -> text).bindFromRequest.fold(
+      errors => {
+        val flash  = Flash(Map("warning" -> "No CHASSIS_TAG submitted"))
+        BadRequest(html.resources.intake2(asset)(flash))
+      },
+      chassis_tag => asset.getAttribute(AssetMeta.Enum.ChassisTag).map { attrib =>
+        chassis_tag == attrib.getValue match {
+          case true =>
+            Ok(html.resources.intake3(asset, chassis_tag))
+          case false =>
+            val msg = "Asset %s has chassis tag '%s', not '%s'".format(
+              asset.secondaryId, attrib.getValue, chassis_tag)
+            val flash = Flash(Map("error" -> msg))
+            Ok(html.resources.intake2(asset)(flash))
+        }
+      }.getOrElse {
+        val msg = "Asset %s does not have an associated chassis tag".format(
+          asset.secondaryId
+        )
+        val flash = Flash(Map("error" -> msg))
+        Ok(html.resources.intake2(asset)(flash))
+      }
+    )
+  } catch {
+    case e: IndexOutOfBoundsException =>
+      val msg = "Asset %s has multiple chassis tags associated with it.".format(
+        asset.secondaryId
+      )
+      val flash = Flash(Map("error" -> msg))
+      logger.error(msg)
+      InternalServerError(html.resources.intake2(asset)(flash))
+  }
+
+  /**
+   * Given a secondary_id (tumblr tag), find the associated asset
+   */
   protected def findBySecondaryId[A](id: String)(implicit r: Request[A]) = {
     Asset.findBySecondaryId(id) match {
       case None =>
@@ -117,15 +140,26 @@ object Resources extends SecureWebController {
   }
 
   protected def intakeAllowed[A](asset: Asset)(implicit r: Request[A]): Boolean = {
-    asset.isNew && hasRole(getUser(r), Seq("infra"))
+    val isNew = asset.isNew
+    val rightType = asset.assetType == AssetType.Enum.ServerNode.id
+    val rightRole = hasRole(getUser(r), Seq("infra"))
+    logger.info("intakeAllowed - New: %s, Right Type: %s, Right Role: %s".format(
+      isNew, rightType, rightRole
+    ))
+    isNew && rightType && rightRole
   }
 
-  private def rewriteQuery(request: Map[String,Seq[String]]): List[(AssetMeta.Enum, String)] = {
-    request.map { case(k,vs) =>
+  // Rewrite a query such that it can be used by findByMeta
+  private def rewriteQuery(req: Request[AnyContent]): List[(AssetMeta.Enum, String)] = {
+    val requestMap = req.queryString.filter { case(k,vs) => vs.nonEmpty && vs.head.nonEmpty }
+    requestMap.map { case(k,vs) =>
       (AssetMeta.Enum.withName(k), vs.head + "%")
     }.toList
   }
 
+  /**
+   * Find assets by specified Meta parameters
+   */
   protected def findByMeta[A](query: List[(AssetMeta.Enum, String)])(implicit r: Request[A]) = {
     Asset.findByMeta(query) match {
       case Nil =>
@@ -135,6 +169,7 @@ object Resources extends SecureWebController {
     }
   }
 
+  // Implicit exists to allow for controller binding of routes that leverage Help
   implicit def bindableHelp = new QueryStringBindable[Resources.Help] {
     def bind(key: String, params: Map[String, Seq[String]]) = 
       params.get(key).flatMap(_.headOption).map { i =>

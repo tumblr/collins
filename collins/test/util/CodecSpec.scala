@@ -6,6 +6,8 @@ object CodecSpec extends Specification {
   val username = "blake"
   val password = "hello:world"
 
+  val cryptoCodec = CryptoCodec(CryptoCodec.randomString(23))
+
   "The Crypto Codec" should {
     "generate random strings" >> {
       val passwords = (1 to 100).map { _ => CryptoCodec.randomString(13) }
@@ -16,41 +18,41 @@ object CodecSpec extends Specification {
     "encode" >> {
       val message = "Hello World"
       val array = message.getBytes("UTF-8")
-      val encrypted = CryptoCodec.Encode(array)
+      val encrypted = cryptoCodec.Encode(array)
       encrypted must haveClass[String]
       encrypted must not be empty
     }
     "encode usernames/passwords" >> {
-      val encrypted = CryptoCodec.Encode(username, password)
+      val encrypted = cryptoCodec.Encode(username, password)
       encrypted must haveClass[String]
       encrypted must not be empty
     }
     "not encode the same thing the same way" >> {
-      val encrypted = CryptoCodec.Encode(username, password)
-      val encrypted2 = CryptoCodec.Encode(username, password)
+      val encrypted = cryptoCodec.Encode(username, password)
+      val encrypted2 = cryptoCodec.Encode(username, password)
       encrypted must not be equalTo(encrypted2)
     }
     "decode" >> {
       val message = "Hello World"
       val array = message.getBytes("UTF-8")
-      val encrypted = CryptoCodec.Encode(array)
-      val decrypted = CryptoCodec.Decode(encrypted)
+      val encrypted = cryptoCodec.Encode(array)
+      val decrypted = cryptoCodec.Decode(encrypted)
       decrypted must beSome(message)
     }
     "decode usernames/passwords" >> {
       val message = "Hello World"
       val array = message.getBytes("UTF-8")
-      val encrypted = CryptoCodec.Encode(username, password)
-      val decrypted = CryptoCodec.Decode.toUsernamePassword(encrypted)
+      val encrypted = cryptoCodec.Encode(username, password)
+      val decrypted = cryptoCodec.Decode.toUsernamePassword(encrypted)
       decrypted must beSome
       decrypted.get must beEqualTo((username, password))
     }
     "decode same data (different encoding)" >> {
-      val encrypted = CryptoCodec.Encode(username, password)
-      val encrypted2 = CryptoCodec.Encode(username, password)
+      val encrypted = cryptoCodec.Encode(username, password)
+      val encrypted2 = cryptoCodec.Encode(username, password)
       encrypted must not be equalTo(encrypted2)
-      val decrypted = CryptoCodec.Decode.toUsernamePassword(encrypted)
-      val decrypted2 = CryptoCodec.Decode.toUsernamePassword(encrypted2)
+      val decrypted = cryptoCodec.Decode.toUsernamePassword(encrypted)
+      val decrypted2 = cryptoCodec.Decode.toUsernamePassword(encrypted2)
       decrypted must beSome
       decrypted2 must beSome
       decrypted.get must beEqualTo((username, password))

@@ -4,16 +4,17 @@ import java.security._
 import javax.crypto._
 import javax.crypto.spec._
 import scala.util.Random
+import org.bouncycastle.crypto.PBEParametersGenerator
+import org.bouncycastle.crypto.digests.SHA256Digest
+import org.bouncycastle.crypto.engines.AESEngine
+import org.bouncycastle.crypto.generators.PKCS12ParametersGenerator
+import org.bouncycastle.crypto.modes.CBCBlockCipher
+import org.bouncycastle.crypto.paddings.{PaddedBufferedBlockCipher, PKCS7Padding}
+import org.bouncycastle.crypto.params.ParametersWithIV
+import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 object CryptoCodec {
-  private val kgen = KeyGenerator.getInstance("AES")
-  val aesKeySize = 256
-  kgen.init(aesKeySize)
-  private val keySize = aesKeySize/8 // 256 bit AES key is 32 bytes
-
-  protected def combiner(values: String*) = values.mkString(":")
-  protected def splitter(value: String) = value.split(":")
-
+  def apply(key: String) = new CryptoCodec(key)
   private val allowedChars = Vector(
     ('a' to 'z'),
     ('A' to 'Z'),
@@ -22,6 +23,21 @@ object CryptoCodec {
   def randomString(length: Int = 12): String = {
     val chars = for (i <- 0 until length) yield allowedChars(Random.nextInt(allowedCharsSz))
     chars.mkString
+  }
+}
+
+class CryptoCodec(privateKey: String, saltSize: Int = 8, iterations: Int = 100) {
+  private val secretKey = privateKey.toArray
+
+  protected def combiner(values: String*) = values.mkString(":")
+  protected def splitter(value: String) = value.split(":")
+
+
+  protected def createSalt(size: Int): Array[Byte] = {
+    val salt = new Array[Byte](size)
+    val saltGen = SecureRandom.getInstance("SHA1PRNG")
+    saltGen.nextBytes(salt)
+    salt
   }
 
   object Decode {
@@ -37,33 +53,43 @@ object CryptoCodec {
         }
       }
     }
+    protected def splitWithSalt(value: String): (Array[Byte], Array[Byte]) = {
+      val hex = Hex.fromHexString(value)
+      val splitAt = hex.length - saltSize
+      hex.splitAt(splitAt)
+    }
     def apply(value: String): Option[String] = {
-      try {
-        val hex = Hex.fromHexString(value)
-        val splitAt = hex.length - keySize
-        val (orig,salt) = hex.splitAt(splitAt)
-        val cipher = Cipher.getInstance("AES")
-        val skeySpec = new SecretKeySpec(salt, "AES")
-        cipher.init(Cipher.DECRYPT_MODE, skeySpec)
-        Some(new String(cipher.doFinal(orig)))
-      } catch {
-        case _ => None
-      }
+      val (cipher,salt) = splitWithSalt(value)
+      val pGen = new PKCS12ParametersGenerator(new SHA256Digest())
+      val pkcs12PasswordBytes = PBEParametersGenerator.PKCS12PasswordToBytes(secretKey)
+      pGen.init(pkcs12PasswordBytes, salt, iterations)
+      val aesCBC = new CBCBlockCipher(new AESEngine())
+      val aesCBCParams = pGen.generateDerivedParameters(256, 128).asInstanceOf[ParametersWithIV]
+      aesCBC.init(false, aesCBCParams)
+      val aesCipher = new PaddedBufferedBlockCipher(aesCBC, new PKCS7Padding())
+      val plainTemp = new Array[Byte](aesCipher.getOutputSize(cipher.length))
+      val offset = aesCipher.processBytes(cipher, 0, cipher.length, plainTemp, 0)
+      val last = aesCipher.doFinal(plainTemp, offset)
+      val plain = new Array[Byte](offset + last)
+      Array.copy(plainTemp, 0, plain, 0, plain.length)
+      Some(new String(plain))
     }
   }
   object Encode {
+    private val encodeType = "PBEWithSHA256And256BitAES-CBC-BC"
     def apply(values: String*): String = {
       apply(combiner(values:_*).getBytes)
     }
     def apply(value: Array[Byte]): String = {
-      val skey = kgen.generateKey()
-      val raw = skey.getEncoded()
-      val skeySpec = new SecretKeySpec(raw, "AES")
-      val cipher = Cipher.getInstance("AES")
-      cipher.init(Cipher.ENCRYPT_MODE, skeySpec)
-      val encrypted = cipher.doFinal(value)
-      val salted = Array(encrypted, raw).flatten
-      Hex.toHexString(salted)
+      val salt = createSalt(saltSize)
+      Security.addProvider(new BouncyCastleProvider())
+      val pbeParamSpec = new PBEParameterSpec(salt, iterations)
+      val pbeKeySpec = new PBEKeySpec(secretKey)
+      val keyFac = SecretKeyFactory.getInstance(encodeType)
+      val pbeKey = keyFac.generateSecret(pbeKeySpec)
+      val encryptionCipher = Cipher.getInstance(encodeType)
+      encryptionCipher.init(Cipher.ENCRYPT_MODE, pbeKey, pbeParamSpec)
+      Hex.toHexString(Array(encryptionCipher.doFinal(value), salt).flatten)
     }
   }
 }

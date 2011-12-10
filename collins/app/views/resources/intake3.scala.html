@@ -1,19 +1,71 @@
 @(asset: Asset, chassisTag: String)(implicit flash: Flash)
 
 @import helper._
+@import AssetMeta.Enum._
 
 @main("Intake Step 3 - " + asset.secondaryId) {
 <div class="page-header">
   <h1>Asset Intake Step 3 <small>Verify Information for @asset.secondaryId</small></h1>
 </div>
 <div class="row">
-  <div class="span14">
-    <div class="alert-message block-message warning">
-      <p><strong>Are you done?</strong></p>
-      <div class="alert-actions">
-        <a class="btn primary" href="@routes.Resources.intake(asset.id, 4)">Done &rarr;</a>
+  <div class="span10">
+    @form(routes.Resources.intake(asset.id, 4)) {
+    <div class="clearfix">
+      <label for="TUMBLR_TAG">Tumblr Tag</label>
+      <div class="input">
+        <span id="TUMBLR_TAG" class="uneditable-input">@asset.secondaryId</span>
       </div>
     </div>
+    <div class="clearfix">
+      <label for="@ServiceTag.toString">Service Tag</label>
+      <div class="input">
+        <span id="@ServiceTag.toString" class="uneditable-input">@{
+          asset.getAttribute(ServiceTag).map{a => a.getValue()}.getOrElse{<em>-</em>}
+        }</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="@ChassisTag.toString">Chassis Tag</label>
+      <div class="input">
+        <span id="@ChassisTag.toString" class="uneditable-input">@chassisTag</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="@RackPosition.toString">Rack Position</label>
+      <div class="input">
+        <input type="text" class="focus" enter-style="tab" id="@RackPosition.toString" name="@RackPosition.toString">
+        <span class="help-inline">Scan the rack position barcode</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="@{PowerPort.toString}_A">Power Port A</label>
+      <div class="input">
+        <input type="text" id="@{PowerPort.toString}_A" enter-style="tab" name="@{PowerPort.toString}_A">
+        <span class="help-inline">Scan the first power port</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="@{PowerPort.toString}_B">Power Port B</label>
+      <div class="input">
+        <input type="text" id="@{PowerPort.toString}_B" name="@{PowerPort.toString}_B">
+        <span class="help-inline">Scan the second power port</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <input type="hidden" name="@ChassisTag.toString" value="@chassisTag">
+      <input type="hidden" name="stage" value="4">
+    </div>
+    <div class="actions">
+      <input type="submit" class="btn primary" value="Done &rarr;">
+      <a class="btn" href="@routes.Resources.intake(asset.id, 5)">Cancel</a>
+    </div>
+    }
+  </div>
+  <div class="span4">
+    <h3>Overview</h3>
+    <p>Scan the rack position and individual power ports of the chassis. These values will be
+    associated with the node. These values are used for determining what nodes are available in
+    which racks, and calculating power utilization/distribution.</p>
   </div>
 </div>
 }
