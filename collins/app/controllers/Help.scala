@@ -1,5 +1,7 @@
 package controllers
 
+import play.api.mvc._
+
 import util.SecuritySpec
 import views._
 
@@ -15,8 +17,11 @@ object Help {
   }
 }
 
-object HelpPage extends SecureWebController {
+trait HelpPage extends Controller {
+  this: SecureController =>
+
   import Help._
+
   implicit val spec = SecuritySpec(isSecure = false, Nil)
 
   def index(htype: Int) = SecureAction { implicit req =>

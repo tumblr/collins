@@ -5,7 +5,8 @@ import play.api.mvc._
 import models.User
 import util._
 
-object Api extends SecureApiController {
+trait Api extends Controller {
+  this: SecureController =>
 
   implicit val securitySpec = SecuritySpec(isSecure = true, requiredCredentials = Nil)
 
@@ -21,4 +22,8 @@ object Api extends SecureApiController {
     Ok("No auth required")
   }(SecuritySpec(isSecure = false, Nil))
 
+  def getOutputType(request: Request[AnyContent]): OutputType = OutputType(request) match {
+    case Some(ot) => ot
+    case None => throw new Exception("WTF?")
+  }
 }
