@@ -29,7 +29,7 @@ object Resources extends SecureWebController {
    * Find assets by query parameters, special care for TUMBLR_TAG
    */
   def find = SecureAction { implicit req =>
-    Form("TUMBLR_TAG" -> text).bindFromRequest.fold(
+    Form("TUMBLR_TAG" -> requiredText).bindFromRequest.fold(
       noTag => rewriteQuery(req) match {
         case Nil =>
           Redirect(routes.Resources.index).flashing(
