@@ -1,6 +1,7 @@
-@(asset: Asset, chassisTag: String)(implicit flash: Flash)
+@(asset: Asset, chassisTag: String, dataForm: Form[(String,String,String,String)])(implicit flash: Flash)
 
 @import helper._
+@import _root_.util.Helpers.formatPowerPort
 @import AssetMeta.Enum._
 
 @main("Intake Step 3 - " + asset.secondaryId) {
@@ -30,27 +31,14 @@
         <span id="@ChassisTag.toString" class="uneditable-input">@chassisTag</span>
       </div>
     </div>
-    <div class="clearfix">
-      <label for="@RackPosition.toString">Rack Position</label>
-      <div class="input">
-        <input type="text" class="focus" enter-style="tab" id="@RackPosition.toString" name="@RackPosition.toString">
-        <span class="help-inline">Scan the rack position barcode</span>
+    @inputText(dataForm(RackPosition.toString), 'label -> "Rack Position", Symbol("enter-style") -> "tab", 'class -> "focus")(twitterBootstrapInput)
+    @inputText(dataForm(formatPowerPort("A")), 'label -> "Power Port A", Symbol("enter-style") -> "tab")(twitterBootstrapInput)
+    @inputText(dataForm(formatPowerPort("B")), 'label -> "Power Port B")(twitterBootstrapInput)
+    @dataForm.globalError.map { error =>
+      <div class="alert-message error">
+        <strong>Unable to intake node</strong> @error.message
       </div>
-    </div>
-    <div class="clearfix">
-      <label for="@{PowerPort.toString}_A">Power Port A</label>
-      <div class="input">
-        <input type="text" id="@{PowerPort.toString}_A" enter-style="tab" name="@{PowerPort.toString}_A">
-        <span class="help-inline">Scan the first power port</span>
-      </div>
-    </div>
-    <div class="clearfix">
-      <label for="@{PowerPort.toString}_B">Power Port B</label>
-      <div class="input">
-        <input type="text" id="@{PowerPort.toString}_B" name="@{PowerPort.toString}_B">
-        <span class="help-inline">Scan the second power port</span>
-      </div>
-    </div>
+    }
     <div class="clearfix">
       <input type="hidden" name="@ChassisTag.toString" value="@chassisTag">
       <input type="hidden" name="stage" value="4">

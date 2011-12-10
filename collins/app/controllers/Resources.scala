@@ -6,7 +6,9 @@ import play.api.data._
 import play.core.QueryStringBindable
 
 import models._
+import AssetMeta.Enum._
 import util.SecuritySpec
+import util.Helpers.formatPowerPort
 import views._
 
 object Resources extends SecureWebController {
@@ -65,13 +67,48 @@ object Resources extends SecureWebController {
           intakeStage3(asset)
         case 4 =>
           logger.debug("intake stage 4")
-          Ok("Done")
+          intakeStage4(asset)
         case n =>
           logger.debug("intake stage " + n)
           Ok(html.resources.intake(asset))
       }
     }
   }(SecuritySpec(isSecure = true, Seq("infra")))
+
+  def intakeStage3Form(asset: Asset): Form[(String,String,String,String)] = Form(
+    of(
+      ChassisTag.toString -> requiredText(1),
+      RackPosition.toString -> requiredText(1),
+      formatPowerPort("A") -> requiredText(1),
+      formatPowerPort("B") -> requiredText(1)
+    ) verifying ("Port A must not equal Port B", result => result match {
+      case(c,r,pA,pB) => pA != pB
+    }) verifying ("Chassis must match actual chassis", result => result match {
+      case(c,r,pA,pB) => asset.getAttribute(ChassisTag).isDefined
+    })
+  )
+
+  /**
+   * Handle stage 4 validation
+   *
+   * We should have gotten a: CHASSIS_TAG, RACK_POSITION, POWER_PORT_A, POWER_PORT_B
+   * Validate that CHASSIS_TAG matches one on Asset
+   * Validate that _A and _B are on different PDU's and are PDU's we know about
+   * Validate that RACK_POSITION is a rack we know about
+   */
+  protected def intakeStage4(asset: Asset)(implicit req: Request[AnyContent]) = {
+    intakeStage3Form(asset).bindFromRequest.fold(
+      formWithErrors => {
+        val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
+        BadRequest(html.resources.intake3(asset, chassis_tag, formWithErrors))
+      },
+      success => success match {
+        case(tag, position, portA, portB) => {
+          Ok("good :)")
+        }
+      }
+    )
+  }
 
   /**
    * Handle stage 3 validation
@@ -94,10 +131,10 @@ object Resources extends SecureWebController {
         val flash  = Flash(Map("warning" -> "No CHASSIS_TAG submitted"))
         BadRequest(html.resources.intake2(asset)(flash))
       },
-      chassis_tag => asset.getAttribute(AssetMeta.Enum.ChassisTag).map { attrib =>
+      chassis_tag => asset.getAttribute(ChassisTag).map { attrib =>
         chassis_tag == attrib.getValue match {
           case true =>
-            Ok(html.resources.intake3(asset, chassis_tag))
+            Ok(html.resources.intake3(asset, chassis_tag, intakeStage3Form(asset)))
           case false =>
             val msg = "Asset %s has chassis tag '%s', not '%s'".format(
               asset.secondaryId, attrib.getValue, chassis_tag)
@@ -143,9 +180,6 @@ object Resources extends SecureWebController {
     val isNew = asset.isNew
     val rightType = asset.assetType == AssetType.Enum.ServerNode.id
     val rightRole = hasRole(getUser(r), Seq("infra"))
-    logger.info("intakeAllowed - New: %s, Right Type: %s, Right Role: %s".format(
-      isNew, rightType, rightRole
-    ))
     isNew && rightType && rightRole
   }
 
