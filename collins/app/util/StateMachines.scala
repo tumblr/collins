@@ -63,7 +63,7 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
     case _ => throw new IllegalStateException("State not AssetState")
   }
 
-  private def statusToState() = asset.getStatus() match {
+  private def statusToState() = Status.Enum(asset.getStatus().getId) match {
     case Incomplete => IncompleteState()
     case New => NewState()
     case Unallocated => UnallocatedState()
@@ -71,7 +71,7 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
     case Cancelled => CancelledState()
     case Maintenance => MaintenanceState()
     case Decommissioned => DecommissionedState()
-    case _ => throw new IllegalStateException("Unknown asset status found")
+    case e => throw new IllegalStateException("Unknown asset status found: " + e)
   }
 }
 

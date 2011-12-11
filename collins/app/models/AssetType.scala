@@ -1,33 +1,24 @@
 package models
 
 import anorm._
+import anorm.defaults._
 import anorm.SqlParser._
 import java.sql._
 
-case class AssetType(pk: Pk[Int], name: String) extends BasicModel[Int]
-object AssetType extends BasicQueries[AssetType,Int] {
-  val tableName = "asset_type"
-  val simple = {
-    get[Pk[Int]]("asset_type.id") ~/
-    get[String]("asset_type.name") ^^ {
-      case id~name => AssetType(id, name)
-    }
+case class AssetType(id: Pk[java.lang.Integer], name: String) {
+  def getId(): Int = id.get
+}
+
+object AssetType extends Magic[AssetType](Some("asset_type")) with Dao[AssetType] {
+  def create(atypes: Seq[AssetType])(implicit con: Connection): Seq[AssetType] = {
+    atypes.foldLeft(List[AssetType]()) { case(list, atype) =>
+      if (atype.id.isDefined) throw new IllegalArgumentException("Use update, id already defined")
+      AssetType.create(atype) +: list
+    }.reverse
   }
 
-  def batchCreate(atypes: Seq[AssetType])(implicit con: Connection): Int = {
-    atypes.foldLeft(0) { case(count, atype) =>
-      if (atype.id > 0) throw new IllegalArgumentException("Can only create for asset type with id 0")
-      count + SQL(
-        """
-          insert into asset_type values (
-            id = (select next value for asset_type_seq),
-            name = {name}
-          )
-        """
-      ).on(
-        'name -> atype.name
-      ).executeUpdate()
-    }
+  def findById(id: Int) = Model.withConnection { implicit con =>
+    AssetType.find("id={id}").on('id -> id).singleOption()
   }
 
   type Enum = Enum.Value

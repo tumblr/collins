@@ -13,6 +13,7 @@ case class Asset(
     asset_type: Int,
     created: Date, updated: Option[Date], deleted: Option[Date])
 {
+  require(secondary_id != null && secondary_id.length > 0)
   def getId(): Long = id.get
   def isNew(): Boolean = {
     status == models.Status.Enum.New.id
@@ -43,6 +44,11 @@ case class Asset(
 }
 
 object Asset extends Magic[Asset](Some("asset")) with Dao[Asset] {
+
+  def apply(secondary_id: String, status: Status.Enum, asset_type: AssetType.Enum) = {
+    new Asset(NotAssigned, secondary_id, status.id, asset_type.id, new Date(), None, None)
+  }
+
   def create(assets: Seq[Asset])(implicit con: Connection): Seq[Asset] = {
     assets.foldLeft(List[Asset]()) { case(list, asset) =>
       if (asset.id.isDefined) throw new IllegalArgumentException("id of asset must be NotAssigned")
