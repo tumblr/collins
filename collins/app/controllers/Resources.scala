@@ -26,7 +26,7 @@ trait Resources extends Controller {
     Form("TUMBLR_TAG" -> requiredText).bindFromRequest.fold(
       noTag => rewriteQuery(req) match {
         case Nil =>
-          Redirect(App.routes.Resources.index).flashing(
+          Redirect(app.routes.Resources.index).flashing(
             "message" -> "No query specified"
           )
         case q => findByMeta(q)
@@ -49,7 +49,7 @@ trait Resources extends Controller {
       }
     } match {
       case None =>
-        Redirect(App.routes.Resources.index).flashing("error" -> "Can not intake host that isn't New")
+        Redirect(app.routes.Resources.index).flashing("error" -> "Can not intake host that isn't New")
       case Some(asset) => stage match {
         case 2 =>
           logger.debug("intake stage 2")
@@ -104,7 +104,7 @@ trait Resources extends Controller {
           AssetMetaValue.create(AssetMetaValue(asset.id, PowerPort.id, portA))
           AssetMetaValue.create(AssetMetaValue(asset.id, PowerPort.id, portB))
           Asset.update(asset.copy(status = models.Status.Enum.Unallocated.id)) // FIXME
-          Redirect(App.routes.Resources.index).flashing(
+          Redirect(app.routes.Resources.index).flashing(
             "success" -> "Successfull intake of %s".format(asset.secondaryId)
           )
         }
@@ -167,11 +167,11 @@ trait Resources extends Controller {
   protected def findBySecondaryId[A](id: String)(implicit r: Request[A]) = {
     Asset.findBySecondaryId(id) match {
       case None =>
-        Redirect(App.routes.Resources.index).flashing("message" -> "Could not find asset with specified tumblr tag")
+        Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified tumblr tag")
       case Some(asset) =>
         intakeAllowed(asset) match {
           case true =>
-            Redirect(App.routes.Resources.intake(asset.id, 1))
+            Redirect(app.routes.Resources.intake(asset.id, 1))
           case false =>
             Ok(html.resources.list(Seq(asset)))
         }
@@ -199,7 +199,7 @@ trait Resources extends Controller {
   protected def findByMeta[A](query: List[(AssetMeta.Enum, String)])(implicit r: Request[A]) = {
     Asset.findByMeta(query) match {
       case Nil =>
-        Redirect(App.routes.Resources.index).flashing("message" -> "No results found")
+        Redirect(app.routes.Resources.index).flashing("message" -> "No results found")
       case r =>
         Ok(html.resources.list(r))
     }

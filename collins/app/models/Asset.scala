@@ -70,6 +70,7 @@ object Asset extends BasicQueries[Asset,Long] {
       ).executeUpdate()
     }
   }
+
   def findBySecondaryId(id: String): Option[Asset] = {
     val query = "select * from asset where secondary_id = {id}"
     PlayDB.withConnection(db) { implicit connection =>

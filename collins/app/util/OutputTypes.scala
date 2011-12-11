@@ -3,7 +3,7 @@ package util
 import play.api.mvc._
 import play.api.http.HeaderNames
 
-sealed abstract class OutputType()
+sealed abstract class OutputType(val contentType: String)
 object OutputType {
   def apply(request: Request[AnyContent]): Option[OutputType] = request match {
     case JsonOutput(req) => Some(JsonOutput())
@@ -13,7 +13,7 @@ object OutputType {
   }
 }
 
-class JsonOutput() extends OutputType {
+class JsonOutput() extends OutputType(JsonOutput.acceptValue) {
   override def toString() = "JsonOutput"
 }
 object JsonOutput extends OutputTypeExtractor {
@@ -30,7 +30,7 @@ object JsonOutput extends OutputTypeExtractor {
   }
 }
 
-class BashOutput() extends OutputType {
+class BashOutput() extends OutputType(BashOutput.acceptValue) {
   override def toString() = "BashOutput"
 }
 object BashOutput extends OutputTypeExtractor {
@@ -47,7 +47,7 @@ object BashOutput extends OutputTypeExtractor {
   }
 }
 
-class TextOutput() extends OutputType {
+class TextOutput() extends OutputType(TextOutput.acceptValue) {
   override def toString() = "TextOutput"
 }
 object TextOutput extends OutputTypeExtractor {

@@ -1,4 +1,4 @@
-package object App {
+package object app {
   import play.api.Play._
 
   val Resources: controllers.Resources = new controllers.Resources with controllers.SecureWebController

@@ -3,14 +3,14 @@
 # ~~~~
 
 # Home page
-GET     /                           App.Resources.index
+GET     /                           app.Resources.index
 
 # Resources/Assets
-GET     /resources                  App.Resources.find
-GET     /resource/:id               App.Resources.intake(id: Long, stage: Int ?= 1)
+GET     /resources                  app.Resources.find
+GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
 
 # Help
-GET     /help                       App.HelpPage.index(t: Int ?= controllers.Help.Default)
+GET     /help                       app.HelpPage.index(t: Int ?= controllers.Help.Default)
 
 # Authentication
 GET     /login                      controllers.Application.login
@@ -18,10 +18,7 @@ POST    /login                      controllers.Application.authenticate
 GET     /logout                     controllers.Application.logout
 
 # API
-GET     /api/authenticatedPing      App.Api.authenticatedPing
-GET     /api/authorizedPing         App.Api.authorizedPing
-GET     /api/noauthPing             App.Api.noauthPing
-POST    /api/asset/:tag             App.Api.asset(tag: String)
+POST    /api/asset/:tag             app.Api.asset(tag: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

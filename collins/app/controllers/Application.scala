@@ -32,7 +32,7 @@ object Application extends SecureWebController {
       },
       user => {
         val u = User.toMap(User.authenticate(user._1, user._2))
-        Redirect(App.routes.Resources.index).withSession(u.toSeq:_*)
+        Redirect(app.routes.Resources.index).withSession(u.toSeq:_*)
       }
     )
   }

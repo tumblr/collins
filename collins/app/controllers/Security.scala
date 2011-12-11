@@ -26,11 +26,12 @@ import org.apache.commons.codec.binary.Base64
 object SecureController {
   private[this] val logger = Logger.logger
 
-  def Authenticated[A](
+  def Authenticated(
     authenticate: RequestHeader => Option[User],
-    onUnauthorized: RequestHeader => Result,
-    hasRole: (User, Seq[String]) => Boolean)(action: Option[User] => Action[A])(implicit spec: SecuritySpecification): Action[(Action[A], A)] = {
-    val authenticatedBodyParser = BodyParser { request =>
+    onUnauthorized: Action[AnyContent],
+    hasRole: (User, Seq[String]) => Boolean)(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification): Action[AnyContent] = {
+    val newAction = Action { request =>
+    //val authenticatedBodyParser = BodyParser { request =>
       spec.isSecure match {
         case false =>
           logger.debug("No authentication required, processing action")
@@ -49,25 +50,19 @@ object SecureController {
                     getAction(Some(user), action, request)
                   case false =>
                     logger.debug("Credentials required and NOT found")
-                    Done(Left(onUnauthorized(request)), Input.Empty)
+                    onUnauthorized(request)
                 }
               }
             case None =>
               logger.debug("Auth required and NOT successful")
-              Done(Left(onUnauthorized(request)), Input.Empty)
+              onUnauthorized(request)
           }
       }
     }
-    Action(authenticatedBodyParser) { request =>
-      val (innerAction, innerBody) = request.body
-      innerAction(request.map(_ => innerBody))
-    }
+    newAction
   }
-  private def getAction[A](u: Option[User], a: Option[User] => Action[A], r: RequestHeader) = {
-    val innerAction = a(u)
-    innerAction.parser(r).mapDone { body =>
-      body.right.map(innerBody => (innerAction, innerBody))
-    }
+  private def getAction(u: Option[User], a: Option[User] => Action[AnyContent], r: Request[AnyContent]) = {
+   a(u)(r)
   }
 }
 
@@ -81,11 +76,11 @@ trait SecureController extends Controller {
   /** Authenticate a request, return a User if the request can be authenticated */
   protected def authenticate(request: RequestHeader): Option[User]
   /** Where to go if a request can't be authenticated */
-  protected def onUnauthorized(request: RequestHeader): Result = Unauthorized(views.html.defaultpages.unauthorized())
+  protected def onUnauthorized: Action[AnyContent]
 
   protected def getUser(request: RequestHeader): User
 
-  def Authenticated[A](action: Option[User] => Action[A])(implicit spec: SecuritySpecification) =
+  def Authenticated(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification) =
     SecureController.Authenticated(authenticate, onUnauthorized, hasRole)(action)
 
   def SecureAction(block: Request[AnyContent] => Result)(implicit spec: SecuritySpecification) =
@@ -99,8 +94,9 @@ trait SecureWebController extends SecureController {
 
   override protected def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
 
-  override def onUnauthorized(request: RequestHeader) =
+  override def onUnauthorized = Action { implicit request =>
     Results.Redirect(unauthorizedRoute).flashing(securityMessage(request))
+  }
 
   /** Use sessions storage for authenticate/etc */
   override def authenticate(request: RequestHeader) = User.fromMap(request.session.data) match {
@@ -119,7 +115,7 @@ trait SecureWebController extends SecureController {
 
 /** Used for API access, authenticates based on basic auth */
 trait SecureApiController extends SecureController {
-  override def onUnauthorized(request: RequestHeader) = {
+  override def onUnauthorized = Action { implicit request =>
     Results.Unauthorized(Txt("Invalid Username/Password specified"))
   }
 

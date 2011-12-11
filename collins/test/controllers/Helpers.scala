@@ -3,6 +3,7 @@ package controllers
 import models.{User, UserImpl}
 import play.api.mvc._
 import play.api.http.HeaderNames
+import play.api.templates.Txt
 
 trait SpecHelpers {
   case class MockRequest(
@@ -16,10 +17,13 @@ trait SpecHelpers {
   def getApi(user: Option[User]) = new Api with SecureController {
     override def authenticate(request: RequestHeader) = user
     override def getUser(request: RequestHeader) = user.get
+    override def onUnauthorized = Action { req =>
+      Results.Unauthorized(Txt("Invalid username/password specified"))
+    }
   }
   def getLoggedInUser(group: String) = Some(UserImpl("test", "*", Seq(group), 123, true))
 
-  def getRequest(req: MockRequest) = new Request[AnyContent] {
+  def getRequest(req: MockRequest): Request[AnyContent] = new Request[AnyContent] {
     def uri = req.uri
     def method = "GET"
     def queryString = req.queryString

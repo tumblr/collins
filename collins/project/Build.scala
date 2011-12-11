@@ -11,7 +11,7 @@ object ApplicationBuild extends Build {
       "org.bouncycastle" % "bcprov-jdk16" % "1.46"
     )
 
-    val main = PlayProject(appName, appVersion, appDependencies).settings(defaultScalaSettings:_*).settings(
+    val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
       // Add your own project settings here      
     )
 
