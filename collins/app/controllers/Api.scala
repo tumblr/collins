@@ -2,7 +2,7 @@ package controllers
 
 import play.api._
 import play.api.mvc._
-import models.Asset
+import models.{Asset, Model}
 import util._
 
 trait Api extends Controller {
@@ -23,6 +23,9 @@ trait Api extends Controller {
     Map.empty
   }
   private def createAsset(tag: String)(implicit req: Request[AnyContent]): Map[String,String] = {
+    Model.withTransaction { implicit con =>
+
+    }
     Map.empty
   }
   private def formatMap(tag: String, data: Map[String,String])(implicit req: Request[AnyContent]) = {

@@ -5,7 +5,7 @@ import play.api.mvc._
 import play.api.data._
 
 import models._
-import util.SecuritySpec
+import util.{AssetStateMachine, SecuritySpec}
 import util.Helpers.formatPowerPort
 import views._
 
@@ -93,6 +93,14 @@ trait Resources extends Controller {
    */
   protected def intakeStage4(asset: Asset)(implicit req: Request[AnyContent]) = {
     import AssetMeta.Enum._
+    def handleError(e: Throwable) = {
+      val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
+      val formWithErrors = intakeStage3Form(asset).bindFromRequest
+      val msg = "Error on host intake: %s".format(e.getMessage)
+      val flash = Flash(Map("error" -> msg))
+      logger.error(msg)
+      InternalServerError(html.resources.intake3(asset, chassis_tag, formWithErrors)(flash))
+    }
     intakeStage3Form(asset).bindFromRequest.fold(
       formWithErrors => {
         val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
@@ -100,13 +108,22 @@ trait Resources extends Controller {
       },
       success => success match {
         case(tag, position, portA, portB) => {
-          AssetMetaValue.create(AssetMetaValue(asset.id, RackPosition.id, position))
-          AssetMetaValue.create(AssetMetaValue(asset.id, PowerPort.id, portA))
-          AssetMetaValue.create(AssetMetaValue(asset.id, PowerPort.id, portB))
-          Asset.update(asset.copy(status = models.Status.Enum.Unallocated.id)) // FIXME
-          Redirect(app.routes.Resources.index).flashing(
-            "success" -> "Successfull intake of %s".format(asset.secondaryId)
-          )
+          val assetId = asset.getId
+          val values = List(
+            AssetMetaValue(assetId, RackPosition.id, position),
+            AssetMetaValue(assetId, PowerPort.id, portA),
+            AssetMetaValue(assetId, PowerPort.id, portB))
+          try {
+            Model.withTransaction { implicit conn =>
+              require(AssetMetaValue.create(values) == values.length)
+              AssetStateMachine(asset).update().executeUpdate()
+            }
+            Redirect(app.routes.Resources.index).flashing(
+              "success" -> "Successfull intake of %s".format(asset.secondary_id)
+            )
+          } catch {
+            case e: Throwable => handleError(e)
+          }
         }
       }
     )
@@ -139,13 +156,13 @@ trait Resources extends Controller {
             Ok(html.resources.intake3(asset, chassis_tag, intakeStage3Form(asset)))
           case false =>
             val msg = "Asset %s has chassis tag '%s', not '%s'".format(
-              asset.secondaryId, attrib.getValue, chassis_tag)
+              asset.secondary_id, attrib.getValue, chassis_tag)
             val flash = Flash(Map("error" -> msg))
             Ok(html.resources.intake2(asset)(flash))
         }
       }.getOrElse {
         val msg = "Asset %s does not have an associated chassis tag".format(
-          asset.secondaryId
+          asset.secondary_id
         )
         val flash = Flash(Map("error" -> msg))
         Ok(html.resources.intake2(asset)(flash))
@@ -154,7 +171,7 @@ trait Resources extends Controller {
   } catch {
     case e: IndexOutOfBoundsException =>
       val msg = "Asset %s has multiple chassis tags associated with it.".format(
-        asset.secondaryId
+        asset.secondary_id
       )
       val flash = Flash(Map("error" -> msg))
       logger.error(msg)
@@ -171,7 +188,7 @@ trait Resources extends Controller {
       case Some(asset) =>
         intakeAllowed(asset) match {
           case true =>
-            Redirect(app.routes.Resources.intake(asset.id, 1))
+            Redirect(app.routes.Resources.intake(asset.getId, 1))
           case false =>
             Ok(html.resources.list(Seq(asset)))
         }
@@ -180,7 +197,7 @@ trait Resources extends Controller {
 
   protected def intakeAllowed[A](asset: Asset)(implicit r: Request[A]): Boolean = {
     val isNew = asset.isNew
-    val rightType = asset.assetType == AssetType.Enum.ServerNode.id
+    val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
     val rightRole = hasRole(getUser(r), Seq("infra"))
     isNew && rightType && rightRole
   }

@@ -38,7 +38,7 @@ class AssetSpec extends DatabaseSpec {
       val asset = Asset.findById(1)
       asset must beSome[Asset]
       val _asset = asset.get
-      _asset.secondaryId mustEqual "tumblrtag1"
+      _asset.secondary_id mustEqual "tumblrtag1"
       _asset.getStatus.name mustEqual "New"
       _asset.getType.name mustEqual "Server Node"
       val attribs = _asset.getAttributes(Set(

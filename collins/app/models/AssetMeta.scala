@@ -1,35 +1,40 @@
 package models
 
 import anorm._
-import anorm.SqlParser._
+import anorm.defaults._
 import play.api.cache.Cache
 import play.api.Play.current
+import java.sql._
 
 case class AssetMeta(
-    pk: Pk[Long],
+    id: Pk[java.lang.Long],
     name: String,
     priority: Int,
     label: String,
     description: String)
-  extends BasicModel[Long]
-object AssetMeta extends BasicQueries[AssetMeta,Long] {
-  val tableName = "asset_meta"
-  val simple = {
-    get[Pk[Long]]("asset_meta.id") ~/
-    get[String]("asset_meta.name") ~/
-    get[Int]("asset_meta.priority") ~/
-    get[String]("asset_meta.label") ~/
-    get[String]("asset_meta.description") ^^ {
-      case id~name~priority~label~description => AssetMeta(id, name, priority, label, description)
-    }
+{
+  def getId(): Long = id.get
+}
+
+object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) with Dao[AssetMeta] {
+
+  def create(metas: Seq[AssetMeta])(implicit con: Connection): Seq[AssetMeta] = {
+    metas.foldLeft(List[AssetMeta]()) { case(list, meta) =>
+      if (meta.id.isDefined) throw new IllegalArgumentException("Use update, id already defined")
+      AssetMeta.create(meta) +: list
+    }.reverse
   }
 
-  def getViewable(): List[AssetMeta] = {
+  def findById(id: Long) = Model.withConnection { implicit con =>
+    AssetMeta.find("id={id}").on('id -> id).singleOption()
+  }
+
+  def getViewable(): Seq[AssetMeta] = {
     // change to use stuff in Enum
-    PlayDB.withConnection(db) { implicit connection =>
+    Model.withConnection { implicit connection =>
       Cache.get[List[AssetMeta]]("AssetMeta.getViewable").getOrElse {
         logger.debug("Cache miss for AssetMeta.getViewable")
-        val res = SQL("select * from asset_meta where priority > -1 order by priority asc").as(AssetMeta.simple *)
+        val res = AssetMeta.find("priority > -1 order by priority asc").list()
         Cache.set("AssetMeta.getViewable", res)
         res
       }

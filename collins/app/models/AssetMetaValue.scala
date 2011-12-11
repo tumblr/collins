@@ -1,14 +1,16 @@
 package models
 
 import anorm._
+import anorm.defaults._
 import anorm.SqlParser._
+import java.sql._
 
 /**
  * Provide a convenience wrapper on top of a row of meta/value data
  */
 case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
-  def getAssetId(): Long = _value.asset_id
-  def getMetaId(): Long = _meta.id
+  def getAssetId(): Long = _value.asset_id.id
+  def getMetaId(): Long = _meta.getId
   def getId(): (Long,Long) = (getAssetId(), getMetaId())
   def getName(): String = _meta.name
   def getNameEnum(): Option[AssetMeta.Enum] = try {
@@ -20,83 +22,57 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getValue(): String = _value.value
 }
 
-case class AssetMetaValue(asset_id: Long, meta_id: Long, value: String) {
+case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.lang.Long], value: String) {
   def getAsset(): Asset = {
-    Asset.findById(asset_id).get
+    Asset.findById(asset_id.id).get
   }
   def getMeta(): AssetMeta = {
-    AssetMeta.findById(meta_id).get
+    AssetMeta.findById(asset_meta_id.id).get
   }
 }
 
-object AssetMetaValue {
-  val tableName = "asset_meta_value"
-  val db = "collins"
-  val simple = {
-    get[Long]("asset_meta_value.asset_id") ~/
-    get[Long]("asset_meta_value.asset_meta_id") ~/
-    get[String]("asset_meta_value.value") ^^ {
-      case asset_id~asset_meta_id~meta_value => AssetMetaValue(asset_id, asset_meta_id, meta_value)
-    }
-  }
+object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) with Dao[AssetMetaValue] {
 
-  val withAssetMeta = AssetMetaValue.simple ~/ AssetMeta.simple ^^ {
-    case assetMetaValue~assetMeta => MetaWrapper(assetMeta, assetMetaValue)
-  }
+  def apply(asset_id: Long, asset_meta_id: Long, value: String) =
+    new AssetMetaValue(Id(asset_id), Id(asset_meta_id), value)
 
-  def create(mv: AssetMetaValue): Int = {
-    PlayDB.withConnection(db) { implicit con =>
-      SQL(
-        """
-          insert into asset_meta_value values (
-            {amv_aid}, {amv_amid}, {value}
-          )
-        """
-      ).on(
-        'amv_aid -> mv.asset_id,
-        'amv_amid -> mv.meta_id,
-        'value -> mv.value
-      ).executeUpdate()
+  def create(mvs: Seq[AssetMetaValue])(implicit con: Connection): Int = {
+    mvs.foldLeft(0) { case(count, mv) =>
+      AssetMetaValue.insert(mv) match {
+        case true => count + 1
+        case false => count
+      }
     }
   }
 
   def findOneByAssetId(spec: Set[AssetMeta.Enum], asset_id: Long): Seq[MetaWrapper] = {
     val query = """
-    select
-      *
-    from 
-      asset_meta, asset_meta_value
-    where
-      asset_meta_value.asset_id = {id}
-        and
-      asset_meta.id = asset_meta_value.asset_meta_id
+      select * from asset_meta am
+      join asset_meta_value amv on am.id = amv.asset_meta_id
+      where amv.asset_id = {id}
     """
-    val constraints = spec.map { e =>
-      "asset_meta_value.asset_meta_id = %d".format(e.id)
-    }.mkString(" or ")
-    val extra = constraints.isEmpty match {
+    val extra = spec.isEmpty match {
       case true => ""
-      case false => " and (%s)".format(constraints)
+      case false => " and amv.asset_meta_id in (%s)".format(spec.map { _.id }.mkString(","))
     }
     val finalQuery = query + extra
-    PlayDB.withConnection(db) { implicit connection =>
-      SQL(finalQuery).on('id -> asset_id).as(AssetMetaValue.withAssetMeta *)
+    Model.withConnection { implicit connection =>
+      SQL(finalQuery).on('id -> asset_id).as(AssetMetaValue ~< AssetMeta ^^ flatten *).map {
+        case (mv, m) => MetaWrapper(m, mv)
+      }
     }
   }
 
   def findAllByAssetId(id: Long): Seq[MetaWrapper] = {
     val query = """
-    select
-      *
-    from
-      asset_meta, asset_meta_value
-    where
-      asset_meta_value.asset_meta_id = asset_meta.id
-        and
-      asset_meta_value.asset_id = {id}
+      select * from asset_meta am
+      join asset_meta_value amv on am.id = amv.asset_meta_id
+      where amv.asset_id={id}
     """
-    PlayDB.withConnection(db) { implicit connection =>
-      SQL(query).on('id -> id).as(AssetMetaValue.withAssetMeta *)
+    Model.withConnection { implicit connection =>
+      SQL(query).on('id -> id).as(AssetMetaValue ~< AssetMeta ^^ flatten *).map {
+        case (mv, m) => MetaWrapper(m, mv)
+      }
     }
   }
 }

@@ -3,15 +3,15 @@
 @import util.notice
 @import helper._
 
-@main("Intake Step 2 - " + asset.secondaryId) {
+@main("Intake Step 2 - " + asset.secondary_id) {
 <div class="page-header">
-  <h1>Asset Intake Step 2 <small>Verify Chassis Tag for @asset.secondaryId</small></h1>
+  <h1>Asset Intake Step 2 <small>Verify Chassis Tag for @asset.secondary_id</small></h1>
 </div>
 <div class="row">
   <div class="span14">
     @notice("error")
     @notice("warning")
-    @form(app.routes.Resources.intake(asset.id, 3), 'class -> "form-stacked") {
+    @form(app.routes.Resources.intake(asset.getId, 3), 'class -> "form-stacked") {
     <div class="clearfix">
       <label for="CHASSIS_TAG"><strong>Scan the Chassis Tag</strong></label>
       <div class="input">

@@ -2,19 +2,22 @@
 
 @import helper._
 @import _root_.util.Helpers.formatPowerPort
+@import util.notice
 @import AssetMeta.Enum._
 
-@main("Intake Step 3 - " + asset.secondaryId) {
+@main("Intake Step 3 - " + asset.secondary_id) {
 <div class="page-header">
-  <h1>Asset Intake Step 3 <small>Verify Information for @asset.secondaryId</small></h1>
+  <h1>Asset Intake Step 3 <small>Verify Information for @asset.secondary_id</small></h1>
 </div>
 <div class="row">
   <div class="span10">
-    @form(app.routes.Resources.intake(asset.id, 4)) {
+    @notice("error")
+    @notice("warning")
+    @form(app.routes.Resources.intake(asset.getId, 4)) {
     <div class="clearfix">
       <label for="TUMBLR_TAG">Tumblr Tag</label>
       <div class="input">
-        <span id="TUMBLR_TAG" class="uneditable-input">@asset.secondaryId</span>
+        <span id="TUMBLR_TAG" class="uneditable-input">@asset.secondary_id</span>
       </div>
     </div>
     <div class="clearfix">
@@ -45,7 +48,7 @@
     </div>
     <div class="actions">
       <input type="submit" class="btn primary" value="Done &rarr;">
-      <a class="btn" href="@app.routes.Resources.intake(asset.id, 5)">Cancel</a>
+      <a class="btn" href="@app.routes.Resources.intake(asset.getId, 5)">Cancel</a>
     </div>
     }
   </div>
