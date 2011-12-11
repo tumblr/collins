@@ -9,7 +9,11 @@ trait Api extends Controller {
   this: SecureController =>
 
   implicit val securitySpec = SecuritySpec(isSecure = true, requiredCredentials = Nil)
+  val defaultOutputType = JsonOutput()
 
+  def asset(tag: String) = SecureAction { implicit req =>
+    Ok(tag)
+  }
   def authenticatedPing = SecureAction { implicit req =>
     Ok("You are logged in")
   }
@@ -24,6 +28,6 @@ trait Api extends Controller {
 
   def getOutputType(request: Request[AnyContent]): OutputType = OutputType(request) match {
     case Some(ot) => ot
-    case None => throw new Exception("WTF?")
+    case None => defaultOutputType
   }
 }

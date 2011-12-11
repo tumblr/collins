@@ -6,7 +6,7 @@ import play.api.test._
 import play.api.test.MockApplication._
 import play.api.db.evolutions._
 
-trait DatabaseSpec extends Specification {
+object DatabaseSpec {
   val dataSource = Map(
     "application.name" -> "mock app",
     "db.collins.driver" -> "org.h2.Driver",
@@ -14,10 +14,12 @@ trait DatabaseSpec extends Specification {
     "db.collins.user" -> "sa",
     "db.collins.password" -> "",
     "mock" -> "true")
+}
 
+trait DatabaseSpec extends Specification {
   def evolveDb = {
     OfflineEvolutions.applyScript(new java.io.File("."), getClass.getClassLoader, "collins")
-    val mockApp = injectGlobalMock(Nil, dataSource)
+    val mockApp = injectGlobalMock(Nil, DatabaseSpec.dataSource)
   }
   def devolveDb = {
     clearMock()

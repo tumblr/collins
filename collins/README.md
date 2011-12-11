@@ -6,8 +6,6 @@ run the application.
 
 ## Remaining TODO
 
- * Break action functionality out into traits/models
- * Add REST API for resources model
  * Parsing of lshw data
  * Password, IP Address generation
  * Log data/storage/search

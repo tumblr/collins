@@ -2,6 +2,7 @@ package controllers
 
 import models.{User, UserImpl}
 import play.api.mvc._
+import play.api.http.HeaderNames
 
 trait SpecHelpers {
   case class MockRequest(
@@ -27,6 +28,7 @@ trait SpecHelpers {
     def path = req.path
     def headers = new Headers {
       def getAll(key: String) = req.headers
+      def keys: Set[String] = Set(HeaderNames.ACCEPT)
     }
     def cookies = new Cookies {
       def get(name: String) = Some(Cookie(name="foo",value="yay"))
