@@ -45,8 +45,22 @@ CREATE TABLE asset_meta_value (
 CREATE INDEX amv_ids ON asset_meta_value (asset_id, asset_meta_id);
 CREATE INDEX amv_mid ON asset_meta_value (asset_meta_id);
 
+CREATE TABLE ipmi_info (
+  id                            BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  asset_id                      BIGINT NOT NULL UNIQUE,
+  username                      VARCHAR(64) NOT NULL,
+  password                      VARCHAR(90) NOT NULL,
+  gateway                       BIGINT NOT NULL,
+  address                       BIGINT NOT NULL UNIQUE,
+  netmask                       BIGINT NOT NULL,
+  CONSTRAINT fk_ipmi_aid        FOREIGN KEY (asset_id) REFERENCES asset (id) ON DELETE CASCADE
+);
+CREATE INDEX ipmi_gateway_idx ON ipmi_info (gateway);
+CREATE INDEX ipmi_netmask_idx ON ipmi_info (netmask);
+
 # --- !Downs
 
+DROP TABLE IF EXISTS ipmi_info;
 DROP TABLE IF EXISTS asset_meta_value;
 DROP TABLE IF EXISTS asset_meta;
 DROP TABLE IF EXISTS asset;

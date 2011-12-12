@@ -43,14 +43,14 @@ class AssetSpec extends DatabaseSpec {
 
       "findByMeta" in {
         val criteria = List(
-          AssetMeta.Enum.IpmiAddress -> "10.0.0.1"
+          AssetMeta.Enum.ChassisTag -> "chassis tag abc"
         )
         val assets = Asset.findByMeta(criteria)
         assets must haveSize(1)
         assets(0).getAttributes().foreach { attrib =>
           attrib.getNameEnum() match {
-            case AssetMeta.Enum.IpmiAddress =>
-              attrib.getValue() mustEqual "10.0.0.1"
+            case AssetMeta.Enum.ChassisTag =>
+              attrib.getValue() mustEqual "chassis tag abc"
             case _ =>
               // ignored
           }
@@ -75,7 +75,7 @@ class AssetSpec extends DatabaseSpec {
           _asset must beSome[Asset]
           val asset = _asset.get
           val attribs = asset.getAttributes()
-          attribs.size must be_>=(3)
+          attribs.size must be_>=(2)
         }
 
         "many" in {
@@ -87,11 +87,9 @@ class AssetSpec extends DatabaseSpec {
           asset.getType.name mustEqual "Server Node"
           val attribs = asset.getAttributes(Set(
             AssetMeta.Enum.ServiceTag,
-            AssetMeta.Enum.ChassisTag,
-            AssetMeta.Enum.IpmiAddress,
-            AssetMeta.Enum.Hostname))
+            AssetMeta.Enum.ChassisTag))
           attribs must not be empty
-          attribs must haveSize(4)
+          attribs must haveSize(2)
           attribs.foreach { attrib =>
             val enum = attrib.getNameEnum()
             enum must beSome
@@ -100,10 +98,6 @@ class AssetSpec extends DatabaseSpec {
                 attrib.getValue mustEqual "asset tag 123"
               case AssetMeta.Enum.ChassisTag =>
                 attrib.getValue mustEqual "chassis tag abc"
-              case AssetMeta.Enum.IpmiAddress =>
-                attrib.getValue mustEqual "10.0.0.1"
-              case AssetMeta.Enum.Hostname =>
-                attrib.getValue mustEqual "test.tumblr.test"
               case v =>
                 failure("Unexpected value " + v)
             }

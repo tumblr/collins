@@ -1,6 +1,7 @@
 package util
 
 import models.{Asset, Status}
+import java.util.Date
 import java.sql._
 
 object AssetStateMachine {
@@ -55,7 +56,7 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
   }
 
   def executeUpdate()(implicit con: Connection) = transition("executeUpdate") {
-    case _ => Asset.update(asset.copy(status = stateToStatus().id))
+    case _ => Asset.update(asset.copy(status = stateToStatus().id, updated = Some(new Date())))
   }
 
   private def stateToStatus() = state match {

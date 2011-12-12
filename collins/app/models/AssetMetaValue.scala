@@ -39,8 +39,7 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) wi
   def create(mvs: Seq[AssetMetaValue])(implicit con: Connection): Int = {
     mvs.foldLeft(0) { case(count, mv) =>
       AssetMetaValue.insert(mv) match {
-        case true => count + 1
-        case false => count
+        case _ => count + 1
       }
     }
   }

@@ -115,7 +115,9 @@ trait Resources extends Controller {
             AssetMetaValue(assetId, PowerPort.id, portB))
           try {
             Model.withTransaction { implicit conn =>
-              require(AssetMetaValue.create(values) == values.length)
+              val created = AssetMetaValue.create(values)
+              require(created == values.length,
+                "Should have had %d values, had %d".format(values.length, created))
               AssetStateMachine(asset).update().executeUpdate()
             }
             Redirect(app.routes.Resources.index).flashing(

@@ -3,16 +3,16 @@ package util
 import org.specs2.mutable._
 
 object CodecSpec extends Specification {
-  val username = "blake"
-  val password = "hello:world"
+  val username = "host-xyz123456-1937-1955-1394.dfw01.tumblr.net"
+  val password = "hello:world:foofa:blahh:"
 
   val cryptoCodec = CryptoCodec(CryptoCodec.randomString(23))
 
   "The Crypto Codec" should {
     "generate random strings" >> {
-      val passwords = (1 to 100).map { _ => CryptoCodec.randomString(13) }
+      val passwords = (1 to 100).map { _ => CryptoCodec.randomString(14) }
       passwords must have size(100)
-      passwords.foreach { _ must have size(13) }
+      passwords.foreach { _ must have size(14) }
       passwords.distinct must have size(100)
     }
     "encode" >> {

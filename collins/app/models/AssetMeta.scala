@@ -45,14 +45,9 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) with Dao[AssetMeta
   object Enum extends Enumeration(1) {
     val ServiceTag = Value("SERVICE_TAG")
     val ChassisTag = Value("CHASSIS_TAG")
-    val IpAddress = Value("IP_ADDRESS")
-    val IpmiAddress = Value("IPMI_ADDRESS")
-    val Hostname = Value("HOSTNAME")
-    val MacAddress = Value("MAC_ADDRESS")
     val RackPosition = Value("RACK_POSITION")
     val PowerPort = Value("POWER_PORT")
     val SwitchPort = Value("SWITCH_PORT")
-    val IpmiCredentials = Value("IPMI_CREDENTIALS")
   }
 }
 

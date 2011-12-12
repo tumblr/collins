@@ -13,6 +13,10 @@ import org.bouncycastle.crypto.paddings.{PaddedBufferedBlockCipher, PKCS7Padding
 import org.bouncycastle.crypto.params.ParametersWithIV
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 
+trait CryptoAccessor {
+  def getCryptoKey(): String
+}
+
 object CryptoCodec {
   def apply(key: String) = new CryptoCodec(key)
   private val allowedChars = Vector(
@@ -30,8 +34,6 @@ class CryptoCodec(privateKey: String, saltSize: Int = 8, iterations: Int = 100) 
   private val secretKey = privateKey.toArray
 
   protected def combiner(values: String*) = values.mkString(":")
-  protected def splitter(value: String) = value.split(":")
-
 
   protected def createSalt(size: Int): Array[Byte] = {
     val salt = new Array[Byte](size)
@@ -43,13 +45,10 @@ class CryptoCodec(privateKey: String, saltSize: Int = 8, iterations: Int = 100) 
   object Decode {
     def toUsernamePassword(value: String): Option[(String,String)] = {
       apply(value).flatMap { decoded =>
-        decoded.split(":").toList match {
-          case Nil =>
-            None
-          case head :: Nil =>
-            None
-          case first :: last =>
-            Some((first, last.mkString(":")))
+        decoded.split(":", 2).toList match {
+          case username :: password :: Nil =>
+            Some((username, password))
+          case _ => None
         }
       }
     }

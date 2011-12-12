@@ -2,7 +2,7 @@ package controllers
 
 import play.api._
 import play.api.mvc._
-import models.{Asset, Model}
+import models.{Asset, AssetMeta, AssetType, IpmiInfo, Model, Status => AStatus}
 import util._
 
 trait Api extends Controller {
@@ -23,11 +23,20 @@ trait Api extends Controller {
     Map.empty
   }
   private def createAsset(tag: String)(implicit req: Request[AnyContent]): Map[String,String] = {
+    import IpmiInfo.Enum._
     Model.withTransaction { implicit con =>
-
+      val asset = Asset.create(Asset(tag, AStatus.Enum.Incomplete, AssetType.Enum.ServerNode))
+      val ipmi = IpmiInfo(asset)
+      Map(
+        IpmiAddress.toString -> ipmi.dottedAddress,
+        IpmiGateway.toString -> ipmi.dottedGateway,
+        IpmiNetmask.toString -> ipmi.dottedNetmask,
+        IpmiUsername.toString -> ipmi.username,
+        IpmiPassword.toString -> ipmi.decryptedPassword
+      )
     }
-    Map.empty
   }
+
   private def formatMap(tag: String, data: Map[String,String])(implicit req: Request[AnyContent]) = {
     getOutputType(req) match {
       case o: TextOutput =>

@@ -13,6 +13,9 @@ object DatabaseSpec {
     "db.collins.url" -> "jdbc:h2:mem:play",
     "db.collins.user" -> "sa",
     "db.collins.password" -> "",
+    "crypto.key" -> "foobarbaz",
+    "ipmi.gateway" -> "10.0.0.1",
+    "ipmi.netmask" -> "255.255.224.0",
     "mock" -> "true")
 }
 

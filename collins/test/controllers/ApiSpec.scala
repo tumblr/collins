@@ -16,6 +16,7 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       val request = getRequest(MockRequest(path = "/api/asset/foo.txt"))
       val result = api.asset("foo").apply(request)
       val extracted = Extract.from(result)
+      println(extracted)
       extracted._1 must equalTo(200)
     }
   }
