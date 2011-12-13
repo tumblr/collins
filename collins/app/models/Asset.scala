@@ -13,7 +13,9 @@ case class Asset(
     asset_type: Int,
     created: Date, updated: Option[Date], deleted: Option[Date])
 {
-  require(secondary_id != null && secondary_id.length > 0)
+  require(secondary_id != null && secondary_id.length > 0, "Secondary id must not be empty")
+  require(Asset.SecondaryId(secondary_id).matches, "Secondary id must be alpha numeric")
+
   def getId(): Long = id.get
   def isNew(): Boolean = {
     status == models.Status.Enum.New.id
@@ -44,6 +46,8 @@ case class Asset(
 }
 
 object Asset extends Magic[Asset](Some("asset")) with Dao[Asset] {
+
+  val SecondaryId = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
 
   def apply(secondary_id: String, status: Status.Enum, asset_type: AssetType.Enum) = {
     new Asset(NotAssigned, secondary_id, status.id, asset_type.id, new Date(), None, None)

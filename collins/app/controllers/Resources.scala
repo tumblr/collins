@@ -20,10 +20,10 @@ trait Resources extends Controller {
   }
 
   /**
-   * Find assets by query parameters, special care for TUMBLR_TAG
+   * Find assets by query parameters, special care for ASSET_TAG
    */
   def find = SecureAction { implicit req =>
-    Form("TUMBLR_TAG" -> requiredText).bindFromRequest.fold(
+    Form("ASSET_TAG" -> requiredText).bindFromRequest.fold(
       noTag => rewriteQuery(req) match {
         case Nil =>
           Redirect(app.routes.Resources.index).flashing(
@@ -31,9 +31,9 @@ trait Resources extends Controller {
           )
         case q => findByMeta(q)
       },
-      tumblr_tag => {
-        logger.debug("Tumblr Tag: " + tumblr_tag)
-        findBySecondaryId(tumblr_tag)
+      asset_tag => {
+        logger.debug("Got asset tag: " + asset_tag)
+        findBySecondaryId(asset_tag)
       }
     )
   }
@@ -181,12 +181,12 @@ trait Resources extends Controller {
   }
 
   /**
-   * Given a secondary_id (tumblr tag), find the associated asset
+   * Given a secondary_id (asset tag), find the associated asset
    */
   protected def findBySecondaryId[A](id: String)(implicit r: Request[A]) = {
     Asset.findBySecondaryId(id) match {
       case None =>
-        Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified tumblr tag")
+        Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified asset tag")
       case Some(asset) =>
         intakeAllowed(asset) match {
           case true =>

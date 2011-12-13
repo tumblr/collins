@@ -1,9 +1,11 @@
 package controllers
 
 import play.api._
+import play.api.data._
 import play.api.mvc._
 import models.{Asset, AssetMeta, AssetType, IpmiInfo, Model, Status => AStatus}
 import util._
+import java.io.File
 
 trait Api extends Controller {
   this: SecureController =>
@@ -14,15 +16,28 @@ trait Api extends Controller {
   val defaultOutputType = JsonOutput()
 
   def asset(tag: String) = SecureAction { implicit req =>
-    val responseData = Asset.findBySecondaryId(tag) match {
-      case Some(asset) => updateAsset(asset)
-      case None => createAsset(tag)
+    val responseData = tag.isEmpty match {
+      case true => ResponseData(BadRequest, Map("Details" -> "Empty tag specified"))
+      case false => Asset.findBySecondaryId(tag) match {
+        case Some(asset) => updateAsset(asset)
+        case None => createAsset(tag)
+      }
     }
     formatResponseData(tag, responseData)
   }
 
   private def updateAsset(asset: Asset)(implicit req: Request[AnyContent]): ResponseData = {
-    ResponseData(NotImplemented, Map.empty)
+    req.body match {
+      case b if b.asMultipartFormData.isDefined =>
+        val parts = b.asMultipartFormData.get.asUrlFormEncoded
+        val lshw = parts.get("lshw").map { data =>
+          println(scala.xml.XML.loadString(data.head) \\ "@id")
+        }
+        ResponseData(NotImplemented, Map("Details" -> "In progress"))
+      case n =>
+        println(n)
+        ResponseData(BadRequest, Map("Details" -> "Expected file uploads"))
+    }
   }
 
   private def createAsset(tag: String)(implicit req: Request[AnyContent]): ResponseData = {
@@ -38,7 +53,7 @@ trait Api extends Controller {
           IpmiUsername.toString -> ipmi.username,
           IpmiPassword.toString -> ipmi.decryptedPassword,
           "ASSET_STATUS" -> "Incomplete",
-          "TUMBLR_TAG" -> tag
+          "ASSET_TAG" -> tag
         ))
       }
     } catch {
