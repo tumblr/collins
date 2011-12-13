@@ -13,11 +13,11 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
 
   "The API" should {
     "Support Basic Auth" >> {
-      val request = getRequest(MockRequest(path = "/api/asset/foo.txt"))
+      val request = getRequest(MockRequest(path = "/api/asset/foo.sh"))
       val result = api.asset("foo").apply(request)
       val extracted = Extract.from(result)
       println(extracted)
-      extracted._1 must equalTo(200)
+      extracted._1 must equalTo(201)
     }
   }
 

@@ -1,6 +1,6 @@
 package util
 
-import models.{Asset, Status}
+import models.{Asset, IpmiInfo, Status}
 import java.util.Date
 import java.sql._
 
@@ -21,6 +21,12 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
   case class DecommissionedState() extends AssetState(Decommissioned)
 
   state = statusToState()
+
+  def decommission() = transition("decommission") {
+    case CancelledState() =>
+      state = DecommissionedState()
+      this
+  }
 
   def cancel() = transition("cancel") {
     case NewState() =>
@@ -50,13 +56,14 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
     case AllocatedState() =>
       state = UnallocatedState()
       this
-    case CancelledState() =>
-      state = DecommissionedState()
-      this
   }
 
   def executeUpdate()(implicit con: Connection) = transition("executeUpdate") {
-    case _ => Asset.update(asset.copy(status = stateToStatus().id, updated = Some(new Date())))
+    case DecommissionedState() =>
+      Asset.update(asset.copy(status = stateToStatus().id, updated = Some(new Date())))
+      IpmiInfo.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
+    case _ =>
+      Asset.update(asset.copy(status = stateToStatus().id, updated = Some(new Date())))
   }
 
   private def stateToStatus() = state match {

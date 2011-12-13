@@ -44,7 +44,7 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) with Dao[IpmiInfo] {
 
   protected def createNewIpmiInfo(asset: Asset)(implicit con: Connection): IpmiInfo = {
     val assetId = asset.getId
-    val (gateway, address, netmask) = getNextAddress()
+    val (gateway, address, netmask) = getAddress()
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
     val ipmiInfo = IpmiInfo(
@@ -53,11 +53,16 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) with Dao[IpmiInfo] {
     IpmiInfo.create(ipmiInfo)
   }
 
-  protected def getNextAddress(): Tuple3[Long,Long,Long] = {
+  protected def getAddress()(implicit con: Connection): Tuple3[Long,Long,Long] = {
     val gateway: Long = getGateway()
-    val address: Long = 0
     val netmask: Long = getNetmask()
+    val address: Long = getNextAvailableAddress(netmask)
     (gateway, address, netmask)
+  }
+
+  protected def getNextAvailableAddress(netmask: Long)(implicit con: Connection): Long = {
+    val currentMax = IpmiInfo.find("select max(address) as address from ipmi_info").as(scalar[Long])
+    IpAddress.nextAvailableAddress(currentMax, netmask)
   }
 
   protected def getGateway(): Long = {

@@ -29,6 +29,17 @@ class IpAddressSpec extends Specification with DataTables {
       }
     }
 
+    "handle basic nextAvailableAddress functionality" >> {
+      "initial address" || "expected next address" |
+      "10.0.0.1"        !! "10.0.0.2"              |
+      "10.0.0.254"      !! "10.0.1.2"              |> {
+      (initial,expected) =>
+        val initialAsLong = IpAddress.toLong(initial)
+        val next = IpAddress.nextAvailableAddress(initialAsLong, 0)
+        next mustEqual(IpAddress.toLong(expected))
+      }
+    }
+
   } // IpAddress conversions should
 
 }

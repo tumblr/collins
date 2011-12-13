@@ -27,7 +27,7 @@ INSERT INTO asset_meta VALUES (5, 'SWITCH_PORT', 4, 'Switch Port', 'Switch port 
 INSERT INTO asset VALUES (1, 'tumblrtag1', 1, 1, CURRENT_TIMESTAMP, null, null);
 
 -- gateway 10.0.0.1, ip address 10.0.0.2, netmask /19 = 255.255.224.0
-INSERT INTO ipmi_info VALUES(1, 1, 'test-user', '', 167772161, 167772161, 4294959104);
+INSERT INTO ipmi_info VALUES(1, 1, 'test-user', '', 167772161, 167772162, 4294959104);
 
 INSERT INTO asset_meta_value VALUES(1, 1, 'asset tag 123');
 INSERT INTO asset_meta_value VALUES(1, 2, 'chassis tag abc');
