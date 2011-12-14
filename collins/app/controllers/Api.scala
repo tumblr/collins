@@ -31,11 +31,9 @@ trait Api extends Controller {
       case b if b.asMultipartFormData.isDefined =>
         val parts = b.asMultipartFormData.get.asUrlFormEncoded
         val lshw = parts.get("lshw").map { data =>
-          println(scala.xml.XML.loadString(data.head) \\ "@id")
         }
         ResponseData(NotImplemented, Map("Details" -> "In progress"))
       case n =>
-        println(n)
         ResponseData(BadRequest, Map("Details" -> "Expected file uploads"))
     }
   }

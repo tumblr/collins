@@ -1,6 +1,8 @@
 package util
 
 import models.{Asset, IpmiInfo, Status}
+
+import com.twitter.util.StateMachine
 import java.util.Date
 import java.sql._
 
@@ -80,25 +82,5 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
     case Maintenance => MaintenanceState()
     case Decommissioned => DecommissionedState()
     case e => throw new IllegalStateException("Unknown asset status found: " + e)
-  }
-}
-
-object StateMachine {
-  case class InvalidStateTransition(fromState: String, command: String) extends
-    Exception("Transitioning from " + fromState + " via command " + command)
-}
-
-trait StateMachine {
-  import StateMachine._
-
-  protected abstract class State
-  protected var state: State = _
-
-  protected def transition[A](command: String)(f: PartialFunction[State, A]) = synchronized {
-    if (f.isDefinedAt(state)) {
-      f(state)
-    } else {
-      throw new InvalidStateTransition(state.toString, command)
-    }
   }
 }
