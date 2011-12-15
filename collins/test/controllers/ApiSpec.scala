@@ -2,6 +2,7 @@ package controllers
 
 import models._
 import org.specs2.mutable._
+import play.api.json._
 import play.api.libs.Files._
 import play.api.mvc._
 import play.api.mvc.MultipartFormData._
@@ -31,13 +32,15 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       }
       "Support a multi-step intake" >> {
         val assetId = "testAsset123"
-        val assetUrl = "/api/asset/%s.txt".format(assetId)
+        val assetUrl = "/api/asset/%s.json".format(assetId)
         "Step 1 - Intake Started" >> {
           val request = getRequest(MockRequest(path = assetUrl, method = "PUT"))
           val result = Extract.from(api.createAsset(assetId).apply(request))
-          println(result)
           result._1 mustEqual(201)
-          result._3 must contain("Incomplete")
+          val jsonResponse = parseJson(result._3)
+          jsonResponse \ "ASSET" must haveClass[JsObject]
+          (jsonResponse \ "ASSET" \ "STATUS").valueAs[String] mustEqual("Incomplete")
+          jsonResponse \ "IPMI" must haveClass[JsObject]
         }
         "Step 2 - Intake Finished" >> {
           val lshwData = getResource("lshw-basic.xml")
@@ -48,14 +51,18 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
           val body = AnyContentAsMultipartFormData(mdf)
           val request = getRequest(MockRequest(path = assetUrl, body = body, method = "POST"))
           val result = Extract.from(api.updateAsset(assetId).apply(request))
-          println(result)
           result._1 mustEqual(200)
+          val jsonResponse = parseJson(result._3)
+          jsonResponse \ "SUCCESS" must haveClass[JsBoolean]
+          (jsonResponse \ "SUCCESS").valueAs[Boolean] must beTrue
         }
         "Step 3 - Review Intake Data" >> {
-          val req = getRequest(MockRequest(path = "/api/asset/%s.txt".format(assetId)))
+          val req = getRequest(MockRequest(path = "/api/asset/%s.json".format(assetId)))
           val res = Extract.from(api.findAssetWithMetaValues(assetId).apply(req))
-          println(res)
           res._1 mustEqual(200)
+          val jsonResponse = parseJson(res._3)
+          jsonResponse \ "ASSET" must haveClass[JsObject]
+          (jsonResponse \ "ASSET" \ "STATUS").valueAs[String] mustEqual "New"
         }
       }
     }

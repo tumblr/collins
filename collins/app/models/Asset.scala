@@ -3,7 +3,7 @@ package models
 import anorm._
 import anorm.defaults._
 
-import util.LshwRepresentation
+import util.{Helpers, LshwRepresentation}
 
 import java.util.Date
 import java.sql._
@@ -16,6 +16,15 @@ case class Asset(
     created: Date, updated: Option[Date], deleted: Option[Date])
 {
   require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
+
+  def toMap(): Map[String,String] = Map(
+    "ID" -> getId().toString,
+    "TAG" -> tag,
+    "STATUS" -> getStatus().name,
+    "TYPE" -> getType().name,
+    "CREATED" -> Helpers.dateFormat(created),
+    "UPDATED" -> updated.map { Helpers.dateFormat(_) }.getOrElse("")
+  )
 
   def getId(): Long = id.get
   def isNew(): Boolean = {

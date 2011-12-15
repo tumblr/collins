@@ -2,27 +2,11 @@ package controllers
 
 import models.{Status => AStatus}
 import models._
-import util.{Helpers, LshwParser}
+import util.{AssetStateMachine, Helpers, LshwParser}
 
 import play.api.data._
 import play.api.mvc._
 import play.api.json._
-
-object AssetApiProtocol {
-  implicit object AssetFormat extends Format[Asset] {
-    def writes(o: Asset): JsValue = JsObject(Map(
-      "id" -> JsNumber(o.getId),
-      "tag" -> JsString(o.tag),
-      "status" -> JsString(o.getStatus.name),
-      "type" -> JsString(o.getType.name)
-    ))
-    def reads(json: JsValue): Asset = Asset(
-      (json \ "tag").as[String],
-      AStatus.Enum.withName((json \ "status").as[String]),
-      AssetType.Enum.withName((json \ "type").as[String])
-    )
-  }
-}
 
 trait AssetApi {
   this: Api with SecureController =>
@@ -32,9 +16,12 @@ trait AssetApi {
   // GET /api/asset/:tag
   def findAssetWithMetaValues(tag: String) = SecureAction { implicit req =>
     val responseData = withAssetFromTag(tag) { asset =>
-      ResponseData(Ok, JsObject(AssetMetaValue.findAllByAssetId(asset.getId).map { wrap =>
+      val assetAsMap = assetToJsMap(asset)
+      val attribsObj = JsObject(AssetMetaValue.findAllByAssetId(asset.getId).map { wrap =>
         "%s_%d".format(wrap.getName, wrap.getGroupId) -> JsString(wrap.getValue)
-      }.toMap))
+      }.toMap)
+      val attribMap = Map("ATTRIBS" -> attribsObj)
+      ResponseData(Ok, JsObject(assetAsMap ++ attribMap))
     }
     formatResponseData(responseData)
   }
@@ -101,6 +88,7 @@ trait AssetApi {
         Model.withTransaction { implicit con =>
           LshwHelper.updateAsset(asset, lshwRep) match {
             case true =>
+              AssetStateMachine(asset).update().executeUpdate()
               ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(true))))
             case false =>
               getErrorMessage("Error saving values", InternalServerError)
@@ -119,9 +107,15 @@ trait AssetApi {
   }
 
   private def getCreateMessage(asset: Asset, ipmi: IpmiInfo): JsObject = {
-    JsObject((ipmi.toMap() ++ Map(
-      "ASSET_STATUS" -> asset.getStatus().name,
-      "ASSET_TAG" -> asset.tag
-    )).map { case(k,v) => k -> JsString(v) })
+    val assetAsMap = assetToJsMap(asset)
+    val ipmiAsMap = ipmi.toMap().map { case(k,v) =>
+      k -> JsString(v)
+    }
+    JsObject(assetAsMap ++ Map("IPMI" -> JsObject(ipmiAsMap)))
   }
+
+  private def assetToJsMap(asset: Asset) = Map("ASSET" -> JsObject(asset.toMap().map { case(k,v) =>
+    k -> JsString(v)
+  }))
+
 }
