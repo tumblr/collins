@@ -11,7 +11,7 @@ import java.io.File
 trait Api extends Controller with AssetApi {
   this: SecureController =>
 
-  case class ResponseData(status: Status, data: Map[String,String])
+  case class ResponseData(status: Status, data: JsObject)
 
   protected implicit val securitySpec = SecuritySpec(isSecure = true, Seq("infra"))
   protected val defaultOutputType = JsonOutput()
@@ -19,16 +19,32 @@ trait Api extends Controller with AssetApi {
   protected def formatResponseData(response: ResponseData)(implicit req: Request[AnyContent]) = {
     getOutputType(req) match {
       case o: TextOutput =>
-        response.status(response.data.mkString("\n")).as(o.contentType)
+        response.status(response.data.value.map { case(k, v) =>
+          k + "\t" + (v match {
+            case JsNull => "null"
+            case JsUndefined(error) => error
+            case JsBoolean(value) => value.toString
+            case JsNumber(number) => number.toString
+            case JsString(s) => s
+            case o => throw new IllegalArgumentException("Unsupported js type: " + o.getClass)
+          })
+        }.mkString("\n")).as(o.contentType)
       case o: BashOutput =>
-        response.status(response.data.map { case(k, v) =>
-          "%s=%s".format(k,v)
+        response.status(response.data.value.map { case(k, v) =>
+          "%s=%s;".format(k, (v match {
+            case JsNull => ""
+            case JsUndefined(error) => "\"%s\"".format(error)
+            case JsBoolean(value) => value match {
+              case true => "1"
+              case false => "0"
+            }
+            case JsNumber(number) => number.toString
+            case JsString(s) => "\"%s\"".format(s)
+            case o => throw new IllegalArgumentException("Unsupported js type: " + o.getClass)
+          }))
         }.mkString("\n") + "\n").as(o.contentType)
       case o: JsonOutput =>
-        val jsonMap = JsObject(response.data.map { case(k, v) =>
-          (k -> JsString(v))
-        })
-        response.status(stringify(jsonMap)).as(o.contentType)
+        response.status(stringify(response.data)).as(o.contentType)
     }
   }
 

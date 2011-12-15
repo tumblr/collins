@@ -32,9 +32,9 @@ trait AssetApi {
   // GET /api/asset/:tag
   def findAssetWithMetaValues(tag: String) = SecureAction { implicit req =>
     val responseData = withAssetFromTag(tag) { asset =>
-      ResponseData(Ok, AssetMetaValue.findAllByAssetId(asset.getId).map { wrap =>
-        "%s_%d".format(wrap.getName, wrap.getGroupId) -> wrap.getValue
-      }.toMap)
+      ResponseData(Ok, JsObject(AssetMetaValue.findAllByAssetId(asset.getId).map { wrap =>
+        "%s_%d".format(wrap.getName, wrap.getGroupId) -> JsString(wrap.getValue)
+      }.toMap))
     }
     formatResponseData(responseData)
   }
@@ -101,7 +101,7 @@ trait AssetApi {
         Model.withTransaction { implicit con =>
           LshwHelper.updateAsset(asset, lshwRep) match {
             case true =>
-              ResponseData(Ok, Map("SUCCESS" -> "true"))
+              ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(true))))
             case false =>
               getErrorMessage("Error saving values", InternalServerError)
           }
@@ -115,13 +115,13 @@ trait AssetApi {
   }
 
   private def getErrorMessage(msg: String, status: Status = BadRequest) = {
-    ResponseData(status, Map("ERROR_DETAILS" -> msg))
+    ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
   }
 
-  private def getCreateMessage(asset: Asset, ipmi: IpmiInfo): Map[String,String] = {
-    ipmi.toMap() ++ Map(
+  private def getCreateMessage(asset: Asset, ipmi: IpmiInfo): JsObject = {
+    JsObject((ipmi.toMap() ++ Map(
       "ASSET_STATUS" -> asset.getStatus().name,
       "ASSET_TAG" -> asset.tag
-    )
+    )).map { case(k,v) => k -> JsString(v) })
   }
 }

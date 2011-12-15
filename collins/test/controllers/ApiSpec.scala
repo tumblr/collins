@@ -31,13 +31,13 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       }
       "Support a multi-step intake" >> {
         val assetId = "testAsset123"
-        val assetUrl = "/api/asset/%s.sh".format(assetId)
+        val assetUrl = "/api/asset/%s.txt".format(assetId)
         "Step 1 - Intake Started" >> {
           val request = getRequest(MockRequest(path = assetUrl, method = "PUT"))
           val result = Extract.from(api.createAsset(assetId).apply(request))
           println(result)
           result._1 mustEqual(201)
-          result._3 must contain("ASSET_STATUS=Incomplete")
+          result._3 must contain("Incomplete")
         }
         "Step 2 - Intake Finished" >> {
           val lshwData = getResource("lshw-basic.xml")
@@ -52,7 +52,7 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
           result._1 mustEqual(200)
         }
         "Step 3 - Review Intake Data" >> {
-          val req = getRequest(MockRequest(path = "/api/asset/%s.sh".format(assetId)))
+          val req = getRequest(MockRequest(path = "/api/asset/%s.txt".format(assetId)))
           val res = Extract.from(api.findAssetWithMetaValues(assetId).apply(req))
           println(res)
           res._1 mustEqual(200)
