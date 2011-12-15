@@ -10,13 +10,12 @@ import java.sql._
 
 case class Asset(
     id: Pk[java.lang.Long],
-    secondary_id: String,
+    tag: String,
     status: Int,
     asset_type: Int,
     created: Date, updated: Option[Date], deleted: Option[Date])
 {
-  require(secondary_id != null && secondary_id.length > 0, "Secondary id must not be empty")
-  require(Asset.SecondaryId(secondary_id).matches, "Secondary id must be alpha numeric")
+  require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
 
   def getId(): Long = id.get
   def isNew(): Boolean = {
@@ -49,10 +48,13 @@ case class Asset(
 
 object Asset extends Magic[Asset](Some("asset")) with Dao[Asset] {
 
-  val SecondaryId = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
+  private[this] val TagR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
+  def isValidTag(tag: String): Boolean = {
+    tag != null && tag.nonEmpty && TagR(tag).matches
+  }
 
-  def apply(secondary_id: String, status: Status.Enum, asset_type: AssetType.Enum) = {
-    new Asset(NotAssigned, secondary_id, status.id, asset_type.id, new Date(), None, None)
+  def apply(tag: String, status: Status.Enum, asset_type: AssetType.Enum) = {
+    new Asset(NotAssigned, tag, status.id, asset_type.id, new Date(), None, None)
   }
 
   def create(assets: Seq[Asset])(implicit con: Connection): Seq[Asset] = {
@@ -65,8 +67,8 @@ object Asset extends Magic[Asset](Some("asset")) with Dao[Asset] {
   def findById(id: Long): Option[Asset] = Model.withConnection { implicit con =>
     Asset.find("id={id}").on('id -> id).singleOption()
   }
-  def findBySecondaryId(id: String): Option[Asset] = Model.withConnection { implicit con =>
-    Asset.find("secondary_id={id}").on('id -> id).first()
+  def findByTag(tag: String): Option[Asset] = Model.withConnection { implicit con =>
+    Asset.find("tag={tag}").on('tag -> tag).first()
   }
 
   def findByMeta(list: Seq[(AssetMeta.Enum,String)]): Seq[Asset] = {

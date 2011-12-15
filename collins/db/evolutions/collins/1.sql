@@ -13,7 +13,7 @@ CREATE TABLE asset_type (
 );
 CREATE TABLE asset (
   id                            BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  secondary_id                  VARCHAR(255) NOT NULL UNIQUE,
+  tag                           VARCHAR(255) NOT NULL UNIQUE,
   status                        INTEGER NOT NULL,
   asset_type                    INTEGER NOT NULL,
   created                       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

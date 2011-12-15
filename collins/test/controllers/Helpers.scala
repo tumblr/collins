@@ -11,7 +11,8 @@ trait SpecHelpers {
     queryString: Map[String,Seq[String]] = Map.empty,
     body: AnyContent = AnyContentAsEmpty,
     path: String = "/api/fizz",
-    headers: Seq[String] = Seq.empty
+    headers: Seq[String] = Seq.empty,
+    method: String = "GET"
   )
 
   def getApi(user: Option[User]) = new Api with SecureController {
@@ -25,7 +26,7 @@ trait SpecHelpers {
 
   def getRequest(req: MockRequest): Request[AnyContent] = new Request[AnyContent] {
     def uri = req.uri
-    def method = "GET"
+    def method = req.method
     def queryString = req.queryString
     def body = req.body
     def username = Some("testuser")

@@ -5,9 +5,9 @@
 @import util.notice
 @import AssetMeta.Enum._
 
-@main("Intake Step 3 - " + asset.secondary_id) {
+@main("Intake Step 3 - " + asset.tag) {
 <div class="page-header">
-  <h1>Asset Intake Step 3 <small>Verify Information for @asset.secondary_id</small></h1>
+  <h1>Asset Intake Step 3 <small>Verify Information for @asset.tag</small></h1>
 </div>
 <div class="row">
   <div class="span10">
@@ -17,7 +17,7 @@
     <div class="clearfix">
       <label for="ASSET_TAG">Asset Tag</label>
       <div class="input">
-        <span id="ASSET_TAG" class="uneditable-input">@asset.secondary_id</span>
+        <span id="ASSET_TAG" class="uneditable-input">@asset.tag</span>
       </div>
     </div>
     <div class="clearfix">

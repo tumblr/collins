@@ -33,7 +33,7 @@ trait Resources extends Controller {
       },
       asset_tag => {
         logger.debug("Got asset tag: " + asset_tag)
-        findBySecondaryId(asset_tag)
+        findByTag(asset_tag)
       }
     )
   }
@@ -121,7 +121,7 @@ trait Resources extends Controller {
               AssetStateMachine(asset).update().executeUpdate()
             }
             Redirect(app.routes.Resources.index).flashing(
-              "success" -> "Successfull intake of %s".format(asset.secondary_id)
+              "success" -> "Successfull intake of %s".format(asset.tag)
             )
           } catch {
             case e: Throwable => handleError(e)
@@ -158,13 +158,13 @@ trait Resources extends Controller {
             Ok(html.resources.intake3(asset, chassis_tag, intakeStage3Form(asset)))
           case false =>
             val msg = "Asset %s has chassis tag '%s', not '%s'".format(
-              asset.secondary_id, attrib.getValue, chassis_tag)
+              asset.tag, attrib.getValue, chassis_tag)
             val flash = Flash(Map("error" -> msg))
             Ok(html.resources.intake2(asset)(flash))
         }
       }.getOrElse {
         val msg = "Asset %s does not have an associated chassis tag".format(
-          asset.secondary_id
+          asset.tag
         )
         val flash = Flash(Map("error" -> msg))
         Ok(html.resources.intake2(asset)(flash))
@@ -173,7 +173,7 @@ trait Resources extends Controller {
   } catch {
     case e: IndexOutOfBoundsException =>
       val msg = "Asset %s has multiple chassis tags associated with it.".format(
-        asset.secondary_id
+        asset.tag
       )
       val flash = Flash(Map("error" -> msg))
       logger.error(msg)
@@ -181,10 +181,10 @@ trait Resources extends Controller {
   }
 
   /**
-   * Given a secondary_id (asset tag), find the associated asset
+   * Given a asset tag, find the associated asset
    */
-  protected def findBySecondaryId[A](id: String)(implicit r: Request[A]) = {
-    Asset.findBySecondaryId(id) match {
+  protected def findByTag[A](tag: String)(implicit r: Request[A]) = {
+    Asset.findByTag(tag) match {
       case None =>
         Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified asset tag")
       case Some(asset) =>

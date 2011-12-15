@@ -68,8 +68,8 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) wi
 
   def findAllByAssetId(id: Long): Seq[MetaWrapper] = {
     val query = """
-      select * from asset_meta_value amv
-      join asset_meta am on am.id = amv.asset_meta_id
+      select * from asset_meta am
+      join asset_meta_value amv on am.id = amv.asset_meta_id
       where amv.asset_id={id}
     """
     Model.withConnection { implicit connection =>

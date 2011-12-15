@@ -17,7 +17,7 @@
       <tbody>
         @assets.map { asset =>
         <tr>
-          <td>@asset.secondary_id</td>
+          <td>@asset.tag</td>
           <td>@asset.getStatus().name</td>
           <td>@asset.getType().name</td>
           <td>@asset.created.format("dd MMM yyyy")</td>

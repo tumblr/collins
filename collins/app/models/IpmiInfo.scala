@@ -18,10 +18,18 @@ case class IpmiInfo(
   address: Long,
   netmask: Long)
 {
+  import IpmiInfo.Enum._
   def dottedAddress(): String = IpAddress.toString(address)
   def dottedGateway(): String = IpAddress.toString(gateway)
   def dottedNetmask(): String = IpAddress.toString(netmask)
   def decryptedPassword(): String = IpmiInfo.decrypt(password)
+  def toMap(): Map[String,String] = Map(
+    IpmiAddress.toString -> dottedAddress,
+    IpmiGateway.toString -> dottedGateway,
+    IpmiNetmask.toString -> dottedNetmask,
+    IpmiUsername.toString -> username,
+    IpmiPassword.toString -> decryptedPassword
+  )
 }
 
 object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) with Dao[IpmiInfo] {
@@ -117,7 +125,7 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) with Dao[IpmiInfo] {
     }
     randomUsername match {
       case true => CryptoCodec.randomString(8)
-      case false => asset.secondary_id + "-ipmi"
+      case false => asset.tag + "-ipmi"
     }
   }
 

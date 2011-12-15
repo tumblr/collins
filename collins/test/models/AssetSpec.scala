@@ -20,16 +20,16 @@ class AssetSpec extends DatabaseSpec {
 
       "UPDATE" >> {
         Model.withConnection { implicit con =>
-          val asset = Asset.findBySecondaryId("tumblrtag2").get
+          val asset = Asset.findByTag("tumblrtag2").get
           AssetStateMachine(asset).update().executeUpdate() mustEqual(1)
-          val a2 = Asset.findBySecondaryId("tumblrtag2").get
+          val a2 = Asset.findByTag("tumblrtag2").get
           a2.getStatus().getId mustEqual(Status.Enum.New.id)
         }
       }
 
       "DELETE" >> {
         Model.withConnection { implicit con =>
-          val tag2 = Asset.findBySecondaryId("tumblrtag2").get
+          val tag2 = Asset.findByTag("tumblrtag2").get
           val query = Asset.delete("id={id}").on('id -> tag2.getId).executeUpdate() mustEqual 1
           Asset.findById(tag2.getId) must beNone
         }
@@ -37,8 +37,8 @@ class AssetSpec extends DatabaseSpec {
     }
 
     "Support getters/finders" >> {
-      "findBySecondaryId" in {
-        Asset.findBySecondaryId("tumblrtag1") must beSome
+      "findByTag" in {
+        Asset.findByTag("tumblrtag1") must beSome
       }
 
       "findByMeta" in {
@@ -82,7 +82,7 @@ class AssetSpec extends DatabaseSpec {
           val _asset = Asset.findById(1)
           _asset must beSome[Asset]
           val asset = _asset.get
-          asset.secondary_id mustEqual "tumblrtag1"
+          asset.tag mustEqual "tumblrtag1"
           asset.getStatus.name mustEqual "New"
           asset.getType.name mustEqual "Server Node"
           val attribs = asset.getAttributes(Set(
