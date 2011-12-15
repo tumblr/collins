@@ -43,11 +43,32 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) with Dao[AssetMeta
 
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {
-    val ServiceTag = Value("SERVICE_TAG")
-    val ChassisTag = Value("CHASSIS_TAG")
-    val RackPosition = Value("RACK_POSITION")
-    val PowerPort = Value("POWER_PORT")
-    val SwitchPort = Value("SWITCH_PORT")
+    val ServiceTag = Value(1, "SERVICE_TAG")
+    val ChassisTag = Value(2, "CHASSIS_TAG")
+    val RackPosition = Value(3, "RACK_POSITION")
+    val PowerPort = Value(4, "POWER_PORT")
+    val SwitchPort = Value(5, "SWITCH_PORT")
+
+    val CpuCount = Value(6, "CPU_COUNT")
+    val CpuCores = Value(7, "CPU_CORES")
+    val CpuThreads = Value(8, "CPU_THREADS")
+    val CpuSpeedGhz = Value(9, "CPU_SPEED_GHZ")
+    val CpuDescription = Value(10, "CPU_DESCRIPTION")
+
+    val MemoryAvailableBytes = Value(11, "MEMORY_SIZE_BYTES")
+    val MemoryBanksUsed = Value(12, "MEMORY_BANKS_USED")
+    val MemoryBanksUnused = Value(13, "MEMORY_BANKS_UNUSED")
+    val MemoryDescription = Value(14, "MEMORY_DESCRIPTION")
+
+    val NicSpeed = Value(15, "NIC_SPEED") // in bits
+    val MacAddress = Value(16, "MAC_ADDRESS")
+    val NicDescription = Value(17, "NIC_DESCRIPTION")
+
+    val DiskSizeBytes = Value(18, "DISK_SIZE_BYTES")
+    val DiskType = Value(19, "DISK_TYPE")
+    val DiskDescription = Value(20, "DISK_DESCRIPTION")
+    val DiskIsFlash = Value(21, "DISK_IS_FLASH")
+    val DiskStorageTotal = Value(22, "DISK_STORAGE_TOTAL")
   }
 }
 

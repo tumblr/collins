@@ -1,6 +1,6 @@
 package util
 
-import play.api.Logger
+import play.api._
 
 import scala.xml.{Elem, MalformedAttributeException, Node, NodeSeq, XML}
 
@@ -12,9 +12,22 @@ object SpeedConversions {
   def hzToMhz(l: Long): Double = l/mhz
 }
 
-class LshwParser(txt: String) {
+class LshwParser(txt: String, config: Map[String,String] = Map.empty) {
   require(txt != null && txt.length > 0, "LshwParser can not parse empty files")
   private[this] val logger = Logger.logger
+
+  val wildcard: PartialFunction[NodeSeq,LshwAsset] = { case _ => null }
+  lazy val matcher = cpuMatcher.orElse(
+    memMatcher.orElse(
+      diskMatcher.orElse(
+        nicMatcher.orElse(
+          flashMatcher.orElse(
+            wildcard
+          )
+        )
+      )
+    )
+  )
 
   def parse(): Either[Throwable,LshwRepresentation] = {
     val xml = try {
@@ -22,18 +35,16 @@ class LshwParser(txt: String) {
     } catch {
       case e: Throwable =>
         logger.info("Invalid XML specified: " + e.getMessage)
-        println("Caught exception reading text")
         return Left(e)
     }
-    val wildcard: PartialFunction[NodeSeq,LshwAsset] = { case _ => null }
-    val matcher = cpuMatcher orElse memMatcher orElse diskMatcher orElse nicMatcher orElse wildcard
     val rep = try {
-      getCoreNodes(xml).foldLeft(LshwRepresentation(Nil,Nil,Nil,Nil)) { case (holder,node) =>
+      getCoreNodes(xml).foldLeft(LshwRepresentation(Nil,Nil,Nil,Nil,None)) { case (holder,node) =>
         matcher(node) match {
           case c: Cpu => holder.copy(cpus = c +: holder.cpus)
           case m: Memory => holder.copy(memory = m +: holder.memory)
           case d: Disk => holder.copy(disks = d +: holder.disks)
           case n: Nic => holder.copy(nics = n +: holder.nics)
+          case f: FlashDisk => holder.copy(flashDisk = Some(f))
           case _ => holder
         }
       }
@@ -70,11 +81,21 @@ class LshwParser(txt: String) {
     case n if (n \ "@class" text) == "memory" && (n \ "@id" text).contains("bank:") =>
       val asset = getAsset(n)
       val size = (n \ "size" text) match {
-        case n if n.isEmpty => new ByteStorageUnit(0)
-        case n => new ByteStorageUnit(n.toLong)
+        case n if n.isEmpty => ByteStorageUnit(0)
+        case n => ByteStorageUnit(n.toLong)
       }
       val bank: Int = try { (n \ "@id" text).split(":").last.toInt } catch { case _ => -1 }
       Memory(size, bank, asset.description, asset.product, asset.vendor)
+  }
+
+  // NOTE There is no way to tell how large the virident cards are so we used a default
+  val flashDescription = config.getOrElse("flashDescription", "flash")
+  val flashSize = config.getOrElse("flashSize", "1400000000000").toLong
+  val flashMatcher: PartialFunction[NodeSeq,FlashDisk] = {
+    case n if (n \ "@class" text) == "memory" && (n \ "description" text).toLowerCase.contains(flashDescription) =>
+      val asset = getAsset(n)
+      val size = ByteStorageUnit(flashSize)
+      FlashDisk(size, asset.description, asset.product, asset.vendor)
   }
 
   val diskMatcher: PartialFunction[NodeSeq,Disk] = {
@@ -94,17 +115,18 @@ class LshwParser(txt: String) {
   val nicMatcher: PartialFunction[NodeSeq,Nic] = {
     case n if (n \ "@class" text) == "network" =>
       val asset = getAsset(n)
+      val mac = (n \ "serial" text)
       val speed = (n \ "capacity" text) match {
-        case cap if cap.nonEmpty => new BitStorageUnit(cap.toLong)
+        case cap if cap.nonEmpty => BitStorageUnit(cap.toLong)
         case empty => asset.product.toLowerCase.contains("10-gig") match {
-          case true => new BitStorageUnit(10000000000L)
+          case true => BitStorageUnit(10000000000L)
           case false =>
             throw AttributeNotFoundException(
               "Could not find capacity for network interface"
             )
         }
       }
-      Nic(speed, asset.description, asset.product, asset.vendor)
+      Nic(speed, mac, asset.description, asset.product, asset.vendor)
   }
 
   protected def getCoreNodes(elem: Elem): NodeSeq = {

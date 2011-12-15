@@ -2,8 +2,10 @@ package controllers
 
 import play.api._
 import play.api.data._
+import play.api.json._
 import play.api.mvc._
-import models.{Asset, AssetMeta, AssetType, IpmiInfo, Model, Status => AStatus}
+import models.{Status => AStatus}
+import models._
 import util._
 import java.io.File
 
@@ -12,12 +14,29 @@ trait Api extends Controller {
 
   case class ResponseData(status: Status, data: Map[String,String])
 
+  lazy val lshwConfig = Helpers.subAsMap("lshw")
   implicit val securitySpec = SecuritySpec(isSecure = true, requiredCredentials = Seq("infra"))
   val defaultOutputType = JsonOutput()
 
+  def findAssetMetaValues(tag: String) = SecureAction { implicit req =>
+    val responseData = tag.isEmpty match {
+      case true => ResponseData(BadRequest, Map("ERROR_DETAILS" -> "Empty tag specified"))
+      case false => Asset.findBySecondaryId(tag) match {
+        case Some(asset) =>
+          ResponseData(Ok, AssetMetaValue.findAllByAssetId(asset.getId).map { wrap =>
+            "%s_%d".format(wrap.getName, wrap.getGroupId) -> wrap.getValue
+          }.toMap)
+        case None =>
+          ResponseData(NotFound, Map("ERROR_DETAILS" -> "Could not find specified asset"))
+      }
+    }
+    formatResponseData(tag, responseData)
+  }
+
+  // FIXME refuse update if asset isn't in right state
   def asset(tag: String) = SecureAction { implicit req =>
     val responseData = tag.isEmpty match {
-      case true => ResponseData(BadRequest, Map("Details" -> "Empty tag specified"))
+      case true => ResponseData(BadRequest, Map("ERROR_DETAILS" -> "Empty tag specified"))
       case false => Asset.findBySecondaryId(tag) match {
         case Some(asset) => updateAsset(asset)
         case None => createAsset(tag)
@@ -26,16 +45,41 @@ trait Api extends Controller {
     formatResponseData(tag, responseData)
   }
 
-  private def updateAsset(asset: Asset)(implicit req: Request[AnyContent]): ResponseData = {
-    req.body match {
-      case b if b.asMultipartFormData.isDefined =>
-        val parts = b.asMultipartFormData.get.asUrlFormEncoded
-        val lshw = parts.get("lshw").map { data =>
+  private def handleUpdate(asset: Asset, lshw: String): ResponseData = {
+    val parser = new LshwParser(lshw, lshwConfig)
+    val parsed = parser.parse()
+    parsed match {
+      case Left(e) => ResponseData(BadRequest, Map("ERROR_DETAILS" -> e.getMessage))
+      case Right(lshwRep) => try {
+        Model.withTransaction { implicit con =>
+          LshwHelper.updateAsset(asset, lshwRep) match {
+            case true =>
+              ResponseData(Ok, Map("SUCCESS" -> "Yes"))
+            case false =>
+              ResponseData(InternalServerError, Map("ERROR_DETAILS" -> "Error saving values"))
+          }
         }
-        ResponseData(NotImplemented, Map("Details" -> "In progress"))
-      case n =>
-        ResponseData(BadRequest, Map("Details" -> "Expected file uploads"))
+      } catch {
+        case e: Throwable =>
+          ResponseData(
+            InternalServerError,
+            Map("ERROR_DETAILS" -> ("Error saving values: " + e.getMessage)))
+      }
     }
+  }
+
+  private def updateAsset(asset: Asset)(implicit req: Request[AnyContent]): ResponseData = {
+    Form("lshw" -> requiredText).bindFromRequest.fold(
+      noLshw => ResponseData(
+        BadRequest,
+        Map(
+          "ERROR_DETAILS" -> noLshw.errors.map { err =>
+            err.message
+          }.mkString(", ")
+        )
+      ),
+      lshw => handleUpdate(asset, lshw)
+    )
   }
 
   private def createAsset(tag: String)(implicit req: Request[AnyContent]): ResponseData = {
@@ -56,7 +100,7 @@ trait Api extends Controller {
       }
     } catch {
       case e =>
-        ResponseData(BadRequest, Map("Details" -> e.getMessage))
+        ResponseData(BadRequest, Map("ERROR_DETAILS" -> e.getMessage))
     }
   }
 
@@ -69,7 +113,10 @@ trait Api extends Controller {
           "%s=%s".format(k,v)
         }.mkString("\n") + "\n").as(o.contentType)
       case o =>
-        Ok("json - " + tag).as(o.contentType)
+        val jsonMap = JsObject(response.data.map { case(k, v) =>
+          (k -> JsString(v))
+        })
+        response.status(stringify(jsonMap)).as(o.contentType)
     }
   }
 

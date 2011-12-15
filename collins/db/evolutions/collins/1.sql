@@ -38,12 +38,14 @@ CREATE INDEX asset_meta_idx ON asset_meta (priority);
 CREATE TABLE asset_meta_value (
   asset_id                      BIGINT NOT NULL,
   asset_meta_id                 INTEGER NOT NULL,
+  group_id                      INTEGER NOT NULL DEFAULT 0,
   value                         TEXT,
   CONSTRAINT fk_amv_asset_id      FOREIGN KEY (asset_id) REFERENCES asset (id) ON DELETE CASCADE,
   CONSTRAINT fk_amv_asset_meta_id FOREIGN KEY (asset_meta_id) REFERENCES asset_meta (id)
 );
 CREATE INDEX amv_ids ON asset_meta_value (asset_id, asset_meta_id);
 CREATE INDEX amv_mid ON asset_meta_value (asset_meta_id);
+CREATE INDEX amv_gid ON asset_meta_value (group_id);
 
 CREATE TABLE ipmi_info (
   id                            BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,

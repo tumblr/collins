@@ -3,6 +3,8 @@ package models
 import anorm._
 import anorm.defaults._
 
+import util.LshwRepresentation
+
 import java.util.Date
 import java.sql._
 

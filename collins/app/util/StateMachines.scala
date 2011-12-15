@@ -1,6 +1,6 @@
 package util
 
-import models.{Asset, IpmiInfo, Status}
+import models.{Asset, AssetMetaValue, IpmiInfo, Status}
 
 import com.twitter.util.StateMachine
 import java.util.Date
@@ -64,6 +64,7 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
     case DecommissionedState() =>
       Asset.update(asset.copy(status = stateToStatus().id, updated = Some(new Date())))
       IpmiInfo.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
+      AssetMetaValue.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
     case _ =>
       Asset.update(asset.copy(status = stateToStatus().id, updated = Some(new Date())))
   }

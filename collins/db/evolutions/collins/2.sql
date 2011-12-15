@@ -20,17 +20,39 @@ INSERT INTO asset_type VALUES (7, 'Power Strip');
 
 INSERT INTO asset_meta VALUES (1, 'SERVICE_TAG', 0, 'Service Tag', 'Vendor supplied service tag');
 INSERT INTO asset_meta VALUES (2, 'CHASSIS_TAG', 0, 'Chassis Tag', 'Tag for asset chassis');
-INSERT INTO asset_meta VALUES (3, 'RACK_POSITION', 3, 'Rack Position', 'Position of asset in rack');
+INSERT INTO asset_meta VALUES (3, 'RACK_POSITION', 1, 'Rack Position', 'Position of asset in rack');
 INSERT INTO asset_meta VALUES (4, 'POWER_PORT', 4, 'Power Port', 'Power port of asset');
 INSERT INTO asset_meta VALUES (5, 'SWITCH_PORT', 4, 'Switch Port', 'Switch port that asset is connected to');
+
+INSERT INTO asset_meta VALUES (6, 'CPU_COUNT', -1, 'CPU Count', 'Number of physical CPUs in asset');
+INSERT INTO asset_meta VALUES (7, 'CPU_CORES', -1, 'CPU Cores', 'Number of cores per physical CPU');
+INSERT INTO asset_meta VALUES (8, 'CPU_THREADS', -1, 'CPU Threads', 'Number of threads per CPU core');
+INSERT INTO asset_meta VALUES (9, 'CPU_SPEED_GHZ', -1, 'CPU Speed', 'CPU Speed in GHz');
+INSERT INTO asset_meta VALUES (10, 'CPU_DESCRIPTION', -1, 'CPU Description', 'CPU description, vendor labels');
+
+INSERT INTO asset_meta VALUES (11, 'MEMORY_SIZE_BYTES', -1, 'Memory', 'Total amount of available memory');
+INSERT INTO asset_meta VALUES (12, 'MEMORY_BANKS_USED', -1, 'Used Memory Banks', 'Number of used memory banks');
+INSERT INTO asset_meta VALUES (13, 'MEMORY_BANKS_UNUSED', -1, 'Unused Memory Banks', 'Number of unused memory banks');
+INSERT INTO asset_meta VALUES (14, 'MEMORY_DESCRIPTION', -1, 'Memory Description', 'Memory description, vendor label');
+
+INSERT INTO asset_meta VALUES (15, 'NIC_SPEED', -1, 'NIC Speed', 'Speed of nic, stored as bits per second');
+INSERT INTO asset_meta VALUES (16, 'MAC_ADDRESS', 5, 'MAC Address', 'MAC Address of NIC');
+INSERT INTO asset_meta VALUES (17, 'NIC_DESCRIPTION', -1, 'NIC Description', 'Vendor labels for NIC');
+
+INSERT INTO asset_meta VALUES (18, 'DISK_SIZE_BYTES', -1, 'Disk Size', 'Disk size in bytes');
+INSERT INTO asset_meta VALUES (19, 'DISK_TYPE', -1, 'Inferred disk type', 'Inferred disk type: SCSI, IDE or FLASH');
+INSERT INTO asset_meta VALUES (20, 'DISK_DESCRIPTION', -1, 'Disk Description', 'Vendor labels for disk');
+INSERT INTO asset_meta VALUES (21, 'DISK_IS_FLASH', 6, 'Flash Disk', 'Disk is flash memory based');
+
+INSERT INTO asset_meta VALUES (22, 'DISK_STORAGE_TOTAL', 7, 'Total disk storage', 'Total amount of available storage');
 
 INSERT INTO asset VALUES (1, 'tumblrtag1', 1, 1, CURRENT_TIMESTAMP, null, null);
 
 -- gateway 10.0.0.1, ip address 10.0.0.2, netmask /19 = 255.255.224.0
 INSERT INTO ipmi_info VALUES(1, 1, 'test-user', '', 167772161, 167772162, 4294959104);
 
-INSERT INTO asset_meta_value VALUES(1, 1, 'asset tag 123');
-INSERT INTO asset_meta_value VALUES(1, 2, 'chassis tag abc');
+INSERT INTO asset_meta_value VALUES(1, 1, 0, 'dell service tag 123');
+INSERT INTO asset_meta_value VALUES(1, 2, 0, 'chassis tag abc');
 
 # --- !Downs
 

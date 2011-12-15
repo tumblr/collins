@@ -95,7 +95,7 @@ class AssetSpec extends DatabaseSpec {
             enum must beSome
             enum.get match {
               case AssetMeta.Enum.ServiceTag =>
-                attrib.getValue mustEqual "asset tag 123"
+                attrib.getValue mustEqual "dell service tag 123"
               case AssetMeta.Enum.ChassisTag =>
                 attrib.getValue mustEqual "chassis tag abc"
               case v =>

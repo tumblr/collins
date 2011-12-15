@@ -13,6 +13,7 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getMetaId(): Long = _meta.getId
   def getId(): (Long,Long) = (getAssetId(), getMetaId())
   def getName(): String = _meta.name
+  def getGroupId(): Int = _value.group_id
   def getNameEnum(): Option[AssetMeta.Enum] = try {
     Some(AssetMeta.Enum.withName(getName()))
   } catch { case _ => None }
@@ -22,7 +23,7 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getValue(): String = _value.value
 }
 
-case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.lang.Long], value: String) {
+case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.lang.Long], group_id: Int, value: String) {
   def getAsset(): Asset = {
     Asset.findById(asset_id.id).get
   }
@@ -34,7 +35,10 @@ case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.l
 object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) with Dao[AssetMetaValue] {
 
   def apply(asset_id: Long, asset_meta_id: Long, value: String) =
-    new AssetMetaValue(Id(asset_id), Id(asset_meta_id), value)
+    new AssetMetaValue(Id(asset_id), Id(asset_meta_id), 0, value)
+
+  def apply(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) =
+    new AssetMetaValue(Id(asset_id), Id(asset_meta_id), group_id, value)
 
   def create(mvs: Seq[AssetMetaValue])(implicit con: Connection): Int = {
     mvs.foldLeft(0) { case(count, mv) =>
@@ -64,16 +68,17 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) wi
 
   def findAllByAssetId(id: Long): Seq[MetaWrapper] = {
     val query = """
-      select * from asset_meta am
-      join asset_meta_value amv on am.id = amv.asset_meta_id
+      select * from asset_meta_value amv
+      join asset_meta am on am.id = amv.asset_meta_id
       where amv.asset_id={id}
     """
     Model.withConnection { implicit connection =>
-      SQL(query).on('id -> id).as(AssetMetaValue ~< AssetMeta ^^ flatten *).map {
-        case (mv, m) => MetaWrapper(m, mv)
+      SQL(query).on('id -> id).as(AssetMeta ~< AssetMetaValue ^^ flatten *).map {
+        case (meta, metaValue) => MetaWrapper(meta, metaValue)
       }
     }
   }
+
 }
 
 
