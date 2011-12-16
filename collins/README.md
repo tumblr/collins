@@ -6,7 +6,12 @@ run the application.
 
 ## Remaining TODO
 
- * Parsing of lshw data
- * Password, IP Address generation
+ * Handle validation of asset state before allowing update in stage 2
  * Log data/storage/search
- * Functional tests
+ * Intake for things besides servers (routers, etc)
+ * LLDP info as part of IT intake stage 2
+ * Lucene index for values
+ * Add remaining intake steps to API
+ * Documentation
+ * Decent tests
+ * Deployment automation

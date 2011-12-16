@@ -39,4 +39,14 @@ trait SpecHelpers {
       def get(name: String) = Some(Cookie(name="foo",value="yay"))
     }
   }
+
+  def getResource(filename: String) = {
+    val stream = getClass.getClassLoader.getResourceAsStream(filename)
+    val tmp = io.Source.fromInputStream(stream)
+    val str = tmp.mkString
+    tmp.close()
+    str
+  }
+
+
 }

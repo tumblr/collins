@@ -1,12 +1,13 @@
 package controllers
 
+import util._
+
 import play.api._
 import play.api.data._
 import play.api.json._
 import play.api.mvc._
-import models._
-import util._
 import java.io.File
+import java.util.Date
 
 trait Api extends Controller with AssetApi {
   this: SecureController =>
@@ -15,6 +16,24 @@ trait Api extends Controller with AssetApi {
 
   protected implicit val securitySpec = SecuritySpec(isSecure = true, Seq("infra"))
   protected val defaultOutputType = JsonOutput()
+
+  def ping = Action { implicit req =>
+    formatResponseData(ResponseData(Ok, JsObject(Map(
+      "Data" -> JsObject(Map(
+        "Timestamp" -> JsString(Helpers.dateFormat(new Date())),
+        "TestObj" -> JsObject(Map(
+          "TestString" -> JsString("test"),
+          "TestList" -> JsArray(List(JsNumber(1), JsNumber(2)))
+        )),
+        "TestList" -> JsArray(List(
+          JsObject(Map("id" -> JsNumber(123), "name" -> JsString("foo123"))),
+          JsObject(Map("id" -> JsNumber(124), "name" -> JsString("foo124"))),
+          JsObject(Map("id" -> JsNumber(124), "name" -> JsString("foo124")))
+        ))
+      )),
+      "Status" -> JsString("Ok")
+    ))))
+  }
 
   protected def formatResponseData(response: ResponseData)(implicit req: Request[AnyContent]) = {
     getOutputType(req) match {
@@ -41,19 +60,29 @@ trait Api extends Controller with AssetApi {
         case _ => throw new IllegalArgumentException("Unsupported JS type")
       }
     }
-    def formatList(jsvalue: List[JsValue]): String = {
-      jsvalue.map { item =>
-        item match {
-          case JsArray(list) => formatList(list)
-          case o: JsObject => "\n" + formatBashResponse(o, prefix)
-          case b => formatBasic(b)
-        }
-      }.mkString(",")
+    def formatList(jsvalue: List[JsValue], listPrefix: String = ""): String = {
+      val isObj = jsvalue.find { item => item.isInstanceOf[JsObject] }.map { _ => true }.getOrElse(false)
+      val isNonPrim = jsvalue.find { item =>
+        item.isInstanceOf[JsObject] || item.isInstanceOf[JsArray]
+      }.map { _ => true }.getOrElse(false)
+
+      if (isObj) {
+        jsvalue.map { item =>
+          item match {
+            case o: JsObject => formatBashResponse(o, listPrefix) + "\n"
+            case b => formatBasic(b)
+          }
+        }.mkString("")
+      } else if (!isNonPrim) {
+        listPrefix + "=" + jsvalue.map { i => formatBasic(i) }.mkString(",") + ";"
+      } else {
+        throw new Exception("Invalid JS specified")
+      }
     }
     jsobject.value.map { case(k, v) =>
       v match {
-        case m: JsObject => formatBashResponse(m, "%s_".format(k))
-        case JsArray(list) => formatList(list)
+        case m: JsObject => formatBashResponse(m, "%s_".format(prefix + k))
+        case JsArray(list) => formatList(list, "%s_".format(prefix + k))
         case o => "%s%s=%s;".format(prefix, k, formatBasic(o))
       }
     }.mkString("\n")
