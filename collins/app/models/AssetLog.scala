@@ -48,6 +48,18 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
   def apply(asset: Asset, message: JsValue, isError: Boolean) = {
     new AssetLog(NotAssigned, Id(asset.getId), new Date().asTimestamp, isError, true, stringify(message))
   }
+  def apply(asset: Asset, message: String, ex: Throwable) = {
+    val msgWithException = "Message: %s\nException Class: %s\nException Message: %s\n".format(
+      message, ex.getClass.toString, ex.getMessage
+    )
+    new AssetLog(NotAssigned, Id(asset.getId), new Date().asTimestamp, true, false, msgWithException)
+  }
+  def apply(asset: Asset, ex: Throwable) = {
+    val msgWithException = "Exception Class: %s\nException Message: %s\n".format(
+      ex.getClass.toString, ex.getMessage
+    )
+    new AssetLog(NotAssigned, Id(asset.getId), new Date().asTimestamp, true, false, msgWithException)
+  }
 
   def apply(asset_id: Long, message: String, isError: Boolean) = {
     new AssetLog(NotAssigned, Id(asset_id), new Date().asTimestamp, isError, false, message)

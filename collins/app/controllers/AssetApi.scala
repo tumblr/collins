@@ -8,7 +8,6 @@ import play.api.data._
 import play.api.mvc._
 import play.api.json._
 
-// FIXME: Don't require lshw if asset is not a server
 trait AssetApi {
   this: Api with SecureController =>
 
@@ -31,45 +30,37 @@ trait AssetApi {
   // PUT /api/asset/:tag
   def createAsset(tag: String) = SecureAction { implicit req =>
 
-    val defaultAssetType = AssetType.Enum.ServerNode
-
-    val (generate_ipmi, asset_type) = Form(of(
-      "generate_ipmi" -> optional(boolean),
-      "asset_type" -> optional(text(1))
-    )).bindFromRequest.fold(
-      err => (false, AssetType.fromEnum(defaultAssetType)),
-      success => {
-        val gen_ipmi = success._1.getOrElse(true)
-        val atype = success._2.map { name =>
-          try {
-            AssetType.fromEnum(AssetType.Enum.withName(name))
-          } catch {
-            case _ => AssetType.findByName(name).get
+    def handleValidation(): Either[String,(Option[Boolean],AssetType)] = {
+      val defaultAssetType = AssetType.Enum.ServerNode
+      val form = Form(of(
+        "generate_ipmi" -> optional(boolean),
+        "asset_type" -> optional(text(1)).verifying("Invalid asset type specified", res => res match {
+          case Some(asset_type) => AssetType.fromString(asset_type) match {
+            case Some(_) => true
+            case None => false
           }
-        }.getOrElse(AssetType.fromEnum(defaultAssetType))
-        (gen_ipmi, atype)
-      }
-    )
-
-    def doCreateAsset(tag: String): ResponseData = {
-      import IpmiInfo.Enum._
-      try {
-        Model.withTransaction { implicit con =>
-          val asset = Asset.create(Asset(tag, AStatus.Enum.Incomplete, asset_type))
-          val ipmi = generate_ipmi match {
-            case true => Some(IpmiInfo.createForAsset(asset))
-            case false => None
-          }
-          AssetLog.create(AssetLog(
-            asset,
-            "Initial intake successful, status now Incomplete",
-            false
-          ))
-          ResponseData(Created, getCreateMessage(asset, ipmi))
+          case None => true
+        })
+      ))
+      form.bindFromRequest.fold(
+        err => {
+          val msg = err("generate_ipmi").error.map { _ =>
+            "generate_ipmi only takes true or false as values"
+          }.getOrElse(
+            err("asset_type").error.map { _ =>
+              "Invalid asset_type specified"
+            }.getOrElse("Error during parameter validation")
+          )
+          Left(msg)
+        },
+        success => {
+          val gen_ipmi = success._1
+          val atype = success._2.flatMap { name =>
+            AssetType.fromString(name)
+          }.getOrElse(AssetType.fromEnum(defaultAssetType))
+          Right(gen_ipmi, atype)
         }
-      } catch {
-        case e => getErrorMessage(e.getMessage)
-      }
+      )
     }
 
     val responseData = Asset.isValidTag(tag) match {
@@ -78,29 +69,50 @@ trait AssetApi {
         case Some(asset) => Model.withConnection { implicit con =>
           ResponseData(Ok, getCreateMessage(asset, IpmiInfo.findByAsset(asset)))
         }
-        case None => doCreateAsset(tag)
+        case None => handleValidation() match {
+          case Left(error) => getErrorMessage(error)
+          case Right((optGenerateIpmi, assetType)) =>
+            val generateIpmi = optGenerateIpmi.getOrElse({
+              assetType.getId == AssetType.Enum.ServerNode.id
+            })
+            AssetLifecycle.createAsset(tag, assetType, generateIpmi) match {
+              case Left(ex) => getErrorMessage(ex.getMessage)
+              case Right((asset, ipmi)) =>
+                ResponseData(Created, getCreateMessage(asset, ipmi))
+            }
+        }
       }
     }
-
     formatResponseData(responseData)
   }(SecuritySpec(true, Seq("infra")))
 
   // POST /api/asset/:tag
   def updateAsset(tag: String) = SecureAction { implicit req =>
+
+    def handleValidation(asset: Asset): Either[String,(Option[String],Option[String])] = {
+      val form = Form(of(
+        "lshw" -> optional(text(1)),
+        "lldpd" -> optional(text(1))
+      ))
+      form.bindFromRequest.fold(
+        err => Left("Error processing form data"),
+        success => Right(success._1, success._2)
+      )
+    }
+
     val responseData = withAssetFromTag(tag) { asset =>
       if (asset.status != AStatus.Enum.Incomplete.id) {
         getErrorMessage("Asset update only works when asset is Incomplete")
       } else {
-        Form("lshw" -> requiredText).bindFromRequest.fold(
-          noLshw => {
-            val msg = noLshw.errors.map { _.message }.mkString(", ")
-            Model.withConnection { implicit con =>
-              AssetLog.create(AssetLog(asset, "Failed asset update: " + msg, true))
+        handleValidation(asset) match {
+          case Left(error) => getErrorMessage(error)
+          case Right((lshw,lldp)) =>
+            AssetLifecycle.updateAsset(asset, lshw, lldp) match {
+              case Left(error) => getErrorMessage(error.getMessage)
+              case Right(success) =>
+                ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(success))))
             }
-            getErrorMessage(msg)
-          },
-          lshw => doUpdate(asset, lshw)
-        )
+        }
       }
     }
     formatResponseData(responseData)
@@ -133,40 +145,6 @@ trait AssetApi {
     formatResponseData(responseData)
   }(SecuritySpec(true, Seq("infra")))
 
-
-  private def doUpdate(asset: Asset, lshw: String): ResponseData = {
-    val parser = new LshwParser(lshw, lshwConfig)
-    val parsed = parser.parse()
-    parsed match {
-      case Left(e) => {
-        Model.withConnection { implicit con =>
-          AssetLog.create(AssetLog(asset, "Parsing LSHW failed: " + e.getMessage, true))
-        }
-        getErrorMessage(e.getMessage)
-      }
-      case Right(lshwRep) => try {
-        Model.withTransaction { implicit con =>
-          LshwHelper.updateAsset(asset, lshwRep) match {
-            case true =>
-              AssetStateMachine(asset).update().executeUpdate()
-              AssetLog.create(AssetLog(
-                asset,
-                "Parsing and storing LSHW data succeeded, asset now New",
-                false
-              ))
-              ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(true))))
-            case false =>
-              AssetLog.create(AssetLog(asset, "Parsing LSHW succeeded, saving failed", true))
-              getErrorMessage("Error saving values", InternalServerError)
-          }
-        }
-      } catch {
-        case e: Throwable =>
-          val msg = "Error saving values: %s".format(e.getMessage)
-          getErrorMessage(msg, InternalServerError)
-      }
-    }
-  }
 
   private def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
     val assetAsMap = assetToJsMap(asset)

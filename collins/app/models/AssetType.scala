@@ -24,8 +24,16 @@ object AssetType extends Magic[AssetType](Some("asset_type")) {
   def findByName(name: String): Option[AssetType] = Model.withConnection { implicit con =>
     AssetType.find("name={name}").on('name -> name).singleOption()
   }
+
   def fromEnum(enum: AssetType.Enum): AssetType =
     new AssetType(Id(enum.id), enum.toString)
+  def fromString(name: String): Option[AssetType] = {
+    try {
+      Some(fromEnum(Enum.withName(name)))
+    } catch {
+      case e => findByName(name)
+    }
+  }
 
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {
