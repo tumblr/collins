@@ -36,20 +36,13 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
   val DefaultPasswordLength = 12
   val RandomUsername = false
 
-  def apply(asset: Asset)(implicit con: Connection) = {
-    findByAsset(asset) match {
-      case None => createNewIpmiInfo(asset)
-      case Some(ipmi_info) => ipmi_info
-    }
-  }
-
   def findByAsset(asset: Asset): Option[IpmiInfo] = {
     Model.withConnection { implicit con =>
       IpmiInfo.find("asset_id={asset_id}").on('asset_id -> asset.getId).singleOption()
     }
   }
 
-  protected def createNewIpmiInfo(asset: Asset)(implicit con: Connection): IpmiInfo = {
+  def createForAsset(asset: Asset)(implicit con: Connection): IpmiInfo = {
     val assetId = asset.getId
     val (gateway, address, netmask) = getAddress()
     val username = getUsername(asset)

@@ -21,10 +21,12 @@ GET     /logout                     controllers.Application.logout
 # API
 PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10)
+
 PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
-#DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
+DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
 GET     /api/asset/:tag             app.Api.findAssetWithMetaValues(tag: String)
+
 GET     /api/ping                   app.Api.ping
 
 # Map static resources from the /public folder to the /assets URL path

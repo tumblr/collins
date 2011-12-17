@@ -8,110 +8,11 @@ import play.api.data._
 import play.api.mvc._
 import play.api.json._
 
-// FIXME: Add generate_ipmi flag to asset PUT endpoint
 // FIXME: Don't require lshw if asset is not a server
 trait AssetApi {
   this: Api with SecureController =>
 
   private lazy val lshwConfig = Helpers.subAsMap("lshw")
-
-  // GET /api/asset/:tag/log
-  def getLogData(tag: String, page: Int, size: Int) = SecureAction { implicit req =>
-    val responseData = withAssetFromTag(tag) { asset =>
-      val logs = AssetLog.list(asset, page, size)
-      val logMessage: AssetLog => JsValue = { log =>
-        log.is_json match {
-          case true => parseJson(log.message)
-          case false => JsString(log.message)
-        }
-      }
-      val prevPage = logs.prev match {
-        case None => 0
-        case Some(n) => n
-      }
-      val nextPage = logs.next match {
-        case None => page
-        case Some(n) => n
-      }
-      val totalResults = logs.total
-      val headers = Seq(
-        ("X-Pagination-PreviousPage" -> prevPage.toString),
-        ("X-Pagination-CurrentPage" -> page.toString),
-        ("X-Pagination-NextPage" -> nextPage.toString),
-        ("X-Pagination-TotalResults" -> totalResults.toString)
-      )
-      ResponseData(Ok, JsObject(Map(
-        "Pagination" -> JsObject(Map(
-          "PreviousPage" -> JsNumber(prevPage),
-          "CurrentPage" -> JsNumber(page),
-          "NextPage" -> JsNumber(nextPage),
-          "TotalResults" -> JsNumber(logs.total)
-        )),
-        "Data" -> JsArray(logs.items.map { log =>
-          JsObject(Map(
-            "AssetTag" -> JsString(tag),
-            "Created" -> JsString(Helpers.dateFormat(log.created)),
-            "IsError" -> JsBoolean(log.is_error),
-            "Message" -> logMessage(log)
-          ))
-        }.toList)
-      )), headers)
-    }
-    formatResponseData(responseData)
-  }
-
-  // PUT /api/asset/:tag/log
-  def submitLogData(tag: String) = SecureAction { implicit req =>
-
-    def processJson(jsValue: JsValue, asset: Asset): Option[String] = {
-      val is_error: Boolean = jsValue \ "IsError" match {
-        case JsBoolean(bool) => bool
-        case JsUndefined(msg) => false
-        case _ => return Some("IsError must be a boolean")
-      }
-      val msg = jsValue \ "Message" match {
-        case JsUndefined(msg) => return Some("Didn't find Message in json object")
-        case js => js
-      }
-      Model.withConnection { implicit con =>
-        AssetLog.create(AssetLog(asset, msg, is_error))
-      }
-      None
-    }
-
-    def processForm(asset: Asset): Option[String] = {
-      Form(of(
-            "message" -> requiredText(1),
-            "is_error" -> optional(boolean)
-           )
-      ).bindFromRequest.fold(
-        error => {
-          val msg = error.errors.map { _.message }.mkString(", ")
-          Some(msg)
-        },
-        success => {
-          val msg = success._1
-          val is_error = success._2.getOrElse(false)
-          Model.withConnection { implicit con =>
-            AssetLog.create(AssetLog(asset, msg, is_error))
-          }
-          None
-        }
-      )
-    }
-
-    val responseData = withAssetFromTag(tag) { asset =>
-      (req.body.asJson match {
-        case Some(jsValue) => processJson(jsValue, asset)
-        case None => processForm(asset)
-      }).map { err =>
-        getErrorMessage(err)
-      }.getOrElse {
-        ResponseData(Created, JsObject(Map("Success" -> JsBoolean(true))))
-      }
-    }
-    formatResponseData(responseData)
-  }(SecuritySpec(isSecure = true, Seq("infra")))
 
   // GET /api/asset/:tag
   def findAssetWithMetaValues(tag: String) = SecureAction { implicit req =>
@@ -130,12 +31,35 @@ trait AssetApi {
   // PUT /api/asset/:tag
   def createAsset(tag: String) = SecureAction { implicit req =>
 
+    val defaultAssetType = AssetType.Enum.ServerNode
+
+    val (generate_ipmi, asset_type) = Form(of(
+      "generate_ipmi" -> optional(boolean),
+      "asset_type" -> optional(text(1))
+    )).bindFromRequest.fold(
+      err => (false, AssetType.fromEnum(defaultAssetType)),
+      success => {
+        val gen_ipmi = success._1.getOrElse(true)
+        val atype = success._2.map { name =>
+          try {
+            AssetType.fromEnum(AssetType.Enum.withName(name))
+          } catch {
+            case _ => AssetType.findByName(name).get
+          }
+        }.getOrElse(AssetType.fromEnum(defaultAssetType))
+        (gen_ipmi, atype)
+      }
+    )
+
     def doCreateAsset(tag: String): ResponseData = {
       import IpmiInfo.Enum._
       try {
         Model.withTransaction { implicit con =>
-          val asset = Asset.create(Asset(tag, AStatus.Enum.Incomplete, AssetType.Enum.ServerNode))
-          val ipmi = IpmiInfo(asset)
+          val asset = Asset.create(Asset(tag, AStatus.Enum.Incomplete, asset_type))
+          val ipmi = generate_ipmi match {
+            case true => Some(IpmiInfo.createForAsset(asset))
+            case false => None
+          }
           AssetLog.create(AssetLog(
             asset,
             "Initial intake successful, status now Incomplete",
@@ -152,7 +76,7 @@ trait AssetApi {
       case false => getErrorMessage("Invalid tag specified")
       case true => Asset.findByTag(tag) match {
         case Some(asset) => Model.withConnection { implicit con =>
-          ResponseData(Ok, getCreateMessage(asset, IpmiInfo(asset)))
+          ResponseData(Ok, getCreateMessage(asset, IpmiInfo.findByAsset(asset)))
         }
         case None => doCreateAsset(tag)
       }
@@ -182,15 +106,33 @@ trait AssetApi {
     formatResponseData(responseData)
   }(SecuritySpec(true, Seq("infra")))
 
-  private def withAssetFromTag(tag: String)(f: Asset => ResponseData): ResponseData = {
-    Asset.isValidTag(tag) match {
-      case false => getErrorMessage("Empty tag specified")
-      case true => Asset.findByTag(tag) match {
-        case Some(asset) => f(asset)
-        case None => getErrorMessage("Could not find specified asset", NotFound)
+  // DELETE /api/asset/:tag
+  def deleteAsset(tag: String) = SecureAction { implicit req =>
+    import com.twitter.util.StateMachine.InvalidStateTransition
+    import play.api.http.{Status => StatusValues}
+    val responseData = withAssetFromTag(tag) { asset =>
+      Model.withTransaction { implicit con =>
+        try {
+          AssetStateMachine(asset).decommission().executeUpdate()
+          AssetLog.create(AssetLog(
+            asset,
+            "Asset decommissioned successfully",
+            false
+          ))
+          ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(true))))
+        } catch {
+          case e: InvalidStateTransition =>
+            val msg = "Only assets in a cancelled state can be decommissioned"
+            getErrorMessage(msg, Status(StatusValues.CONFLICT))
+          case e =>
+            val msg = "Error saving response: %s".format(e.getMessage)
+            getErrorMessage(msg, InternalServerError)
+        }
       }
     }
-  }
+    formatResponseData(responseData)
+  }(SecuritySpec(true, Seq("infra")))
+
 
   private def doUpdate(asset: Asset, lshw: String): ResponseData = {
     val parser = new LshwParser(lshw, lshwConfig)
@@ -226,16 +168,16 @@ trait AssetApi {
     }
   }
 
-  private def getErrorMessage(msg: String, status: Status = BadRequest) = {
-    ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
-  }
-
-  private def getCreateMessage(asset: Asset, ipmi: IpmiInfo): JsObject = {
+  private def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
     val assetAsMap = assetToJsMap(asset)
-    val ipmiAsMap = ipmi.toMap().map { case(k,v) =>
-      k -> JsString(v)
+    val map = ipmi.isDefined match {
+      case true =>
+        val ipmiAsMap = ipmi.get.toMap().map { case(k,v) => k -> JsString(v) }
+        assetAsMap ++ Map("IPMI" -> JsObject(ipmiAsMap))
+      case false =>
+        assetAsMap
     }
-    JsObject(assetAsMap ++ Map("IPMI" -> JsObject(ipmiAsMap)))
+    JsObject(map)
   }
 
   private def assetToJsMap(asset: Asset) = Map("ASSET" -> JsObject(asset.toMap().map { case(k,v) =>

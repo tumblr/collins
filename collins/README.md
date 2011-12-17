@@ -6,10 +6,11 @@ run the application.
 
 ## Remaining TODO
 
- * DELETE an asset, Cancelled to Decommissioned
  * Address FIXME's in source
  * Intake for things besides servers (routers, etc)
  * LLDP info as part of IT intake stage 2
+ * Add source attribute to `asset_log`
+ * Implement onHandlerNotFound, onHandlerError, etc
  * Light up IPMI during intake
  * Lucene index for values
  * Add remaining intake steps to API

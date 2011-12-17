@@ -1,5 +1,6 @@
 package controllers
 
+import models.Asset
 import util._
 
 import play.api._
@@ -9,7 +10,7 @@ import play.api.mvc._
 import java.io.File
 import java.util.Date
 
-trait Api extends Controller with AssetApi {
+trait Api extends Controller with AssetApi with AssetLogApi {
   this: SecureController =>
 
   case class ResponseData(status: Status, data: JsObject, headers: Seq[(String,String)] = Nil)
@@ -125,4 +126,19 @@ trait Api extends Controller with AssetApi {
       case None => defaultOutputType
     }
   }
+
+  protected def withAssetFromTag(tag: String)(f: Asset => ResponseData): ResponseData = {
+    Asset.isValidTag(tag) match {
+      case false => getErrorMessage("Empty tag specified")
+      case true => Asset.findByTag(tag) match {
+        case Some(asset) => f(asset)
+        case None => getErrorMessage("Could not find specified asset", NotFound)
+      }
+    }
+  }
+
+  protected def getErrorMessage(msg: String, status: Status = BadRequest) = {
+    ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
+  }
+
 }

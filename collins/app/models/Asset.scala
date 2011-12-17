@@ -67,6 +67,10 @@ object Asset extends Magic[Asset](Some("asset")) {
     new Asset(NotAssigned, tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
   }
 
+  def apply(tag: String, status: Status.Enum, asset_type: AssetType) = {
+    new Asset(NotAssigned, tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
+  }
+
   def create(assets: Seq[Asset])(implicit con: Connection): Seq[Asset] = {
     assets.foldLeft(List[Asset]()) { case(list, asset) =>
       if (asset.id.isDefined) throw new IllegalArgumentException("id of asset must be NotAssigned")
