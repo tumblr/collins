@@ -1,7 +1,8 @@
 package models
 
+import Model.defaults._
+
 import anorm._
-import anorm.defaults._
 import java.sql._
 
 case class Status(id: Pk[java.lang.Integer], name: String, description: String) {
@@ -9,7 +10,7 @@ case class Status(id: Pk[java.lang.Integer], name: String, description: String) 
   require(description != null && description.length > 0, "Description must not be empty")
   def getId(): Int = id.get
 }
-object Status extends Magic[Status](Some("status")) with Dao[Status] {
+object Status extends Magic[Status](Some("status")) {
 
   def apply(name: String, description: String) = {
     new Status(NotAssigned, name, description)

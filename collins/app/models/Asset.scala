@@ -1,19 +1,20 @@
 package models
 
-import anorm._
-import anorm.defaults._
-
+import Model.defaults._
+import conversions._
 import util.{Helpers, LshwRepresentation}
 
+import anorm._
+
+import java.sql.{Connection, Timestamp}
 import java.util.Date
-import java.sql._
 
 case class Asset(
     id: Pk[java.lang.Long],
     tag: String,
     status: Int,
     asset_type: Int,
-    created: Date, updated: Option[Date], deleted: Option[Date])
+    created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp])
 {
   require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
 
@@ -55,7 +56,7 @@ case class Asset(
   }
 }
 
-object Asset extends Magic[Asset](Some("asset")) with Dao[Asset] {
+object Asset extends Magic[Asset](Some("asset")) {
 
   private[this] val TagR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
   def isValidTag(tag: String): Boolean = {
@@ -63,7 +64,7 @@ object Asset extends Magic[Asset](Some("asset")) with Dao[Asset] {
   }
 
   def apply(tag: String, status: Status.Enum, asset_type: AssetType.Enum) = {
-    new Asset(NotAssigned, tag, status.id, asset_type.id, new Date(), None, None)
+    new Asset(NotAssigned, tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
   }
 
   def create(assets: Seq[Asset])(implicit con: Connection): Seq[Asset] = {

@@ -12,9 +12,9 @@ import java.util.Date
 trait Api extends Controller with AssetApi {
   this: SecureController =>
 
-  case class ResponseData(status: Status, data: JsObject)
+  case class ResponseData(status: Status, data: JsObject, headers: Seq[(String,String)] = Nil)
 
-  protected implicit val securitySpec = SecuritySpec(isSecure = true, Seq("infra"))
+  protected implicit val securitySpec = SecuritySpec(isSecure = true, Nil)
   protected val defaultOutputType = JsonOutput()
 
   def ping = Action { implicit req =>
@@ -38,11 +38,11 @@ trait Api extends Controller with AssetApi {
   protected def formatResponseData(response: ResponseData)(implicit req: Request[AnyContent]) = {
     getOutputType(req) match {
       case o: TextOutput =>
-        response.status(formatTextResponse(response.data) + "\n").as(o.contentType)
+        response.status(formatTextResponse(response.data) + "\n").as(o.contentType).withHeaders(response.headers:_*)
       case o: BashOutput =>
-        response.status(formatBashResponse(response.data) + "\n").as(o.contentType)
+        response.status(formatBashResponse(response.data) + "\n").as(o.contentType).withHeaders(response.headers:_*)
       case o: JsonOutput =>
-        response.status(stringify(response.data)).as(o.contentType)
+        response.status(stringify(response.data)).as(o.contentType).withHeaders(response.headers:_*)
     }
   }
 

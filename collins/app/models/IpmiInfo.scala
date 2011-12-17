@@ -1,9 +1,9 @@
 package models
 
+import Model.defaults._
 import util.{CryptoAccessor, CryptoCodec, IpAddress}
 
 import anorm._
-import anorm.defaults._
 import anorm.SqlParser._
 import play.api._
 
@@ -32,15 +32,14 @@ case class IpmiInfo(
   )
 }
 
-object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) with Dao[IpmiInfo] {
+object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
   val DefaultPasswordLength = 12
   val RandomUsername = false
 
   def apply(asset: Asset)(implicit con: Connection) = {
-    if (asset.status == Status.Enum.Incomplete.id) {
-      createNewIpmiInfo(asset)
-    } else {
-      findByAsset(asset).get
+    findByAsset(asset) match {
+      case None => createNewIpmiInfo(asset)
+      case Some(ipmi_info) => ipmi_info
     }
   }
 

@@ -1,7 +1,8 @@
 package models
 
+import Model.defaults._
+
 import anorm._
-import anorm.defaults._
 import anorm.SqlParser._
 import java.sql._
 
@@ -32,7 +33,7 @@ case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.l
   }
 }
 
-object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) with Dao[AssetMetaValue] {
+object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
 
   def apply(asset_id: Long, asset_meta_id: Long, value: String) =
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), 0, value)

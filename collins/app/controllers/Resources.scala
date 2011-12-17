@@ -91,7 +91,7 @@ trait Resources extends Controller {
    * Validate that _A and _B are on different PDU's and are PDU's we know about
    * Validate that RACK_POSITION is a rack we know about
    */
-  protected def intakeStage4(asset: Asset)(implicit req: Request[AnyContent]) = {
+  private def intakeStage4(asset: Asset)(implicit req: Request[AnyContent]) = {
     import AssetMeta.Enum._
     def handleError(e: Throwable) = {
       val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
@@ -146,7 +146,7 @@ trait Resources extends Controller {
    *   - Multiple chassis tags are associated with an asset
    *     - 500, this should not happen
    */
-  protected def intakeStage3(asset: Asset)(implicit req: Request[AnyContent]) = try {
+  private def intakeStage3(asset: Asset)(implicit req: Request[AnyContent]) = try {
     Form("CHASSIS_TAG" -> text).bindFromRequest.fold(
       errors => {
         val flash  = Flash(Map("warning" -> "No CHASSIS_TAG submitted"))
@@ -183,7 +183,7 @@ trait Resources extends Controller {
   /**
    * Given a asset tag, find the associated asset
    */
-  protected def findByTag[A](tag: String)(implicit r: Request[A]) = {
+  private def findByTag[A](tag: String)(implicit r: Request[A]) = {
     Asset.findByTag(tag) match {
       case None =>
         Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified asset tag")
@@ -197,7 +197,7 @@ trait Resources extends Controller {
     }
   }
 
-  protected def intakeAllowed[A](asset: Asset)(implicit r: Request[A]): Boolean = {
+  private def intakeAllowed[A](asset: Asset)(implicit r: Request[A]): Boolean = {
     val isNew = asset.isNew
     val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
     val rightRole = hasRole(getUser(r), Seq("infra"))
@@ -215,7 +215,7 @@ trait Resources extends Controller {
   /**
    * Find assets by specified Meta parameters
    */
-  protected def findByMeta[A](query: List[(AssetMeta.Enum, String)])(implicit r: Request[A]) = {
+  private def findByMeta[A](query: List[(AssetMeta.Enum, String)])(implicit r: Request[A]) = {
     Asset.findByMeta(query) match {
       case Nil =>
         Redirect(app.routes.Resources.index).flashing("message" -> "No results found")

@@ -1,7 +1,8 @@
 package models
 
+import Model.defaults._
+
 import anorm._
-import anorm.defaults._
 import anorm.SqlParser._
 import java.sql._
 
@@ -9,7 +10,7 @@ case class AssetType(id: Pk[java.lang.Integer], name: String) {
   def getId(): Int = id.get
 }
 
-object AssetType extends Magic[AssetType](Some("asset_type")) with Dao[AssetType] {
+object AssetType extends Magic[AssetType](Some("asset_type")) {
   def create(atypes: Seq[AssetType])(implicit con: Connection): Seq[AssetType] = {
     atypes.foldLeft(List[AssetType]()) { case(list, atype) =>
       if (atype.id.isDefined) throw new IllegalArgumentException("Use update, id already defined")

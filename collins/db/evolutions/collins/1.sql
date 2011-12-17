@@ -47,6 +47,16 @@ CREATE INDEX amv_ids ON asset_meta_value (asset_id, asset_meta_id);
 CREATE INDEX amv_mid ON asset_meta_value (asset_meta_id);
 CREATE INDEX amv_gid ON asset_meta_value (group_id);
 
+CREATE TABLE asset_log (
+  id                            BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  asset_id                      BIGINT NOT NULL,
+  created                       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  is_error                      BOOLEAN NOT NULL DEFAULT FALSE,
+  is_json                       BOOLEAN NOT NULL DEFAULT FALSE,
+  message                       TEXT
+);
+CREATE INDEX al_aid ON asset_log (asset_id);
+
 CREATE TABLE ipmi_info (
   id                            BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   asset_id                      BIGINT NOT NULL UNIQUE,

@@ -6,8 +6,6 @@ run the application.
 
 ## Remaining TODO
 
- * Handle validation of asset state before allowing update in stage 2
- * Log data/storage/search
  * Intake for things besides servers (routers, etc)
  * LLDP info as part of IT intake stage 2
  * Lucene index for values

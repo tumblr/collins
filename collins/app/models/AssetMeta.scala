@@ -1,7 +1,8 @@
 package models
 
+import Model.defaults._
+
 import anorm._
-import anorm.defaults._
 import play.api.cache.Cache
 import play.api.Play.current
 import java.sql._
@@ -16,7 +17,7 @@ case class AssetMeta(
   def getId(): Long = id.get
 }
 
-object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) with Dao[AssetMeta] {
+object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
 
   def create(metas: Seq[AssetMeta])(implicit con: Connection): Seq[AssetMeta] = {
     metas.foldLeft(List[AssetMeta]()) { case(list, meta) =>
@@ -33,7 +34,6 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) with Dao[AssetMeta
     // change to use stuff in Enum
     Model.withConnection { implicit connection =>
       Cache.get[List[AssetMeta]]("AssetMeta.getViewable").getOrElse {
-        logger.debug("Cache miss for AssetMeta.getViewable")
         val res = AssetMeta.find("priority > -1 order by priority asc").list()
         Cache.set("AssetMeta.getViewable", res)
         res

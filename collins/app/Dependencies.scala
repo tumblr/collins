@@ -5,4 +5,6 @@ package object app {
   val HelpPage: controllers.HelpPage = new controllers.HelpPage with controllers.SecureWebController
   val Api: controllers.Api = new controllers.Api with controllers.SecureApiController
 
+  val CookieApi: controllers.Api = new controllers.Api with controllers.SecureWebController
+
 }

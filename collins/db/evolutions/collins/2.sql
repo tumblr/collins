@@ -46,13 +46,15 @@ INSERT INTO asset_meta VALUES (21, 'DISK_IS_FLASH', 6, 'Flash Disk', 'Disk is fl
 
 INSERT INTO asset_meta VALUES (22, 'DISK_STORAGE_TOTAL', 7, 'Total disk storage', 'Total amount of available storage');
 
-INSERT INTO asset VALUES (1, 'tumblrtag1', 1, 1, CURRENT_TIMESTAMP, null, null);
+INSERT INTO asset VALUES (1, 'tumblrtag1', 7, 1, CURRENT_TIMESTAMP, null, null);
 
 -- gateway 10.0.0.1, ip address 10.0.0.2, netmask /19 = 255.255.224.0
 INSERT INTO ipmi_info VALUES(1, 1, 'test-user', '', 167772161, 167772162, 4294959104);
 
 INSERT INTO asset_meta_value VALUES(1, 1, 0, 'dell service tag 123');
 INSERT INTO asset_meta_value VALUES(1, 2, 0, 'chassis tag abc');
+
+INSERT INTO asset_log SET asset_id=1, message='Automatically created by database migration';
 
 # --- !Downs
 

@@ -83,7 +83,7 @@ class AssetSpec extends DatabaseSpec {
           _asset must beSome[Asset]
           val asset = _asset.get
           asset.tag mustEqual "tumblrtag1"
-          asset.getStatus.name mustEqual "New"
+          asset.getStatus.name mustEqual "Incomplete"
           asset.getType.name mustEqual "Server Node"
           val attribs = asset.getAttributes(Set(
             AssetMeta.Enum.ServiceTag,
