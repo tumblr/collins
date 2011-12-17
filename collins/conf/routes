@@ -9,6 +9,8 @@ GET     /                           app.Resources.index
 GET     /resources                  app.Resources.find
 GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
 GET     /resource/:tag/logs         app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10)
+GET     /asset/:id                  app.AssetController.show(id: Long)
+
 
 # Help
 GET     /help                       app.HelpPage.index(t: Int ?= controllers.Help.Default)

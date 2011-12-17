@@ -17,11 +17,11 @@
       <tbody>
         @assets.map { asset =>
         <tr>
-          <td>@asset.tag</td>
+          <td><a href="@app.routes.AssetController.show(asset.getId)">@asset.tag</a></td>
           <td>@asset.getStatus().name</td>
           <td>@asset.getType().name</td>
-          <td>@asset.created.format("dd MMM yyyy")</td>
-          <td>@asset.updated.map(_.format("dd MMM yyyy")).getOrElse { <em>-</em> }</td>
+          <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
+          <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
         </tr>
         }
       </tbody>

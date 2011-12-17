@@ -37,9 +37,18 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
 
   def apply(asset_id: Long, asset_meta_id: Long, value: String) =
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), 0, value)
+  def apply(asset: Asset, asset_meta_id: Long, value: String) =
+    new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), 0, value)
 
   def apply(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), group_id, value)
+  def apply(asset: Asset, asset_meta_id: Long, group_id: Int, value: String) =
+    new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), group_id, value)
+
+  override def create(mv: AssetMetaValue)(implicit con: Connection): AssetMetaValue = {
+    AssetMetaValue.insert(mv)
+    mv
+  }
 
   def create(mvs: Seq[AssetMetaValue])(implicit con: Connection): Int = {
     mvs.foldLeft(0) { case(count, mv) =>

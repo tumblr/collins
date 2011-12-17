@@ -89,25 +89,27 @@ trait AssetApi {
   // POST /api/asset/:tag
   def updateAsset(tag: String) = SecureAction { implicit req =>
 
-    def handleValidation(asset: Asset): Either[String,(Option[String],Option[String])] = {
+    def handleValidation(asset: Asset): Either[String,Map[String,String]] = {
       val form = Form(of(
         "lshw" -> optional(text(1)),
-        "lldpd" -> optional(text(1))
-      ))
-      form.bindFromRequest.fold(
-        err => Left("Error processing form data"),
-        success => Right(success._1, success._2)
-      )
+        "lldpd" -> optional(text(1)),
+        "chassis_tag" -> optional(text(1))
+      )).bindFromRequest
+      form.value.isDefined match {
+        case true => Right(form.data)
+        case false => Left("Error processing form data")
+      }
     }
 
     val responseData = withAssetFromTag(tag) { asset =>
+      // FIXME this should be handled in AssetLifecycle
       if (asset.status != AStatus.Enum.Incomplete.id) {
         getErrorMessage("Asset update only works when asset is Incomplete")
       } else {
         handleValidation(asset) match {
           case Left(error) => getErrorMessage(error)
-          case Right((lshw,lldp)) =>
-            AssetLifecycle.updateAsset(asset, lshw, lldp) match {
+          case Right(options) =>
+            AssetLifecycle.updateAsset(asset, options) match {
               case Left(error) => getErrorMessage(error.getMessage)
               case Right(success) =>
                 ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(success))))

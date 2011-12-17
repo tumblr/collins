@@ -33,38 +33,44 @@ object AssetLifecycle {
   }
 
   private lazy val lshwConfig = Helpers.subAsMap("lshw")
-  def updateAsset(asset: Asset, lshw: Option[String], lldpd: Option[String]): Either[Throwable,Boolean] = {
+  def updateAsset(asset: Asset, options: Map[String,String]): Either[Throwable,Boolean] = {
     asset.asset_type == AssetType.Enum.ServerNode.id match {
-      case true => updateServer(asset, lshw, lldpd)
-      case false => updateOther(asset, lshw, lldpd)
+      case true => updateServer(asset, options)
+      case false => updateOther(asset, options)
     }
   }
 
-  protected def updateOther(asset: Asset, lshw: Option[String], lldpd: Option[String]): Either[Throwable,Boolean] = {
-     try {
-        Model.withTransaction { implicit con =>
-          AssetStateMachine(asset).update().executeUpdate()
-          AssetLog.create(AssetLog(asset, "Asset updated", false))
-          Right(true)
-        }
-      } catch {
-        case e: Throwable =>
-          logger.warn("Error saving values or in state transition", e)
-          try {
-            Model.withConnection { implicit con =>
-              AssetLog.create(AssetLog(asset, "Error saving values", e))
-            }
-          } catch {
-            case ex =>
-              logger.error("Database problem", ex)
-          }
-          Left(e)
+  protected def updateOther(asset: Asset, options: Map[String,String]): Either[Throwable,Boolean] = {
+    try {
+      Model.withTransaction { implicit con =>
+        AssetStateMachine(asset).update().executeUpdate()
+        AssetLog.create(AssetLog(asset, "Asset updated", false))
+        Right(true)
       }
+    } catch {
+      case e: Throwable =>
+        logger.warn("Error saving values or in state transition", e)
+        try {
+          Model.withConnection { implicit con =>
+            AssetLog.create(AssetLog(asset, "Error saving values", e))
+          }
+        } catch {
+          case ex =>
+            logger.error("Database problem", ex)
+        }
+        Left(e)
+    }
   }
 
-  protected def updateServer(asset: Asset, lshw: Option[String], lldpd: Option[String]): Either[Throwable,Boolean] = {
+  protected def updateServer(asset: Asset, options: Map[String,String]): Either[Throwable,Boolean] = {
+    val lshw = options.get("lshw")
+    val lldpd = options.get("lldpd")
+    val chassis_tag = options.get("chassis_tag")
+
     if (!lshw.isDefined) {
-      return Left(new Exception("LSHW data not specified"))
+      return Left(new Exception("lshw data not specified"))
+    } else if (!chassis_tag.isDefined) {
+      return Left(new Exception("chassis_tag data not specified"))
     }
     val parser = new LshwParser(lshw.get, lshwConfig)
     parser.parse() match {
@@ -76,6 +82,7 @@ object AssetLifecycle {
       }
       case Right(lshwRep) => try {
         Model.withTransaction { implicit con =>
+          AssetMetaValue.create(AssetMetaValue(asset, AssetMeta.Enum.ChassisTag.id, chassis_tag.get))
           LshwHelper.updateAsset(asset, lshwRep) match {
             case true =>
               AssetStateMachine(asset).update().executeUpdate()

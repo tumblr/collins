@@ -23,9 +23,9 @@
     <div class="clearfix">
       <label for="@ServiceTag.toString">Service Tag</label>
       <div class="input">
-        <span id="@ServiceTag.toString" class="uneditable-input">@{
-          asset.getAttribute(ServiceTag).map{a => a.getValue()}.getOrElse{<em>-</em>}
-        }</span>
+        <span id="@ServiceTag.toString" class="uneditable-input">
+          @asset.getAttribute(ServiceTag).map{a => a.getValue()}.getOrElse{<em>-</em>}
+        </span>
       </div>
     </div>
     <div class="clearfix">

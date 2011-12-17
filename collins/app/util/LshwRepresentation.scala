@@ -27,7 +27,7 @@ case class LshwRepresentation(
   flashDisk: Option[FlashDisk]
 ) {
   def cpuCount: Int = cpus.size
-  def hasHypthreadingEnabled: Boolean = (cpuThreadCount > cpuCoreCount)
+  def hasHyperthreadingEnabled: Boolean = (cpuThreadCount > cpuCoreCount)
   def cpuCoreCount: Int = cpus.foldLeft(0) { case(total,cpu) =>
     total + cpu.cores
   }

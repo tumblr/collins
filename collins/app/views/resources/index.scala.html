@@ -24,8 +24,17 @@
     <div class="clearfix">
       <label for="@asset.name">@asset.label</label>
       <div class="input">
+        @if(asset.name=="DISK_IS_FLASH") {
+        <select name="@asset.name" id="@asset.name">
+          <option value="" selected></option>
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+        <span class="help-inline">@asset.description</span>
+        } else {
         <input type="text" id="@asset.name" name="@asset.name">
         <span class="help-inline">@asset.description</span>
+        }
       </div>
     </div>
     }

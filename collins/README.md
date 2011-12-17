@@ -7,7 +7,7 @@ run the application.
 ## Remaining TODO
 
  * Address FIXME's in source
- * Intake for things besides servers (routers, etc)
+ * Intake UI for things besides servers (routers, etc)
  * LLDP info as part of IT intake stage 2
  * Add source attribute to `asset_log`
  * Implement onHandlerNotFound, onHandlerError, etc
