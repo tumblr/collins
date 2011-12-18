@@ -42,5 +42,50 @@ $(document).ready(function() {
     });
   });
 
+  var fnLogProcessing = function (sSource, aoData, fnCallback) {
+    var paging = this.fnPagingInfo();
+    aoData.push( {"name": "page", "value": paging.iPage} );
+    aoData.push( {"name": "size", "value": paging.iLength} );
+    var sortDir = "desc";
+    for (var i = 0; i < aoData.length; i++) {
+      if (aoData[i].name == "sSortDir_0") {
+        sortDir = aoData[i].value;
+        break;
+      }
+    }
+    aoData.push( {"name": "sort", "value": sortDir} );
+    $.ajax( {
+      "dataType": 'json',
+      "type": "GET",
+      "url": sSource,
+      "data": aoData,
+      "success": function(json) {
+        json.iTotalRecords = json.Pagination.TotalResults;
+        json.iTotalDisplayRecords = json.iTotalRecords;
+        fnCallback(json);
+      }
+    });
+  };
+  var oTable = $('table.log-data[data-source]').each(function() {
+    var e = $(this);
+    var src = e.attr('data-source')
+    e.dataTable({
+      "bProcessing": true,
+      "bServerSide": true,
+      "bFilter": false,
+      "sAjaxSource": src,
+      "aaSorting": [[0, "desc"]],
+      "sPaginationType": "bootstrap",
+      "sDom": "<'row'<'span7'l><'span7'f>r>t<'row'<'span7'i><'span7'p>>",
+      "iDisplayLength": 25,
+      "fnServerData": fnLogProcessing,
+      "sAjaxDataProp": "Data",
+      "aoColumns": [
+        { "mDataProp": "Created" },
+        { "mDataProp": "IsError", "bSearchable": false, "bSortable": false },
+        { "mDataProp": "Message", "bSortable": false }
+      ]
+    });
+  });
 
 })

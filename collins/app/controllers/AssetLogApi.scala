@@ -10,9 +10,9 @@ trait AssetLogApi {
   this: Api with SecureController =>
 
   // GET /api/asset/:tag/log
-  def getLogData(tag: String, page: Int, size: Int) = SecureAction { implicit req =>
+  def getLogData(tag: String, page: Int, size: Int, sort: String) = SecureAction { implicit req =>
     val responseData = withAssetFromTag(tag) { asset =>
-      val logs = AssetLog.list(asset, page, size)
+      val logs = AssetLog.list(asset, page, size, sort)
       val logMessage: AssetLog => JsValue = { log =>
         log.is_json match {
           case true => parseJson(log.message)

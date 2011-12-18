@@ -68,15 +68,20 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
     new AssetLog(NotAssigned, Id(asset_id), new Date().asTimestamp, isError, true, stringify(message))
   }
 
-  def list(asset: Asset, page: Int = 0, pageSize: Int = 10): Page[AssetLog] = {
+  def list(asset: Asset, page: Int = 0, pageSize: Int = 10, sort: String): Page[AssetLog] = {
+    val order: String = sort match {
+      case "asc" => "ASC"
+      case _ => "DESC"
+    }
     val offset = pageSize * page
+    // I Don't know where I can't use on('order here but I get an exception
     Model.withConnection { implicit con =>
-      val rows = AssetLog.find("asset_id={asset_id} limit {pageSize} offset {offset}").on(
+      val rows = AssetLog.find("asset_id={asset_id} order by id %s limit {pageSize} offset {offset}".format(order)).on(
         'asset_id -> asset.getId,
         'pageSize -> pageSize,
         'offset -> offset
       ).list()
-      val totalRows = SQL("select count(*) from asset_log where asset_id={asset_id}").on(
+      val totalRows = AssetLog.count("asset_id={asset_id}").on(
         'asset_id -> asset.getId
       ).as(scalar[Long])
       Page(rows, page, offset, totalRows)
