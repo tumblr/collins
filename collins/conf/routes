@@ -8,6 +8,7 @@ GET     /                           app.Resources.index
 # Resources/Assets
 GET     /resources                  app.Resources.find
 GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
+
 GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "asc")
 GET     /asset/:id                  app.AssetController.show(id: Long)
 

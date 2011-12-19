@@ -69,14 +69,14 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
   }
 
   def list(asset: Asset, page: Int = 0, pageSize: Int = 10, sort: String): Page[AssetLog] = {
-    val order: String = sort match {
-      case "asc" => "ASC"
-      case _ => "DESC"
+    val orderBy: String = sort match {
+      case "asc" => "ORDER BY ID ASC"
+      case _ => "ORDER BY ID DESC"
     }
     val offset = pageSize * page
-    // I Don't know where I can't use on('order here but I get an exception
+    // Can't use on() for asc/desc because we don't want it quoted
     Model.withConnection { implicit con =>
-      val rows = AssetLog.find("asset_id={asset_id} order by id %s limit {pageSize} offset {offset}".format(order)).on(
+      val rows = AssetLog.find("asset_id={asset_id} limit {pageSize} offset {offset} %s".format(orderBy)).on(
         'asset_id -> asset.getId,
         'pageSize -> pageSize,
         'offset -> offset

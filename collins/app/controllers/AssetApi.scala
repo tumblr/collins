@@ -5,6 +5,7 @@ import models._
 import util.{AssetStateMachine, Helpers, LshwParser, JsonOutput, SecuritySpec}
 
 import play.api.data._
+import play.api.http.{Status => StatusValues}
 import play.api.mvc._
 import play.api.json._
 
@@ -66,9 +67,9 @@ trait AssetApi {
     val responseData = Asset.isValidTag(tag) match {
       case false => getErrorMessage("Invalid tag specified")
       case true => Asset.findByTag(tag) match {
-        case Some(asset) => Model.withConnection { implicit con =>
-          ResponseData(Ok, getCreateMessage(asset, IpmiInfo.findByAsset(asset)))
-        }
+        case Some(asset) =>
+          val msg = "Asset with tag '%s' already exists".format(tag)
+          getErrorMessage(msg, Status(StatusValues.CONFLICT))
         case None => handleValidation() match {
           case Left(error) => getErrorMessage(error)
           case Right((optGenerateIpmi, assetType)) =>
@@ -123,7 +124,6 @@ trait AssetApi {
   // DELETE /api/asset/:tag
   def deleteAsset(tag: String) = SecureAction { implicit req =>
     import com.twitter.util.StateMachine.InvalidStateTransition
-    import play.api.http.{Status => StatusValues}
     val responseData = withAssetFromTag(tag) { asset =>
       Model.withTransaction { implicit con =>
         try {

@@ -20,7 +20,7 @@ class LshwParserSpec extends Specification {
   
         rep.cpuCount mustEqual 2
         rep.cpuCoreCount mustEqual 12
-        rep.hasHypthreadingEnabled must beFalse
+        rep.hasHyperthreadingEnabled must beFalse
         rep.cpuSpeed must beCloseTo(2.3, 0.1)
   
         rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
@@ -50,7 +50,7 @@ class LshwParserSpec extends Specification {
   
         rep.cpuCount mustEqual 2
         rep.cpuCoreCount mustEqual 12
-        rep.hasHypthreadingEnabled must beFalse
+        rep.hasHyperthreadingEnabled must beFalse
         rep.cpuSpeed must beCloseTo(2.3, 0.1)
   
         rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
@@ -80,7 +80,7 @@ class LshwParserSpec extends Specification {
   
         rep.cpuCount mustEqual 2
         rep.cpuCoreCount mustEqual 12
-        rep.hasHypthreadingEnabled must beFalse
+        rep.hasHyperthreadingEnabled must beFalse
         rep.cpuSpeed must beCloseTo(2.3, 0.1)
   
         rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
@@ -140,7 +140,7 @@ class LshwParserSpec extends Specification {
   
         rep.cpuCount mustEqual 2
         rep.cpuCoreCount mustEqual 12
-        rep.hasHypthreadingEnabled must beTrue
+        rep.hasHyperthreadingEnabled must beTrue
         rep.cpuSpeed must beCloseTo(1.6, 0.1)
   
         rep.totalMemory.inGigabytes must beCloseTo(72L, 1)
@@ -167,7 +167,7 @@ class LshwParserSpec extends Specification {
   
         rep.cpuCount mustEqual 11
         rep.cpuCoreCount mustEqual 11
-        rep.hasHypthreadingEnabled must beFalse
+        rep.hasHyperthreadingEnabled must beFalse
         rep.cpuSpeed must beCloseTo(1.6, 0.1)
   
         rep.totalMemory.inGigabytes must beCloseTo(72L, 1)
