@@ -9,16 +9,12 @@ import play.api.json._
 trait AssetLogApi {
   this: Api with SecureController =>
 
+  val DefaultMessageType = AssetLog.MessageTypes.Informational
+
   // GET /api/asset/:tag/log
-  def getLogData(tag: String, page: Int, size: Int, sort: String) = SecureAction { implicit req =>
+  def getLogData(tag: String, page: Int, size: Int, sort: String, filter: String) = SecureAction { implicit req =>
     val responseData = withAssetFromTag(tag) { asset =>
-      val logs = AssetLog.list(asset, page, size, sort)
-      val logMessage: AssetLog => JsValue = { log =>
-        log.is_json match {
-          case true => parseJson(log.message)
-          case false => JsString(log.message)
-        }
-      }
+      val logs = AssetLog.list(asset, page, size, sort, filter)
       val prevPage = logs.prev match {
         case None => 0
         case Some(n) => n
@@ -42,12 +38,7 @@ trait AssetLogApi {
           "TotalResults" -> JsNumber(logs.total)
         )),
         "Data" -> JsArray(logs.items.map { log =>
-          JsObject(Map(
-            "AssetTag" -> JsString(tag),
-            "Created" -> JsString(Helpers.dateFormat(log.created)),
-            "IsError" -> JsBoolean(log.is_error),
-            "Message" -> logMessage(log)
-          ))
+          JsObject(log.toJsonMap)
         }.toList)
       )), headers)
     }
@@ -58,25 +49,34 @@ trait AssetLogApi {
   def submitLogData(tag: String) = SecureAction { implicit req =>
 
     def processJson(jsValue: JsValue, asset: Asset): Option[String] = {
-      val is_error: Boolean = jsValue \ "IsError" match {
-        case JsBoolean(bool) => bool
-        case JsUndefined(msg) => false
-        case _ => return Some("IsError must be a boolean")
+      val typeString: String = jsValue \ "Type" match {
+        case JsString(s) => s.toUpperCase
+        case JsUndefined(msg) => DefaultMessageType.toString
+        case _ => return Some("Type must be a string")
       }
       val msg = jsValue \ "Message" match {
         case JsUndefined(msg) => return Some("Didn't find Message in json object")
         case js => js
       }
-      Model.withConnection { implicit con =>
-        AssetLog.create(AssetLog(asset, msg, is_error))
+      try {
+        val mtype = AssetLog.MessageTypes.withName(typeString)
+        Model.withConnection { implicit con =>
+          AssetLog.create(
+            AssetLog(asset, stringify(msg), AssetLog.Formats.Json, AssetLog.Sources.Api, mtype)
+          )
+        }
+        None
+      } catch {
+        case _ => Some("Invalid message type specified. Valid types are: %s".format(
+          AssetLog.MessageTypes.values.mkString(","))
+        )
       }
-      None
     }
 
     def processForm(asset: Asset): Option[String] = {
       Form(of(
             "message" -> requiredText(1),
-            "is_error" -> optional(boolean)
+            "type" -> optional(text(1))
            )
       ).bindFromRequest.fold(
         error => {
@@ -85,11 +85,20 @@ trait AssetLogApi {
         },
         success => {
           val msg = success._1
-          val is_error = success._2.getOrElse(false)
-          Model.withConnection { implicit con =>
-            AssetLog.create(AssetLog(asset, msg, is_error))
+          val typeString = success._2.getOrElse(DefaultMessageType.toString).toUpperCase
+          try {
+            val mtype = AssetLog.MessageTypes.withName(typeString)
+            Model.withConnection { implicit con =>
+              AssetLog.create(
+                AssetLog(asset, msg, AssetLog.Formats.PlainText, AssetLog.Sources.Api, mtype)
+              )
+            }
+            None
+          } catch {
+            case _ => Some("Invalid message type specified. Valid types are: %s".format(
+              AssetLog.MessageTypes.values.mkString(","))
+            )
           }
-          None
         }
       )
     }

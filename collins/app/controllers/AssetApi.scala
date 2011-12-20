@@ -95,6 +95,7 @@ trait AssetApi {
         "lshw" -> optional(text(1)),
         "lldpd" -> optional(text(1)),
         "chassis_tag" -> optional(text(1))
+        // FIXME attribute -> optional(text(3)) - keyword;value
       )).bindFromRequest
       form.value.isDefined match {
         case true => Right(form.data)
@@ -128,10 +129,11 @@ trait AssetApi {
       Model.withTransaction { implicit con =>
         try {
           AssetStateMachine(asset).decommission().executeUpdate()
-          AssetLog.create(AssetLog(
+          AssetLog.create(AssetLog.informational(
             asset,
             "Asset decommissioned successfully",
-            false
+            AssetLog.Formats.PlainText,
+            AssetLog.Sources.Internal
           ))
           ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(true))))
         } catch {
@@ -147,6 +149,10 @@ trait AssetApi {
     formatResponseData(responseData)
   }(SecuritySpec(true, Seq("infra")))
 
+  // Params: attribute, type, status, createdAfter|Before, updatedAfter|Before
+  def findAssets(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
+    formatResponseData(getErrorMessage("Not yet implemented", NotImplemented))
+  }(SecuritySpec(true, Seq("infra")))
 
   private def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
     val assetAsMap = assetToJsMap(asset)

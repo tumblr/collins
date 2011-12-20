@@ -54,7 +54,7 @@ INSERT INTO ipmi_info VALUES(1, 1, 'test-user', '', 167772161, 167772162, 429495
 INSERT INTO asset_meta_value VALUES(1, 1, 0, 'dell service tag 123');
 INSERT INTO asset_meta_value VALUES(1, 2, 0, 'chassis tag abc');
 
-INSERT INTO asset_log SET asset_id=1, message='Automatically created by database migration';
+INSERT INTO asset_log SET asset_id=1, message_type=6, message='Automatically created by database migration';
 
 # --- !Downs
 

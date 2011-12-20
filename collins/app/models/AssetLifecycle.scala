@@ -18,10 +18,11 @@ object AssetLifecycle {
           case true => Some(IpmiInfo.createForAsset(asset))
           case false => None
         }
-        AssetLog.create(AssetLog(
+        AssetLog.create(AssetLog.informational(
           asset,
           "Initial intake successful, status now Incomplete",
-          false
+          AssetLog.Formats.PlainText,
+          AssetLog.Sources.Internal
         ))
         Right(Tuple2(asset, ipmi))
       }
@@ -44,21 +45,17 @@ object AssetLifecycle {
     try {
       Model.withTransaction { implicit con =>
         AssetStateMachine(asset).update().executeUpdate()
-        AssetLog.create(AssetLog(asset, "Asset updated", false))
+        AssetLog.create(AssetLog.informational(
+          asset,
+          "Asset state updated",
+          AssetLog.Formats.PlainText,
+          AssetLog.Sources.Internal
+        ))
         Right(true)
       }
     } catch {
       case e: Throwable =>
-        logger.warn("Error saving values or in state transition", e)
-        try {
-          Model.withConnection { implicit con =>
-            AssetLog.create(AssetLog(asset, "Error saving values", e))
-          }
-        } catch {
-          case ex =>
-            logger.error("Database problem", ex)
-        }
-        Left(e)
+        handleException(asset, "Error saving values or in state transition", e)
     }
   }
 
@@ -76,7 +73,12 @@ object AssetLifecycle {
     parser.parse() match {
       case Left(ex) => {
         Model.withConnection { implicit con =>
-          AssetLog.create(AssetLog(asset, "Parsing LSHW failed", ex))
+          AssetLog.create(AssetLog.notice(
+            asset,
+            "Parsing LSHW failed",
+            AssetLog.Formats.PlainText,
+            AssetLog.Sources.Internal
+          ).withException(ex))
         }
         Left(ex)
       }
@@ -86,28 +88,46 @@ object AssetLifecycle {
           LshwHelper.updateAsset(asset, lshwRep) match {
             case true =>
               AssetStateMachine(asset).update().executeUpdate()
-              AssetLog.create(AssetLog(asset, "Parsing and storing LSHW data succeeded, asset now New", false))
+              AssetLog.create(AssetLog.informational(
+                asset,
+                "Parsing and storing LSHW data succeeded, asset now New",
+                AssetLog.Formats.PlainText,
+                AssetLog.Sources.Internal
+              ))
               Right(true)
             case false =>
               val ex = new Exception("Parsing LSHW succeeded, saving failed")
-              AssetLog.create(AssetLog(asset, ex))
+              AssetLog.create(AssetLog.error(
+                asset,
+                "Parsing LSHW succeeded but saving it failed",
+                AssetLog.Formats.PlainText,
+                AssetLog.Sources.Internal
+              ).withException(ex))
               Left(ex)
           }
         }
       } catch {
         case e: Throwable =>
-          logger.warn("Error saving values", e)
-          try {
-            Model.withConnection { implicit con =>
-              AssetLog.create(AssetLog(asset, "Error saving values", e))
-            }
-          } catch {
-            case ex =>
-              logger.error("Database problem", ex)
-          }
-          Left(e)
+          handleException(asset, "Error saving values or in state transition", e)
       } //catch
     } // parser.parse
   } // updateServer
 
+  private def handleException(asset: Asset, msg: String, e: Throwable): Either[Throwable,Boolean] = {
+    logger.warn(msg, e)
+    try {
+      Model.withConnection { implicit con =>
+        AssetLog.create(AssetLog.error(
+          asset,
+          msg,
+          AssetLog.Formats.PlainText,
+          AssetLog.Sources.Internal
+        ).withException(e))
+      }
+    } catch {
+      case ex =>
+        logger.error("Database problems", ex)
+    }
+    Left(e)
+  }
 }

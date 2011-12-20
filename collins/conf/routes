@@ -9,7 +9,7 @@ GET     /                           app.Resources.index
 GET     /resources                  app.Resources.find
 GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
 
-GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "asc")
+GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 GET     /asset/:id                  app.AssetController.show(id: Long)
 
 
@@ -23,12 +23,13 @@ GET     /logout                     controllers.Application.logout
 
 # API
 PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
-GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "asc")
+GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 
 PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
 DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
 GET     /api/asset/:tag             app.Api.findAssetWithMetaValues(tag: String)
+GET     /api/assets                 app.Api.findAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC")
 
 GET     /api/ping                   app.Api.ping
 

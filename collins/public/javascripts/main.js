@@ -46,7 +46,7 @@ $(document).ready(function() {
     var paging = this.fnPagingInfo();
     aoData.push( {"name": "page", "value": paging.iPage} );
     aoData.push( {"name": "size", "value": paging.iLength} );
-    var sortDir = "desc";
+    var sortDir = "DESC";
     for (var i = 0; i < aoData.length; i++) {
       if (aoData[i].name == "sSortDir_0") {
         sortDir = aoData[i].value;
@@ -68,7 +68,15 @@ $(document).ready(function() {
   };
   var oTable = $('table.log-data[data-source]').each(function() {
     var e = $(this);
-    var src = e.attr('data-source')
+    var src = e.attr('data-source');
+    var errors = ["EMERGENCY", "ALERT", "CRITICAL"];
+    var warnings = ["ERROR", "WARNING"];
+    var notices = ["NOTICE"];
+    var success = ["INFORMATIONAL"];
+
+    var getLabelSpan = function(msg, label) {
+      return '<span class="label ' + label + '">' + msg + '</span>';
+    };
     e.dataTable({
       "bProcessing": true,
       "bServerSide": true,
@@ -81,10 +89,28 @@ $(document).ready(function() {
       "fnServerData": fnLogProcessing,
       "sAjaxDataProp": "Data",
       "aoColumns": [
-        { "mDataProp": "Created" },
-        { "mDataProp": "IsError", "bSearchable": false, "bSortable": false },
-        { "mDataProp": "Message", "bSortable": false }
-      ]
+        { "mDataProp": "CREATED" },
+        { "mDataProp": "SOURCE", "bSortable": false },
+        { "mDataProp": "TYPE", "bSortable": false },
+        { "mDataProp": "MESSAGE", "bSortable": false }
+      ],
+      "fnRowCallback": function( nRow, aData, iDisplayIndex ) {
+        var dtype = aData.TYPE;
+        console.log(aData);
+        if ($.inArray(dtype, errors) > -1) {
+          $('td:eq(2)', nRow).html(getLabelSpan(dtype, "important"));
+        } else if ($.inArray(dtype, warnings) > -1) {
+          $('td:eq(2)', nRow).html(getLabelSpan(dtype, "warning"));
+        } else if ($.inArray(dtype, notices) > -1) {
+          $('td:eq(2)', nRow).html(getLabelSpan(dtype, "notice"));
+        } else if ($.inArray(dtype, success) > -1) {
+          $('td:eq(2)', nRow).html(getLabelSpan(dtype, "success"));
+        } else {
+          console.log(dtype);
+          $('td:eq(2)', nRow).html(getLabelSpan(dtype, ""));
+        }
+        return nRow;
+      }
     });
   });
 

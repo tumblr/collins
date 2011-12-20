@@ -25,6 +25,7 @@ CREATE TABLE asset (
 CREATE INDEX status_idx ON asset (status);
 CREATE INDEX asset_type_idx ON asset (asset_type);
 CREATE INDEX created_idx ON asset (created);
+CREATE INDEX updated_idx ON asset (updated);
 
 CREATE TABLE asset_meta (
   id                            INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -47,15 +48,18 @@ CREATE INDEX amv_ids ON asset_meta_value (asset_id, asset_meta_id);
 CREATE INDEX amv_mid ON asset_meta_value (asset_meta_id);
 CREATE INDEX amv_gid ON asset_meta_value (group_id);
 
+-- NOTE Because format/source/message_type are not user manageable, we do not have another table
+-- that tracks the text for each of these. It could be easily added.
 CREATE TABLE asset_log (
   id                            BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   asset_id                      BIGINT NOT NULL,
   created                       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  is_error                      BOOLEAN NOT NULL DEFAULT FALSE,
-  is_json                       BOOLEAN NOT NULL DEFAULT FALSE,
+  format                        TINYINT NOT NULL DEFAULT 0, -- 0=text,1=json,....
+  source                        TINYINT NOT NULL DEFAULT 0, -- 0=internal,1=API,2=User,....
+  message_type                  TINYINT NOT NULL DEFAULT 0, -- 0=note,1=error,2=lifecycle,...
   message                       TEXT
 );
-CREATE INDEX al_aid ON asset_log (asset_id);
+CREATE INDEX al_aid ON asset_log (asset_id,message_type);
 
 CREATE TABLE ipmi_info (
   id                            BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -73,6 +77,7 @@ CREATE INDEX ipmi_netmask_idx ON ipmi_info (netmask);
 # --- !Downs
 
 DROP TABLE IF EXISTS ipmi_info;
+DROP TABLE IF EXISTS asset_log;
 DROP TABLE IF EXISTS asset_meta_value;
 DROP TABLE IF EXISTS asset_meta;
 DROP TABLE IF EXISTS asset;
