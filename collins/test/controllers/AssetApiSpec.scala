@@ -58,7 +58,7 @@ class AssetApiSpec extends models.DatabaseSpec with SpecHelpers {
       }
       "Step 3 - Review Intake Data" >> {
         val req = getRequest(MockRequest(path = "/api/asset/%s.json".format(assetId)))
-        val res = Extract.from(api.findAssetWithMetaValues(assetId).apply(req))
+        val res = Extract.from(api.getAsset(assetId).apply(req))
         res._1 mustEqual(200)
         val jsonResponse = parseJson(res._3)
         jsonResponse \ "ASSET" must haveClass[JsObject]

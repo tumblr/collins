@@ -21,9 +21,7 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty) {
     memMatcher.orElse(
       diskMatcher.orElse(
         nicMatcher.orElse(
-          flashMatcher.orElse(
-            wildcard
-          )
+          wildcard
         )
       )
     )
@@ -38,13 +36,12 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty) {
         return Left(e)
     }
     val rep = try {
-      getCoreNodes(xml).foldLeft(LshwRepresentation(Nil,Nil,Nil,Nil,None)) { case (holder,node) =>
+      getCoreNodes(xml).foldLeft(LshwRepresentation(Nil,Nil,Nil,Nil)) { case (holder,node) =>
         matcher(node) match {
           case c: Cpu => holder.copy(cpus = c +: holder.cpus)
           case m: Memory => holder.copy(memory = m +: holder.memory)
           case d: Disk => holder.copy(disks = d +: holder.disks)
           case n: Nic => holder.copy(nics = n +: holder.nics)
-          case f: FlashDisk => holder.copy(flashDisk = Some(f))
           case _ => holder
         }
       }
@@ -91,18 +88,11 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty) {
   // NOTE There is no way to tell how large the virident cards are so we used a default
   val flashDescription = config.getOrElse("flashDescription", "flash")
   val flashSize = config.getOrElse("flashSize", "1400000000000").toLong
-  val flashMatcher: PartialFunction[NodeSeq,FlashDisk] = {
-    case n if (n \ "@class" text) == "memory" && (n \ "description" text).toLowerCase.contains(flashDescription) =>
-      val asset = getAsset(n)
-      val size = ByteStorageUnit(flashSize)
-      FlashDisk(size, asset.description, asset.product, asset.vendor)
-  }
-
   val diskMatcher: PartialFunction[NodeSeq,Disk] = {
     case n if (n \ "@class" text) == "disk" =>
       val _type = (n \ "physid" text).contains("\\.") match {
-        case true => "IDE"
-        case false => "SCSI"
+        case true => Disk.Type.Ide
+        case false => Disk.Type.Scsi
       }
       val asset = getAsset(n)
       val size = (n \ "size" text) match {
@@ -110,6 +100,10 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty) {
         case size => ByteStorageUnit(size.toLong)
       }
       Disk(size, _type, asset.description, asset.product, asset.vendor)
+    case n if (n \ "@class" text) == "memory" && (n \ "description" text).toLowerCase.contains(flashDescription) =>
+      val asset = getAsset(n)
+      val size = ByteStorageUnit(flashSize)
+      Disk(size, Disk.Type.Flash, asset.description, asset.product, asset.vendor)
   }
 
   val nicMatcher: PartialFunction[NodeSeq,Nic] = {

@@ -2,125 +2,71 @@ package controllers
 
 import models.{Status => AStatus}
 import models._
-import util.{AssetStateMachine, Helpers, LshwParser, JsonOutput, SecuritySpec}
+import util._
+import views.html
 
 import play.api.data._
 import play.api.http.{Status => StatusValues}
 import play.api.mvc._
 import play.api.json._
 
+import java.util.Date
+
 trait AssetApi {
   this: Api with SecureController =>
 
   private lazy val lshwConfig = Helpers.subAsMap("lshw")
 
-  // GET /api/asset/:tag
-  def findAssetWithMetaValues(tag: String) = SecureAction { implicit req =>
-    val responseData = withAssetFromTag(tag) { asset =>
-      val assetAsMap = assetToJsMap(asset)
-      val assetMeta = AssetMetaValue.findAllByAssetId(asset.getId).groupBy { _.getGroupId }
-      val attribsObj = JsObject(assetMeta.map { case(groupId, mvl) =>
-        groupId.toString -> JsObject(mvl.map { mv => mv.getName -> JsString(mv.getValue) }.toMap)
-      })
-      val attribMap = Map("ATTRIBS" -> attribsObj)
-      ResponseData(Ok, JsObject(assetAsMap ++ attribMap))
+  def getAsset(tag: String) = Authenticated { user => Action { implicit req =>
+    type IpmiMap = Map[String,JsValue]
+    type Carry = Tuple4[Asset, LshwRepresentation, Seq[MetaWrapper], IpmiMap]
+
+    val isHtml = OutputType.isHtml(req)
+    withAssetFromTag(tag) { asset =>
+      val (lshwRep, mvs) = LshwHelper.reconstruct(asset)
+      val ipmi = IpmiInfo.findByAsset(asset).map { info =>
+        hasRole(user.get, Seq("infra")) match {
+          case true => info.toJsonMap(false)
+          case _ => info.toJsonMap()
+        }
+      }.getOrElse(Map[String,JsValue]())
+      val outMap = Map(
+        "ASSET" -> JsObject(asset.toJsonMap),
+        "HARDWARE" -> JsObject(lshwRep.toJsonMap),
+        "IPMI" -> JsObject(ipmi),
+        "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map { case(groupId, mv) =>
+          groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) }.toMap)
+        }.toMap)
+      )
+      val extras: Carry = (asset, lshwRep, mvs, ipmi)
+      ResponseData(Ok, JsObject(outMap), attachment = Some(extras))
+    }.map { data =>
+      isHtml match {
+        case true => data.status match {
+          case Ok =>
+            val (asset, lshwRep, mv, ipmi) = data.attachment.get.asInstanceOf[Carry]
+            Ok(html.asset.show(asset, lshwRep, mv, ipmi))
+          case _ =>
+            Redirect(app.routes.Resources.index).flashing(
+              "message" -> ("Could not find asset with tag " + tag)
+            )
+        }
+        case _ => formatResponseData(data)
+      }
     }
-    formatResponseData(responseData)
-  }
+  }}(SecuritySpec(true, Nil))
+
+  // GET /api/assets?params
+  val finder = new AssetApi.FindAsset()
+  def getAssets(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
+    finder(page, size, sort)
+  }(SecuritySpec(true, Nil))
 
   // PUT /api/asset/:tag
-  def createAsset(tag: String) = SecureAction { implicit req =>
-
-    def handleValidation(): Either[String,(Option[Boolean],AssetType)] = {
-      val defaultAssetType = AssetType.Enum.ServerNode
-      val form = Form(of(
-        "generate_ipmi" -> optional(boolean),
-        "asset_type" -> optional(text(1)).verifying("Invalid asset type specified", res => res match {
-          case Some(asset_type) => AssetType.fromString(asset_type) match {
-            case Some(_) => true
-            case None => false
-          }
-          case None => true
-        })
-      ))
-      form.bindFromRequest.fold(
-        err => {
-          val msg = err("generate_ipmi").error.map { _ =>
-            "generate_ipmi only takes true or false as values"
-          }.getOrElse(
-            err("asset_type").error.map { _ =>
-              "Invalid asset_type specified"
-            }.getOrElse("Error during parameter validation")
-          )
-          Left(msg)
-        },
-        success => {
-          val gen_ipmi = success._1
-          val atype = success._2.flatMap { name =>
-            AssetType.fromString(name)
-          }.getOrElse(AssetType.fromEnum(defaultAssetType))
-          Right(gen_ipmi, atype)
-        }
-      )
-    }
-
-    val responseData = Asset.isValidTag(tag) match {
-      case false => getErrorMessage("Invalid tag specified")
-      case true => Asset.findByTag(tag) match {
-        case Some(asset) =>
-          val msg = "Asset with tag '%s' already exists".format(tag)
-          getErrorMessage(msg, Status(StatusValues.CONFLICT))
-        case None => handleValidation() match {
-          case Left(error) => getErrorMessage(error)
-          case Right((optGenerateIpmi, assetType)) =>
-            val generateIpmi = optGenerateIpmi.getOrElse({
-              assetType.getId == AssetType.Enum.ServerNode.id
-            })
-            AssetLifecycle.createAsset(tag, assetType, generateIpmi) match {
-              case Left(ex) => getErrorMessage(ex.getMessage)
-              case Right((asset, ipmi)) =>
-                ResponseData(Created, getCreateMessage(asset, ipmi))
-            }
-        }
-      }
-    }
-    formatResponseData(responseData)
-  }(SecuritySpec(true, Seq("infra")))
+  val createAsset = new CreateAsset()
 
   // POST /api/asset/:tag
-  def updateAsset(tag: String) = SecureAction { implicit req =>
-
-    def handleValidation(asset: Asset): Either[String,Map[String,String]] = {
-      val form = Form(of(
-        "lshw" -> optional(text(1)),
-        "lldpd" -> optional(text(1)),
-        "chassis_tag" -> optional(text(1))
-        // FIXME attribute -> optional(text(3)) - keyword;value
-      )).bindFromRequest
-      form.value.isDefined match {
-        case true => Right(form.data)
-        case false => Left("Error processing form data")
-      }
-    }
-
-    val responseData = withAssetFromTag(tag) { asset =>
-      // FIXME this should be handled in AssetLifecycle
-      if (asset.status != AStatus.Enum.Incomplete.id) {
-        getErrorMessage("Asset update only works when asset is Incomplete")
-      } else {
-        handleValidation(asset) match {
-          case Left(error) => getErrorMessage(error)
-          case Right(options) =>
-            AssetLifecycle.updateAsset(asset, options) match {
-              case Left(error) => getErrorMessage(error.getMessage)
-              case Right(success) =>
-                ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(success))))
-            }
-        }
-      }
-    }
-    formatResponseData(responseData)
-  }(SecuritySpec(true, Seq("infra")))
+  val updateAsset = new UpdateAsset()
 
   // DELETE /api/asset/:tag
   def deleteAsset(tag: String) = SecureAction { implicit req =>
@@ -149,25 +95,221 @@ trait AssetApi {
     formatResponseData(responseData)
   }(SecuritySpec(true, Seq("infra")))
 
-  // Params: attribute, type, status, createdAfter|Before, updatedAfter|Before
-  def findAssets(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
-    formatResponseData(getErrorMessage("Not yet implemented", NotImplemented))
-  }(SecuritySpec(true, Seq("infra")))
-
   private def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
-    val assetAsMap = assetToJsMap(asset)
-    val map = ipmi.isDefined match {
-      case true =>
-        val ipmiAsMap = ipmi.get.toMap().map { case(k,v) => k -> JsString(v) }
-        assetAsMap ++ Map("IPMI" -> JsObject(ipmiAsMap))
-      case false =>
-        assetAsMap
-    }
+    val map = ipmi.map { ipmi_info =>
+        Map("ASSET" -> JsObject(asset.toJsonMap),
+            "IPMI" -> JsObject(ipmi_info.toJsonMap()))
+    }.getOrElse(Map("ASSET" -> JsObject(asset.toJsonMap)))
     JsObject(map)
   }
 
-  private def assetToJsMap(asset: Asset) = Map("ASSET" -> JsObject(asset.toMap().map { case(k,v) =>
-    k -> JsString(v)
-  }))
+  private[AssetApi] class UpdateAsset(perms: Seq[String] = Seq("infra")) {
+    val updateForm = Form(of(
+      "lshw" -> optional(text(1)),
+      "lldpd" -> optional(text(1)),
+      "chassis_tag" -> optional(text(1)),
+      "attribute" -> optional(text(3)).verifying("Invalid attribute specified", res => res match {
+        case None => true
+        case Some(v) => v.split(";", 2).size == 2
+      })
+    ))
 
+    def validateRequest(asset: Asset)(implicit req: Request[AnyContent]): Either[String,Map[String,String]] = {
+      updateForm.bindFromRequest.fold(
+        hasErrors => Left("Error processing form data"),
+        success => {
+          val (lshw, lldpd, chassis_tag, attribute) = success
+          val map: Map[String,String] = Map.empty ++
+            lshw.map { s => Map("lshw" -> s) }.getOrElse(Map.empty) ++
+            lldpd.map { s => Map("lldpd" -> s) }.getOrElse(Map.empty) ++
+            chassis_tag.map { s => Map("chassis_tag" -> s) }.getOrElse(Map.empty) ++
+            attribute.map { attrib =>
+              val attribs = attrib.split(";", 2)
+              Map(attribs(0) -> attribs(1))
+            }.getOrElse(Map.empty)
+          Right(map)
+        }
+      )
+    }
+
+    def apply(tag: String) = SecureAction { implicit req =>
+      val responseData = withAssetFromTag(tag) { asset =>
+        validateRequest(asset) match {
+          case Left(error) => getErrorMessage(error)
+          case Right(options) =>
+            AssetLifecycle.updateAsset(asset, options) match {
+              case Left(error) => getErrorMessage(error.getMessage)
+              case Right(success) =>
+                ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(success))))
+            }
+        }
+      }
+      formatResponseData(responseData)
+    }(SecuritySpec(true, Seq("infra")))
+  }
+
+
+  private[AssetApi] class CreateAsset(perms: Seq[String] = Seq("infra")) {
+    val defaultAssetType = AssetType.Enum.ServerNode
+    val createForm = Form(of(
+      "generate_ipmi" -> optional(boolean),
+      "asset_type" -> optional(text(1)).verifying("Invalid asset type specified", res => res match {
+        case Some(asset_type) => AssetType.fromString(asset_type) match {
+          case Some(_) => true
+          case None => false
+        }
+        case None => true
+      })
+    ))
+
+    def validateRequest()(implicit request: Request[AnyContent]): Either[String,(Option[Boolean],AssetType)] = {
+      createForm.bindFromRequest.fold(
+        err => {
+          val msg = err("generate_ipmi").error.map { _ =>
+            "generate_ipmi only takes true or false as values"
+          }.getOrElse(
+            err("asset_type").error.map { _ =>
+              "Invalid asset_type specified"
+            }.getOrElse("Error during parameter validation")
+          )
+          Left(msg)
+        },
+        success => {
+          val gen_ipmi = success._1
+          val atype = success._2.flatMap { name =>
+            AssetType.fromString(name)
+          }.getOrElse(AssetType.fromEnum(defaultAssetType))
+          Right(gen_ipmi, atype)
+        }
+      )
+    }
+
+    def validateTag(tag: String): Option[ResponseData] = {
+      Asset.isValidTag(tag) match {
+        case false => Some(getErrorMessage("Invalid tag specified"))
+        case true => Asset.findByTag(tag) match {
+          case Some(asset) =>
+            val msg = "Asset with tag '%s' already exists".format(tag)
+            Some(getErrorMessage(msg, Status(StatusValues.CONFLICT)))
+          case None => None
+        }
+      }
+    }
+
+    def apply(tag: String) = SecureAction { implicit req =>
+      val responseData = validateTag(tag) match {
+        case Some(data) => data
+        case None => validateRequest() match {
+          case Left(error) => getErrorMessage(error)
+          case Right((optGenerateIpmi, assetType)) =>
+            val generateIpmi = optGenerateIpmi.getOrElse({
+              assetType.getId == AssetType.Enum.ServerNode.id
+            })
+            AssetLifecycle.createAsset(tag, assetType, generateIpmi) match {
+              case Left(ex) => getErrorMessage(ex.getMessage)
+              case Right((asset, ipmi)) =>
+                ResponseData(Created, getCreateMessage(asset, ipmi))
+            }
+        }
+      }
+      formatResponseData(responseData)
+    }(SecuritySpec(true, perms))
+  }
+}
+object AssetApi extends ApiResponse {
+  private[controllers] object FindAsset {
+    val params = Set("attribute", "type", "status", "createdAfter", "createdBefore", "updatedAfter",
+      "updatedBefore")
+    val findForm = Form(of(
+      "attribute" -> optional(text(3)).verifying("Invalid attribute specified", res => res match {
+        case None => true
+        case Some(s) => s.split(";", 2).size == 2
+      }),
+      "type" -> optional(text(2)).verifying("Invalid asset type specified", res => res match {
+        case None => true
+        case Some(s) => AssetType.Enum.values.find(_.toString == s).isDefined
+      }),
+      "status" -> optional(text(2)).verifying("Invalid asset status specified", res => res match {
+        case None => true
+        case Some(s) => AStatus.Enum.values.find(_.toString == s).isDefined
+      }),
+      "createdAfter" -> optional(date(Helpers.ISO_8601_FORMAT)),
+      "createdBefore" -> optional(date(Helpers.ISO_8601_FORMAT)),
+      "updatedAfter" -> optional(date(Helpers.ISO_8601_FORMAT)),
+      "updatedBefore" -> optional(date(Helpers.ISO_8601_FORMAT))
+    ))
+  }
+
+  private[controllers] class FindAsset() {
+
+    def formatFormErrors(errors: Seq[FormError]): String = {
+      errors.map { e =>
+        e.key match {
+          case "attribute" | "type" | "status" => "%s - %s".format(e.key, e.message)
+          case key if key.startsWith("created") => "%s must be an ISO8601 date".format(key)
+          case key if key.startsWith("updated") => "%s must be an ISO8601 date".format(key)
+        }
+      }.mkString(", ")
+    }
+
+    type Validated = (AttributeResolver.ResultTuple,AssetFinder)
+    def validateRequest()(implicit req: Request[AnyContent]): Either[String,Validated] = {
+      FindAsset.findForm.bindFromRequest.fold(
+        errorForm => Left(formatFormErrors(errorForm.errors)),
+        success => {
+          val (attribute,atype,status,createdA,createdB,updatedA,updatedB) = success
+          val attributeMap = attribute.map { _ =>
+            req.queryString("attribute").foldLeft(Map[String,String]()) { case(total,cur) =>
+              val split = cur.split(";", 2)
+              if (split.size == 2) {
+                total ++ Map(split(0) -> split(1))
+              } else {
+                return Left("attribute found but not formatted as key;value")
+              }
+            }
+          }.getOrElse(Map[String,String]())
+          val atypeEnum: Option[AssetType.Enum] = atype.map { at => AssetType.Enum.withName(at) }
+          val statusEnum: Option[AStatus.Enum] = status.map { s => AStatus.Enum.withName(s) }
+          val resolvedMap = try {
+            AttributeResolver(attributeMap)
+          } catch {
+            case e => return Left(e.getMessage)
+          }
+          Right((resolvedMap,AssetFinder(statusEnum, atypeEnum, createdA, createdB, updatedA, updatedB)))
+        }
+      )
+    }
+
+    protected def formatAsJson(results: Page[Asset]): ResponseData = {
+      ResponseData(Ok, JsObject(results.getPaginationJsMap() ++ Map(
+        "Data" -> JsArray(results.items.map { i => JsObject(i.toJsonMap) }.toList)
+      )), results.getPaginationHeaders)
+    }
+
+    def apply(page: Int, size: Int, sort: String)(implicit req: Request[AnyContent]) = {
+      val isHtml = OutputType.isHtml(req)
+      validateRequest() match {
+        case Left(err) => isHtml match {
+          case true =>
+            Redirect(app.routes.Resources.index).flashing(
+              "error" -> ("Error executing search: " + err)
+            )
+          case false =>
+            formatResponseData(getErrorMessage(err))
+        }
+        case Right(valid) =>
+          val pageParams = PageParams(page, size, sort)
+          val results = MetaWrapper.findAssets(pageParams, valid._1, valid._2)
+          isHtml match {
+            case false => formatResponseData(formatAsJson(results))
+            case true => results.items.size match {
+              case 0 => Redirect(app.routes.Resources.index).flashing(
+                "message" -> ("Could not find any matching assets")
+              )
+              case n => Ok(html.asset.list(results))
+            }
+          }
+      }
+    }
+  }
 }

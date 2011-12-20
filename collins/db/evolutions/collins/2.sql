@@ -40,11 +40,10 @@ INSERT INTO asset_meta VALUES (16, 'MAC_ADDRESS', 5, 'MAC Address', 'MAC Address
 INSERT INTO asset_meta VALUES (17, 'NIC_DESCRIPTION', -1, 'NIC Description', 'Vendor labels for NIC');
 
 INSERT INTO asset_meta VALUES (18, 'DISK_SIZE_BYTES', -1, 'Disk Size', 'Disk size in bytes');
-INSERT INTO asset_meta VALUES (19, 'DISK_TYPE', -1, 'Inferred disk type', 'Inferred disk type: SCSI, IDE or FLASH');
+INSERT INTO asset_meta VALUES (19, 'DISK_TYPE', 6, 'Inferred disk type', 'Inferred disk type: SCSI, IDE or FLASH');
 INSERT INTO asset_meta VALUES (20, 'DISK_DESCRIPTION', -1, 'Disk Description', 'Vendor labels for disk');
-INSERT INTO asset_meta VALUES (21, 'DISK_IS_FLASH', 6, 'Flash Disk', 'Disk is flash memory based');
 
-INSERT INTO asset_meta VALUES (22, 'DISK_STORAGE_TOTAL', 7, 'Total disk storage', 'Total amount of available storage');
+INSERT INTO asset_meta VALUES (21, 'DISK_STORAGE_TOTAL', 7, 'Total disk storage', 'Total amount of available storage');
 
 INSERT INTO asset VALUES (1, 'tumblrtag1', 7, 1, CURRENT_TIMESTAMP, null, null);
 
@@ -59,6 +58,7 @@ INSERT INTO asset_log SET asset_id=1, message_type=6, message='Automatically cre
 # --- !Downs
 
 DELETE FROM asset_meta_value;
+DELETE FROM asset_log;
 DELETE FROM asset_meta;
 DELETE FROM asset;
 DELETE FROM asset_type;

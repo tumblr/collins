@@ -17,7 +17,7 @@
       <tbody>
         @assets.map { asset =>
         <tr>
-          <td><a href="@app.routes.AssetController.show(asset.getId)">@asset.tag</a></td>
+          <td><a href="@app.routes.CookieApi.getAsset(asset.tag)">@asset.tag</a></td>
           <td>@asset.getStatus().name</td>
           <td>@asset.getType().name</td>
           <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>

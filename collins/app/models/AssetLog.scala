@@ -103,16 +103,7 @@ case class AssetLog(
   }
 }
 
-case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
-  lazy val prev: Option[Int] = Option(page - 1).filter(_ >= 0)
-  lazy val next: Option[Int] = Option(page + 1).filter(_ => (offset + items.size) < total)
-}
-
 object AssetLog extends Magic[AssetLog](Some("asset_log")) {
-  protected def requireTiny(value: Int) {
-    require(value >=0 && value < 128, "Value must be 0 <= x < 128")
-  }
-
   def apply(asset: Asset, message: String, format: AssetLog.Formats, source: AssetLog.Sources, mt: AssetLog.MessageTypes) = {
     new AssetLog(NotAssigned, Id(asset.getId), new Date().asTimestamp,
       format.id.toByte, source.id.toByte,

@@ -60,6 +60,14 @@ object AssetLifecycle {
   }
 
   protected def updateServer(asset: Asset, options: Map[String,String]): Either[Throwable,Boolean] = {
+    if (asset.status == Status.Enum.Incomplete.id) {
+      updateIncompleteServer(asset, options)
+    } else {
+      Left(new Exception("Only updates for Incomplete servers are currently supported"))
+    }
+  }
+
+  protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Either[Throwable,Boolean] = {
     val lshw = options.get("lshw")
     val lldpd = options.get("lldpd")
     val chassis_tag = options.get("chassis_tag")
@@ -69,16 +77,24 @@ object AssetLifecycle {
     } else if (!chassis_tag.isDefined) {
       return Left(new Exception("chassis_tag data not specified"))
     }
+    val excluded = Set("lshw", "lldpd", "chassis_tag")
+    val restricted = AssetMeta.Enum.values.map { _.toString }.toSet
+    val filteredOptions = options.filter { case(k,v) =>
+      !excluded.contains(k)
+    }
+    filteredOptions.foreach { case(k,v) =>
+      if (restricted.contains(k)) {
+        return Left(new Exception("Attribute %s is restricted".format(k)))
+      }
+    }
     val parser = new LshwParser(lshw.get, lshwConfig)
     parser.parse() match {
       case Left(ex) => {
         Model.withConnection { implicit con =>
-          AssetLog.create(AssetLog.notice(
-            asset,
-            "Parsing LSHW failed",
-            AssetLog.Formats.PlainText,
-            AssetLog.Sources.Internal
-          ).withException(ex))
+          AssetLog.create(
+            AssetLog.notice(asset, "Parsing LSHW failed", AssetLog.Formats.PlainText,
+              AssetLog.Sources.Internal).withException(ex)
+          )
         }
         Left(ex)
       }
@@ -88,21 +104,20 @@ object AssetLifecycle {
           LshwHelper.updateAsset(asset, lshwRep) match {
             case true =>
               AssetStateMachine(asset).update().executeUpdate()
-              AssetLog.create(AssetLog.informational(
-                asset,
-                "Parsing and storing LSHW data succeeded, asset now New",
-                AssetLog.Formats.PlainText,
-                AssetLog.Sources.Internal
-              ))
+              MetaWrapper.createMeta(asset, filteredOptions)
+              AssetLog.create(
+                AssetLog.informational(asset, "Parsing and storing LSHW data succeeded, asset now New",
+                  AssetLog.Formats.PlainText, AssetLog.Sources.Internal
+                )
+              )
               Right(true)
             case false =>
               val ex = new Exception("Parsing LSHW succeeded, saving failed")
-              AssetLog.create(AssetLog.error(
-                asset,
-                "Parsing LSHW succeeded but saving it failed",
-                AssetLog.Formats.PlainText,
-                AssetLog.Sources.Internal
-              ).withException(ex))
+              AssetLog.create(
+                AssetLog.error(asset, "Parsing LSHW succeeded but saving it failed",
+                  AssetLog.Formats.PlainText, AssetLog.Sources.Internal
+                ).withException(ex)
+              )
               Left(ex)
           }
         }

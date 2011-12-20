@@ -4,27 +4,9 @@ import Model.defaults._
 
 import anorm._
 import anorm.SqlParser._
-import java.sql._
+import java.sql.Connection
 
-/**
- * Provide a convenience wrapper on top of a row of meta/value data
- */
-case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
-  def getAssetId(): Long = _value.asset_id.id
-  def getMetaId(): Long = _meta.getId
-  def getId(): (Long,Long) = (getAssetId(), getMetaId())
-  def getName(): String = _meta.name
-  def getGroupId(): Int = _value.group_id
-  def getNameEnum(): Option[AssetMeta.Enum] = try {
-    Some(AssetMeta.Enum.withName(getName()))
-  } catch { case _ => None }
-  def getPriority(): Int = _meta.priority
-  def getLabel(): String = _meta.label
-  def getDescription(): String = _meta.description
-  def getValue(): String = _value.value
-}
-
-case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.lang.Long], group_id: Int, value: String) {
+case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.lang.Integer], group_id: Int, value: String) {
   def getAsset(): Asset = {
     Asset.findById(asset_id.id).get
   }
@@ -35,14 +17,14 @@ case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.l
 
 object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
 
-  def apply(asset_id: Long, asset_meta_id: Long, value: String) =
+  def apply(asset_id: Long, asset_meta_id: Int, value: String) =
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), 0, value)
-  def apply(asset: Asset, asset_meta_id: Long, value: String) =
+  def apply(asset: Asset, asset_meta_id: Int, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), 0, value)
 
-  def apply(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) =
+  def apply(asset_id: Long, asset_meta_id: Int, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), group_id, value)
-  def apply(asset: Asset, asset_meta_id: Long, group_id: Int, value: String) =
+  def apply(asset: Asset, asset_meta_id: Int, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), group_id, value)
 
   override def create(mv: AssetMetaValue)(implicit con: Connection): AssetMetaValue = {

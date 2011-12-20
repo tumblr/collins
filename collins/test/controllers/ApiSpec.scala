@@ -28,15 +28,15 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
           Extract.from(api.ping.apply(req))
         }
         "Bash" >> {
-          val res = getExtractedResponse(BashOutput.acceptValue)
+          val res = getExtractedResponse(BashOutput().contentType)
           res must provideBashResponse
         }
         "JSON" >> {
-          val res = getExtractedResponse(JsonOutput.acceptValue)
+          val res = getExtractedResponse(JsonOutput().contentType)
           res must provideJsonResponse
         }
         "Text" >> {
-          val res = getExtractedResponse(TextOutput.acceptValue)
+          val res = getExtractedResponse(TextOutput().contentType)
           res must provideTextResponse
         }
       }
@@ -47,15 +47,15 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
           Extract.from(api.ping.apply(req))
         }
         "Bash" >> {
-          val res = getExtractedResponse(BashOutput.fileExtension)
+          val res = getExtractedResponse(BashOutput().fileExtension)
           res must provideBashResponse
         }
         "JSON" >> {
-          val res = getExtractedResponse(JsonOutput.fileExtension)
+          val res = getExtractedResponse(JsonOutput().fileExtension)
           res must provideJsonResponse
         }
         "Text" >> {
-          val res = getExtractedResponse(TextOutput.fileExtension)
+          val res = getExtractedResponse(TextOutput().fileExtension)
           res must provideTextResponse
         }
       }
@@ -66,15 +66,15 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
           Extract.from(api.ping.apply(req))
         }
         "Bash" >> {
-          val res = getExtractedResponse(BashOutput.queryString._2)
+          val res = getExtractedResponse(BashOutput().queryString._2)
           res must provideBashResponse
         }
         "JSON" >> {
-          val res = getExtractedResponse(JsonOutput.queryString._2)
+          val res = getExtractedResponse(JsonOutput().queryString._2)
           res must provideJsonResponse
         }
         "Text" >> {
-          val res = getExtractedResponse(TextOutput.queryString._2)
+          val res = getExtractedResponse(TextOutput().queryString._2)
           res must provideTextResponse
         }
       }
@@ -89,8 +89,8 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       val response = s.value._3
       val status: Boolean = code == 200 &&
         headers.contains("Content-Type") &&
-        headers("Content-Type").equals(BashOutput.acceptValue) &&
-        response.contains("""Data_TestList_name="foo123";""") &&
+        headers("Content-Type").equals(BashOutput().contentType) &&
+        response.contains("""Data_TestList_0_name="foo123";""") &&
         response.contains("""Status="Ok";""");
       result(status, "Got expected Bash response", ("Invalid Bash response for " + s.value), s)
     }
@@ -104,7 +104,7 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       val json = parseJson(response)
       val status: Boolean = code == 200 &&
         headers.contains("Content-Type") &&
-        headers("Content-Type").equals(JsonOutput.acceptValue) &&
+        headers("Content-Type").equals(JsonOutput().contentType) &&
         (json \ "Status").isInstanceOf[JsString] &&
         (json \ "Status").valueAs[String].equals("Ok") &&
         (json \ "Data").isInstanceOf[JsObject] &&
@@ -122,7 +122,7 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       val response = s.value._3
       val status: Boolean = code == 200 &&
         headers.contains("Content-Type") &&
-        headers("Content-Type").equals(TextOutput.acceptValue) &&
+        headers("Content-Type").equals(TextOutput().contentType) &&
         response.contains("Status\tOk");
       result(status, "Got expected Text response", ("Invalid text response for " + s.value), s)
     }

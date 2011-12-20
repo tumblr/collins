@@ -58,20 +58,24 @@ class CryptoCodec(privateKey: String, saltSize: Int = 8, iterations: Int = 100) 
       hex.splitAt(splitAt)
     }
     def apply(value: String): Option[String] = {
-      val (cipher,salt) = splitWithSalt(value)
-      val pGen = new PKCS12ParametersGenerator(new SHA256Digest())
-      val pkcs12PasswordBytes = PBEParametersGenerator.PKCS12PasswordToBytes(secretKey)
-      pGen.init(pkcs12PasswordBytes, salt, iterations)
-      val aesCBC = new CBCBlockCipher(new AESEngine())
-      val aesCBCParams = pGen.generateDerivedParameters(256, 128).asInstanceOf[ParametersWithIV]
-      aesCBC.init(false, aesCBCParams)
-      val aesCipher = new PaddedBufferedBlockCipher(aesCBC, new PKCS7Padding())
-      val plainTemp = new Array[Byte](aesCipher.getOutputSize(cipher.length))
-      val offset = aesCipher.processBytes(cipher, 0, cipher.length, plainTemp, 0)
-      val last = aesCipher.doFinal(plainTemp, offset)
-      val plain = new Array[Byte](offset + last)
-      Array.copy(plainTemp, 0, plain, 0, plain.length)
-      Some(new String(plain))
+      try {
+        val (cipher,salt) = splitWithSalt(value)
+        val pGen = new PKCS12ParametersGenerator(new SHA256Digest())
+        val pkcs12PasswordBytes = PBEParametersGenerator.PKCS12PasswordToBytes(secretKey)
+        pGen.init(pkcs12PasswordBytes, salt, iterations)
+        val aesCBC = new CBCBlockCipher(new AESEngine())
+        val aesCBCParams = pGen.generateDerivedParameters(256, 128).asInstanceOf[ParametersWithIV]
+        aesCBC.init(false, aesCBCParams)
+        val aesCipher = new PaddedBufferedBlockCipher(aesCBC, new PKCS7Padding())
+        val plainTemp = new Array[Byte](aesCipher.getOutputSize(cipher.length))
+        val offset = aesCipher.processBytes(cipher, 0, cipher.length, plainTemp, 0)
+        val last = aesCipher.doFinal(plainTemp, offset)
+        val plain = new Array[Byte](offset + last)
+        Array.copy(plainTemp, 0, plain, 0, plain.length)
+        Some(new String(plain))
+      } catch {
+        case _ => None
+      }
     }
   }
   object Encode {

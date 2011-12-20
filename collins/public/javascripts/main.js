@@ -42,6 +42,45 @@ $(document).ready(function() {
     });
   });
 
+  $("[data-toggle=collapse]").each(function() {
+    var e = $(this);
+    var target = e.attr('data-target');
+    var startCollapsed = $(target).hasClass('collapse')
+    if (startCollapsed) {
+      $(target).toggle();
+    }
+    e.click(function() {
+      $(target).toggle();
+    });
+  });
+  $("[data-toggle=collapseAll]").each(function() {
+    var targets = [];
+    $("[data-target]").each(function() {
+      var target = $(this).attr('data-target')
+      targets.push($(target));
+    });
+    var e = $(this);
+    e.click(function() {
+      for (var i = 0; i < targets.length; i++) {
+        targets[i].hide();
+      }
+    });
+  });
+  $("[data-toggle=openAll]").each(function() {
+    var targets = [];
+    $("[data-target]").each(function() {
+      var target = $(this).attr('data-target')
+      targets.push($(target));
+    });
+    var e = $(this);
+    e.click(function() {
+      for (var i = 0; i < targets.length; i++) {
+        targets[i].show();
+      }
+    });
+  });
+
+
   var fnLogProcessing = function (sSource, aoData, fnCallback) {
     var paging = this.fnPagingInfo();
     aoData.push( {"name": "page", "value": paging.iPage} );
@@ -66,6 +105,7 @@ $(document).ready(function() {
       }
     });
   };
+
   var oTable = $('table.log-data[data-source]').each(function() {
     var e = $(this);
     var src = e.attr('data-source');
@@ -85,7 +125,7 @@ $(document).ready(function() {
       "aaSorting": [[0, "desc"]],
       "sPaginationType": "bootstrap",
       "sDom": "<'row'<'span7'l><'span7'f>r>t<'row'<'span7'i><'span7'p>>",
-      "iDisplayLength": 25,
+      "iDisplayLength": 10,
       "fnServerData": fnLogProcessing,
       "sAjaxDataProp": "Data",
       "aoColumns": [
@@ -96,7 +136,6 @@ $(document).ready(function() {
       ],
       "fnRowCallback": function( nRow, aData, iDisplayIndex ) {
         var dtype = aData.TYPE;
-        console.log(aData);
         if ($.inArray(dtype, errors) > -1) {
           $('td:eq(2)', nRow).html(getLabelSpan(dtype, "important"));
         } else if ($.inArray(dtype, warnings) > -1) {
@@ -106,7 +145,6 @@ $(document).ready(function() {
         } else if ($.inArray(dtype, success) > -1) {
           $('td:eq(2)', nRow).html(getLabelSpan(dtype, "success"));
         } else {
-          console.log(dtype);
           $('td:eq(2)', nRow).html(getLabelSpan(dtype, ""));
         }
         return nRow;

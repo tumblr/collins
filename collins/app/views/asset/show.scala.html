@@ -1,7 +1,8 @@
-@(asset: Asset, lshw: _root_.util.LshwRepresentation, wseq: Seq[MetaWrapper])(implicit flash: Flash)
+@(asset: Asset, lshw: _root_.util.LshwRepresentation, wseq: Seq[MetaWrapper], ipmi: Map[String,play.api.json.JsValue])(implicit flash: Flash)
 
 @import helper._
 @import util.notice
+@import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
 <div class="page-header">
@@ -13,9 +14,13 @@
     @notice("error")
     @notice("warning")
 
-    <h3>Basic Data</h3>
-    <p>Basic asset information including tag, type, status and dates</p>
-    <table class="zebra-striped condensed-table">
+    <div style="float: right;">
+      <button class="btn" data-toggle="collapseAll">Collapse All</button>
+      <button class="btn" data-toggle="openAll">Open All</button>
+    </div>
+
+    <h3><a data-toggle="collapse" data-target="#basicDataTable">Basic Data</a></h3>
+    <table id="basicDataTable" class="zebra-striped condensed-table">
       <thead>
         <tr>
           <th></th><th></th><th></th>
@@ -85,8 +90,140 @@
       </tbody>
     </table>
 
+    @if(ipmi.nonEmpty) {
+    <h3><a data-toggle="collapse" data-target="#ipmiInfo">IPMI Info</a></h3>
+    <table class="zebra-striped condensed-table" id="ipmiInfo">
+      <thead>
+        <th></th><th></th>
+      </thead>
+      <tbody>
+        @ipmi.get(IpmiGateway.toString).map { address =>
+        <tr>
+          <th>IPMI Gateway</th>
+          <td>@address.value</td>
+        </tr>
+        }
+        @ipmi.get(IpmiAddress.toString).map { address =>
+        <tr>
+          <th>IPMI Address/Gateway</th>
+          <td>@{address.value}/@{ipmi.get(IpmiNetmask.toString).map { _.value }.getOrElse("255.255.255.255")}</td>
+        </tr>
+        }
+        @ipmi.get(IpmiUsername.toString).map { username =>
+        <tr>
+          <th>IPMI Username</th>
+          <td>@username.value</td>
+        </tr>
+        }
+        @ipmi.get(IpmiPassword.toString).map { password =>
+        <tr>
+          <th>IPMI Password</th>
+          <td>@password.value</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+    }
+
     @if(lshw.cpus.size > 0) {
-    <h3>Hardware Information</h3>
+    <h3><a data-toggle="collapse" data-target="#hardwareSummary">Hardware Summary</a></h3>
+    <table class="zebra-striped condensed-table" id="hardwareSummary">
+      <thead>
+        <tr>
+          <th></th><th></th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th colspan="3">CPU</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total CPUs</td>
+          <td>@lshw.cpuCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total CPU Cores</td>
+          <td>@lshw.cpuCoreCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total CPU Threads</td>
+          <td>@lshw.cpuThreadCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Hyperthreading Enabled</td>
+          <td>@{if (lshw.hasHyperthreadingEnabled) "Yes" else "No"}</td>
+        </tr>
+
+        <tr>
+          <th colspan="3">Memory</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Memory</td>
+          <td>@lshw.totalMemory.toHuman</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Memory Banks</td>
+          <td>@lshw.memoryBanksTotal</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Used Memory Banks</td>
+          <td>@lshw.memoryBanksUsed</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Unused Memory Banks</td>
+          <td>@lshw.memoryBanksUnused</td>
+        </tr>
+
+        <tr>
+          <th colspan="3">Disks</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Disks</td>
+          <td>@lshw.diskCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Spinning Storage</td>
+          <td>@lshw.totalStorage.toHuman</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Storage</td>
+          <td>@lshw.totalUsableStorage.toHuman</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Has Flash Disk</td>
+          <td>@{if (lshw.hasFlashStorage) "Yes" else "No"}</td>
+        </tr>
+
+        <tr>
+          <th colspan="3">Network</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Interfaces</td>
+          <td>@lshw.nicCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Has 10Gb Interface</td>
+          <td>@{if (lshw.has10GbNic) "Yes" else "No"}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3><a data-toggle="collapse" data-target="#hardwareDetails">Hardware Details</a></h3>
+    <div id="hardwareDetails" class="collapse">
     <h4>CPU <small>Collected CPU Information</small></h4>
     <table class="zebra-striped condensed-table">
       <thead>
@@ -103,24 +240,6 @@
         </tr>
       }
       </tbody>
-      <tfoot class="summary">
-        <tr>
-          <th colspan="2">Total CPUs</th>
-          <td colspan="3">@lshw.cpuCount</td>
-        </tr>
-        <tr>
-          <th colspan="2">Total CPU Cores</th>
-          <td colspan="3">@lshw.cpuCoreCount</td>
-        </tr>
-        <tr>
-          <th colspan="2">Total CPU Threads</th>
-          <td colspan="3">@lshw.cpuThreadCount</td>
-        </tr>
-        <tr>
-          <th colspan="2">Hyperthreading Enabled</th>
-          <td colspan="3">@{if (lshw.hasHyperthreadingEnabled) "Yes" else "No"}</td>
-        </tr>
-      </tfoot>
     </table>
 
     <h4>Memory <small>Collected Memory Information</small></h4>
@@ -128,7 +247,9 @@
     bank is actually in use</p>
     <table class="zebra-striped condensed-table">
       <thead>
-        <th>Bank Id</th><th>Size</th><th>Description</th>
+        <tr>
+          <th>Bank Id</th><th>Size</th><th>Description</th>
+        </tr>
       </thead>
       <tbody>
       @lshw.memory.map { mem =>
@@ -139,30 +260,33 @@
         </tr>
       }
       </tbody>
-      <tfoot class="summary">
+    </table>
+
+    <h4>Disks <small>Collected Disk Information</small></h4>
+    <table class="zebra-striped condensed-table">
+      <thead>
         <tr>
-          <th colspan="2">Total Memory</th>
-          <td colspan="3">@lshw.totalMemory.toHuman</td>
+          <th>Id</th><th>Size</th><th>Type</th><th>Description</th>
         </tr>
+      </thead>
+      <tbody>
+      @lshw.disks.zipWithIndex.map { case(disk,id) =>
         <tr>
-          <th colspan="2">Total Memory Banks</th>
-          <td colspan="3">@lshw.memoryBanksTotal</td>
+          <th>@id</th>
+          <td>@disk.size.toHuman</td>
+          <td>@disk.diskType</td>
+          <td>@disk.description</td>
         </tr>
-        <tr>
-          <th colspan="2">Used Memory Banks</th>
-          <td colspan="3">@lshw.memoryBanksUsed</td>
-        </tr>
-        <tr>
-          <th colspan="2">Unused Memory Banks</th>
-          <td colspan="3">@lshw.memoryBanksUnused</td>
-        </tr>
-      </tfoot>
+      }
+      </tbody>
     </table>
 
     <h4>Network Interfaces <small>Collected NIC Information</small></h4>
     <table class="zebra-striped condensed-table">
       <thead>
-        <th>Id</th><th>Speed</th><th>MAC Address</th><th>Description</th>
+        <tr>
+          <th>Id</th><th>Speed</th><th>MAC Address</th><th>Description</th>
+        </tr>
       </thead>
       <tbody>
       @lshw.nics.zipWithIndex.map { case(nic,id) =>
@@ -174,56 +298,8 @@
         </tr>
       }
       </tbody>
-      <tfoot class="summary">
-        <tr>
-          <th colspan="2">Interfaces</th>
-          <td colspan="3">@lshw.nicCount</td>
-        </tr>
-        <tr>
-          <th colspan="2">Has 10Gb Interface</th>
-          <td colspan="3">@{if (lshw.has10GbNic) "Yes" else "No"}</td>
-        </tr>
-      </tfoot>
     </table>
-
-    <h4>Disks <small>Collected Disk Information</small></h4>
-    <table class="zebra-striped condensed-table">
-      <thead>
-        <th>Id</th><th>Size</th><th>Type</th><th>Description</th>
-      </thead>
-      <tbody>
-      @lshw.disks.zipWithIndex.map { case(disk,id) =>
-        <tr>
-          <th>@id</th>
-          <td>@disk.size.toHuman</td>
-          <td>@disk.diskType</td>
-          <td>@disk.description</td>
-        </tr>
-      }
-      @lshw.flashDisk.map { fdisk =>
-        <tr>
-          <th>@{lshw.diskCount + 1}</th>
-          <td>@fdisk.size.toHuman</td>
-          <td>FLASH</td>
-          <td>@fdisk.description</td>
-        </tr>
-      }
-      </tbody>
-      <tfoot class="summary">
-        <tr>
-          <th colspan="2">Disks</td>
-          <td colspan="3">@lshw.diskCount</td>
-        </tr>
-        <tr>
-          <th colspan="2">Spinning Storage</th>
-          <td colspan="3">@lshw.totalStorage.toHuman</td>
-        </tr>
-        <tr>
-          <th colspan="2">Total Storage</th>
-          <td colspan="3">@lshw.totalUsableStorage.toHuman</td>
-        </tr>
-      </tfoot>
-    </table>
+    </div>
     }
 
     <h3>Log Data <small>Log data about asset</small></h3>

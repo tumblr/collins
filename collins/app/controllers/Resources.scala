@@ -19,17 +19,47 @@ trait Resources extends Controller {
     Ok(html.resources.index(AssetMeta.getViewable()))
   }
 
+  def rewriteRequest(req: Request[AnyContent]): Request[AnyContent] = {
+    val respectedKeys = AssetApi.FindAsset.params
+    val pagination = Set("page", "sort", "size")
+    val nonEmpty = req.queryString.filter { case(k,v) =>
+      v.forall { _.nonEmpty }
+    }.filter { case(k,v) => !pagination.contains(k) }
+    val grouped = nonEmpty.groupBy { case(k, v) =>
+      respectedKeys.contains(k)
+    }
+    val respectedParams = grouped.getOrElse(true, Map[String,Seq[String]]())
+    val rewrittenParams = grouped.get(false).map { unknownParams =>
+      unknownParams.map { case(k,v) =>
+        k -> v.map { s => ("%s;%s".format(k,s)) }
+      }
+    }.getOrElse(Map[String,Seq[String]]())
+    val mergedParams: Seq[String] = Seq(
+      respectedParams.getOrElse("attribute", Seq[String]()),
+      rewrittenParams.values.flatten
+    ).flatten
+    val finalMap: Map[String,Seq[String]] = respectedParams ++ Map(
+      "attribute" -> mergedParams
+    )
+    new Request[AnyContent] {
+      def uri = req.uri
+      def path = req.path
+      def method = req.method
+      def queryString = finalMap
+      def headers = req.headers
+      def cookies = req.cookies
+      def body = req.body
+    }
+  }
+
   /**
    * Find assets by query parameters, special care for ASSET_TAG
    */
-  def find = SecureAction { implicit req =>
+  val findAssets = new AssetApi.FindAsset()
+  def find(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
     Form("ASSET_TAG" -> requiredText).bindFromRequest.fold(
-      noTag => rewriteQuery(req) match {
-        case Nil =>
-          Redirect(app.routes.Resources.index).flashing(
-            "message" -> "No query specified"
-          )
-        case q => findByMeta(q)
+      noTag => {
+        findAssets(page, size, sort)(rewriteRequest(req))
       },
       asset_tag => {
         logger.debug("Got asset tag: " + asset_tag)
@@ -185,8 +215,12 @@ trait Resources extends Controller {
    */
   private def findByTag[A](tag: String)(implicit r: Request[A]) = {
     Asset.findByTag(tag) match {
-      case None =>
-        Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified asset tag")
+      case None => Asset.findLikeTag(tag) match {
+        case Nil => 
+          Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified asset tag")
+        case list =>
+          Ok(html.resources.list(list))
+      }
       case Some(asset) =>
         intakeAllowed(asset) match {
           case true =>
@@ -202,26 +236,6 @@ trait Resources extends Controller {
     val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
     val rightRole = hasRole(getUser(r), Seq("infra"))
     isNew && rightType && rightRole
-  }
-
-  // Rewrite a query such that it can be used by findByMeta
-  private def rewriteQuery(req: Request[AnyContent]): List[(AssetMeta.Enum, String)] = {
-    val requestMap = req.queryString.filter { case(k,vs) => vs.nonEmpty && vs.head.nonEmpty }
-    requestMap.map { case(k,vs) =>
-      (AssetMeta.Enum.withName(k), vs.head + "%")
-    }.toList
-  }
-
-  /**
-   * Find assets by specified Meta parameters
-   */
-  private def findByMeta[A](query: List[(AssetMeta.Enum, String)])(implicit r: Request[A]) = {
-    Asset.findByMeta(query) match {
-      case Nil =>
-        Redirect(app.routes.Resources.index).flashing("message" -> "No results found")
-      case r =>
-        Ok(html.resources.list(r))
-    }
   }
 
 }

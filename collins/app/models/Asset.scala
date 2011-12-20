@@ -5,6 +5,7 @@ import conversions._
 import util.{Helpers, LshwRepresentation}
 
 import anorm._
+import play.api.json._
 
 import java.sql.{Connection, Timestamp}
 import java.util.Date
@@ -25,6 +26,14 @@ case class Asset(
     "TYPE" -> getType().name,
     "CREATED" -> Helpers.dateFormat(created),
     "UPDATED" -> updated.map { Helpers.dateFormat(_) }.getOrElse("")
+  )
+  def toJsonMap(): Map[String,JsValue] = Map(
+    "ID" -> JsNumber(getId()),
+    "TAG" -> JsString(tag),
+    "STATUS" -> JsString(getStatus().name),
+    "TYPE" -> JsString(getType().name),
+    "CREATED" -> JsString(Helpers.dateFormat(created)),
+    "UPDATED" -> JsString(updated.map { Helpers.dateFormat(_) }.getOrElse(""))
   )
 
   def getId(): Long = id.get
@@ -84,6 +93,9 @@ object Asset extends Magic[Asset](Some("asset")) {
   def findByTag(tag: String): Option[Asset] = Model.withConnection { implicit con =>
     Asset.find("tag={tag}").on('tag -> tag).first()
   }
+  def findLikeTag(tag: String): Seq[Asset] = Model.withConnection { implicit con =>
+    Asset.find("tag like {tag}").on('tag -> (tag + "%")).list()
+  }
 
   def findByMeta(list: Seq[(AssetMeta.Enum,String)]): Seq[Asset] = {
     val query = "select distinct asset_id from asset_meta_value where "
@@ -99,6 +111,51 @@ object Asset extends Magic[Asset](Some("asset")) {
       Asset.find("select * from asset WHERE id in (%s)".format(subquery)).on(
         params.map(_._2):_*
       ).list()
+    }
+  }
+}
+
+case class AssetFinder(
+  status: Option[Status.Enum],
+  assetType: Option[AssetType.Enum],
+  createdAfter: Option[Date],
+  createdBefore: Option[Date],
+  updatedAfter: Option[Date],
+  updatedBefore: Option[Date])
+{
+  // Without this, toParameterValue sees dates as java.util.Date instead of Timestamp and the wrong
+  // ToStatement is used
+  import DaoSupport._
+
+  type Intable = {def id: Int}
+  def asQueryFragment(): SimpleSql[Row] = {
+    val _status = getEnumSimple("asset.status", status)
+    val _atype = getEnumSimple("asset.asset_type", assetType)
+    val _created = createDateSimple("asset.created", createdAfter, createdBefore)
+    val _updated = createDateSimple("asset.updated", updatedAfter, updatedBefore)
+    flattenSql(Seq(_status, _atype, _created, _updated).collect { case Some(i) => i })
+  }
+
+  private def getEnumSimple(param: String, enum: Option[Intable]): Option[SimpleSql[Row]] = {
+    enum.map { e =>
+      val name = "%s_0".format(param.replace(".","_"));
+      SqlQuery("%s={%s}".format(param, name)).on(name -> e.id)
+    }
+  }
+  private def createDateSimple(param: String, after: Option[Date], before: Option[Date]): Option[SimpleSql[Row]] = {
+    val afterName = "%s_after_0".format(param.replace(".","_"))
+    val beforeName = "%s_before_0".format(param.replace(".","_"))
+    val _after = after.map { date =>
+      SqlQuery("%s >= {%s}".format(param, afterName)).on(afterName -> date.asTimestamp)
+    }
+    val _before = before.map { date =>
+      SqlQuery("%s <= {%s}".format(param, beforeName)).on(beforeName -> date.asTimestamp)
+    }
+    val filtered: Seq[SimpleSql[Row]] = Seq(_after, _before).collect { case Some(i) => i }
+    if (filtered.nonEmpty) {
+      Some(flattenSql(filtered))
+    } else {
+      None
     }
   }
 }

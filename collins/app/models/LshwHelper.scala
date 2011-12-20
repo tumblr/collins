@@ -5,29 +5,37 @@ import java.sql.Connection
 
 object LshwHelper {
   import AssetMeta.Enum._
+
+  type FilteredSeq[T] = Tuple2[Seq[T], Map[Int, Seq[MetaWrapper]]]
+  type Reconstruction = Tuple2[LshwRepresentation,Seq[MetaWrapper]]
+
   def updateAsset(asset: Asset, lshw: LshwRepresentation)(implicit con: Connection): Boolean = {
     // FIXME: Need to delete specific asset meta values before accepting an update
-    val mvs: Seq[AssetMetaValue] = collectCpus(asset.getId, lshw) ++
-              collectMemory(asset.getId, lshw) ++
-              collectNics(asset.getId, lshw) ++
-              collectDisks(asset.getId, lshw)
+    val mvs = construct(asset, lshw)
     mvs.size == AssetMetaValue.create(mvs)
   }
-
-  def reconstruct(asset: Asset): Tuple2[LshwRepresentation,Seq[MetaWrapper]] = {
-    val assetMeta = AssetMetaValue.findAllByAssetId(asset.getId)
-    val metaMap = assetMeta.groupBy { _.getGroupId }
-    val cpus = reconstructCpu(metaMap)
-    val memory = reconstructMemory(metaMap)
-    val nics = reconstructNics(metaMap)
-    val disks = reconstructDisks(metaMap).groupBy { _.isInstanceOf[FlashDisk] }
-    val spinningDisks = disks.get(false).getOrElse(Nil).asInstanceOf[Seq[Disk]]
-    val flashDisk = disks.get(true).flatMap { _.headOption }.asInstanceOf[Option[FlashDisk]]
-    (LshwRepresentation(cpus, memory, nics, spinningDisks, flashDisk), assetMeta)
+  def construct(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
+    collectCpus(asset.getId, lshw) ++
+      collectMemory(asset.getId, lshw) ++
+      collectNics(asset.getId, lshw) ++
+      collectDisks(asset.getId, lshw)
   }
 
-  protected def reconstructCpu(meta: Map[Int, Seq[MetaWrapper]]): Seq[Cpu] = {
-    meta.get(0).map { seq =>
+  def reconstruct(asset: Asset, assetMeta: Seq[MetaWrapper]): Reconstruction = {
+    val metaMap = assetMeta.groupBy { _.getGroupId }
+    val (cpus,postCpuMap) = reconstructCpu(metaMap)
+    val (memory,postMemoryMap) = reconstructMemory(postCpuMap)
+    val (nics,postNicMap) = reconstructNics(postMemoryMap)
+    val (disks,postDiskMap) = reconstructDisks(postNicMap)
+    (LshwRepresentation(cpus, memory, nics, disks), postDiskMap.values.flatten.toSeq)
+  }
+  def reconstruct(asset: Asset): Reconstruction = {
+    val assetMeta = AssetMetaValue.findAllByAssetId(asset.getId)
+    reconstruct(asset, assetMeta)
+  }
+
+  protected def reconstructCpu(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Cpu] = {
+    val cpuSeq = meta.get(0).map { seq =>
       val cpuCount = finder(seq, CpuCount, _.toInt, 0)
       val cpuCores = finder(seq, CpuCores, _.toInt, 0)
       val cpuThreads = finder(seq, CpuThreads, _.toInt, 0)
@@ -37,6 +45,14 @@ object LshwHelper {
         Cpu(cpuCores, cpuThreads, cpuSpeed, cpuDescription, "", "")
       }.toSeq
     }.getOrElse(Nil)
+    val filteredMeta = meta.map { case(groupId, metaSeq) =>
+      val newSeq = filterNot(
+        metaSeq,
+        Set(CpuCount.id, CpuCores.id, CpuThreads.id, CpuSpeedGhz.id, CpuDescription.id)
+      )
+      groupId -> newSeq
+    }
+    (cpuSeq, filteredMeta)
   }
   protected def collectCpus(asset_id: Long, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     if (lshw.cpuCount < 1) {
@@ -52,12 +68,15 @@ object LshwHelper {
     )
   }
 
+  private def filterNot(m: Seq[MetaWrapper], s: Set[Long]): Seq[MetaWrapper] = {
+    m.filterNot { mw => s.contains(mw.getMetaId) }
+  }
   private def finder[T](m: Seq[MetaWrapper], e: AssetMeta.Enum, c: (String => T), d: T): T = {
     m.find { _.getMetaId == e.id }.map { i => c(i.getValue) }.getOrElse(d)
   }
 
-  protected def reconstructMemory(meta: Map[Int, Seq[MetaWrapper]]): Seq[Memory] = {
-    meta.get(0).map { seq =>
+  protected def reconstructMemory(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Memory] = {
+    val memSeq = meta.get(0).map { seq =>
       val memAvail = finder(seq, MemoryAvailableBytes, _.toLong, 0L)
       val banksUsed = finder(seq, MemoryBanksUsed, _.toInt, 0)
       val banksUnused = finder(seq, MemoryBanksUnused, _.toInt, 0)
@@ -75,6 +94,14 @@ object LshwHelper {
         }
       }.toSeq
     }.getOrElse(Nil)
+    val filteredMeta = meta.map { case(groupId, metaSeq) =>
+      val newSeq = filterNot(
+        metaSeq,
+        Set(MemoryAvailableBytes.id, MemoryBanksUsed.id, MemoryBanksUnused.id, MemoryDescription.id)
+      )
+      groupId -> newSeq
+    }
+    (memSeq, filteredMeta)
   }
   protected def collectMemory(asset_id: Long, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     if (lshw.memoryBanksTotal < 1) {
@@ -91,8 +118,8 @@ object LshwHelper {
     )
   }
 
-  protected def reconstructNics(meta: Map[Int, Seq[MetaWrapper]]): Seq[Nic] = {
-    meta.foldLeft(Seq[Nic]()) { case (seq, map) =>
+  protected def reconstructNics(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Nic] = {
+    val nicSeq = meta.foldLeft(Seq[Nic]()) { case (seq, map) =>
       val groupId = map._1
       val wrapSeq = map._2
       val nicSpeed = finder(wrapSeq, NicSpeed, _.toLong, 0L)
@@ -104,6 +131,14 @@ object LshwHelper {
         Nic(BitStorageUnit(nicSpeed), macAddress, descr, "", "") +: seq
       }
     }
+    val filteredMeta = meta.map { case(groupId, metaSeq) =>
+      val newSeq = filterNot(
+        metaSeq,
+        Set(NicSpeed.id, MacAddress.id, NicDescription.id)
+      )
+      groupId -> newSeq
+    }
+    (nicSeq, filteredMeta)
   }
   protected def collectNics(asset_id: Long, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     if (lshw.nicCount < 1) {
@@ -120,26 +155,28 @@ object LshwHelper {
     }._2
   }
 
-  protected def reconstructDisks(meta: Map[Int, Seq[MetaWrapper]]): Seq[LshwAsset] = {
-    meta.foldLeft(Seq[LshwAsset]()) { case (seq, map) =>
+  protected def reconstructDisks(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Disk] = {
+    val diskSeq = meta.foldLeft(Seq[Disk]()) { case (seq, map) =>
       val groupId = map._1
       val wrapSeq = map._2
       val diskSize = finder(wrapSeq, DiskSizeBytes, _.toLong, 0L)
-      val diskType = finder(wrapSeq, DiskType, _.toString, "")
+      val diskType = finder(wrapSeq, DiskType, {s => Some(Disk.Type.withName(s))}, None)
       val descr = finder(wrapSeq, DiskDescription, _.toString, "")
-      val isFlash = finder(wrapSeq, DiskIsFlash, _.toBoolean, false)
       if (diskSize == 0L && diskType.isEmpty && descr.isEmpty) {
         seq
       } else {
         val size = ByteStorageUnit(diskSize)
-        val disk = if (isFlash) {
-          FlashDisk(size, descr, "", "")
-        } else {
-          Disk(size, diskType, descr, "", "")
-        }
-        disk +: seq
+        Disk(size, diskType.get, descr, "", "") +: seq
       }
     }
+    val filteredMeta = meta.map { case(groupId, metaSeq) =>
+      val newSeq = filterNot(
+        metaSeq,
+        Set(DiskSizeBytes.id, DiskType.id, DiskDescription.id)
+      )
+      groupId -> newSeq
+    }
+    (diskSeq, filteredMeta)
   }
   protected def collectDisks(asset_id: Long, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     if (lshw.diskCount < 1) {
@@ -150,22 +187,12 @@ object LshwHelper {
       val total = run._2
       (groupId + 1, total ++ Seq(
         AssetMetaValue(asset_id, DiskSizeBytes.id, groupId, disk.size.inBytes.toString),
-        AssetMetaValue(asset_id, DiskType.id, groupId, disk.diskType),
+        AssetMetaValue(asset_id, DiskType.id, groupId, disk.diskType.toString),
         AssetMetaValue(asset_id, DiskDescription.id, groupId, "%s %s".format(disk.vendor, disk.product))
       ))
     }._2
     val diskSummary = AssetMetaValue(asset_id, DiskStorageTotal.id, lshw.totalUsableStorage.inBytes.toString)
-    val flashDisk = lshw.flashDisk.map { disk =>
-      val groupId = physicalDisks.size
-      val flashDisk = Seq(
-        AssetMetaValue(asset_id, DiskIsFlash.id, groupId, "true"),
-        AssetMetaValue(asset_id, DiskSizeBytes.id, groupId, disk.size.inBytes.toString),
-        AssetMetaValue(asset_id, DiskType.id, groupId, "FLASH"),
-        AssetMetaValue(asset_id, DiskDescription.id, groupId, "%s %s".format(disk.vendor, disk.product))
-        )
-      flashDisk
-    }.getOrElse(Seq[AssetMetaValue]())
-    Seq(diskSummary) ++ physicalDisks ++ flashDisk
+    Seq(diskSummary) ++ physicalDisks
   }
 
 }

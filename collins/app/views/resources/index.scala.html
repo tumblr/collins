@@ -2,6 +2,17 @@
 
 @import helper._
 @import util.notice
+@import _root_.util.Disk
+
+@diskOptions(asset: AssetMeta) = {
+  <select name="@asset.name" id="@asset.name">
+    <option value="" selected="selected"></option>
+    @Disk.Type.values.toSeq.map { v =>
+    <option value="@v.toString">@v.toString</option>
+    }
+  </select>
+  <span class="help-inline">@asset.description</span>
+}
 
 @main("Asset Search") {
 <div class="page-header"><h1>Asset Search</h1></div>
@@ -12,7 +23,7 @@
     @notice("success")
     @notice("error")
 
-    @form(app.routes.Resources.find) {
+    @form(app.routes.Resources.find(0,10,"DESC")) {
     <div class="clearfix">
       <label for="ASSET_TAG">Asset Tag</label>
       <div class="input">
@@ -24,13 +35,8 @@
     <div class="clearfix">
       <label for="@asset.name">@asset.label</label>
       <div class="input">
-        @if(asset.name=="DISK_IS_FLASH") {
-        <select name="@asset.name" id="@asset.name">
-          <option value="" selected></option>
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-        <span class="help-inline">@asset.description</span>
+        @if(asset.name=="DISK_TYPE") {
+        @diskOptions(asset)
         } else {
         <input type="text" id="@asset.name" name="@asset.name">
         <span class="help-inline">@asset.description</span>

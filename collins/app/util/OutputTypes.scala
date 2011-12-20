@@ -3,77 +3,16 @@ package util
 import play.api.mvc._
 import play.api.http.HeaderNames
 
-sealed abstract class OutputType(val contentType: String)
-object OutputType {
-  def apply(request: Request[AnyContent]): Option[OutputType] = request match {
-    case JsonOutput(req) => Some(JsonOutput())
-    case BashOutput(req) => Some(BashOutput())
-    case TextOutput(req) => Some(TextOutput())
-    case _ => None
-  }
-}
-
-class JsonOutput() extends OutputType(JsonOutput.acceptValue) {
-  override def toString() = "JsonOutput"
-}
-object JsonOutput extends OutputTypeExtractor {
-  val fileExtension = ".json"
-  val queryString = "outputType" -> "json"
-  val acceptValue = "application/json"
-
-  def apply() = new JsonOutput()
-  def unapply(req: Request[AnyContent]): Option[JsonOutput] = {
-    (inPath(req) || inQueryString(req) || inHeader(req) || inBody(req)) match {
-      case true => Some(JsonOutput())
-      case false => None
-    }
-  }
-}
-
-class BashOutput() extends OutputType(BashOutput.acceptValue) {
-  override def toString() = "BashOutput"
-}
-object BashOutput extends OutputTypeExtractor {
-  val fileExtension = ".sh"
-  val queryString = "outputType" -> "sh"
-  val acceptValue = "text/x-shellscript"
-
-  def apply() = new BashOutput()
-  def unapply(req: Request[AnyContent]): Option[BashOutput] = {
-    (inPath(req) || inQueryString(req) || inHeader(req) || inBody(req)) match {
-      case true => Some(BashOutput())
-      case false => None
-    }
-  }
-}
-
-class TextOutput() extends OutputType(TextOutput.acceptValue) {
-  override def toString() = "TextOutput"
-}
-object TextOutput extends OutputTypeExtractor {
-  val fileExtension = ".txt"
-  val queryString = "outputType" -> "text"
-  val acceptValue = "text/plain"
-
-  def apply() = new TextOutput()
-  def unapply(req: Request[AnyContent]): Option[TextOutput] = {
-    (inPath(req) || inQueryString(req) || inHeader(req) || inBody(req)) match {
-      case true => Some(TextOutput())
-      case false => None
-    }
-  }
-}
-
-trait OutputTypeExtractor {
+sealed trait OutputType {
   val fileExtension: String
-  val queryString: (String,String) // key/value
-  val acceptValue: String
+  val queryString: (String,String)
+  val contentType: String
 
   def inPath(request: Request[AnyContent]) = request.path.endsWith(fileExtension)
   def inQueryString(request: Request[AnyContent]) = checkQueryString(request.queryString)
   def inHeader(request: Request[AnyContent]) = {
     request.headers.get(HeaderNames.ACCEPT).map { header =>
-      header.contains(acceptValue)
+      header.contains(contentType)
     }.getOrElse(false)
   }
   def inBody(request: Request[AnyContent]) = {
@@ -84,9 +23,51 @@ trait OutputTypeExtractor {
     }
   }
 
+  def matches(req: Request[AnyContent]): Boolean = {
+    inPath(req) || inQueryString(req) || inHeader(req) || inBody(req)
+  }
   protected def checkQueryString(data: Map[String, Seq[String]]) = {
     data.get(queryString._1).map { a =>
       a.headOption.map { _.equals(queryString._2) }.getOrElse(false)
     }.getOrElse(false)
   }
+}
+
+object OutputType {
+  def apply(request: Request[AnyContent]): Option[OutputType] = request match {
+    case html if HtmlOutput().matches(html) => Some(HtmlOutput())
+    case json if JsonOutput().matches(json) => Some(JsonOutput())
+    case bash if BashOutput().matches(bash) => Some(BashOutput())
+    case text if TextOutput().matches(text) => Some(TextOutput())
+    case _ => None
+  }
+  def isHtml(request: Request[AnyContent]): Boolean = HtmlOutput().matches(request)
+}
+
+case class JsonOutput() extends OutputType {
+  val fileExtension = ".json"
+  val queryString = "outputType" -> "json"
+  val contentType = "application/json"
+  override def toString() = "JsonOutput"
+}
+
+case class HtmlOutput() extends OutputType {
+  val fileExtension = ".html"
+  val queryString = "outputType" -> "html"
+  val contentType = "text/html"
+  override def toString() = "HtmlOutput"
+}
+
+case class BashOutput() extends OutputType {
+  val fileExtension = ".sh"
+  val queryString = "outputType" -> "sh"
+  val contentType = "text/x-shellscript"
+  override def toString() = "BashOutput"
+}
+
+case class TextOutput() extends OutputType {
+  val fileExtension = ".txt"
+  val queryString = "outputType" -> "text"
+  val contentType = "text/plain"
+  override def toString() = "TextOutput"
 }

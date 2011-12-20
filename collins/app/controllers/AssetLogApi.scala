@@ -24,19 +24,9 @@ trait AssetLogApi {
         case Some(n) => n
       }
       val totalResults = logs.total
-      val headers = Seq(
-        ("X-Pagination-PreviousPage" -> prevPage.toString),
-        ("X-Pagination-CurrentPage" -> page.toString),
-        ("X-Pagination-NextPage" -> nextPage.toString),
-        ("X-Pagination-TotalResults" -> totalResults.toString)
-      )
-      ResponseData(Ok, JsObject(Map(
-        "Pagination" -> JsObject(Map(
-          "PreviousPage" -> JsNumber(prevPage),
-          "CurrentPage" -> JsNumber(page),
-          "NextPage" -> JsNumber(nextPage),
-          "TotalResults" -> JsNumber(logs.total)
-        )),
+      val headers = logs.getPaginationHeaders()
+      val paginationMap = logs.getPaginationJsMap()
+      ResponseData(Ok, JsObject(paginationMap ++ Map(
         "Data" -> JsArray(logs.items.map { log =>
           JsObject(log.toJsonMap)
         }.toList)

@@ -59,7 +59,7 @@ class LshwParserSpec extends Specification {
         rep.memoryBanksTotal mustEqual 12
   
         rep.totalStorage.toHuman mustEqual "278.46 GB"
-        rep.diskCount mustEqual 3
+        rep.diskCount mustEqual 4
   
         rep.hasFlashStorage must beTrue
         rep.totalFlashStorage.toHuman mustEqual "1.27 TB"

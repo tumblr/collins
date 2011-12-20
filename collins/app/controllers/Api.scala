@@ -10,30 +10,15 @@ import play.api.mvc._
 import java.io.File
 import java.util.Date
 
-trait Api extends Controller with AssetApi with AssetLogApi {
-  this: SecureController =>
-
-  case class ResponseData(status: Status, data: JsObject, headers: Seq[(String,String)] = Nil)
-
-  protected implicit val securitySpec = SecuritySpec(isSecure = true, Nil)
+trait ApiResponse extends Controller {
   protected val defaultOutputType = JsonOutput()
 
-  def ping = Action { implicit req =>
-    formatResponseData(ResponseData(Ok, JsObject(Map(
-      "Data" -> JsObject(Map(
-        "Timestamp" -> JsString(Helpers.dateFormat(new Date())),
-        "TestObj" -> JsObject(Map(
-          "TestString" -> JsString("test"),
-          "TestList" -> JsArray(List(JsNumber(1), JsNumber(2)))
-        )),
-        "TestList" -> JsArray(List(
-          JsObject(Map("id" -> JsNumber(123), "name" -> JsString("foo123"))),
-          JsObject(Map("id" -> JsNumber(124), "name" -> JsString("foo124"))),
-          JsObject(Map("id" -> JsNumber(124), "name" -> JsString("foo124")))
-        ))
-      )),
-      "Status" -> JsString("Ok")
-    ))))
+  private[controllers] case class ResponseData(status: Status, data: JsObject, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
+    def map[T](fn: ResponseData => T) = fn(this)
+  }
+
+  protected def getErrorMessage(msg: String, status: Status = BadRequest) = {
+    ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
   }
 
   protected def formatResponseData(response: ResponseData)(implicit req: Request[AnyContent]) = {
@@ -44,6 +29,10 @@ trait Api extends Controller with AssetApi with AssetLogApi {
         response.status(formatBashResponse(response.data) + "\n").as(o.contentType).withHeaders(response.headers:_*)
       case o: JsonOutput =>
         response.status(stringify(response.data)).as(o.contentType).withHeaders(response.headers:_*)
+      case o: HtmlOutput =>
+        val e = new Exception("Unhandled view")
+        e.printStackTrace()
+        throw e
     }
   }
 
@@ -53,8 +42,8 @@ trait Api extends Controller with AssetApi with AssetLogApi {
         case JsNull => ""
         case JsUndefined(error) => "\"%s\"".format(error)
         case JsBoolean(value) => value match {
-          case true => "1"
-          case false => "0"
+          case true => "true"
+          case false => "false"
         }
         case JsNumber(number) => number.toString
         case JsString(s) => "\"%s\"".format(s)
@@ -68,9 +57,9 @@ trait Api extends Controller with AssetApi with AssetLogApi {
       }.map { _ => true }.getOrElse(false)
 
       if (isObj) {
-        jsvalue.map { item =>
+        jsvalue.zipWithIndex.map { case(item,id) =>
           item match {
-            case o: JsObject => formatBashResponse(o, listPrefix) + "\n"
+            case o: JsObject => formatBashResponse(o, listPrefix + id.toString + "_") + "\n"
             case b => formatBasic(b)
           }
         }.mkString("")
@@ -127,6 +116,32 @@ trait Api extends Controller with AssetApi with AssetLogApi {
     }
   }
 
+
+}
+
+trait Api extends ApiResponse with AssetApi with AssetLogApi {
+  this: SecureController =>
+
+  protected implicit val securitySpec = SecuritySpec(isSecure = true, Nil)
+
+  def ping = Action { implicit req =>
+    formatResponseData(ResponseData(Ok, JsObject(Map(
+      "Data" -> JsObject(Map(
+        "Timestamp" -> JsString(Helpers.dateFormat(new Date())),
+        "TestObj" -> JsObject(Map(
+          "TestString" -> JsString("test"),
+          "TestList" -> JsArray(List(JsNumber(1), JsNumber(2)))
+        )),
+        "TestList" -> JsArray(List(
+          JsObject(Map("id" -> JsNumber(123), "name" -> JsString("foo123"))),
+          JsObject(Map("id" -> JsNumber(124), "name" -> JsString("foo124"))),
+          JsObject(Map("id" -> JsNumber(124), "name" -> JsString("foo124")))
+        ))
+      )),
+      "Status" -> JsString("Ok")
+    ))))
+  }
+
   protected def withAssetFromTag(tag: String)(f: Asset => ResponseData): ResponseData = {
     Asset.isValidTag(tag) match {
       case false => getErrorMessage("Empty tag specified")
@@ -136,9 +151,4 @@ trait Api extends Controller with AssetApi with AssetLogApi {
       }
     }
   }
-
-  protected def getErrorMessage(msg: String, status: Status = BadRequest) = {
-    ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
-  }
-
 }

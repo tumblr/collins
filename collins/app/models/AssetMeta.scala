@@ -8,16 +8,20 @@ import play.api.Play.current
 import java.sql._
 
 case class AssetMeta(
-    id: Pk[java.lang.Long],
+    id: Pk[java.lang.Integer],
     name: String,
     priority: Int,
     label: String,
     description: String)
 {
-  def getId(): Long = id.get
+  def getId(): Int = id.get
 }
 
 object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
+
+  def apply(name: String, priority: Int, label: String, description: String) = {
+    new AssetMeta(NotAssigned, name, priority, label, description)
+  }
 
   def create(metas: Seq[AssetMeta])(implicit con: Connection): Seq[AssetMeta] = {
     metas.foldLeft(List[AssetMeta]()) { case(list, meta) =>
@@ -26,10 +30,13 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     }.reverse
   }
 
-  def findById(id: Long) = Model.withConnection { implicit con =>
+  def findById(id: Int) = Model.withConnection { implicit con =>
     AssetMeta.find("id={id}").on('id -> id).singleOption()
   }
 
+  def findByName(name: String) = Model.withConnection { implicit con =>
+    AssetMeta.find("name={name}").on('name -> name).singleOption()
+  }
   def getViewable(): Seq[AssetMeta] = {
     // change to use stuff in Enum
     Model.withConnection { implicit connection =>
@@ -67,8 +74,7 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     val DiskSizeBytes = Value(18, "DISK_SIZE_BYTES")
     val DiskType = Value(19, "DISK_TYPE")
     val DiskDescription = Value(20, "DISK_DESCRIPTION")
-    val DiskIsFlash = Value(21, "DISK_IS_FLASH")
-    val DiskStorageTotal = Value(22, "DISK_STORAGE_TOTAL")
+    val DiskStorageTotal = Value(21, "DISK_STORAGE_TOTAL")
   }
 }
 
