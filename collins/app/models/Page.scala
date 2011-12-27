@@ -2,7 +2,10 @@ package models
 
 import play.api.libs.json._
 
-case class PageParams(page: Int, size: Int, sort: String, offset: Int = 0)
+case class PageParams(page: Int, size: Int, sort: String) {
+  def offset: Int = page * size
+}
+
 case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
   lazy val prev: Option[Int] = Option(page - 1).filter(_ >= 0)
   lazy val next: Option[Int] = Option(page + 1).filter(_ => (offset + items.size) < total)

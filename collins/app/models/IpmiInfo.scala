@@ -74,7 +74,9 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
       join ipmi_info ipmi on asset.id = ipmi.asset_id
       where %s
     """
-    val finderQuery = DaoSupport.flattenSql(Seq(finder.asQueryFragment(), collectParams(ipmi)))
+    val queryFragment = finder.asQueryFragment()
+    val collectedParams = collectParams(ipmi)
+    val finderQuery = DaoSupport.flattenSql(Seq(queryFragment, collectedParams))
     val finderQueryFrag = finderQuery.sql.query
     val query = queryPlaceholder.format("*", finderQueryFrag) + " limit {pageSize} offset {offset}"
     val countQuery = queryPlaceholder.format("count(*)", finderQueryFrag)

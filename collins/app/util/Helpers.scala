@@ -12,6 +12,12 @@ object Helpers {
     DATE_FORMAT.format(date)
   }
 
+  private[this] val words = """([a-zA-Z]+)""".r
+  private[this] val separators = """([^a-zA-Z]+)""".r
+  def camelCase(value: String, sep: String = "") = {
+    separators.replaceAllIn(words.replaceAllIn(value, m => m.matched.toLowerCase.capitalize), sep)
+  }
+
   def formatPowerPort(label: String) = {
     import models.AssetMeta.Enum.PowerPort
     PowerPort.toString + "_" + label
