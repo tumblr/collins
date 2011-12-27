@@ -21,14 +21,18 @@ trait ApiResponse extends Controller {
     ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
   }
 
+  private def contentTypeWithCharset(o: OutputType) = {
+    o.contentType + "; charset=utf-8"
+  }
+
   protected def formatResponseData(response: ResponseData)(implicit req: Request[AnyContent]) = {
     getOutputType(req) match {
       case o: TextOutput =>
-        response.status(formatTextResponse(response.data) + "\n").as(o.contentType).withHeaders(response.headers:_*)
+        response.status(formatTextResponse(response.data) + "\n").as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: BashOutput =>
-        response.status(formatBashResponse(response.data) + "\n").as(o.contentType).withHeaders(response.headers:_*)
+        response.status(formatBashResponse(response.data) + "\n").as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: JsonOutput =>
-        response.status(Json.stringify(response.data)).as(o.contentType).withHeaders(response.headers:_*)
+        response.status(Json.stringify(response.data)).as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: HtmlOutput =>
         val e = new Exception("Unhandled view")
         e.printStackTrace()

@@ -9,7 +9,6 @@ import play.api.libs.json._
 import play.api.libs.Files._
 import play.api.mvc._
 import play.api.mvc.MultipartFormData._
-import play.api.test.Extract
 
 import org.specs2.mock._
 
@@ -89,7 +88,7 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       val response = s.value._3
       val status: Boolean = code == 200 &&
         headers.contains("Content-Type") &&
-        headers("Content-Type").equals(BashOutput().contentType) &&
+        headers("Content-Type").contains(BashOutput().contentType) &&
         response.contains("""Data_TestList_0_name="foo123";""") &&
         response.contains("""Status="Ok";""");
       result(status, "Got expected Bash response", ("Invalid Bash response for " + s.value), s)
@@ -101,16 +100,16 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       val code = s.value._1
       val headers = s.value._2
       val response = s.value._3
-      val json = parseJson(response)
+      val json = Json.parse(response)
       val status: Boolean = code == 200 &&
         headers.contains("Content-Type") &&
-        headers("Content-Type").equals(JsonOutput().contentType) &&
+        headers("Content-Type").contains(JsonOutput().contentType) &&
         (json \ "Status").isInstanceOf[JsString] &&
-        (json \ "Status").valueAs[String].equals("Ok") &&
+        (json \ "Status").as[String].equals("Ok") &&
         (json \ "Data").isInstanceOf[JsObject] &&
         (json \ "Data" \ "TestList").isInstanceOf[JsArray] &&
         (json \ "Data" \ "TestList")(0).isInstanceOf[JsObject] &&
-        ((json \ "Data" \ "TestList")(0) \ "id").valueAs[BigDecimal] == 123;
+        ((json \ "Data" \ "TestList")(0) \ "id").as[Long] == 123L;
       result(status, "Got expected JSON response", ("Invalid JSON response for " + s.value), s)
     }
   }
@@ -122,7 +121,7 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       val response = s.value._3
       val status: Boolean = code == 200 &&
         headers.contains("Content-Type") &&
-        headers("Content-Type").equals(TextOutput().contentType) &&
+        headers("Content-Type").contains(TextOutput().contentType) &&
         response.contains("Status\tOk");
       result(status, "Got expected Text response", ("Invalid text response for " + s.value), s)
     }

@@ -2,9 +2,8 @@ package models
 
 import org.specs2.mutable._
 import org.specs2.specification._
+import play.api._
 import play.api.test._
-import play.api.test.MockApplication._
-import play.api.db.evolutions._
 
 object DatabaseSpec {
   val dataSource = Map(
@@ -21,11 +20,12 @@ object DatabaseSpec {
 
 trait DatabaseSpec extends Specification {
   def evolveDb = {
-    OfflineEvolutions.applyScript(new java.io.File("."), getClass.getClassLoader, "collins")
-    val mockApp = injectGlobalMock(Nil, DatabaseSpec.dataSource)
+    Play.start(
+      FakeApplication().addPlugin("play.api.db.evolutions.EvolutionsPlugin").addPlugin("play.api.db.DBPlugin")
+    )
   }
   def devolveDb = {
-    clearMock()
+    Play.stop()
   }
 
   override def map(fs: => Fragments) = Step(evolveDb) ^ fs ^ Step(devolveDb)
