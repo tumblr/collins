@@ -19,39 +19,6 @@ trait Resources extends Controller {
     Ok(html.resources.index(AssetMeta.getViewable()))
   }
 
-  def rewriteRequest(req: Request[AnyContent]): Request[AnyContent] = {
-    val respectedKeys = AssetApi.FindAsset.params
-    val pagination = Set("page", "sort", "size")
-    val nonEmpty = req.queryString.filter { case(k,v) =>
-      v.forall { _.nonEmpty }
-    }.filter { case(k,v) => !pagination.contains(k) }
-    val grouped = nonEmpty.groupBy { case(k, v) =>
-      respectedKeys.contains(k)
-    }
-    val respectedParams = grouped.getOrElse(true, Map[String,Seq[String]]())
-    val rewrittenParams = grouped.get(false).map { unknownParams =>
-      unknownParams.map { case(k,v) =>
-        k -> v.map { s => ("%s;%s".format(k,s)) }
-      }
-    }.getOrElse(Map[String,Seq[String]]())
-    val mergedParams: Seq[String] = Seq(
-      respectedParams.getOrElse("attribute", Seq[String]()),
-      rewrittenParams.values.flatten
-    ).flatten
-    val finalMap: Map[String,Seq[String]] = respectedParams ++ Map(
-      "attribute" -> mergedParams
-    )
-    new Request[AnyContent] {
-      def uri = req.uri
-      def path = req.path
-      def method = req.method
-      def queryString = finalMap
-      def headers = req.headers
-      def cookies = req.cookies
-      def body = req.body
-    }
-  }
-
   /**
    * Find assets by query parameters, special care for ASSET_TAG
    */
@@ -63,7 +30,8 @@ trait Resources extends Controller {
       },
       asset_tag => {
         logger.debug("Got asset tag: " + asset_tag)
-        findByTag(asset_tag)
+        val newReq = newRequestWithQuery(req, stripQuery(req.queryString))
+        findByTag(asset_tag, PageParams(page, size, sort))(newReq)
       }
     )
   }
@@ -213,29 +181,74 @@ trait Resources extends Controller {
   /**
    * Given a asset tag, find the associated asset
    */
-  private def findByTag[A](tag: String)(implicit r: Request[A]) = {
+  private def findByTag(tag: String, page: PageParams)(implicit r: Request[AnyContent]) = {
     Asset.findByTag(tag) match {
-      case None => Asset.findLikeTag(tag) match {
-        case Nil => 
+      case None => Asset.findLikeTag(tag, page) match {
+        case Page(_, _, _, 0) =>
           Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified asset tag")
-        case list =>
-          Ok(html.resources.list(list))
+        case page =>
+          Ok(html.asset.list(page))
       }
       case Some(asset) =>
         intakeAllowed(asset) match {
           case true =>
             Redirect(app.routes.Resources.intake(asset.getId, 1))
           case false =>
-            Ok(html.resources.list(Seq(asset)))
+            Redirect(app.routes.CookieApi.getAsset(asset.tag))
         }
     }
   }
 
-  private def intakeAllowed[A](asset: Asset)(implicit r: Request[A]): Boolean = {
+  private def intakeAllowed(asset: Asset)(implicit r: Request[AnyContent]): Boolean = {
     val isNew = asset.isNew
     val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
     val rightRole = hasRole(getUser(r), Seq("infra"))
     isNew && rightType && rightRole
+  }
+
+  /**
+   * Rewrite k/v pairs into an attribute=k;v map
+   */
+  private def rewriteRequest(req: Request[AnyContent]): Request[AnyContent] = {
+    val respectedKeys = AssetApi.FindAsset.params
+    val nonEmpty = stripQuery(req.queryString)
+    val grouped = nonEmpty.groupBy { case(k, v) =>
+      respectedKeys.contains(k)
+    }
+    val respectedParams = grouped.getOrElse(true, Map[String,Seq[String]]())
+    val rewrittenParams = grouped.get(false).map { unknownParams =>
+      unknownParams.map { case(k,v) =>
+        k -> v.map { s => ("%s;%s".format(k,s)) }
+      }
+    }.getOrElse(Map[String,Seq[String]]())
+    val mergedParams: Seq[String] = Seq(
+      respectedParams.getOrElse("attribute", Seq[String]()),
+      rewrittenParams.values.flatten
+    ).flatten
+    val finalMap: Map[String,Seq[String]] = mergedParams match {
+      case Nil => respectedParams
+      case list => respectedParams ++ Map("attribute" -> list)
+    }
+    newRequestWithQuery(req, finalMap)
+  }
+
+  private def stripQuery(inputMap: Map[String, Seq[String]]) = {
+    val exclude = Set("page", "sort", "size")
+    inputMap.filter { case(k,v) =>
+      v.forall { _.nonEmpty }
+    }.filter { case(k,v) => !exclude.contains(k) }
+  }
+
+  private def newRequestWithQuery(req: Request[AnyContent], finalMap: Map[String, Seq[String]]) = {
+    new Request[AnyContent] {
+      def uri = req.uri
+      def path = req.path
+      def method = req.method
+      def queryString = finalMap
+      def headers = req.headers
+      def cookies = req.cookies
+      def body = req.body
+    }
   }
 
 }

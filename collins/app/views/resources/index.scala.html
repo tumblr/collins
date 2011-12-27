@@ -1,16 +1,11 @@
 @(assetMeta: Seq[AssetMeta])(implicit flash: Flash)
 
 @import helper._
+@import _root_.util.Helpers
 @import util.notice
-@import _root_.util.Disk
 
-@diskOptions(asset: AssetMeta) = {
-  <select name="@asset.name" id="@asset.name">
-    <option value="" selected="selected"></option>
-    @Disk.Type.values.toSeq.map { v =>
-    <option value="@v.toString">@v.toString</option>
-    }
-  </select>
+@basicFormatter(asset: AssetMeta) = {
+  <input type="text" id="@asset.name" name="@asset.name">
   <span class="help-inline">@asset.description</span>
 }
 
@@ -31,16 +26,51 @@
         <span class="help-inline">Tumblr Asset Tag</span>
       </div>
     </div>
+    <div class="clearfix">
+      <label for="IPMI_ADDRESS">IPMI Address</label>
+      <div class="input">
+        <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS">
+        <span class="help-inline">IPMI Address</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="type">Asset Type</label>
+      <div class="input">
+        <select name="type" id="type">
+          <option value="" selected="selected"></option>
+          @AssetType.Enum.values.toSeq.map { v =>
+          <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
+          }
+        </select>
+        <span class="help-inline">Type of Asset (Server Chassis, Server Node, etc)</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="status">Asset Status</label>
+      <div class="input">
+        <select name="status" id="status">
+          <option value="" selected="selected"></option>
+          @Status.Enum.values.toSeq.map { v =>
+          <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
+          }
+        </select>
+        <span class="help-inline">Asset Status (New, Incomplete, etc)</span>
+      </div>
+    </div>
     @assetMeta.map { case(asset) =>
     <div class="clearfix">
       <label for="@asset.name">@asset.label</label>
       <div class="input">
-        @if(asset.name=="DISK_TYPE") {
-        @diskOptions(asset)
-        } else {
-        <input type="text" id="@asset.name" name="@asset.name">
-        <span class="help-inline">@asset.description</span>
-        }
+        @{
+           asset.name match {
+             case "DISK_TYPE" => optionDisplay(asset, 2)
+             case "DISK_STORAGE_TOTAL" => optionDisplay(asset, 1)
+             case "CPU_SPEED_GHZ" => optionDisplay(asset, 3)
+             case "MEMORY_SIZE_TOTAL" => optionDisplay(asset, 1)
+             case "NIC_SPEED" => optionDisplay(asset, 4)
+             case _ => basicFormatter(asset)
+           }
+         }
       </div>
     </div>
     }

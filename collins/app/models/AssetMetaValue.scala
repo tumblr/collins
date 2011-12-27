@@ -40,6 +40,16 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
     }
   }
 
+  def findMetaValues(meta_id: Long): Seq[String] = {
+    val query = """
+      select distinct value from asset_meta_value amv
+      where amv.asset_meta_id = {id}
+    """
+    Model.withConnection { implicit con =>
+      SQL(query).on('id -> meta_id).as(str("value") *).sorted
+    }
+  }
+
   def findOneByAssetId(spec: Set[AssetMeta.Enum], asset_id: Long): Seq[MetaWrapper] = {
     val query = """
       select * from asset_meta am

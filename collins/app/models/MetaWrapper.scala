@@ -33,19 +33,11 @@ object MetaWrapper {
     AssetMetaValue.create(metaValues)
   }
 
-  /**
-   * To all who enter findAssets and the variations found within, I apologize in advance.
-   * This code is incredibly brittle and needs to be refactored. What would have been arguably much
-   * simpler than passing around these sequences of tuples would have been building up a SimpleSql
-   * case class as these can be composed by caling 'on' multiple times.
-   */
   def findAssets(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder): Page[Asset] = {
-    val offset = page.size * page.page
-    val newPage = page.copy(offset = offset)
     if (params._1.nonEmpty) {
-      IpmiInfo.findAssetsByIpmi(newPage, params._1, afinder)
+      IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
     } else if (params._2.nonEmpty) {
-      MetaWrapper.findAssetsByMeta(newPage, params._2, afinder)
+      MetaWrapper.findAssetsByMeta(page, params._2, afinder)
     } else {
       val finderQuery = afinder.asQueryFragment()
       val finderQueryFrag = finderQuery.sql.query match {
@@ -54,15 +46,15 @@ object MetaWrapper {
       }
       val paramsNoPaging = finderQuery.params
       val paramsWithPaging = Seq(
-        ('pageSize -> toParameterValue(newPage.size)),
-        ('offset -> toParameterValue(newPage.offset))
+        ('pageSize -> toParameterValue(page.size)),
+        ('offset -> toParameterValue(page.offset))
       ) ++ paramsNoPaging
       Model.withConnection { implicit con =>
         val assets = Asset.find(
           "%s limit {pageSize} offset {offset}".format(finderQueryFrag)
         ).on(paramsWithPaging:_*).list()
         val count = Asset.count("%s".format(finderQueryFrag)).on(paramsNoPaging:_*).as(scalar[Long])
-        Page(assets, newPage.page, newPage.offset, count)
+        Page(assets, page.page, page.offset, count)
       }
     }
   }

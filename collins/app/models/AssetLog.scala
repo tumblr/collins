@@ -8,7 +8,7 @@ import anorm._
 import anorm.SqlParser._
 import play.api.libs.json._
 
-import java.sql.Timestamp
+import java.sql.{Connection, Timestamp}
 import java.util.Date
 
 case class AssetLog(

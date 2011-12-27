@@ -76,6 +76,9 @@ object LshwHelper {
   }
 
   protected def reconstructMemory(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Memory] = {
+    if (!meta.contains(0)) {
+      return (Seq[Memory](), meta)
+    }
     val totalBanks = finder(meta(0), MemoryBanksTotal, _.toInt, 0)
     val memSeq = (0 until totalBanks).map { bankId =>
       meta.get(bankId).map { seq =>

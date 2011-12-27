@@ -94,9 +94,9 @@ object DaoSupport extends ExtendSupport {
   }
 
   def flattenSql(seq: Seq[SimpleSql[Row]], join: String = " and "): SimpleSql[Row] = {
-    val size = seq.size
-    val query = seq.map { _.sql.query }.mkString(join)
-    val params = seq.map { _.params }.flatten
+    val filtered = seq.filter { _.sql.query.nonEmpty }
+    val query = filtered.map { _.sql.query }.mkString(join)
+    val params = filtered.map { _.params }.flatten
     SqlQuery(query).on(params:_*)
   }
 

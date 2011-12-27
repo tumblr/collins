@@ -5,6 +5,7 @@ import conversions._
 import util.{Helpers, LshwRepresentation}
 
 import anorm._
+import anorm.SqlParser._
 import play.api.libs.json._
 
 import java.sql.{Connection, Timestamp}
@@ -93,8 +94,21 @@ object Asset extends Magic[Asset](Some("asset")) {
   def findByTag(tag: String): Option[Asset] = Model.withConnection { implicit con =>
     Asset.find("tag={tag}").on('tag -> tag).first()
   }
-  def findLikeTag(tag: String): Seq[Asset] = Model.withConnection { implicit con =>
-    Asset.find("tag like {tag}").on('tag -> (tag + "%")).list()
+  def findLikeTag(tag: String, params: PageParams): Page[Asset] = Model.withConnection { implicit con =>
+    val tags = tag + "%"
+    val orderBy = params.sort.toUpperCase match {
+      case "ASC" => "ORDER BY ID ASC"
+      case _ => "ORDER BY ID DESC"
+    }
+    val assets = Asset.find("tag like {tag} %s limit {pageSize} offset {offset}".format(orderBy)).on(
+      'tag -> tags,
+      'pageSize -> params.size,
+      'offset -> params.offset
+    ).list()
+    val count = Asset.count("tag like {tag}").on(
+      'tag -> tags
+    ).as(scalar[Long])
+    Page(assets, params.page, params.offset, count)
   }
 
   def findByMeta(list: Seq[(AssetMeta.Enum,String)]): Seq[Asset] = {
