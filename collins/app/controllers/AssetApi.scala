@@ -57,7 +57,7 @@ trait AssetApi {
   }}(SecuritySpec(true, Nil))
 
   // GET /api/assets?params
-  val finder = new AssetApi.FindAsset()
+  private val finder = new AssetApi.FindAsset()
   def getAssets(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
     finder(page, size, sort)
   }(SecuritySpec(true, Nil))
@@ -95,15 +95,8 @@ trait AssetApi {
     formatResponseData(responseData)
   }(SecuritySpec(true, Seq("infra")))
 
-  private def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
-    val map = ipmi.map { ipmi_info =>
-        Map("ASSET" -> JsObject(asset.toJsonMap),
-            "IPMI" -> JsObject(ipmi_info.toJsonMap()))
-    }.getOrElse(Map("ASSET" -> JsObject(asset.toJsonMap)))
-    JsObject(map)
-  }
-
   private[AssetApi] class UpdateAsset(perms: Seq[String] = Seq("infra")) {
+    import play.api.libs.Files
     val updateForm = Form(of(
       "lshw" -> optional(text(1)),
       "lldpd" -> optional(text(1)),
@@ -114,14 +107,28 @@ trait AssetApi {
       })
     ))
 
+    protected def getFormFile(key: String)(implicit req: Request[AnyContent]): Map[String,String] = {
+      req.body match {
+        case AnyContentAsMultipartFormData(mdf) => mdf.file(key) match {
+          case Some(temporaryFile) =>
+            val src = io.Source.fromFile(temporaryFile.ref.file)
+            val txt = src.mkString
+            src.close()
+            Map(key -> txt)
+          case None => Map.empty
+        }
+        case _ => Map.empty
+      }
+    }
+
     def validateRequest(asset: Asset)(implicit req: Request[AnyContent]): Either[String,Map[String,String]] = {
       updateForm.bindFromRequest.fold(
         hasErrors => Left("Error processing form data"),
         success => {
           val (lshw, lldpd, chassis_tag, attribute) = success
           val map: Map[String,String] = Map.empty ++
-            lshw.map { s => Map("lshw" -> s) }.getOrElse(Map.empty) ++
-            lldpd.map { s => Map("lldpd" -> s) }.getOrElse(Map.empty) ++
+            lshw.map { s => Map("lshw" -> s) }.getOrElse(getFormFile("lshw")) ++
+            lldpd.map { s => Map("lldpd" -> s) }.getOrElse(getFormFile("lldpd")) ++
             chassis_tag.map { s => Map("chassis_tag" -> s) }.getOrElse(Map.empty) ++
             attribute.map { attrib =>
               val attribs = attrib.split(";", 2)
@@ -194,6 +201,14 @@ trait AssetApi {
           case None => None
         }
       }
+    }
+
+    protected def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
+      val map = ipmi.map { ipmi_info =>
+          Map("ASSET" -> JsObject(asset.toJsonMap),
+              "IPMI" -> JsObject(ipmi_info.toJsonMap(false)))
+      }.getOrElse(Map("ASSET" -> JsObject(asset.toJsonMap)))
+      JsObject(map)
     }
 
     def apply(tag: String) = SecureAction { implicit req =>
