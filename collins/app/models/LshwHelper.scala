@@ -76,28 +76,22 @@ object LshwHelper {
   }
 
   protected def reconstructMemory(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Memory] = {
-    val memSeq = meta.get(0).map { seq =>
-      val memAvail = finder(seq, MemoryAvailableBytes, _.toLong, 0L)
-      val banksUsed = finder(seq, MemoryBanksUsed, _.toInt, 0)
-      val banksUnused = finder(seq, MemoryBanksUnused, _.toInt, 0)
-      val totalBanks = banksUsed + banksUnused
-      val description = finder(seq, MemoryDescription, _.toString, "")
-      val mem = (banksUsed > 0) match {
-        case true => memAvail / banksUsed
-        case false => memAvail
-      } 
-      (0 until totalBanks).map { bank =>
-        if (bank < banksUsed) {
-          Memory(ByteStorageUnit(mem), bank, description, "", "")
+    val totalBanks = finder(meta(0), MemoryBanksTotal, _.toInt, 0)
+    val memSeq = (0 until totalBanks).map { bankId =>
+      meta.get(bankId).map { seq =>
+        val memorySizeBytes = finder(seq, MemorySizeBytes, _.toLong, 0L)
+        val description = finder(seq, MemoryDescription, _.toString, "")
+        if (memorySizeBytes == 0L && description.isEmpty) {
+          Memory(ByteStorageUnit(0L), bankId, "Empty Memory Bank", "", "")
         } else {
-          Memory(ByteStorageUnit(0), bank, "Empty Memory Bank", "", "")
+          Memory(ByteStorageUnit(memorySizeBytes), bankId, description, "", "")
         }
-      }.toSeq
-    }.getOrElse(Nil)
+      }.getOrElse(Memory(ByteStorageUnit(0L), bankId, "Empty Memory Bank", "", ""))
+    }.toSeq
     val filteredMeta = meta.map { case(groupId, metaSeq) =>
       val newSeq = filterNot(
         metaSeq,
-        Set(MemoryAvailableBytes.id, MemoryBanksUsed.id, MemoryBanksUnused.id, MemoryDescription.id)
+        Set(MemorySizeBytes.id, MemoryDescription.id, MemorySizeTotal.id, MemoryBanksTotal.id)
       )
       groupId -> newSeq
     }
@@ -107,14 +101,18 @@ object LshwHelper {
     if (lshw.memoryBanksTotal < 1) {
       return Seq()
     }
-    val mem = lshw.memory.head
-    Seq(
-      AssetMetaValue(asset_id, MemoryAvailableBytes.id, lshw.totalMemory.inBytes.toString),
-      AssetMetaValue(asset_id, MemoryBanksUsed.id, lshw.memoryBanksUsed.toString),
-      AssetMetaValue(asset_id, MemoryBanksUnused.id, lshw.memoryBanksUnused.toString),
-      AssetMetaValue(asset_id, MemoryDescription.id, "%s - %s %s".format(
-        mem.description, mem.vendor, mem.product
-      ))
+    lshw.memory.filter { _.size.bytes > 0 }.foldLeft(Seq[AssetMetaValue]()) { case(total, current) =>
+      val memory = current
+      val groupId = memory.bank
+      total ++ Seq(
+        AssetMetaValue(asset_id, MemorySizeBytes.id, groupId, memory.size.bytes.toString),
+        AssetMetaValue(asset_id, MemoryDescription.id, groupId, "%s - %s %s".format(
+          memory.description, memory.vendor, memory.product
+        ))
+      )
+    } ++ Seq(
+      AssetMetaValue(asset_id, MemorySizeTotal.id, lshw.totalMemory.bytes.toString),
+      AssetMetaValue(asset_id, MemoryBanksTotal.id, lshw.memoryBanksTotal.toString)
     )
   }
 

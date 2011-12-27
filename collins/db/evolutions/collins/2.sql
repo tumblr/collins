@@ -30,10 +30,10 @@ INSERT INTO asset_meta VALUES (8, 'CPU_THREADS', -1, 'CPU Threads', 'Number of t
 INSERT INTO asset_meta VALUES (9, 'CPU_SPEED_GHZ', -1, 'CPU Speed', 'CPU Speed in GHz');
 INSERT INTO asset_meta VALUES (10, 'CPU_DESCRIPTION', -1, 'CPU Description', 'CPU description, vendor labels');
 
-INSERT INTO asset_meta VALUES (11, 'MEMORY_SIZE_BYTES', -1, 'Memory', 'Total amount of available memory');
-INSERT INTO asset_meta VALUES (12, 'MEMORY_BANKS_USED', -1, 'Used Memory Banks', 'Number of used memory banks');
-INSERT INTO asset_meta VALUES (13, 'MEMORY_BANKS_UNUSED', -1, 'Unused Memory Banks', 'Number of unused memory banks');
-INSERT INTO asset_meta VALUES (14, 'MEMORY_DESCRIPTION', -1, 'Memory Description', 'Memory description, vendor label');
+INSERT INTO asset_meta VALUES (11, 'MEMORY_SIZE_BYTES', -1, 'Memory', 'Size of Memory Stick');
+INSERT INTO asset_meta VALUES (12, 'MEMORY_DESCRIPTION', -1, 'Memory Description', 'Memory description, vendor label');
+INSERT INTO asset_meta VALUES (13, 'MEMORY_SIZE_TOTAL', -1, 'Memory Total', 'Total amount of available memory in bytes');
+INSERT INTO asset_meta VALUES (14, 'MEMORY_BANKS_TOTAL', -1, 'Memory Banks', 'Total number of memory banks');
 
 INSERT INTO asset_meta VALUES (15, 'NIC_SPEED', -1, 'NIC Speed', 'Speed of nic, stored as bits per second');
 INSERT INTO asset_meta VALUES (16, 'MAC_ADDRESS', 5, 'MAC Address', 'MAC Address of NIC');
@@ -42,7 +42,6 @@ INSERT INTO asset_meta VALUES (17, 'NIC_DESCRIPTION', -1, 'NIC Description', 'Ve
 INSERT INTO asset_meta VALUES (18, 'DISK_SIZE_BYTES', -1, 'Disk Size', 'Disk size in bytes');
 INSERT INTO asset_meta VALUES (19, 'DISK_TYPE', 6, 'Inferred disk type', 'Inferred disk type: SCSI, IDE or FLASH');
 INSERT INTO asset_meta VALUES (20, 'DISK_DESCRIPTION', -1, 'Disk Description', 'Vendor labels for disk');
-
 INSERT INTO asset_meta VALUES (21, 'DISK_STORAGE_TOTAL', 7, 'Total disk storage', 'Total amount of available storage');
 
 INSERT INTO asset VALUES (1, 'tumblrtag1', 7, 1, CURRENT_TIMESTAMP, null, null);

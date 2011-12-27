@@ -62,10 +62,10 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     val CpuSpeedGhz = Value(9, "CPU_SPEED_GHZ")
     val CpuDescription = Value(10, "CPU_DESCRIPTION")
 
-    val MemoryAvailableBytes = Value(11, "MEMORY_SIZE_BYTES")
-    val MemoryBanksUsed = Value(12, "MEMORY_BANKS_USED")
-    val MemoryBanksUnused = Value(13, "MEMORY_BANKS_UNUSED")
-    val MemoryDescription = Value(14, "MEMORY_DESCRIPTION")
+    val MemorySizeBytes = Value(11, "MEMORY_SIZE_BYTES")
+    val MemoryDescription = Value(12, "MEMORY_DESCRIPTION")
+    val MemorySizeTotal = Value(13, "MEMORY_SIZE_TOTAL")
+    val MemoryBanksTotal = Value(14, "MEMORY_BANKS_TOTAL")
 
     val NicSpeed = Value(15, "NIC_SPEED") // in bits
     val MacAddress = Value(16, "MAC_ADDRESS")
