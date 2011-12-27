@@ -5,7 +5,7 @@ import util._
 
 import play.api._
 import play.api.data._
-import play.api.json._
+import play.api.libs.json._
 import play.api.mvc._
 import java.io.File
 import java.util.Date
@@ -28,7 +28,7 @@ trait ApiResponse extends Controller {
       case o: BashOutput =>
         response.status(formatBashResponse(response.data) + "\n").as(o.contentType).withHeaders(response.headers:_*)
       case o: JsonOutput =>
-        response.status(stringify(response.data)).as(o.contentType).withHeaders(response.headers:_*)
+        response.status(Json.stringify(response.data)).as(o.contentType).withHeaders(response.headers:_*)
       case o: HtmlOutput =>
         val e = new Exception("Unhandled view")
         e.printStackTrace()

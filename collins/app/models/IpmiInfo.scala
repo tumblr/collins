@@ -6,7 +6,7 @@ import util.{CryptoAccessor, CryptoCodec, IpAddress}
 import anorm._
 import anorm.SqlParser._
 import play.api._
-import play.api.json._
+import play.api.libs.json._
 
 import java.sql.Connection
 

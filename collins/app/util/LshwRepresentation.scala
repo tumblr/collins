@@ -1,6 +1,6 @@
 package util
 
-import play.api.json._
+import play.api.libs.json._
 
 sealed abstract class LshwAsset {
   val description: String

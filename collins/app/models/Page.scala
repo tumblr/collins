@@ -1,6 +1,6 @@
 package models
 
-import play.api.json._
+import play.api.libs.json._
 
 case class PageParams(page: Int, size: Int, sort: String, offset: Int = 0)
 case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
