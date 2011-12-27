@@ -8,7 +8,7 @@ import views.html
 import play.api.data._
 import play.api.http.{Status => StatusValues}
 import play.api.mvc._
-import play.api.json._
+import play.api.libs.json._
 
 import java.util.Date
 

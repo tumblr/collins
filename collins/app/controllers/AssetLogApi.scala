@@ -4,7 +4,7 @@ import models.{Asset, AssetLog, Model}
 import util.{Helpers, SecuritySpec}
 
 import play.api.data._
-import play.api.json._
+import play.api.libs.json._
 
 trait AssetLogApi {
   this: Api with SecureController =>
@@ -52,7 +52,7 @@ trait AssetLogApi {
         val mtype = AssetLog.MessageTypes.withName(typeString)
         Model.withConnection { implicit con =>
           AssetLog.create(
-            AssetLog(asset, stringify(msg), AssetLog.Formats.Json, AssetLog.Sources.Api, mtype)
+            AssetLog(asset, Json.stringify(msg), AssetLog.Formats.Json, AssetLog.Sources.Api, mtype)
           )
         }
         None

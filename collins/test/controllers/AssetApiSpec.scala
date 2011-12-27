@@ -2,7 +2,7 @@ package controllers
 
 import models._
 import org.specs2.mutable._
-import play.api.json._
+import play.api.libs.json._
 import play.api.libs.Files._
 import play.api.mvc._
 import play.api.mvc.MultipartFormData._

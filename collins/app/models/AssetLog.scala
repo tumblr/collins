@@ -6,7 +6,7 @@ import util.Helpers
 
 import anorm._
 import anorm.SqlParser._
-import play.api.json._
+import play.api.libs.json._
 
 import java.sql.Timestamp
 import java.util.Date
@@ -39,7 +39,7 @@ case class AssetLog(
     "SOURCE" -> JsString(getSource().toString()),
     "TYPE" -> JsString(getMessageType().toString()),
     "MESSAGE" -> (isJson() match {
-      case true => parseJson(message)
+      case true => Json.parse(message)
       case false => JsString(message)
     })
   )
@@ -87,14 +87,14 @@ case class AssetLog(
             "Exception Class" -> JsString(ex.getClass.toString),
             "Exception Message" -> JsString(ex.getMessage)
           )
-          val json = parseJson(oldMessage) match {
+          val json = Json.parse(oldMessage) match {
             case JsObject(map) =>
               JsObject(jsMap ++ map)
             case o => JsObject(jsMap ++ Map(
               "Message" -> o
             ))
           }
-          stringify(json)
+          Json.stringify(json)
         case false =>
           throw new Exception("Unhandled format type, not Json or PlainText")
       }

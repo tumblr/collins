@@ -5,7 +5,7 @@ import conversions._
 import util.{Helpers, LshwRepresentation}
 
 import anorm._
-import play.api.json._
+import play.api.libs.json._
 
 import java.sql.{Connection, Timestamp}
 import java.util.Date

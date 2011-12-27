@@ -1,7 +1,8 @@
-@(asset: Asset, lshw: _root_.util.LshwRepresentation, wseq: Seq[MetaWrapper], ipmi: Map[String,play.api.json.JsValue])(implicit flash: Flash)
+@(asset: Asset, lshw: _root_.util.LshwRepresentation, wseq: Seq[MetaWrapper], ipmi: Map[String,play.api.libs.json.JsValue])(implicit flash: Flash)
 
 @import helper._
 @import util.notice
+@import _root_.util.conversions._
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
