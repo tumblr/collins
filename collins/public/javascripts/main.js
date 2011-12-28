@@ -15,6 +15,14 @@ $(document).ready(function() {
   // focus input elements with a focus class
   $("input.focus").focus();
 
+  $("input[data-type=date]").dateinput({
+    format: 'yyyy-mm-dd',
+    change: function() {
+      var isoDate = this.getValue('yyyy-mm-dd') + 'T00:00:00'
+      this.getInput().val(isoDate);
+    }
+  });
+
   // Attach a keypress handler that moves to the next input on enter
   $("input[enter-style=tab]").each(function() {
     var e = $(this);
