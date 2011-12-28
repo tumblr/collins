@@ -1,4 +1,4 @@
-@(asset: Asset, lshw: _root_.util.LshwRepresentation, wseq: Seq[MetaWrapper], ipmi: Map[String,play.api.libs.json.JsValue])(implicit flash: Flash, req: Request[AnyContent])
+@(asset: Asset, lshw: _root_.util.LshwRepresentation, lldp: _root_.util.LldpRepresentation, wseq: Seq[MetaWrapper], ipmi: Map[String,play.api.libs.json.JsValue])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util.notice
@@ -126,7 +126,68 @@
     </table>
     }
 
-    @if(lshw.cpus.size > 0) {
+    @if(lldp.interfaceCount > 0) {
+    <h3><a data-toggle="collapse" data-target="#lldpSummary">LLDP Summary</a></h3>
+    <table class="zebra-striped condensed-table" id="lldpSummary">
+      <thead>
+        <tr>
+          <th></th>
+          @lldp.interfaces.map { interface =>
+          <th>@interface.name</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Chassis Name</th>
+          @lldp.interfaces.map { interface =>
+          <td>@interface.chassis.name</td>
+          }
+        </tr>
+        <tr>
+          <th>Chassis Description</th>
+          @lldp.interfaces.map { interface =>
+          <td>@interface.chassis.description</td>
+          }
+        </tr>
+        <tr>
+          <th>Chassis ID</th>
+          @lldp.interfaces.map { interface =>
+          <td>@interface.chassis.id.idType / @interface.chassis.id.value</td>
+          }
+        </tr>
+
+        <tr>
+          <th>Port ID</th>
+          @lldp.interfaces.map { interface =>
+          <td>@interface.port.id.idType / @interface.port.id.value</td>
+          }
+        </tr>
+        <tr>
+          <th>Port Description</th>
+          @lldp.interfaces.map { interface =>
+          <td>@interface.port.description</td>
+          }
+        </tr>
+
+        <tr>
+          <th>VLAN ID</th>
+          @lldp.interfaces.map { interface =>
+          <td>@interface.vlan.id</td>
+          }
+        </tr>
+        <tr>
+          <th>VLAN Name</th>
+          @lldp.interfaces.map { interface =>
+          <td>@interface.vlan.name</td>
+          }
+        </tr>
+
+      </tbody>
+    </table>
+    }
+
+    @if(lshw.cpuCount > 0) {
     <h3><a data-toggle="collapse" data-target="#hardwareSummary">Hardware Summary</a></h3>
     <table class="zebra-striped condensed-table" id="hardwareSummary">
       <thead>

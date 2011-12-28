@@ -19,11 +19,12 @@ trait AssetApi {
 
   def getAsset(tag: String) = Authenticated { user => Action { implicit req =>
     type IpmiMap = Map[String,JsValue]
-    type Carry = Tuple4[Asset, LshwRepresentation, Seq[MetaWrapper], IpmiMap]
+    type Carry = Tuple5[Asset, LshwRepresentation, LldpRepresentation, Seq[MetaWrapper], IpmiMap]
 
     val isHtml = OutputType.isHtml(req)
     withAssetFromTag(tag) { asset =>
       val (lshwRep, mvs) = LshwHelper.reconstruct(asset)
+      val (lldpRep, mvs2) = LldpHelper.reconstruct(asset, mvs)
       val ipmi = IpmiInfo.findByAsset(asset).map { info =>
         hasRole(user.get, Seq("infra")) match {
           case true => info.toJsonMap(false)
@@ -33,19 +34,20 @@ trait AssetApi {
       val outMap = Map(
         "ASSET" -> JsObject(asset.toJsonMap),
         "HARDWARE" -> JsObject(lshwRep.toJsonMap),
+        "LLDP" -> JsObject(lldpRep.toJsonMap),
         "IPMI" -> JsObject(ipmi),
-        "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map { case(groupId, mv) =>
+        "ATTRIBS" -> JsObject(mvs2.groupBy { _.getGroupId }.map { case(groupId, mv) =>
           groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) }.toMap)
         }.toMap)
       )
-      val extras: Carry = (asset, lshwRep, mvs, ipmi)
+      val extras: Carry = (asset, lshwRep, lldpRep, mvs2, ipmi)
       ResponseData(Results.Ok, JsObject(outMap), attachment = Some(extras))
     }.map { data =>
       isHtml match {
         case true => data.status match {
           case Results.Ok =>
-            val (asset, lshwRep, mv, ipmi) = data.attachment.get.asInstanceOf[Carry]
-            Results.Ok(html.asset.show(asset, lshwRep, mv, ipmi))
+            val (asset, lshwRep, lldpRep, mv, ipmi) = data.attachment.get.asInstanceOf[Carry]
+            Results.Ok(html.asset.show(asset, lshwRep, lldpRep, mv, ipmi))
           case _ =>
             Redirect(app.routes.Resources.index).flashing(
               "message" -> ("Could not find asset with tag " + tag)
