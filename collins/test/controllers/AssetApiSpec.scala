@@ -42,9 +42,11 @@ class AssetApiSpec extends models.DatabaseSpec with SpecHelpers {
       }
       "Step 2 - Intake Finished" >> {
         val lshwData = getResource("lshw-basic.xml")
+        val lldpData = getResource("lldpctl-two-nic.xml")
         val dummy = Seq[FilePart[TemporaryFile]]()
         val mdf = MultipartFormData(Map(
           "lshw" -> Seq(lshwData),
+          "lldp" -> Seq(lldpData),
           "chassis_tag" -> Seq("abbacadabra")
         ), dummy, Nil, Nil)
         val body = AnyContentAsMultipartFormData(mdf)
