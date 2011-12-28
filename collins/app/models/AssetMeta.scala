@@ -75,6 +75,17 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     val DiskType = Value(19, "DISK_TYPE")
     val DiskDescription = Value(20, "DISK_DESCRIPTION")
     val DiskStorageTotal = Value(21, "DISK_STORAGE_TOTAL")
+
+    val LldpInterfaceName = Value(22, "LLDP_INTERFACE_NAME")
+    val LldpChassisName = Value(23, "LLDP_CHASSIS_NAME")
+    val LldpChassisIdType = Value(24, "LLDP_CHASSIS_ID_TYPE")
+    val LldpChassisIdValue = Value(25, "LLDP_CHASSIS_ID_VALUE")
+    val LldpChassisDescription = Value(26, "LLDP_CHASSIS_DESCRIPTION")
+    val LldpPortIdType = Value(27, "LLDP_PORT_ID_TYPE")
+    val LldpPortIdValue = Value(28, "LLDP_PORT_ID_VALUE")
+    val LldpPortDescription = Value(29, "LLDP_PORT_DESCRIPTION")
+    val LldpVlanId = Value(30, "LLDP_VLAN_ID")
+    val LldpVlanName = Value(31, "LLDP_VLAN_NAME")
   }
 }
 

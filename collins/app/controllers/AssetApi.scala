@@ -102,7 +102,7 @@ trait AssetApi {
     import play.api.libs.Files
     val updateForm = Form(of(
       "lshw" -> optional(text(1)),
-      "lldpd" -> optional(text(1)),
+      "lldp" -> optional(text(1)),
       "chassis_tag" -> optional(text(1)),
       "attribute" -> optional(text(3)).verifying("Invalid attribute specified", res => res match {
         case None => true
@@ -128,10 +128,10 @@ trait AssetApi {
       updateForm.bindFromRequest.fold(
         hasErrors => Left("Error processing form data"),
         success => {
-          val (lshw, lldpd, chassis_tag, attribute) = success
+          val (lshw, lldp, chassis_tag, attribute) = success
           val map: Map[String,String] = Map.empty ++
             lshw.map { s => Map("lshw" -> s) }.getOrElse(getFormFile("lshw")) ++
-            lldpd.map { s => Map("lldpd" -> s) }.getOrElse(getFormFile("lldpd")) ++
+            lldp.map { s => Map("lldp" -> s) }.getOrElse(getFormFile("lldp")) ++
             chassis_tag.map { s => Map("chassis_tag" -> s) }.getOrElse(Map.empty) ++
             attribute.map { attrib =>
               val attribs = attrib.split(";", 2)

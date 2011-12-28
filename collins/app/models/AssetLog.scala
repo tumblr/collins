@@ -101,6 +101,15 @@ case class AssetLog(
     }
     this.copy(message = newMessage);
   }
+
+  def create()(implicit con: Connection) = {
+    if (id == NotAssigned) {
+      AssetLog.create(this)
+    } else {
+      throw new IllegalStateException("Can't create log entry, already created")
+    }
+  }
+
 }
 
 object AssetLog extends Magic[AssetLog](Some("asset_log")) {

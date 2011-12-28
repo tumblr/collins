@@ -45,6 +45,17 @@ INSERT INTO asset_meta VALUES (19, 'DISK_TYPE', 6, 'Inferred disk type', 'Inferr
 INSERT INTO asset_meta VALUES (20, 'DISK_DESCRIPTION', -1, 'Disk Description', 'Vendor labels for disk');
 INSERT INTO asset_meta VALUES (21, 'DISK_STORAGE_TOTAL', 7, 'Total disk storage', 'Total amount of available storage');
 
+INSERT INTO asset_meta VALUES (22, 'LLDP_INTERFACE_NAME', -1, 'LLDP Interface Name', 'Interface name reported by lldpctl');
+INSERT INTO asset_meta VALUES (23, 'LLDP_CHASSIS_NAME', -1, 'LLDP Chassis Name', 'Chassis name reported by lldpctl');
+INSERT INTO asset_meta VALUES (24, 'LLDP_CHASSIS_ID_TYPE', -1, 'LLDP Chassis ID Type', 'Chassis ID Type reported by lldpctl');
+INSERT INTO asset_meta VALUES (25, 'LLDP_CHASSIS_ID_VALUE', -1, 'LLDP Chassis ID Value', 'Chassis ID Value reported by lldpctl');
+INSERT INTO asset_meta VALUES (26, 'LLDP_CHASSIS_DESCRIPTION', -1, 'LLDP Chassis Description', 'Chassis Description reported by lldpctl');
+INSERT INTO asset_meta VALUES (27, 'LLDP_PORT_ID_TYPE', -1, 'LLDP Port ID Type', 'Port ID Type reported by lldpctl');
+INSERT INTO asset_meta VALUES (28, 'LLDP_PORT_ID_VALUE', -1, 'LLDP Port ID Value', 'Port ID Value reported by lldpctl');
+INSERT INTO asset_meta VALUES (29, 'LLDP_PORT_DESCRIPTION', -1, 'LLDP Port Description', 'Port Description reported by lldpctl');
+INSERT INTO asset_meta VALUES (30, 'LLDP_VLAN_ID', -1, 'LLDP VLAN ID', 'VLAN ID reported by lldpctl');
+INSERT INTO asset_meta VALUES (31, 'LLDP_VLAN_NAME', -1, 'LLDP VLANE Name', 'VLAN name reported by lldpctl');
+
 INSERT INTO asset VALUES (1, 'tumblrtag1', 7, 1, CURRENT_TIMESTAMP, null, null);
 
 -- gateway 10.0.0.1, ip address 10.0.0.2, netmask /19 = 255.255.224.0
