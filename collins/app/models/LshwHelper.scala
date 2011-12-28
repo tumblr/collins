@@ -3,17 +3,9 @@ package models
 import util._
 import java.sql.Connection
 
-object LshwHelper {
+object LshwHelper extends CommonHelper[LshwRepresentation] {
   import AssetMeta.Enum._
 
-  type FilteredSeq[T] = Tuple2[Seq[T], Map[Int, Seq[MetaWrapper]]]
-  type Reconstruction = Tuple2[LshwRepresentation,Seq[MetaWrapper]]
-
-  def updateAsset(asset: Asset, lshw: LshwRepresentation)(implicit con: Connection): Boolean = {
-    // FIXME: Need to delete specific asset meta values before accepting an update
-    val mvs = construct(asset, lshw)
-    mvs.size == AssetMetaValue.create(mvs)
-  }
   def construct(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     collectCpus(asset.getId, lshw) ++
       collectMemory(asset.getId, lshw) ++
@@ -28,10 +20,6 @@ object LshwHelper {
     val (nics,postNicMap) = reconstructNics(postMemoryMap)
     val (disks,postDiskMap) = reconstructDisks(postNicMap)
     (LshwRepresentation(cpus, memory, nics, disks), postDiskMap.values.flatten.toSeq)
-  }
-  def reconstruct(asset: Asset): Reconstruction = {
-    val assetMeta = AssetMetaValue.findAllByAssetId(asset.getId)
-    reconstruct(asset, assetMeta)
   }
 
   protected def reconstructCpu(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Cpu] = {
@@ -66,13 +54,6 @@ object LshwHelper {
       AssetMetaValue(asset_id, CpuSpeedGhz.id, cpu.speedGhz.toString),
       AssetMetaValue(asset_id, CpuDescription.id, "%s %s".format(cpu.product, cpu.vendor))
     )
-  }
-
-  private def filterNot(m: Seq[MetaWrapper], s: Set[Long]): Seq[MetaWrapper] = {
-    m.filterNot { mw => s.contains(mw.getMetaId) }
-  }
-  private def finder[T](m: Seq[MetaWrapper], e: AssetMeta.Enum, c: (String => T), d: T): T = {
-    m.find { _.getMetaId == e.id }.map { i => c(i.getValue) }.getOrElse(d)
   }
 
   protected def reconstructMemory(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Memory] = {
