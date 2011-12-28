@@ -17,6 +17,7 @@ INSERT INTO asset_type VALUES (4, 'Switch');
 INSERT INTO asset_type VALUES (5, 'Router');
 INSERT INTO asset_type VALUES (6, 'Power Circuit');
 INSERT INTO asset_type VALUES (7, 'Power Strip');
+INSERT INTO asset_type VALUES (8, 'Data Center');
 
 INSERT INTO asset_meta VALUES (1, 'SERVICE_TAG', 0, 'Service Tag', 'Vendor supplied service tag');
 INSERT INTO asset_meta VALUES (2, 'CHASSIS_TAG', 0, 'Chassis Tag', 'Tag for asset chassis');

@@ -44,5 +44,6 @@ object AssetType extends Magic[AssetType](Some("asset_type")) {
     val Router = Value("ROUTER")
     val PowerCircuit = Value("POWER_CIRCUIT")
     val PowerStrip = Value("POWER_STRIP")
+    val DataCenter = Value("DATA_CENTER")
   }
 }

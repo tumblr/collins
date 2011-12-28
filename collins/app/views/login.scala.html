@@ -1,4 +1,4 @@
-@(loginForm: Form[(String,String)])(implicit flash: Flash)
+@(loginForm: Form[(String,String)])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util.notice

@@ -9,7 +9,7 @@ virident"
 files=($Files)
 num_files=${#files[*]}
 
-for i in `seq 2 25`; do
+for i in `seq 2 550`; do
   TAG="tumblrtag${i}"
   FILE="./test/resources/lshw-${files[$((RANDOM%num_files))]}.xml"
   curl --basic -X PUT -H "Accept: text/plain" -u blake:admin:first "${URL}/${TAG}"

@@ -1,0 +1,59 @@
+@(atype: AssetType.Enum)(implicit flash: Flash, req: Request[AnyContent])
+
+@import _root_.util.Helpers
+@import util.notice
+
+@main("Asset Creator") {
+<div class="page-header"><h1>Asset Creator <small>Create a @Helpers.camelCase(atype.toString, " ")</small></h1></div>
+<div class="row">
+  <div class="span14">
+    @notice("error")
+    @notice("warning")
+
+    <form action="@app.routes.Resources.createAsset(atype.toString)" method="post">
+      <div class="clearfix">
+        <label for="asset_type">Asset Type</label>
+        <div class="input">
+          <span id="asset_type" class="uneditable-input">@Helpers.camelCase(atype.toString, " ")</span>
+          <input type="hidden" name="asset_type" value="@atype.toString">
+        </div>
+      </div>
+      <div class="clearfix">
+        <label for="tag">Asset Tag</label>
+        <div class="input">
+          <input type="text" id="tag" name="tag">
+          <span class="help-inline">Asset tag, must be a unique alpha-numeric string</span>
+        </div>
+      </div>
+      <div class="clearfix">
+        <label for="generate_ipmi">Generate IPMI Info?</label>
+        <div class="input">
+          <select name="generate_ipmi">
+            <option value="false" selected="selected">No</option>
+            <option value="true">Yes</option>
+          </select>
+          <span class="help-inline">Whether IPMI data should be generated or not</span>
+        </div>
+      </div>
+
+      <div class="clearfix">
+        <label for="status">Asset Status</label>
+        <div class="input">
+          <select name="status" id="status">
+            <option value="" selected="selected"></option>
+            @Status.Enum.values.toSeq.map { v =>
+            <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
+            }
+          </select>
+          <span class="help-inline">Asset Status (New, Incomplete, etc)</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <input type="submit" class="btn primary" value="Create @Helpers.camelCase(atype.toString, " ")">
+        <button type="reset" class="btn">Reset</button>
+      </div>
+    </form>
+  </div>
+</div>
+}

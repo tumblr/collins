@@ -5,6 +5,8 @@ import util.{Helpers, SecuritySpec}
 
 import play.api.data._
 import play.api.libs.json._
+import play.api.mvc._
+import Results._
 
 trait AssetLogApi {
   this: Api with SecureController =>
@@ -26,7 +28,7 @@ trait AssetLogApi {
       val totalResults = logs.total
       val headers = logs.getPaginationHeaders()
       val paginationMap = logs.getPaginationJsMap()
-      ResponseData(Ok, JsObject(paginationMap ++ Map(
+      ResponseData(Results.Ok, JsObject(paginationMap ++ Map(
         "Data" -> JsArray(logs.items.map { log =>
           JsObject(log.toJsonMap)
         }.toList)
@@ -100,7 +102,7 @@ trait AssetLogApi {
       }).map { err =>
         getErrorMessage(err)
       }.getOrElse {
-        ResponseData(Created, JsObject(Map("Success" -> JsBoolean(true))))
+        ResponseData(Results.Created, JsObject(Map("Success" -> JsBoolean(true))))
       }
     }
     formatResponseData(responseData)

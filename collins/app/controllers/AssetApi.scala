@@ -39,13 +39,13 @@ trait AssetApi {
         }.toMap)
       )
       val extras: Carry = (asset, lshwRep, mvs, ipmi)
-      ResponseData(Ok, JsObject(outMap), attachment = Some(extras))
+      ResponseData(Results.Ok, JsObject(outMap), attachment = Some(extras))
     }.map { data =>
       isHtml match {
         case true => data.status match {
-          case Ok =>
+          case Results.Ok =>
             val (asset, lshwRep, mv, ipmi) = data.attachment.get.asInstanceOf[Carry]
-            Ok(html.asset.show(asset, lshwRep, mv, ipmi))
+            Results.Ok(html.asset.show(asset, lshwRep, mv, ipmi))
           case _ =>
             Redirect(app.routes.Resources.index).flashing(
               "message" -> ("Could not find asset with tag " + tag)
@@ -63,7 +63,10 @@ trait AssetApi {
   }(SecuritySpec(true, Nil))
 
   // PUT /api/asset/:tag
-  val createAsset = new CreateAsset()
+  private val assetCreator = new AssetApi.CreateAsset()
+  def createAsset(tag: String) = SecureAction { implicit req =>
+    formatResponseData(assetCreator(tag))
+  }(SecuritySpec(true, Seq("infra")))
 
   // POST /api/asset/:tag
   val updateAsset = new UpdateAsset()
@@ -81,14 +84,14 @@ trait AssetApi {
             AssetLog.Formats.PlainText,
             AssetLog.Sources.Internal
           ))
-          ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(true))))
+          ResponseData(Results.Ok, JsObject(Map("SUCCESS" -> JsBoolean(true))))
         } catch {
           case e: InvalidStateTransition =>
             val msg = "Only assets in a cancelled state can be decommissioned"
-            getErrorMessage(msg, Status(StatusValues.CONFLICT))
+            getErrorMessage(msg, Results.Status(StatusValues.CONFLICT))
           case e =>
             val msg = "Error saving response: %s".format(e.getMessage)
-            getErrorMessage(msg, InternalServerError)
+            getErrorMessage(msg, Results.InternalServerError)
         }
       }
     }
@@ -147,7 +150,7 @@ trait AssetApi {
             AssetLifecycle.updateAsset(asset, options) match {
               case Left(error) => getErrorMessage(error.getMessage)
               case Right(success) =>
-                ResponseData(Ok, JsObject(Map("SUCCESS" -> JsBoolean(success))))
+                ResponseData(Results.Ok, JsObject(Map("SUCCESS" -> JsBoolean(success))))
             }
         }
       }
@@ -156,80 +159,6 @@ trait AssetApi {
   }
 
 
-  private[AssetApi] class CreateAsset(perms: Seq[String] = Seq("infra")) {
-    val defaultAssetType = AssetType.Enum.ServerNode
-    val createForm = Form(of(
-      "generate_ipmi" -> optional(boolean),
-      "asset_type" -> optional(text(1)).verifying("Invalid asset type specified", res => res match {
-        case Some(asset_type) => AssetType.fromString(asset_type) match {
-          case Some(_) => true
-          case None => false
-        }
-        case None => true
-      })
-    ))
-
-    def validateRequest()(implicit request: Request[AnyContent]): Either[String,(Option[Boolean],AssetType)] = {
-      createForm.bindFromRequest.fold(
-        err => {
-          val msg = err("generate_ipmi").error.map { _ =>
-            "generate_ipmi only takes true or false as values"
-          }.getOrElse(
-            err("asset_type").error.map { _ =>
-              "Invalid asset_type specified"
-            }.getOrElse("Error during parameter validation")
-          )
-          Left(msg)
-        },
-        success => {
-          val gen_ipmi = success._1
-          val atype = success._2.flatMap { name =>
-            AssetType.fromString(name)
-          }.getOrElse(AssetType.fromEnum(defaultAssetType))
-          Right(gen_ipmi, atype)
-        }
-      )
-    }
-
-    def validateTag(tag: String): Option[ResponseData] = {
-      Asset.isValidTag(tag) match {
-        case false => Some(getErrorMessage("Invalid tag specified"))
-        case true => Asset.findByTag(tag) match {
-          case Some(asset) =>
-            val msg = "Asset with tag '%s' already exists".format(tag)
-            Some(getErrorMessage(msg, Status(StatusValues.CONFLICT)))
-          case None => None
-        }
-      }
-    }
-
-    protected def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
-      val map = ipmi.map { ipmi_info =>
-          Map("ASSET" -> JsObject(asset.toJsonMap),
-              "IPMI" -> JsObject(ipmi_info.toJsonMap(false)))
-      }.getOrElse(Map("ASSET" -> JsObject(asset.toJsonMap)))
-      JsObject(map)
-    }
-
-    def apply(tag: String) = SecureAction { implicit req =>
-      val responseData = validateTag(tag) match {
-        case Some(data) => data
-        case None => validateRequest() match {
-          case Left(error) => getErrorMessage(error)
-          case Right((optGenerateIpmi, assetType)) =>
-            val generateIpmi = optGenerateIpmi.getOrElse({
-              assetType.getId == AssetType.Enum.ServerNode.id
-            })
-            AssetLifecycle.createAsset(tag, assetType, generateIpmi) match {
-              case Left(ex) => getErrorMessage(ex.getMessage)
-              case Right((asset, ipmi)) =>
-                ResponseData(Created, getCreateMessage(asset, ipmi))
-            }
-        }
-      }
-      formatResponseData(responseData)
-    }(SecuritySpec(true, perms))
-  }
 }
 object AssetApi extends ApiResponse {
   private[controllers] object FindAsset {
@@ -253,6 +182,96 @@ object AssetApi extends ApiResponse {
       "updatedAfter" -> optional(date(Helpers.ISO_8601_FORMAT)),
       "updatedBefore" -> optional(date(Helpers.ISO_8601_FORMAT))
     ))
+  }
+
+  private[controllers] object CreateAsset {
+    val params = Set("generate_ipmi", "asset_type", "status")
+    val createForm = Form(of(
+      "generate_ipmi" -> optional(boolean),
+      "asset_type" -> optional(text(1)).verifying("Invalid asset type specified", res => res match {
+        case Some(asset_type) => AssetType.fromString(asset_type) match {
+          case Some(_) => true
+          case None => false
+        }
+        case None => true
+      }),
+      "status" -> optional(text(1)).verifying("Invalid asset status specified", res => res match {
+        case Some(status) => AStatus.Enum.values.find(_.toString == status).isDefined
+        case None => true
+      })
+    ))
+  }
+
+  private[controllers] class CreateAsset() {
+    val defaultAssetType = AssetType.Enum.ServerNode
+
+    type Success = (Option[Boolean],AssetType,Option[AStatus.Enum])
+    def validateRequest()(implicit request: Request[AnyContent]): Either[String,Success] = {
+      CreateAsset.createForm.bindFromRequest.fold(
+        err => {
+          val msg = err("generate_ipmi").error.map { _ =>
+            "generate_ipmi only takes true or false as values"
+          }.getOrElse(
+            err("asset_type").error.map { _ =>
+              "Invalid asset_type specified"
+            }.getOrElse(
+              err("status").error.map { _ =>
+                "Invalid status specified"
+              }.getOrElse("Error during parameter validation")
+            )
+          )
+          Left(msg)
+        },
+        success => {
+          val gen_ipmi = success._1
+          val atype = success._2.flatMap { name =>
+            AssetType.fromString(name)
+          }.getOrElse(AssetType.fromEnum(defaultAssetType))
+          val status = success._3.map { st =>
+            AStatus.Enum.withName(st)
+          }
+          Right(gen_ipmi, atype, status)
+        }
+      )
+    }
+
+    def validateTag(tag: String): Option[ResponseData] = {
+      Asset.isValidTag(tag) match {
+        case false => Some(getErrorMessage("Invalid tag specified"))
+        case true => Asset.findByTag(tag) match {
+          case Some(asset) =>
+            val msg = "Asset with tag '%s' already exists".format(tag)
+            Some(getErrorMessage(msg, Results.Status(StatusValues.CONFLICT)))
+          case None => None
+        }
+      }
+    }
+
+    protected def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
+      val map = ipmi.map { ipmi_info =>
+          Map("ASSET" -> JsObject(asset.toJsonMap),
+              "IPMI" -> JsObject(ipmi_info.toJsonMap(false)))
+      }.getOrElse(Map("ASSET" -> JsObject(asset.toJsonMap)))
+      JsObject(map)
+    }
+
+    def apply(tag: String)(implicit req: Request[AnyContent]) = {
+      validateTag(tag) match {
+        case Some(data) => data
+        case None => validateRequest() match {
+          case Left(error) => getErrorMessage(error)
+          case Right((optGenerateIpmi, assetType, status)) =>
+            val generateIpmi = optGenerateIpmi.getOrElse({
+              assetType.getId == AssetType.Enum.ServerNode.id
+            })
+            AssetLifecycle.createAsset(tag, assetType, generateIpmi, status) match {
+              case Left(ex) => getErrorMessage(ex.getMessage)
+              case Right((asset, ipmi)) =>
+                ResponseData(Results.Created, getCreateMessage(asset, ipmi))
+            }
+        }
+      }
+    }
   }
 
   private[controllers] class FindAsset() {
@@ -296,7 +315,7 @@ object AssetApi extends ApiResponse {
     }
 
     protected def formatAsJson(results: Page[Asset]): ResponseData = {
-      ResponseData(Ok, JsObject(results.getPaginationJsMap() ++ Map(
+      ResponseData(Results.Ok, JsObject(results.getPaginationJsMap() ++ Map(
         "Data" -> JsArray(results.items.map { i => JsObject(i.toJsonMap) }.toList)
       )), results.getPaginationHeaders)
     }
@@ -321,7 +340,7 @@ object AssetApi extends ApiResponse {
               case 0 => Redirect(app.routes.Resources.index).flashing(
                 "message" -> ("Could not find any matching assets")
               )
-              case n => Ok(html.asset.list(results))
+              case n => Results.Ok(html.asset.list(results))
             }
           }
       }
