@@ -1,6 +1,7 @@
 package controllers
 
 import play.api._
+import play.api.libs.json._
 import play.api.mvc._
 import play.api.data._
 
@@ -14,10 +15,47 @@ trait Resources extends Controller {
 
   import AssetMeta.Enum.ChassisTag
   implicit val spec = SecuritySpec(isSecure = true, Nil)
+  val infraSpec = SecuritySpec(isSecure = true, Seq("infra"))
 
   def index = SecureAction { implicit req =>
     Ok(html.resources.index(AssetMeta.getViewable()))
   }
+
+  def createForm(assetType: String) = SecureAction { implicit req =>
+    val atype: Option[AssetType.Enum] = try {
+      Some(AssetType.Enum.withName(assetType))
+    } catch {
+      case _ => None
+    }
+    atype match {
+      case Some(t) => t match {
+        case AssetType.Enum.ServerNode =>
+          Redirect(app.routes.Resources.index).flashing("error" -> "Server Node not supported for creation")
+        case _ =>
+          Ok(html.resources.create(t))
+      }
+      case None =>
+        Redirect(app.routes.Resources.index).flashing("error" -> "Invalid asset type specified")
+    }
+  }(infraSpec)
+
+  val assetCreator = new AssetApi.CreateAsset()
+  def createAsset(atype: String) = SecureAction { implicit req =>
+    Form("tag" -> requiredText).bindFromRequest.fold(
+      noTag => Redirect(app.routes.Resources.createForm(atype)).flashing("error" -> "A tag must be specified"),
+      withTag => {
+        val rd = assetCreator(withTag)
+        rd.status match {
+          case Results.Created =>
+            Redirect(app.routes.Resources.index).flashing("success" -> "Asset successfully created")
+          case _ =>
+            val errJs = rd.data.value.getOrElse("ERROR_DETAILS", JsString("Error processing request"))
+            val errStr = errJs.as[String]
+            Redirect(app.routes.Resources.createForm(atype)).flashing("error" -> errStr)
+        }
+      }
+    )
+  }(infraSpec)
 
   /**
    * Find assets by query parameters, special care for ASSET_TAG
@@ -63,7 +101,7 @@ trait Resources extends Controller {
           Ok(html.resources.intake(asset))
       }
     }
-  }(SecuritySpec(isSecure = true, Seq("infra")))
+  }(infraSpec)
 
   private def intakeStage3Form(asset: Asset): Form[(String,String,String,String)] = {
     import models.AssetMeta.Enum._
@@ -97,7 +135,7 @@ trait Resources extends Controller {
       val msg = "Error on host intake: %s".format(e.getMessage)
       val flash = Flash(Map("error" -> msg))
       logger.error(msg)
-      InternalServerError(html.resources.intake3(asset, chassis_tag, formWithErrors)(flash))
+      InternalServerError(html.resources.intake3(asset, chassis_tag, formWithErrors)(flash, req))
     }
     intakeStage3Form(asset).bindFromRequest.fold(
       formWithErrors => {
@@ -148,7 +186,7 @@ trait Resources extends Controller {
     Form("CHASSIS_TAG" -> text).bindFromRequest.fold(
       errors => {
         val flash  = Flash(Map("warning" -> "No CHASSIS_TAG submitted"))
-        BadRequest(html.resources.intake2(asset)(flash))
+        BadRequest(html.resources.intake2(asset)(flash, req))
       },
       chassis_tag => asset.getAttribute(ChassisTag).map { attrib =>
         chassis_tag == attrib.getValue match {
@@ -158,14 +196,14 @@ trait Resources extends Controller {
             val msg = "Asset %s has chassis tag '%s', not '%s'".format(
               asset.tag, attrib.getValue, chassis_tag)
             val flash = Flash(Map("error" -> msg))
-            Ok(html.resources.intake2(asset)(flash))
+            Ok(html.resources.intake2(asset)(flash, req))
         }
       }.getOrElse {
         val msg = "Asset %s does not have an associated chassis tag".format(
           asset.tag
         )
         val flash = Flash(Map("error" -> msg))
-        Ok(html.resources.intake2(asset)(flash))
+        Ok(html.resources.intake2(asset)(flash, req))
       }
     )
   } catch {
@@ -175,7 +213,7 @@ trait Resources extends Controller {
       )
       val flash = Flash(Map("error" -> msg))
       logger.error(msg)
-      InternalServerError(html.resources.intake2(asset)(flash))
+      InternalServerError(html.resources.intake2(asset)(flash, req))
   }
 
   /**

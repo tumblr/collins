@@ -11,6 +11,8 @@ GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?=
 
 GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
+GET     /asset;create               app.Resources.createForm(assetType: String)
+POST    /asset;create               app.Resources.createAsset(assetType: String)
 
 # Help
 GET     /help                       app.HelpPage.index(t: Int ?= controllers.Help.Default)

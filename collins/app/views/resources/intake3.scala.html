@@ -1,4 +1,4 @@
-@(asset: Asset, chassisTag: String, dataForm: Form[(String,String,String,String)])(implicit flash: Flash)
+@(asset: Asset, chassisTag: String, dataForm: Form[(String,String,String,String)])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import _root_.util.Helpers.formatPowerPort

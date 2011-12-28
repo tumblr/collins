@@ -9,18 +9,19 @@ object AssetLifecycle {
   private[this] val logger = Logger.logger
 
   type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
-  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean): Either[Throwable,AssetIpmi] = {
+  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum] = None): Either[Throwable,AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
       Model.withTransaction { implicit con =>
-        val asset = Asset.create(Asset(tag, Status.Enum.Incomplete, assetType))
+        val _status = status.getOrElse(Status.Enum.Incomplete)
+        val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
           case true => Some(IpmiInfo.createForAsset(asset))
           case false => None
         }
         AssetLog.create(AssetLog.informational(
           asset,
-          "Initial intake successful, status now Incomplete",
+          "Initial intake successful, status now %s".format(_status.toString),
           AssetLog.Formats.PlainText,
           AssetLog.Sources.Internal
         ))

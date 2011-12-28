@@ -1,4 +1,4 @@
-@(asset: Asset, lshw: _root_.util.LshwRepresentation, wseq: Seq[MetaWrapper], ipmi: Map[String,play.api.libs.json.JsValue])(implicit flash: Flash)
+@(asset: Asset, lshw: _root_.util.LshwRepresentation, wseq: Seq[MetaWrapper], ipmi: Map[String,play.api.libs.json.JsValue])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util.notice

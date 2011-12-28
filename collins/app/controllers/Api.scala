@@ -10,14 +10,14 @@ import play.api.mvc._
 import java.io.File
 import java.util.Date
 
+private[controllers] case class ResponseData(status: Results.Status, data: JsObject, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
+  def map[T](fn: ResponseData => T) = fn(this)
+}
+
 trait ApiResponse extends Controller {
   protected val defaultOutputType = JsonOutput()
 
-  private[controllers] case class ResponseData(status: Status, data: JsObject, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
-    def map[T](fn: ResponseData => T) = fn(this)
-  }
-
-  protected def getErrorMessage(msg: String, status: Status = BadRequest) = {
+  protected def getErrorMessage(msg: String, status: Results.Status = Results.BadRequest) = {
     ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
   }
 
@@ -129,7 +129,7 @@ trait Api extends ApiResponse with AssetApi with AssetLogApi {
   protected implicit val securitySpec = SecuritySpec(isSecure = true, Nil)
 
   def ping = Action { implicit req =>
-    formatResponseData(ResponseData(Ok, JsObject(Map(
+    formatResponseData(ResponseData(Results.Ok, JsObject(Map(
       "Data" -> JsObject(Map(
         "Timestamp" -> JsString(Helpers.dateFormat(new Date())),
         "TestObj" -> JsObject(Map(
@@ -151,7 +151,7 @@ trait Api extends ApiResponse with AssetApi with AssetLogApi {
       case false => getErrorMessage("Empty tag specified")
       case true => Asset.findByTag(tag) match {
         case Some(asset) => f(asset)
-        case None => getErrorMessage("Could not find specified asset", NotFound)
+        case None => getErrorMessage("Could not find specified asset", Results.NotFound)
       }
     }
   }

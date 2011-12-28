@@ -10,6 +10,11 @@ abstract class User(val username: String, val password: String) {
   def isAuthenticated(): Boolean
   def id(): Int
   def roles(): Seq[String]
+  def hasRole(name: String): Boolean = roles().contains(name)
+  def getRole[T](name: String): Option[String] = hasRole(name) match {
+    case true => Some(name)
+    case false => None
+  }
   def toMap(): Map[String,String] = Map(
     User.ID -> id().toString(),
     User.USERNAME -> username,
