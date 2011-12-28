@@ -1,6 +1,7 @@
 package models
 
 import util._
+import util.parsers.LshwParser
 import conversions._
 import org.specs2.mutable._
 import java.util.Date

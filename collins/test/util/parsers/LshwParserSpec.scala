@@ -1,4 +1,5 @@
 package util
+package parsers
 
 import play.api.test._
 import org.specs2.matcher.Matcher
