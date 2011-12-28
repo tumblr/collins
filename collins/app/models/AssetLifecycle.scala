@@ -1,6 +1,7 @@
 package models
 
-import util.{AssetStateMachine, Helpers, LshwParser}
+import util.{AssetStateMachine, Helpers}
+import util.parsers.LshwParser
 import play.api.Logger
 
 // Supports meta operations on assets
