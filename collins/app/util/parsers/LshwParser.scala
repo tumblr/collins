@@ -1,11 +1,8 @@
 package util
 package parsers
 
-import play.api._
-
 import scala.xml.{Elem, MalformedAttributeException, Node, NodeSeq, XML}
 
-case class AttributeNotFoundException(msg: String) extends Exception(msg)
 object SpeedConversions {
   private val ghz = (1000*1000*1000).toDouble
   private val mhz = (1000*1000*1000*1000).toDouble
@@ -13,9 +10,9 @@ object SpeedConversions {
   def hzToMhz(l: Long): Double = l/mhz
 }
 
-class LshwParser(txt: String, config: Map[String,String] = Map.empty) {
-  require(txt != null && txt.length > 0, "LshwParser can not parse empty files")
-  private[this] val logger = Logger.logger
+class LshwParser(txt: String, config: Map[String,String] = Map.empty)
+  extends CommonParser[LshwRepresentation](txt, config)
+{
 
   val wildcard: PartialFunction[NodeSeq,LshwAsset] = { case _ => null }
   lazy val matcher = cpuMatcher.orElse(
@@ -28,7 +25,7 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty) {
     )
   )
 
-  def parse(): Either[Throwable,LshwRepresentation] = {
+  override def parse(): Either[Throwable,LshwRepresentation] = {
     val xml = try {
       XML.loadString(txt)
     } catch {
