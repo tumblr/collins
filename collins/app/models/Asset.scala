@@ -2,7 +2,7 @@ package models
 
 import Model.defaults._
 import conversions._
-import util.{Helpers, LshwRepresentation}
+import util.{Helpers, LldpRepresentation, LshwRepresentation}
 
 import anorm._
 import anorm.SqlParser._
@@ -39,7 +39,7 @@ case class Asset(
   def getType(): AssetType = {
     AssetType.findById(asset_type).get
   }
-  def getAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
+  def getMetaAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
     AssetMetaValue.findOneByAssetId(Set(spec), id.get).toList match {
       case Nil => None
       case one :: Nil =>
@@ -48,13 +48,20 @@ case class Asset(
         throw new IndexOutOfBoundsException("Expected one value, if any")
     }
   }
-  def getAttributes(specs: Set[AssetMeta.Enum] = Set.empty): List[MetaWrapper] = {
+  def getMetaAttributes(specs: Set[AssetMeta.Enum] = Set.empty): List[MetaWrapper] = {
     specs.isEmpty match {
       case true =>
         AssetMetaValue.findAllByAssetId(id.get).toList
       case false =>
         AssetMetaValue.findOneByAssetId(specs, id.get).toList
     }
+  }
+ 
+  def getAllAttributes: Asset.AllAttributes = {
+    val (lshwRep, mvs) = LshwHelper.reconstruct(this)
+    val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
+    val ipmi = IpmiInfo.findByAsset(this)
+    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, mvs2)
   }
 }
 
@@ -117,6 +124,28 @@ object Asset extends Magic[Asset](Some("asset")) {
       Asset.find("select * from asset WHERE id in (%s)".format(subquery)).on(
         params.map(_._2):_*
       ).list()
+    }
+  }
+
+  case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], mvs: Seq[MetaWrapper]) {
+    def exposeCredentials(showCreds: Boolean = false) = {
+      this.copy(ipmi = this.ipmi.map { _.withExposedCredentials(showCreds) })
+    }
+
+    def toJsonObject(): JsObject = {
+      val ipmiMap = ipmi.map { info =>
+        info.toJsonMap
+      }.getOrElse(Map[String,JsValue]())
+      val outMap = Map(
+        "ASSET" -> JsObject(asset.toJsonMap),
+        "HARDWARE" -> JsObject(lshw.toJsonMap),
+        "LLDP" -> JsObject(lldp.toJsonMap),
+        "IPMI" -> JsObject(ipmiMap),
+        "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map { case(groupId, mv) =>
+          groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) }.toMap)
+        }.toMap)
+      )
+      JsObject(outMap)
     }
   }
 }

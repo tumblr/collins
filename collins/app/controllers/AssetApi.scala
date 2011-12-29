@@ -18,36 +18,16 @@ trait AssetApi {
   private lazy val lshwConfig = Helpers.subAsMap("lshw")
 
   def getAsset(tag: String) = Authenticated { user => Action { implicit req =>
-    type IpmiMap = Map[String,JsValue]
-    type Carry = Tuple5[Asset, LshwRepresentation, LldpRepresentation, Seq[MetaWrapper], IpmiMap]
-
-    val isHtml = OutputType.isHtml(req)
     withAssetFromTag(tag) { asset =>
-      val (lshwRep, mvs) = LshwHelper.reconstruct(asset)
-      val (lldpRep, mvs2) = LldpHelper.reconstruct(asset, mvs)
-      val ipmi = IpmiInfo.findByAsset(asset).map { info =>
-        hasRole(user.get, Seq("infra")) match {
-          case true => info.toJsonMap(false)
-          case _ => info.toJsonMap()
-        }
-      }.getOrElse(Map[String,JsValue]())
-      val outMap = Map(
-        "ASSET" -> JsObject(asset.toJsonMap),
-        "HARDWARE" -> JsObject(lshwRep.toJsonMap),
-        "LLDP" -> JsObject(lldpRep.toJsonMap),
-        "IPMI" -> JsObject(ipmi),
-        "ATTRIBS" -> JsObject(mvs2.groupBy { _.getGroupId }.map { case(groupId, mv) =>
-          groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) }.toMap)
-        }.toMap)
-      )
-      val extras: Carry = (asset, lshwRep, lldpRep, mvs2, ipmi)
-      ResponseData(Results.Ok, JsObject(outMap), attachment = Some(extras))
+      val exposeCredentials = hasRole(user.get, Seq("infra"))
+      val allAttributes = asset.getAllAttributes.exposeCredentials(exposeCredentials)
+      ResponseData(Results.Ok, allAttributes.toJsonObject, attachment = Some(allAttributes))
     }.map { data =>
-      isHtml match {
+      OutputType.isHtml(req) match {
         case true => data.status match {
           case Results.Ok =>
-            val (asset, lshwRep, lldpRep, mv, ipmi) = data.attachment.get.asInstanceOf[Carry]
-            Results.Ok(html.asset.show(asset, lshwRep, lldpRep, mv, ipmi))
+            val attribs = data.attachment.get.asInstanceOf[Asset.AllAttributes]
+            Results.Ok(html.asset.show(attribs))
           case _ =>
             Redirect(app.routes.Resources.index).flashing(
               "message" -> ("Could not find asset with tag " + tag)
@@ -262,7 +242,7 @@ object AssetApi extends ApiResponse {
     protected def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
       val map = ipmi.map { ipmi_info =>
           Map("ASSET" -> JsObject(asset.toJsonMap),
-              "IPMI" -> JsObject(ipmi_info.toJsonMap(false)))
+              "IPMI" -> JsObject(ipmi_info.withExposedCredentials(true).toJsonMap))
       }.getOrElse(Map("ASSET" -> JsObject(asset.toJsonMap)))
       JsObject(map)
     }
