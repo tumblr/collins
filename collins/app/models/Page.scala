@@ -13,6 +13,8 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
   lazy val prevPage = prev.getOrElse(0)
   lazy val nextPage = next.getOrElse(page)
 
+  lazy val size = items.size
+
   def getPaginationHeaders(): Seq[(String,String)] = {
     Seq(
       ("X-Pagination-PreviousPage" -> prevPage.toString),

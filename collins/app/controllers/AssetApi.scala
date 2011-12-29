@@ -61,7 +61,11 @@ trait AssetApi {
   // GET /api/assets?params
   private val finder = new AssetApi.FindAsset()
   def getAssets(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
-    finder(page, size, sort)
+    val rd = finder(page, size, sort) match {
+      case Left(err) => getErrorMessage(err)
+      case Right(success) => AssetApi.FindAsset.formatResultAsRd(success)
+    }
+    formatResponseData(rd)
   }(SecuritySpec(true, Nil))
 
   // PUT /api/asset/:tag
@@ -184,6 +188,12 @@ object AssetApi extends ApiResponse {
       "updatedAfter" -> optional(date(Helpers.ISO_8601_FORMAT)),
       "updatedBefore" -> optional(date(Helpers.ISO_8601_FORMAT))
     ))
+
+    def formatResultAsRd(results: Page[Asset]): ResponseData = {
+      ResponseData(Results.Ok, JsObject(results.getPaginationJsMap() ++ Map(
+        "Data" -> JsArray(results.items.map { i => JsObject(i.toJsonMap) }.toList)
+      )), results.getPaginationHeaders)
+    }
   }
 
   private[controllers] object CreateAsset {
@@ -316,35 +326,13 @@ object AssetApi extends ApiResponse {
       )
     }
 
-    protected def formatAsJson(results: Page[Asset]): ResponseData = {
-      ResponseData(Results.Ok, JsObject(results.getPaginationJsMap() ++ Map(
-        "Data" -> JsArray(results.items.map { i => JsObject(i.toJsonMap) }.toList)
-      )), results.getPaginationHeaders)
-    }
-
-    def apply(page: Int, size: Int, sort: String)(implicit req: Request[AnyContent]) = {
-      val isHtml = OutputType.isHtml(req)
+    def apply(page: Int, size: Int, sort: String)(implicit req: Request[AnyContent]): Either[String,Page[Asset]] = {
       validateRequest() match {
-        case Left(err) => isHtml match {
-          case true =>
-            Redirect(app.routes.Resources.index).flashing(
-              "error" -> ("Error executing search: " + err)
-            )
-          case false =>
-            formatResponseData(getErrorMessage(err))
-        }
+        case Left(err) => Left("Error executing search: " + err)
         case Right(valid) =>
           val pageParams = PageParams(page, size, sort)
           val results = MetaWrapper.findAssets(pageParams, valid._1, valid._2)
-          isHtml match {
-            case false => formatResponseData(formatAsJson(results))
-            case true => results.items.size match {
-              case 0 => Redirect(app.routes.Resources.index).flashing(
-                "message" -> ("Could not find any matching assets")
-              )
-              case n => Results.Ok(html.asset.list(results))
-            }
-          }
+          Right(results)
       }
     }
   }
