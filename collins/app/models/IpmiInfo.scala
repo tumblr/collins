@@ -160,8 +160,8 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
       case None => DefaultPasswordLength
       case Some(config) => config.getInt("passwordLength") match {
         case None => DefaultPasswordLength
-        case Some(len) if len > 0 && len <= 24 => len
-        case _ => throw new IllegalArgumentException("passwordLength must be between 1 and 24")
+        case Some(len) if len > 0 && len <= 16 => len
+        case _ => throw new IllegalArgumentException("passwordLength must be between 1 and 16")
       }
     }
   }
