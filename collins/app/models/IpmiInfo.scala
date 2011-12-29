@@ -27,7 +27,14 @@ case class IpmiInfo(
   def getId(): Long = id.get
   def getAssetId(): Long = asset_id.get
 
-  def toJsonMap(secure: Boolean = true): Map[String,JsValue] = strip(secure, Map(
+  def withExposedCredentials(exposeCredentials: Boolean = false) = {
+    if (exposeCredentials) {
+      this.copy(password = decryptedPassword())
+    } else {
+      this.copy(username = "********", password = "********")
+    }
+  }
+  def toJsonMap: Map[String,JsValue] = Map(
     "ID" -> JsNumber(getId()),
     "ASSET_ID" -> JsNumber(getAssetId()),
     IpmiAddress.toString -> JsString(dottedAddress),
@@ -35,15 +42,7 @@ case class IpmiInfo(
     IpmiNetmask.toString -> JsString(dottedNetmask),
     IpmiUsername.toString -> JsString(username),
     IpmiPassword.toString -> JsString(decryptedPassword)
-  ))
-
-  private val sensitive = Set(IpmiUsername.toString, IpmiPassword.toString)
-  private def strip[V](secure: Boolean, map: Map[String, V]): Map[String, V] = {
-    secure match {
-      case true => map.filterKeys(!sensitive.contains(_))
-      case false => map
-    }
-  }
+  )
 }
 
 object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {

@@ -47,7 +47,7 @@ class AssetSpec extends DatabaseSpec {
         )
         val assets = Asset.findByMeta(criteria)
         assets must haveSize(1)
-        assets(0).getAttributes().foreach { attrib =>
+        assets(0).getMetaAttributes().foreach { attrib =>
           attrib.getNameEnum() match {
             case AssetMeta.Enum.ChassisTag =>
               attrib.getValue() mustEqual "chassis tag abc"
@@ -58,12 +58,12 @@ class AssetSpec extends DatabaseSpec {
         success
       }
 
-      "getAttributes" >> {
+      "getMetaAttributes" >> {
         "one" >> {
           val _asset = Asset.findById(1)
           _asset must beSome[Asset]
           val asset = _asset.get
-          val attribs = asset.getAttributes(Set(AssetMeta.Enum.ChassisTag))
+          val attribs = asset.getMetaAttributes(Set(AssetMeta.Enum.ChassisTag))
           attribs must haveSize(1)
           val attrib = attribs.head
           attrib.getValue mustEqual("chassis tag abc")
@@ -74,7 +74,7 @@ class AssetSpec extends DatabaseSpec {
           val _asset = Asset.findById(1)
           _asset must beSome[Asset]
           val asset = _asset.get
-          val attribs = asset.getAttributes()
+          val attribs = asset.getMetaAttributes()
           attribs.size must be_>=(2)
         }
 
@@ -85,7 +85,7 @@ class AssetSpec extends DatabaseSpec {
           asset.tag mustEqual "tumblrtag1"
           asset.getStatus.name mustEqual "Incomplete"
           asset.getType.name mustEqual "Server Node"
-          val attribs = asset.getAttributes(Set(
+          val attribs = asset.getMetaAttributes(Set(
             AssetMeta.Enum.ServiceTag,
             AssetMeta.Enum.ChassisTag))
           attribs must not be empty
@@ -104,7 +104,7 @@ class AssetSpec extends DatabaseSpec {
           }
           success
         } //many
-      } // getAttributes
+      } // getMetaAttributes
     } // support getters/finders
   } // Asset should
 }

@@ -138,7 +138,7 @@ trait Resources extends Controller {
       ) verifying ("Port A must not equal Port B", result => result match {
         case(c,r,pA,pB) => pA != pB
       }) verifying ("Stored chassis tag must match specified tag", result => result match {
-        case(c,r,pA,pB) => asset.getAttribute(ChassisTag).map { tag =>
+        case(c,r,pA,pB) => asset.getMetaAttribute(ChassisTag).map { tag =>
           tag == c
         }.getOrElse(false)
       })
@@ -166,7 +166,7 @@ trait Resources extends Controller {
         val flash  = Flash(Map("warning" -> "No CHASSIS_TAG submitted"))
         BadRequest(html.resources.intake2(asset)(flash, req))
       },
-      chassis_tag => asset.getAttribute(ChassisTag).map { attrib =>
+      chassis_tag => asset.getMetaAttribute(ChassisTag).map { attrib =>
         chassis_tag == attrib.getValue match {
           case true =>
             Ok(html.resources.intake3(asset, chassis_tag, intakeStage3Form(asset)))
@@ -205,7 +205,7 @@ trait Resources extends Controller {
   private def intakeStage4(asset: Asset)(implicit req: Request[AnyContent]) = {
     import AssetMeta.Enum._
     def handleError(e: Throwable) = {
-      val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
+      val chassis_tag: String = asset.getMetaAttribute(ChassisTag).get.getValue
       val formWithErrors = intakeStage3Form(asset).bindFromRequest
       val msg = "Error on host intake: %s".format(e.getMessage)
       val flash = Flash(Map("error" -> msg))
@@ -214,7 +214,7 @@ trait Resources extends Controller {
     }
     intakeStage3Form(asset).bindFromRequest.fold(
       formWithErrors => {
-        val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
+        val chassis_tag: String = asset.getMetaAttribute(ChassisTag).get.getValue
         BadRequest(html.resources.intake3(asset, chassis_tag, formWithErrors))
       },
       success => success match {
