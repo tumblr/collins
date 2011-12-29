@@ -27,15 +27,6 @@ case class IpmiInfo(
   def getId(): Long = id.get
   def getAssetId(): Long = asset_id.get
 
-  def toMap(secure: Boolean = true): Map[String,String] = strip(secure, Map(
-    "ID" -> getId().toString,
-    "ASSET_ID" -> asset_id.get.toString,
-    IpmiAddress.toString -> dottedAddress,
-    IpmiGateway.toString -> dottedGateway,
-    IpmiNetmask.toString -> dottedNetmask,
-    IpmiUsername.toString -> username,
-    IpmiPassword.toString -> decryptedPassword
-  ))
   def toJsonMap(secure: Boolean = true): Map[String,JsValue] = strip(secure, Map(
     "ID" -> JsNumber(getId()),
     "ASSET_ID" -> JsNumber(getAssetId()),

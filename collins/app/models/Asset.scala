@@ -20,14 +20,6 @@ case class Asset(
 {
   require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
 
-  def toMap(): Map[String,String] = Map(
-    "ID" -> getId().toString,
-    "TAG" -> tag,
-    "STATUS" -> getStatus().name,
-    "TYPE" -> getType().name,
-    "CREATED" -> Helpers.dateFormat(created),
-    "UPDATED" -> updated.map { Helpers.dateFormat(_) }.getOrElse("")
-  )
   def toJsonMap(): Map[String,JsValue] = Map(
     "ID" -> JsNumber(getId()),
     "TAG" -> JsString(tag),
