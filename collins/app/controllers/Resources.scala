@@ -65,7 +65,19 @@ trait Resources extends Controller {
   def find(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
     Form("ASSET_TAG" -> requiredText).bindFromRequest.fold(
       noTag => {
-        findAssets(page, size, sort)(rewriteRequest(req))
+        val results = findAssets(page, size, sort)(rewriteRequest(req))
+        results match {
+          case Left(err) =>
+            Redirect(app.routes.Resources.index).flashing("error" -> err)
+          case Right(success) => success.size match {
+            case 0 =>
+              Redirect(app.routes.Resources.index).flashing(
+                "message" -> "Could not find any matching assets"
+              )
+            case n =>
+              Results.Ok(html.asset.list(success))
+          }
+        }
       },
       asset_tag => {
         logger.debug("Got asset tag: " + asset_tag)
