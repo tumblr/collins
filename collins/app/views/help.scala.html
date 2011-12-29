@@ -1,6 +1,7 @@
 @(htype: Help)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
+@import util.notice
 
 @main("Intake Help") {
 <div class="page-header">
@@ -8,6 +9,10 @@
 </div>
 <div class="row">
   <div class="span14">
+    @notice("message", Some("notice"))
+    @notice("success")
+    @notice("error")
+
     You're here because something is broken, it's a @htype
   </div>
 </div>

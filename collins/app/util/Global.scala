@@ -1,6 +1,6 @@
 import play.api._
 
-import util.{AuthenticationProvider, AuthenticationAccessor, CryptoAccessor}
+import util.{AuthenticationProvider, AuthenticationAccessor, CryptoAccessor, IpmiCommandProcessor}
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
@@ -22,6 +22,10 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
     setAuthentication(auth)
     setCryptoKey(key)
+  }
+
+  override def onStop(app: Application) {
+    //IpmiCommandProcessor.ref.stop()
   }
 
   var cryptoKey: Option[String] = None

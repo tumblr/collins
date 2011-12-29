@@ -1,14 +1,15 @@
 package controllers
 
+import models._
+import util.{AssetStateMachine, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
+import util.Helpers.formatPowerPort
+import views._
+
+import akka.util.duration._
 import play.api._
 import play.api.libs.json._
 import play.api.mvc._
 import play.api.data._
-
-import models._
-import util.{AssetStateMachine, SecuritySpec}
-import util.Helpers.formatPowerPort
-import views._
 
 trait Resources extends Controller {
   this: SecureController =>
@@ -98,7 +99,18 @@ trait Resources extends Controller {
           intakeStage4(asset)
         case n =>
           logger.debug("intake stage " + n)
-          Ok(html.resources.intake(asset))
+          AsyncResult {
+            IpmiCommandProcessor.send(IpmiIdentifyCommand(asset, 30.seconds)) { opt =>
+              opt match {
+                case Some(error) =>
+                  Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
+                    "message" -> error
+                  )
+                case None =>
+                  Ok(html.resources.intake(asset, None))
+              }
+            }
+          }
       }
     }
   }(infraSpec)
