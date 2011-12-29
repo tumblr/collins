@@ -12,7 +12,9 @@ object AssetLifecycle {
   private[this] val logger = Logger.logger
 
   type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
-  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum] = None): Either[Throwable,AssetIpmi] = {
+  type Status[T] = Either[Throwable,T]
+
+  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum] = None): Status[AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
       Model.withTransaction { implicit con =>
@@ -32,29 +34,30 @@ object AssetLifecycle {
       }
     } catch {
       case e =>
+        // FIXME once we have logging for non-assets
         logger.warn("Caught exception creating asset: %s".format(e.getMessage), e)
         Left(e)
     }
   }
 
   private lazy val lshwConfig = Helpers.subAsMap("lshw")
-  def updateAsset(asset: Asset, options: Map[String,String]): Either[Throwable,Boolean] = {
+  def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     asset.asset_type == AssetType.Enum.ServerNode.id match {
       case true => updateServer(asset, options)
       case false => updateOther(asset, options)
     }
   }
 
-  protected def updateOther(asset: Asset, options: Map[String,String]): Either[Throwable,Boolean] = {
+  protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     try {
       Model.withTransaction { implicit con =>
         AssetStateMachine(asset).update().executeUpdate()
-        AssetLog.create(AssetLog.informational(
+        AssetLog.informational(
           asset,
           "Asset state updated",
           AssetLog.Formats.PlainText,
           AssetLog.Sources.Internal
-        ))
+        ).create()
         Right(true)
       }
     } catch {
@@ -63,7 +66,7 @@ object AssetLifecycle {
     }
   }
 
-  protected def updateServer(asset: Asset, options: Map[String,String]): Either[Throwable,Boolean] = {
+  protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     if (asset.status == Status.Enum.Incomplete.id) {
       updateIncompleteServer(asset, options)
     } else {
@@ -71,7 +74,7 @@ object AssetLifecycle {
     }
   }
 
-  protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Either[Throwable,Boolean] = {
+  protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     val lshw = options.get("lshw")
     val lldp = options.get("lldp")
     val chassis_tag = options.get("chassis_tag")
@@ -116,11 +119,10 @@ object AssetLifecycle {
     } catch {
       case e: Throwable =>
         handleException(asset, "Exception updating asset", e)
-        Left(e)
     }
   }
 
-  protected def parseLshw(asset: Asset, parser: LshwParser)(implicit con: Connection): Either[Throwable,LshwRepresentation] = {
+  protected def parseLshw(asset: Asset, parser: LshwParser)(implicit con: Connection): Status[LshwRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
         AssetLog.notice(asset, "Parsing LSHW failed", AssetLog.Formats.PlainText,
@@ -140,7 +142,7 @@ object AssetLifecycle {
     } //catch
   } // updateServer
 
-  protected def parseLldp(asset: Asset, parser: LldpParser)(implicit con: Connection): Either[Throwable,LldpRepresentation] = {
+  protected def parseLldp(asset: Asset, parser: LldpParser)(implicit con: Connection): Status[LldpRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
         AssetLog.notice(asset, "Parsing LLDP failed", AssetLog.Formats.PlainText,
@@ -160,16 +162,16 @@ object AssetLifecycle {
     }
   }
 
-  private def handleException(asset: Asset, msg: String, e: Throwable): Either[Throwable,Boolean] = {
+  private def handleException(asset: Asset, msg: String, e: Throwable): Status[Boolean] = {
     logger.warn(msg, e)
     try {
       Model.withConnection { implicit con =>
-        AssetLog.create(AssetLog.error(
+        AssetLog.error(
           asset,
           msg,
           AssetLog.Formats.PlainText,
           AssetLog.Sources.Internal
-        ).withException(e))
+        ).withException(e).create()
       }
     } catch {
       case ex =>

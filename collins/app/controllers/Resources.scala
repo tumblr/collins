@@ -137,57 +137,11 @@ trait Resources extends Controller {
         formatPowerPort("B") -> requiredText(1)
       ) verifying ("Port A must not equal Port B", result => result match {
         case(c,r,pA,pB) => pA != pB
-      }) verifying ("Chassis must match actual chassis", result => result match {
-        case(c,r,pA,pB) => asset.getAttribute(ChassisTag).isDefined
+      }) verifying ("Stored chassis tag must match specified tag", result => result match {
+        case(c,r,pA,pB) => asset.getAttribute(ChassisTag).map { tag =>
+          tag == c
+        }.getOrElse(false)
       })
-    )
-  }
-
-  /**
-   * Handle stage 4 validation
-   *
-   * We should have gotten a: CHASSIS_TAG, RACK_POSITION, POWER_PORT_A, POWER_PORT_B
-   * Validate that CHASSIS_TAG matches one on Asset
-   * Validate that _A and _B are on different PDU's and are PDU's we know about
-   * Validate that RACK_POSITION is a rack we know about
-   */
-  private def intakeStage4(asset: Asset)(implicit req: Request[AnyContent]) = {
-    import AssetMeta.Enum._
-    def handleError(e: Throwable) = {
-      val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
-      val formWithErrors = intakeStage3Form(asset).bindFromRequest
-      val msg = "Error on host intake: %s".format(e.getMessage)
-      val flash = Flash(Map("error" -> msg))
-      logger.error(msg)
-      InternalServerError(html.resources.intake3(asset, chassis_tag, formWithErrors)(flash, req))
-    }
-    intakeStage3Form(asset).bindFromRequest.fold(
-      formWithErrors => {
-        val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
-        BadRequest(html.resources.intake3(asset, chassis_tag, formWithErrors))
-      },
-      success => success match {
-        case(tag, position, portA, portB) => {
-          val assetId = asset.getId
-          val values = List(
-            AssetMetaValue(assetId, RackPosition.id, position),
-            AssetMetaValue(assetId, PowerPort.id, portA),
-            AssetMetaValue(assetId, PowerPort.id, portB))
-          try {
-            Model.withTransaction { implicit conn =>
-              val created = AssetMetaValue.create(values)
-              require(created == values.length,
-                "Should have had %d values, had %d".format(values.length, created))
-              AssetStateMachine(asset).update().executeUpdate()
-            }
-            Redirect(app.routes.Resources.index).flashing(
-              "success" -> "Successfull intake of %s".format(asset.tag)
-            )
-          } catch {
-            case e: Throwable => handleError(e)
-          }
-        }
-      }
     )
   }
 
@@ -241,12 +195,60 @@ trait Resources extends Controller {
   }
 
   /**
+   * Handle stage 4 validation
+   *
+   * We should have gotten a: CHASSIS_TAG, RACK_POSITION, POWER_PORT_A, POWER_PORT_B
+   * Validate that CHASSIS_TAG matches one on Asset
+   * Validate that _A and _B are on different PDU's and are PDU's we know about
+   * Validate that RACK_POSITION is a rack we know about
+   */
+  private def intakeStage4(asset: Asset)(implicit req: Request[AnyContent]) = {
+    import AssetMeta.Enum._
+    def handleError(e: Throwable) = {
+      val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
+      val formWithErrors = intakeStage3Form(asset).bindFromRequest
+      val msg = "Error on host intake: %s".format(e.getMessage)
+      val flash = Flash(Map("error" -> msg))
+      logger.error(msg)
+      InternalServerError(html.resources.intake3(asset, chassis_tag, formWithErrors)(flash, req))
+    }
+    intakeStage3Form(asset).bindFromRequest.fold(
+      formWithErrors => {
+        val chassis_tag: String = asset.getAttribute(ChassisTag).get.getValue
+        BadRequest(html.resources.intake3(asset, chassis_tag, formWithErrors))
+      },
+      success => success match {
+        case(tag, position, portA, portB) => {
+          val assetId = asset.getId
+          val values = List(
+            AssetMetaValue(assetId, RackPosition.id, position),
+            AssetMetaValue(assetId, PowerPort.id, portA),
+            AssetMetaValue(assetId, PowerPort.id, portB))
+          try {
+            Model.withTransaction { implicit conn =>
+              val created = AssetMetaValue.create(values)
+              require(created == values.length,
+                "Should have had %d values, had %d".format(values.length, created))
+              AssetStateMachine(asset).update().executeUpdate()
+            }
+            Redirect(app.routes.Resources.index).flashing(
+              "success" -> "Successfull intake of %s".format(asset.tag)
+            )
+          } catch {
+            case e: Throwable => handleError(e)
+          }
+        }
+      }
+    )
+  }
+
+  /**
    * Given a asset tag, find the associated asset
    */
   private def findByTag(tag: String, page: PageParams)(implicit r: Request[AnyContent]) = {
     Asset.findByTag(tag) match {
       case None => Asset.findLikeTag(tag, page) match {
-        case Page(_, _, _, 0) =>
+        case page if page.size == 0 =>
           Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified asset tag")
         case page =>
           Ok(html.asset.list(page))

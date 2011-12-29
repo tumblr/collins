@@ -22,15 +22,6 @@ case class AssetLog(
 {
   require(message != null && message.length > 0)
 
-  def toMap(): Map[String,String] = Map(
-    "ID" -> getId().toString,
-    "ASSET_ID" -> getAssetId().toString,
-    "CREATED" -> Helpers.dateFormat(created),
-    "FORMAT" -> getFormat().toString,
-    "SOURCE" -> getSource().toString,
-    "TYPE" -> getMessageType().toString,
-    "MESSAGE" -> message
-  )
   def toJsonMap(): Map[String,JsValue] = Map(
     "ID" -> JsNumber(getId()),
     "ASSET_ID" -> JsNumber(getAssetId()),
