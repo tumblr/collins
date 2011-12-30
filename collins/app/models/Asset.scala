@@ -151,6 +151,7 @@ object Asset extends Magic[Asset](Some("asset")) {
 }
 
 case class AssetFinder(
+  tag: Option[String],
   status: Option[Status.Enum],
   assetType: Option[AssetType.Enum],
   createdAfter: Option[Date],
@@ -168,7 +169,11 @@ case class AssetFinder(
     val _atype = getEnumSimple("asset.asset_type", assetType)
     val _created = createDateSimple("asset.created", createdAfter, createdBefore)
     val _updated = createDateSimple("asset.updated", updatedAfter, updatedBefore)
-    flattenSql(Seq(_status, _atype, _created, _updated).collect { case Some(i) => i })
+    val _tag = tag.map { t =>
+      val name = "%s_0".format("asset_tag")
+      SqlQuery("%s={%s}".format("asset.tag", name)).on(name -> t)
+    }
+    flattenSql(Seq(_status, _atype, _created, _updated, _tag).collect { case Some(i) => i })
   }
 
   private def getEnumSimple(param: String, enum: Option[Intable]): Option[SimpleSql[Row]] = {

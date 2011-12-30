@@ -41,7 +41,7 @@ case class IpmiInfo(
     IpmiGateway.toString -> JsString(dottedGateway),
     IpmiNetmask.toString -> JsString(dottedNetmask),
     IpmiUsername.toString -> JsString(username),
-    IpmiPassword.toString -> JsString(decryptedPassword)
+    IpmiPassword.toString -> JsString(password)
   )
 }
 
