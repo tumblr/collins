@@ -54,7 +54,7 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     val ChassisTag = Value(2, "CHASSIS_TAG")
     val RackPosition = Value(3, "RACK_POSITION")
     val PowerPort = Value(4, "POWER_PORT")
-    val SwitchPort = Value(5, "SWITCH_PORT")
+    //val SwitchPort = Value(5, "SWITCH_PORT")
 
     val CpuCount = Value(6, "CPU_COUNT")
     val CpuCores = Value(7, "CPU_CORES")
