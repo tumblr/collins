@@ -22,7 +22,7 @@ trait Resources extends Controller {
     Ok(html.resources.index(AssetMeta.getViewable()))
   }
 
-  def createForm(assetType: String) = SecureAction { implicit req =>
+  def displayCreateForm(assetType: String) = SecureAction { implicit req =>
     val atype: Option[AssetType.Enum] = try {
       Some(AssetType.Enum.withName(assetType))
     } catch {
@@ -40,10 +40,10 @@ trait Resources extends Controller {
     }
   }(infraSpec)
 
-  val assetCreator = new AssetApi.CreateAsset()
+  private val assetCreator = new actions.CreateAsset()
   def createAsset(atype: String) = SecureAction { implicit req =>
     Form("tag" -> requiredText).bindFromRequest.fold(
-      noTag => Redirect(app.routes.Resources.createForm(atype)).flashing("error" -> "A tag must be specified"),
+      noTag => Redirect(app.routes.Resources.displayCreateForm(atype)).flashing("error" -> "A tag must be specified"),
       withTag => {
         val rd = assetCreator(withTag)
         rd.status match {
@@ -52,7 +52,7 @@ trait Resources extends Controller {
           case _ =>
             val errJs = rd.data.value.getOrElse("ERROR_DETAILS", JsString("Error processing request"))
             val errStr = errJs.as[String]
-            Redirect(app.routes.Resources.createForm(atype)).flashing("error" -> errStr)
+            Redirect(app.routes.Resources.displayCreateForm(atype)).flashing("error" -> errStr)
         }
       }
     )
@@ -61,7 +61,7 @@ trait Resources extends Controller {
   /**
    * Find assets by query parameters, special care for ASSET_TAG
    */
-  val findAssets = new AssetApi.FindAsset()
+  private val findAssets = new actions.FindAsset()
   def find(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
     Form("ASSET_TAG" -> requiredText).bindFromRequest.fold(
       noTag => {
@@ -274,7 +274,7 @@ trait Resources extends Controller {
    * Rewrite k/v pairs into an attribute=k;v map
    */
   private def rewriteRequest(req: Request[AnyContent]): Request[AnyContent] = {
-    val respectedKeys = AssetApi.FindAsset.params
+    val respectedKeys = actions.FindAsset.params
     val nonEmpty = stripQuery(req.queryString)
     val grouped = nonEmpty.groupBy { case(k, v) =>
       respectedKeys.contains(k)

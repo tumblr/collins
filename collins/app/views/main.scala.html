@@ -4,7 +4,7 @@
 @import _root_.util.Helpers
 
 @createLink(a: AssetType.Enum) = {
-  <a href="@app.routes.Resources.createForm(a.toString)">@Helpers.camelCase(a.toString, " ")</a>
+  <a href="@app.routes.Resources.displayCreateForm(a.toString)">@Helpers.camelCase(a.toString, " ")</a>
 }
 
 <!DOCTYPE html>
