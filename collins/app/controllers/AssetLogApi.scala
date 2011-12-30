@@ -15,7 +15,7 @@ trait AssetLogApi {
 
   // GET /api/asset/:tag/log
   def getLogData(tag: String, page: Int, size: Int, sort: String, filter: String) = SecureAction { implicit req =>
-    val responseData = withAssetFromTag(tag) { asset =>
+    val result = Api.withAssetFromTag(tag) { asset =>
       val logs = AssetLog.list(asset, page, size, sort, filter)
       val prevPage = logs.prev match {
         case None => 0
@@ -28,13 +28,13 @@ trait AssetLogApi {
       val totalResults = logs.total
       val headers = logs.getPaginationHeaders()
       val paginationMap = logs.getPaginationJsMap()
-      ResponseData(Results.Ok, JsObject(paginationMap ++ Map(
+      Right(ResponseData(Results.Ok, JsObject(paginationMap ++ Map(
         "Data" -> JsArray(logs.items.map { log =>
           JsObject(log.toJsonMap)
         }.toList)
-      )), headers)
+      )), headers))
     }
-    formatResponseData(responseData)
+    formatResponseData(result.fold(l => l, r => r))
   }
 
   // PUT /api/asset/:tag/log
@@ -95,16 +95,16 @@ trait AssetLogApi {
       )
     }
 
-    val responseData = withAssetFromTag(tag) { asset =>
+    val responseData = Api.withAssetFromTag(tag) { asset =>
       (req.body.asJson match {
         case Some(jsValue) => processJson(jsValue, asset)
         case None => processForm(asset)
       }).map { err =>
-        getErrorMessage(err)
+        Left(Api.getErrorMessage(err))
       }.getOrElse {
-        ResponseData(Results.Created, JsObject(Map("Success" -> JsBoolean(true))))
+        Right(ResponseData(Results.Created, JsObject(Map("SUCCESS" -> JsBoolean(true)))))
       }
-    }
+    }.fold(l => l, r => r)
     formatResponseData(responseData)
   }(SecuritySpec(isSecure = true, Seq("infra")))
 
