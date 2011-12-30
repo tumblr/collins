@@ -17,11 +17,6 @@ object LldpHelper extends CommonHelper[LldpRepresentation] {
       val chassis = interface.chassis
       val port = interface.port
       val vlan = interface.vlan
-      val switchPort = if(interface.isPortLocal) {
-        Seq(AssetMetaValue(asset_id, SwitchPort.id, groupId, interface.portAsInt.toString))
-      } else {
-        Seq()
-      }
       seq ++ Seq(
         AssetMetaValue(asset_id, LldpInterfaceName.id, groupId, interface.name),
         AssetMetaValue(asset_id, LldpChassisName.id, groupId, chassis.name),
@@ -33,7 +28,7 @@ object LldpHelper extends CommonHelper[LldpRepresentation] {
         AssetMetaValue(asset_id, LldpPortDescription.id, groupId, port.description),
         AssetMetaValue(asset_id, LldpVlanId.id, groupId, vlan.id.toString),
         AssetMetaValue(asset_id, LldpVlanName.id, groupId, vlan.name)
-      ) ++ switchPort
+      )
     }
   }
 

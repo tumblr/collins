@@ -7,6 +7,25 @@ import models.AssetMeta.Enum.ChassisTag
 import play.api.data._
 import play.api.mvc._
 
+object UpdateAsset {
+  val FORM = Form(
+    of(UpdateAsset.apply _, UpdateAsset.unapply _)(
+      "LSHW" -> optional(text(1)),
+      "LLDP" -> optional(text(1)),
+      ChassisTag.toString -> optional(text(1)),
+      "ATTRIBUTE" -> optional(text(3)),
+      "form" -> ignored(None)
+    )
+  )
+  def get() = new UpdateAsset(None, None, None, None, None)
+  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, Some(form))
+  def toMap(form: UpdateAsset): Map[String,String] = Map.empty ++
+    form.lshw.map(s => Map("LSHW" -> s)).getOrElse(Map.empty) ++
+    form.lldp.map(s => Map("LLDP" -> s)).getOrElse(Map.empty) ++
+    form.chassisTag.map(s => Map(ChassisTag.toString -> s)).getOrElse(Map.empty) ++
+    form.attributes
+}
+
 private[controllers] case class UpdateAsset(
   lshw: Option[String],
   lldp: Option[String],
@@ -23,6 +42,19 @@ private[controllers] case class UpdateAsset(
   }
   def attributes(seq: Seq[String]): Map[String,String] = seq.foldLeft(Map[String,String]()) { case(map,item) =>
     map ++ attributes(item)
+  }
+
+  def execute(tag: String)(implicit req: Request[AnyContent]): Either[ResponseData,Boolean] = {
+    Api.withAssetFromTag(tag) { asset =>
+      validateRequest(asset) match {
+        case Left(error) => Left(Api.getErrorMessage(error))
+        case Right(options) =>
+          AssetLifecycle.updateAsset(asset, options) match {
+            case Left(error) => Left(Api.getErrorMessage(error.getMessage))
+            case Right(success) => Right(success)
+          }
+      }
+    }
   }
 
   protected def getFormFile(key: String)(implicit req: Request[AnyContent]): Map[String,String] = {
@@ -49,36 +81,4 @@ private[controllers] case class UpdateAsset(
       }
     )
   }
-
-  def execute(tag: String)(implicit req: Request[AnyContent]): Either[ResponseData,Boolean] = {
-    Api.withAssetFromTag(tag) { asset =>
-      validateRequest(asset) match {
-        case Left(error) => Left(Api.getErrorMessage(error))
-        case Right(options) =>
-          AssetLifecycle.updateAsset(asset, options) match {
-            case Left(error) => Left(Api.getErrorMessage(error.getMessage))
-            case Right(success) => Right(success)
-          }
-      }
-    }
-  }
-}
-
-object UpdateAsset {
-  val FORM = Form(
-    of(UpdateAsset.apply _, UpdateAsset.unapply _)(
-      "LSHW" -> optional(text(1)),
-      "LLDP" -> optional(text(1)),
-      ChassisTag.toString -> optional(text(1)),
-      "ATTRIBUTE" -> optional(text(3)),
-      "form" -> ignored(None)
-    )
-  )
-  def get() = new UpdateAsset(None, None, None, None, None)
-  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, Some(form))
-  def toMap(form: UpdateAsset): Map[String,String] = Map.empty ++
-    form.lshw.map(s => Map("LSHW" -> s)).getOrElse(Map.empty) ++
-    form.lldp.map(s => Map("LLDP" -> s)).getOrElse(Map.empty) ++
-    form.chassisTag.map(s => Map(ChassisTag.toString -> s)).getOrElse(Map.empty) ++
-    form.attributes
 }
