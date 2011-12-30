@@ -1,6 +1,7 @@
 package util
 
 import play.api.Play
+import play.api.Mode
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -41,5 +42,11 @@ object Helpers {
         }
       }.getOrElse(default)
     }.getOrElse(default)
+  }
+
+  def getApplicationMode(): Mode.Mode = {
+    Play.maybeApplication.map { app =>
+      app.mode
+    }.getOrElse(Mode.Dev)
   }
 }

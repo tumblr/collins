@@ -21,11 +21,15 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), 0, value)
   def apply(asset: Asset, asset_meta_id: Int, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), 0, value)
+  def apply(asset: Asset, asset_meta: AssetMeta.Enum, value: String) =
+    new AssetMetaValue(Id(asset.getId), Id(asset_meta.id), 0, value)
 
   def apply(asset_id: Long, asset_meta_id: Int, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), group_id, value)
   def apply(asset: Asset, asset_meta_id: Int, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), group_id, value)
+  def apply(asset: Asset, asset_meta: AssetMeta.Enum, group_id: Int, value: String) =
+    new AssetMetaValue(Id(asset.getId), Id(asset_meta.id), group_id, value)
 
   override def create(mv: AssetMetaValue)(implicit con: Connection): AssetMetaValue = {
     AssetMetaValue.insert(mv)

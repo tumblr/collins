@@ -7,6 +7,7 @@ import Actor._
 import akka.dispatch.FutureTimeoutException
 import akka.util.Duration
 import akka.util.duration._
+import play.api.Mode
 import play.api.libs.akka._
 import play.api.libs.concurrent.{Redeemed, Thrown}
 
@@ -42,6 +43,7 @@ abstract class IpmiCommand {
   val duration: Duration
   val timeout: Duration
   val configKey: String
+  var debug: Boolean = false
 
   protected def ipmiInfo: IpmiInfo
 
@@ -51,6 +53,9 @@ abstract class IpmiCommand {
   }
 
   def run(): Option[String] = {
+    if (Helpers.getApplicationMode() != Mode.Prod && !debug) {
+      return None
+    }
     val cmd = substitute(getIpmiCommand())
     val process = Process(cmd, None, ("IPMI_PASSWORD" -> password))
     val sb = new StringBuilder()
