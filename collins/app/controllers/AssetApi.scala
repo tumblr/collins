@@ -59,9 +59,9 @@ trait AssetApi {
   }(SecuritySpec(true, Seq("infra")))
 
   // POST /api/asset/:tag
-  private val assetUpdater = new actions.UpdateAsset()
   def updateAsset(tag: String) = SecureAction { implicit req =>
-    val rd = assetUpdater(tag) match {
+    val assetUpdater = actions.UpdateAsset.get()
+    val rd = assetUpdater.execute(tag) match {
       case Left(err) => err
       case Right(status) =>
         ResponseData(Results.Ok, JsObject(Map("SUCCESS" -> JsBoolean(status))))

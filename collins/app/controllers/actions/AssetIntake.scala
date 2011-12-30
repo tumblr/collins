@@ -4,11 +4,12 @@ package actions
 import models.{Asset, AssetLifecycle, AssetMeta, AssetMetaValue, Model}
 import models.AssetMeta.Enum.{ChassisTag, PowerPort, RackPosition}
 import util.AssetStateMachine
+import util.Helpers.formatPowerPort
 
 import play.api.mvc._
 import play.api.data._
 
-import scala.util.control.Exception.{allCatch, catching}
+import scala.util.control.Exception.catching
 
 private[controllers] class AssetIntake(stage: Int)(implicit req: Request[AnyContent]) {
 
@@ -83,22 +84,15 @@ case class Stage3Form(
   extends AssetIntakeForm
 {
   override protected[actions] def process(asset: Asset): Option[FormError] = {
-    allCatch[Option[FormError]].either {
-      validate(asset).orElse {
-        val values = Seq(
-          AssetMetaValue(asset, RackPosition, rackPosition),
-          AssetMetaValue(asset, PowerPort, 0, powerPort1),
-          AssetMetaValue(asset, PowerPort, 1, powerPort2))
-        Model.withTransaction { implicit conn =>
-          val created = AssetMetaValue.create(values)
-          require(created == values.length,
-            "Should have created %d rows, created %d".format(values.length, created))
-          AssetStateMachine(asset).update().executeUpdate()
-          None
-        }
-      }
-    }.left.map(e => FormError("", "Exception while processing: " + e.getMessage))
-     .fold(l => Some(l), r => r)
+    validate(asset).orElse {
+      AssetLifecycle.updateAsset(asset, Map(
+        RackPosition.toString -> rackPosition,
+        formatPowerPort("A") -> powerPort1,
+        formatPowerPort("B") -> powerPort2)
+      ).left.map { e => Some(FormError("", e.getMessage, Nil)) }
+       .right.map { success => if (success) None else Some(FormError("", "Failed to save asset")) }
+       .fold(l => l, r => r)
+    }
   }
 
   protected def validate(asset: Asset): Option[FormError] = {
@@ -120,8 +114,8 @@ case class Stage3Form(
     }
   }
 }
+
 object Stage3Form {
-  import util.Helpers.formatPowerPort
 
   val FORM = Form(
     of(Stage3Form.apply _, Stage3Form.unapply _)(
@@ -141,7 +135,7 @@ object Stage3Form {
 
 private[actions] object SharedStageValidators {
   private val chassisFormError: Function2[String,Seq[String],FormError] =
-    FormError(ChassisTag.toString, _: String, _)
+    FormError(ChassisTag.toString, _: String, _: Seq[String])
 
   def validateChassisTag(specifiedTag: String, asset: Asset): Option[FormError] = {
     catching[Option[FormError]](classOf[IndexOutOfBoundsException])

@@ -1,13 +1,18 @@
 package models
 
+import AssetMeta.Enum.{PowerPort, RackPosition}
 import util.{AssetStateMachine, Helpers, LldpRepresentation, LshwRepresentation}
 import util.parsers.{LldpParser, LshwParser}
+import Helpers.formatPowerPort
+
 import play.api.Logger
 
+import scala.util.control.Exception.allCatch
 import java.sql.Connection
 
 // Supports meta operations on assets
 object AssetLifecycle {
+  val RESTRICTED_KEYS = AssetMeta.Enum.values.map { _.toString }.toSet
 
   private[this] val logger = Logger.logger
 
@@ -49,7 +54,7 @@ object AssetLifecycle {
   }
 
   protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    try {
+    allCatch[Boolean].either {
       Model.withTransaction { implicit con =>
         AssetStateMachine(asset).update().executeUpdate()
         AssetLog.informational(
@@ -58,47 +63,70 @@ object AssetLifecycle {
           AssetLog.Formats.PlainText,
           AssetLog.Sources.Internal
         ).create()
-        Right(true)
+        true
       }
-    } catch {
-      case e: Throwable =>
-        handleException(asset, "Error saving values or in state transition", e)
-    }
+    }.left.map(e => handleException(asset, "Error saving values or in state transition", e))
   }
 
   protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    if (asset.status == Status.Enum.Incomplete.id) {
-      updateIncompleteServer(asset, options)
-    } else {
-      Left(new Exception("Only updates for Incomplete servers are currently supported"))
+    Status.Enum(asset.status) match {
+      case Status.Enum.Incomplete =>
+        updateIncompleteServer(asset, options)
+      case Status.Enum.New =>
+        updateNewServer(asset, options)
+      case _ =>
+        Left(new Exception("Only updates for Incomplete and New servers are currently supported"))
     }
   }
 
-  protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    val lshw = options.get("lshw")
-    val lldp = options.get("lldp")
-    val chassis_tag = options.get("chassis_tag")
+  protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+    val requiredKeys = Set(RackPosition.toString, formatPowerPort("A"), formatPowerPort("B"))
+    requiredKeys.find(key => !options.contains(key)).map { not_found =>
+      return Left(new Exception(not_found + " parameter not specified"))
+    }
 
-    if (!lshw.isDefined) {
-      return Left(new Exception("lshw data not specified"))
-    } else if (!chassis_tag.isDefined) {
-      return Left(new Exception("chassis_tag data not specified"))
-    } else if (!lldp.isDefined) {
-      return Left(new Exception("lldp data not specified"))
-    }
-    val excluded = Set("lshw", "lldp", "chassis_tag")
-    val restricted = AssetMeta.Enum.values.map { _.toString }.toSet
-    val filteredOptions = options.filter { case(k,v) =>
-      !excluded.contains(k)
-    }
-    filteredOptions.foreach { case(k,v) =>
-      if (restricted.contains(k)) {
-        return Left(new Exception("Attribute %s is restricted".format(k)))
+    val rackpos = options(RackPosition.toString)
+    val power1 = options(formatPowerPort("A"))
+    val power2 = options(formatPowerPort("B"))
+
+    val filtered = options.filter(kv => !requiredKeys(kv._1))
+    filtered.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
+      return Left(new Exception("Attribute %s is restricted".format(kv._1)))
+    )
+
+    allCatch[Boolean].either {
+      val values = Seq(
+        AssetMetaValue(asset, RackPosition, rackpos),
+        AssetMetaValue(asset, PowerPort, 0, power1),
+        AssetMetaValue(asset, PowerPort, 1, power2))
+      Model.withTransaction { implicit con =>
+        val created = AssetMetaValue.create(values)
+        require(created == values.length,
+          "Should have created %d rows, created %d".format(values.length, created))
+        AssetStateMachine(asset).update().executeUpdate()
+        true
       }
+    }.left.map(e => handleException(asset, "Exception updating asset", e))
+  }
+
+  protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+    val requiredKeys = Set("LSHW", "LLDP", "CHASSIS_TAG")
+    requiredKeys.find(key => !options.contains(key)).map { not_found =>
+      return Left(new Exception(not_found + " parameter not specified"))
     }
-    val lshwParser = new LshwParser(lshw.get, lshwConfig)
-    val lldpParser = new LldpParser(lldp.get)
-    try {
+
+    val lshw = options("LSHW")
+    val lldp = options("LLDP")
+    val chassis_tag = options("CHASSIS_TAG")
+
+    val filtered = options.filter(kv => !requiredKeys(kv._1))
+    filtered.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
+      return Left(new Exception("Attribute %s is restricted".format(kv._1)))
+    )
+    val lshwParser = new LshwParser(lshw, lshwConfig)
+    val lldpParser = new LldpParser(lldp)
+
+    allCatch[Boolean].either {
       Model.withTransaction { implicit con =>
         val lshwParsingResults = parseLshw(asset, lshwParser)
         if (lshwParsingResults.isLeft) {
@@ -108,18 +136,15 @@ object AssetLifecycle {
         if (lldpParsingResults.isLeft) {
           throw lldpParsingResults.left.get
         }
-        AssetMetaValue.create(AssetMetaValue(asset, AssetMeta.Enum.ChassisTag.id, chassis_tag.get))
-        MetaWrapper.createMeta(asset, filteredOptions)
+        AssetMetaValue.create(AssetMetaValue(asset, AssetMeta.Enum.ChassisTag.id, chassis_tag))
+        MetaWrapper.createMeta(asset, filtered)
         AssetStateMachine(asset).update().executeUpdate()
         AssetLog.informational(asset, "Parsing and storing LSHW data succeeded, asset now New",
           AssetLog.Formats.PlainText, AssetLog.Sources.Internal
         ).create()
-        Right(true)
+        true
       }
-    } catch {
-      case e: Throwable =>
-        handleException(asset, "Exception updating asset", e)
-    }
+    }.left.map(e => handleException(asset, "Exception updating asset", e))
   }
 
   protected def parseLshw(asset: Asset, parser: LshwParser)(implicit con: Connection): Status[LshwRepresentation] = {
@@ -162,7 +187,7 @@ object AssetLifecycle {
     }
   }
 
-  private def handleException(asset: Asset, msg: String, e: Throwable): Status[Boolean] = {
+  private def handleException(asset: Asset, msg: String, e: Throwable): Throwable = {
     logger.warn(msg, e)
     try {
       Model.withConnection { implicit con =>
@@ -177,6 +202,6 @@ object AssetLifecycle {
       case ex =>
         logger.error("Database problems", ex)
     }
-    Left(e)
+    e
   }
 }
