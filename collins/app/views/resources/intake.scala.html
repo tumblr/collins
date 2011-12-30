@@ -10,7 +10,9 @@
 <div class="row">
   <div class="span14">
     <div class="alert-message block-message warning">
-      <p>Result: @status</p>
+      @status.map { err =>
+        <p><strong>Error: @err</strong></p>
+      }
       <p><strong>Did the correct light come on?</strong></p>
       <div class="alert-actions">
         <a class="btn primary" alt-key="yes" href="@app.routes.Resources.intake(asset.getId, 2)">Yes</a>

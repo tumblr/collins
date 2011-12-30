@@ -1,9 +1,9 @@
-@(asset: Asset, chassisTag: String, dataForm: Form[(String,String,String,String)])(implicit flash: Flash, req: Request[AnyContent])
+@(asset: Asset, f: Form[actions.Stage3Form])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import _root_.util.Helpers.formatPowerPort
 @import util.notice
-@import AssetMeta.Enum._
+@import AssetMeta.Enum.{ChassisTag, RackPosition, ServiceTag}
 
 @main("Intake Step 3 - " + asset.tag) {
 <div class="page-header">
@@ -13,7 +13,7 @@
   <div class="span10">
     @notice("error")
     @notice("warning")
-    @form(app.routes.Resources.intake(asset.getId, 4)) {
+    @form(app.routes.Resources.intake(asset.getId, 3)) {
     <div class="clearfix">
       <label for="ASSET_TAG">Asset Tag</label>
       <div class="input">
@@ -29,26 +29,28 @@
       </div>
     </div>
     <div class="clearfix">
-      <label for="@ChassisTag.toString">Chassis Tag</label>
+      @f.forField(ChassisTag.toString) { field =>
+      <label for="@field.name">Chassis Tag</label>
       <div class="input">
-        <span id="@ChassisTag.toString" class="uneditable-input">@chassisTag</span>
+        <span id="@field.name" class="uneditable-input">@field.value.getOrElse("")</span>
+        <input type="hidden" name="@field.name" value="@field.value.getOrElse("")">
       </div>
+      }
     </div>
-    @inputText(dataForm(RackPosition.toString), 'label -> "Rack Position", Symbol("enter-style") -> "tab", 'class -> "focus")(twitterBootstrapInput)
-    @inputText(dataForm(formatPowerPort("A")), 'label -> "Power Port A", Symbol("enter-style") -> "tab")(twitterBootstrapInput)
-    @inputText(dataForm(formatPowerPort("B")), 'label -> "Power Port B")(twitterBootstrapInput)
-    @dataForm.globalError.map { error =>
+    @inputText(f(RackPosition.toString), 'label -> "Rack Position", Symbol("enter-style") -> "tab", 'class -> "focus")(twitterBootstrapInput)
+    @inputText(f(formatPowerPort("A")), 'label -> "Power Port A", Symbol("enter-style") -> "tab")(twitterBootstrapInput)
+    @inputText(f(formatPowerPort("B")), 'label -> "Power Port B")(twitterBootstrapInput)
+    @f.globalError.map { error =>
       <div class="alert-message error">
         <strong>Unable to intake node</strong> @error.message
       </div>
     }
     <div class="clearfix">
-      <input type="hidden" name="@ChassisTag.toString" value="@chassisTag">
-      <input type="hidden" name="stage" value="4">
+      <input type="hidden" name="stage" value="3">
     </div>
     <div class="actions">
       <input type="submit" class="btn primary" value="Done &rarr;">
-      <a class="btn" href="@app.routes.Resources.intake(asset.getId, 5)">Cancel</a>
+      <a class="btn" href="@app.routes.Resources.intake(asset.getId, 1)">Cancel</a>
     </div>
     }
   </div>

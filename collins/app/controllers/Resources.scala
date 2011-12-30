@@ -40,12 +40,11 @@ trait Resources extends Controller {
     }
   }(infraSpec)
 
-  private val assetCreator = new actions.CreateAsset()
   def createAsset(atype: String) = SecureAction { implicit req =>
     Form("tag" -> requiredText).bindFromRequest.fold(
       noTag => Redirect(app.routes.Resources.displayCreateForm(atype)).flashing("error" -> "A tag must be specified"),
       withTag => {
-        val rd = assetCreator(withTag)
+        val rd = new actions.CreateAsset()(withTag)
         rd.status match {
           case Results.Created =>
             Redirect(app.routes.Resources.index).flashing("success" -> "Asset successfully created")
@@ -61,11 +60,10 @@ trait Resources extends Controller {
   /**
    * Find assets by query parameters, special care for ASSET_TAG
    */
-  private val findAssets = new actions.FindAsset()
   def find(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
     Form("ASSET_TAG" -> requiredText).bindFromRequest.fold(
       noTag => {
-        val results = findAssets(page, size, sort)(rewriteRequest(req))
+        val results = new actions.FindAsset()(page, size, sort)(rewriteRequest(req))
         results match {
           case Left(err) =>
             Redirect(app.routes.Resources.index).flashing("error" -> err)
@@ -91,27 +89,20 @@ trait Resources extends Controller {
    * Manage 4 stage asset intake process
    */
   def intake(id: Long, stage: Int = 1) = SecureAction { implicit req =>
-    Asset.findById(id).flatMap { asset =>
+    import actions.{Stage1Form, Stage2Form, Stage3Form}
+    val asset = Asset.findById(id).flatMap { asset =>
       intakeAllowed(asset) match {
         case true => Some(asset)
         case false => None
       }
-    } match {
+    }
+    asset match {
       case None =>
         Redirect(app.routes.Resources.index).flashing("error" -> "Can not intake host that isn't New")
-      case Some(asset) => stage match {
-        case 2 =>
-          logger.debug("intake stage 2")
-          Ok(html.resources.intake2(asset))
-        case 3 =>
-          logger.debug("intake stage 3")
-          intakeStage3(asset)
-        case 4 =>
-          logger.debug("intake stage 4")
-          intakeStage4(asset)
-        case n =>
-          logger.debug("intake stage " + n)
-          AsyncResult {
+      case Some(asset) =>
+        val intake = new actions.AssetIntake(stage)
+        intake.execute(asset) match {
+          case Stage1Form() => AsyncResult {
             IpmiCommandProcessor.send(IpmiIdentifyCommand(asset, 30.seconds)) { opt =>
               opt match {
                 case Some(error) =>
@@ -123,124 +114,22 @@ trait Resources extends Controller {
               }
             }
           }
-      }
+          case Stage2Form(chassisTag, Some(form)) =>
+            BadRequest(html.resources.intake2(asset, form))
+          case Stage2Form(chassisTag, None) =>
+            val form = actions.Stage3Form.TRANSITION_FORM(chassisTag)
+            Ok(html.resources.intake3(asset, form))
+          case form: Stage3Form =>
+            form.errorForm.map { formWithErrors =>
+              BadRequest(html.resources.intake3(asset, formWithErrors))
+            }.getOrElse{
+              Redirect(app.routes.Resources.index).flashing(
+                "success" -> "Successfull intake of %s".format(asset.tag)
+              )
+            }
+        }
     }
   }(infraSpec)
-
-  private def intakeStage3Form(asset: Asset): Form[(String,String,String,String)] = {
-    import models.AssetMeta.Enum._
-    Form(
-      of(
-        ChassisTag.toString -> requiredText(1),
-        RackPosition.toString -> requiredText(1),
-        formatPowerPort("A") -> requiredText(1),
-        formatPowerPort("B") -> requiredText(1)
-      ) verifying ("Port A must not equal Port B", result => result match {
-        case(c,r,pA,pB) => pA != pB
-      }) verifying ("Stored chassis tag must match specified tag", result => result match {
-        case(c,r,pA,pB) => asset.getMetaAttribute(ChassisTag).map { tag =>
-          tag == c
-        }.getOrElse(false)
-      })
-    )
-  }
-
-  /**
-   * Handle stage 3 validation
-   *
-   * Lookup CHASSIS_TAG in HTTP parameters
-   * On error, back to intake2
-   * On success, retrieve ChassisTag for asset
-   * Check equality of specified tag and actual tag
-   * Special cases where:
-   *   - Specified tag and stored tag don't match
-   *     - Display error to user
-   *   - No tag is associated with the asset
-   *     - Display error to user
-   *   - Multiple chassis tags are associated with an asset
-   *     - 500, this should not happen
-   */
-  private def intakeStage3(asset: Asset)(implicit req: Request[AnyContent]) = try {
-    Form("CHASSIS_TAG" -> text).bindFromRequest.fold(
-      errors => {
-        val flash  = Flash(Map("warning" -> "No CHASSIS_TAG submitted"))
-        BadRequest(html.resources.intake2(asset)(flash, req))
-      },
-      chassis_tag => asset.getMetaAttribute(ChassisTag).map { attrib =>
-        chassis_tag == attrib.getValue match {
-          case true =>
-            Ok(html.resources.intake3(asset, chassis_tag, intakeStage3Form(asset)))
-          case false =>
-            val msg = "Asset %s has chassis tag '%s', not '%s'".format(
-              asset.tag, attrib.getValue, chassis_tag)
-            val flash = Flash(Map("error" -> msg))
-            Ok(html.resources.intake2(asset)(flash, req))
-        }
-      }.getOrElse {
-        val msg = "Asset %s does not have an associated chassis tag".format(
-          asset.tag
-        )
-        val flash = Flash(Map("error" -> msg))
-        Ok(html.resources.intake2(asset)(flash, req))
-      }
-    )
-  } catch {
-    case e: IndexOutOfBoundsException =>
-      val msg = "Asset %s has multiple chassis tags associated with it.".format(
-        asset.tag
-      )
-      val flash = Flash(Map("error" -> msg))
-      logger.error(msg)
-      InternalServerError(html.resources.intake2(asset)(flash, req))
-  }
-
-  /**
-   * Handle stage 4 validation
-   *
-   * We should have gotten a: CHASSIS_TAG, RACK_POSITION, POWER_PORT_A, POWER_PORT_B
-   * Validate that CHASSIS_TAG matches one on Asset
-   * Validate that _A and _B are on different PDU's and are PDU's we know about
-   * Validate that RACK_POSITION is a rack we know about
-   */
-  private def intakeStage4(asset: Asset)(implicit req: Request[AnyContent]) = {
-    import AssetMeta.Enum._
-    def handleError(e: Throwable) = {
-      val chassis_tag: String = asset.getMetaAttribute(ChassisTag).get.getValue
-      val formWithErrors = intakeStage3Form(asset).bindFromRequest
-      val msg = "Error on host intake: %s".format(e.getMessage)
-      val flash = Flash(Map("error" -> msg))
-      logger.error(msg)
-      InternalServerError(html.resources.intake3(asset, chassis_tag, formWithErrors)(flash, req))
-    }
-    intakeStage3Form(asset).bindFromRequest.fold(
-      formWithErrors => {
-        val chassis_tag: String = asset.getMetaAttribute(ChassisTag).get.getValue
-        BadRequest(html.resources.intake3(asset, chassis_tag, formWithErrors))
-      },
-      success => success match {
-        case(tag, position, portA, portB) => {
-          val assetId = asset.getId
-          val values = List(
-            AssetMetaValue(assetId, RackPosition.id, position),
-            AssetMetaValue(assetId, PowerPort.id, portA),
-            AssetMetaValue(assetId, PowerPort.id, portB))
-          try {
-            Model.withTransaction { implicit conn =>
-              val created = AssetMetaValue.create(values)
-              require(created == values.length,
-                "Should have had %d values, had %d".format(values.length, created))
-              AssetStateMachine(asset).update().executeUpdate()
-            }
-            Redirect(app.routes.Resources.index).flashing(
-              "success" -> "Successfull intake of %s".format(asset.tag)
-            )
-          } catch {
-            case e: Throwable => handleError(e)
-          }
-        }
-      }
-    )
-  }
 
   /**
    * Given a asset tag, find the associated asset

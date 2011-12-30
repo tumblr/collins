@@ -6,3 +6,7 @@ constraint.minLength = The minimum length is {0}
 
 # --- Errors
 error.minLength = The minimum length is {0}
+
+chassis.mismatch = Chassis of ''{0}'' is ''{1}'' but ''{2}'' was specified
+chassis.multiple = Asset ''{0}'' has multiple chassis tags, invalid configuration
+chassis.none = Asset ''{0}'' does not have an associated chassis tag
