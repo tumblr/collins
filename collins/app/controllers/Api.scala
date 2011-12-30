@@ -17,10 +17,6 @@ private[controllers] case class ResponseData(status: Results.Status, data: JsObj
 trait ApiResponse extends Controller {
   protected val defaultOutputType = JsonOutput()
 
-  protected def getErrorMessage(msg: String, status: Results.Status = Results.BadRequest) = {
-    ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
-  }
-
   private def contentTypeWithCharset(o: OutputType) = {
     o.contentType + "; charset=utf-8"
   }
@@ -145,14 +141,21 @@ trait Api extends ApiResponse with AssetApi with AssetLogApi {
       "Status" -> JsString("Ok")
     ))))
   }
+}
 
-  protected def withAssetFromTag(tag: String)(f: Asset => ResponseData): ResponseData = {
+object Api {
+  def withAssetFromTag[T](tag: String)(f: Asset => Either[ResponseData,T]): Either[ResponseData,T] = {
     Asset.isValidTag(tag) match {
-      case false => getErrorMessage("Empty tag specified")
+      case false => Left(getErrorMessage("Invalid tag specified"))
       case true => Asset.findByTag(tag) match {
         case Some(asset) => f(asset)
-        case None => getErrorMessage("Could not find specified asset", Results.NotFound)
+        case None => Left(getErrorMessage("Could not find specified asset", Results.NotFound))
       }
     }
   }
+
+  def getErrorMessage(msg: String, status: Results.Status = Results.BadRequest) = {
+    ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
+  }
+
 }

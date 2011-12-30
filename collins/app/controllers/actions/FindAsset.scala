@@ -41,7 +41,7 @@ private[controllers] class FindAsset() {
   def formatFormErrors(errors: Seq[FormError]): String = {
     errors.map { e =>
       e.key match {
-        case "attribute" | "type" | "status" => "%s - %s".format(e.key, e.message)
+        case "tag" | "attribute" | "type" | "status" => "%s - %s".format(e.key, e.message)
         case key if key.startsWith("created") => "%s must be an ISO8601 date".format(key)
         case key if key.startsWith("updated") => "%s must be an ISO8601 date".format(key)
       }

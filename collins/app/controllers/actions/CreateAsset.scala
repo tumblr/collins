@@ -18,7 +18,8 @@ private[controllers] object CreateAsset {
   ))
 }
 
-private[controllers] class CreateAsset() extends ApiResponse {
+// FIXME: Don't extend ApiResponse, have apply return standard Either
+private[controllers] class CreateAsset() {
   val defaultAssetType = AssetType.Enum.ServerNode
 
   type Success = (Option[Boolean],AssetType,Option[AStatus.Enum])
@@ -54,11 +55,11 @@ private[controllers] class CreateAsset() extends ApiResponse {
 
   def validateTag(tag: String): Option[ResponseData] = {
     Asset.isValidTag(tag) match {
-      case false => Some(getErrorMessage("Invalid tag specified"))
+      case false => Some(Api.getErrorMessage("Invalid tag specified"))
       case true => Asset.findByTag(tag) match {
         case Some(asset) =>
           val msg = "Asset with tag '%s' already exists".format(tag)
-          Some(getErrorMessage(msg, Results.Status(StatusValues.CONFLICT)))
+          Some(Api.getErrorMessage(msg, Results.Status(StatusValues.CONFLICT)))
         case None => None
       }
     }
@@ -76,13 +77,13 @@ private[controllers] class CreateAsset() extends ApiResponse {
     validateTag(tag) match {
       case Some(data) => data
       case None => validateRequest() match {
-        case Left(error) => getErrorMessage(error)
+        case Left(error) => Api.getErrorMessage(error)
         case Right((optGenerateIpmi, assetType, status)) =>
           val generateIpmi = optGenerateIpmi.getOrElse({
             assetType.getId == AssetType.Enum.ServerNode.id
           })
           AssetLifecycle.createAsset(tag, assetType, generateIpmi, status) match {
-            case Left(ex) => getErrorMessage(ex.getMessage)
+            case Left(ex) => Api.getErrorMessage(ex.getMessage)
             case Right((asset, ipmi)) =>
               ResponseData(Results.Created, getCreateMessage(asset, ipmi))
           }
