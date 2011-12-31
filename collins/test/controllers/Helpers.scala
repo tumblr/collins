@@ -24,6 +24,21 @@ trait SpecHelpers {
   }
   def getLoggedInUser(group: String) = Some(UserImpl("test", "*", Seq(group), 123, true))
 
+  def getRequestHeader(req: MockRequest): RequestHeader = new RequestHeader {
+    def uri = req.uri
+    def method = req.method
+    def queryString = req.queryString
+    def username = Some("testuser")
+    def path = req.path
+    def headers = new Headers {
+      def getAll(key: String) = req.headers
+      def keys: Set[String] = Set(HeaderNames.ACCEPT)
+    }
+    def cookies = new Cookies {
+      def get(name: String) = Some(Cookie(name="foo",value="yay"))
+    }
+  }
+
   def getRequest(req: MockRequest): Request[AnyContent] = new Request[AnyContent] {
     def uri = req.uri
     def method = req.method
