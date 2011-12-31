@@ -8,10 +8,10 @@ sealed trait OutputType {
   val queryString: (String,String)
   val contentType: String
 
-  def inPath(request: Request[AnyContent]) = request.path.endsWith(fileExtension)
-  def inQueryString(request: Request[AnyContent]) = checkQueryString(request.queryString)
-  def inHeader(request: Request[AnyContent]) = {
-    request.headers.get(HeaderNames.ACCEPT).map { header =>
+  def inPath(header: RequestHeader) = header.path.endsWith(fileExtension)
+  def inQueryString(header: RequestHeader) = checkQueryString(header.queryString)
+  def inHttpHeader(header: RequestHeader) = {
+    header.headers.get(HeaderNames.ACCEPT).map { header =>
       header.contains(contentType)
     }.getOrElse(false)
   }
@@ -23,8 +23,11 @@ sealed trait OutputType {
     }
   }
 
+  def matches(header: RequestHeader): Boolean = {
+    inPath(header) || inQueryString(header) || inHttpHeader(header)
+  }
   def matches(req: Request[AnyContent]): Boolean = {
-    inPath(req) || inQueryString(req) || inHeader(req) || inBody(req)
+    inPath(req) || inQueryString(req) || inHttpHeader(req) || inBody(req)
   }
   protected def checkQueryString(data: Map[String, Seq[String]]) = {
     data.get(queryString._1).map { a =>
@@ -41,7 +44,26 @@ object OutputType {
     case text if TextOutput().matches(text) => Some(TextOutput())
     case _ => None
   }
+  def apply(header: RequestHeader): Option[OutputType] = header match {
+    case html if HtmlOutput().matches(html) => Some(HtmlOutput())
+    case json if JsonOutput().matches(json) => Some(JsonOutput())
+    case bash if BashOutput().matches(bash) => Some(BashOutput())
+    case text if TextOutput().matches(text) => Some(TextOutput())
+    case _ => None
+  }
   def isHtml(request: Request[AnyContent]): Boolean = HtmlOutput().matches(request)
+  def isJson(request: Request[AnyContent]): Boolean = JsonOutput().matches(request)
+  def isText(request: Request[AnyContent]): Boolean = TextOutput().matches(request)
+  def isBash(request: Request[AnyContent]): Boolean = BashOutput().matches(request)
+
+  def isHtml(header: RequestHeader): Boolean = HtmlOutput().matches(header)
+  def isJson(header: RequestHeader): Boolean = JsonOutput().matches(header)
+  def isText(header: RequestHeader): Boolean = TextOutput().matches(header)
+  def isBash(header: RequestHeader): Boolean = BashOutput().matches(header)
+
+  def contentTypeWithCharset(o: OutputType) = {
+    o.contentType + "; charset=utf-8"
+  }
 }
 
 case class JsonOutput() extends OutputType {

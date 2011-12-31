@@ -37,7 +37,7 @@ private[controllers] class BackgroundProcessor extends Actor {
   }
 }
 
-private[controllers] object BackgroundProcessor {
+object BackgroundProcessor {
   lazy val ref = {
     actorOf[BackgroundProcessor].start()
   }
