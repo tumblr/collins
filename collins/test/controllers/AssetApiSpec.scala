@@ -36,9 +36,9 @@ class AssetApiSpec extends models.DatabaseSpec with SpecHelpers {
         val result = Extract.from(api.createAsset(assetId).apply(request))
         result._1 mustEqual(201)
         val jsonResponse = Json.parse(result._3)
-        jsonResponse \ "ASSET" must haveClass[JsObject]
-        (jsonResponse \ "ASSET" \ "STATUS").as[String] mustEqual("Incomplete")
-        jsonResponse \ "IPMI" must haveClass[JsObject]
+        jsonResponse \ "data" \ "ASSET" must haveClass[JsObject]
+        (jsonResponse \ "data" \ "ASSET" \ "STATUS").as[String] mustEqual("Incomplete")
+        jsonResponse \ "data" \ "IPMI" must haveClass[JsObject]
       }
       "Step 2 - Intake Finished" >> {
         val lshwData = getResource("lshw-basic.xml")
@@ -54,16 +54,16 @@ class AssetApiSpec extends models.DatabaseSpec with SpecHelpers {
         val result = Extract.from(api.updateAsset(assetId).apply(request))
         result._1 mustEqual(200)
         val jsonResponse = Json.parse(result._3)
-        jsonResponse \ "SUCCESS" must haveClass[JsBoolean]
-        (jsonResponse \ "SUCCESS").as[Boolean] must beTrue
+        jsonResponse \ "data" \ "SUCCESS" must haveClass[JsBoolean]
+        (jsonResponse \ "data" \ "SUCCESS").as[Boolean] must beTrue
       }
       "Step 3 - Review Intake Data" >> {
         val req = getRequest(MockRequest(path = "/api/asset/%s.json".format(assetId)))
         val res = Extract.from(api.getAsset(assetId).apply(req))
         res._1 mustEqual(200)
         val jsonResponse = Json.parse(res._3)
-        jsonResponse \ "ASSET" must haveClass[JsObject]
-        (jsonResponse \ "ASSET" \ "STATUS").as[String] mustEqual "New"
+        jsonResponse \ "data" \ "ASSET" must haveClass[JsObject]
+        (jsonResponse \ "data" \ "ASSET" \ "STATUS").as[String] mustEqual "New"
       }
     }
   } // The Asset API

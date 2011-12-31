@@ -101,15 +101,16 @@ class ApiSpec extends models.DatabaseSpec with SpecHelpers {
       val headers = s.value._2
       val response = s.value._3
       val json = Json.parse(response)
+      val jsData = json \ "data"
       val status: Boolean = code == 200 &&
         headers.contains("Content-Type") &&
         headers("Content-Type").contains(JsonOutput().contentType) &&
-        (json \ "Status").isInstanceOf[JsString] &&
-        (json \ "Status").as[String].equals("Ok") &&
-        (json \ "Data").isInstanceOf[JsObject] &&
-        (json \ "Data" \ "TestList").isInstanceOf[JsArray] &&
-        (json \ "Data" \ "TestList")(0).isInstanceOf[JsObject] &&
-        ((json \ "Data" \ "TestList")(0) \ "id").as[Long] == 123L;
+        (jsData \ "Status").isInstanceOf[JsString] &&
+        (jsData \ "Status").as[String].equals("Ok") &&
+        (jsData \ "Data").isInstanceOf[JsObject] &&
+        (jsData \ "Data" \ "TestList").isInstanceOf[JsArray] &&
+        (jsData \ "Data" \ "TestList")(0).isInstanceOf[JsObject] &&
+        ((jsData \ "Data" \ "TestList")(0) \ "id").as[Long] == 123L;
       result(status, "Got expected JSON response", ("Invalid JSON response for " + s.value), s)
     }
   }
