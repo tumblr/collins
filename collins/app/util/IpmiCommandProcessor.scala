@@ -13,7 +13,6 @@ import play.api.libs.concurrent.{Redeemed, Thrown}
 
 import scala.collection.mutable.StringBuilder
 import scala.sys.process._
-import java.util.concurrent.TimeUnit
 
 class IpmiCommandProcessor extends Actor {
   def receive = {

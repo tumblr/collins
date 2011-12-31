@@ -24,7 +24,7 @@ class AssetApiSpec extends models.DatabaseSpec with SpecHelpers {
       }
       "Non alpha-num is rejected" >> {
         val request = getRequest(MockRequest(path = "/api/asset/"))
-        val result = Extract.from(api.updateAsset("^*$lasc$").apply(request))
+        val result = Extract.from(api.updateAsset("^*$lkas$").apply(request))
         result._1 mustEqual(400)
       }
     }

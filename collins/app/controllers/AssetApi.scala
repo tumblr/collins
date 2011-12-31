@@ -60,13 +60,20 @@ trait AssetApi {
 
   // POST /api/asset/:tag
   def updateAsset(tag: String) = SecureAction { implicit req =>
-    val assetUpdater = actions.UpdateAsset.get()
-    val rd = assetUpdater.execute(tag) match {
-      case Left(err) => err
-      case Right(status) =>
-        ResponseData(Results.Ok, JsObject(Map("SUCCESS" -> JsBoolean(status))))
+    AsyncResult {
+      BackgroundProcessor.send(AssetUpdateProcessor(tag)) { case(ex,res) =>
+        val rd: ResponseData = ex.map { err =>
+          Api.getErrorMessage(err.getMessage)
+        }.orElse{
+          res.get match {
+            case Left(err) => Some(err)
+            case Right(success) =>
+              Some(ResponseData(Results.Ok, JsObject(Map("SUCCESS" -> JsBoolean(success)))))
+          }
+        }.get
+        formatResponseData(rd)
+      }
     }
-    formatResponseData(rd)
   }(SecuritySpec(true, Seq("infra")))
 
   // DELETE /api/asset/:tag

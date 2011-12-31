@@ -2,7 +2,8 @@ package controllers
 package actions
 
 import models.{Asset, AssetLifecycle}
-import models.AssetMeta.Enum.ChassisTag
+import models.AssetMeta.Enum.{ChassisTag, RackPosition}
+import util.Helpers.formatPowerPort
 
 import play.api.data._
 import play.api.mvc._
@@ -14,15 +15,20 @@ object UpdateAsset {
       "LLDP" -> optional(text(1)),
       ChassisTag.toString -> optional(text(1)),
       "ATTRIBUTE" -> optional(text(3)),
-      "form" -> ignored(None)
+      RackPosition.toString -> optional(text(1)),
+      formatPowerPort("A") -> optional(text(1)),
+      formatPowerPort("B") -> optional(text(1))
     )
   )
-  def get() = new UpdateAsset(None, None, None, None, None)
-  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, Some(form))
+  def get() = new UpdateAsset(None, None, None, None, None, None, None)
+  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, None, None, None)
   def toMap(form: UpdateAsset): Map[String,String] = Map.empty ++
     form.lshw.map(s => Map("LSHW" -> s)).getOrElse(Map.empty) ++
     form.lldp.map(s => Map("LLDP" -> s)).getOrElse(Map.empty) ++
     form.chassisTag.map(s => Map(ChassisTag.toString -> s)).getOrElse(Map.empty) ++
+    form.rackPosition.map(s => Map(RackPosition.toString -> s)).getOrElse(Map.empty) ++
+    form.powerPort1.map(s => Map(formatPowerPort("A") -> s)).getOrElse(Map.empty) ++
+    form.powerPort2.map(s => Map(formatPowerPort("B") -> s)).getOrElse(Map.empty) ++
     form.attributes
 }
 
@@ -31,7 +37,9 @@ private[controllers] case class UpdateAsset(
   lldp: Option[String],
   chassisTag: Option[String],
   attribute: Option[String],
-  form: Option[Form[UpdateAsset]] = None)
+  rackPosition: Option[String],
+  powerPort1: Option[String],
+  powerPort2: Option[String])
 {
 
   def attributes(): Map[String,String] = attribute.map(s => attributes(s)).getOrElse(Map.empty)
