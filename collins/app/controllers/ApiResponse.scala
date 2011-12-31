@@ -33,6 +33,9 @@ object ApiResponse {
     formatJsonMessage(status, jso)
   }
 
+  def isJsonErrorMessage(js: JsValue): Boolean = {
+    (js \ "status").asOpt[String].map(e => e.contains("error")).getOrElse(false)
+  }
   def getJsonErrorMessage(js: JsValue, default: String) = {
     val isError = (js \ "status").asOpt[String].map(e => e.contains("error")).getOrElse(false)
     if (isError) {
@@ -43,12 +46,12 @@ object ApiResponse {
   }
 
   def formatJsonError(msg: String, ex: Option[Throwable]): JsObject = {
-    val map = Map("message" -> msg)
+    val map = Map("message" -> JsString(msg))
     val exMap = ex.map { e =>
-      Map("details" -> formatException(e))
+      Map("details" -> JsObject(formatException(e).map(kv => kv._1 -> JsString(kv._2))))
     }.getOrElse(Map.empty)
     val dataMap = map ++ exMap
-    formatJsonMessage("error", dataMap)
+    formatJsonMessage("error", JsObject(dataMap))
   }
 
   def bashError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]) = {
@@ -107,7 +110,7 @@ Message       %s
     status(output).as(contentTypeWithCharset(TextOutput()))
   }
 
-  private def formatException(ex: Throwable) = {
+  private def formatException(ex: Throwable): Map[String,String] = {
     Map("classOf" -> ex.getClass.toString,
         "message" -> ex.getMessage,
         "stackTrace" -> ex.getStackTrace.map { _.toString }.mkString("\n"))
@@ -126,7 +129,10 @@ trait ApiResponse extends Controller {
       case o: BashOutput =>
         response.status(formatBashResponse(response.data) + "\n").as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: JsonOutput =>
-        val rewritten = ApiResponse.formatJsonMessage(response.status, response.data)
+        val rewritten = ApiResponse.isJsonErrorMessage(response.data) match {
+          case true => response.data
+          case false => ApiResponse.formatJsonMessage(response.status, response.data)
+        }
         response.status(Json.stringify(rewritten)).as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: HtmlOutput =>
         val e = new Exception("Unhandled view")
