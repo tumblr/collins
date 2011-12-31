@@ -107,7 +107,7 @@ $(document).ready(function() {
       "url": sSource,
       "data": aoData,
       "success": function(json) {
-        json.iTotalRecords = json.Pagination.TotalResults;
+        json.iTotalRecords = json.data.Pagination.TotalResults;
         json.iTotalDisplayRecords = json.iTotalRecords;
         fnCallback(json);
       }
@@ -135,7 +135,7 @@ $(document).ready(function() {
       "sDom": "<'row'<'span7'l><'span7'f>r>t<'row'<'span7'i><'span7'p>>",
       "iDisplayLength": 10,
       "fnServerData": fnLogProcessing,
-      "sAjaxDataProp": "Data",
+      "sAjaxDataProp": "data.Data",
       "aoColumns": [
         { "mDataProp": "CREATED" },
         { "mDataProp": "SOURCE", "bSortable": false },

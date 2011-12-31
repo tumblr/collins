@@ -58,7 +58,8 @@ object Api {
     }
   }
 
-  def getErrorMessage(msg: String, status: Results.Status = Results.BadRequest) = {
-    ResponseData(status, JsObject(Map("ERROR_DETAILS" -> JsString(msg))))
+  def getErrorMessage(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable] = None) = {
+    val json = ApiResponse.formatJsonError(msg, ex)
+    ResponseData(status, json)
   }
 }
