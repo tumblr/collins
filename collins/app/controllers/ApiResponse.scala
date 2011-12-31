@@ -9,6 +9,48 @@ object ApiResponse {
   import Results._
   import OutputType.contentTypeWithCharset
 
+  def formatJsonMessage(status: String, data: JsObject): JsObject = {
+    JsObject(Map(
+      "status" -> JsString(status),
+      "data" -> data
+    ))
+  }
+  def formatJsonMessage(status: Results.Status, data: JsObject): JsObject = {
+    formatJsonMessage(statusToString(status), data)
+  }
+  def formatJsonMessage[V](status: Results.Status, data: Map[String,V])(implicit m: Manifest[V]): JsObject = {
+    formatJsonMessage(statusToString(status), data)
+  }
+  def formatJsonMessage[V](status: String, data: Map[String,V])(implicit m: Manifest[V]): JsObject = {
+    val jso = m match {
+      case s if s == Manifest.classType(classOf[String]) =>
+        JsObject(data.map(kv => kv._1 -> JsString(kv._2.asInstanceOf[String])))
+      case j if j == Manifest.classType(classOf[JsValue]) =>
+        JsObject(data.asInstanceOf[Map[String,JsValue]])
+      case _ =>
+        throw new RuntimeException("Unhandled conversion for Map with values of type " + m.toString)
+    }
+    formatJsonMessage(status, jso)
+  }
+
+  def getJsonErrorMessage(js: JsValue, default: String) = {
+    val isError = (js \ "status").asOpt[String].map(e => e.contains("error")).getOrElse(false)
+    if (isError) {
+      (js \ "data" \ "message").asOpt[String].getOrElse(default)
+    } else {
+      default
+    }
+  }
+
+  def formatJsonError(msg: String, ex: Option[Throwable]): JsObject = {
+    val map = Map("message" -> msg)
+    val exMap = ex.map { e =>
+      Map("details" -> formatException(e))
+    }.getOrElse(Map.empty)
+    val dataMap = map ++ exMap
+    formatJsonMessage("error", dataMap)
+  }
+
   def bashError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]) = {
     val exMap = ex.map { e => formatException(e) }.getOrElse(Map.empty)
     val exMsg = exMap.map { case(k,v) =>
@@ -16,25 +58,35 @@ object ApiResponse {
     }.mkString("\n")
     val output =
 """STATUS="error";
-DATA_MESSAGE="%s";
+DATA_MESSAGE='%s';
 %s
 """.format(msg, exMsg)
     status(output).as(contentTypeWithCharset(BashOutput()))
   }
 
+  def statusToString(status: Results.Status): String = {
+    status.header.status match {
+      case 200 => "successful -> ok"
+      case 201 => "successful -> created"
+      case 202 => "successful -> accepted"
+      case ok if ok >= 200 && ok < 300 => "successful -> other"
+      case 400 => "client error -> bad request"
+      case 401 => "client error -> unauthorized"
+      case 403 => "client error -> forbidden"
+      case 404 => "client error -> not found"
+      case 405 => "client error -> method not allowed"
+      case 406 => "client error -> not acceptable"
+      case 409 => "client error -> conflict"
+      case userErr if userErr >= 400 && userErr < 500 => "client error -> unknown"
+      case 500 => "server error -> internal server error"
+      case 501 => "server error -> not implemented"
+      case srvErr if srvErr >= 500 => "server error -> unknown"
+      case n => "unknown -> %d".format(n)
+    }
+  }
+
   def jsonError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]) = {
-    val map = Map("message" -> JsString(msg))
-    val exMap = ex.map { e =>
-      val details = formatException(e).map { case(k,v) =>
-        k -> JsString(v)
-      }
-      Map("details" -> JsObject(details))
-    }.getOrElse(Map.empty)
-    val dataMap = map ++ exMap
-    val output: JsValue = JsObject(Map(
-      "status" -> JsString("error"),
-      "data" -> JsObject(dataMap)
-    ))
+    val output: JsValue = formatJsonError(msg, ex)
     status(output).as(contentTypeWithCharset(JsonOutput()))
   }
 
@@ -74,7 +126,8 @@ trait ApiResponse extends Controller {
       case o: BashOutput =>
         response.status(formatBashResponse(response.data) + "\n").as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: JsonOutput =>
-        response.status(Json.stringify(response.data)).as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
+        val rewritten = ApiResponse.formatJsonMessage(response.status, response.data)
+        response.status(Json.stringify(rewritten)).as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: HtmlOutput =>
         val e = new Exception("Unhandled view")
         e.printStackTrace()

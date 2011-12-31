@@ -7,7 +7,6 @@ import views._
 
 import akka.util.duration._
 import play.api._
-import play.api.libs.json._
 import play.api.mvc._
 import play.api.data._
 
@@ -49,8 +48,7 @@ trait Resources extends Controller {
           case Results.Created =>
             Redirect(app.routes.Resources.index).flashing("success" -> "Asset successfully created")
           case _ =>
-            val errJs = rd.data.value.getOrElse("ERROR_DETAILS", JsString("Error processing request"))
-            val errStr = errJs.as[String]
+            val errStr = ApiResponse.getJsonErrorMessage(rd.data, "Error processing request")
             Redirect(app.routes.Resources.displayCreateForm(atype)).flashing("error" -> errStr)
         }
       }
