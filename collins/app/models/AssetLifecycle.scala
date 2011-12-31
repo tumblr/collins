@@ -81,6 +81,7 @@ object AssetLifecycle {
 
   protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     val requiredKeys = Set(RackPosition.toString, formatPowerPort("A"), formatPowerPort("B"))
+    println(options)
     requiredKeys.find(key => !options.contains(key)).map { not_found =>
       return Left(new Exception(not_found + " parameter not specified"))
     }
