@@ -1,28 +1,39 @@
 package models
 
+import test.ApplicationHelper
 import org.specs2.mutable._
 import anorm._
 import anorm.defaults._
+import play.api.Play
+import play.api.test.FakeApplication
 
-class StatusSpec extends DatabaseSpec {
+class StatusSpec extends Specification {
+  
+  "Status Model Specification".title
+
   args(sequential = true)
+
+  step {
+    Play.start(FakeApplication())
+  }
+
   "Status" should {
 
-    "Support findById" >> {
+    "Support findById" in {
       Status.findById(1) must beSome
     }
 
-    "CRUD" >> {
+    "CRUD" in {
       val status = Status("test1", "New test")
 
-      "CREATE" >> {
+      "CREATE" in {
         Model.withConnection { implicit con =>
           val created = Status.create(status)
           created.id.isDefined must beTrue
         }
       }
 
-      "READ" >> {
+      "READ" in {
         Model.withConnection { implicit con =>
           val _test1 = Status.find("name={name}").on('name -> "test1").first()
           _test1 must beSome
@@ -33,7 +44,7 @@ class StatusSpec extends DatabaseSpec {
         }
       }
 
-      "UPDATE" >> {
+      "UPDATE" in {
         Model.withConnection { implicit con =>
           val test = Status.find("name={name}").on('name -> "test1").single()
           Status.update(test.copy(description = "updated test")) mustEqual 1
@@ -41,7 +52,7 @@ class StatusSpec extends DatabaseSpec {
         }
       }
 
-      "DELETE" >> {
+      "DELETE" in {
         Model.withConnection { implicit con =>
           val testId = Status.find("name={name}").on('name -> "test1").single().getId
           val query = Status.delete("id={id}").on('id -> testId).executeUpdate() mustEqual 1
@@ -49,6 +60,10 @@ class StatusSpec extends DatabaseSpec {
         }
       }
     }
+  }
+
+  step {
+    Play.stop()
   }
 
 }
