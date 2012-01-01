@@ -28,7 +28,7 @@ trait DatabaseSpec extends Specification {
     Play.stop()
   }
 
-  override def map(fs: => Fragments) = Step(evolveDb) ^ fs ^ Step(devolveDb)
+  override def map(fs: => Fragments) = Step(evolveDb) ^ super.map(fs) ^ Step(devolveDb)
 }
 
 

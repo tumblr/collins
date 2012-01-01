@@ -1,24 +1,33 @@
 package models
 
+import test.ApplicationHelper
 import org.specs2.mutable._
 import util.AssetStateMachine
+import play.api.Play
+import play.api.test.FakeApplication
 
-class AssetSpec extends DatabaseSpec {
+class AssetSpec extends Specification {
+
+  "Asset Model Specification".title
 
   args(sequential = true)
 
+  step {
+    Play.start(FakeApplication())
+  }
+
   "Asset" should {
 
-    "CRUD" >> {
+    "CRUD" in {
       val _asset = Asset("tumblrtag2", Status.Enum.Incomplete, AssetType.Enum.ServerNode)
 
-      "CREATE" >> {
+      "CREATE" in {
         val result = Model.withConnection { implicit con => Asset.create(_asset) }
         result.id.isDefined must beTrue
         result.getId must beGreaterThan(1L)
       }
 
-      "UPDATE" >> {
+      "UPDATE" in {
         Model.withConnection { implicit con =>
           val asset = Asset.findByTag("tumblrtag2").get
           AssetStateMachine(asset).update().executeUpdate() mustEqual(1)
@@ -27,7 +36,7 @@ class AssetSpec extends DatabaseSpec {
         }
       }
 
-      "DELETE" >> {
+      "DELETE" in {
         Model.withConnection { implicit con =>
           val tag2 = Asset.findByTag("tumblrtag2").get
           val query = Asset.delete("id={id}").on('id -> tag2.getId).executeUpdate() mustEqual 1
@@ -36,7 +45,7 @@ class AssetSpec extends DatabaseSpec {
       }
     }
 
-    "Support getters/finders" >> {
+    "Support getters/finders" in {
       "findByTag" in {
         Asset.findByTag("tumblrtag1") must beSome
       }
@@ -58,8 +67,8 @@ class AssetSpec extends DatabaseSpec {
         success
       }
 
-      "getMetaAttributes" >> {
-        "one" >> {
+      "getMetaAttributes" in {
+        "one" in {
           val _asset = Asset.findById(1)
           _asset must beSome[Asset]
           val asset = _asset.get
@@ -70,7 +79,7 @@ class AssetSpec extends DatabaseSpec {
           attrib.getNameEnum must beSome(AssetMeta.Enum.ChassisTag)
         }
 
-        "none" >> {
+        "none" in {
           val _asset = Asset.findById(1)
           _asset must beSome[Asset]
           val asset = _asset.get
@@ -107,4 +116,8 @@ class AssetSpec extends DatabaseSpec {
       } // getMetaAttributes
     } // support getters/finders
   } // Asset should
+
+  step {
+    Play.stop()
+  }
 }

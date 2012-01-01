@@ -38,9 +38,7 @@ private[controllers] class BackgroundProcessor extends Actor {
 }
 
 object BackgroundProcessor {
-  lazy val ref = {
-    actorOf[BackgroundProcessor].start()
-  }
+  lazy val ref = actorOf[BackgroundProcessor].start()
 
   type SendType[T] = Tuple2[Option[Throwable], Option[T]]
   def send[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]) = {

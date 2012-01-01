@@ -21,9 +21,7 @@ class IpmiCommandProcessor extends Actor {
 }
 
 object IpmiCommandProcessor {
-  lazy val ref = {
-    actorOf[IpmiCommandProcessor].start()
-  }
+  lazy val ref = actorOf[IpmiCommandProcessor].start()
 
   def send[A](cmd: IpmiCommand)(result: Option[String] => A) = {
     ref.?(cmd)(timeout = cmd.timeout).mapTo[Option[String]].asPromise.extend1 {

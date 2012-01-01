@@ -14,7 +14,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
 
   override def onStart(app: Application) {
     verifyConfiguration(app.configuration)
-
     // FIXME Run evolutions if needed
     val auth = app.configuration.getSub("authentication") match {
       case None => AuthenticationProvider.Default
@@ -34,8 +33,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     setCryptoKey(key)
   }
   override def onStop(app: Application) {
-    IpmiCommandProcessor.ref.stop()
-    BackgroundProcessor.ref.stop()
+    super.onStop(app)
   }
 
   override def onError(request: RequestHeader, ex: Throwable): Result = {
