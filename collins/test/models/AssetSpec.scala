@@ -1,123 +1,143 @@
 package models
 
-import test.ApplicationHelper
-import org.specs2.mutable._
 import util.AssetStateMachine
-import play.api.Play
-import play.api.test.FakeApplication
+import test.ApplicationSpecification
 
-class AssetSpec extends Specification {
+import org.specs2._
+import specification._
+
+class AssetSpec extends ApplicationSpecification {
 
   "Asset Model Specification".title
 
   args(sequential = true)
 
-  step {
-    Play.start(FakeApplication())
-  }
+  "The Asset Model" should {
 
-  "Asset" should {
+    "Support CRUD Operations" in {
 
-    "CRUD" in {
-      val _asset = Asset("tumblrtag2", Status.Enum.Incomplete, AssetType.Enum.ServerNode)
-
-      "CREATE" in {
-        val result = Model.withConnection { implicit con => Asset.create(_asset) }
+      "CREATE" in new mockasset {
+        val result = Model.withConnection { implicit con => Asset.create(newAsset) }
         result.id.isDefined must beTrue
         result.getId must beGreaterThan(1L)
       }
 
-      "UPDATE" in {
+      "UPDATE" in new mockasset {
         Model.withConnection { implicit con =>
-          val asset = Asset.findByTag("tumblrtag2").get
-          AssetStateMachine(asset).update().executeUpdate() mustEqual(1)
-          val a2 = Asset.findByTag("tumblrtag2").get
-          a2.getStatus().getId mustEqual(Status.Enum.New.id)
+          val maybeAsset = Asset.findByTag(assetTag)
+          maybeAsset must beSome[Asset]
+          val realAsset = maybeAsset.get
+          AssetStateMachine(realAsset).update().executeUpdate() mustEqual 1
+          Asset.findByTag(assetTag).map { a =>
+            a.getStatus().getId mustEqual(Status.Enum.New.id)
+          }.getOrElse(failure("Couldn't find asset but expected to"))
         }
       }
 
-      "DELETE" in {
+      "DELETE" in new mockasset {
         Model.withConnection { implicit con =>
-          val tag2 = Asset.findByTag("tumblrtag2").get
-          val query = Asset.delete("id={id}").on('id -> tag2.getId).executeUpdate() mustEqual 1
-          Asset.findById(tag2.getId) must beNone
+          Asset.findByTag(assetTag).map { a =>
+            Asset.delete("id={id}").on('id -> a.getId).executeUpdate() mustEqual 1
+            Asset.findById(a.getId) must beNone
+          }.getOrElse(failure("Couldn't find asset but expected to"))
         }
       }
     }
 
     "Support getters/finders" in {
-      "findByTag" in {
-        Asset.findByTag("tumblrtag1") must beSome
+
+      "findByTag" in new concreteasset {
+        Asset.findByTag(assetTag) must beSome[Asset]
       }
 
-      "findByMeta" in {
+      "findLikeTag" in new concreteasset {
+        val page = PageParams(0, 10, "")
+        val assets = Asset.findLikeTag(assetTag.take(assetTag.size - 1), page)
+        assets.total must beGreaterThan(0L)
+        assets.items must have {_.tag == assetTag}
+      }
+
+      "findByMeta" in new concreteasset {
         val criteria = List(
           AssetMeta.Enum.ChassisTag -> "chassis tag abc"
         )
         val assets = Asset.findByMeta(criteria)
         assets must haveSize(1)
-        assets(0).getMetaAttributes().foreach { attrib =>
-          attrib.getNameEnum() match {
-            case AssetMeta.Enum.ChassisTag =>
-              attrib.getValue() mustEqual "chassis tag abc"
-            case _ =>
-              // ignored
-          }
+        atLeastOnceWhen(assets(0).getMetaAttributes()) {
+          case a if a.getNameEnum() == Some(AssetMeta.Enum.ChassisTag) =>
+            a.getValue() mustEqual "chassis tag abc"
         }
-        success
       }
 
       "getMetaAttributes" in {
-        "one" in {
-          val _asset = Asset.findById(1)
-          _asset must beSome[Asset]
-          val asset = _asset.get
+        "one" in new concreteasset {
+          val maybeAsset = Asset.findById(assetId)
+          maybeAsset must beSome[Asset]
+          val asset = maybeAsset.get
           val attribs = asset.getMetaAttributes(Set(AssetMeta.Enum.ChassisTag))
           attribs must haveSize(1)
           val attrib = attribs.head
-          attrib.getValue mustEqual("chassis tag abc")
+          attrib.getValue mustEqual "chassis tag abc"
           attrib.getNameEnum must beSome(AssetMeta.Enum.ChassisTag)
         }
 
-        "none" in {
-          val _asset = Asset.findById(1)
-          _asset must beSome[Asset]
-          val asset = _asset.get
+        "none" in new concreteasset {
+          val maybeAsset = Asset.findById(assetId)
+          maybeAsset must beSome[Asset]
+          val asset = maybeAsset.get
           val attribs = asset.getMetaAttributes()
           attribs.size must be_>=(2)
         }
 
-        "many" in {
-          val _asset = Asset.findById(1)
-          _asset must beSome[Asset]
-          val asset = _asset.get
-          asset.tag mustEqual "tumblrtag1"
-          asset.getStatus.name mustEqual "Incomplete"
+        "many" in new concreteasset {
+          val maybeAsset = Asset.findById(assetId)
+          maybeAsset must beSome[Asset]
+          val asset = maybeAsset.get
+          asset.tag mustEqual assetTag
+          asset.getStatus.name mustEqual assetStatus.toString
           asset.getType.name mustEqual "Server Node"
           val attribs = asset.getMetaAttributes(Set(
             AssetMeta.Enum.ServiceTag,
             AssetMeta.Enum.ChassisTag))
-          attribs must not be empty
-          attribs must haveSize(2)
-          attribs.foreach { attrib =>
-            val enum = attrib.getNameEnum()
-            enum must beSome
-            enum.get match {
-              case AssetMeta.Enum.ServiceTag =>
-                attrib.getValue mustEqual "dell service tag 123"
-              case AssetMeta.Enum.ChassisTag =>
-                attrib.getValue mustEqual "chassis tag abc"
-              case v =>
-                failure("Unexpected value " + v)
-            }
+          attribs must have size(2)
+          val enums = attribs.map { _.getNameEnum() }.filter { _.isDefined }.map { _.get }
+          enums must contain(AssetMeta.Enum.ServiceTag, AssetMeta.Enum.ChassisTag).only
+          forallWhen(attribs) {
+            case a if a.getNameEnum() == Some(AssetMeta.Enum.ServiceTag) =>
+              a.getValue mustEqual "dell service tag 123"
+            case b if b.getNameEnum() == Some(AssetMeta.Enum.ChassisTag) =>
+              b.getValue mustEqual "chassis tag abc"
           }
-          success
         } //many
       } // getMetaAttributes
+
+      "getAllAttributes" in new concreteasset {
+        val maybeAsset = Asset.findByTag(assetTag)
+        maybeAsset must beSome[Asset]
+        val asset = maybeAsset.get
+        val attributes = asset.getAllAttributes
+        attributes.ipmi must beSome.which { ipmi =>
+          ipmi.dottedAddress mustEqual "10.0.0.2"
+          ipmi.dottedGateway mustEqual "10.0.0.1"
+        }
+      }
+
     } // support getters/finders
   } // Asset should
 
-  step {
-    Play.stop()
+  trait mockasset extends Scope {
+    val assetTag = "tumblrtag2"
+    val assetStatus = Status.Enum.Incomplete
+    val assetType = AssetType.Enum.ServerNode
+    val newAsset = Asset(assetTag, assetStatus, assetType)
   }
+
+  trait concreteasset extends Scope {
+    val assetTag = "tumblrtag1"
+    val assetStatus = Status.Enum.Incomplete
+    val assetType = AssetType.Enum.ServerNode
+    val assetId = 1
+  }
+
+
 }

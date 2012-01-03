@@ -20,6 +20,10 @@ object Status extends Magic[Status](Some("status")) {
     Status.find("id={id}").on('id -> id).first()
   }
 
+  def findByName(name: String): Option[Status] = Model.withConnection { implicit con =>
+    Status.find("name={name}").on('name -> name).first()
+  }
+
   def create(statuses: Seq[Status])(implicit con: Connection): Seq[Status] = {
     statuses.foldLeft(List[Status]()) { case(list, status) =>
       if (status.id.isDefined) throw new IllegalArgumentException("Can only create for status with id 0")

@@ -1,29 +1,39 @@
 package models
 
-import test.ApplicationHelper
-import org.specs2.mutable._
-import anorm._
-import anorm.defaults._
-import play.api.Play
-import play.api.test.FakeApplication
+import test.ApplicationSpecification
 
-class StatusSpec extends Specification {
+import org.specs2._
+import specification._
+
+class StatusSpec extends ApplicationSpecification {
   
   "Status Model Specification".title
 
   args(sequential = true)
 
-  step {
-    Play.start(FakeApplication())
-  }
+  "The Status Model" should {
 
-  "Status" should {
-
-    "Support findById" in {
-      Status.findById(1) must beSome
+    "Handle validation" in {
+      "Disallow empty names" in {
+        Status("", "Description") must throwA[IllegalArgumentException]
+      }
+      "Disallow empty descriptions" in {
+        Status("Name", "") must throwA[IllegalArgumentException]
+      }
     }
 
-    "CRUD" in {
+    "Support find methods" in {
+      "findById" in {
+        Status.findById(1) must beSome[Status]
+        Status.findById(0) must beNone
+      }
+      "findByName" in {
+        Status.findByName(Status.Enum.New.toString) must beSome[Status]
+        Status.findByName("fizzbuzz") must beNone
+      }
+    }
+
+    "Support CRUD Operations" in {
       val status = Status("test1", "New test")
 
       "CREATE" in {
@@ -35,35 +45,31 @@ class StatusSpec extends Specification {
 
       "READ" in {
         Model.withConnection { implicit con =>
-          val _test1 = Status.find("name={name}").on('name -> "test1").first()
-          _test1 must beSome
+          val _test1 = Status.findByName(status.name)
+          _test1 must beSome[Status]
           val test1 = _test1.get
           test1.getId must be_>=(5)
-          test1.name mustEqual "test1"
-          test1.description mustEqual "New test"
+          test1.name mustEqual status.name
+          test1.description mustEqual status.description
         }
       }
 
       "UPDATE" in {
         Model.withConnection { implicit con =>
-          val test = Status.find("name={name}").on('name -> "test1").single()
+          val test = Status.findByName(status.name).get
           Status.update(test.copy(description = "updated test")) mustEqual 1
-          Status.find("name={name}").on('name -> "test1").single().description mustEqual "updated test"
+          Status.find("name={name}").on('name -> status.name).single().description mustEqual "updated test"
         }
       }
 
       "DELETE" in {
         Model.withConnection { implicit con =>
-          val testId = Status.find("name={name}").on('name -> "test1").single().getId
+          val testId = Status.findByName(status.name).get.getId
           val query = Status.delete("id={id}").on('id -> testId).executeUpdate() mustEqual 1
           Status.findById(testId) must beNone
         }
       }
     }
-  }
-
-  step {
-    Play.stop()
   }
 
 }
