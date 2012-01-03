@@ -1,9 +1,14 @@
 package util
 
-import org.specs2.mutable._
+import test.{FakeRequest, FakeRequestHeader}
+
+import org.specs2._
+import specification._
+import matcher.Matcher
+
 import play.api.mvc._
 
-class OutputTypeSpec extends Specification with controllers.SpecHelpers {
+class OutputTypeSpec extends mutable.Specification {
 
   def isJson(o: OutputType) = o must haveClass[JsonOutput]
   def isBash(o: OutputType) = o must haveClass[BashOutput]
@@ -15,80 +20,80 @@ class OutputTypeSpec extends Specification with controllers.SpecHelpers {
 
       "JSON" >> {
         "Based on Path" >> {
-          val req1 = getRequestHeader(MockRequest(path = "/api/fizz.json"))
+          val req1 = FakeRequestHeader(uri = "/api/fizz.json")
           OutputType(req1) must beSome.which(isJson)
         }
         "Based on Query String" >> {
-          val req1 = getRequestHeader(MockRequest(queryString = Map("outputType" -> Seq("json"))))
+          val req1 = FakeRequestHeader(uri = "/api/fizz?outputType=json")
           OutputType(req1) must beSome.which(isJson)
         }
         "Based on Headers" >> {
-          val req1 = getRequestHeader(MockRequest(headers = Seq("application/json")))
+          val req1 = FakeRequestHeader.withAcceptHeader("application/json")
           OutputType(req1) must beSome.which(isJson)
         }
         "Based on Request Body" >> {
           val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("json")))
-          val req1 = getRequest(MockRequest(body = body))
+          val req1 = FakeRequest(body)
           OutputType(req1) must beSome.which(isJson)
         }
       } // JSON
 
       "Bash" >> {
         "Based on Path" >> {
-          val req1 = getRequestHeader(MockRequest(path = "/api/fizz.sh"))
+          val req1 = FakeRequestHeader(uri = "/api/fizz.sh")
           OutputType(req1) must beSome.which(isBash)
         }
         "Based on Query String" >> {
-          val req1 = getRequestHeader(MockRequest(queryString = Map("outputType" -> Seq("sh"))))
+          val req1 = FakeRequestHeader(uri = "/api/fizz?outputType=sh")
           OutputType(req1) must beSome.which(isBash)
         }
         "Based on Headers" >> {
-          val req1 = getRequestHeader(MockRequest(headers = Seq("text/x-shellscript")))
+          val req1 = FakeRequestHeader.withAcceptHeader("text/x-shellscript")
           OutputType(req1) must beSome.which(isBash)
         }
         "Based on Request Body" >> {
           val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("sh")))
-          val req1 = getRequest(MockRequest(body = body))
+          val req1 = FakeRequest(body)
           OutputType(req1) must beSome.which(isBash)
         }
       } // Bash
 
       "Text" >> {
         "Based on Path" >> {
-          val req1 = getRequestHeader(MockRequest(path = "/api/fizz.txt"))
+          val req1 = FakeRequestHeader(uri = "/api/fizz.txt")
           OutputType(req1) must beSome.which(isText)
         }
         "Based on Query String" >> {
-          val req1 = getRequestHeader(MockRequest(queryString = Map("outputType" -> Seq("text"))))
+          val req1 = FakeRequestHeader(uri = "/api/fizz?outputType=text")
           OutputType(req1) must beSome.which(isText)
         }
         "Based on Headers" >> {
-          val req1 = getRequestHeader(MockRequest(headers = Seq("text/plain")))
+          val req1 = FakeRequestHeader.withAcceptHeader("text/plain")
           OutputType(req1) must beSome.which(isText)
         }
         "Based on Request Body" >> {
           val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("text")))
-          val req1 = getRequest(MockRequest(body = body))
+          val req1 = FakeRequest(body)
           OutputType(req1) must beSome.which(isText)
         }
       } // Text
 
       "HTML" >> {
         "Based on Path" >> {
-          val req1 = getRequestHeader(MockRequest(path = "/api/fizz.html"))
+          val req1 = FakeRequestHeader(uri = "/api/fizz.html")
           OutputType(req1) must beSome.which(isHtml)
         }
         "Based on Query String" >> {
-          val req1 = getRequestHeader(MockRequest(queryString = Map("outputType" -> Seq("html"))))
+          val req1 = FakeRequestHeader(uri = "/api/fizz?outputType=html")
           OutputType(req1) must beSome.which(isHtml)
         }
         "Based on Headers" >> {
-          val req1 = getRequestHeader(MockRequest(headers = Seq("text/html")))
+          val req1 = FakeRequestHeader.withAcceptHeader("text/html")
           OutputType(req1) must beSome.which(isHtml)
         }
         "Based on Request Body" >> {
           val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("html")))
-          val req1 = getRequest(MockRequest(body = body))
+          val req1 = FakeRequest(body)
           OutputType(req1) must beSome.which(isHtml)
         }
       } // HTML
@@ -98,20 +103,20 @@ class OutputTypeSpec extends Specification with controllers.SpecHelpers {
     "Not be detected for" >> {
       "XML and other unsupported formats" >> {
         "Based on Path" >> {
-          val req1 = getRequestHeader(MockRequest(path = "/api/fizz.xml"))
+          val req1 = FakeRequestHeader(uri = "/api/fizz.xml")
           OutputType(req1) must beNone
         }
         "Based on Query String" >> {
-          val req1 = getRequestHeader(MockRequest(queryString = Map("outputType" -> Seq("xml"))))
+          val req1 = FakeRequestHeader(uri = "/api/fizz?outputType=xml")
           OutputType(req1) must beNone
         }
         "Based on Headers" >> {
-          val req1 = getRequestHeader(MockRequest(headers = Seq("text/xml")))
+          val req1 = FakeRequestHeader.withAcceptHeader("text/xml")
           OutputType(req1) must beNone
         }
         "Based on Request Body" >> {
           val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("xml")))
-          val req1 = getRequest(MockRequest(body = body))
+          val req1 = FakeRequest(body)
           OutputType(req1) must beNone
         }
       }
