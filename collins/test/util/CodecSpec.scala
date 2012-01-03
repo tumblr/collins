@@ -12,7 +12,7 @@ object CodecSpec extends Specification {
     "generate random strings" >> {
       val passwords = (1 to 100).map { _ => CryptoCodec.randomString(14) }
       passwords must have size(100)
-      passwords.foreach { _ must have size(14) }
+      ((_:String) must have size(14)).forall(passwords)
       passwords.distinct must have size(100)
     }
     "encode" >> {
@@ -38,6 +38,13 @@ object CodecSpec extends Specification {
       val encrypted = cryptoCodec.Encode(array)
       val decrypted = cryptoCodec.Decode(encrypted)
       decrypted must beSome(message)
+    }
+    "decode stored" >> {
+      val key = "jLloDCPFCPaSZmG6" // Generated with CryptoCodec.randomString(16)
+      val codec = CryptoCodec(key)
+      val encrypted = "dab465c6a24fb8ac82c8f03c7623a6b8e5827a5d2baca8f7" // Encrypted with key
+      val decrypted = codec.Decode(encrypted)
+      decrypted must beSome("Hello World")
     }
     "decode usernames/passwords" >> {
       val message = "Hello World"
