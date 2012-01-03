@@ -7,9 +7,9 @@ import play.api.libs.Files._
 import play.api.mvc._
 import play.api.mvc.MultipartFormData._
 
-import org.specs2.mock._
+import test._
 
-class AssetApiSpec extends models.DatabaseSpec with SpecHelpers {
+class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
 
   args(sequential = true)
   val user = getLoggedInUser("infra")
@@ -18,22 +18,22 @@ class AssetApiSpec extends models.DatabaseSpec with SpecHelpers {
   "The Asset API" should {
     "Reject intake with bad tag" >> {
       "Empty is rejected" >> {
-        val request = getRequest(MockRequest(path = "/api/asset/"))
+        val request = FakeRequest("GET", "/api/asset/")
         val result = Extract.from(api.createAsset("").apply(request))
         result._1 mustEqual(400)
       }
       "Non alpha-num is rejected" >> {
-        val request = getRequest(MockRequest(path = "/api/asset/"))
+        val request = FakeRequest("GET", "/api/asset/")
         val result = Extract.from(api.updateAsset("^*$lkas$").apply(request))
         result._1 mustEqual(400)
       }
     }
     "Support a multi-step intake" >> {
-      val assetId = "testAsset123"
-      val assetUrl = "/api/asset/%s.json".format(assetId)
+      val assetTag = "testAsset123"
+      val assetUrl = "/api/asset/%s.json".format(assetTag)
       "Step 1 - Intake Started" >> {
-        val request = getRequest(MockRequest(path = assetUrl, method = "PUT"))
-        val result = Extract.from(api.createAsset(assetId).apply(request))
+        val request = FakeRequest("PUT", assetUrl)
+        val result = Extract.from(api.createAsset(assetTag).apply(request))
         result._1 mustEqual(201)
         val jsonResponse = Json.parse(result._3)
         jsonResponse \ "data" \ "ASSET" must haveClass[JsObject]
@@ -50,16 +50,16 @@ class AssetApiSpec extends models.DatabaseSpec with SpecHelpers {
           "CHASSIS_TAG" -> Seq("abbacadabra")
         ), dummy, Nil, Nil)
         val body = AnyContentAsMultipartFormData(mdf)
-        val request = getRequest(MockRequest(path = assetUrl, body = body, method = "POST"))
-        val result = Extract.from(api.updateAsset(assetId).apply(request))
+        val request = FakeRequest("POST", assetUrl).copy(body = body)
+        val result = Extract.from(api.updateAsset(assetTag).apply(request))
         result._1 mustEqual(200)
         val jsonResponse = Json.parse(result._3)
         jsonResponse \ "data" \ "SUCCESS" must haveClass[JsBoolean]
         (jsonResponse \ "data" \ "SUCCESS").as[Boolean] must beTrue
       }
       "Step 3 - Review Intake Data" >> {
-        val req = getRequest(MockRequest(path = "/api/asset/%s.json".format(assetId)))
-        val res = Extract.from(api.getAsset(assetId).apply(req))
+        val req = FakeRequest("GET", "/api/asset/%s.json".format(assetTag))
+        val res = Extract.from(api.getAsset(assetTag).apply(req))
         res._1 mustEqual(200)
         val jsonResponse = Json.parse(res._3)
         jsonResponse \ "data" \ "ASSET" must haveClass[JsObject]
