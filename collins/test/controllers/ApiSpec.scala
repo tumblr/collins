@@ -6,7 +6,6 @@ import util._
 import org.specs2._
 import specification._
 
-import org.specs2.matcher._
 import play.api.libs.json._
 import play.api.libs.Files._
 import play.api.mvc._
@@ -29,7 +28,7 @@ class ApiSpec extends ApplicationSpecification with ControllerSpec {
         }
         "Bash" >> {
           val res = getExtractedResponse(BashOutput().contentType)
-          res must provideBashResponse(200)
+          res must provideBashResponse
         }
         "JSON" >> {
           val res = getExtractedResponse(JsonOutput().contentType)
@@ -47,7 +46,7 @@ class ApiSpec extends ApplicationSpecification with ControllerSpec {
         }
         "Bash" >> {
           val res = getExtractedResponse(BashOutput().fileExtension)
-          res must provideBashResponse(200)
+          res must provideBashResponse
         }
         "JSON" >> {
           val res = getExtractedResponse(JsonOutput().fileExtension)
@@ -65,7 +64,7 @@ class ApiSpec extends ApplicationSpecification with ControllerSpec {
         }
         "Bash" >> {
           val res = getExtractedResponse(BashOutput().queryString._2)
-          res must provideBashResponse(200)
+          res must provideBashResponse
         }
         "JSON" >> {
           val res = getExtractedResponse(JsonOutput().queryString._2)
@@ -79,18 +78,16 @@ class ApiSpec extends ApplicationSpecification with ControllerSpec {
     } // Handle Content Type's correctly
   }
 
-  def provideBashResponse: ResponseMatcher = provideBashResponse(200)
-  def provideBashResponse(sc: Int) = new ResponseMatcher(BashOutput().contentType) {
-    override def expectedStatusCode = sc
+  def provideBashResponse = new ResponseMatcher(BashOutput().contentType) {
+    override def expectedStatusCode = 200
     override def responseMatches(txt: String): Boolean = {
       txt.contains("""Data_TestList_0_name="foo123";""") &&
       txt.contains("""Status="Ok";""");
     }
   }
 
-  def provideJsonResponse: ResponseMatcher = provideJsonResponse(200)
-  def provideJsonResponse(sc: Int) = new ResponseMatcher(JsonOutput().contentType) {
-    override def expectedStatusCode = sc
+  def provideJsonResponse = new ResponseMatcher(JsonOutput().contentType) {
+    override def expectedStatusCode = 200
     override def responseMatches(txt: String): Boolean = {
       val json = Json.parse(txt)
       val jsData = json \ "data"
@@ -103,9 +100,8 @@ class ApiSpec extends ApplicationSpecification with ControllerSpec {
     }
   }
 
-  def provideTextResponse: ResponseMatcher = provideTextResponse(200)
-  def provideTextResponse(sc: Int) = new ResponseMatcher(TextOutput().contentType) {
-    override def expectedStatusCode = sc
+  def provideTextResponse = new ResponseMatcher(TextOutput().contentType) {
+    override def expectedStatusCode = 200
     override def responseMatches(txt: String): Boolean = {
       txt.contains("Status\tOk")
     }
