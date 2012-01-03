@@ -6,7 +6,7 @@ import specification._
 import play.api.Play
 import play.api.test.FakeApplication
 
-trait ApplicationSpecification extends mutable.Specification {
+trait ApplicationSpecification extends mutable.Specification with ResourceFinder {
 
   def applicationSetup = {
     Play.start(
