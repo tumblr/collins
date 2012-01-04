@@ -1,6 +1,7 @@
 package models
 
 import Model.defaults._
+import util.Cache
 
 import anorm._
 import anorm.SqlParser._
@@ -19,10 +20,14 @@ object AssetType extends Magic[AssetType](Some("asset_type")) {
   }
 
   def findById(id: Int): Option[AssetType] = Model.withConnection { implicit con =>
-    AssetType.find("id={id}").on('id -> id).singleOption()
+    Cache.getOrElseUpdate("AssetType.findById(%d)".format(id)) {
+      AssetType.find("id={id}").on('id -> id).singleOption()
+    }
   }
   def findByName(name: String): Option[AssetType] = Model.withConnection { implicit con =>
-    AssetType.find("name={name}").on('name -> name).singleOption()
+    Cache.getOrElseUpdate("AssetType.findByName(%s)".format(name)) {
+      AssetType.find("name={name}").on('name -> name).singleOption()
+    }
   }
 
   def fromEnum(enum: AssetType.Enum): AssetType =

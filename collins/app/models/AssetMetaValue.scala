@@ -1,6 +1,7 @@
 package models
 
 import Model.defaults._
+import util.Cache
 
 import anorm._
 import anorm.SqlParser._
@@ -33,12 +34,13 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
 
   override def create(mv: AssetMetaValue)(implicit con: Connection): AssetMetaValue = {
     AssetMetaValue.insert(mv)
+    Cache.invalidate("AssetMetaValue.findMetaValues(%d)".format(mv.asset_meta_id.get))
     mv
   }
 
   def create(mvs: Seq[AssetMetaValue])(implicit con: Connection): Int = {
     mvs.foldLeft(0) { case(count, mv) =>
-      AssetMetaValue.insert(mv) match {
+      AssetMetaValue.create(mv) match {
         case _ => count + 1
       }
     }
@@ -50,7 +52,9 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
       where amv.asset_meta_id = {id}
     """
     Model.withConnection { implicit con =>
-      SQL(query).on('id -> meta_id).as(str("value") *).sorted
+      Cache.getOrElseUpdate("AssetMetaValue.findMetaValues(%d)".format(meta_id)) {
+        SQL(query).on('id -> meta_id).as(str("value") *).sorted
+      }
     }
   }
 
