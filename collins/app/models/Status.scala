@@ -1,6 +1,7 @@
 package models
 
 import Model.defaults._
+import util.Cache
 
 import anorm._
 import java.sql._
@@ -17,11 +18,15 @@ object Status extends Magic[Status](Some("status")) {
   }
 
   def findById(id: Int): Option[Status] = Model.withConnection { implicit con =>
-    Status.find("id={id}").on('id -> id).first()
+    Cache.getOrElseUpdate("Status.findById(%d)".format(id)) {
+      Status.find("id={id}").on('id -> id).first()
+    }
   }
 
   def findByName(name: String): Option[Status] = Model.withConnection { implicit con =>
-    Status.find("name={name}").on('name -> name).first()
+    Cache.getOrElseUpdate("Status.findByName(%s)".format(name)) {
+      Status.find("name={name}").on('name -> name).first()
+    }
   }
 
   def create(statuses: Seq[Status])(implicit con: Connection): Seq[Status] = {

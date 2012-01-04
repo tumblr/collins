@@ -2,8 +2,9 @@ package models
 
 import Model.defaults._
 
+import util.Cache
+
 import anorm._
-import play.api.cache.Cache
 import play.api.Play.current
 import java.sql._
 
@@ -33,12 +34,16 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
   }
 
   def findById(id: Int) = Model.withConnection { implicit con =>
-    AssetMeta.find("id={id}").on('id -> id).singleOption()
+    Cache.getOrElseUpdate("AssetMeta.findById(%d)".format(id)) {
+      AssetMeta.find("id={id}").on('id -> id).singleOption()
+    }
   }
 
   def findByName(name: String, con: Connection): Option[AssetMeta] = {
     implicit val c: Connection = con
-    AssetMeta.find("name={name}").on('name -> name).singleOption()
+    Cache.getOrElseUpdate("AssetMeta.findByName(%s)".format(name)) {
+      AssetMeta.find("name={name}").on('name -> name).singleOption()
+    }
   }
 
   def findByName(name: String): Option[AssetMeta] = Model.withConnection { con =>
@@ -48,10 +53,8 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
   def getViewable(): Seq[AssetMeta] = {
     // change to use stuff in Enum
     Model.withConnection { implicit connection =>
-      Cache.get[List[AssetMeta]]("AssetMeta.getViewable").getOrElse {
-        val res = AssetMeta.find("priority > -1 order by priority asc").list()
-        Cache.set("AssetMeta.getViewable", res)
-        res
+      Cache.getOrElseUpdate("AssetMeta.getViewable") {
+        AssetMeta.find("priority > -1 order by priority asc").list()
       }
     }
   }

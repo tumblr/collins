@@ -13,6 +13,8 @@ object Helpers {
     DATE_FORMAT.format(date)
   }
 
+  def formatDouble(d: Double) = "%.2f".format(100*d)
+
   private[this] val words = """([a-zA-Z]+)""".r
   private[this] val separators = """([^a-zA-Z]+)""".r
   def camelCase(value: String, sep: String = "") = {
