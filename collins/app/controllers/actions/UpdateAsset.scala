@@ -11,10 +11,10 @@ import play.api.mvc._
 object UpdateAsset {
   val FORM = Form(
     of(UpdateAsset.apply _, UpdateAsset.unapply _)(
-      "LSHW" -> optional(text(1)),
-      "LLDP" -> optional(text(1)),
+      "lshw" -> optional(text(1)),
+      "lldp" -> optional(text(1)),
       ChassisTag.toString -> optional(text(1)),
-      "ATTRIBUTE" -> optional(text(3)),
+      "attribute" -> optional(text(3)),
       RackPosition.toString -> optional(text(1)),
       formatPowerPort("A") -> optional(text(1)),
       formatPowerPort("B") -> optional(text(1))
@@ -23,8 +23,8 @@ object UpdateAsset {
   def get() = new UpdateAsset(None, None, None, None, None, None, None)
   def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, None, None, None)
   def toMap(form: UpdateAsset): Map[String,String] = Map.empty ++
-    form.lshw.map(s => Map("LSHW" -> s)).getOrElse(Map.empty) ++
-    form.lldp.map(s => Map("LLDP" -> s)).getOrElse(Map.empty) ++
+    form.lshw.map(s => Map("lshw" -> s)).getOrElse(Map.empty) ++
+    form.lldp.map(s => Map("lldp" -> s)).getOrElse(Map.empty) ++
     form.chassisTag.map(s => Map(ChassisTag.toString -> s)).getOrElse(Map.empty) ++
     form.rackPosition.map(s => Map(RackPosition.toString -> s)).getOrElse(Map.empty) ++
     form.powerPort1.map(s => Map(formatPowerPort("A") -> s)).getOrElse(Map.empty) ++
@@ -69,9 +69,9 @@ private[controllers] case class UpdateAsset(
     UpdateAsset.FORM.bindFromRequest.fold(
       hasErrors => Left("Error processing form data"),
       form => {
-        val om1: Option[Map[String,String]] = req.queryString.get("ATTRIBUTE").map(seq => attributes(seq))
+        val om1: Option[Map[String,String]] = req.queryString.get("attribute").map(seq => attributes(seq))
         val om2: Option[Map[String,String]] = req.body.asUrlFormEncoded.flatMap { m =>
-          m.get("ATTRIBUTE").map { seq =>
+          m.get("attribute").map { seq =>
             attributes(seq)
           }
         }
