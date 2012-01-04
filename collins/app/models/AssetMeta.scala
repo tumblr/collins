@@ -14,6 +14,8 @@ case class AssetMeta(
     label: String,
     description: String)
 {
+  require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
+  require(description != null && description.length > 0, "Need a description")
   def getId(): Int = id.get
 }
 
@@ -34,9 +36,15 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     AssetMeta.find("id={id}").on('id -> id).singleOption()
   }
 
-  def findByName(name: String) = Model.withConnection { implicit con =>
+  def findByName(name: String, con: Connection): Option[AssetMeta] = {
+    implicit val c: Connection = con
     AssetMeta.find("name={name}").on('name -> name).singleOption()
   }
+
+  def findByName(name: String): Option[AssetMeta] = Model.withConnection { con =>
+    findByName(name, con)
+  }
+
   def getViewable(): Seq[AssetMeta] = {
     // change to use stuff in Enum
     Model.withConnection { implicit connection =>

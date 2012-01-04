@@ -7,7 +7,7 @@ import java.util.Date
 
 trait CommonHelperSpec[REP] extends test.ResourceFinder {
 
-  def getParser(txt: String): util.parsers.CommonParser[REP]
+  def getParser(txt: String): _root_.util.parsers.CommonParser[REP]
 
   def parsed(): REP
 

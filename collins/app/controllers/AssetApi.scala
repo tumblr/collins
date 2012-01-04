@@ -17,6 +17,7 @@ trait AssetApi {
 
   private lazy val lshwConfig = Helpers.subAsMap("lshw")
 
+  // GET /api/asset/:tag
   def getAsset(tag: String) = Authenticated { user => Action { implicit req =>
     val result = Api.withAssetFromTag(tag) { asset =>
       val exposeCredentials = hasRole(user.get, Seq("infra"))
@@ -79,26 +80,23 @@ trait AssetApi {
   // DELETE /api/asset/:tag
   def deleteAsset(tag: String) = SecureAction { implicit req =>
     import com.twitter.util.StateMachine.InvalidStateTransition
+    val options = Form("reason" -> optional(text(1))).bindFromRequest.fold(
+      err => None,
+      reason => reason.map { r => Map("reason" -> r) }
+    ).getOrElse(Map.empty)
     val result = Api.withAssetFromTag(tag) { asset =>
-      try {
-        Model.withTransaction { implicit con =>
-          AssetStateMachine(asset).decommission().executeUpdate()
-          AssetLog.informational(
-            asset,
-            "Asset decommissioned successfully",
-            AssetLog.Formats.PlainText,
-            AssetLog.Sources.Internal
-          ).create()
-          Right(ResponseData(Results.Ok, JsObject(Map("SUCCESS" -> JsBoolean(true)))))
+      AssetLifecycle.decommissionAsset(asset, options)
+        .left.map { e =>
+          e match {
+            case ex: InvalidStateTransition =>
+              val msg = "Illegal state transition: %s".format(ex.getMessage)
+              Api.getErrorMessage(msg, Results.Status(StatusValues.CONFLICT))
+            case ex =>
+              val msg = "Error saving response: %s".format(e.getMessage)
+              Api.getErrorMessage(msg, Results.InternalServerError)
+          }
         }
-      } catch {
-        case e: InvalidStateTransition =>
-          val msg = "Only assets in a cancelled state can be decommissioned"
-          Left(Api.getErrorMessage(msg, Results.Status(StatusValues.CONFLICT)))
-        case e =>
-          val msg = "Error saving response: %s".format(e.getMessage)
-          Left(Api.getErrorMessage(msg, Results.InternalServerError))
-      } 
+        .right.map(s => ResponseData(Results.Ok, JsObject(Map("SUCCESS" -> JsBoolean(s)))))
     }
     val responseData = result.fold(l => l, r => r)
     formatResponseData(responseData)

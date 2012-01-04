@@ -49,7 +49,6 @@ trait Api extends ApiResponse with AssetApi with AssetLogApi {
 
 object Api {
   def withAssetFromTag[T](tag: String)(f: Asset => Either[ResponseData,T]): Either[ResponseData,T] = {
-    // FIXME: I think this is broken, should be Right(f(asset))
     Asset.isValidTag(tag) match {
       case false => Left(getErrorMessage("Invalid tag specified"))
       case true => Asset.findByTag(tag) match {

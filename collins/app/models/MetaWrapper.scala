@@ -25,7 +25,7 @@ object MetaWrapper {
   def createMeta(asset: Asset, metas: Map[String,String])(implicit con: Connection) = {
     val metaValues = metas.map { case(k,v) =>
       val metaName = k.toUpperCase
-      val meta: AssetMeta = AssetMeta.findByName(metaName).getOrElse {
+      val meta: AssetMeta = AssetMeta.findByName(metaName, con).getOrElse {
         AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
       }
       AssetMetaValue(asset, meta.getId, v)

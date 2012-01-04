@@ -1,46 +1,51 @@
 package controllers
 
 import models._
-import org.specs2.mutable._
+import util.Helpers
+import test._
+
 import play.api.libs.json._
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc._
 import play.api.mvc.MultipartFormData._
 
-import test._
+import org.specs2._
+import specification._
+import matcher.Matcher
 
 class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
 
+  "Asset API Specification".title
+
   args(sequential = true)
+
   val user = getLoggedInUser("infra")
   val api = getApi(user)
 
-  "The Asset API" should {
-    "Reject intake with bad tag" >> {
-      "Empty is rejected" >> {
-        val request = FakeRequest("GET", "/api/asset/")
-        val result = Extract.from(api.createAsset("").apply(request))
-        result._1 mustEqual(400)
-      }
-      "Non alpha-num is rejected" >> {
-        val request = FakeRequest("GET", "/api/asset/")
-        val result = Extract.from(api.updateAsset("^*$lkas$").apply(request))
-        result._1 mustEqual(400)
-      }
+  "Asset Validation" should {
+    "Reject empty asset tags" in new ResponseScope {
+      val request = FakeRequest("GET", "/api/asset/")
+      Extract.from(api.createAsset("").apply(request)) must haveStatus(400)
     }
-    "Support a multi-step intake" >> {
-      val assetTag = "testAsset123"
-      val assetUrl = "/api/asset/%s.json".format(assetTag)
-      "Step 1 - Intake Started" >> {
+    "Reject Non alpha-num tags" in new ResponseScope {
+      val request = FakeRequest("GET", "/api/asset/")
+      Extract.from(api.updateAsset("^*$lkas$").apply(request)) must haveStatus(400)
+    }
+  }
+
+  "The REST API" should {
+
+    "Support Multi-step intake" in {
+      "Create an asset via a PUT" in new asset {
         val request = FakeRequest("PUT", assetUrl)
         val result = Extract.from(api.createAsset(assetTag).apply(request))
-        result._1 mustEqual(201)
-        val jsonResponse = Json.parse(result._3)
-        jsonResponse \ "data" \ "ASSET" must haveClass[JsObject]
-        (jsonResponse \ "data" \ "ASSET" \ "STATUS").as[String] mustEqual("Incomplete")
-        jsonResponse \ "data" \ "IPMI" must haveClass[JsObject]
+        result must haveStatus(201)
+        result must haveJsonData.which { s =>
+          s must /("data") */("ASSET")/("STATUS" -> "Incomplete")
+          s must /("data") */("IPMI")/("IPMI_GATEWAY" -> "10.0.0.1")
+        }
       }
-      "Step 2 - Intake Finished" >> {
+      "Inventory hardware information via a POST" in new asset {
         val lshwData = getResource("lshw-basic.xml")
         val lldpData = getResource("lldpctl-two-nic.xml")
         val dummy = Seq[FilePart[TemporaryFile]]()
@@ -52,20 +57,139 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         val body = AnyContentAsMultipartFormData(mdf)
         val request = FakeRequest("POST", assetUrl).copy(body = body)
         val result = Extract.from(api.updateAsset(assetTag).apply(request))
-        result._1 mustEqual(200)
-        val jsonResponse = Json.parse(result._3)
-        jsonResponse \ "data" \ "SUCCESS" must haveClass[JsBoolean]
-        (jsonResponse \ "data" \ "SUCCESS").as[Boolean] must beTrue
+        result must haveStatus(200)
+        result must haveJsonData.which { s =>
+          s must /("data") */("SUCCESS" -> true)
+        }
+        getAsset() must haveJsonData.which { txt =>
+          txt must /("data") */("ATTRIBS") */("0") */("CHASSIS_TAG" -> "abbacadabra")
+          txt must /("data") */("ASSET")/("STATUS" -> "New")
+        }
       }
-      "Step 3 - Review Intake Data" >> {
-        val req = FakeRequest("GET", "/api/asset/%s.json".format(assetTag))
-        val res = Extract.from(api.getAsset(assetTag).apply(req))
-        res._1 mustEqual(200)
-        val jsonResponse = Json.parse(res._3)
-        jsonResponse \ "data" \ "ASSET" must haveClass[JsObject]
-        (jsonResponse \ "data" \ "ASSET" \ "STATUS").as[String] mustEqual "New"
+      "Update the status after getting rack position and such" in new asset {
+        import AssetMeta.Enum.RackPosition
+        import Helpers.formatPowerPort
+        val rp: String = RackPosition.toString
+        val body = AnyContentAsUrlFormEncoded(Map(
+          RackPosition.toString -> Seq("rack 1"),
+          formatPowerPort("A") -> Seq("power 1"),
+          formatPowerPort("B") -> Seq("power 2"),
+          "ATTRIBUTE" -> Seq("foo;bar","fizz;buzz")
+        ))
+        val req = FakeRequest("POST", assetUrl).copy(body = body)
+        val result = Extract.from(api.updateAsset(assetTag).apply(req))
+        result must haveStatus(200)
+        result must haveJsonData.which { txt =>
+          txt must /("data") */("SUCCESS" -> true)
+        }
+        getAsset() must haveJsonData.which { txt =>
+          txt must /("data") */("ASSET")/("STATUS" -> "Unallocated")
+          txt must /("data") */("ATTRIBS") */("0") */("RACK_POSITION" -> "rack 1")
+          txt must /("data") */("ATTRIBS") */("0") */("POWER_PORT" -> "power 1")
+          txt must /("data") */("ATTRIBS") */("1") */("POWER_PORT" -> "power 2")
+          txt must /("data") */("ATTRIBS") */("0") */("FOO" -> "bar")
+          txt must /("data") */("ATTRIBS") */("0") */("FIZZ" -> "buzz")
+        }
+      }
+    } // Support multi-step intake
+
+    "Support find" in {
+      "by custom attribute" in new asset {
+        val req = FakeRequest("GET", findUrl + "?attribute=foo;bar")
+        val result = Extract.from(api.getAssets(0, 10, "").apply(req))
+        result must haveJsonData.which { txt =>
+          txt must /("data") */("Data") */("TAG" -> assetTag)
+        }
+        val req2 = FakeRequest("GET", findUrl + "?attribute=fizz;buzz")
+        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+          txt must /("data") */("Data") */("TAG" -> assetTag)
+        }
+      }
+      "by type" in new asset {
+        val req = FakeRequest("GET", findUrl + "?type=SERVER_NODE")
+        val result = Extract.from(api.getAssets(0, 10, "").apply(req))
+        result must haveJsonData.which { txt =>
+          txt must /("data") */("Data") */("TAG" -> assetTag)
+        }
+      }
+      "by status" in new asset {
+        val req = FakeRequest("GET", findUrl + "?status=Unallocated")
+        val result = Extract.from(api.getAssets(0, 10, "").apply(req))
+        result must haveJsonData.which { txt =>
+          txt must /("data") */("Data") */("TAG" -> assetTag)
+        }
+      }
+      "by createdAfter" in new asset {
+        val req = FakeRequest("GET", findUrl + "?createdAfter=2011-12-30T00:00:00")
+        Extract.from(api.getAssets(0, 10, "").apply(req)) must haveJsonData.which { txt =>
+          txt must /("data") */("Data") */("TAG" -> assetTag)
+        }
+        val req2 = FakeRequest("GET", findUrl + "?createdAfter=2020-12-30T00:00:00")
+        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+          txt must /("data") */("Pagination") */("TotalResults" -> 0.0)
+        }
+      }
+      "by createdBefore" in new asset {
+        val req = FakeRequest("GET", findUrl + "?createdBefore=2020-12-30T00:00:00")
+        Extract.from(api.getAssets(0, 10, "").apply(req)) must haveJsonData.which { txt =>
+          txt must /("data") */("Data") */("TAG" -> assetTag)
+        }
+        val req2 = FakeRequest("GET", findUrl + "?createdBefore=2011-12-30T00:00:00")
+        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+          txt must /("data") */("Pagination") */("TotalResults" -> 0.0)
+        }
+      }
+      "by updatedAfter" in new asset {
+        val req = FakeRequest("GET", findUrl + "?updatedAfter=2011-12-30T00:00:00")
+        Extract.from(api.getAssets(0, 10, "").apply(req)) must haveJsonData.which { txt =>
+          txt must /("data") */("Data") */("TAG" -> assetTag)
+        }
+        val req2 = FakeRequest("GET", findUrl + "?updatedAfter=2020-12-30T00:00:00")
+        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+          txt must /("data") */("Pagination") */("TotalResults" -> 0.0)
+        }
+      }
+      "by updatedBefore" in new asset {
+        val req = FakeRequest("GET", findUrl + "?updatedBefore=2020-12-30T00:00:00")
+        Extract.from(api.getAssets(0, 10, "").apply(req)) must haveJsonData.which { txt =>
+          txt must /("data") */("Data") */("TAG" -> assetTag)
+        }
+        val req2 = FakeRequest("GET", findUrl + "?updatedAfter=2020-12-30T00:00:00")
+        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+          txt must /("data") */("Pagination") */("TotalResults" -> 0.0)
+        }
+      }
+    } // Support various find mechanisms
+
+
+    "Handle asset decommission" in {
+      "For Unallocated assets" in new asset {
+        val req = FakeRequest("DELETE", assetUrl)
+        Extract.from(api.deleteAsset(assetTag).apply(req)) must haveJsonData.which { txt =>
+          txt must /("data") */("SUCCESS" -> true)
+        }
+        getAsset() must haveJsonData.which { txt =>
+          txt must /("data") */("ASSET")/("STATUS" -> "Decommissioned")
+        }
+      }
+      "For Incomplete assets" in new ResponseScope {
+        val req = FakeRequest("DELETE", "/api/asset/%s.json".format("tumblrtag1"))
+        Extract.from(api.deleteAsset("tumblrtag1").apply(req)) must haveStatus(409)
       }
     }
-  } // The Asset API
+
+  } // The REST API
+
+  trait asset extends Scope with ResponseMatchHelpers {
+    val assetTag = "testAsset123"
+    val assetUrl = "/api/asset/%s.json".format(assetTag)
+    val findUrl = "/api/assets.json"
+
+    def getAsset() = {
+      val request = FakeRequest("GET", assetUrl)
+      Extract.from(api.getAsset(assetTag).apply(request))
+    }
+  }
+
 
 }
