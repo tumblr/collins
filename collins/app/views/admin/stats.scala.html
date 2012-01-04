@@ -1,0 +1,50 @@
+@(cacheStats: com.tumblr.play.CacheStats)(implicit flash: Flash, req: Request[AnyContent])
+
+@import _root_.util.Helpers
+
+@main("Admin Stats") {
+<div class="page-header">
+  <h1>Admin Stats</h1>
+</div>
+<div class="row">
+  <div class="span14">
+    <h3><a data-toggle="collapse" data-target="#cacheStats">Cache Stats</a></h3>
+    <table id="cacheStats" class="zebra-striped condensed-table">
+
+      <thead>
+        <tr>
+          <th></th><th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr>
+          <th>Eviction Count</th>
+          <td>@cacheStats.evictionCount</td>
+        </tr>
+        <tr>
+          <th>Hit Count</th>
+          <td>@cacheStats.hitCount</td>
+        </tr>
+        <tr>
+          <th>Hit Rate</th>
+          <td>@Helpers.formatDouble(cacheStats.hitRate) %</td>
+        </tr>
+        <tr>
+          <th>Miss Count</th>
+          <td>@cacheStats.missCount</td>
+        </tr>
+        <tr>
+          <th>Miss Rate</th>
+          <td>@Helpers.formatDouble(cacheStats.missRate) %</td>
+        </tr>
+        <tr>
+          <th>Request Count</th>
+          <td>@cacheStats.requestCount</td>
+        </tr>
+      </tbody>
+
+    </table>
+  </div>
+</div>
+}

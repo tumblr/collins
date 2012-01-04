@@ -14,6 +14,9 @@ GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
 GET     /asset;create               app.Resources.displayCreateForm(assetType: String)
 POST    /asset;create               app.Resources.createAsset(assetType: String)
 
+# Admin pages
+GET     /admin/stats                controllers.Admin.stats
+
 # Help
 GET     /help                       app.HelpPage.index(t: Int ?= controllers.Help.Default)
 
