@@ -2,7 +2,7 @@ package models
 
 import Model.defaults._
 import conversions._
-import util.{Helpers, LldpRepresentation, LshwRepresentation}
+import util.{Cache, Helpers, LldpRepresentation, LshwRepresentation}
 
 import anorm._
 import anorm.SqlParser._
@@ -80,6 +80,23 @@ object Asset extends Magic[Asset](Some("asset")) {
     new Asset(NotAssigned, tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
   }
 
+  override def create(asset: Asset)(implicit con: Connection) = {
+    super.create(asset) match {
+      case newasset =>
+        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag))
+        newasset
+    }
+  }
+
+  override def update(asset: Asset)(implicit con: Connection) = {
+    super.update(asset) match {
+      case updated =>
+        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag))
+        Cache.invalidate("Asset.findById(%d)".format(asset.getId))
+        updated
+    }
+  }
+
   def create(assets: Seq[Asset])(implicit con: Connection): Seq[Asset] = {
     assets.foldLeft(List[Asset]()) { case(list, asset) =>
       if (asset.id.isDefined) throw new IllegalArgumentException("id of asset must be NotAssigned")
@@ -88,10 +105,14 @@ object Asset extends Magic[Asset](Some("asset")) {
   }
 
   def findById(id: Long): Option[Asset] = Model.withConnection { implicit con =>
-    Asset.find("id={id}").on('id -> id).singleOption()
+    Cache.getOrElseUpdate("Asset.findById(%d)".format(id)) {
+      Asset.find("id={id}").on('id -> id).singleOption()
+    }
   }
   def findByTag(tag: String): Option[Asset] = Model.withConnection { implicit con =>
-    Asset.find("tag={tag}").on('tag -> tag).first()
+    Cache.getOrElseUpdate("Asset.findByTag(%s)".format(tag)) {
+      Asset.find("tag={tag}").on('tag -> tag).first()
+    }
   }
   def findLikeTag(tag: String, params: PageParams): Page[Asset] = Model.withConnection { implicit con =>
     val tags = tag + "%"
