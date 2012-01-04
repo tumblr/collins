@@ -10,10 +10,10 @@ import play.api.libs.json._
 import play.api.mvc._
 
 private[controllers] object CreateAsset {
-  val params = Set("generate_ipmi", "asset_type", "status")
+  val params = Set("generate_ipmi", "type", "status")
   val createForm = Form(of(
     "generate_ipmi" -> optional(boolean),
-    "asset_type" -> optional(of[AssetType.Enum]),
+    "type" -> optional(of[AssetType.Enum]),
     "status" -> optional(of[AStatus.Enum])
   ))
 }
@@ -31,8 +31,8 @@ private[controllers] class CreateAsset() {
             p match {
               case "generate_ipmi" =>
                 "%s only takes true or false as values".format(p)
-              case "asset_type" =>
-                "Invalid asset_type specified"
+              case "type" =>
+                "Invalid asset type specified"
               case "status" =>
                 "Invalid status specified"
             }

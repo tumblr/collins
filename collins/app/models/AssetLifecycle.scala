@@ -134,13 +134,13 @@ object AssetLifecycle {
   }
 
   protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    val requiredKeys = Set("LSHW", "LLDP", "CHASSIS_TAG")
+    val requiredKeys = Set("lshw", "lldp", "CHASSIS_TAG")
     requiredKeys.find(key => !options.contains(key)).map { not_found =>
       return Left(new Exception(not_found + " parameter not specified"))
     }
 
-    val lshw = options("LSHW")
-    val lldp = options("LLDP")
+    val lshw = options("lshw")
+    val lldp = options("lldp")
     val chassis_tag = options("CHASSIS_TAG")
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))

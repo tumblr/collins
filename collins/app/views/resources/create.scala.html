@@ -12,10 +12,10 @@
 
     <form action="@app.routes.Resources.createAsset(atype.toString)" method="post">
       <div class="clearfix">
-        <label for="asset_type">Asset Type</label>
+        <label for="type">Asset Type</label>
         <div class="input">
-          <span id="asset_type" class="uneditable-input">@Helpers.camelCase(atype.toString, " ")</span>
-          <input type="hidden" name="asset_type" value="@atype.toString">
+          <span id="type" class="uneditable-input">@Helpers.camelCase(atype.toString, " ")</span>
+          <input type="hidden" name="type" value="@atype.toString">
         </div>
       </div>
       <div class="clearfix">

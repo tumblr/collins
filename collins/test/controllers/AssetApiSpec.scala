@@ -50,8 +50,8 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         val lldpData = getResource("lldpctl-two-nic.xml")
         val dummy = Seq[FilePart[TemporaryFile]]()
         val mdf = MultipartFormData(Map(
-          "LSHW" -> Seq(lshwData),
-          "LLDP" -> Seq(lldpData),
+          "lshw" -> Seq(lshwData),
+          "lldp" -> Seq(lldpData),
           "CHASSIS_TAG" -> Seq("abbacadabra")
         ), dummy, Nil, Nil)
         val body = AnyContentAsMultipartFormData(mdf)
@@ -74,7 +74,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
           RackPosition.toString -> Seq("rack 1"),
           formatPowerPort("A") -> Seq("power 1"),
           formatPowerPort("B") -> Seq("power 2"),
-          "ATTRIBUTE" -> Seq("foo;bar","fizz;buzz")
+          "attribute" -> Seq("foo;bar","fizz;buzz")
         ))
         val req = FakeRequest("POST", assetUrl).copy(body = body)
         val result = Extract.from(api.updateAsset(assetTag).apply(req))
