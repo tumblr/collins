@@ -26,6 +26,14 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     new AssetMeta(NotAssigned, name, priority, label, description)
   }
 
+  override def create(am: AssetMeta)(implicit con: Connection) = {
+    super.create(am) match {
+      case newam =>
+        Cache.invalidate("AssetMeta.findByName(%s)".format(am.name))
+        newam
+    }
+  }
+
   def create(metas: Seq[AssetMeta])(implicit con: Connection): Seq[AssetMeta] = {
     metas.foldLeft(List[AssetMeta]()) { case(list, meta) =>
       if (meta.id.isDefined) throw new IllegalArgumentException("Use update, id already defined")
