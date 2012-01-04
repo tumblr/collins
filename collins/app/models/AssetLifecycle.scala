@@ -45,6 +45,29 @@ object AssetLifecycle {
     }
   }
 
+  def decommissionAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+    val reason = options.get("reason").map { r =>
+      r + " : status is %s".format(asset.getStatus().name)
+    }.getOrElse(
+      "Decommission of asset requested, status is %s".format(asset.getStatus().name)
+    )
+    try {
+      Model.withTransaction { implicit con =>
+        AssetLog.informational(
+          asset, reason, AssetLog.Formats.PlainText, AssetLog.Sources.Internal
+        ).create()
+        AssetStateMachine(asset).decommission().executeUpdate()
+        AssetLog.informational(
+          asset, "Asset decommissioned successfully", AssetLog.Formats.PlainText,
+          AssetLog.Sources.Internal
+        ).create()
+      }
+      Right(true)
+    } catch {
+      case e => Left(e)
+    }
+  }
+
   private lazy val lshwConfig = Helpers.subAsMap("lshw")
   def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     asset.asset_type == AssetType.Enum.ServerNode.id match {
@@ -104,6 +127,7 @@ object AssetLifecycle {
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
         AssetStateMachine(asset).update().executeUpdate()
+        MetaWrapper.createMeta(asset, filtered)
         true
       }
     }.left.map(e => handleException(asset, "Exception updating asset", e))

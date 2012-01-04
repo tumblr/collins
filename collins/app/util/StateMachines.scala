@@ -26,6 +26,12 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
   state = statusToState()
 
   def decommission() = transition("decommission") {
+    case UnallocatedState() =>
+      state = DecommissionedState()
+      this
+    case NewState() =>
+      state = DecommissionedState()
+      this
     case CancelledState() =>
       state = DecommissionedState()
       this

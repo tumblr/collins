@@ -1,6 +1,8 @@
 package test
 
-import org.specs2.matcher._
+import org.specs2._
+import specification._
+import matcher._
 
 import play.api.mvc._
 import play.api.http.HeaderNames
@@ -50,6 +52,7 @@ object FakeRequest {
 object ResultType {
   type ResultTuple = Tuple3[Int, Map[String,String], String]
 }
+
 abstract class ResponseMatcher(contentType: String) extends Matcher[ResultType.ResultTuple] {
   def expectedStatusCode: Int
   def responseMatches(txt: String): Boolean
@@ -67,3 +70,48 @@ abstract class ResponseMatcher(contentType: String) extends Matcher[ResultType.R
     )
   }
 }
+
+trait ResponseMatchHelpers {
+  import ResultType.ResultTuple
+  import play.api.libs.json._
+
+  def haveStatus(expectedCode: Int) = new Matcher[ResultTuple] {
+    def apply[S <: ResultTuple](s: Expectable[S]) = {
+      val code = s.value._1
+      result(code == expectedCode,
+        "expected and got %d".format(expectedCode),
+        "expected %d, got %d".format(expectedCode, code),
+        s
+      )
+    }
+  }
+
+  trait JsonDataMatcher extends Matcher[ResultTuple] { outer =>
+    def apply[S <: ResultTuple](s: Expectable[S]) = {
+      val response = s.value._3
+      val parsed = Json.parse(response)
+      val matchResult = (parsed \ "data").isInstanceOf[JsObject]
+      result(matchResult,
+        "Response is JSON and contains data key",
+        "Response is not JSON or does not contain a 'data' key: %s".format(response),
+        s
+      )
+    }
+    def which(f: String => Boolean) = new Matcher[ResultTuple] {
+      def apply[S <: ResultTuple](a: Expectable[S]) = {
+        val outerResult = outer.apply(a)
+        if (outerResult.isSuccess) {
+          val txt = a.value._3
+          outerResult and result(f(txt), "ok", "ko", a)
+        } else {
+          outerResult
+        }
+      }
+    }
+  }
+
+  def haveJsonData() = new JsonDataMatcher {}
+
+}
+
+trait ResponseScope extends Scope with ResponseMatchHelpers

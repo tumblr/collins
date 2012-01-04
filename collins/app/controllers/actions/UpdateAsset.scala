@@ -65,26 +65,18 @@ private[controllers] case class UpdateAsset(
     }
   }
 
-  protected def getFormFile(key: String)(implicit req: Request[AnyContent]): Map[String,String] = {
-    req.body match {
-      case AnyContentAsMultipartFormData(mdf) => mdf.file(key) match {
-        case Some(temporaryFile) =>
-          val src = io.Source.fromFile(temporaryFile.ref.file)
-          val txt = src.mkString
-          src.close()
-          Map(key -> txt)
-        case None => Map.empty
-      }
-      case _ => Map.empty
-    }
-  }
-
   protected def validateRequest(asset: Asset)(implicit req: Request[AnyContent]): Either[String,Map[String,String]] = {
     UpdateAsset.FORM.bindFromRequest.fold(
       hasErrors => Left("Error processing form data"),
       form => {
+        val om1: Option[Map[String,String]] = req.queryString.get("ATTRIBUTE").map(seq => attributes(seq))
+        val om2: Option[Map[String,String]] = req.body.asUrlFormEncoded.flatMap { m =>
+          m.get("ATTRIBUTE").map { seq =>
+            attributes(seq)
+          }
+        }
         val map: Map[String,String] = UpdateAsset.toMap(form) ++
-          req.queryString.get("ATTRIBUTE").map(seq => attributes(seq)).getOrElse(Map.empty)
+          om1.orElse(om2).getOrElse(Map.empty)
         Right(map)
       }
     )

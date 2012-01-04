@@ -16,10 +16,10 @@ object AttributeResolver {
   }
   private def asAssetMeta(key: String): Option[AssetMeta] = try {
     val am = AssetMeta.Enum.withName(key)
-    // FIXME, do lookup if enum lookup fails
     Some(AssetMeta(Id(new java.lang.Integer(am.id)), am.toString, -1, "label", "description"))
   } catch {
-    case _ => None
+    case _ => // If an exception was thrown, try the database
+      AssetMeta.findByName(key.toUpperCase)
   }
 
   def apply(map: Map[String,String]): ResultTuple = {
