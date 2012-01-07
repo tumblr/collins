@@ -197,7 +197,6 @@ trait Resources extends Controller {
       def method = req.method
       def queryString = finalMap
       def headers = req.headers
-      def cookies = req.cookies
       def body = req.body
     }
   }

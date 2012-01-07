@@ -66,11 +66,11 @@ private[controllers] class CreateAsset() {
   }
 
   protected def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
-    val map = ipmi.map { ipmi_info =>
-        Map("ASSET" -> JsObject(asset.toJsonMap),
-            "IPMI" -> JsObject(ipmi_info.withExposedCredentials(true).toJsonMap))
-    }.getOrElse(Map("ASSET" -> JsObject(asset.toJsonMap)))
-    JsObject(map)
+    val seq = ipmi.map { ipmi_info =>
+        Seq("ASSET" -> JsObject(asset.forJsonObject),
+            "IPMI" -> JsObject(ipmi_info.withExposedCredentials(true).forJsonObject))
+    }.getOrElse(Seq("ASSET" -> JsObject(asset.forJsonObject)))
+    JsObject(seq)
   }
 
   def apply(tag: String)(implicit req: Request[AnyContent]) = {

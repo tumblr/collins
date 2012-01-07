@@ -1,7 +1,7 @@
 package util
 
 import play.api._
-import play.api.Configuration.Config
+import play.api.Configuration
 import models.User
 import org.specs2.mutable._
 import java.io.File
@@ -16,12 +16,12 @@ object AuthenticationProviderSpec extends Specification {
     "work with LDAP authentication" >> {
       val thisFile = new File("")
       val configData = Map(
-        "authentication.type" -> Config("authentication.type", "ldap", thisFile),
-        "authentication.host" -> Config("authentication.host", "admin02.jfk01.tumblr.net", thisFile),
-        "authentication.searchbase" -> Config("authentication.searchbase", "dc=corp,dc=tumblr,dc=net", thisFile)
+        "authentication.type" -> "ldap",
+        "authentication.host" -> "192.168.128.250", // FIXME when office network isn't fucked
+        "authentication.searchbase" -> "dc=corp,dc=tumblr,dc=net"
       )
-      val config = Configuration(configData)
-      val authConfig = config.getSub("authentication")
+      val config = Configuration.from(configData)
+      val authConfig = config.getConfig("authentication")
       authConfig must beSome
       val provider = AuthenticationProvider.get("ldap", authConfig.get)
       provider must haveClass[LdapAuthenticationProvider]

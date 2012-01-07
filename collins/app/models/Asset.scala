@@ -20,7 +20,7 @@ case class Asset(
 {
   require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
 
-  def toJsonMap(): Map[String,JsValue] = Map(
+  def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "TAG" -> JsString(tag),
     "STATUS" -> JsString(getStatus().name),
@@ -155,18 +155,18 @@ object Asset extends Magic[Asset](Some("asset")) {
 
     def toJsonObject(): JsObject = {
       val ipmiMap = ipmi.map { info =>
-        info.toJsonMap
-      }.getOrElse(Map[String,JsValue]())
-      val outMap = Map(
-        "ASSET" -> JsObject(asset.toJsonMap),
-        "HARDWARE" -> JsObject(lshw.toJsonMap),
-        "LLDP" -> JsObject(lldp.toJsonMap),
+        info.forJsonObject
+      }.getOrElse(Seq[(String,JsValue)]())
+      val outSeq = Seq(
+        "ASSET" -> JsObject(asset.forJsonObject),
+        "HARDWARE" -> JsObject(lshw.forJsonObject),
+        "LLDP" -> JsObject(lldp.forJsonObject),
         "IPMI" -> JsObject(ipmiMap),
         "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map { case(groupId, mv) =>
-          groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) }.toMap)
-        }.toMap)
+          groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) })
+        }.toSeq)
       )
-      JsObject(outMap)
+      JsObject(outSeq)
     }
   }
 }

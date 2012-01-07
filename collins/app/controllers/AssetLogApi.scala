@@ -27,10 +27,10 @@ trait AssetLogApi {
       }
       val totalResults = logs.total
       val headers = logs.getPaginationHeaders()
-      val paginationMap = logs.getPaginationJsMap()
-      Right(ResponseData(Results.Ok, JsObject(paginationMap ++ Map(
+      val paginationMap = logs.getPaginationJsObject
+      Right(ResponseData(Results.Ok, JsObject(paginationMap ++ Seq(
         "Data" -> JsArray(logs.items.map { log =>
-          JsObject(log.toJsonMap)
+          JsObject(log.forJsonObject)
         }.toList)
       )), headers))
     }
@@ -102,7 +102,7 @@ trait AssetLogApi {
       }).map { err =>
         Left(Api.getErrorMessage(err))
       }.getOrElse {
-        Right(ResponseData(Results.Created, JsObject(Map("SUCCESS" -> JsBoolean(true)))))
+        Right(ResponseData(Results.Created, JsObject(Seq("SUCCESS" -> JsBoolean(true)))))
       }
     }.fold(l => l, r => r)
     formatResponseData(responseData)

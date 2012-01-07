@@ -20,17 +20,17 @@ trait Api extends ApiResponse with AssetApi with AssetLogApi {
   protected implicit val securitySpec = SecuritySpec(isSecure = true, Nil)
 
   def ping = Action { implicit req =>
-    formatResponseData(ResponseData(Results.Ok, JsObject(Map(
-      "Data" -> JsObject(Map(
+    formatResponseData(ResponseData(Results.Ok, JsObject(Seq(
+      "Data" -> JsObject(Seq(
         "Timestamp" -> JsString(Helpers.dateFormat(new Date())),
-        "TestObj" -> JsObject(Map(
+        "TestObj" -> JsObject(Seq(
           "TestString" -> JsString("test"),
           "TestList" -> JsArray(List(JsNumber(1), JsNumber(2)))
         )),
         "TestList" -> JsArray(List(
-          JsObject(Map("id" -> JsNumber(123), "name" -> JsString("foo123"))),
-          JsObject(Map("id" -> JsNumber(124), "name" -> JsString("foo124"))),
-          JsObject(Map("id" -> JsNumber(124), "name" -> JsString("foo124")))
+          JsObject(Seq("id" -> JsNumber(123), "name" -> JsString("foo123"))),
+          JsObject(Seq("id" -> JsNumber(124), "name" -> JsString("foo124"))),
+          JsObject(Seq("id" -> JsNumber(124), "name" -> JsString("foo124")))
         ))
       )),
       "Status" -> JsString("Ok")
@@ -41,7 +41,7 @@ trait Api extends ApiResponse with AssetApi with AssetLogApi {
     req.queryString.map { case(k,v) =>
       k match {
         case "foo" =>
-          formatResponseData(ResponseData(Results.Ok, JsObject(Map("Result" -> JsBoolean(true)))))
+          formatResponseData(ResponseData(Results.Ok, JsObject(Seq("Result" -> JsBoolean(true)))))
       }
     }.head
   }

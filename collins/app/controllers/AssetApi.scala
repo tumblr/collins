@@ -69,7 +69,7 @@ trait AssetApi {
           res.get match {
             case Left(err) => Some(err)
             case Right(success) =>
-              Some(ResponseData(Results.Ok, JsObject(Map("SUCCESS" -> JsBoolean(success)))))
+              Some(ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsBoolean(success)))))
           }
         }.get
         formatResponseData(rd)
@@ -96,7 +96,7 @@ trait AssetApi {
               Api.getErrorMessage(msg, Results.InternalServerError)
           }
         }
-        .right.map(s => ResponseData(Results.Ok, JsObject(Map("SUCCESS" -> JsBoolean(s)))))
+        .right.map(s => ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsBoolean(s)))))
     }
     val responseData = result.fold(l => l, r => r)
     formatResponseData(responseData)

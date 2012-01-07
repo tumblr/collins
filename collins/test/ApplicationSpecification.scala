@@ -10,7 +10,7 @@ trait ApplicationSpecification extends mutable.Specification with ResourceFinder
 
   def applicationSetup = {
     Play.start(
-      FakeApplication().addPlugin("play.api.db.evolutions.EvolutionsPlugin").addPlugin("play.api.db.DBPlugin")
+      FakeApplication(additionalPlugins = Seq("play.api.db.evolutions.EvolutionsPlugin", "play.api.db.DBPlugin"))
     )
   }
 

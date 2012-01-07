@@ -23,9 +23,9 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
       ("X-Pagination-TotalResults" -> total.toString)
     )
   }
-  def getPaginationJsMap(): Map[String, JsValue] = {
-    Map(
-      "Pagination" -> JsObject(Map(
+  def getPaginationJsObject(): Seq[(String, JsValue)] = {
+    Seq(
+      "Pagination" -> JsObject(Seq(
         "PreviousPage" -> JsNumber(prevPage),
         "CurrentPage" -> JsNumber(page),
         "NextPage" -> JsNumber(nextPage),

@@ -13,8 +13,7 @@ object FakeRequestHeader {
   def apply[A](req: PlayFakeRequest[A]) = new FakeRequestHeader(
     method = req.method,
     uri = req.uri,
-    headers = req.headers,
-    cookies = req.cookies
+    headers = req.headers
   )
   def withAcceptHeader(value: String) = {
     FakeRequestHeader(FakeRequest()).copy(headers = FakeHeaders(Map(HeaderNames.ACCEPT -> Seq(value))))
@@ -24,8 +23,7 @@ object FakeRequestHeader {
 case class FakeRequestHeader(
   method: String = "GET",
   uri: String = "/",
-  headers: FakeHeaders = FakeHeaders(),
-  cookies: FakeCookies = FakeCookies()
+  headers: FakeHeaders = FakeHeaders()
 ) extends RequestHeader {
   lazy val path = uri.split('?').take(1).mkString
   lazy val queryString = play.core.parsers.UrlFormEncodedParser.parse(rawQueryString)
@@ -34,7 +32,6 @@ case class FakeRequestHeader(
       this.method,
       this.uri,
       this.headers,
-      this.cookies,
       body
     )
 }
