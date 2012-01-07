@@ -6,20 +6,20 @@ sealed abstract class LshwAsset {
   val description: String
   val product: String
   val vendor: String
-  def toJsonMap(): Map[String,JsValue]
+  def forJsonObject(): Seq[(String,JsValue)]
 }
 object LshwAsset {
   def apply(desc: String, prod: String, vend: String) = new LshwAsset {
     val description = desc
     val product = prod
     val vendor = vend
-    override def toJsonMap(): Map[String,JsValue] = throw new Exception("Don't call toJsonMap on stubs")
+    override def forJsonObject(): Seq[(String,JsValue)] = throw new Exception("Don't call forJsonObject on stubs")
   }
 }
 
 case class Cpu(cores: Int, threads: Int, speedGhz: Double, description: String, product: String, vendor: String) extends LshwAsset
 {
-  def toJsonMap(): Map[String,JsValue] = Map(
+  def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "CORES" -> JsNumber(cores),
     "THREADS" -> JsNumber(threads),
     "SPEED_GHZ" -> JsNumber(speedGhz),
@@ -28,7 +28,7 @@ case class Cpu(cores: Int, threads: Int, speedGhz: Double, description: String, 
 }
 case class Memory(size: ByteStorageUnit, bank: Int, description: String, product: String, vendor: String) extends LshwAsset
 {
-  def toJsonMap(): Map[String,JsValue] = Map(
+  def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "SIZE" -> JsNumber(size.inBytes),
     "SIZE_S" -> JsString(size.toHuman),
     "BANK" -> JsNumber(bank),
@@ -38,7 +38,7 @@ case class Memory(size: ByteStorageUnit, bank: Int, description: String, product
 case class Nic(speed: BitStorageUnit, macAddress: String, description: String, product: String, vendor: String)
   extends LshwAsset
 {
-  def toJsonMap(): Map[String,JsValue] = Map(
+  def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "SPEED" -> JsNumber(speed.inBits),
     "SPEED_S" -> JsString(speed.toHuman),
     "MAC_ADDRESS" -> JsString(macAddress),
@@ -50,7 +50,7 @@ case class Disk(size: ByteStorageUnit, diskType: Disk.Type, description: String,
   extends LshwAsset
 {
   def isFlash(): Boolean = diskType == Disk.Type.Flash
-  def toJsonMap(): Map[String,JsValue] = Map(
+  def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "SIZE" -> JsNumber(size.inBytes),
     "SIZE_S" -> JsString(size.toHuman),
     "TYPE" -> JsString(diskType.toString),
@@ -111,18 +111,18 @@ case class LshwRepresentation(
   def has10GbNic: Boolean = nics.find { _.speed.inGigabits == 10 }.map { _ => true }.getOrElse(false)
   def macAddresses: Seq[String] = nics.map { _.macAddress }
 
-  def toJsonMap(): Map[String,JsValue] = Map(
+  def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "CPU" -> JsArray(cpus.map { cpu =>
-      JsObject(cpu.toJsonMap)
+      JsObject(cpu.forJsonObject)
     }.toList),
     "MEMORY" -> JsArray(memory.map { mem =>
-      JsObject(mem.toJsonMap)
+      JsObject(mem.forJsonObject)
     }.toList),
     "NIC" -> JsArray(nics.map { nic =>
-      JsObject(nic.toJsonMap)
+      JsObject(nic.forJsonObject)
     }.toList),
     "DISK" -> JsArray(disks.map { disk =>
-      JsObject(disk.toJsonMap)
+      JsObject(disk.forJsonObject)
     }.toList)
   )
 

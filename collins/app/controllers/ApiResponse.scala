@@ -10,7 +10,7 @@ object ApiResponse {
   import OutputType.contentTypeWithCharset
 
   def formatJsonMessage(status: String, data: JsObject): JsObject = {
-    JsObject(Map(
+    JsObject(Seq(
       "status" -> JsString(status),
       "data" -> data
     ))
@@ -18,15 +18,15 @@ object ApiResponse {
   def formatJsonMessage(status: Results.Status, data: JsObject): JsObject = {
     formatJsonMessage(statusToString(status), data)
   }
-  def formatJsonMessage[V](status: Results.Status, data: Map[String,V])(implicit m: Manifest[V]): JsObject = {
+  def formatJsonMessage[V](status: Results.Status, data: Seq[(String,V)])(implicit m: Manifest[V]): JsObject = {
     formatJsonMessage(statusToString(status), data)
   }
-  def formatJsonMessage[V](status: String, data: Map[String,V])(implicit m: Manifest[V]): JsObject = {
+  def formatJsonMessage[V](status: String, data: Seq[(String,V)])(implicit m: Manifest[V]): JsObject = {
     val jso = m match {
       case s if s == Manifest.classType(classOf[String]) =>
         JsObject(data.map(kv => kv._1 -> JsString(kv._2.asInstanceOf[String])))
       case j if j == Manifest.classType(classOf[JsValue]) =>
-        JsObject(data.asInstanceOf[Map[String,JsValue]])
+        JsObject(data.asInstanceOf[Seq[(String,JsValue)]])
       case _ =>
         throw new RuntimeException("Unhandled conversion for Map with values of type " + m.toString)
     }
@@ -46,17 +46,17 @@ object ApiResponse {
   }
 
   def formatJsonError(msg: String, ex: Option[Throwable]): JsObject = {
-    val map = Map("message" -> JsString(msg))
-    val exMap = ex.map { e =>
-      Map("details" -> JsObject(formatException(e).map(kv => kv._1 -> JsString(kv._2))))
-    }.getOrElse(Map.empty)
-    val dataMap = map ++ exMap
-    formatJsonMessage("error", JsObject(dataMap))
+    val seq = Seq("message" -> JsString(msg))
+    val exSeq = ex.map { e =>
+      Seq("details" -> JsObject(formatException(e).map(kv => kv._1 -> JsString(kv._2))))
+    }.getOrElse(Seq())
+    val dataSeq = seq ++ exSeq
+    formatJsonMessage("error", JsObject(dataSeq))
   }
 
   def bashError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]) = {
-    val exMap = ex.map { e => formatException(e) }.getOrElse(Map.empty)
-    val exMsg = exMap.map { case(k,v) =>
+    val exSeq = ex.map { e => formatException(e) }.getOrElse(Seq())
+    val exMsg = exSeq.map { case(k,v) =>
       """DATA_EXCEPTION_%s='%s';""".format(k.toUpperCase, v)
     }.mkString("\n")
     val output =
@@ -94,8 +94,8 @@ DATA_MESSAGE='%s';
   }
 
   def textError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]) = {
-    val exMap = ex.map { e => formatException(e) }.getOrElse(Map.empty)
-    val exMsg = exMap.map { case(k,v) => """
+    val exSeq = ex.map { e => formatException(e) }.getOrElse(Seq())
+    val exMsg = exSeq.map { case(k,v) => """
 Exception %s  %s""".format(k, v.replace("\n","\n\t\t"))
     }.mkString("\n")
     val output =
@@ -110,8 +110,8 @@ Message       %s
     status(output).as(contentTypeWithCharset(TextOutput()))
   }
 
-  private def formatException(ex: Throwable): Map[String,String] = {
-    Map("classOf" -> ex.getClass.toString,
+  private def formatException(ex: Throwable): Seq[(String,String)] = {
+    Seq("classOf" -> ex.getClass.toString,
         "message" -> ex.getMessage,
         "stackTrace" -> ex.getStackTrace.map { _.toString }.mkString("\n"))
   }

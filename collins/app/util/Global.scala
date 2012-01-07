@@ -15,14 +15,14 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   override def onStart(app: Application) {
     verifyConfiguration(app.configuration)
     // FIXME Run evolutions if needed
-    val auth = app.configuration.getSub("authentication") match {
+    val auth = app.configuration.getConfig("authentication") match {
       case None => AuthenticationProvider.Default
       case Some(config) => config.getString("type", Some(AuthenticationProvider.Types)) match {
         case None => AuthenticationProvider.Default
         case Some(t) => AuthenticationProvider.get(t, config)
       }
     }
-    val key = app.configuration.getSub("crypto") match {
+    val key = app.configuration.getConfig("crypto") match {
       case None => throw new RuntimeException("No crypto.key specified in config")
       case Some(config) => config.getString("key") match {
         case None => throw new RuntimeException("No crypto.key specified in config")
@@ -86,13 +86,13 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     RequiredConfig.foreach { key =>
       key.split("\\.", 2) match {
         case Array(sub,key) =>
-          config.getSub(sub).map { _.get(key).getOrElse(
+          config.getConfig(sub).map { _.getString(key).getOrElse(
             throw config.globalError("No %s.%s found in configuration".format(sub, key))
           )}.getOrElse(
             throw config.globalError("No configuration found '" + sub + "'")
           )
         case _ =>
-          config.get(key).getOrElse(
+          config.getConfig(key).getOrElse(
             throw config.globalError("No configuration found '" + key + "'")
           )
       }

@@ -38,9 +38,15 @@ object Helpers {
 
   def subAsMap(subKey: String, default: Map[String,String] = Map.empty): Map[String,String] = {
     Play.maybeApplication.map { app =>
-      app.configuration.getSub(subKey).map { config =>
-        config.data.map { case(key, conf) =>
-          key -> conf.value
+      if (subKey.isEmpty) {
+        app.configuration.keys.map { key =>
+          key -> app.configuration.getString(key).get
+        }.toMap
+      } else {
+        app.configuration.getConfig(subKey).map { config =>
+          config.keys.map { key =>
+            key -> config.getString(key).get
+          }.toMap
         }
       }.getOrElse(default)
     }.getOrElse(default)

@@ -30,8 +30,8 @@ private[controllers] object FindAsset {
   )
 
   def formatResultAsRd(results: Page[Asset]): ResponseData = {
-    ResponseData(Results.Ok, JsObject(results.getPaginationJsMap() ++ Map(
-      "Data" -> JsArray(results.items.map { i => JsObject(i.toJsonMap) }.toList)
+    ResponseData(Results.Ok, JsObject(results.getPaginationJsObject() ++ Seq(
+      "Data" -> JsArray(results.items.map { i => JsObject(i.forJsonObject) }.toList)
     )), results.getPaginationHeaders)
   }
 }

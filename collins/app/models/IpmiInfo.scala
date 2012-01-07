@@ -34,7 +34,7 @@ case class IpmiInfo(
       this.copy(username = "********", password = "********")
     }
   }
-  def toJsonMap: Map[String,JsValue] = Map(
+  def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "ASSET_ID" -> JsNumber(getAssetId()),
     IpmiAddress.toString -> JsString(dottedAddress),
@@ -177,7 +177,7 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
 
   protected def getConfig(): Option[Configuration] = {
     Play.maybeApplication.map { app =>
-      app.configuration.getSub("ipmi")
+      app.configuration.getConfig("ipmi")
     }.getOrElse(None)
   }
 

@@ -22,7 +22,7 @@ case class AssetLog(
 {
   require(message != null && message.length > 0)
 
-  def toJsonMap(): Map[String,JsValue] = Map(
+  def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "ASSET_ID" -> JsNumber(getAssetId()),
     "CREATED" -> JsString(Helpers.dateFormat(created)),
@@ -74,14 +74,14 @@ case class AssetLog(
           ex.getClass.toString, ex.getMessage, oldMessage)
       case false => isJson() match {
         case true =>
-          val jsMap = Map(
+          val jsSeq = Seq(
             "Exception Class" -> JsString(ex.getClass.toString),
             "Exception Message" -> JsString(ex.getMessage)
           )
           val json = Json.parse(oldMessage) match {
-            case JsObject(map) =>
-              JsObject(jsMap ++ map)
-            case o => JsObject(jsMap ++ Map(
+            case JsObject(seq) =>
+              JsObject(jsSeq ++ seq)
+            case o => JsObject(jsSeq ++ Seq(
               "Message" -> o
             ))
           }

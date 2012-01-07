@@ -41,15 +41,15 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
   import javax.naming.directory._
 
   // validation
-  require(config.get("host").isDefined, "LDAP requires a host attribute")
-  require(config.get("searchbase").isDefined, "LDAP requires a searchbase attribute")
-  config.get("type").map { cfg =>
-    require(cfg.value.toLowerCase == "ldap", "If specified, authentication type must be LDAP")
+  require(config.getString("host").isDefined, "LDAP requires a host attribute")
+  require(config.getString("searchbase").isDefined, "LDAP requires a searchbase attribute")
+  config.getString("type").map { cfg =>
+    require(cfg.toLowerCase == "ldap", "If specified, authentication type must be LDAP")
   }
 
   // LDAP values
-  val host = config.get("host").get.value
-  val searchbase = config.get("searchbase").get.value
+  val host = config.getString("host").get
+  val searchbase = config.getString("searchbase").get
   val url = "ldap://%s/%s".format(host, searchbase)
   logger.debug("LDAP URL: %s".format(url))
 
