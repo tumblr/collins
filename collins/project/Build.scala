@@ -2,6 +2,8 @@ import sbt._
 import Keys._
 import PlayProject._
 
+import java.io.File
+
 object ApplicationBuild extends Build {
 
     val appName         = "collins"
@@ -13,7 +15,7 @@ object ApplicationBuild extends Build {
     )
 
     val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(
-      // Add your own project settings here      
+      resourceDirectories in Compile += file("db")
     )
 
 }
