@@ -6,3 +6,6 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2" % "1.7.1" % "test",
   "com.google.guava" % "guava" % "11.0"
 )
+
+resourceDirectories in Compile += file("db")
+
