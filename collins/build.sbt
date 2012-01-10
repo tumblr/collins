@@ -7,5 +7,4 @@ libraryDependencies ++= Seq(
   "com.google.guava" % "guava" % "11.0"
 )
 
-resourceDirectories in Compile += file("db")
 
