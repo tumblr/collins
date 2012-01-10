@@ -16,7 +16,6 @@ POST    /asset;create               app.Resources.createAsset(assetType: String)
 
 # Admin pages
 GET     /admin/stats                controllers.Admin.stats
-GET     /admin/evolve               controllers.Admin.evolve
 
 # Help
 GET     /help                       app.HelpPage.index(t: Int ?= controllers.Help.Default)
