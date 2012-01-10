@@ -28,11 +28,10 @@ object Model {
 
 }
 
-import java.sql.Timestamp
 // This exists because we need to handle conversions of timestamps and Pk/Id cols
 object DaoSupport extends ExtendSupport {
-  implicit val tsToStatement = new ToStatement[java.sql.Timestamp] {
-    def set(s: java.sql.PreparedStatement, index: Int, aValue: java.sql.Timestamp): Unit = {
+  implicit val tsToStatement = new ToStatement[Timestamp] {
+    def set(s: PreparedStatement, index: Int, aValue: Timestamp): Unit = {
       s.setTimestamp(index, aValue)
     }
   }
@@ -47,7 +46,7 @@ object DaoSupport extends ExtendSupport {
   }
 
   implicit val byteToStatement = new ToStatement[java.lang.Byte] {
-    def set(s: java.sql.PreparedStatement, index: Int, aValue: java.lang.Byte): Unit = {
+    def set(s: PreparedStatement, index: Int, aValue: java.lang.Byte): Unit = {
       s.setByte(index, aValue)
     }
   }
@@ -62,9 +61,9 @@ object DaoSupport extends ExtendSupport {
   }
 
   override def extendSetAny(original: ToStatement[Any]) = new ToStatement[Any] {
-    def set(s: java.sql.PreparedStatement, i: Int, value: Any): Unit = {
+    def set(s: PreparedStatement, i: Int, value: Any): Unit = {
       value match {
-        case ts: java.sql.Timestamp => tsToStatement.set(s,i,value.asInstanceOf[java.sql.Timestamp])
+        case ts: Timestamp => tsToStatement.set(s,i,value.asInstanceOf[Timestamp])
         case byte: java.lang.Byte => byteToStatement.set(s,i,value.asInstanceOf[java.lang.Byte])
         case _ => original.set(s,i,value)
       }

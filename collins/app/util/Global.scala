@@ -33,6 +33,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     setCryptoKey(key)
   }
   override def onStop(app: Application) {
+    logger.info("Stopping application")
     super.onStop(app)
   }
 
