@@ -1,0 +1,64 @@
+@(asset: Asset, f: Form[actions.Stage3Form])(implicit flash: Flash, req: Request[AnyContent])
+
+@import helper._
+@import _root_.util.Helpers.formatPowerPort
+@import util.notice
+@import AssetMeta.Enum.{ChassisTag, RackPosition, ServiceTag}
+
+@main("Intake Step 3 - " + asset.tag) {
+<div class="page-header">
+  <h1>Asset Intake Step 3 <small>Verify Information for @asset.tag</small></h1>
+</div>
+<div class="row">
+  <div class="span10">
+    @notice("error")
+    @notice("warning")
+    @form(app.routes.Resources.intake(asset.getId, 3)) {
+    <div class="clearfix">
+      <label for="ASSET_TAG">Asset Tag</label>
+      <div class="input">
+        <span id="ASSET_TAG" class="uneditable-input">@asset.tag</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="@ServiceTag.toString">Service Tag</label>
+      <div class="input">
+        <span id="@ServiceTag.toString" class="uneditable-input">
+          @asset.getMetaAttribute(ServiceTag).map{a => a.getValue()}.getOrElse{<em>-</em>}
+        </span>
+      </div>
+    </div>
+    <div class="clearfix">
+      @f.forField(ChassisTag.toString) { field =>
+      <label for="@field.name">Chassis Tag</label>
+      <div class="input">
+        <span id="@field.name" class="uneditable-input">@field.value.getOrElse("")</span>
+        <input type="hidden" name="@field.name" value="@field.value.getOrElse("")">
+      </div>
+      }
+    </div>
+    @inputText(f(RackPosition.toString), 'label -> "Rack Position", Symbol("enter-style") -> "tab", 'class -> "focus")(twitterBootstrapInput)
+    @inputText(f(formatPowerPort("A")), 'label -> "Power Port A", Symbol("enter-style") -> "tab")(twitterBootstrapInput)
+    @inputText(f(formatPowerPort("B")), 'label -> "Power Port B")(twitterBootstrapInput)
+    @f.globalError.map { error =>
+      <div class="alert-message error">
+        <strong>Unable to intake node</strong> @error.message
+      </div>
+    }
+    <div class="clearfix">
+      <input type="hidden" name="stage" value="3">
+    </div>
+    <div class="actions">
+      <input type="submit" class="btn primary" value="Done &rarr;">
+      <a class="btn" href="@app.routes.Resources.intake(asset.getId, 1)">Cancel</a>
+    </div>
+    }
+  </div>
+  <div class="span4">
+    <h3>Overview</h3>
+    <p>Scan the rack position and individual power ports of the chassis. These values will be
+    associated with the node. These values are used for determining what nodes are available in
+    which racks, and calculating power utilization/distribution.</p>
+  </div>
+</div>
+}

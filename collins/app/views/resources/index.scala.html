@@ -1,0 +1,107 @@
+@(assetMeta: Seq[AssetMeta])(implicit flash: Flash, req: Request[AnyContent])
+
+@import helper._
+@import _root_.util.Helpers
+@import util.notice
+
+@basicFormatter(asset: AssetMeta) = {
+  <input type="text" id="@asset.name" name="@asset.name">
+  <span class="help-inline">@asset.description</span>
+}
+
+@main("Asset Search") {
+<div class="page-header"><h1>Asset Search</h1></div>
+<div class="row">
+  <div class="span14">
+
+    @notice("message", Some("notice"))
+    @notice("success")
+    @notice("error")
+
+    @form(app.routes.Resources.find(0,10,"DESC")) {
+    <div class="clearfix">
+      <label for="ASSET_TAG">Asset Tag</label>
+      <div class="input">
+        <input type="text" class="focus" id="ASSET_TAG" name="ASSET_TAG">
+        <span class="help-inline">Tumblr Asset Tag</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label>Created Between</label>
+      <div class="input">
+        <div class="inline-inputs">
+          <input id="createdAfter" class="mini" data-type="date" type="text" name="createdAfter" min="2011-12-01" placeholder="Start"/>
+          and
+          <input id="createdBefore" class="mini" data-type="date" type="text" name="createdBefore" min="2011-12-01" placeholder="End"/>
+          <span class="help-block">Asset was created after Start date and before End date</span>
+        </div>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label>Updated Between</label>
+      <div class="input">
+        <div class="inline-inputs">
+          <input id="updatedAfter" class="mini" data-type="date" type="text" name="updatedAfter" min="2011-12-01" placeholder="Start"/>
+          and
+          <input id="updatedBefore" class="mini" data-type="date" type="text" name="updatedBefore" min="2011-12-01" placeholder="End"/>
+          <span class="help-block">Asset was last updated after Start date and before End date</span>
+        </div>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="IPMI_ADDRESS">IPMI Address</label>
+      <div class="input">
+        <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS">
+        <span class="help-inline">IPMI Address</span>
+      </div>
+    </div>
+    @assetMeta.map { case(asset) =>
+    <div class="clearfix">
+      <label for="@asset.name">@asset.label</label>
+      <div class="input">
+        @{
+           asset.name match {
+             case "DISK_TYPE" => optionDisplay(asset, 2)
+             case "DISK_STORAGE_TOTAL" => optionDisplay(asset, 1)
+             case "CPU_SPEED_GHZ" => optionDisplay(asset, 3)
+             case "MEMORY_SIZE_TOTAL" => optionDisplay(asset, 1)
+             case "NIC_SPEED" => optionDisplay(asset, 4)
+             case _ => basicFormatter(asset)
+           }
+         }
+      </div>
+    </div>
+    }
+    <div class="clearfix">
+      <label for="type">Asset Type</label>
+      <div class="input">
+        <select name="type" id="type">
+          <option value="" selected="selected"></option>
+          @AssetType.Enum.values.toSeq.map { v =>
+          <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
+          }
+        </select>
+        <span class="help-inline">Type of Asset (Server Chassis, Server Node, etc)</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="status">Asset Status</label>
+      <div class="input">
+        <select name="status" id="status">
+          <option value="" selected="selected"></option>
+          @Status.Enum.values.toSeq.map { v =>
+          <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
+          }
+        </select>
+        <span class="help-inline">Asset Status (New, Incomplete, etc)</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <input type="submit" class="btn primary" value="Search">
+      <button type="reset" class="btn">Reset</button>
+    </div>
+    }
+  </div>
+</div>
+}

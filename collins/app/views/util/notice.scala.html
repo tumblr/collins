@@ -1,0 +1,7 @@
+@(key: String, alertType: Option[String] = None)(implicit flash: Flash)
+@flash.get(key).map { message =>
+    <div class="alert-message @alertType.getOrElse(key) fade in" data-alert="alert">
+      <a class="close small" href="#">x</a>
+      @message
+    </div>
+}

@@ -1,0 +1,70 @@
+@(assets: Page[Asset])(implicit flash: Flash, req: Request[AnyContent])
+
+@import helper._
+@import _root_.util.Helpers
+@import util.notice
+
+@link(newPage: Int) = @{
+  Helpers.mapToQueryString(app.routes.Resources.find(newPage, 10, "DESC").toString, req.queryString)
+}
+@main("Asset Search Results") {
+<div class="page-header">
+  <h1>Asset Search Results <small>@assets.items.size of @assets.total results</small></h1>
+</div>
+<div class="row">
+  <div class="span14">
+    @notice("message", Some("notice"))
+    @notice("error")
+    @notice("warning")
+    <table class="condensed-table zebra-striped">
+      <thead>
+        <tr>
+          <th>Asset Tag</th>
+          <th>Status</th>
+          <th>Type</th>
+          <th>Created</th>
+          <th>Last Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        @assets.items.map { asset =>
+        <tr>
+          <td><a href="@app.routes.CookieApi.getAsset(asset.tag)">@asset.tag</a></td>
+          <td>@asset.getStatus().name</td>
+          <td>@asset.getType().name</td>
+          <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
+          <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+
+    <div id="pagination" class="pagination">
+      <ul>
+        @assets.prev.map { page =>
+          <li class="prev">
+            <a href="@link(page)">&larr; Previous</a>
+          </li>
+        }.getOrElse {
+          <li class="prev disabled">
+            <a>&larr; Previous</a>
+          </li>
+        }
+        <li class="current">
+          <a>Displaying @(assets.offset + 1) to @(assets.offset + assets.items.size) of @assets.total</a>
+        </li>
+        @assets.next.map { page =>
+          <li class="next">
+            <a href="@link(page)">Next &rarr;</a>
+          </li>
+        }.getOrElse {
+          <li class="next disabled">
+            <a>Next &rarr;</a>
+          </li>
+        }
+
+      </ul>
+    </div>
+  </div>
+</div>
+}
