@@ -1,0 +1,375 @@
+@(aa: Asset.AllAttributes)(implicit flash: Flash, req: Request[AnyContent])
+
+@import helper._
+@import util.notice
+@import _root_.util.conversions._
+@import _root_.models.IpmiInfo.Enum._
+
+@main("Asset Details") {
+<div class="page-header">
+  <h1>Asset Details <small>@aa.asset.tag</small></h1>
+</div>
+<div class="row">
+  <div class="span14">
+    @notice("message", Some("notice"))
+    @notice("error")
+    @notice("warning")
+
+    <div style="float: right;">
+      <button class="btn" data-toggle="collapseAll">Collapse All</button>
+      <button class="btn" data-toggle="openAll">Open All</button>
+    </div>
+
+    <h3><a data-toggle="collapse" data-target="#basicDataTable">Basic Data</a></h3>
+    <table id="basicDataTable" class="zebra-striped condensed-table">
+      <thead>
+        <tr>
+          <th></th><th></th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Asset Tag</th>
+          <td>@aa.asset.tag</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>Asset Type</th>
+          <td>@aa.asset.getType().name</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>Asset Status</th>
+          <td>@aa.asset.getStatus().name</td>
+          <td>@aa.asset.getStatus().description</td>
+        </tr>
+        <tr>
+          <th>Created On</th>
+          <td>@aa.asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>Last Updated</th>
+          <td>@aa.asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse {<em>Never</em>}</td>
+          <td></td>
+        </tr>
+        @aa.mvs.find { _.getMetaId == AssetMeta.Enum.ChassisTag.id }.map { mv =>
+        <tr>
+          <th>@mv.getLabel</th>
+          <td>@mv.getValue</td>
+          <td>@mv.getDescription</td>
+        </tr>
+        }
+        @aa.mvs.find { _.getMetaId == AssetMeta.Enum.ServiceTag.id }.map { mv =>
+        <tr>
+          <th>@mv.getLabel</th>
+          <td>@mv.getValue</td>
+          <td>@mv.getDescription</td>
+        </tr>
+        }
+        @aa.mvs.find { _.getMetaId == AssetMeta.Enum.RackPosition.id }.map { mv =>
+        <tr>
+          <th>@mv.getLabel</th>
+          <td>@mv.getValue</td>
+          <td>@mv.getDescription</td>
+        </tr>
+        }
+        @aa.mvs.filter { _.getMetaId == AssetMeta.Enum.PowerPort.id }.map { mv =>
+        <tr>
+          <th>@mv.getLabel</th>
+          <td>@mv.getValue</td>
+          <td>@mv.getDescription</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+
+    @if(aa.ipmi.nonEmpty) {
+    <h3><a data-toggle="collapse" data-target="#ipmiInfo">IPMI Info</a></h3>
+    <table class="zebra-striped condensed-table" id="ipmiInfo">
+      <thead>
+        <th></th><th></th>
+      </thead>
+      <tbody>
+        <tr>
+          <th>IPMI Gateway</th>
+          <td>@aa.ipmi.get.dottedGateway()</td>
+        </tr>
+        <tr>
+          <th>IPMI Address/Gateway</th>
+          <td>@{aa.ipmi.get.dottedAddress()}/@{aa.ipmi.get.dottedNetmask()}</td>
+        </tr>
+        <tr>
+          <th>IPMI Username</th>
+          <td>@aa.ipmi.get.username</td>
+        </tr>
+        <tr>
+          <th>IPMI Password</th>
+          <td>@aa.ipmi.get.password</td>
+        </tr>
+      </tbody>
+    </table>
+    }
+
+    @if(aa.lldp.interfaceCount > 0) {
+    <h3><a data-toggle="collapse" data-target="#lldpSummary">LLDP Summary</a></h3>
+    <table class="zebra-striped condensed-table" id="lldpSummary">
+      <thead>
+        <tr>
+          <th></th>
+          @aa.lldp.interfaces.map { interface =>
+          <th>@interface.name</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Chassis Name</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.chassis.name</td>
+          }
+        </tr>
+        <tr>
+          <th>Chassis Description</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.chassis.description</td>
+          }
+        </tr>
+        <tr>
+          <th>Chassis ID</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.chassis.id.idType / @interface.chassis.id.value</td>
+          }
+        </tr>
+
+        <tr>
+          <th>Port ID</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.port.id.idType / @interface.port.id.value</td>
+          }
+        </tr>
+        <tr>
+          <th>Port Description</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.port.description</td>
+          }
+        </tr>
+
+        <tr>
+          <th>VLAN ID</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.vlan.id</td>
+          }
+        </tr>
+        <tr>
+          <th>VLAN Name</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.vlan.name</td>
+          }
+        </tr>
+
+      </tbody>
+    </table>
+    }
+
+    @if(aa.lshw.cpuCount > 0) {
+    <h3><a data-toggle="collapse" data-target="#hardwareSummary">Hardware Summary</a></h3>
+    <table class="zebra-striped condensed-table" id="hardwareSummary">
+      <thead>
+        <tr>
+          <th></th><th></th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th colspan="3">CPU</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total CPUs</td>
+          <td>@aa.lshw.cpuCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total CPU Cores</td>
+          <td>@aa.lshw.cpuCoreCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total CPU Threads</td>
+          <td>@aa.lshw.cpuThreadCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Hyperthreading Enabled</td>
+          <td>@{if (aa.lshw.hasHyperthreadingEnabled) "Yes" else "No"}</td>
+        </tr>
+
+        <tr>
+          <th colspan="3">Memory</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Memory</td>
+          <td>@aa.lshw.totalMemory.toHuman</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Memory Banks</td>
+          <td>@aa.lshw.memoryBanksTotal</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Used Memory Banks</td>
+          <td>@aa.lshw.memoryBanksUsed</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Unused Memory Banks</td>
+          <td>@aa.lshw.memoryBanksUnused</td>
+        </tr>
+
+        <tr>
+          <th colspan="3">Disks</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Disks</td>
+          <td>@aa.lshw.diskCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Spinning Storage</td>
+          <td>@aa.lshw.totalStorage.toHuman</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Storage</td>
+          <td>@aa.lshw.totalUsableStorage.toHuman</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Has Flash Disk</td>
+          <td>@{if (aa.lshw.hasFlashStorage) "Yes" else "No"}</td>
+        </tr>
+
+        <tr>
+          <th colspan="3">Network</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Interfaces</td>
+          <td>@aa.lshw.nicCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Has 10Gb Interface</td>
+          <td>@{if (aa.lshw.has10GbNic) "Yes" else "No"}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3><a data-toggle="collapse" data-target="#hardwareDetails">Hardware Details</a></h3>
+    <div id="hardwareDetails" class="collapse">
+    <h4>CPU <small>Collected CPU Information</small></h4>
+    <table class="zebra-striped condensed-table">
+      <thead>
+        <th>Id</th><th>Cores</th><th>Threads</th><th>Speed</th><th>Description</th>
+      </thead>
+      <tbody>
+      @aa.lshw.cpus.zipWithIndex.map { case(cpu,id) =>
+        <tr>
+          <th>@id</th>
+          <td>@cpu.cores</td>
+          <td>@cpu.threads</td>
+          <td>@cpu.speedGhz</td>
+          <td>@cpu.description</td>
+        </tr>
+      }
+      </tbody>
+    </table>
+
+    <h4>Memory <small>Collected Memory Information</small></h4>
+    <table class="zebra-striped condensed-table">
+      <thead>
+        <tr>
+          <th>Bank Id</th><th>Size</th><th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      @aa.lshw.memory.map { mem =>
+        <tr>
+          <th>@mem.bank</th>
+          <td>@mem.size.toHuman</td>
+          <td>@mem.description</td>
+        </tr>
+      }
+      </tbody>
+    </table>
+
+    <h4>Disks <small>Collected Disk Information</small></h4>
+    <table class="zebra-striped condensed-table">
+      <thead>
+        <tr>
+          <th>Id</th><th>Size</th><th>Type</th><th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      @aa.lshw.disks.zipWithIndex.map { case(disk,id) =>
+        <tr>
+          <th>@id</th>
+          <td>@disk.size.toHuman</td>
+          <td>@disk.diskType</td>
+          <td>@disk.description</td>
+        </tr>
+      }
+      </tbody>
+    </table>
+
+    <h4>Network Interfaces <small>Collected NIC Information</small></h4>
+    <table class="zebra-striped condensed-table">
+      <thead>
+        <tr>
+          <th>Id</th><th>Speed</th><th>MAC Address</th><th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      @aa.lshw.nics.zipWithIndex.map { case(nic,id) =>
+        <tr>
+          <th>@id</th>
+          <td>@{nic.speed.toHuman}/s</td>
+          <td>@nic.macAddress</td>
+          <td>@nic.description</td>
+        </tr>
+      }
+      </tbody>
+    </table>
+    </div>
+    }
+
+    <h3>Log Data <small>Log data about asset</small></h3>
+    <table id="log_data" class="log-data zebra-striped condensed-table" data-source="/asset/@aa.asset.tag/logs">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Source</th>
+          <th>Level</th>
+          <th>Message</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th>Date</th>
+          <th>Source</th>
+          <th>Level</th>
+          <th>Message</th>
+        </tr>
+      </tfoot>
+    </table>
+      </thead>
+    </table>
+  </div>
+</div>
+}

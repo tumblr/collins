@@ -1,0 +1,43 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                           app.Resources.index
+
+# Resources/Assets
+GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC")
+GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
+
+GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
+GET     /asset;create               app.Resources.displayCreateForm(assetType: String)
+POST    /asset;create               app.Resources.createAsset(assetType: String)
+
+# Admin pages
+GET     /admin/stats                controllers.Admin.stats
+
+# Help
+GET     /help                       app.HelpPage.index(t: Int ?= controllers.Help.Default)
+
+# Authentication
+GET     /login                      controllers.Application.login
+POST    /login                      controllers.Application.authenticate
+GET     /logout                     controllers.Application.logout
+
+# API
+PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
+GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+
+PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
+POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
+DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
+GET     /api/asset/:tag             app.Api.getAsset(tag: String)
+GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC")
+
+# For testing
+GET     /api/ping                   app.Api.ping
+GET     /api/errorPing              app.Api.errorPing(id: Int ?= 1)
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)

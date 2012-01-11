@@ -1,0 +1,85 @@
+@(title: String, loggedIn: Boolean = true)(content: Html)(implicit req: Request[AnyContent])
+
+@import helper._
+@import _root_.util.Helpers
+
+@createLink(a: AssetType.Enum) = {
+  <a href="@app.routes.Resources.displayCreateForm(a.toString)">@Helpers.camelCase(a.toString, " ")</a>
+}
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>@title</title>
+    <link rel="stylesheet" type="text/css" media="screen" href="@routes.Assets.at("stylesheets/bootstrap-1.4.0.min.css")"> 
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/main.css")">
+    <link rel="stylesheet" media="screen" href="@routes.Assets.at("stylesheets/dateinput.css")">
+    <link rel="shortcut icon" type="image/gif" href="@routes.Assets.at("images/favicon.ico")">
+    <script src="@routes.Assets.at("javascripts/jquery-1.6.4.min.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/jquery.dataTables.min.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-alerts.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/bootstrap-dropdown.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/dataTables.bootstrapPagination.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/jquery-tools.min.js")" type="text/javascript"></script>
+    <script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
+  </head>
+  <body>
+
+    @if(loggedIn) {
+    <div class="topbar-wrapper" style="z-index: 5;">
+      <div class="topbar" data-dropdown="dropdown">
+        <div class="topbar-inner">
+          <div class="container">
+            <a class="brand" href="@app.routes.Resources.index">Collins Resource Manager</a>
+            <ul class="nav" style="float: right;">
+              <li><a href="@app.routes.Resources.index">Search</a></li>
+              @User.fromMap(req.session.data).map { u =>
+              @u.getRole("infra").map { role =>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle">Create</a>
+                <ul class="dropdown-menu">
+                  <li>@createLink(AssetType.Enum.DataCenter)</li>
+                  <li>@createLink(AssetType.Enum.PowerCircuit)</li>
+                  <li>@createLink(AssetType.Enum.PowerStrip)</li>
+                  <li>@createLink(AssetType.Enum.Rack)</li>
+                  <li>@createLink(AssetType.Enum.Router)</li>
+                  <li>@createLink(AssetType.Enum.Switch)</li>
+                </ul>
+              </li>
+              }}
+              <li><a href="@routes.Application.logout">Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    } else {
+      <div class="topbar">
+        <div class="fill">
+          <div class="container">
+            <a class="brand" href="@routes.Application.login">Collins Resource Manager</a>
+            <form action="@routes.Application.authenticate" method="post" class="pull-right">
+              <input class="input-small" type="text" name="username" placeholder="Username">
+              <input class="input-small" type="password" name="password" placeholder="Password">
+              <button class="btn" type="submit">Sign in</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="container">
+
+      <div class="content">
+        @content
+      </div>
+
+      <footer>
+        <p>&copy; Tumblr, 2011</p>
+      </footer>
+    </div>
+
+
+  </body>
+</html>

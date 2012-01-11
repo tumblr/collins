@@ -1,0 +1,24 @@
+@(asset: Asset, f: Form[actions.Stage2Form])(implicit flash: Flash, req: Request[AnyContent])
+
+@import util.notice
+@import helper._
+@import AssetMeta.Enum.ChassisTag
+
+@main("Intake Step 2 - " + asset.tag) {
+<div class="page-header">
+  <h1>Asset Intake Step 2 <small>Verify Chassis Tag for @asset.tag</small></h1>
+</div>
+<div class="row">
+  <div class="span14">
+    @notice("error")
+    @notice("warning")
+    @form(app.routes.Resources.intake(asset.getId, 2), 'class -> "form-stacked") {
+    @inputText(f(ChassisTag.toString), 'label -> "Scan the Chassis Tag", 'class -> "focus")(twitterBootstrapInput)
+    <input type="hidden" name="stage" value="2">
+    <div class="actions">
+      <input type="submit" class="btn primary" value="Next &rarr;">
+    </div>
+    }
+  </div>
+</div>
+}
