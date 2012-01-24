@@ -1,12 +1,21 @@
 #! /usr/bin/env sh
+#
+# collins - groovy kind of love
+#
+# chkconfig:   35 95 5
 
 APP_NAME="collins"
 APP_HOME="/usr/local/$APP_NAME/current"
-LISTEN_PORT="8080"
 DAEMON="/usr/local/bin/daemon"
+LISTEN_PORT=8080
+FILE_LIMIT=8192
+COLLINS_USER="collins"
+HEAP_OPTS="-Xmx8192m -Xms8192m -XX:NewSize=6144m"
+
+# Check for config overrides
+[ -f /etc/sysconfig/collins ] && . /etc/sysconfig/collins
 
 APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
-HEAP_OPTS="-Xmx8192m -Xms8192m -XX:NewSize=6144m"
 GC_OPTS="-XX:+UseParallelOldGC -XX:+UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=1000 -XX:GCTimeRatio=99"
 GC_LOG_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintTenuringDistribution -XX:+PrintHeapAtGC"
 GC_LOG="-Xloggc:/var/log/$APP_NAME/gc.log"
@@ -16,7 +25,7 @@ JAVA_OPTS="-server $APP_OPTS $JMX_OPTS $GC_OPTS $GC_LOG_OPTS $GC_LOG $HEAP_OPTS 
 
 pidfile="/var/run/$APP_NAME/$APP_NAME.pid"
 daemon_pidfile="/var/run/$APP_NAME/$APP_NAME-daemon.pid"
-daemon_args="--name $APP_NAME --pidfile $daemon_pidfile --core -U --chdir /"
+daemon_args="-u $COLLINS_USER --name $APP_NAME --pidfile $daemon_pidfile --core -U --chdir /"
 daemon_start_args="--stdout=/var/log/$APP_NAME/stdout --stderr=/var/log/$APP_NAME/error"
 
 function running() {
@@ -62,6 +71,7 @@ case "$1" in
     fi
     echo "Running migrations"
     ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/scripts/
+    echo "Database initialization attempted" > /var/run/$APP_NAME/install.log
   ;;
 
   start)
@@ -83,7 +93,7 @@ case "$1" in
     fi
 
     ulimit -c unlimited || echo -n " (no coredump)"
-    ulimit -n 8192
+    ulimit -n $FILE_LIMIT || echo -n " (could not set file limit)"
     $DAEMON $daemon_args $daemon_start_args -- sh -c "echo "'$$'" > $pidfile; exec ${JAVA_HOME}/bin/java ${JAVA_OPTS} -cp ${APP_HOME}'/lib/*' play.core.server.NettyServer ${APP_HOME}"
     tries=0
     while ! running; do
