@@ -5,7 +5,7 @@ APP_HOME="/usr/local/$APP_NAME/current"
 LISTEN_PORT="8080"
 DAEMON="/usr/local/bin/daemon"
 
-APP_OPTS="-Dconfig.file=$APP_HOME/production.conf -Dhttp.port=${LISTEN_PORT}"
+APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
 HEAP_OPTS="-Xmx8192m -Xms8192m -XX:NewSize=6144m"
 GC_OPTS="-XX:+UseParallelOldGC -XX:+UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=1000 -XX:GCTimeRatio=99"
 GC_LOG_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintTenuringDistribution -XX:+PrintHeapAtGC"
