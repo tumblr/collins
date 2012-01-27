@@ -55,7 +55,8 @@ object DaoSupport extends ExtendSupport {
       val MetaDataItem(qualified, nullable, clazz) = meta
       value match {
         case byte: java.lang.Byte => Right(byte)
-        case _ => Left(TypeDoesNotMatch("Cannot convert " + value +":"+value.asInstanceOf[AnyRef].getClass + " to Timestamp for column " + qualified))
+        case int: java.lang.Integer => Right(int.byteValue():java.lang.Byte)
+        case _ => Left(TypeDoesNotMatch("Cannot convert " + value +":"+value.asInstanceOf[AnyRef].getClass + " to Byte for column " + qualified))
       }
     })
   }
