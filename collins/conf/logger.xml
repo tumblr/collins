@@ -3,7 +3,7 @@
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
      <file>/var/log/collins/application.log</file>
      <encoder>
-       <pattern>%date - [%level] - from %logger in %thread %n%message%n%xException%n</pattern>
+       <pattern>%date - [%level] - from %logger in %thread %n%message%n%xException{100}%n</pattern>
      </encoder>
    </appender>
 
@@ -16,7 +16,6 @@
   <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
 
   <root level="ERROR">
-    <appender-ref ref="STDOUT" />
     <appender-ref ref="FILE" />
   </root>
   

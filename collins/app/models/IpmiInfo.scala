@@ -110,7 +110,7 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
   }
 
   protected def getNextAvailableAddress(netmask: Long)(implicit con: Connection): Long = {
-    val currentMax = IpmiInfo.find("select max(address) as address from ipmi_info").as(scalar[Long])
+    val currentMax = IpmiInfo.find("select MAX(address) as address from ipmi_info").as(long("address"))
     IpAddress.nextAvailableAddress(currentMax, netmask)
   }
 

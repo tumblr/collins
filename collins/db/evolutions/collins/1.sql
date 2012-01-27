@@ -17,8 +17,8 @@ CREATE TABLE asset (
   status                        INTEGER NOT NULL,
   asset_type                    INTEGER NOT NULL,
   created                       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated                       TIMESTAMP,
-  deleted                       TIMESTAMP,
+  updated                       TIMESTAMP NULL,
+  deleted                       TIMESTAMP NULL,
   CONSTRAINT fk_status FOREIGN KEY (status) REFERENCES status(id),
   CONSTRAINT fk_type FOREIGN KEY (asset_type) REFERENCES asset_type (id)
 );
