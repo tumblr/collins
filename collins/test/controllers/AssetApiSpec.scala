@@ -71,7 +71,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         import Helpers.formatPowerPort
         val rp: String = RackPosition.toString
         val body = AnyContentAsUrlFormEncoded(Map(
-          RackPosition.toString -> Seq("rack 1"),
+          rp -> Seq("rack 1"),
           formatPowerPort("A") -> Seq("power 1"),
           formatPowerPort("B") -> Seq("power 2"),
           "attribute" -> Seq("foo;bar","fizz;buzz")

@@ -9,7 +9,7 @@ import play.api.Play.current
 import java.sql._
 
 case class AssetMeta(
-    id: Pk[java.lang.Integer],
+    id: Pk[java.lang.Long],
     name: String,
     priority: Int,
     label: String,
@@ -17,7 +17,7 @@ case class AssetMeta(
 {
   require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
   require(description != null && description.length > 0, "Need a description")
-  def getId(): Int = id.get
+  def getId(): Long = id.get
 }
 
 object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
@@ -41,7 +41,7 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     }.reverse
   }
 
-  def findById(id: Int) = Model.withConnection { implicit con =>
+  def findById(id: Long) = Model.withConnection { implicit con =>
     Cache.getOrElseUpdate("AssetMeta.findById(%d)".format(id)) {
       AssetMeta.find("id={id}").on('id -> id).singleOption()
     }

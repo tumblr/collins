@@ -9,8 +9,8 @@ import java.sql.Connection
  */
 case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getAssetId(): Long = _value.asset_id.id
-  def getMetaId(): Int = _meta.getId
-  def getId(): (Long,Int) = (getAssetId(), getMetaId())
+  def getMetaId(): Long = _meta.getId
+  def getId(): (Long,Long) = (getAssetId(), getMetaId())
   def getName(): String = _meta.name
   def getGroupId(): Int = _value.group_id
   def getNameEnum(): Option[AssetMeta.Enum] = try {
@@ -28,7 +28,7 @@ object MetaWrapper {
       val meta: AssetMeta = AssetMeta.findByName(metaName, con).getOrElse {
         AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
       }
-      AssetMetaValue(asset, meta.getId, v)
+      AssetMetaValue(asset, meta.id.get, v)
     }.toSeq
     AssetMetaValue.purge(metaValues)
     AssetMetaValue.create(metaValues)

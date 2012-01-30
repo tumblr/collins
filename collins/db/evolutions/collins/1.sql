@@ -28,7 +28,7 @@ CREATE INDEX created_idx ON asset (created);
 CREATE INDEX updated_idx ON asset (updated);
 
 CREATE TABLE asset_meta (
-  id                            INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  id                            BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   name                          VARCHAR(255) NOT NULL UNIQUE,
   priority                      INTEGER NOT NULL DEFAULT -1,
   label                         VARCHAR(255) NOT NULL,
@@ -38,7 +38,7 @@ CREATE INDEX asset_meta_idx ON asset_meta (priority);
 
 CREATE TABLE asset_meta_value (
   asset_id                      BIGINT NOT NULL,
-  asset_meta_id                 INTEGER NOT NULL,
+  asset_meta_id                 BIGINT NOT NULL,
   group_id                      INTEGER NOT NULL DEFAULT 0,
   value                         TEXT,
   CONSTRAINT fk_amv_asset_id      FOREIGN KEY (asset_id) REFERENCES asset (id) ON DELETE CASCADE,
