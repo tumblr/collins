@@ -16,7 +16,7 @@ object AttributeResolver {
   }
   private def asAssetMeta(key: String): Option[AssetMeta] = try {
     val am = AssetMeta.Enum.withName(key)
-    Some(AssetMeta(Id(new java.lang.Integer(am.id)), am.toString, -1, "label", "description"))
+    Some(AssetMeta(Id(new java.lang.Long(am.id)), am.toString, -1, "label", "description"))
   } catch {
     case _ => // If an exception was thrown, try the database
       AssetMeta.findByName(key.toUpperCase)

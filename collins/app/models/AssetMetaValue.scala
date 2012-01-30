@@ -10,7 +10,7 @@ import play.api.Logger
 import java.sql.{Connection, Timestamp}
 import java.util.Date
 
-case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.lang.Integer], group_id: Int, value: String) {
+case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.lang.Long], group_id: Int, value: String) {
   def getAsset(): Asset = {
     Asset.findById(asset_id.id).get
   }
@@ -22,16 +22,16 @@ case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.l
 object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
   private[this] val logger = Logger.logger
 
-  def apply(asset_id: Long, asset_meta_id: Int, value: String) =
+  def apply(asset_id: Long, asset_meta_id: Long, value: String) =
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), 0, value)
-  def apply(asset: Asset, asset_meta_id: Int, value: String) =
+  def apply(asset: Asset, asset_meta_id: Long, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), 0, value)
   def apply(asset: Asset, asset_meta: AssetMeta.Enum, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta.id), 0, value)
 
-  def apply(asset_id: Long, asset_meta_id: Int, group_id: Int, value: String) =
+  def apply(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), group_id, value)
-  def apply(asset: Asset, asset_meta_id: Int, group_id: Int, value: String) =
+  def apply(asset: Asset, asset_meta_id: Long, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), group_id, value)
   def apply(asset: Asset, asset_meta: AssetMeta.Enum, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta.id), group_id, value)
