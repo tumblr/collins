@@ -63,7 +63,7 @@ case "$1" in
       db_password=$3;
     fi
     echo "mysql root password. Enter for none."
-    mysql -u root -p -e "grant all privileges on collins.* to $db_username@'localhost' identified by '$db_password';"
+    mysql -u root -p -e "grant all privileges on collins.* to $db_username@'127.0.0.1' identified by '$db_password';"
     if [ ! -x $JAVA_HOME/bin/java ]; then
       echo "FAIL"
       echo "Didn't find $JAVA_HOME/bin/java, check JAVA_HOME?"
