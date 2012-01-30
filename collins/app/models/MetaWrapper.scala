@@ -30,6 +30,7 @@ object MetaWrapper {
       }
       AssetMetaValue(asset, meta.getId, v)
     }.toSeq
+    AssetMetaValue.purge(metaValues)
     AssetMetaValue.create(metaValues)
   }
 

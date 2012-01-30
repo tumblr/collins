@@ -1,11 +1,14 @@
 package models
 
 import Model.defaults._
+import conversions._
 import util.Cache
 
 import anorm._
 import anorm.SqlParser._
-import java.sql.Connection
+import play.api.Logger
+import java.sql.{Connection, Timestamp}
+import java.util.Date
 
 case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.lang.Integer], group_id: Int, value: String) {
   def getAsset(): Asset = {
@@ -17,6 +20,7 @@ case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.l
 }
 
 object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
+  private[this] val logger = Logger.logger
 
   def apply(asset_id: Long, asset_meta_id: Int, value: String) =
     new AssetMetaValue(Id(asset_id), Id(asset_meta_id), 0, value)
@@ -31,6 +35,27 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
     new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), group_id, value)
   def apply(asset: Asset, asset_meta: AssetMeta.Enum, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta.id), group_id, value)
+
+  def purge(mvs: Seq[AssetMetaValue])(implicit con: Connection) = {
+    mvs.foreach { mv =>
+      AssetMetaValue.delete("asset_id={aid} AND asset_meta_id={ami}").on(
+        'aid -> mv.asset_id.get,
+        'ami -> mv.asset_meta_id.get
+      ).executeUpdate() match {
+        case 1 =>
+          val ami = mv.asset_meta_id.get
+          AssetLog(NotAssigned, mv.asset_id, new Date().asTimestamp, AssetLog.Formats.PlainText.id.toByte,
+                   AssetLog.Sources.Internal.id.toByte,
+                   AssetLog.MessageTypes.Notice.id.toByte,
+                   "Deleted old meta value, setting %s to %s".format(
+                     AssetMeta.findById(ami).map { _.name }.getOrElse(ami.toString),
+                     mv.value)
+                   ).create()
+        case n =>
+          logger.trace("Got %d rows for AssetMetaValue.delete", n)
+      }
+    }
+  }
 
   override def create(mv: AssetMetaValue)(implicit con: Connection): AssetMetaValue = {
     AssetMetaValue.insert(mv)

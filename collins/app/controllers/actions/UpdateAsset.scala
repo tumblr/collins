@@ -57,11 +57,27 @@ private[controllers] case class UpdateAsset(
       validateRequest(asset) match {
         case Left(error) => Left(Api.getErrorMessage(error))
         case Right(options) =>
-          AssetLifecycle.updateAsset(asset, options) match {
+          val res = if (onlyHasAttributes(req, options)) {
+            AssetLifecycle.updateAssetAttributes(asset, options)
+          } else {
+            AssetLifecycle.updateAsset(asset, options)
+          }
+          res match {
             case Left(error) => Left(Api.getErrorMessage(error.getMessage))
             case Right(success) => Right(success)
           }
       }
+    }
+  }
+
+  protected def onlyHasAttributes(req: Request[AnyContent], options: Map[String,String]): Boolean = {
+    val a1: Boolean = req.queryString.size == 1 && req.queryString.contains("attribute")
+    val a2: Option[Boolean] = req.body.asUrlFormEncoded.map { m =>
+      m.size == 1 && m.contains("attribute")
+    }
+    a2 match {
+      case Some(b) => b
+      case None => a1
     }
   }
 
