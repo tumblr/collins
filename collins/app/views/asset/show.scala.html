@@ -53,28 +53,7 @@
           <td>@aa.asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse {<em>Never</em>}</td>
           <td></td>
         </tr>
-        @aa.mvs.find { _.getMetaId == AssetMeta.Enum.ChassisTag.id }.map { mv =>
-        <tr>
-          <th>@mv.getLabel</th>
-          <td>@mv.getValue</td>
-          <td>@mv.getDescription</td>
-        </tr>
-        }
-        @aa.mvs.find { _.getMetaId == AssetMeta.Enum.ServiceTag.id }.map { mv =>
-        <tr>
-          <th>@mv.getLabel</th>
-          <td>@mv.getValue</td>
-          <td>@mv.getDescription</td>
-        </tr>
-        }
-        @aa.mvs.find { _.getMetaId == AssetMeta.Enum.RackPosition.id }.map { mv =>
-        <tr>
-          <th>@mv.getLabel</th>
-          <td>@mv.getValue</td>
-          <td>@mv.getDescription</td>
-        </tr>
-        }
-        @aa.mvs.filter { _.getMetaId == AssetMeta.Enum.PowerPort.id }.map { mv =>
+        @aa.mvs.map { mv =>
         <tr>
           <th>@mv.getLabel</th>
           <td>@mv.getValue</td>

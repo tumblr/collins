@@ -102,6 +102,19 @@ object AssetLifecycle {
     }
   }
 
+  def updateAssetAttributes(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+    allCatch[Boolean].either {
+      options.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
+        return Left(new Exception("Attribute %s is restricted".format(kv._1)))
+      )
+      Model.withTransaction { implicit con =>
+        MetaWrapper.createMeta(asset, options)
+        true
+      }
+    }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
+  }
+
+
   protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     val requiredKeys = Set(RackPosition.toString, formatPowerPort("A"), formatPowerPort("B"))
     requiredKeys.find(key => !options.contains(key)).map { not_found =>
