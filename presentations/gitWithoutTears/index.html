@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->  <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	
+	<title>Git Without Tears - A timeless journey</title>
+	
+	<meta name="viewport" content="width=1024, user-scalable=no">
+	
+	<!-- Core and extension CSS files -->
+	<link rel="stylesheet" href="stylesheets/deck.core.css">
+	<link rel="stylesheet" href="stylesheets/deck.goto.css">
+	<link rel="stylesheet" href="stylesheets/deck.menu.css">
+	<link rel="stylesheet" href="stylesheets/deck.navigation.css">
+	<link rel="stylesheet" href="stylesheets/deck.status.css">
+	<link rel="stylesheet" href="stylesheets/deck.hash.css">
+
+	<link rel="stylesheet" href="stylesheets/neon.css">
+	<link rel="stylesheet" href="stylesheets/horizontal-slide.css">
+
+	<link rel="stylesheet" href="template.css">
+
+	<script src="javascripts/modernizr.custom.js"></script>
+</head>
+
+<body class="deck-container">
+
+	<section class="slide banner" id="intro">
+		<div>
+			<hgoup>
+				<h1>Git without Tears</h1>
+				<h2>A Timeless Journey</h2>
+			</hgroup>
+			<pre>I've made a huge tiny mistake - Gob</pre>
+		</div>
+	</section>
+
+	<section class="slide" id="overview">
+		<h2>Overview</h2>
+		<ol>
+			<li><h3>Git Fundamentals</h3></li>
+			<li><h3>The Git Workflow</h3></li>
+			<li><h3>Oh Shit</h3></li>
+			<li><h3>Tips &amp; Tricks</h3></li>
+			<li><h3>Q &amp; A</h3></li>
+		</ol>
+	</section>
+
+	<section class="slide" id="git-fundy">
+		<h2>Git Fundamentals</h2>
+		<ul>
+			<li><h3>History</h3></li>
+			<li><h3>What makes git different?</h3></li>
+			<li><h3>Thinking Git</h3></li>
+		</ul>
+	</section>
+	<section class="slide" id="git-history">
+		<h2>The History of Git</h2>
+		<ul>
+			<li><h3>In 2005 the Linux kernel could no longer use bitkeeper for version control</h3></li>
+			<li><h3>Created by Linus</h3></li>
+			<li><h3>Motivations</h3>
+			<ul>
+				<li>Speed</li>
+				<li>Simplicity</li>
+				<li>Non-linear development</li>
+				<li>Fully distributed</li>
+			</ul></li>
+		</ul>
+	</section>
+	<section class="slide" id="git-different">
+		<h2>What makes git different?</h2>
+		<ul>
+			<li><h3>Snapshots, not diffs (think filesystem)</h3></li>
+			<li><h3>Can be operated entirely offline</h3></li>
+			<li><h3>Under the hood, all git objects are referenced as SHA-1 checksums</h3></li>
+			<li><h3>Git is basically append only. Even deletes are adds in Git</h3></li>
+			<li><h3>Branching is <em>really</em> cheap</h3></li>
+		</ul>
+	</section>
+	<section class="slide" id="git-thinking">
+		<h2>Thinking Git</h2>
+        <div style="float: left; width: 240px;">
+            <img src="images/18333fig0106-tn_small.png" alt="Operations">
+        </div>
+        <div style="float: left; width: 555px;">
+            <ul>
+                <li><h3>Modify files in your working directory</h3></li>
+                <li><h3>Stage files, adding snapshots to your staging area</h3></li>
+                <li><h3>Do a commit, store the snapshot to git directory</h3></li>
+            </ul>
+        </div>
+	</section>
+	<section class="slide" id="git-thinking-lifecycle">
+		<h2>File Status Lifecycle</h2>
+        <img src="images/18333fig0201-tn.png" alt="Workflow">
+	</section>
+<style type="text/css">
+    .red {
+        color: red;
+    }
+    .green {
+        color: green;
+    }
+    .yellow {
+        color: yellow;
+    }
+</style>
+    <section class="slide" id="git-thinking-lifecycle-ex">
+		<h2>File Status Lifecycle Example</h2>
+        <pre><code style="font-size: 16px;"><span class="yellow">bmatheny@blake-MacPro</span> [01:36:29] [~/foo] <span class="green">[master]</span>
+-&gt; % gst
+# On branch master
+#
+# Initial commit
+#
+nothing to commit (create/copy files and use "git add" to track)
+<span class="yellow">bmatheny@blake-MacPro</span> [01:36:30] [~/foo] <span class="green">[master]</span>
+-&gt; % touch foo
+# On branch master
+#
+# Initial commit
+#
+# Untracked files:
+#   (use "git add &lt;file&gt;..." to include in what will be committed)
+#
+#	foo
+nothing added to commit but untracked files present (use "git add" to track)
+<span class="yellow">bmatheny@blake-MacPro</span> [01:36:33] [~/foo] <span class="green">[master</span> <span class="red">*</span><span class="green">]</span>
+-&gt; % git add foo
+<span class="yellow">bmatheny@blake-MacPro</span> [01:36:45] [~/foo] <span class="green">[master</span> <span class="red">*</span><span class="green">]</span>
+-&gt; % gst
+# On branch master
+#
+# Initial commit
+#
+# Changes to be committed:
+#   (use "git rm --cached &lt;file&gt;..." to unstage)
+#
+#	new file:   foo
+#
+<span class="yellow">bmatheny@blake-MacPro</span> [01:36:46] [~/foo] <span class="green">[master</span> <span class="red">*</span><span class="green">]</span>
+-&gt; % git commit -m "Adding foo to local repo" foo
+[master (root-commit) 085277a] Adding foo to local repo
+ 0 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 foo
+<span class="yellow">bmatheny@blake-MacPro</span> [01:39:51] [~/foo] <span class="green">[master]</span>
+-&gt; % gst
+# On branch master
+nothing to commit (working directory clean)
+        </code></pre>
+    </section>
+    
+    	<section class="slide" id="git-workflow">
+		<h2>Git Workflow - Best Practices</h2>
+		<ul>
+			<li><h3>Always work out of a branch</h3></li>
+            		<li><h3>Regularly fetch/pull/merge from master</h3></li>
+            		<li><h3>Squash your branch or no-ff (to make rollback easy)</h3></li>
+		</ul>
+	</section>
+	<section class="slide" id="git-workflow-ex">
+		<h2>Git Workflow - Example</h2>
+    	</section>
+    
+    <section class="slide" id="git-oh-shit">
+		<h2>Oh Shit</h2>
+		<ul>
+			<li><h3>You've broken something, now what?</h3></li>
+            <li><h3>Reverts are easy</h3></li>
+		</ul>
+	</section>
+    
+    <section class="slide" id="git-tips">
+		<h2>Tips &amp; Tricks</h2>
+		<ul>
+			<li><h3><code>git stash</code> - Stash uncommitted code for later</h3></li>
+            <li><h3>oh-my-zsh git plugin - ggpush, ggpull,</h3></li>
+		</ul>
+	</section>
+    <section class="slide" id="gitconfig">
+		<h2><code>.gitconfig</code></h2>
+        <pre><code>
+<span style="color: green;">[user]</span>
+    <span style="color: blue;">name</span> = Blake Matheny
+    <span style="color: blue;">email</span> = bmatheny@mobocracy.net
+<span style="color: green;">[color]</span>
+    <span style="color: blue;">diff</span> = auto
+    <span style="color: blue;">status</span> = auto
+    <span style="color: blue;">branch</span> = auto
+    <span style="color: blue;">interactive</span> = auto
+    <span style="color: blue;">ui</span> = true
+    <span style="color: blue;">pager</span> = true
+<span style="color: green;">[alias]</span>
+    <span style="color: blue;">co</span> = checkout
+    <span style="color: blue;">st</span> = status
+    <span style="color: blue;">pu</span> = !"git fetch origin -v; git fetch upstream -v; git merge upstream/master"
+    <span style="color: blue;">info</span> = !"~/bin/git-info.sh"
+    <span style="color: blue;">ldiff</span> = !"git diff origin/master..HEAD"
+<span style="color: green;">[core]</span>
+    <span style="color: blue;">editor</span> = vim
+    <span style="color: blue;">excludesfile</span> = /Users/bmatheny/.gitglobalignore
+        </pre></code>
+	</section>
+
+    <section class="slide" id="gitinfo">
+		<h2><code>git info</code></h2>
+        <pre><code>
+== Remote URL: origin	git@github.com:tumblr/platform.git (fetch)
+origin	git@github.com:tumblr/platform.git (push)
+== Remote Branches: 
+  <span style="color: red;">origin/HEAD</span> -> origin/master
+  <span style="color: red;">origin/collins</span>
+  <span style="color: red;">origin/dallas-qkiller</span>
+  <span style="color: red;">origin/master</span>
+
+== Local Branches:
+* <span style="color: green;">master</span>
+
+== Configuration (.git/config)
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+[remote "origin"]
+	fetch = +refs/heads/*:refs/remotes/origin/*
+	url = git@github.com:tumblr/platform.git
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+
+== Most Recent Commit
+<span style="color: orange;">commit fddc3b7495971628bc652e58bedfff4214aff99b</span>
+Merge: cb88b23 2a2be15
+Author: dallas marlow <dallasmarlow@gmail.com>
+Date:   Mon Jan 30 10:14:39 2012 -0500
+
+    Merge branch 'master' of github.com:tumblr/platform
+
+Type 'git log' for more commits, or 'git show' for full commit details.
+            </pre></code>
+	</section>
+    
+	<section class="slide" id="what-is-tumblr">
+	<h2>What is Tumblr</h2>
+	<div style="float: left; width: 415px;">
+		<img src="images/cat.png" alt="Kitties">
+	</div>
+	<div style="float: left; width: 415px;">
+		<ul>
+			<li><h3>Top 20 US Website</h3></li>
+			<li><h3>More than 50% of traffic is international</h3></li>
+			<li><h3>70% of traffic is destined for the dashboard, not blogs</h3></li>
+			<li><h3>The dashboard is the essential Tumblr user experience</h3></li>
+		</ul>
+	</div>
+	</section>
+
+	<section class="slide" id="qa">
+		<h2>Questions?</h2>
+		<ul>
+			<li><a href="http://progit.org/about.html">Pro Git</a> - Wonderful free book</a></li>
+			<li><a href="http://gitready.com/">git ready</a> - Easy to use reference, beginner to advanced</li>
+			<li><a href="http://cheat.errtheblog.com/s/git">Git cheatsheet</a></li>
+			<li><a href="http://www.git-tower.com/">Tower</a> - Commercial OS X Git GUI</li>
+		</ul>
+	</section>
+
+<a href="#" class="deck-prev-link" title="Previous">&#8592;</a>
+<a href="#" class="deck-next-link" title="Next">&#8594;</a>
+
+<p class="deck-status">
+	<span class="deck-status-current"></span>
+	/
+	<span class="deck-status-total"></span>
+</p>
+
+  <!-- Grab CDN jQuery, with a protocol relative URL; fall back to local if offline -->
+  <script src="javascripts/jquery-1.7.min.js"></script>
+
+<!-- Deck Core and extensions -->
+<script src="javascripts/deck.core.js"></script>
+<script src="javascripts/deck.hash.js"></script>
+<script src="javascripts/deck.menu.js"></script>
+<script src="javascripts/deck.goto.js"></script>
+<script src="javascripts/deck.status.js"></script>
+<script src="javascripts/deck.navigation.js"></script>
+
+<!-- Specific to this page -->
+<script src="template.js"></script>
+
+</body>
+</html>
