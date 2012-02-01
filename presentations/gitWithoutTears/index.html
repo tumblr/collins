@@ -90,7 +90,7 @@
         <div style="float: left; width: 555px;">
             <ul>
                 <li><h3>Modify files in your working directory</h3></li>
-                <li><h3>Stage files, adding snapshots to your staging area</h3></li>
+                <li><h3>Stage files, adding snapshots to your staging area (git calls this the "index")</h3></li>
                 <li><h3>Do a commit, store the snapshot to git directory</h3></li>
             </ul>
         </div>
@@ -165,23 +165,65 @@ nothing to commit (working directory clean)
 	</section>
 	<section class="slide" id="git-workflow-ex">
 		<h2>Git Workflow - Example</h2>
-    	</section>
+		<ul>
+		    <li><h3></h3></li>
+		    <li><h3></h3></li>
+		    <li><h3></h3></li>
+		    <li><h3></h3></li>
+		    <li><h3></h3></li>
+		    <li><h3></h3></li>
+		</ul>
+    </section>
     
     <section class="slide" id="git-oh-shit">
 		<h2>Oh Shit</h2>
 		<ul>
 			<li><h3>You've broken something, now what?</h3></li>
-            <li><h3>Reverts are easy</h3></li>
+            <li><h3>Multiple commands that can help you out: <code>git revert</code>, <code>git reset</code>, <code>git checkout</code></h3></li>
+		</ul>
+	</section>
+    <section class="slide" id="git-revert">
+		<h2>git revert</h2>
+		<ul>
+			<li><h3>Useful if you have a single commit you want to un-do, and that commit has already been pushed to github</h3></li>
+			<li><h3><code>git revert [hash]</code> - creates a commit that does the exact opposite of the specified commit. It's essentially the inverse of <code>git cherry-pick</code></h3></li>
+			<li><h3><code>git revert -m 1 [hash]</code> - when reverting a merge commit, you have to specify which parent to KEEP. Usually this is the first parent, ie, you're reverting the merge that brought some other branch into this one.</h3></li>
+			<li><h3>After reverting a merge, if you want to re-introduce that branch, you need to revert the revert!</h3></li>
+		</ul>
+	</section>
+	<section class="slide" id="git-reset">
+		<h2>git reset</h2>
+		<ul>
+			<li><h3>Useful if you want to un-do a commit (or series of commits) that haven't been pushed to github yet</h3></li>
+			<li><h3><code>git reset --soft [hash]</code> - Makes HEAD point to the specified commit, but doesn't alter your working directory or index. So the changes since that commit will be present and staged.</h3></li>
+			<li><h3><code>git reset --mixed [hash]</code> - Makes HEAD point to the commit, and also makes your index reflect that commit. Essentially moves the changes since that commit into your working copy.</h3></li>
+			<li><h3><code>git reset --hard [hash]</code> - Makes head, index, and working copy all look like the given commit. This is a potentially destructive command.</h3></li>
+		</ul>
+	</section>
+	<section class="slide" id="git-checkout">
+		<h2>git checkout</h2>
+		<ul>
+			<li><h3>Besides allowing you to change branches, this command can also be used to put a specific subset of files from another commit or branch into your working copy.</h3></li>
+			<li><h3>Useful for throwing out uncommitted changes to just particular files.</h3></li>
+			<li><h3><code>git checkout -- some/path</code> - Makes the files at some/path look like the version from HEAD of the current branch.</h3></li>
+			<li><h3><code>git checkout [hash] -- some/path</code> - Likewise, but with a commit other than HEAD.</h3></li>
 		</ul>
 	</section>
     
     <section class="slide" id="git-tips">
 		<h2>Tips &amp; Tricks</h2>
 		<ul>
-			<li><h3><code>git stash</code> - Stash uncommitted code for later</h3></li>
+			<li><h3><code>git stash</code> - Move uncommitted code aside and re-apply it later</h3>
+			    <ul>
+			        <li><code>git stash save [optional descriptive text]</code> - Move your working changes into a stash</li>
+			        <li><code>git stash list</code> - list your stashes</li>
+			        <li><code>git stash pop</code> - apply a stash to your working changes</li>
+			    </ul>
+			</li>
             <li><h3>oh-my-zsh git plugin - ggpush, ggpull,</h3></li>
 		</ul>
 	</section>
+	
     <section class="slide" id="gitconfig">
 		<h2><code>.gitconfig</code></h2>
         <pre><code>
@@ -266,6 +308,7 @@ Type 'git log' for more commits, or 'git show' for full commit details.
 		<h2>Questions?</h2>
 		<ul>
 			<li><a href="http://progit.org/about.html">Pro Git</a> - Wonderful free book</a></li>
+			<li><a href="http://www.amazon.com/Version-Control-Git-Collaborative-Development/dp/0596520123">O'Reilly Git book</a> - Slightly dated but good coverage of internals. We have a copy in the office.</li>
 			<li><a href="http://gitready.com/">git ready</a> - Easy to use reference, beginner to advanced</li>
 			<li><a href="http://cheat.errtheblog.com/s/git">Git cheatsheet</a></li>
 			<li><a href="http://www.git-tower.com/">Tower</a> - Commercial OS X Git GUI</li>
