@@ -163,15 +163,71 @@ nothing to commit (working directory clean)
             		<li><h3>Squash your branch or no-ff (to make rollback easy)</h3></li>
 		</ul>
 	</section>
-	<section class="slide" id="git-workflow-ex">
-		<h2>Git Workflow - Example</h2>
+	<section class="slide" id="git-workflow-new-branch">
+		<h2>Git Workflow - create a branch</h2>
 		<ul>
-		    <li><h3></h3></li>
-		    <li><h3></h3></li>
-		    <li><h3></h3></li>
-		    <li><h3></h3></li>
-		    <li><h3></h3></li>
-		    <li><h3></h3></li>
+		    <li><h3><code>git checkout [branch or commit to base on]</code></h3></li>
+		    <li>You want to base feature branches on <code>master</code>, and hotfix branches on <code>production</code>.</li>
+		    <li><h3><code>git checkout -b [new-branch-name]</code></h3></li>
+		    <li>This creates the new branch and switches you to it immediately.</li>
+		</ul>
+    </section>
+	<section class="slide" id="git-workflow-ex">
+		<h2>Git Workflow - Example for a branch only you are working on</h2>
+		<ul>
+		    <li><h3><code>git checkout [branch-name]</code></h3></li>
+		    <li><h3>Make changes as desired</h3></li>
+		    <li><h3><code>git add [files to stage]</code></h3></li>
+		    <li><h3><code>git commit</code></h3></li>
+		    <li><h3><code>git push origin [branch-name]</code></h3></li>
+		</ul>
+    </section>
+	<section class="slide" id="git-workflow-ex2">
+		<h2>Git Workflow - Example for a branch others are working on too</h2>
+		<ul>
+		    <li><h3><code>git checkout [branch-name]</code></h3></li>
+		    <li><h3><code>git pull</code> - Does a fetch (updates <u>all</u> tracking branches, such as origin/master, origin/production, origin/branch-name) followed by a merge for your <u>current</u> branch</h3></li>
+		    <li><h3>Make changes as desired</h3></li>
+		    <li><h3><code>git pull</code> - yes, again, to bring in any new changes others have made. This is optional, but it keeps the commit graph flat by avoiding unnecessary automatic merges.</h3></li>
+		    <li><h3><code>git add [files to stage]</code></h3></li>
+		    <li><h3><code>git commit</code></h3></li>
+		    <li><h3><code>git push origin [branch-name]</code></h3></li>
+		</ul>
+    </section>
+	<section class="slide" id="git-workflow-merge">
+		<h2>Git Workflow - Merging a branch into master</h2>
+		<ul>
+		    <li><h3><code>git checkout master</code></h3></li>
+		    <li><h3><code>git pull</code></h3></li>
+		    <li><h3><code>git merge --no-ff [branch-name]</code> - the --no-ff only matters if this branch is based off of the current HEAD of master</h3></li>
+		    <li><h3><code>git push origin master</code></h3></li>
+		</ul>
+    </section>
+	<section class="slide" id="git-workflow-merge-conflict">
+		<h2>Merge conflicts</h2>
+		<ul>
+		    <li><h3>For example, a feature branch is based off a master commit from a few days ago. Since then, a line of a file is modified in master AND the feature branch. When you try to merge the feature branch into master, you'll get a merge conflict.</h3></li>
+		    <li><h3>Edit each conflicted file (search for <<<) to make it look the way you want</h3></li>
+		    <li><h3><code>git add [path]</code> to mark the conflict as resolved</h3></li>
+		    <li><h3><code>git commit</code> to finish the merge commit. Don't use -m here to specify commit message on command line; better to use the auto-generated one.</h3></li>
+		</ul>
+    </section>	<section class="slide" id="git-pull-requests">
+		<h2>Pull requests</h2>
+		<ul>
+		    <li><h3>Github-specific feature, not part of git itself</h3></li>
+		    <li><h3>A wrapper around code review and merges</h3></li>
+		    <li><h3>After creating one, you can keep making changes in your branch! The pull request will reflect your new commits too.</h3></li>
+		    <li><h3>Please don't keep making new pull requests for each subsequent change!!!</h3></li>
+		</ul>
+    </section>
+	<section class="slide" id="git-delete-branch">
+		<h2>Git Workflow - delete a branch</h2>
+		<ul>
+		    <li><h3><code>git branch -d [branch-name]</code> - deletes a branch from your local clone, if it's already been merged</h3></li>
+		    <li><h3><code>git branch -D [branch-name]</code> - forces deletion of a branch from your local clone, regardless of whether it's been merged</h3></li>
+		    <li><h3><code>git push origin :branch-name</code> - deletes a branch from the origin (ie, GitHub)</h3></li>
+		    <li>Branch names are really just pointers to the HEAD of a series of commits. Deleting that pointer does not modify those commits.</li>
+		    <li>...but if that branch name was the only way to reach those commits, they'll now be unreachable, and will soon be garbage-collected.</li>
 		</ul>
     </section>
     
@@ -195,9 +251,9 @@ nothing to commit (working directory clean)
 		<h2>git reset</h2>
 		<ul>
 			<li><h3>Useful if you want to un-do a commit (or series of commits) that haven't been pushed to github yet</h3></li>
-			<li><h3><code>git reset --soft [hash]</code> - Makes HEAD point to the specified commit, but doesn't alter your working directory or index. So the changes since that commit will be present and staged.</h3></li>
+			<li><h3><code>git reset --soft [hash]</code> - Makes HEAD point to the specified commit, but doesn't alter your working directory or index. So the changes since that commit will be present in your working copy, and will be staged.</h3></li>
 			<li><h3><code>git reset --mixed [hash]</code> - Makes HEAD point to the commit, and also makes your index reflect that commit. Essentially moves the changes since that commit into your working copy.</h3></li>
-			<li><h3><code>git reset --hard [hash]</code> - Makes head, index, and working copy all look like the given commit. This is a potentially destructive command.</h3></li>
+			<li><h3><code>git reset --hard [hash]</code> - Makes head, index, and working copy all look like the given commit. This is a potentially destructive command. Use to completely discard changes from a series of unpushed commits.</h3></li>
 		</ul>
 	</section>
 	<section class="slide" id="git-checkout">
