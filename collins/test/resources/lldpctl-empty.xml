@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lldp label="LLDP neighbors">
+  <interface label="Interface" name="bond0">
+    <chassis label="Chassis">
+      <id label="ChassisID" type="mac">00:25:90:35:E5:62</id>
+      <name label="SysName">Unknown</name>
+      <descr label="SysDescr">Unknown</descr>
+    </chassis>
+    <port label="Port">
+      <id label="PortId" type="local">666</id>
+      <descr label="PortDescr">ge-0/0/7.0</descr>
+      <mfs label="MFS">1514</mfs>
+    </port>
+    <vlan label="VLAN" vlan-id="106" pvid="yes">D2</vlan>
+  </interface>
+  <interface label="Interface" name="bond1">
+    <chassis label="Chassis">
+      <id label="ChassisID" type="mac">00:25:90:35:E5:63</id>
+      <name label="SysName">Unknown</name>
+      <descr label="SysDescr">Unknown</descr>
+    </chassis>
+    <port label="Port">
+      <id label="PortId" type="local">666</id>
+      <descr label="PortDescr">ge-0/0/7.0</descr>
+      <mfs label="MFS">1514</mfs>
+    </port>
+    <vlan label="VLAN" vlan-id="106" pvid="yes">D2</vlan>
+  </interface>
+  <interface label="Interface" name="eth0">
+    <chassis label="Chassis">
+      <id label="ChassisID" type="mac">00:25:90:35:E5:62</id>
+      <name label="SysName">Unknown</name>
+      <descr label="SysDescr">Unknown</descr>
+    </chassis>
+    <port label="Port">
+      <id label="PortId" type="local">666</id>
+      <descr label="PortDescr">ge-0/0/7.0</descr>
+      <mfs label="MFS">1514</mfs>
+    </port>
+    <vlan label="VLAN" vlan-id="106" pvid="yes">D2</vlan>
+  </interface>
+  <interface label="Interface" name="eth1">
+    <chassis label="Chassis">
+      <id label="ChassisID" type="mac">00:25:90:35:E5:63</id>
+      <name label="SysName">Unknown</name>
+      <descr label="SysDescr">Unknown</descr>
+    </chassis>
+    <port label="Port">
+      <id label="PortId" type="local">666</id>
+      <descr label="PortDescr">ge-0/0/7.0</descr>
+      <mfs label="MFS">1514</mfs>
+    </port>
+    <vlan label="VLAN" vlan-id="106" pvid="yes">D2</vlan>
+  </interface>
+  <interface label="Interface" name="eth2">
+    <chassis label="Chassis">
+      <id label="ChassisID" type="mac">00:25:90:35:E5:62</id>
+      <name label="SysName">Unknown</name>
+      <descr label="SysDescr">Unknown</descr>
+    </chassis>
+    <port label="Port">
+      <id label="PortId" type="local">666</id>
+      <descr label="PortDescr">ge-0/0/7.0</descr>
+      <mfs label="MFS">1514</mfs>
+    </port>
+    <vlan label="VLAN" vlan-id="106" pvid="yes">D2</vlan>
+  </interface>
+  <interface label="Interface" name="eth3">
+    <chassis label="Chassis">
+      <id label="ChassisID" type="mac">00:25:90:35:E5:63</id>
+      <name label="SysName">Unknown</name>
+      <descr label="SysDescr">Unknown</descr>
+    </chassis>
+    <port label="Port">
+      <id label="PortId" type="local">666</id>
+      <descr label="PortDescr">ge-0/0/7.0</descr>
+      <mfs label="MFS">1514</mfs>
+    </port>
+    <vlan label="VLAN" vlan-id="106" pvid="yes">D2</vlan>
+  </interface>
+</lldp>

@@ -46,7 +46,7 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     if (lshw.cpuCount < 1) {
       return Seq()
     }
-    val cpu = lshw.cpus.head
+    val cpu = lshw.cpus.find(cpu => cpu.description.nonEmpty).getOrElse(lshw.cpus.head)
     Seq(
       AssetMetaValue(asset_id, CpuCount.id, lshw.cpuCount.toString),
       AssetMetaValue(asset_id, CpuCores.id, cpu.cores.toString),
@@ -107,16 +107,23 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       val nicSpeed = finder(wrapSeq, NicSpeed, _.toLong, 0L)
       val macAddress = finder(wrapSeq, MacAddress, _.toString, "")
       val descr = finder(wrapSeq, NicDescription, _.toString, "")
+      val ifaceName = finder(wrapSeq, NicName, _.toString, "")
+      val ifaceAddr = finder(wrapSeq, NicAddress, _.toString, "")
+      val info = if (ifaceName.nonEmpty || ifaceAddr.nonEmpty) {
+        Some(NicInfo(ifaceAddr, ifaceName))
+      } else {
+        None
+      }
       if (nicSpeed == 0L && macAddress.isEmpty && descr.isEmpty) {
         seq
       } else {
-        Nic(BitStorageUnit(nicSpeed), macAddress, descr, "", "") +: seq
+        Nic(BitStorageUnit(nicSpeed), macAddress, descr, "", "", info) +: seq
       }
     }
     val filteredMeta = meta.map { case(groupId, metaSeq) =>
       val newSeq = filterNot(
         metaSeq,
-        Set(NicSpeed.id, MacAddress.id, NicDescription.id)
+        Set(NicSpeed.id, MacAddress.id, NicDescription.id, NicName.id, NicAddress.id)
       )
       groupId -> newSeq
     }
@@ -129,11 +136,16 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     lshw.nics.foldLeft((0,Seq[AssetMetaValue]())) { case (run,nic) =>
       val groupId = run._1
       val total = run._2
-      (groupId + 1, total ++ Seq(
+      val info: Seq[AssetMetaValue] = nic.info.map { n => Seq(
+        AssetMetaValue(asset_id, NicName.id, groupId, n.interface),
+        AssetMetaValue(asset_id, NicAddress.id, groupId, n.address)
+      )}.getOrElse(Nil)
+      val res: Seq[AssetMetaValue] = Seq(
         AssetMetaValue(asset_id, NicSpeed.id, groupId, nic.speed.inBits.toString),
         AssetMetaValue(asset_id, MacAddress.id, groupId, nic.macAddress),
         AssetMetaValue(asset_id, NicDescription.id, groupId, "%s - %s".format(nic.product, nic.vendor))
-      ))
+      )
+      (groupId + 1, total ++ res ++ info)
     }._2
   }
 

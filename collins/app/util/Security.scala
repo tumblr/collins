@@ -22,11 +22,13 @@ trait AuthenticationAccessor {
 
 object AuthenticationProvider {
   val Default = new MockAuthenticationProvider
-  val Types = Set("ldap", "default")
+  val Types = Set("ldap", "file", "default")
   def get(name: String, config: Configuration): AuthenticationProvider = {
     name match {
       case "ldap" =>
         new LdapAuthenticationProvider(config)
+      case "file" =>
+        new FileAuthenticationProvider(config)
       case "default" =>
         Default
     }
@@ -114,6 +116,52 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
   }
 }
 
+class FileAuthenticationProvider(config: Configuration) extends AuthenticationProvider {
+  import scala.io.Source
+  import sun.misc.BASE64Encoder
+  import java.io.File
+  import java.security.MessageDigest
+
+  require(config.getString("file").isDefined, "FILE requires an authentication.file attribute")
+  config.getString("type").map { cfg =>
+    require(cfg.toLowerCase == "file", "If specified, authentication type must be file")
+  }
+  val file = new File(config.getString("file").get)
+  require(file.exists() && file.canRead(), "File %s does not exist".format(config.getString("file").get))
+
+  val users = {
+    val _users = Source.fromFile(file, "UTF-8").getLines().map { line =>
+      val split = line.split(":", 3)
+      if (split.length != 3) {
+        throw new Exception("Invalid line format for users")
+      }
+      val username = split(0)
+      val password = split(1)
+      val roles = split(2).split(",").toSeq
+      UserImpl(username, password, roles, username.hashCode, false)
+    }.toSeq
+    _users.map { user =>
+      user.username -> user
+    }.toMap
+  }
+
+  override def authenticate(username: String, password: String): Option[User] = {
+    users.get(username) match {
+      case None => None
+      case Some(user) => (hash(password) == user.password) match {
+        case true =>
+          val newUser = user.copy(_password = "*", _authenticated = true)
+          Some(newUser)
+        case false => None
+      }
+    }
+  }
+
+  // This is consistent with how apache encrypts SHA1
+  protected def hash(s: String): String = {
+    "{SHA}" + new BASE64Encoder().encode(MessageDigest.getInstance("SHA1").digest(s.getBytes()))
+  }
+}
 class MockAuthenticationProvider extends AuthenticationProvider {
   val users = Map(
     "blake" -> UserImpl("blake", "admin:first", Seq("engineering","infra","ops"), 1024, false),

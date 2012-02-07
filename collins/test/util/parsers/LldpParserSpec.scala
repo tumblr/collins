@@ -42,6 +42,10 @@ class LldpParserSpec extends mutable.Specification {
       }
     }
 
+    "Parse a generated XML file" in new LldpParserHelper("lldpctl-empty.xml") {
+      parsed must beRight
+    }
+
     "Fail to parse wrong XML" in new LldpParserHelper("lshw-basic.xml") {
       parsed must beLeft
     }

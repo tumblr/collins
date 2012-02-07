@@ -107,5 +107,3 @@ object Hex {
     hex.decode(value.getBytes("UTF-8"))
   }
 }
-
-

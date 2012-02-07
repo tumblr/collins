@@ -41,7 +41,9 @@ class LshwParserSpec extends mutable.Specification {
           rep.hasFlashStorage must beFalse
           rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
           rep.totalUsableStorage.toHuman mustEqual "5.46 TB"
-    
+
+          rep.interfaceNames must contain("bond0")
+          rep.ipAddresses.size mustEqual 0
           rep.nicCount mustEqual 2
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -70,7 +72,9 @@ class LshwParserSpec extends mutable.Specification {
           rep.hasFlashStorage must beTrue
           rep.totalFlashStorage.toHuman mustEqual "1.27 TB"
           rep.totalUsableStorage.toHuman mustEqual "1.55 TB"
-    
+
+          rep.interfaceNames.size mustEqual 0
+          rep.ipAddresses.size mustEqual 0
           rep.nicCount mustEqual 2
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -95,7 +99,9 @@ class LshwParserSpec extends mutable.Specification {
     
           rep.totalStorage.toHuman mustEqual "5.46 TB"
           rep.diskCount mustEqual 6
-    
+
+          rep.interfaceNames.size mustEqual 0
+          rep.ipAddresses.size mustEqual 0
           rep.nicCount mustEqual 3
           rep.hasGbNic must beTrue
           rep.has10GbNic must beTrue
@@ -111,7 +117,7 @@ class LshwParserSpec extends mutable.Specification {
 
       "Different flash description and size" in new LshwParserHelper(file) {
         val config = Map(
-          "flashDescription" -> "flash memory",
+          "flashProduct" -> "flashmax",
           "flashSize" -> "1048576"
         )
         val parseResults = parsed(config)
@@ -125,7 +131,7 @@ class LshwParserSpec extends mutable.Specification {
 
       "Bad flash description" in new LshwParserHelper(file) {
         val config = Map(
-          "flashDescription" -> "flashing memory",
+          "flashProduct" -> "flashing memory",
           "flashSize" -> "1048576"
         )
         val parseResults = parsed(config)
@@ -155,7 +161,9 @@ class LshwParserSpec extends mutable.Specification {
     
           rep.totalStorage.toHuman mustEqual "930.99 GB"
           rep.diskCount mustEqual 3
-    
+
+          rep.interfaceNames must contain("bond0", "bond1")
+          rep.ipAddresses must contain("50.97.173.12")
           rep.nicCount mustEqual 4
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -180,6 +188,39 @@ class LshwParserSpec extends mutable.Specification {
     
           rep.totalStorage.toHuman mustEqual "930.99 GB"
           rep.diskCount mustEqual 3
+
+          rep.interfaceNames must contain("bond0", "bond1")
+          rep.ipAddresses must contain("50.22.38.73", "10.60.29.29")
+          rep.nicCount mustEqual 4
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 4
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      } // B.02.12 format
+
+      "A Production SL Web LSHW Output" in new LshwParserHelper("lshw-old-web.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 11
+          rep.cpuCoreCount mustEqual 11
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(1.6, 0.1)
+
+          rep.totalMemory.inGigabytes must beCloseTo(24L, 1)
+          rep.memoryBanksUsed mustEqual 6
+          rep.memoryBanksUnused mustEqual 6
+          rep.memoryBanksTotal mustEqual 12
+
+          rep.interfaceNames must contain("bond0", "bond1")
+          rep.ipAddresses must contain("184.172.29.71", "10.80.96.225")
+   
+          rep.totalStorage.toHuman mustEqual "465.76 GB"
+          rep.hasFlashStorage must beFalse
+          rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
+          rep.diskCount mustEqual 2
+          rep.hasCdRom must beTrue
     
           rep.nicCount mustEqual 4
           rep.hasGbNic must beTrue
@@ -187,7 +228,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
         }
-      }
+      } // B.02.12 format
+
     } // Parse softlayer supermicro (Intel) lshw output"
 
   } // The LSHW parser should
