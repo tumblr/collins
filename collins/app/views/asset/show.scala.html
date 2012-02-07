@@ -262,7 +262,7 @@
           <td>@cpu.cores</td>
           <td>@cpu.threads</td>
           <td>@cpu.speedGhz</td>
-          <td>@cpu.description</td>
+          <td>@cpu.description</td> <!-- vendor? -->
         </tr>
       }
       </tbody>
@@ -309,13 +309,15 @@
     <table class="zebra-striped condensed-table">
       <thead>
         <tr>
-          <th>Id</th><th>Speed</th><th>MAC Address</th><th>Description</th>
+          <th>Id</th><th>Interface</th><th>Address</th><th>Speed</th><th>MAC Address</th><th>Description</th>
         </tr>
       </thead>
       <tbody>
       @aa.lshw.nics.zipWithIndex.map { case(nic,id) =>
         <tr>
           <th>@id</th>
+          <td>@{nic.info.map(n => n.interface).getOrElse("Unknown")}</td>
+          <td>@{nic.info.map(n => n.address).getOrElse("Unknown")}</td>
           <td>@{nic.speed.toHuman}/s</td>
           <td>@nic.macAddress</td>
           <td>@nic.description</td>

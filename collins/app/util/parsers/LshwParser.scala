@@ -37,9 +37,9 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty)
       getCoreNodes(xml).foldLeft(LshwRepresentation(Nil,Nil,Nil,Nil)) { case (holder,node) =>
         matcher(node) match {
           case c: Cpu => holder.copy(cpus = c +: holder.cpus)
-          case m: Memory => holder.copy(memory = m +: holder.memory)
+          case m: Memory => holder.copy(memory = m.copy(bank = holder.memory.size) +: holder.memory)
           case d: Disk => holder.copy(disks = d +: holder.disks)
-          case n: Nic => holder.copy(nics = n +: holder.nics)
+          case n: Nic => holder.copy(nics = n.copy(info = findNicInfo(n.macAddress, xml)) +: holder.nics)
           case _ => holder
         }
       }
@@ -84,13 +84,17 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty)
   }
 
   // NOTE There is no way to tell how large the virident cards are so we used a default
-  val flashDescription = config.getOrElse("flashDescription", "flash")
+  val flashProduct = config.getOrElse("flashProduct", "flash").toLowerCase
   val flashSize = config.getOrElse("flashSize", "1400000000000").toLong
   val diskMatcher: PartialFunction[NodeSeq,Disk] = {
     case n if (n \ "@class" text) == "disk" =>
       val _type = (n \ "physid" text).contains("\\.") match {
         case true => Disk.Type.Ide
-        case false => Disk.Type.Scsi
+        case false =>
+          (n \ "description" text).toLowerCase.contains("cd-rom") match {
+            case true => Disk.Type.CdRom
+            case false => Disk.Type.Scsi
+          }
       }
       val asset = getAsset(n)
       val size = (n \ "size" text) match {
@@ -98,7 +102,7 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty)
         case size => ByteStorageUnit(size.toLong)
       }
       Disk(size, _type, asset.description, asset.product, asset.vendor)
-    case n if (n \ "@class" text) == "memory" && (n \ "description" text).toLowerCase.contains(flashDescription) =>
+    case n if (n \ "@class" text) == "memory" && (n \ "product" text).toLowerCase.contains(flashProduct) =>
       val asset = getAsset(n)
       val size = ByteStorageUnit(flashSize)
       Disk(size, Disk.Type.Flash, asset.description, asset.product, asset.vendor)
@@ -119,6 +123,18 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty)
         }
       }
       Nic(speed, mac, asset.description, asset.product, asset.vendor)
+  }
+
+  protected def findNicInfo(mac: String, e: Elem): Option[NicInfo] = {
+    val node = (e \ "node").find { n =>
+      (n \ "@class" text) == "network" && (n \ "serial" text) == mac
+    }
+    node.map { n =>
+      val addressNode = (n \ "configuration" \ "setting").find(nn => (nn \ "@id" text) == "ip")
+      val address = addressNode.map(m => (m \ "@value" text)).getOrElse("")
+      val logicalName = (n \ "logicalname" text)
+      NicInfo(address, logicalName)
+    }
   }
 
   protected def getCoreNodes(elem: Elem): NodeSeq = {

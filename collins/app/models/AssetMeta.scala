@@ -73,7 +73,7 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     val ChassisTag = Value(2, "CHASSIS_TAG")
     val RackPosition = Value(3, "RACK_POSITION")
     val PowerPort = Value(4, "POWER_PORT")
-    //val SwitchPort = Value(5, "SWITCH_PORT")
+    //val SwitchPort = Value(5, "SWITCH_PORT") Deprecated by id LldpPortIdValue
 
     val CpuCount = Value(6, "CPU_COUNT")
     val CpuCores = Value(7, "CPU_CORES")
@@ -105,6 +105,9 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     val LldpPortDescription = Value(29, "LLDP_PORT_DESCRIPTION")
     val LldpVlanId = Value(30, "LLDP_VLAN_ID")
     val LldpVlanName = Value(31, "LLDP_VLAN_NAME")
+
+    val NicName = Value(32, "INTERFACE_NAME")
+    val NicAddress = Value(33, "INTERFACE_ADDRESS")
   }
 }
 

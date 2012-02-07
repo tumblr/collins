@@ -19,8 +19,8 @@ INSERT INTO asset_type VALUES (6, 'Power Circuit');
 INSERT INTO asset_type VALUES (7, 'Power Strip');
 INSERT INTO asset_type VALUES (8, 'Data Center');
 
-INSERT INTO asset_meta VALUES (1, 'SERVICE_TAG', 0, 'Service Tag', 'Vendor supplied service tag');
-INSERT INTO asset_meta VALUES (2, 'CHASSIS_TAG', 0, 'Chassis Tag', 'Tag for asset chassis');
+INSERT INTO asset_meta VALUES (1, 'SERVICE_TAG', 1, 'Service Tag', 'Vendor supplied service tag');
+INSERT INTO asset_meta VALUES (2, 'CHASSIS_TAG', 1, 'Chassis Tag', 'Tag for asset chassis');
 INSERT INTO asset_meta VALUES (3, 'RACK_POSITION', 1, 'Rack Position', 'Position of asset in rack');
 INSERT INTO asset_meta VALUES (4, 'POWER_PORT', 2, 'Power Port', 'Power port of asset');
 INSERT INTO asset_meta VALUES (5, 'SWITCH_PORT', 2, 'Switch Port', 'Switch port that asset is connected to');
@@ -55,6 +55,8 @@ INSERT INTO asset_meta VALUES (28, 'LLDP_PORT_ID_VALUE', -1, 'LLDP Port ID Value
 INSERT INTO asset_meta VALUES (29, 'LLDP_PORT_DESCRIPTION', -1, 'LLDP Port Description', 'Port Description reported by lldpctl');
 INSERT INTO asset_meta VALUES (30, 'LLDP_VLAN_ID', -1, 'LLDP VLAN ID', 'VLAN ID reported by lldpctl');
 INSERT INTO asset_meta VALUES (31, 'LLDP_VLAN_NAME', -1, 'LLDP VLANE Name', 'VLAN name reported by lldpctl');
+INSERT INTO asset_meta VALUES (32, 'INTERFACE_NAME', -1, 'Interface Name', 'Name of physical interface, e.g. eth0');
+INSERT INTO asset_meta VALUES (33, 'INTERFACE_ADDRESS', 0, 'IP Address', 'Address on interface, e.g. 10.0.0.1');
 
 INSERT INTO asset VALUES (1, 'tumblrtag1', 7, 1, CURRENT_TIMESTAMP, null, null);
 
