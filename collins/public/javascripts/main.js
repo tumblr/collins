@@ -50,6 +50,20 @@ $(document).ready(function() {
     });
   });
 
+  $("button[data-remote]").each(function() {
+    var e = $(this);
+    var remoteUrl = e.attr('data-remote');
+    var method = e.attr('data-method') || 'GET';
+    e.click(function() {
+      $.ajax({
+        type: method,
+        url: remoteUrl,
+        success: function(o) {
+        }
+      });
+    });
+  });
+
   $("[data-toggle=collapse]").each(function() {
     var e = $(this);
     var target = e.attr('data-target');
