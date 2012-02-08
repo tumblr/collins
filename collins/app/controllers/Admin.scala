@@ -14,4 +14,9 @@ object Admin extends SecureWebController {
     Ok(html.admin.stats(Cache.stats()))
   }
 
+  def clearCache = SecureAction { implicit req =>
+    Cache.clear()
+    Ok("ok")
+  }
+
 }
