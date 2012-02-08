@@ -20,7 +20,6 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
         "authentication.type" -> "file",
         "authentication.file" -> authFile.getAbsolutePath
       )
-      println(authFile.getAbsolutePath)
       val config = Configuration.from(configData)
       val authConfig = config.getConfig("authentication")
       authConfig must beSome
