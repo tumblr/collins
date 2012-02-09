@@ -7,6 +7,12 @@
      </encoder>
    </appender>
 
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%date - [%level] - from %logger{15} - %message%n%xException{5}</pattern>
+    </encoder>
+  </appender>
+
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
   
@@ -17,6 +23,7 @@
 
   <root level="ERROR">
     <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
   </root>
   
 </configuration>

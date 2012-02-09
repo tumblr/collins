@@ -1,7 +1,9 @@
 package controllers
 package actions
 
-import models.{Asset, AssetLifecycle}
+import forms._
+
+import models.{Asset, AssetLifecycle, Status => AStatus}
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
 import util.Helpers.formatPowerPort
 
@@ -17,11 +19,12 @@ object UpdateAsset {
       "attribute" -> optional(text(3)),
       RackPosition.toString -> optional(text(1)),
       formatPowerPort("A") -> optional(text(1)),
-      formatPowerPort("B") -> optional(text(1))
+      formatPowerPort("B") -> optional(text(1)),
+      "status" -> optional(of[AStatus.Enum])
     )
   )
-  def get() = new UpdateAsset(None, None, None, None, None, None, None)
-  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, None, None, None)
+  def get() = new UpdateAsset(None, None, None, None, None, None, None, None)
+  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, None, None, None, None)
   def toMap(form: UpdateAsset): Map[String,String] = Map.empty ++
     form.lshw.map(s => Map("lshw" -> s)).getOrElse(Map.empty) ++
     form.lldp.map(s => Map("lldp" -> s)).getOrElse(Map.empty) ++
@@ -29,7 +32,8 @@ object UpdateAsset {
     form.rackPosition.map(s => Map(RackPosition.toString -> s)).getOrElse(Map.empty) ++
     form.powerPort1.map(s => Map(formatPowerPort("A") -> s)).getOrElse(Map.empty) ++
     form.powerPort2.map(s => Map(formatPowerPort("B") -> s)).getOrElse(Map.empty) ++
-    form.attributes
+    form.attributes ++
+    form.status.map(s => Map("status" -> s.toString)).getOrElse(Map.empty)
 }
 
 private[controllers] case class UpdateAsset(
@@ -39,7 +43,8 @@ private[controllers] case class UpdateAsset(
   attribute: Option[String],
   rackPosition: Option[String],
   powerPort1: Option[String],
-  powerPort2: Option[String])
+  powerPort2: Option[String],
+  status: Option[AStatus.Enum])
 {
 
   def attributes(): Map[String,String] = attribute.map(s => attributes(s)).getOrElse(Map.empty)
@@ -59,6 +64,8 @@ private[controllers] case class UpdateAsset(
         case Right(options) =>
           val res = if (onlyHasAttributes(req, options)) {
             AssetLifecycle.updateAssetAttributes(asset, options)
+          } else if (onlyHasStatus(req, options)) {
+            AssetLifecycle.updateAssetStatus(asset, options)
           } else {
             AssetLifecycle.updateAsset(asset, options)
           }
@@ -68,6 +75,10 @@ private[controllers] case class UpdateAsset(
           }
       }
     }
+  }
+
+  protected def onlyHasStatus(req: Request[AnyContent], options: Map[String,String]): Boolean = {
+    options.size == 1 && options.contains("status")
   }
 
   protected def onlyHasAttributes(req: Request[AnyContent], options: Map[String,String]): Boolean = {

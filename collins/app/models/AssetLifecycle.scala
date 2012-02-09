@@ -1,6 +1,9 @@
 package models
 
+import conversions._
 import AssetMeta.Enum.{PowerPort, RackPosition}
+import models.{Status => AStatus}
+
 import util.{AssetStateMachine, Helpers, LldpRepresentation, LshwRepresentation}
 import util.parsers.{LldpParser, LshwParser}
 import Helpers.formatPowerPort
@@ -9,6 +12,7 @@ import play.api.Logger
 
 import scala.util.control.Exception.allCatch
 import java.sql.Connection
+import java.util.Date
 
 // Supports meta operations on assets
 object AssetLifecycle {
@@ -114,6 +118,24 @@ object AssetLifecycle {
     }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
   }
 
+  def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+    val stat = options.get("status").getOrElse("none")
+    allCatch[Boolean].either {
+      val status = AStatus.Enum.withName(stat)
+      Model.withTransaction { implicit con =>
+        val old = AStatus.Enum(asset.status).toString
+        val reason = "Asset state updated from %s to %s".format(old, stat)
+        Asset.update(asset.copy(status = status.id, updated = Some(new Date().asTimestamp)))
+        AssetLog.warning(
+          asset,
+          reason,
+          AssetLog.Formats.PlainText,
+          AssetLog.Sources.Api
+        ).create()
+        true
+      }
+    }.left.map(e => handleException(asset, "Error updating status for asset", e))
+  }
 
   protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     val requiredKeys = Set(RackPosition.toString, formatPowerPort("A"), formatPowerPort("B"))

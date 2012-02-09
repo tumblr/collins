@@ -70,7 +70,7 @@ object Disk {
   object Type extends Enumeration {
     val Ide = Value("IDE")
     val Scsi = Value("SCSI")
-    val Flash = Value("FLASH")
+    val Flash = Value("PCIe")
     val CdRom = Value("CD-ROM")
   }
 }
