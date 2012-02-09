@@ -1,7 +1,6 @@
 package util
 
-import play.api.Play
-import play.api.Mode
+import play.api.{Configuration, Mode, Play}
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -34,6 +33,12 @@ object Helpers {
       case hasQs if hasQs.contains("?") => hasQs + "&" + qs
       case noQs => noQs + "?" + qs
     }
+  }
+
+  def getConfig(name: String): Option[Configuration] = {
+    Play.maybeApplication.map { app =>
+      app.configuration.getConfig(name)
+    }.getOrElse(None)
   }
 
   def subAsMap(subKey: String, default: Map[String,String] = Map.empty): Map[String,String] = {

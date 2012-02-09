@@ -1,7 +1,7 @@
 package models
 
 import Model.defaults._
-import util.{CryptoAccessor, CryptoCodec, IpAddress}
+import util.{CryptoAccessor, CryptoCodec, Helpers, IpAddress}
 
 import anorm._
 import anorm.SqlParser._
@@ -176,9 +176,7 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
   }
 
   protected def getConfig(): Option[Configuration] = {
-    Play.maybeApplication.map { app =>
-      app.configuration.getConfig("ipmi")
-    }.getOrElse(None)
+    Helpers.getConfig("ipmi")
   }
 
   // Converts our query parameters to fragments and parameters for a query

@@ -1,8 +1,7 @@
 package controllers
 
 import models._
-import util.{AssetStateMachine, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
-import util.Helpers.formatPowerPort
+import util.{AssetStateMachine, Helpers, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
 import views._
 
 import akka.util.duration._
@@ -153,8 +152,9 @@ trait Resources extends Controller {
   private def intakeAllowed(asset: Asset)(implicit r: Request[AnyContent]): Boolean = {
     val isNew = asset.isNew
     val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
+    val intakeSupported = Helpers.getConfig("features").flatMap { _.getBoolean("intakeSupported") }.getOrElse(true)
     val rightRole = hasRole(getUser(r), Seq("infra"))
-    isNew && rightType && rightRole
+    intakeSupported && isNew && rightType && rightRole
   }
 
   /**
