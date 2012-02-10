@@ -156,6 +156,10 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
     }
   }
 
+  def encryptPassword(pass: String): String = {
+    CryptoCodec(getCryptoKeyFromFramework()).Encode(pass)
+  }
+
   protected def generateEncryptedPassword(): String = {
     val length = getPasswordLength()
     CryptoCodec(getCryptoKeyFromFramework()).Encode(CryptoCodec.randomString(length))
