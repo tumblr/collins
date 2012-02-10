@@ -41,6 +41,17 @@ object Helpers {
     }.getOrElse(None)
   }
 
+  def haveFeature(name: String, flatten: Boolean = true): Option[Boolean] = {
+    if (flatten) {
+      getConfig("features").flatMap { _.getBoolean(name).filter{_ == true} }
+    } else {
+      getConfig("features").flatMap { _.getBoolean(name) }
+    }
+  }
+  def getFeature(name: String): Option[String] = {
+    getConfig("features").flatMap { _.getString(name) }
+  }
+
   def subAsMap(subKey: String, default: Map[String,String] = Map.empty): Map[String,String] = {
     Play.maybeApplication.map { app =>
       if (subKey.isEmpty) {

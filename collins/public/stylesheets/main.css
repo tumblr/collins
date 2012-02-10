@@ -69,3 +69,7 @@ table {
     margin: 1em 0;
     clear: both;
 }
+
+a[data-toggle] {
+  cursor: pointer;
+}

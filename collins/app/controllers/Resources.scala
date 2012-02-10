@@ -152,7 +152,7 @@ trait Resources extends Controller {
   private def intakeAllowed(asset: Asset)(implicit r: Request[AnyContent]): Boolean = {
     val isNew = asset.isNew
     val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
-    val intakeSupported = Helpers.getConfig("features").flatMap { _.getBoolean("intakeSupported") }.getOrElse(true)
+    val intakeSupported = Helpers.haveFeature("intakeSupported", false).getOrElse(true)
     val rightRole = hasRole(getUser(r), Seq("infra"))
     intakeSupported && isNew && rightType && rightRole
   }

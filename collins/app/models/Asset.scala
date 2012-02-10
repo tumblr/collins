@@ -20,6 +20,13 @@ case class Asset(
 {
   require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
 
+  def isSoftLayerAsset(): Boolean = tag.toLowerCase.startsWith("sl-")
+  def softLayerUrl(): Option[String] = isSoftLayerAsset match {
+    case true =>
+      val sl_id = tag.split("-", 2).last
+      Some("https://manage.softlayer.com/Hardware/view/%s".format(sl_id))
+    case false => None
+  }
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "TAG" -> JsString(tag),
@@ -64,7 +71,11 @@ case class Asset(
     val (lshwRep, mvs) = LshwHelper.reconstruct(this)
     val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
     val ipmi = IpmiInfo.findByAsset(this)
-    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, mvs2)
+    val filtered: Seq[MetaWrapper] = Helpers.getFeature("hideMeta").map { hidden =>
+      val filterSet = hidden.split(",").map(_.trim.toUpperCase).toSet
+      mvs2.filter(f => !filterSet.contains(f.getName))
+    }.getOrElse(mvs2)
+    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, filtered)
   }
 }
 
