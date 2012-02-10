@@ -71,12 +71,8 @@
       </thead>
       <tbody>
         <tr>
-          <th>IPMI Gateway</th>
-          <td>@aa.ipmi.get.dottedGateway()</td>
-        </tr>
-        <tr>
-          <th>IPMI Address/Gateway</th>
-          <td>@{aa.ipmi.get.dottedAddress()}/@{aa.ipmi.get.dottedNetmask()}</td>
+          <th>IPMI Address</th>
+          <td><a target="_blank" href="http://@aa.ipmi.get.dottedAddress()/">@{aa.ipmi.get.dottedAddress()}</a></td>
         </tr>
         <tr>
           <th>IPMI Username</th>
@@ -85,6 +81,10 @@
         <tr>
           <th>IPMI Password</th>
           <td>@aa.ipmi.get.password</td>
+        </tr>
+        <tr>
+          <th>IPMI Gateway/Netmask</th>
+          <td>@aa.ipmi.get.dottedGateway()/@aa.ipmi.get.dottedNetmask()</td>
         </tr>
       </tbody>
     </table>

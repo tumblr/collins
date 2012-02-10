@@ -26,7 +26,7 @@ trait IpmiApi {
         val g = IpAddress.toLong(gateway.get)
         val n = IpAddress.toLong(netmask.get)
         val p = IpmiInfo.encryptPassword(password.get)
-        IpmiInfo(NotAssigned, Id(asset.getId), username.get, p, a, g, n)
+        IpmiInfo(NotAssigned, Id(asset.getId), username.get, p, g, a, n)
       }
     }
   }

@@ -10,6 +10,7 @@ class IpAddressSpec extends Specification with DataTables {
     "support converting string addresses to long" >> {
       "address"         || "long"      |
       "170.112.108.147" !! 2859494547L |
+      "10.60.25.33"     !! 171710753L  |
       "10.0.0.1"        !! 167772161L  |
       "255.255.224.0"   !! 4294959104L |
       "255.255.255.255" !! 4294967295L |> {
@@ -23,6 +24,7 @@ class IpAddressSpec extends Specification with DataTables {
       2859494547L ! "170.112.108.147" |
       167772161L  ! "10.0.0.1"        |
       4294959104L ! "255.255.224.0"   |
+      171710753L  ! "10.60.25.33"     |
       4294967295L ! "255.255.255.255" |> {
       (long,address) =>
         IpAddress.toString(long) mustEqual(address)
