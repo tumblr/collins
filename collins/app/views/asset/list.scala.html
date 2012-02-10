@@ -19,9 +19,10 @@
     <table class="condensed-table zebra-striped">
       <thead>
         <tr>
-          <th>Asset Tag</th>
+	  <th>Asset Tag</th>
+	  <th>Hostname</th>
+	  <th>Primary Role</th>
           <th>Status</th>
-          <th>Type</th>
           <th>Created</th>
           <th>Last Updated</th>
         </tr>
@@ -29,9 +30,10 @@
       <tbody>
         @assets.items.map { asset =>
         <tr>
-          <td><a href="@app.routes.CookieApi.getAsset(asset.tag)">@asset.tag</a></td>
-          <td>@asset.getStatus().name</td>
-          <td>@asset.getType().name</td>
+	  <td><a href="@app.routes.CookieApi.getAsset(asset.tag)">@asset.tag</a></td>
+	  <td>@asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse { <em>Unknown</em> }</td>
+	  <td>@asset.getMetaAttribute("PRIMARY_ROLE").map(_.getValue).getOrElse { <em>Unknown</em> }</td>
+	  <td>@asset.getStatus().name</td>
           <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
           <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
         </tr>

@@ -6,7 +6,7 @@
 GET     /                           app.Resources.index
 
 # Resources/Assets
-GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC")
+GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "DESC")
 GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
 
 GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")

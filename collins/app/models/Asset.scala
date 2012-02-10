@@ -39,6 +39,9 @@ case class Asset(
   def getType(): AssetType = {
     AssetType.findById(asset_type).get
   }
+  def getMetaAttribute(name: String): Option[MetaWrapper] = {
+    MetaWrapper.findMeta(this, name)
+  }
   def getMetaAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
     AssetMetaValue.findOneByAssetId(Set(spec), id.get).toList match {
       case Nil => None
