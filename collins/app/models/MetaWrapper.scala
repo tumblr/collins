@@ -1,5 +1,7 @@
 package models
 
+import util.Cache
+
 import anorm._
 import anorm.SqlParser._
 import java.sql.Connection
@@ -28,10 +30,27 @@ object MetaWrapper {
       val meta: AssetMeta = AssetMeta.findByName(metaName, con).getOrElse {
         AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
       }
+      Cache.invalidate("MetaWrapper(%d).getMetaAttribute(%s)".format(asset.getId, metaName))
       AssetMetaValue(asset, meta.id.get, v)
     }.toSeq
     AssetMetaValue.purge(metaValues)
     AssetMetaValue.create(metaValues)
+  }
+
+  def findMeta(asset: Asset, name: String): Option[MetaWrapper] = {
+    Cache.getOrElseUpdate("MetaWrapper(%d).getMetaAttribute(%s)".format(asset.getId, name.toUpperCase)) {
+      Model.withConnection { implicit con =>
+        AssetMeta.findByName(name, con).flatMap { meta =>
+          val value = AssetMetaValue.find(
+              "asset_id={asset_id} AND asset_meta_id={asset_meta_id} LIMIT 1"
+            ).on(
+              'asset_id -> asset.getId,
+              'asset_meta_id -> meta.getId
+            ).singleOption()
+          value.map { amv => MetaWrapper(meta, amv) }
+        }
+      }
+    }
   }
 
   def findAssets(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder): Page[Asset] = {

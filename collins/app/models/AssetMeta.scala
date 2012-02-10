@@ -49,8 +49,8 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
 
   def findByName(name: String, con: Connection): Option[AssetMeta] = {
     implicit val c: Connection = con
-    Cache.getOrElseUpdate("AssetMeta.findByName(%s)".format(name)) {
-      AssetMeta.find("name={name}").on('name -> name).singleOption()
+    Cache.getOrElseUpdate("AssetMeta.findByName(%s)".format(name.toUpperCase)) {
+      AssetMeta.find("name={name}").on('name -> name.toUpperCase).singleOption()
     }
   }
 
