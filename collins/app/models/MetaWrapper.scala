@@ -109,8 +109,13 @@ object MetaWrapper {
     val result: Seq[SimpleSql[Row]] = assetMeta.zipWithIndex.map { case(tuple, size) =>
       val metaName = "asset_meta_id_%d".format(size)
       val metaValueName = "asset_meta_value_value_%d".format(size)
-      val nvalue = tuple._2 + "%"
-      SqlQuery("(amv.asset_meta_id={%s} and amv.value like {%s})".format(
+      val ivalue = tuple._2
+      val nvalue = if (tuple._2.endsWith("$")) {
+        ivalue
+      } else {
+        ivalue + ".*"
+      }
+      SqlQuery("(amv.asset_meta_id={%s} and amv.value REGEXP {%s})".format(
         metaName, metaValueName
       )).on(metaName -> tuple._1.getId, metaValueName -> nvalue)
     }
