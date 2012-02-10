@@ -1,0 +1,10 @@
+@(asset: Asset, text: String = "SL")
+
+@formatUrl(url: String) = {
+  <a href="@url">@text</a>
+}
+@formatEmpty() = {
+  <em>Unknown</em>
+}
+
+<td>@asset.softLayerUrl.map{url => @formatUrl(url)}.getOrElse{@formatEmpty()}</td>
