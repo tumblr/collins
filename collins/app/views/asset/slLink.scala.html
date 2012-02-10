@@ -1,7 +1,7 @@
 @(asset: Asset, text: String = "SL")
 
 @formatUrl(url: String) = {
-  <a href="@url">@text</a>
+  <a href="@url" target="_blank">@text</a>
 }
 @formatEmpty() = {
   <em>Unknown</em>
