@@ -14,7 +14,7 @@ private[controllers] case class ResponseData(status: Results.Status, data: JsObj
   def map[T](fn: ResponseData => T) = fn(this)
 }
 
-trait Api extends ApiResponse with AssetApi with AssetLogApi {
+trait Api extends ApiResponse with AssetApi with AssetLogApi with IpmiApi {
   this: SecureController =>
 
   protected implicit val securitySpec = SecuritySpec(isSecure = true, Nil)
