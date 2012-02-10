@@ -122,6 +122,9 @@ object AssetLifecycle {
     val stat = options.get("status").getOrElse("none")
     allCatch[Boolean].either {
       val status = AStatus.Enum.withName(stat)
+      if (status.id == asset.status) {
+        return Right(true)
+      }
       Model.withTransaction { implicit con =>
         val old = AStatus.Enum(asset.status).toString
         val reason = "Asset state updated from %s to %s".format(old, stat)
