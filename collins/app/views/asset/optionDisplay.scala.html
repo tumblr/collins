@@ -1,0 +1,18 @@
+@(formatAs: Int, opt: Option[String], label: String)
+
+@import _root_.util.ByteStorageUnit
+
+@formatLink(url: String, display: String) = {
+<a href="@url" target="_blank">@display</a>
+}
+
+@formatDisk(size: String) = {
+@ByteStorageUnit(size.toLong).toHuman
+}
+
+@{
+  formatAs match {
+    case 0 => opt.map(url => formatLink(url, label)).getOrElse(label)
+    case 1 => opt.map(size => formatDisk(size)).getOrElse(label)
+  }
+}

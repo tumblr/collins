@@ -43,6 +43,24 @@ trait AssetApi {
     }
   }}(SecuritySpec(true, Nil))
 
+  // POST /asset/:tag/decommission
+  def decommissionAsset(tag: String) = SecureAction { implicit req =>
+    AsyncResult {
+      BackgroundProcessor.send(AssetCancelProcessor(tag)) { case(ex,res) =>
+        val rd: ResponseData = ex.map { err =>
+          Api.getErrorMessage(err.getMessage)
+        }.orElse{
+          res.get match {
+            case Left(err) => Some(err)
+            case Right(success) =>
+              Some(ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(success)))))
+          }
+        }.get
+        formatResponseData(rd)
+      }
+    }
+  }
+
   // GET /api/assets?params
   private val finder = new actions.FindAsset()
   def getAssets(page: Int, size: Int, sort: String) = SecureAction { implicit req =>

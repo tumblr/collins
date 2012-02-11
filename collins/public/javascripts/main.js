@@ -50,17 +50,51 @@ $(document).ready(function() {
     });
   });
 
+  $("button[data-close]").each(function() {
+    var e = $(this);
+    var toClose = $(e.attr('data-close'));
+    toClose.bind('hide', function() {
+      $('.addedError').each(function(e) {
+        $(this).text("");
+      });
+    });
+    e.click(function() {
+      toClose.modal('hide');
+    });
+  });
+
   $("button[data-remote]").each(function() {
     var e = $(this);
     var remoteUrl = e.attr('data-remote');
     var method = e.attr('data-method') || 'GET';
+    var bodyId = e.attr('data-body');
+    var errorArea = e.attr('data-error');
+    var ajaxArgs = {
+      type: method,
+      url: remoteUrl
+    }
+    ajaxArgs.success = function(o) {
+      window.location.reload();
+    }
+    ajaxArgs.error = function(o) {
+      if (errorArea) {
+        var msg = JSON.parse(o.responseText).data.message;
+        $(errorArea).html('<span class="addedError">' + msg + '</span>');
+      }
+    }
     e.click(function() {
-      $.ajax({
-        type: method,
-        url: remoteUrl,
-        success: function(o) {
-        }
-      });
+      if (bodyId) {
+        console.log("Body ID is " + bodyId);
+        body = {}
+        var bodyHash = "#" + bodyId;
+        console.log(bodyHash);
+        body[bodyId] = $(bodyHash).val()
+        console.log($(bodyHash));
+        console.log(body);
+        ajaxArgs.data = body
+        console.log(ajaxArgs);
+      }
+      $.ajax(ajaxArgs)
     });
   });
 

@@ -118,26 +118,32 @@ object AssetLifecycle {
     }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
   }
 
-  def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  def updateAssetStatus(asset: Asset, options: Map[String,String], con: Connection): Status[Boolean] = {
+    implicit val conn: Connection = con
     val stat = options.get("status").getOrElse("none")
     allCatch[Boolean].either {
       val status = AStatus.Enum.withName(stat)
       if (status.id == asset.status) {
         return Right(true)
       }
-      Model.withTransaction { implicit con =>
-        val old = AStatus.Enum(asset.status).toString
-        val reason = "Asset state updated from %s to %s".format(old, stat)
-        Asset.update(asset.copy(status = status.id, updated = Some(new Date().asTimestamp)))
-        AssetLog.warning(
-          asset,
-          reason,
-          AssetLog.Formats.PlainText,
-          AssetLog.Sources.Api
-        ).create()
-        true
-      }
+      val old = AStatus.Enum(asset.status).toString
+      val defaultReason = "Asset state updated from %s to %s".format(old, stat)
+      val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
+      Asset.update(asset.copy(status = status.id, updated = Some(new Date().asTimestamp)))
+      AssetLog.warning(
+        asset,
+        reason,
+        AssetLog.Formats.PlainText,
+        AssetLog.Sources.Api
+      ).create()
+      true
     }.left.map(e => handleException(asset, "Error updating status for asset", e))
+  }
+
+  def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+    Model.withTransaction { con =>
+      updateAssetStatus(asset, options, con)
+    }
   }
 
   protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
