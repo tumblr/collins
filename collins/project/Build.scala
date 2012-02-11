@@ -11,7 +11,8 @@ object ApplicationBuild extends Build {
 
     val appDependencies = Seq(
       "org.bouncycastle" % "bcprov-jdk16" % "1.46",
-      "com.twitter" %% "util-core" % "1.12.8"
+      "com.twitter" %% "util-core" % "1.12.12",
+      "com.twitter" %% "finagle-http" % "1.10.0"
     )
 
     val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(

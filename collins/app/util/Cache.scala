@@ -5,7 +5,6 @@ import play.api.{Application, Mode}
 import java.io.File
 
 object Cache {
-  private[this] def error = throw new Exception("The tumblr CachePlugin is not properly registered")
   private[this] def getCachePlugin =
     new CachePlugin(new Application(new File("."), this.getClass.getClassLoader, None, Mode.Dev))
   private[this] val cachePlugin = play.api.Play.maybeApplication.map { app =>

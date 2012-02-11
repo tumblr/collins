@@ -1,5 +1,8 @@
 package controllers
 
+import models.{AssetLifecycle, AssetLog, MetaWrapper, Model, Status => AStatus}
+import util.SoftLayerClient
+
 import akka.actor.Actor
 import Actor._
 import akka.dispatch.FutureTimeoutException
@@ -21,6 +24,47 @@ case class AssetUpdateProcessor(tag: String, userTimeout: Option[Duration] = Non
   }
 }
 
+case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = None)(implicit req: Request[AnyContent])
+  extends BackgroundProcess[Either[ResponseData,Long]]
+{
+  override def defaultTimeout: Duration =
+    Duration.parse("10 seconds")
+
+  val timeout = userTimeout.getOrElse(defaultTimeout)
+  def run(): Either[ResponseData,Long] = {
+    req.body.asUrlFormEncoded.flatMap(_.get("reason")).flatMap(_.headOption).map(_.trim).filter(_.size > 0).map { _reason =>
+      val reason = _reason.trim
+      Api.withAssetFromTag(tag) { asset =>
+        SoftLayerClient.pluginEnabled.map { _ =>
+          asset.softLayerId match {
+            case None =>
+              Left(Api.getErrorMessage("Asset is not a softlayer asset"))
+            case Some(n) =>
+              SoftLayerClient.cancelServer(n, reason)() match {
+                case 0L =>
+                  Left(Api.getErrorMessage("There was an error cancelling this server"))
+                case ticketId =>
+                  Model.withTransaction { implicit con =>
+                    MetaWrapper.createMeta(asset, Map("CANCEL_TICKET" -> ticketId.toString))
+                    AssetLifecycle.updateAssetStatus(asset, Map(
+                      "status" -> AStatus.Enum.Decommissioned.toString,
+                      "reason" -> reason
+                    ), con)
+                    AssetLog.informational(asset, "User requested server cancellation",
+                      AssetLog.Formats.PlainText, AssetLog.Sources.Internal).create()
+                  }
+                  SoftLayerClient.setNote(n, "Cancelled: %s".format(reason))()
+                  Right(ticketId)
+              }
+          }
+        }.getOrElse {
+          Left(Api.getErrorMessage("SoftLayer plugin is not enabled"))
+        }
+      }
+    }.getOrElse(Left(Api.getErrorMessage("No reason specified for cancellation")))
+  }
+}
+
 sealed trait BackgroundProcess[T] {
   val timeout: Duration
   def run(): T
@@ -34,6 +78,7 @@ sealed trait BackgroundProcess[T] {
 private[controllers] class BackgroundProcessor extends Actor {
   def receive = {
     case processor: controllers.AssetUpdateProcessor => self.reply(processor.run())
+    case processor: controllers.AssetCancelProcessor => self.reply(processor.run())
   }
 }
 

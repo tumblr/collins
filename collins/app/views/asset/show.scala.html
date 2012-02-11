@@ -3,6 +3,7 @@
 @import helper._
 @import util.notice
 @import _root_.util.conversions._
+@import _root_.util.SoftLayerClient
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
@@ -15,9 +16,41 @@
     @notice("error")
     @notice("warning")
 
+    <div id="cancel-server" class="modal hide fade">
+      <div class="modal-header">
+        <a href="#" class="close">&times;</a>
+        <h3>Server Cancellation</h3>
+      </div>
+      <div class="modal-body">
+        <p><span class="label important">Warning</span> Cancelling this server will</p>
+        <ul>
+          <li>Erase the hard disks</li>
+          <li>Shut down the machine</li>
+          <li>File a ticket with SoftLayer</li>
+          <li>Mark it as decommissioned in collins</li>
+        </ul>
+        <p>If that all sounds good, provide a reason and then click the button below</p>
+        <div class="clearfix">
+          <label for="reason" style="margin-right: 15px;"><strong>Reason</strong></label>
+          <div class="input">
+            <textarea name="reason" id="reason" class="xlarge" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="clearfix" id="cancelError"></div>
+      </div>
+      <div class="modal-footer">
+        <button data-close="#cancel-server" class="btn primary">Go back to browsing tumblr</button>
+        <button data-remote="/asset/@aa.asset.tag/decommission" data-error="#cancelError" data-method="POST" data-body="reason" class="btn">Delete Server</button>
+      </div>
+    </div>
     <div style="float: right;">
       <button class="btn" data-toggle="collapseAll">Collapse All</button>
       <button class="btn" data-toggle="openAll">Open All</button>
+      @SoftLayerClient.pluginEnabled.map { t =>
+        @if(aa.asset.isSoftLayerAsset()) {
+        <button class="btn" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</button>
+        }
+      }
     </div>
 
     <h3><a data-toggle="collapse" data-target="#basicDataTable">Basic Data</a></h3>
@@ -56,7 +89,15 @@
         @aa.mvs.map { mv =>
         <tr>
           <th>@mv.getLabel</th>
-          <td>@mv.getValue</td>
+          <td>
+          @{
+            mv.getName match {
+              case "CANCEL_TICKET" => optionDisplay(0, SoftLayerClient.ticketLink(mv.getValue), mv.getValue)
+              case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
+              case _ => mv.getValue
+            }
+          }
+          </td>
           <td>@mv.getDescription</td>
         </tr>
         }
