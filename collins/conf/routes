@@ -9,11 +9,12 @@ GET     /                           app.Resources.index
 GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "DESC")
 GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
 
+GET     /asset/create/:assetType    app.Resources.displayCreateForm(assetType: String)
+POST    /asset/create/:assetType    app.Resources.createAsset(assetType: String)
 GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+POST    /asset/:tag/log             app.CookieApi.submitLogData(tag: String)
 GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
 POST    /asset/:tag/decommission    app.CookieApi.decommissionAsset(tag: String)
-GET     /asset;create               app.Resources.displayCreateForm(assetType: String)
-POST    /asset;create               app.Resources.createAsset(assetType: String)
 
 # Admin pages
 GET     /admin/stats                controllers.Admin.stats

@@ -57,6 +57,9 @@ case class Asset(
   def getMetaAttribute(name: String): Option[MetaWrapper] = {
     MetaWrapper.findMeta(this, name)
   }
+  def getMetaAttribute(name: String, count: Int): Seq[MetaWrapper] = {
+    MetaWrapper.findMeta(this, name, count)
+  }
   def getMetaAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
     AssetMetaValue.findOneByAssetId(Set(spec), id.get).toList match {
       case Nil => None

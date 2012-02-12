@@ -22,6 +22,7 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getLabel(): String = _meta.label
   def getDescription(): String = _meta.description
   def getValue(): String = _value.value
+  override def toString(): String = getValue()
 }
 object MetaWrapper {
   def createMeta(asset: Asset, metas: Map[String,String])(implicit con: Connection) = {
@@ -37,19 +38,26 @@ object MetaWrapper {
     AssetMetaValue.create(metaValues)
   }
 
-  def findMeta(asset: Asset, name: String): Option[MetaWrapper] = {
-    Cache.getOrElseUpdate("MetaWrapper(%d).getMetaAttribute(%s)".format(asset.getId, name.toUpperCase)) {
+  def findMeta(asset: Asset, name: String, count: Int = 1): Seq[MetaWrapper] = {
+    Cache.getOrElseUpdate("MetaWrapper(%d).getMetaAttribute(%s)(%d)".format(asset.getId, name.toUpperCase, count)) {
       Model.withConnection { implicit con =>
-        AssetMeta.findByName(name, con).flatMap { meta =>
-          val value = AssetMetaValue.find(
-              "asset_id={asset_id} AND asset_meta_id={asset_meta_id} LIMIT 1"
-            ).on(
-              'asset_id -> asset.getId,
-              'asset_meta_id -> meta.getId
-            ).singleOption()
-          value.map { amv => MetaWrapper(meta, amv) }
-        }
+        AssetMeta.findByName(name, con).map { meta =>
+          val values = AssetMetaValue.find(
+            "asset_id={asset_id} AND asset_meta_id={asset_meta_id} LIMIT %d".format(count)
+          ).on(
+            'asset_id -> asset.getId,
+            'asset_meta_id -> meta.getId
+          ).list()
+          values.map { amv => MetaWrapper(meta, amv) }
+        }.getOrElse(Nil)
       }
+    }
+  }
+
+  def findMeta(asset: Asset, name: String): Option[MetaWrapper] = {
+    findMeta(asset, name, 1) match {
+      case Nil => None
+      case head :: Nil => Some(head)
     }
   }
 
