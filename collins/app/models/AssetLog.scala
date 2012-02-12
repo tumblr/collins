@@ -24,7 +24,7 @@ case class AssetLog(
 
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
-    "ASSET_ID" -> JsNumber(getAssetId()),
+    "ASSET_TAG" -> JsString(Asset.findById(getAssetId()).get.tag),
     "CREATED" -> JsString(Helpers.dateFormat(created)),
     "FORMAT" -> JsString(getFormat().toString()),
     "SOURCE" -> JsString(getSource().toString()),
