@@ -41,6 +41,10 @@ table tfoot.summary td {
   border-top: none;
 }
 
+table td.center {
+  text-align: center;
+}
+
 div.dataTables_length label {
     width: 460px;
     float: left;
@@ -70,6 +74,6 @@ table {
     clear: both;
 }
 
-a[data-toggle] {
+a[data-collapsible] {
   cursor: pointer;
 }

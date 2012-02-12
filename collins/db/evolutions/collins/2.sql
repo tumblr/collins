@@ -6,7 +6,7 @@ INSERT INTO status VALUES (1, 'New', 'Asset has been entered into the system');
 INSERT INTO status VALUES (2, 'Unallocated', 'Asset has gone through intake');
 INSERT INTO status VALUES (3, 'Allocated', 'Asset is in use or is ready for use');
 INSERT INTO status VALUES (4, 'Cancelled', 'Asset is scheduled for decommissioning');
-INSERT INTO status VALUES (5, 'Maintenace', 'Asset is scheduled for maintenance');
+INSERT INTO status VALUES (5, 'Maintenance', 'Asset is scheduled for maintenance');
 INSERT INTO status VALUES (6, 'Decommissioned', 'Asset is gone');
 INSERT INTO status VALUES (7, 'Incomplete', 'Asset has not been finalized');
 

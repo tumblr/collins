@@ -7,53 +7,46 @@
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
-<div class="page-header">
-  <h1>Asset Details <small>@aa.asset.tag</small></h1>
-</div>
 <div class="row">
   <div class="span14">
     @notice("message", Some("notice"))
     @notice("error")
     @notice("warning")
+  </div>
+</div>
 
-    <div id="cancel-server" class="modal hide fade">
-      <div class="modal-header">
-        <a href="#" class="close">&times;</a>
-        <h3>Server Cancellation</h3>
-      </div>
-      <div class="modal-body">
-        <p><span class="label important">Warning</span> Cancelling this server will</p>
-        <ul>
-          <li>Erase the hard disks</li>
-          <li>Shut down the machine</li>
-          <li>File a ticket with SoftLayer</li>
-          <li>Mark it as decommissioned in collins</li>
+<div class="row">
+  <div class="span14">
+    <h1>Asset Details <small>@aa.asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse{@aa.asset.tag}</small></h1>
+  </div>
+
+  <div class="span14">
+
+    <ul class="tabs" data-tabs="tabs">
+      <li class="active"><a href="#overview">Overview</a></li>
+      <li><a href="#ipmi-info">IPMI Info</a></li>
+      <li><a href="#log-data">Logs</a></li>
+      <li><a href="#hardware-details">Hardware Details</a></li>
+      <li><a href="#lldp-info">LLDP Info</a></li>
+      <li class="dropdown" data-dropdown="dropdown">
+        <a href="#" class="dropdown-toggle"><strong>Actions</strong></a>
+        <ul class="dropdown-menu">
+          <li><a href="#" data-keyboard="true" data-controls-modal="asset-note">Create Note</a></li>
+          @SoftLayerClient.pluginEnabled.map { t =>
+            @if(aa.asset.isSoftLayerAsset()) {
+            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
+            }
+          }
         </ul>
-        <p>If that all sounds good, provide a reason and then click the button below</p>
-        <div class="clearfix">
-          <label for="reason" style="margin-right: 15px;"><strong>Reason</strong></label>
-          <div class="input">
-            <textarea name="reason" id="reason" class="xlarge" rows="3"></textarea>
-          </div>
-        </div>
-        <div class="clearfix" id="cancelError"></div>
-      </div>
-      <div class="modal-footer">
-        <button data-close="#cancel-server" class="btn primary">Go back to browsing tumblr</button>
-        <button data-remote="/asset/@aa.asset.tag/decommission" data-error="#cancelError" data-method="POST" data-body="reason" class="btn">Delete Server</button>
-      </div>
-    </div>
-    <div style="float: right;">
-      <button class="btn" data-toggle="collapseAll">Collapse All</button>
-      <button class="btn" data-toggle="openAll">Open All</button>
-      @SoftLayerClient.pluginEnabled.map { t =>
-        @if(aa.asset.isSoftLayerAsset()) {
-        <button class="btn" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</button>
-        }
-      }
-    </div>
+      </li>
+    </ul>
+  </div>
+</div>
 
-    <h3><a data-toggle="collapse" data-target="#basicDataTable">Basic Data</a></h3>
+<div class="span14 tab-content">
+
+  <div class="active tab-pane" id="overview">
+    <h3>Overview</h3>
     <table id="basicDataTable" class="zebra-striped condensed-table">
       <thead>
         <tr>
@@ -61,6 +54,16 @@
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <th>Hostname</th>
+          <td>@aa.asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse{"Unknown"}</td>
+          <td>Hostname</td>
+        </tr>
+        <tr>
+          <th>Ip Addresses</th>
+          <td>@aa.asset.getMetaAttribute("INTERFACE_ADDRESS", 2).mkString(", ")</td>
+          <td>Primary IP Addresses</td>
+        </tr>
         <tr>
           <th>Asset Tag</th>
           @Helpers.haveFeature("softLayerSupport").filter(b => aa.asset.isSoftLayerAsset()).map { t =>
@@ -76,7 +79,11 @@
         <tr>
           <th>Asset Status</th>
           <td>@aa.asset.getStatus().name</td>
+@if(aa.asset.getStatus().name == "Maintenance") {
+          <td><span class="label important">See Notes</span> @aa.asset.getStatus().description</td>
+} else {
           <td>@aa.asset.getStatus().description</td>
+}
         </tr>
         <tr>
           <th>Created On</th>
@@ -88,7 +95,7 @@
           <td>@aa.asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse {<em>Never</em>}</td>
           <td></td>
         </tr>
-        @aa.mvs.map { mv =>
+        @aa.mvs.filter(_.getName() != "HOSTNAME").map { mv =>
         <tr>
           <th>@mv.getLabel</th>
           <td>
@@ -106,96 +113,34 @@
       </tbody>
     </table>
 
-    @if(aa.ipmi.nonEmpty) {
-    <h3><a data-toggle="collapse" data-target="#ipmiInfo">IPMI Info</a></h3>
-    <table class="zebra-striped condensed-table" id="ipmiInfo">
-      <thead>
-        <th></th><th></th>
-      </thead>
-      <tbody>
-        <tr>
-          <th>IPMI Address</th>
-          <td><a target="_blank" href="http://@aa.ipmi.get.dottedAddress()/">@{aa.ipmi.get.dottedAddress()}</a></td>
-        </tr>
-        <tr>
-          <th>IPMI Username</th>
-          <td>@aa.ipmi.get.username</td>
-        </tr>
-        <tr>
-          <th>IPMI Password</th>
-          <td>@aa.ipmi.get.password</td>
-        </tr>
-        <tr>
-          <th>IPMI Gateway/Netmask</th>
-          <td>@aa.ipmi.get.dottedGateway()/@aa.ipmi.get.dottedNetmask()</td>
-        </tr>
-      </tbody>
-    </table>
-    }
+    <script type="text/javascript">
+      var userNotesCols = [
+        {"mDataProp": "CREATED", "sWidth": "20%"},
+	{"mDataProp": "MESSAGE", "sWidth": "80%", "bSortable": false}
+      ];
+    </script>
+    <h3>User Notes <small>Notes people have left</small></h3>
+    <div id="log_data_note_container">
+      <table id="log_data_note" class="log-data zebra-striped condensed-table" data-cols='userNotesCols' data-source="/asset/@aa.asset.tag/logs?filter=NOTE">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+          <tr>
+            <th>Date</th>
+            <th>Message</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
 
-    @if(aa.lldp.interfaceCount > 0) {
-    <h3><a data-toggle="collapse" data-target="#lldpSummary">LLDP Summary</a></h3>
-    <table class="zebra-striped condensed-table collapse" id="lldpSummary">
-      <thead>
-        <tr>
-          <th></th>
-          @aa.lldp.interfaces.map { interface =>
-          <th>@interface.name</th>
-          }
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>Chassis Name</th>
-          @aa.lldp.interfaces.map { interface =>
-          <td>@interface.chassis.name</td>
-          }
-        </tr>
-        <tr>
-          <th>Chassis Description</th>
-          @aa.lldp.interfaces.map { interface =>
-          <td>@interface.chassis.description</td>
-          }
-        </tr>
-        <tr>
-          <th>Chassis ID</th>
-          @aa.lldp.interfaces.map { interface =>
-          <td>@interface.chassis.id.idType / @interface.chassis.id.value</td>
-          }
-        </tr>
-
-        <tr>
-          <th>Port ID</th>
-          @aa.lldp.interfaces.map { interface =>
-          <td>@interface.port.id.idType / @interface.port.id.value</td>
-          }
-        </tr>
-        <tr>
-          <th>Port Description</th>
-          @aa.lldp.interfaces.map { interface =>
-          <td>@interface.port.description</td>
-          }
-        </tr>
-
-        <tr>
-          <th>VLAN ID</th>
-          @aa.lldp.interfaces.map { interface =>
-          <td>@interface.vlan.id</td>
-          }
-        </tr>
-        <tr>
-          <th>VLAN Name</th>
-          @aa.lldp.interfaces.map { interface =>
-          <td>@interface.vlan.name</td>
-          }
-        </tr>
-
-      </tbody>
-    </table>
-    }
-
+    <h3>Hardware Summary</h3>
     @if(aa.lshw.cpuCount > 0) {
-    <h3><a data-toggle="collapse" data-target="#hardwareSummary">Hardware Summary</a></h3>
     <table class="zebra-striped condensed-table" id="hardwareSummary">
       <thead>
         <tr>
@@ -290,9 +235,132 @@
         </tr>
       </tbody>
     </table>
+    } else {
+    <div>None Available</div>
+    }
+  </div> <!-- overview -->
 
-    <h3><a data-toggle="collapse" data-target="#hardwareDetails">Hardware Details</a></h3>
-    <div id="hardwareDetails" class="collapse">
+  <div class="tab-pane" id="ipmi-info">
+    <h3>IPMI Info</h3>
+    @if(aa.ipmi.nonEmpty) {
+    <table class="zebra-striped condensed-table" id="ipmiInfo">
+      <thead>
+        <th></th><th></th>
+      </thead>
+      <tbody>
+        <tr>
+          <th>IPMI Address</th>
+          <td><a target="_blank" href="http://@aa.ipmi.get.dottedAddress()/">@{aa.ipmi.get.dottedAddress()}</a></td>
+        </tr>
+        <tr>
+          <th>IPMI Username</th>
+          <td>@aa.ipmi.get.username</td>
+        </tr>
+        <tr>
+          <th>IPMI Password</th>
+          <td>@aa.ipmi.get.password</td>
+        </tr>
+        <tr>
+          <th>IPMI Gateway/Netmask</th>
+          <td>@aa.ipmi.get.dottedGateway()/@aa.ipmi.get.dottedNetmask()</td>
+        </tr>
+      </tbody>
+    </table>
+    } else {
+    <div>None Available</div>
+    }
+  </div>
+
+  <div class="tab-pane" id="lldp-info">
+    <h3>LLDP Summary</h3>
+    @if(aa.lldp.interfaceCount > 0) {
+    <table class="zebra-striped condensed-table" id="lldpSummary">
+      <thead>
+        <tr>
+          <th></th>
+          @aa.lldp.interfaces.map { interface =>
+          <th>@interface.name</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Chassis Name</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.chassis.name</td>
+          }
+        </tr>
+        <tr>
+          <th>Chassis Description</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.chassis.description</td>
+          }
+        </tr>
+        <tr>
+          <th>Chassis ID</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.chassis.id.idType / @interface.chassis.id.value</td>
+          }
+        </tr>
+
+        <tr>
+          <th>Port ID</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.port.id.idType / @interface.port.id.value</td>
+          }
+        </tr>
+        <tr>
+          <th>Port Description</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.port.description</td>
+          }
+        </tr>
+
+        <tr>
+          <th>VLAN ID</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.vlan.id</td>
+          }
+        </tr>
+        <tr>
+          <th>VLAN Name</th>
+          @aa.lldp.interfaces.map { interface =>
+          <td>@interface.vlan.name</td>
+          }
+        </tr>
+      </tbody>
+    </table>
+    } else {
+    <div>None Available</div>
+    }
+  </div>
+
+
+  <div class="tab-pane" id="hardware-details">
+    <h3>Hardware Details</h3>
+    @if(aa.lshw.cpuCount > 0) {
+    <div id="hardwareDetails">
+    <h4>Network Interfaces <small>Collected NIC Information</small></h4>
+    <table class="zebra-striped condensed-table">
+      <thead>
+        <tr>
+          <th>Id</th><th>Interface</th><th>Address</th><th>Speed</th><th>MAC Address</th><th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+      @aa.lshw.nics.zipWithIndex.map { case(nic,id) =>
+        <tr>
+          <th>@id</th>
+          <td>@{nic.info.map(n => n.interface).getOrElse("Unknown")}</td>
+          <td>@{nic.info.map(n => n.address).getOrElse("Unknown")}</td>
+          <td>@{nic.speed.toHuman}/s</td>
+          <td>@nic.macAddress</td>
+          <td>@nic.description</td>
+        </tr>
+      }
+      </tbody>
+    </table>
+
     <h4>CPU <small>Collected CPU Information</small></h4>
     <table class="zebra-striped condensed-table">
       <thead>
@@ -347,53 +415,115 @@
       }
       </tbody>
     </table>
-
-    <h4>Network Interfaces <small>Collected NIC Information</small></h4>
-    <table class="zebra-striped condensed-table">
-      <thead>
-        <tr>
-          <th>Id</th><th>Interface</th><th>Address</th><th>Speed</th><th>MAC Address</th><th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-      @aa.lshw.nics.zipWithIndex.map { case(nic,id) =>
-        <tr>
-          <th>@id</th>
-          <td>@{nic.info.map(n => n.interface).getOrElse("Unknown")}</td>
-          <td>@{nic.info.map(n => n.address).getOrElse("Unknown")}</td>
-          <td>@{nic.speed.toHuman}/s</td>
-          <td>@nic.macAddress</td>
-          <td>@nic.description</td>
-        </tr>
-      }
-      </tbody>
-    </table>
     </div>
+    } else {
+    <div>None Available</div>
     }
-
-    <h3>Log Data <small>Log data about asset</small></h3>
-    <table id="log_data" class="log-data zebra-striped condensed-table" data-source="/asset/@aa.asset.tag/logs">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Source</th>
-          <th>Level</th>
-          <th>Message</th>
-        </tr>
-      </thead>
-      <tbody>
-      </tbody>
-      <tfoot>
-        <tr>
-          <th>Date</th>
-          <th>Source</th>
-          <th>Level</th>
-          <th>Message</th>
-        </tr>
-      </tfoot>
-    </table>
-      </thead>
-    </table>
   </div>
+
+  <div class="tab-pane" id="log-data">
+    <script type="text/javascript">
+      var logDataCols = [
+        {"mDataProp": "CREATED", "sWidth": "20%"},
+	{"mDataProp": "SOURCE", "sWidth": "10%", "bSortable": false},
+        {"mDataProp": "TYPE", "sWidth": "15%", "bSortable": false},
+	{"mDataProp": "MESSAGE", "sWidth": "55%", "bSortable": false}
+      ];
+    </script>
+    <h3>Log Data <small>Log data about asset</small></h3>
+    <div id="log_data_container">
+      <table id="log_data" class="log-data zebra-striped condensed-table" data-cols="logDataCols" data-source="/asset/@aa.asset.tag/logs?filter=!NOTE">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Source</th>
+            <th>Level</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+          <tr>
+            <th>Date</th>
+            <th>Source</th>
+            <th>Level</th>
+            <th>Message</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div> <!-- row -->
+
+<!-- modals -->
+<div id="cancel-server" class="modal hide fade" data-modal-cleanup="cancelError">
+  <div class="modal-header">
+    <a href="#" class="close">&times;</a>
+    <h3>Server Cancellation</h3>
+  </div>
+  @form(app.routes.CookieApi.decommissionAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "cancelError", Symbol("data-modal") -> "cancel-server", Symbol("data-refresh") -> ".window") {
+  <div class="modal-body">
+    <p><span class="label important">Warning</span> Cancelling this server will</p>
+    <ul>
+      <li>Erase the hard disks</li>
+      <li>Shut down the machine</li>
+      <li>File a ticket with SoftLayer</li>
+      <li>Mark it as decommissioned in collins</li>
+    </ul>
+    <p>If that all sounds good, provide a reason and then click the button below</p>
+    <div class="clearfix">
+      <label for="reason">Reason</label>
+      <div class="input">
+        <textarea name="reason" id="reason" class="xlarge" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="cancelError" style="margin-right: 15px;"></label>
+      <span class="alert-message error hide" id="cancelError"></span>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn">Delete Server</button>
+    <button type="reset" data-closes-modal="cancel-server" class="btn primary">Go back to browsing tumblr</button>
+  </div>
+  }
+</div>
+
+<div id="asset-note" class="modal hide fade" data-modal-cleanup="noteError">
+  <div class="modal-header">
+    <a href="#" class="close">&times;</a>
+    <h3>Create new note</h3>
+  </div>
+  @form(app.routes.CookieApi.submitLogData(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "noteError", Symbol("data-modal") -> "asset-note", Symbol("data-refresh") -> "table.log-data") {
+  <div class="modal-body">
+    <div class="clearfix" style="line-height: 150%">
+      <strong>Note</strong> The following HTML tags are allowed: <code>a, b, blockquote, br, cite, code, dd, dl, dt, em, i, img, li, ol, p, pre, q, small, strike, strong, sub, sup, u, ul</code>
+    </div>
+    <div class="clearfix">
+      <label for="type">Note Type</label>
+      <div class="input">
+        @selectDisplay("type", "NOTE")
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="message">Note</label>
+      <div class="input">
+        <textarea name="message" id="message" class="xlarge focus" rows="3"></textarea>
+        <span class="help-block">And that's why, you always leave a note.</span>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="noteError" style="margin-right: 15px;"></label>
+      <span class="alert-message error hide" id="noteError"></span>
+    </div>
+    <input type="hidden" name="source" value="USER">
+  </div>
+  <div class="modal-footer">
+    <button type="reset" data-closes-modal="asset-note" class="btn">Cancel</button>
+    <button type="submit" class="btn primary">Leave a Note</button>
+  </div>
+  }
 </div>
 }

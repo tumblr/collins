@@ -158,6 +158,10 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
       apply(asset, message, format, source, AssetLog.MessageTypes.Debug)
   }
 
+  def note(asset: Asset, message: String, format: AssetLog.Formats, source: AssetLog.Sources) = {
+      apply(asset, message, format, source, AssetLog.MessageTypes.Note)
+  }
+
   def list(asset: Asset, page: Int = 0, pageSize: Int = 10, sort: String = "DESC", filter: String = ""): Page[AssetLog] = {
     val orderBy: String = sort.toUpperCase match {
       case "ASC" => "ORDER BY ID ASC"
@@ -166,7 +170,12 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
     val messageFilter = filter.isEmpty match {
       case true => ""
       case false => try {
-        "and message_type=%d".format(AssetLog.MessageTypes.withName(filter).id)
+        val (id, equalityCheck) = if (filter.startsWith("!")) {
+          (AssetLog.MessageTypes.withName(filter.drop(1)).id, "!=")
+        } else {
+          (AssetLog.MessageTypes.withName(filter).id, "=")
+        }
+        "and message_type %s %d".format(equalityCheck, id)
       } catch {
         case _ => ""
       }
@@ -210,6 +219,7 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
     val Notice = Value(5, "NOTICE")
     val Informational = Value(6, "INFORMATIONAL")
     val Debug = Value(7, "DEBUG")
+    val Note = Value(8, "NOTE")
   }
 
 }

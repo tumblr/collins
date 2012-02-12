@@ -8,6 +8,9 @@ import play.api.libs.json._
 import play.api.mvc._
 import Results._
 
+import org.jsoup.Jsoup
+import org.jsoup.safety.Whitelist
+
 trait AssetLogApi {
   this: Api with SecureController =>
 
@@ -38,7 +41,9 @@ trait AssetLogApi {
   }
 
   // PUT /api/asset/:tag/log
-  def submitLogData(tag: String) = SecureAction { implicit req =>
+  def submitLogData(tag: String) = Authenticated { user => Action { implicit req =>
+
+    val username = user.get.username
 
     def processJson(jsValue: JsValue, asset: Asset): Option[String] = {
       val typeString: String = jsValue \ "Type" match {
@@ -68,21 +73,25 @@ trait AssetLogApi {
     def processForm(asset: Asset): Option[String] = {
       Form(of(
             "message" -> requiredText(1),
-            "type" -> optional(text(1))
+            "type" -> optional(text(1)),
+            "source" -> optional(text(1))
            )
       ).bindFromRequest.fold(
-        error => {
-          val msg = error.errors.map { _.message }.mkString(", ")
-          Some(msg)
-        },
+        error => Some("Message must not be empty"),
         success => {
-          val msg = success._1
           val typeString = success._2.getOrElse(DefaultMessageType.toString).toUpperCase
+          val source = AssetLog.Sources.withName(success._3.map(s => "USER").getOrElse("API"))
+          val escapedMessage = Jsoup.clean(success._1, Whitelist.basicWithImages())
+          val msg = if (source == AssetLog.Sources.User) {
+            "%s: %s".format(username, escapedMessage)
+          } else {
+            escapedMessage
+          }
           try {
             val mtype = AssetLog.MessageTypes.withName(typeString)
             Model.withConnection { implicit con =>
               AssetLog.create(
-                AssetLog(asset, msg, AssetLog.Formats.PlainText, AssetLog.Sources.Api, mtype)
+                AssetLog(asset, msg, AssetLog.Formats.PlainText, source, mtype)
               )
             }
             None
@@ -106,7 +115,7 @@ trait AssetLogApi {
       }
     }.fold(l => l, r => r)
     formatResponseData(responseData)
-  }(SecuritySpec(isSecure = true, Seq("infra")))
+  }}(SecuritySpec(isSecure = true, Seq("infra")))
 
 
 }
