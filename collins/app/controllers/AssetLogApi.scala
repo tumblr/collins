@@ -19,7 +19,7 @@ trait AssetLogApi {
   // GET /api/asset/:tag/log
   def getLogData(tag: String, page: Int, size: Int, sort: String, filter: String) = SecureAction { implicit req =>
     val result = Api.withAssetFromTag(tag) { asset =>
-      val logs = AssetLog.list(asset, page, size, sort, filter)
+      val logs = AssetLog.list(Some(asset), page, size, sort, filter)
       val prevPage = logs.prev match {
         case None => 0
         case Some(n) => n
@@ -38,6 +38,30 @@ trait AssetLogApi {
       )), headers))
     }
     formatResponseData(result.fold(l => l, r => r))
+  }
+
+  // GET /assets/logs
+  def getAllLogData(page: Int, size: Int, sort: String, filter: String) = SecureAction { implicit req =>
+    val result = {
+      val logs = AssetLog.list(None, page, size, sort, filter)
+      val prevPage = logs.prev match {
+        case None => 0
+        case Some(n) => n
+      }
+      val nextPage = logs.next match {
+        case None => page
+        case Some(n) => n
+      }
+      val totalResults = logs.total
+      val headers = logs.getPaginationHeaders()
+      val paginationMap = logs.getPaginationJsObject
+      ResponseData(Results.Ok, JsObject(paginationMap ++ Seq(
+        "Data" -> JsArray(logs.items.map { log =>
+          JsObject(log.forJsonObject)
+        }.toList)
+      )), headers)
+    }
+    formatResponseData(result)
   }
 
   // PUT /api/asset/:tag/log

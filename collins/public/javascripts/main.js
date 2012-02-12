@@ -244,6 +244,7 @@ $(document).ready(function() {
     var oTable;
     var dataSrc = e.attr('data-source');
     var columns = window[e.attr('data-cols')];
+    var rows = e.attr('data-size') || 10;
 
     var typeLocation = false;
     $.each(columns, function(i, v) {
@@ -261,7 +262,7 @@ $(document).ready(function() {
       "aaSorting": [[0, "desc"]],
       "sPaginationType": "bootstrap",
       "sDom": "<'row'<'span7'l><'span7'f>r>t<'row'<'span7'i><'span7'p>>",
-      "iDisplayLength": 10,
+      "iDisplayLength": rows,
       // Need late binding for oTable since it's not assigned yet
       "fnServerData": fnLogProcessing(function() { return oTable; }),
       "sAjaxDataProp": "data.Data",

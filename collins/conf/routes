@@ -12,12 +12,14 @@ GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?=
 GET     /asset/create/:assetType    app.Resources.displayCreateForm(assetType: String)
 POST    /asset/create/:assetType    app.Resources.createAsset(assetType: String)
 GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+GET     /assets/logs                app.CookieApi.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
 POST    /asset/:tag/log             app.CookieApi.submitLogData(tag: String)
 GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
 POST    /asset/:tag/decommission    app.CookieApi.decommissionAsset(tag: String)
 
 # Admin pages
 GET     /admin/stats                controllers.Admin.stats
+GET     /admin/logs                 controllers.Admin.logs
 POST    /admin/cache/clear          controllers.Admin.clearCache
 
 # Help
