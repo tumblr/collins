@@ -210,7 +210,7 @@ $(document).ready(function() {
     };
   };
 
-  var formatLogRow = function(typeLocation) {
+  var formatLogRow = function(typeLocation, tagLocation) {
     var errors = ["EMERGENCY", "ALERT", "CRITICAL"];
     var warnings = ["ERROR", "WARNING"];
     var notices = ["NOTICE","NOTE"];
@@ -231,6 +231,10 @@ $(document).ready(function() {
           $(selector, nRow).html(getLabelSpan(dtype, ""));
         }
       }
+      if (tagLocation !== false) {
+        var selector = 'td:eq(' + tagLocation + ')';
+        $(selector, nRow).html('<a target="_blank" href="/asset/' + aData.ASSET_TAG + '">' + aData.ASSET_TAG + '</a>');
+      }
       return nRow;
     };
   };
@@ -247,9 +251,12 @@ $(document).ready(function() {
     var rows = e.attr('data-size') || 10;
 
     var typeLocation = false;
+    var tagLocation = false;
     $.each(columns, function(i, v) {
       if (v.mDataProp == 'TYPE') {
         typeLocation = i;
+      } else if (v.mDataProp == 'ASSET_TAG') {
+        tagLocation = i;
       }
     });
 
@@ -267,7 +274,7 @@ $(document).ready(function() {
       "fnServerData": fnLogProcessing(function() { return oTable; }),
       "sAjaxDataProp": "data.Data",
       "aoColumns": columns,
-      "fnRowCallback": formatLogRow(typeLocation),
+      "fnRowCallback": formatLogRow(typeLocation, tagLocation),
     });
 
     // Bind a refresh event to the table

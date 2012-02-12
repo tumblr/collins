@@ -5,10 +5,11 @@
   <div class="span14">
     <script type="text/javascript">
       var logDataCols = [
+        {"mDataProp": "ASSET_TAG", "sWidth": "15%"},
         {"mDataProp": "CREATED", "sWidth": "20%"},
 	{"mDataProp": "SOURCE", "sWidth": "10%", "bSortable": false},
-        {"mDataProp": "TYPE", "sWidth": "15%", "bSortable": false},
-	{"mDataProp": "MESSAGE", "sWidth": "55%", "bSortable": false}
+        {"mDataProp": "TYPE", "sWidth": "10%", "bSortable": false},
+	{"mDataProp": "MESSAGE", "sWidth": "45%", "bSortable": false}
       ];
     </script>
     <h1>All Log Data</h1>
@@ -16,6 +17,7 @@
       <table id="log_data" class="log-data zebra-striped condensed-table" data-size="100" data-cols="logDataCols" data-source="/assets/logs">
         <thead>
           <tr>
+            <th>Asset</th>
             <th>Date</th>
             <th>Source</th>
             <th>Level</th>
@@ -26,6 +28,7 @@
         </tbody>
         <tfoot>
           <tr>
+            <th>Asset</th>
             <th>Date</th>
             <th>Source</th>
             <th>Level</th>
