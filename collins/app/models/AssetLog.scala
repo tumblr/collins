@@ -162,7 +162,7 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
       apply(asset, message, format, source, AssetLog.MessageTypes.Note)
   }
 
-  def list(asset: Asset, page: Int = 0, pageSize: Int = 10, sort: String = "DESC", filter: String = ""): Page[AssetLog] = {
+  def list(asset: Option[Asset], page: Int = 0, pageSize: Int = 10, sort: String = "DESC", filter: String = ""): Page[AssetLog] = {
     val orderBy: String = sort.toUpperCase match {
       case "ASC" => "ORDER BY ID ASC"
       case _ => "ORDER BY ID DESC"
@@ -183,16 +183,27 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
     val offset = pageSize * page
     // Can't use on() for asc/desc because we don't want it quoted
     Model.withConnection { implicit con =>
-      val query = "asset_id={asset_id} %s %s limit {pageSize} offset {offset}".format(messageFilter, orderBy)
-      val rows = AssetLog.find(query).on(
-        'asset_id -> asset.getId,
-        'pageSize -> pageSize,
-        'offset -> offset
-      ).list()
-      val totalRows = AssetLog.count("asset_id={asset_id} %s".format(messageFilter)).on(
-        'asset_id -> asset.getId
-      ).as(scalar[Long])
-      Page(rows, page, offset, totalRows)
+      asset match {
+        case Some(asset) =>
+          val query = "asset_id={asset_id} %s %s limit {pageSize} offset {offset}".format(messageFilter, orderBy)
+          val rows = AssetLog.find(query).on(
+            'asset_id -> asset.getId,
+            'pageSize -> pageSize,
+            'offset -> offset
+          ).list()
+          val totalRows = AssetLog.count("asset_id={asset_id} %s".format(messageFilter)).on(
+            'asset_id -> asset.getId
+          ).as(scalar[Long])
+          Page(rows, page, offset, totalRows)
+        case None =>
+          val query = "where 1=1 %s %s limit {pageSize} offset {offset}".format(messageFilter, orderBy)
+          val rows = AssetLog.find(query).on(
+            'pageSize -> pageSize,
+            'offset -> offset
+          ).list()
+          val totalRows = AssetLog.count("%s".format(messageFilter)).as(scalar[Long])
+          Page(rows, page, offset, totalRows)
+      }
     }
   }
 

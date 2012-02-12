@@ -39,6 +39,7 @@
               <li><a href="@app.routes.Resources.index">Search</a></li>
               @User.fromMap(req.session.data).map { u =>
               @u.getRole("infra").map { role =>
+              <li><a href="@routes.Admin.logs">Logging</a></li>
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle">Create</a>
                 <ul class="dropdown-menu">
