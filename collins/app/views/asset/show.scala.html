@@ -3,7 +3,7 @@
 @import helper._
 @import util.notice
 @import _root_.util.conversions._
-@import _root_.util.SoftLayerClient
+@import _root_.util.{Helpers, SoftLayerClient}
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
@@ -63,7 +63,9 @@
       <tbody>
         <tr>
           <th>Asset Tag</th>
-          <td>@aa.asset.tag</td>
+          @Helpers.haveFeature("softLayerSupport").filter(b => aa.asset.isSoftLayerAsset()).map { t =>
+	    @slLink(aa.asset, aa.asset.tag)
+	  }.getOrElse{<td>@aa.asset.tag</td>}
           <td></td>
         </tr>
         <tr>
