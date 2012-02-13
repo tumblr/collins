@@ -34,7 +34,7 @@ GET     /logout                     controllers.Application.logout
 PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 
-DELETE  /api/asset/attribute/:attribute/:tag   app.Api.deleteAssetAttribute(tag: String, attribute: String)
+DELETE  /api/asset/:tag/attribute/:attribute   app.Api.deleteAssetAttribute(tag: String, attribute: String)
 
 PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
