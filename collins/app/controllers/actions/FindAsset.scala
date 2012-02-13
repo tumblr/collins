@@ -11,7 +11,7 @@ import play.api.mvc._
 
 private[controllers] object FindAsset {
   val params = Set("tag", "attribute", "type", "status", "createdAfter", "createdBefore", "updatedAfter", "updatedBefore")
-  val ff = Form(
+  val FORM = Form(
     of(AssetFinderWrapper.apply _, AssetFinderWrapper.unapply _)(
       "" -> of(AssetFinder.apply _, AssetFinder.unapply _)(
         "tag" -> optional(text(1)),
@@ -50,7 +50,7 @@ private[controllers] class FindAsset() {
 
   type Validated = (AttributeResolver.ResultTuple,AssetFinder)
   def validateRequest()(implicit req: Request[AnyContent]): Either[String,Validated] = {
-    FindAsset.ff.bindFromRequest.fold(
+    FindAsset.FORM.bindFromRequest.fold(
       errorForm => Left(formatFormErrors(errorForm.errors)),
       success => {
         val af = success.af
