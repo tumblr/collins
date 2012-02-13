@@ -17,7 +17,7 @@ private[controllers] case class ResponseData(status: Results.Status, data: JsObj
 trait Api extends ApiResponse with AssetApi with AssetLogApi with IpmiApi {
   this: SecureController =>
 
-  protected implicit val securitySpec = SecuritySpec(isSecure = true, Nil)
+  protected implicit val securitySpec = SecuritySpec(true)
 
   def ping = Action { implicit req =>
     formatResponseData(ResponseData(Results.Ok, JsObject(Seq(

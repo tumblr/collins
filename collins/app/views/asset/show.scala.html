@@ -463,14 +463,14 @@
     <a href="#" class="close">&times;</a>
     <h3>Server Cancellation</h3>
   </div>
-  @form(app.routes.CookieApi.decommissionAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "cancelError", Symbol("data-modal") -> "cancel-server", Symbol("data-refresh") -> ".window") {
+  @form(app.routes.CookieApi.cancelAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "cancelError", Symbol("data-modal") -> "cancel-server", Symbol("data-refresh") -> ".window") {
   <div class="modal-body">
     <p><span class="label important">Warning</span> Cancelling this server will</p>
     <ul>
-      <li>Erase the hard disks</li>
-      <li>Shut down the machine</li>
       <li>File a ticket with SoftLayer</li>
-      <li>Mark it as decommissioned in collins</li>
+      <li>Mark it as cancelled in collins</li>
+      <li>24 hours later - Shut down the machine</li>
+      <li>48 hours later - Erase the hard disks</li>
     </ul>
     <p>If that all sounds good, provide a reason and then click the button below</p>
     <div class="clearfix">

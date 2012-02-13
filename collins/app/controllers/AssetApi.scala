@@ -41,10 +41,10 @@ trait AssetApi {
           formatResponseData(success)
         }
     }
-  }}(SecuritySpec(true, Nil))
+  }}
 
-  // POST /asset/:tag/decommission
-  def decommissionAsset(tag: String) = SecureAction { implicit req =>
+  // POST /asset/:tag/cancel
+  def cancelAsset(tag: String) = SecureAction { implicit req =>
     AsyncResult {
       BackgroundProcessor.send(AssetCancelProcessor(tag)) { case(ex,res) =>
         val rd: ResponseData = ex.map { err =>
@@ -59,7 +59,7 @@ trait AssetApi {
         formatResponseData(rd)
       }
     }
-  }
+  }(SecuritySpec(true, "infra"))
 
   // GET /api/assets?params
   private val finder = new actions.FindAsset()
@@ -69,13 +69,13 @@ trait AssetApi {
       case Right(success) => actions.FindAsset.formatResultAsRd(success)
     }
     formatResponseData(rd)
-  }(SecuritySpec(true, Nil))
+  }
 
   // PUT /api/asset/:tag
   private val assetCreator = new actions.CreateAsset()
   def createAsset(tag: String) = SecureAction { implicit req =>
     formatResponseData(assetCreator(tag))
-  }(SecuritySpec(true, Seq("infra")))
+  }(SecuritySpec(true, "infra"))
 
   // POST /api/asset/:tag
   def updateAsset(tag: String) = SecureAction { implicit req =>
@@ -93,7 +93,19 @@ trait AssetApi {
         formatResponseData(rd)
       }
     }
-  }(SecuritySpec(true, Seq("infra")))
+  }(SecuritySpec(true, "infra"))
+
+  private def statusResponse(status: Boolean) =
+    ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsBoolean(status))))
+
+  // DELETE /api/asset/attribute/:attribute/:tag
+  def deleteAssetAttribute(tag: String, attribute: String) = SecureAction { implicit req =>
+    Api.withAssetFromTag(tag) { asset =>
+      AssetLifecycle.updateAssetAttributes(asset, Map(attribute -> ""))
+      .left.map(err => Api.getErrorMessage("Error deleting asset attributes", Results.InternalServerError, Some(err)))
+      .right.map(status => statusResponse(status))
+    }.fold(l => l, r => r).map(s => formatResponseData(s))
+  }(SecuritySpec(true, "infra"))
 
   // DELETE /api/asset/:tag
   def deleteAsset(tag: String) = SecureAction { implicit req =>
@@ -118,7 +130,7 @@ trait AssetApi {
     }
     val responseData = result.fold(l => l, r => r)
     formatResponseData(responseData)
-  }(SecuritySpec(true, Seq("infra")))
+  }(SecuritySpec(true, "infra"))
 
 
 }

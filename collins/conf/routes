@@ -15,7 +15,7 @@ GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: 
 GET     /assets/logs                app.CookieApi.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
 POST    /asset/:tag/log             app.CookieApi.submitLogData(tag: String)
 GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
-POST    /asset/:tag/decommission    app.CookieApi.decommissionAsset(tag: String)
+POST    /asset/:tag/cancel          app.CookieApi.cancelAsset(tag: String)
 
 # Admin pages
 GET     /admin/stats                controllers.Admin.stats
@@ -33,6 +33,8 @@ GET     /logout                     controllers.Application.logout
 # API
 PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+
+DELETE  /api/asset/attribute/:attribute/:tag   app.Api.deleteAssetAttribute(tag: String, attribute: String)
 
 PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)

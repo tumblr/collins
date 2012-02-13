@@ -13,8 +13,8 @@ trait Resources extends Controller {
   this: SecureController =>
 
   import AssetMeta.Enum.ChassisTag
-  implicit val spec = SecuritySpec(isSecure = true, Nil)
-  val infraSpec = SecuritySpec(isSecure = true, Seq("infra"))
+  implicit val spec = SecuritySpec(true)
+  val infraSpec = SecuritySpec(true, Seq("infra"))
 
   def index = SecureAction { implicit req =>
     Ok(html.resources.index(AssetMeta.getViewable()))

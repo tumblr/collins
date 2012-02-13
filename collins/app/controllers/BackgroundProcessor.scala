@@ -47,7 +47,7 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
                   Model.withTransaction { implicit con =>
                     MetaWrapper.createMeta(asset, Map("CANCEL_TICKET" -> ticketId.toString))
                     AssetLifecycle.updateAssetStatus(asset, Map(
-                      "status" -> AStatus.Enum.Decommissioned.toString,
+                      "status" -> AStatus.Enum.Cancelled.toString,
                       "reason" -> reason
                     ), con)
                     AssetLog.informational(asset, "User requested server cancellation",
