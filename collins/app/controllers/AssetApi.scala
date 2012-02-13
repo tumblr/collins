@@ -95,15 +95,15 @@ trait AssetApi {
     }
   }(SecuritySpec(true, "infra"))
 
-  private def statusResponse(status: Boolean) =
-    ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsBoolean(status))))
+  private def statusResponse(status: Boolean, code: play.api.mvc.Results.Status = Results.Ok) =
+    ResponseData(code, JsObject(Seq("SUCCESS" -> JsBoolean(status))))
 
   // DELETE /api/asset/attribute/:attribute/:tag
   def deleteAssetAttribute(tag: String, attribute: String) = SecureAction { implicit req =>
     Api.withAssetFromTag(tag) { asset =>
       AssetLifecycle.updateAssetAttributes(asset, Map(attribute -> ""))
       .left.map(err => Api.getErrorMessage("Error deleting asset attributes", Results.InternalServerError, Some(err)))
-      .right.map(status => statusResponse(status))
+      .right.map(status => statusResponse(status, Results.Status(StatusValues.ACCEPTED)))
     }.fold(l => l, r => r).map(s => formatResponseData(s))
   }(SecuritySpec(true, "infra"))
 
