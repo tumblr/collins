@@ -41,6 +41,6 @@ object Application extends SecureWebController {
     Redirect(routes.Application.login).withNewSession.flashing(
       "success" -> "You have been logged out"
     )
-  }(SecuritySpec(isSecure = true, Nil))
+  }(SecuritySpec(true))
 
 }

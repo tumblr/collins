@@ -16,7 +16,9 @@ import java.util.Date
 
 // Supports meta operations on assets
 object AssetLifecycle {
-  val RESTRICTED_KEYS = AssetMeta.Enum.values.map { _.toString }.toSet
+  // Don't want people trying to set status/tag/etc via attribute
+  val POSSIBLE_ASSET_KEYS = Set("STATUS", "TAG", "TYPE")
+  val RESTRICTED_KEYS = AssetMeta.Enum.values.map { _.toString }.toSet ++ POSSIBLE_ASSET_KEYS
 
   private[this] val logger = Logger.logger
 

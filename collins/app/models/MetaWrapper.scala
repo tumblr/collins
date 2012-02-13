@@ -35,7 +35,7 @@ object MetaWrapper {
       AssetMetaValue(asset, meta.id.get, v)
     }.toSeq
     AssetMetaValue.purge(metaValues)
-    AssetMetaValue.create(metaValues)
+    AssetMetaValue.create(metaValues.filter(v => v.value != null && v.value.nonEmpty))
   }
 
   def findMeta(asset: Asset, name: String, count: Int = 1): Seq[MetaWrapper] = {
@@ -113,21 +113,29 @@ object MetaWrapper {
     }
   }
 
+ 
   private[this] def collectParams(assetMeta: Seq[Tuple2[AssetMeta, String]]): SimpleSql[Row] = {
     val result: Seq[SimpleSql[Row]] = assetMeta.zipWithIndex.map { case(tuple, size) =>
       val metaName = "asset_meta_id_%d".format(size)
       val metaValueName = "asset_meta_value_value_%d".format(size)
       val ivalue = tuple._2
-      val nvalue = if (tuple._2.endsWith("$")) {
-        ivalue
-      } else {
-        ivalue + ".*"
-      }
+      val nvalue = regexWrap(ivalue)
       SqlQuery("(amv.asset_meta_id={%s} and amv.value REGEXP {%s})".format(
         metaName, metaValueName
       )).on(metaName -> tuple._1.getId, metaValueName -> nvalue)
     }
     DaoSupport.flattenSql(result, " or ")
+  }
+
+  private[this] def regexWrap(s: String): String = {
+    val prefixed = s.startsWith("^") match {
+      case true => s
+      case false => ".*" + s
+    }
+    s.endsWith("$") match {
+      case true => prefixed
+      case false => prefixed + ".*"
+    }
   }
 }
 

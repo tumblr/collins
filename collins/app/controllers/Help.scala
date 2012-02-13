@@ -24,7 +24,7 @@ trait HelpPage extends Controller {
 
   import Help._
 
-  implicit val spec = SecuritySpec(isSecure = false, Nil)
+  implicit val spec = SecuritySpec(false)
 
   def index(htype: Int) = SecureAction { implicit req =>
     val help = Help(htype)

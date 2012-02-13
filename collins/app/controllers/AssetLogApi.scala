@@ -139,7 +139,7 @@ trait AssetLogApi {
       }
     }.fold(l => l, r => r)
     formatResponseData(responseData)
-  }}(SecuritySpec(isSecure = true, Seq("infra")))
+  }}(SecuritySpec(true, Seq("infra")))
 
 
 }

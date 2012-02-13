@@ -9,8 +9,12 @@ trait SecuritySpecification {
   val isSecure: Boolean
   val requiredCredentials: Seq[String]
 }
-case class SecuritySpec(isSecure: Boolean, requiredCredentials: Seq[String])
-  extends SecuritySpecification
+case class SecuritySpec(isSecure: Boolean, requiredCredentials: Seq[String]) extends SecuritySpecification
+object SecuritySpec {
+  def apply(isSecure: Boolean, requiredCredentials: String) =
+    new SecuritySpec(isSecure, Seq(requiredCredentials))
+  def apply(isSecure: Boolean) = new SecuritySpec(isSecure, Nil)
+}
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger
