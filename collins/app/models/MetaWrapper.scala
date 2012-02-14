@@ -31,7 +31,7 @@ object MetaWrapper {
       val meta: AssetMeta = AssetMeta.findByName(metaName, con).getOrElse {
         AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
       }
-      Cache.invalidate("MetaWrapper(%d).getMetaAttribute(%s)".format(asset.getId, metaName))
+      Cache.invalidate("MetaWrapper(%d).getMetaAttribute(%s)(1)".format(asset.getId, metaName))
       AssetMetaValue(asset, meta.id.get, v)
     }.toSeq
     AssetMetaValue.purge(metaValues)
