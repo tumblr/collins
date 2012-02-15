@@ -53,15 +53,16 @@
       <label for="@asset.name">@asset.label</label>
       <div class="input">
         @{
-           asset.name match {
+	   asset.name match {
+             case "DATACENTER_NAME" => optionDisplay(asset, 0)
              case "DISK_TYPE" => optionDisplay(asset, 2)
              case "DISK_STORAGE_TOTAL" => optionDisplay(asset, 1)
              case "CPU_SPEED_GHZ" => optionDisplay(asset, 3)
              case "MEMORY_SIZE_TOTAL" => optionDisplay(asset, 1)
              case "NIC_SPEED" => optionDisplay(asset, 4)
-             case "NODECLASS" => optionDisplay(asset, 0)
+	     case "NODECLASS" => optionDisplay(asset, 0)
+             case "POOL" => optionDisplay(asset, 0)
              case "PRIMARY_ROLE" => optionDisplay(asset, 0)
-             case "DATACENTER_NAME" => optionDisplay(asset, 0)
              case _ => basicFormatter(asset)
            }
          }
