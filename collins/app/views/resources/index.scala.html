@@ -18,7 +18,8 @@
     @notice("success")
     @notice("error")
 
-    @form(app.routes.Resources.find(0,50,"DESC")) {
+    @form(app.routes.Resources.find(0,50,"DESC","and")) {
+    <input type="hidden" name="operation" value="and">
     <div class="clearfix">
       <label for="ASSET_TAG">Asset Tag</label>
       <div class="input">
