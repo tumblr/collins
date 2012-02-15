@@ -10,7 +10,7 @@ import play.api.libs.json._
 import play.api.mvc._
 
 private[controllers] object FindAsset {
-  val params = Set("tag", "attribute", "type", "status", "createdAfter", "createdBefore", "updatedAfter", "updatedBefore")
+  val params = Set("operation", "tag", "attribute", "type", "status", "createdAfter", "createdBefore", "updatedAfter", "updatedBefore")
   val FORM = Form(
     of(AssetFinderWrapper.apply _, AssetFinderWrapper.unapply _)(
       "" -> of(AssetFinder.apply _, AssetFinder.unapply _)(
@@ -25,9 +25,16 @@ private[controllers] object FindAsset {
       "attribute" -> optional(text(3)).verifying("Invalid attribute specified", res => res match {
         case None => true
         case Some(s) => s.split(";", 2).size == 2
+      }),
+      "operation" -> optional(text).verifying("Invalid operation specified", res => res match {
+        case None => true
+        case Some(s) => s.toLowerCase match {
+          case "and" | "or" => true
+          case _ => false
+        }
       })
-    )
-  )
+    ) // of(AssetFinderWrapper
+  ) // Form
 
   def formatResultAsRd(results: Page[Asset]): ResponseData = {
     ResponseData(Results.Ok, JsObject(results.getPaginationJsObject() ++ Seq(
@@ -41,14 +48,15 @@ private[controllers] class FindAsset() {
   def formatFormErrors(errors: Seq[FormError]): String = {
     errors.map { e =>
       e.key match {
-        case "tag" | "attribute" | "type" | "status" => "%s - %s".format(e.key, e.message)
+        case "tag" | "attribute" | "type" | "status" | "operation" => "%s - %s".format(e.key, e.message)
         case key if key.startsWith("created") => "%s must be an ISO8601 date".format(key)
         case key if key.startsWith("updated") => "%s must be an ISO8601 date".format(key)
       }
     }.mkString(", ")
   }
 
-  type Validated = (AttributeResolver.ResultTuple,AssetFinder)
+  type Operation = Option[String]
+  type Validated = (AttributeResolver.ResultTuple,AssetFinder,Operation)
   def validateRequest()(implicit req: Request[AnyContent]): Either[String,Validated] = {
     FindAsset.FORM.bindFromRequest.fold(
       errorForm => Left(formatFormErrors(errorForm.errors)),
@@ -64,7 +72,7 @@ private[controllers] class FindAsset() {
         } catch {
           case e => return Left(e.getMessage)
         }
-        Right((resolvedMap,af))
+        Right((resolvedMap,af,success.operation))
       }
     )
   }
@@ -74,13 +82,13 @@ private[controllers] class FindAsset() {
       case Left(err) => Left("Error executing search: " + err)
       case Right(valid) =>
         val pageParams = PageParams(page, size, sort)
-        val results = MetaWrapper.findAssets(pageParams, valid._1, valid._2)
+        val results = MetaWrapper.findAssets(pageParams, valid._1, valid._2, valid._3)
         Right(results)
     }
   }
 }
 
-private[actions] case class AssetFinderWrapper(af: AssetFinder, attribs: Option[String]) {
+private[actions] case class AssetFinderWrapper(af: AssetFinder, attribs: Option[String], operation: Option[String]) {
   def formatAttribute(req: Map[String,Seq[String]]): Map[String,String] = {
     attribs.map { _ =>
       req("attribute").foldLeft(Map[String,String]()) { case(total,cur) =>
