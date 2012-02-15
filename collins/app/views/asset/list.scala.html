@@ -5,7 +5,7 @@
 @import util.notice
 
 @link(newPage: Int) = @{
-  Helpers.mapToQueryString(app.routes.Resources.find(newPage, assets.size, "DESC").toString, req.queryString)
+  Helpers.mapToQueryString(app.routes.Resources.find(newPage, assets.size, "DESC", "and").toString, req.queryString)
 }
 @main("Asset Search Results") {
 <div class="page-header">
