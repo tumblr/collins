@@ -1,7 +1,8 @@
 package controllers
 
 import models.{AssetLifecycle, AssetLog, MetaWrapper, Model, Status => AStatus}
-import util.SoftLayerClient
+import util.{Provisioner, SoftLayerClient}
+import com.tumblr.play.ProvisionerRequest
 
 import akka.actor.Actor
 import Actor._
@@ -21,6 +22,56 @@ case class AssetUpdateProcessor(tag: String, userTimeout: Option[Duration] = Non
   def run(): Either[ResponseData,Boolean] = {
     val assetUpdater = actions.UpdateAsset.get()
     assetUpdater.execute(tag)
+  }
+}
+
+case class ProvisionerProcessor(request: ProvisionerRequest, userTimeout: Option[Duration] = None)(implicit req: Request[AnyContent]) extends BackgroundProcess[Int]
+{
+  override def defaultTimeout: Duration = Duration.parse("10 seconds")
+  val timeout = userTimeout.getOrElse(defaultTimeout)
+
+  def run(): Int = {
+    Provisioner.pluginEnabled { plugin =>
+      plugin.provision(request)()
+    }.getOrElse(-2)
+  }
+}
+
+sealed trait BackgroundProcess[T] {
+  val timeout: Duration
+  def run(): T
+
+  protected def defaultTimeout: Duration = {
+    val config = util.Helpers.subAsMap("")
+    Duration.parse(config.getOrElse("timeout", "2 seconds"))
+  }
+}
+
+private[controllers] class BackgroundProcessor extends Actor {
+  def receive = {
+    case processor: controllers.AssetUpdateProcessor => self.reply(processor.run())
+    case processor: controllers.AssetCancelProcessor => self.reply(processor.run())
+    case processor: controllers.ProvisionerProcessor => self.reply(processor.run())
+  }
+}
+
+object BackgroundProcessor {
+  lazy val ref = actorOf[BackgroundProcessor].start()
+
+  type SendType[T] = Tuple2[Option[Throwable], Option[T]]
+  def send[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]) = {
+    ref.?(cmd)(timeout = cmd.timeout).mapTo[PROC_RES].asPromise.extend1 {
+      case Redeemed(v) => result(Tuple2(None, Some(v)))
+      case Thrown(e) => e match {
+        case t: FutureTimeoutException =>
+          val ex = new Exception("Command took longer than %d seconds: %s".format(
+            cmd.timeout.toSeconds, t.getMessage
+          ))
+          result(Tuple2(Some(ex), None))
+        case _ =>
+          result(Tuple2(Some(e), None))
+      }
+    }
   }
 }
 
@@ -62,42 +113,5 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
         }
       }
     }.getOrElse(Left(Api.getErrorMessage("No reason specified for cancellation")))
-  }
-}
-
-sealed trait BackgroundProcess[T] {
-  val timeout: Duration
-  def run(): T
-
-  protected def defaultTimeout: Duration = {
-    val config = util.Helpers.subAsMap("")
-    Duration.parse(config.getOrElse("timeout", "2 seconds"))
-  }
-}
-
-private[controllers] class BackgroundProcessor extends Actor {
-  def receive = {
-    case processor: controllers.AssetUpdateProcessor => self.reply(processor.run())
-    case processor: controllers.AssetCancelProcessor => self.reply(processor.run())
-  }
-}
-
-object BackgroundProcessor {
-  lazy val ref = actorOf[BackgroundProcessor].start()
-
-  type SendType[T] = Tuple2[Option[Throwable], Option[T]]
-  def send[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]) = {
-    ref.?(cmd)(timeout = cmd.timeout).mapTo[PROC_RES].asPromise.extend1 {
-      case Redeemed(v) => result(Tuple2(None, Some(v)))
-      case Thrown(e) => e match {
-        case t: FutureTimeoutException =>
-          val ex = new Exception("Command took longer than %d seconds: %s".format(
-            cmd.timeout.toSeconds, t.getMessage
-          ))
-          result(Tuple2(Some(ex), None))
-        case _ =>
-          result(Tuple2(Some(e), None))
-      }
-    }
   }
 }

@@ -3,7 +3,7 @@
 @import helper._
 @import util.notice
 @import _root_.util.conversions._
-@import _root_.util.{Helpers, SoftLayerClient}
+@import _root_.util.{Helpers, Provisioner, SoftLayerClient}
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
@@ -35,6 +35,11 @@
           @SoftLayerClient.pluginEnabled.map { t =>
             @if(aa.asset.isSoftLayerAsset()) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
+            }
+          }
+          @Provisioner.pluginEnabled.map { p =>
+            @if(p.canProvision(aa.asset)) {
+            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
             }
           }
         </ul>
@@ -490,6 +495,52 @@
   </div>
   }
 </div>
+
+<div id="provision-server" class="modal hide fade" data-modal-cleanup="provisionError">
+  <div class="modal-header">
+    <a href="#" class="close">&times;</a>
+    <h3>Provision a Server</h3>
+  </div>
+  @form(app.routes.CookieApi.provisionAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "provisionError", Symbol("data-modal") -> "provision-server", Symbol("data-refresh") -> ".window") {
+  <div class="modal-body">
+    <p><span class="label important">Warning</span> Provisioning a server is a destructive process. Be certain that you want to do this. The provisioner will:</p>
+    <ul>
+      <li>SSH into the machine</li>
+      <li>Reboot it into kickstart mode</li>
+      <li>Come back online without old data on disks</li>
+    </ul>
+    <p>If that all sounds good, pick an appropriate profile below and provide your email for notification</p>
+    <div class="clearfix">
+      <label for="role">Role</label>
+      <div class="input">
+        <select name="role" id="role">
+          <option value="" selected="selected"></option>
+          @Provisioner.pluginEnabled.map { p =>
+            @p.profiles.toSeq.map { v =>
+            <option value="@v.identifier">@v.label</option>
+            }
+          }
+        </select>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="contact">Email</label>
+      <div class="input">
+        <input name="contact" id="contact" placeholder="@User.fromMap(req.session.data).map(_.username + "@tumblr.com").getOrElse("user@tumblr.com")">
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="provisionError" style="margin-right: 15px;"></label>
+      <span class="alert-message error hide" id="provisionError"></span>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn">Provision Server</button>
+    <button type="reset" data-closes-modal="provision-server" class="btn primary">Go back to browsing tumblr</button>
+  </div>
+  }
+</div>
+
 
 <div id="asset-note" class="modal hide fade" data-modal-cleanup="noteError">
   <div class="modal-header">

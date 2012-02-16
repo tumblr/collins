@@ -43,6 +43,49 @@ trait AssetApi {
     }
   }}
 
+  // POST /asset/:tag/provision
+  def provisionAsset(tag: String) = SecureAction { implicit req =>
+    Asset.findByTag(tag).map { asset =>
+      Form(of(
+        "role" -> text,
+        "contact" -> text(3)
+      )).bindFromRequest.fold(
+        err => {
+          formatResponseData(Api.getErrorMessage("contact and role must be specified"))
+        },
+        suc => {
+          Provisioner.pluginEnabled { plugin =>
+            plugin.makeRequest(asset.tag, suc._1, Some(suc._2)).map { request =>
+              AsyncResult {
+                BackgroundProcessor.send(ProvisionerProcessor(request)) { res =>
+                  val reply = res match {
+                    case (Some(error), _) =>
+                      Api.getErrorMessage(
+                        "There was an error processing your request",
+                        Results.InternalServerError,
+                        Some(error)
+                      )
+                    case (_, opt) =>
+                      val success = opt.getOrElse(99)
+                      ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(success))))
+                  }
+                  formatResponseData(reply)
+                }
+              }
+            }.getOrElse {
+              formatResponseData(Api.getErrorMessage("Invalid profile specified"))
+            }
+          }.getOrElse {
+            formatResponseData(Api.getErrorMessage("Provisioner plugin not enabled"))
+          }
+        }
+      )
+    }.getOrElse {
+      formatResponseData(Api.getErrorMessage("Specified asset tag is invalid"))
+    }
+  }(SecuritySpec(true, "infra"))
+
+
   // POST /asset/:tag/cancel
   def cancelAsset(tag: String) = SecureAction { implicit req =>
     AsyncResult {
