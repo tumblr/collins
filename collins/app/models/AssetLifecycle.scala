@@ -18,7 +18,8 @@ import java.util.Date
 object AssetLifecycle {
   // Don't want people trying to set status/tag/etc via attribute
   val POSSIBLE_ASSET_KEYS = Set("STATUS", "TAG", "TYPE")
-  val RESTRICTED_KEYS = AssetMeta.Enum.values.map { _.toString }.toSet ++ POSSIBLE_ASSET_KEYS
+  val EXCLUDED_KEYS = Set(AssetMeta.Enum.ChassisTag.toString)
+  val RESTRICTED_KEYS = AssetMeta.Enum.values.map { _.toString }.toSet ++ POSSIBLE_ASSET_KEYS -- EXCLUDED_KEYS
 
   private[this] val logger = Logger.logger
 
