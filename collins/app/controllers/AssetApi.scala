@@ -61,13 +61,18 @@ trait AssetApi {
                   val reply = res match {
                     case (Some(error), _) =>
                       Api.getErrorMessage(
-                        "There was an error processing your request",
+                        "There was an error processing your request: %s".format(error.getMessage),
                         Results.InternalServerError,
                         Some(error)
                       )
                     case (_, opt) =>
                       val success = opt.getOrElse(99)
-                      ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(success))))
+                      if (success != 0) {
+                        Api.getErrorMessage("There was an error processing your request %d".format(success),
+                          Results.InternalServerError, None)
+                      } else {
+                        ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(0))))
+                      }
                   }
                   formatResponseData(reply)
                 }
