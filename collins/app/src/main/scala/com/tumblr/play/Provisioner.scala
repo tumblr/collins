@@ -3,6 +3,8 @@ package com.tumblr.play
 import play.api.{Application, Configuration, Logger, PlayException, Plugin}
 import com.twitter.util.Future
 import scala.collection.immutable.SortedSet
+import scala.collection.mutable.StringBuilder
+import scala.sys.process._
 
 // Token is used for looking up an asset, notify is the address to use for notification
 // Profile would be the same as the profile identifier
@@ -59,7 +61,18 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
   }
 
   override def provision(request: ProvisionerRequest): Future[Int] = {
-    Future(0)
+    val cmd = command(request)
+    val process = Process(cmd)
+    val sb = new StringBuilder()
+    val exitStatus = try {
+      process ! ProcessLogger({s => sb.append(s)})
+    } catch {
+      case e: Throwable =>
+        sb.append(e.getMessage)
+        -1
+    }
+    logger.warn("Command output: " + sb.toString)
+    Future(exitStatus)
   }
 
   protected def profiles(config: Option[Configuration]): Set[ProvisionerProfile] = {
