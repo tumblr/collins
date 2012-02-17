@@ -4,9 +4,10 @@ import models.{AssetLifecycle, AssetLog, MetaWrapper, Model, Status => AStatus}
 import util.{Provisioner, SoftLayerClient}
 import com.tumblr.play.ProvisionerRequest
 
+import akka.actor.Actor._
 import akka.actor.Actor
-import Actor._
 import akka.dispatch.FutureTimeoutException
+import akka.routing._
 import akka.util.Duration
 import akka.util.duration._
 
@@ -47,16 +48,28 @@ sealed trait BackgroundProcess[T] {
   }
 }
 
-private[controllers] class BackgroundProcessor extends Actor {
-  def receive = {
+private[controllers] class BackgroundProcessor extends Actor with DefaultActorPool
+    with BoundedCapacityStrategy
+    with ActiveFuturesPressureCapacitor
+    with SmallestMailboxSelector
+    with BasicNoBackoffFilter
+{
+  def receive = _route
+  def lowerBound = 2
+  def upperBound = 4
+  def rampupRate = 0.1
+  def partialFill = true
+  def selectionCount = 1
+
+  def instance = actorOf(new Actor {def receive = {
     case processor: controllers.AssetUpdateProcessor => self.reply(processor.run())
     case processor: controllers.AssetCancelProcessor => self.reply(processor.run())
     case processor: controllers.ProvisionerProcessor => self.reply(processor.run())
-  }
+  }})
 }
 
 object BackgroundProcessor {
-  lazy val ref = actorOf[BackgroundProcessor].start()
+  val ref = actorOf[BackgroundProcessor].start()
 
   type SendType[T] = Tuple2[Option[Throwable], Option[T]]
   def send[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]) = {
