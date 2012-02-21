@@ -15,6 +15,7 @@ import scala.util.control.Exception.allCatch
 
 trait SoftLayerInterface {
   val SOFTLAYER_API_HOST = "api.softlayer.com:443"
+  protected val logger = Logger(getClass)
   protected def username: String
   protected def password: String
 
@@ -45,6 +46,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
   protected[this] val configuration: Option[Configuration] = app.configuration.getConfig("softlayer")
   protected[this] val _username: Option[String] = configuration.flatMap(_.getString("username"))
   protected[this] val _password: Option[String] = configuration.flatMap(_.getString("password"))
+  protected[this] val cachePlugin = new CachePlugin(app, None, 86400)
   protected[this] def InvalidConfig(s: Option[String] = None): Exception = PlayException(
     "Invalid Configuration",
     s.getOrElse("softlayer.enabled is true but username or password not specified"),
@@ -69,7 +71,10 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
       throw InvalidConfig()
     }
   }
-  override def onStop() {}
+  override def onStop() {
+    cachePlugin.clear()
+    cachePlugin.onStop()
+  }
 
   override def username = _username.get
   override def password = _password.get
@@ -132,6 +137,50 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     } handle {
       case e => false
     }
+  }
+
+  def createTicket(): Unit = {
+    val subjects = getTicketSubjects()
+    subjects.foreach { s =>
+      println(s)
+    }
+  }
+
+  protected def getTicketSubjects(): Seq[Tuple2[Long,String]] = {
+    cachePlugin.getOrElseUpdate("ticketSubjects", {
+      val url = softLayerUrl("/SoftLayer_Ticket_Subject/getAllObjects")
+      val request = RequestBuilder()
+        .url(url)
+        .setHeader("Content-Type", "application/json")
+        .buildGet()
+      val future = makeRequest(request) map { r =>
+        val content = Response(r).contentString
+        val json = Json.parse(content)
+        json match {
+          case JsArray(values) =>
+            try {
+              values.foldLeft(Seq[Tuple2[Long,String]]()) { case (total, current) =>
+                val id = (current \ "id").as[Long]
+                val name = (current \ "name").as[String]
+                val tuple = (id, name)
+                Seq(tuple) ++ total
+              }.sortBy(_._2)
+            } catch {
+              case e =>
+                logger.warn("Unable to get ticket subjects, invalid format")
+                Seq()
+            }
+          case n =>
+            logger.warn("Unexpected response from API")
+            Seq()
+        }
+      } handle {
+        case e =>
+          logger.warn("Error getting ticket subjects", e)
+          Seq()
+      }
+      future()
+    })
   }
 
   protected def makeRequest(request: HttpRequest): Future[HttpResponse] = {
