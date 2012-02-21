@@ -143,6 +143,28 @@ object AssetLifecycle {
     }.left.map(e => handleException(asset, "Error updating status for asset", e))
   }
 
+  def tryUpdateAssetStatus(asset: Asset): Status[Boolean] = {
+    val types = Map("SERVER_NODE" -> Set("PRIMARY_ROLE","POOL"))
+    AssetType.findById(asset.asset_type)
+      .map(at => AssetType.Enum(at.getId))
+      .filter(at => types.contains(at.toString))
+      .filter(_ => asset.status == 2)
+      .filter { at =>
+        types(at.toString).foldLeft(0) { case(found, current) =>
+          found + MetaWrapper.findMeta(asset, current).map(_ => 1).getOrElse(0)
+        } == types(at.toString).size
+      }
+      .map { t =>
+        Model.withTransaction { implicit con =>
+          val options = Map(
+            "status" -> "Allocated",
+            "reason" -> "Triggered by rule"
+          )
+          updateAssetStatus(asset, options, con)
+        }
+      }.getOrElse(Right(false))
+  }
+
   def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     Model.withTransaction { con =>
       updateAssetStatus(asset, options, con)

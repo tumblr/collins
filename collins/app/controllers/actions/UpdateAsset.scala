@@ -71,7 +71,13 @@ private[controllers] case class UpdateAsset(
           }
           res match {
             case Left(error) => Left(Api.getErrorMessage(error.getMessage))
-            case Right(success) => Right(success)
+            case Right(success) => success match {
+              case true =>
+                AssetLifecycle.tryUpdateAssetStatus(asset)
+                Right(true)
+              case false =>
+                Right(false)
+            }
           }
       }
     }

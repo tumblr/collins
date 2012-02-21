@@ -33,6 +33,7 @@ trait SoftLayerInterface {
 
   // Interactive API
   def cancelServer(id: Long, reason: String = "No longer needed"): Future[Long]
+  def getTicketSubjects(): Seq[Tuple2[Long,String]]
   def setNote(id: Long, note: String): Future[Boolean]
 
   protected def softLayerApiUrl: String =
@@ -146,7 +147,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     }
   }
 
-  protected def getTicketSubjects(): Seq[Tuple2[Long,String]] = {
+  def getTicketSubjects(): Seq[Tuple2[Long,String]] = {
     cachePlugin.getOrElseUpdate("ticketSubjects", {
       val url = softLayerUrl("/SoftLayer_Ticket_Subject/getAllObjects")
       val request = RequestBuilder()
