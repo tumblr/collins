@@ -6,7 +6,7 @@
 GET     /                           app.Resources.index
 
 # Resources/Assets
-GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "DESC")
+GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "DESC", operation: String ?= "and")
 GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
 
 GET     /asset/create/:assetType    app.Resources.displayCreateForm(assetType: String)
@@ -16,6 +16,7 @@ GET     /assets/logs                app.CookieApi.getAllLogData(page: Int ?= 0, 
 POST    /asset/:tag/log             app.CookieApi.submitLogData(tag: String)
 GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
 POST    /asset/:tag/cancel          app.CookieApi.cancelAsset(tag: String)
+POST    /asset/:tag/provision       app.CookieApi.provisionAsset(tag: String)
 
 # Admin pages
 GET     /admin/stats                controllers.Admin.stats

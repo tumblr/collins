@@ -1,11 +1,11 @@
 @(assets: Page[Asset])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.Helpers
+@import _root_.util.{Helpers, SoftLayer}
 @import util.notice
 
 @link(newPage: Int) = @{
-  Helpers.mapToQueryString(app.routes.Resources.find(newPage, assets.size, "DESC").toString, req.queryString)
+  Helpers.mapToQueryString(app.routes.Resources.find(newPage, assets.size, "DESC", "and").toString, req.queryString)
 }
 @main("Asset Search Results") {
 <div class="page-header">
@@ -25,7 +25,7 @@
           <th>Status</th>
           <th>Created</th>
           <th>Last Updated</th>
-          @Helpers.haveFeature("softLayerSupport").map{t => <th>SoftLayer Link</th>}
+          @SoftLayer.pluginEnabled.map{plugin => <th>SoftLayer Link</th>}
         </tr>
       </thead>
       <tbody>
@@ -37,7 +37,7 @@
 	  <td>@asset.getStatus().name</td>
           <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
           <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
-          @Helpers.haveFeature("softLayerSupport").map{b => @slLink(asset)}
+          @SoftLayer.pluginEnabled.map{plugin => @slLink(asset)}
         </tr>
         }
       </tbody>

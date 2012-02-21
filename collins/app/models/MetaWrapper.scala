@@ -31,7 +31,7 @@ object MetaWrapper {
       val meta: AssetMeta = AssetMeta.findByName(metaName, con).getOrElse {
         AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
       }
-      Cache.invalidate("MetaWrapper(%d).getMetaAttribute(%s)".format(asset.getId, metaName))
+      Cache.invalidate("MetaWrapper(%d).getMetaAttribute(%s)(1)".format(asset.getId, metaName))
       AssetMetaValue(asset, meta.id.get, v)
     }.toSeq
     AssetMetaValue.purge(metaValues)
@@ -61,11 +61,11 @@ object MetaWrapper {
     }
   }
 
-  def findAssets(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder): Page[Asset] = {
+  def findAssets(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] = {
     if (params._1.nonEmpty) {
       IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
     } else if (params._2.nonEmpty) {
-      MetaWrapper.findAssetsByMeta(page, params._2, afinder)
+      MetaWrapper.findAssetsByMeta(page, params._2, afinder, operation)
     } else {
       val finderQuery = afinder.asQueryFragment()
       val finderQueryFrag = finderQuery.sql.query match {
@@ -87,14 +87,14 @@ object MetaWrapper {
     }
   }
 
-  def findAssetsByMeta(page: PageParams, params: Seq[Tuple2[AssetMeta, String]], afinder: AssetFinder): Page[Asset] = {
+  def findAssetsByMeta(page: PageParams, params: Seq[Tuple2[AssetMeta, String]], afinder: AssetFinder, operation: Option[String] = None): Page[Asset] = {
     val assetQuery = afinder.asQueryFragment()
     val assetQueryFragment = assetQuery.sql.query match {
       case empty if empty.isEmpty => ""
       case nonEmpty => nonEmpty + " and "
     }
 
-    val metaQuery = collectParams(params)
+    val metaQuery = collectParams(params, operation)
 
     val subQuery = """
       select %s from asset_meta_value amv
@@ -132,7 +132,11 @@ object MetaWrapper {
   //  ((value1 LIKE thing) OR (value2 LIKE other)...) AND ((value3 NOT EXISTS) AND (value4 NOT EXISTS))
   //  This creates a query that finds assets that match specific values, and is missing certain
   //  other attributes. This is not straight forward code.
-  private[this] def collectParams(assetMeta: Seq[Tuple2[AssetMeta, String]]): SimpleSql[Row] = {
+  private[this] def collectParams(assetMeta: Seq[Tuple2[AssetMeta, String]], operation: Option[String]): SimpleSql[Row] = {
+    val (isAnd, andOrString) = operation.map(_.trim.toLowerCase).map {
+      case "and" => (true, " and ")
+      case _ => (false, " or ")
+    }.getOrElse((false," or "))
     val result: Seq[QueryType] = assetMeta.zipWithIndex.map { case(tuple, size) =>
       val metaName = "asset_meta_id_%d".format(size) // Name for query expansion
       val metaValueName = "asset_meta_value_value_%d".format(size) // value for query expansion
@@ -146,9 +150,14 @@ object MetaWrapper {
         ExcludeQuery(SqlQuery(filterQuery).on(metaName -> metaId))
       } else {
         val regexValue = regexWrap(initValue) // regex to use for searching
-        val includeQuery = "(amv.asset_meta_id={%s} AND amv.value REGEXP {%s})".format(
-          metaName, metaValueName
-        )
+        val includeQuery = if (isAnd) {
+          """
+          (select count(*) from asset_meta_value amv2 where amv2.asset_id = amv.asset_id
+            and amv2.asset_meta_id={%s} AND amv2.value REGEXP {%s})
+          """.format(metaName, metaValueName)
+        } else {
+          "(amv.asset_meta_id={%s} AND amv.value REGEXP {%s})".format(metaName, metaValueName)
+        }
         val simpleQuery = SqlQuery(includeQuery).on(metaName -> metaId, metaValueName -> regexValue)
         IncludeQuery(simpleQuery)
       }
@@ -158,7 +167,7 @@ object MetaWrapper {
     // the and/or stuff should be configurable but it's not
     val includeSql = includes match {
       case Nil => None
-      case rows => Some(DaoSupport.flattenSql(rows, " or "))
+      case rows => Some(DaoSupport.flattenSql(rows, andOrString))
     }
     val excludeSql = excludes match {
       case Nil => None

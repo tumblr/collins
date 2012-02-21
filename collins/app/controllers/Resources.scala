@@ -57,7 +57,7 @@ trait Resources extends Controller {
   /**
    * Find assets by query parameters, special care for ASSET_TAG
    */
-  def find(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
+  def find(page: Int, size: Int, sort: String, operation: String) = SecureAction { implicit req =>
     Form("ASSET_TAG" -> requiredText).bindFromRequest.fold(
       noTag => {
         val results = new actions.FindAsset()(page, size, sort)(rewriteRequest(req))
