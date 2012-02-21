@@ -3,7 +3,7 @@
 @import helper._
 @import util.notice
 @import _root_.util.conversions._
-@import _root_.util.{Helpers, Provisioner, SoftLayerClient}
+@import _root_.util.{Helpers, Provisioner, SoftLayer}
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
@@ -32,8 +32,8 @@
         <a href="#" class="dropdown-toggle"><strong>Actions</strong></a>
         <ul class="dropdown-menu">
           <li><a href="#" data-keyboard="true" data-controls-modal="asset-note">Create Note</a></li>
-          @SoftLayerClient.pluginEnabled.map { t =>
-            @if(aa.asset.isSoftLayerAsset()) {
+          @SoftLayer.pluginEnabled.map { p =>
+            @if(p.isSoftLayerAsset(aa.asset)) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
             }
           }
@@ -71,7 +71,7 @@
         </tr>
         <tr>
           <th>Asset Tag</th>
-          @Helpers.haveFeature("softLayerSupport").filter(b => aa.asset.isSoftLayerAsset()).map { t =>
+          @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
 	    @slLink(aa.asset, aa.asset.tag)
 	  }.getOrElse{<td>@aa.asset.tag</td>}
           <td></td>
@@ -106,7 +106,7 @@
           <td>
           @{
             mv.getName match {
-              case "CANCEL_TICKET" => optionDisplay(0, SoftLayerClient.ticketLink(mv.getValue), mv.getValue)
+              case "CANCEL_TICKET" => optionDisplay(0, SoftLayer.ticketLink(mv.getValue), mv.getValue)
               case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
               case _ => mv.getValue
             }

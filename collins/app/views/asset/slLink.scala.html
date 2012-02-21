@@ -1,5 +1,7 @@
 @(asset: Asset, text: String = "SL")
 
+@import _root_.util.SoftLayer
+
 @formatUrl(url: String) = {
   <a href="@url" target="_blank">@text</a>
 }
@@ -7,4 +9,4 @@
   <em>Unknown</em>
 }
 
-<td>@asset.softLayerUrl.map{url => @formatUrl(url)}.getOrElse{@formatEmpty()}</td>
+<td>@SoftLayer.assetLink(asset).map(url => formatUrl(url)).getOrElse(formatEmpty())</td>
