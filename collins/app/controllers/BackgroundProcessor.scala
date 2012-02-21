@@ -1,7 +1,7 @@
 package controllers
 
 import models.{AssetLifecycle, AssetLog, MetaWrapper, Model, Status => AStatus}
-import util.{Provisioner, SoftLayerClient}
+import util.{Provisioner, SoftLayer}
 import com.tumblr.play.ProvisionerRequest
 
 import akka.actor.Actor._
@@ -99,12 +99,12 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
     req.body.asUrlFormEncoded.flatMap(_.get("reason")).flatMap(_.headOption).map(_.trim).filter(_.size > 0).map { _reason =>
       val reason = _reason.trim
       Api.withAssetFromTag(tag) { asset =>
-        SoftLayerClient.pluginEnabled.map { _ =>
-          asset.softLayerId match {
+        SoftLayer.pluginEnabled.map { plugin =>
+          plugin.softLayerId(asset) match {
             case None =>
               Left(Api.getErrorMessage("Asset is not a softlayer asset"))
             case Some(n) =>
-              SoftLayerClient.cancelServer(n, reason)() match {
+              plugin.cancelServer(n, reason)() match {
                 case 0L =>
                   Left(Api.getErrorMessage("There was an error cancelling this server"))
                 case ticketId =>
@@ -117,7 +117,7 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
                     AssetLog.informational(asset, "User requested server cancellation",
                       AssetLog.Formats.PlainText, AssetLog.Sources.Internal).create()
                   }
-                  SoftLayerClient.setNote(n, "Cancelled: %s".format(reason))()
+                  plugin.setNote(n, "Cancelled: %s".format(reason))()
                   Right(ticketId)
               }
           }

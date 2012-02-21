@@ -1,51 +1,95 @@
 package com.tumblr.play
 
-import play.api.{Application, PlayException, Plugin}
+import play.api.{Application, Configuration, Logger, PlayException, Plugin}
 import play.api.libs.json._
 
 import com.twitter.finagle.Service
 import com.twitter.finagle.builder.ClientBuilder
-import com.twitter.finagle.http.{Http, ProxyCredentials, RequestBuilder, Response}
+import com.twitter.finagle.http.{Http, RequestBuilder, Response}
 import com.twitter.util.Future
+import java.net.URL
 import org.jboss.netty.buffer.ChannelBuffers
 import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse, QueryStringEncoder}
 import org.jboss.netty.util.CharsetUtil.UTF_8
 import scala.util.control.Exception.allCatch
-import java.net.URL
 
-trait SoftLayerClientApi {
-  // Return value is ticket id
+trait SoftLayerInterface {
+  val SOFTLAYER_API_HOST = "api.softlayer.com:443"
+  protected def username: String
+  protected def password: String
+
+  type AssetWithTag = {
+    def tag: String
+  }
+
+  // Informational API
+  def isSoftLayerAsset(asset: AssetWithTag): Boolean
+  def softLayerId(asset: AssetWithTag): Option[Long]
+  def softLayerUrl(asset: AssetWithTag): Option[String] =
+    softLayerId(asset).map(id => "https://manage.softlayer.com/Hardware/view/%d".format(id))
+  def ticketUrl(id: Long): String =
+    "https://manage.softlayer.com/Support/editTicket/%d".format(id)
+
+  // Interactive API
   def cancelServer(id: Long, reason: String = "No longer needed"): Future[Long]
   def setNote(id: Long, note: String): Future[Boolean]
+
+  protected def softLayerApiUrl: String =
+    "https://%s:%s@%s/rest/v3".format(username, password, SOFTLAYER_API_HOST)
+  protected def softLayerUrl(uri: String) = new URL(softLayerApiUrl + uri)
+  protected def cancelServerPath(id: Long) =
+    "/SoftLayer_Ticket/createCancelServerTicket/%d.json".format(id)
 }
 
-class SoftLayerClientPlugin(app: Application) extends Plugin with SoftLayerClientApi {
+class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
+  protected[this] val configuration: Option[Configuration] = app.configuration.getConfig("softlayer")
+  protected[this] val _username: Option[String] = configuration.flatMap(_.getString("username"))
+  protected[this] val _password: Option[String] = configuration.flatMap(_.getString("password"))
+  protected[this] def InvalidConfig(s: Option[String] = None): Exception = PlayException(
+    "Invalid Configuration",
+    s.getOrElse("softlayer.enabled is true but username or password not specified"),
+    None
+  )
 
   type ClientSpec = ClientBuilder.Complete[HttpRequest, HttpResponse]
-
-  val SOFTLAYER_API_URL_TEMPLATE = "https://%s:%s@api.softlayer.com/rest/v3"
-  lazy val SOFTLAYER_API_URL = {
-    val p = getProxyCredentials()
-    SOFTLAYER_API_URL_TEMPLATE.format(p.username, p.password)
-  }
   protected[this] val clientSpec: ClientSpec = ClientBuilder()
     .tlsWithoutValidation()
     .codec(Http())
-    .hosts("api.softlayer.com:443")
+    .hosts(SOFTLAYER_API_HOST)
     .hostConnectionLimit(1)
 
-  private[this] val pluginDisabled = app.configuration.getString("softLayerClientPlugin.class").filter(_ == "com.tumblr.play.SoftLayerClientPlugin").headOption
+  override def enabled: Boolean = {
+    configuration.flatMap { cfg =>
+      cfg.getBoolean("enabled")
+    }.getOrElse(false)
+  }
 
-  override def enabled = pluginDisabled.isDefined == true
   override def onStart() {
-    getProxyCredentials()
+    if (!_username.isDefined || !_password.isDefined) {
+      throw InvalidConfig()
+    }
   }
   override def onStop() {}
 
-  // start client api
+  override def username = _username.get
+  override def password = _password.get
+
+  // start plugin API
+  override def isSoftLayerAsset(asset: AssetWithTag): Boolean = {
+    asset.tag.startsWith("sl-")
+  }
+  override def softLayerId(asset: AssetWithTag): Option[Long] = isSoftLayerAsset(asset) match {
+    case true => try {
+      Some(asset.tag.split("-", 2).last.toLong)
+    } catch {
+      case _ => None
+    }
+    case false => None
+  }
+
   private[this] val TicketExtractor = "^.* ([0-9]+).*$".r
   override def cancelServer(id: Long, reason: String = "No longer needed"): Future[Long] = {
-    val encoder = new QueryStringEncoder(cancelServerUrl(id))
+    val encoder = new QueryStringEncoder(cancelServerPath(id))
     encoder.addParam("attachmentId", id.toString)
     encoder.addParam("reason", "No longer needed")
     encoder.addParam("content", reason)
@@ -95,19 +139,6 @@ class SoftLayerClientPlugin(app: Application) extends Plugin with SoftLayerClien
     client(request) ensure {
       client.release()
     }
-  }
-
-  protected def cancelServerUrl(id: Long) =
-    "/SoftLayer_Ticket/createCancelServerTicket/%d.json".format(id)
-  protected def softLayerUrl(uri: String) = new URL(SOFTLAYER_API_URL + uri)
-  protected def getProxyCredentials(): ProxyCredentials = {
-    val username = app.configuration.getString("softLayerClient.username").getOrElse {
-      throw PlayException("No username specified", "softLayerClient.username must be specified", None)
-    }
-    val password = app.configuration.getString("softLayerClient.password").getOrElse {
-      throw PlayException("No password specified", "softLayerClient.password must be specified", None)
-    }
-    ProxyCredentials(username, password)
   }
 
 }
