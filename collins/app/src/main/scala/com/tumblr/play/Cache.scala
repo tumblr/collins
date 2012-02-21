@@ -33,9 +33,9 @@ class CacheStatsAdapter(stats: GuavaCacheStats) extends CacheStats {
   def requestCount(): Long = stats.requestCount
 }
 
-class CachePlugin(app: Application, _cache: Option[GuavaCache[String,AnyRef]]) extends Plugin with Cache {
+class CachePlugin(app: Application, _cache: Option[GuavaCache[String,AnyRef]], _timeoutSeconds: Int) extends Plugin with Cache {
 
-  def this(app: Application) = this(app, None)
+  def this(app: Application) = this(app, None, -1)
 
   val pluginDisabled = app.configuration.getString("cache.class").filter(_ == "com.tumblr.play.CachePlugin").headOption
   override def enabled = pluginDisabled.isDefined == true
@@ -89,6 +89,9 @@ class CachePlugin(app: Application, _cache: Option[GuavaCache[String,AnyRef]]) e
 
   protected def getTimeoutInSeconds(): Long = {
     val tmp = app.configuration.getString("cache.timeout").getOrElse("10 minutes")
+    if (_timeoutSeconds > 0) {
+      return _timeoutSeconds;
+    }
     try {
       tmp.split(" ") match {
         case Array(duration, unit) =>

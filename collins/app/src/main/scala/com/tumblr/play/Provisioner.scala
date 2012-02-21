@@ -1,9 +1,15 @@
 package com.tumblr.play
 
-import play.api.{Application, Configuration, Logger, PlayException, Plugin}
+import com.google.common.util.concurrent.UncheckedExecutionException
 import com.twitter.util.Future
+import org.yaml.snakeyaml.Yaml
+import play.api.{Application, Configuration, Logger, PlayException, Plugin}
+
+import java.io.{File, FileInputStream, InputStream}
+
+import scala.collection.JavaConverters._
 import scala.collection.immutable.SortedSet
-import scala.collection.mutable.StringBuilder
+import scala.collection.mutable.{Map => MutableMap, StringBuilder}
 import scala.sys.process._
 
 // Token is used for looking up an asset, notify is the address to use for notification
@@ -17,8 +23,11 @@ case class ProvisionerProfile(identifier: String, label: String) extends Ordered
 
 trait ProvisionerInterface {
   protected[this] val logger = Logger(getClass)
+  type ThingWithStatus = {
+    def status: Int
+  }
   def profiles: Set[ProvisionerProfile]
-  def canProvision(thing: {def status: Int}): Boolean
+  def canProvision(thing: ThingWithStatus): Boolean
   def provision(request: ProvisionerRequest): Future[Int]
   def profile(id: String): Option[ProvisionerProfile] = {
     profiles.find(_.identifier == id)
@@ -33,33 +42,75 @@ trait ProvisionerInterface {
 class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterface {
   protected[this] val configuration: Option[Configuration] = app.configuration.getConfig("provisioner")
   protected[this] val commandTemplate: Option[String] = configuration.flatMap(_.getString("command"))
-  protected[this] val InvalidConfig = PlayException(
+  protected[this] def InvalidConfig(s: Option[String] = None): Exception = PlayException(
     "Invalid Configuration",
-    "provisioner.enabled is true but provisioner.command not specified",
+    s.getOrElse("provisioner.enabled is true but provisioner.command or provisioner.profiles not specified"),
     None
   )
-  // FIXME this should be based on configs
-  protected[this] val allowedStatus: Set[Int] = Set(1,2,3,4,5,6,7)
+  protected[this] val cachePlugin = new CachePlugin(app, None, 30)
+  protected[this] val allowedStatus: Set[Int] =
+    configuration.flatMap(_.getString("allowedStatus")).getOrElse("1,2,3,5,7").split(",").map(_.toInt).toSet
 
+  // overrides Plugin.enabled
   override def enabled: Boolean = {
     configuration.flatMap { cfg =>
       cfg.getBoolean("enabled")
     }.getOrElse(false)
   }
 
+  // overrides Plugin.onStart
   override def onStart() {
-    if (enabled && !commandTemplate.isDefined) {
-      throw InvalidConfig
+    if (enabled) {
+      cachePlugin.clear()
+      logger.info("Cleared cache")
+      try {
+        if (!commandTemplate.isDefined || !haveProfiles) {
+          throw InvalidConfig()
+        }
+      } catch {
+        case e: UncheckedExecutionException =>
+          throw e.getCause
+        case e =>
+          throw e
+      }
     }
   }
 
-  override lazy val profiles: Set[ProvisionerProfile] =
-    profiles(configuration)
+  // overrides Plugin.onStop
+  override def onStop() {
+    cachePlugin.clear()
+    cachePlugin.onStop()
+  }
 
-  override def canProvision(thing: {def status: Int}): Boolean = {
+  // overrides ProvisionerInterface.profiles
+  override def profiles: Set[ProvisionerProfile] = {
+    cachePlugin.getOrElseUpdate("provisionerProfiles", {
+      try {
+        configuration.flatMap { cfg =>
+          cfg.getString("profiles").map { p =>
+            SortedSet((yamlFromFile(p) match {
+              case map: java.util.Map[_, _] => processYaml(map.asScala)
+              case n => Seq[ProvisionerProfile]()
+            }):_*)
+          }
+        }.getOrElse(Set())
+      } catch {
+        case e: PlayException =>
+          cachePlugin.clear()
+          throw e
+        case e =>
+          cachePlugin.clear()
+          throw InvalidConfig()
+        }
+    })
+  }
+
+  // overrides ProvisionerInterface.canProvision
+  override def canProvision(thing: ThingWithStatus): Boolean = {
     allowedStatus.contains(thing.status)
   }
 
+  // overrides ProvisionerInterface.provision
   override def provision(request: ProvisionerRequest): Future[Int] = {
     val cmd = command(request)
     val process = Process(cmd)
@@ -75,15 +126,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
     Future(exitStatus)
   }
 
-  protected def profiles(config: Option[Configuration]): Set[ProvisionerProfile] = {
-    config.flatMap { cfg =>
-      cfg.getConfig("profiles").map { p =>
-        SortedSet(p.keys.toSeq.map { key =>
-          ProvisionerProfile(key, p.getString(key).get)
-        }:_*)
-      }
-    }.getOrElse(Set())
-  }
+  protected def haveProfiles(): Boolean = profiles.size > 0
 
   protected def command(request: ProvisionerRequest): String = {
     commandTemplate.map { cmd =>
@@ -91,7 +134,55 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
         .replace("<profile-id>", request.profile.identifier)
         .replace("<notify>", request.notification.getOrElse(""))
     }.getOrElse {
-      throw InvalidConfig
+      throw InvalidConfig(Some("provisioner.command must be specified"))
+    }
+  }
+
+  private[this] def processYaml[K,V](yaml: MutableMap[K, V]): Seq[ProvisionerProfile] = {
+    def getLabel[K,V](id: String, prof: MutableMap[K, V]): String = {
+      for (entry <- prof) {
+        entry match {
+          case ("label", value: String) => return value
+          case (":label", value: String) => return value
+          case _ =>
+        }
+      }
+      throw InvalidConfig(Some("missing label for %s in profile yaml configuration".format(id)))
+    }
+    def processProfiles[K,V](profs: MutableMap[K, V]): Seq[ProvisionerProfile] = {
+      profs.foldLeft(Seq[ProvisionerProfile]()) { case (total, current) =>
+        current match {
+          case (id: String, value: java.util.Map[_, _]) =>
+            Seq(ProvisionerProfile(id, getLabel(id, value.asScala))) ++ total
+          case _ => 
+            total
+        }
+      }
+    }
+    for (entry <- yaml) {
+      entry match {
+        case (":profiles", map: java.util.Map[_, _]) => return processProfiles(map.asScala)
+        case ("profiles", map: java.util.Map[_, _]) => return processProfiles(map.asScala)
+        case _ =>
+      }
+    }
+    return Seq()
+  }
+
+  private[this] def yamlFromFile(s: String) = {
+    val file = new File(s)
+    if (!(file.exists() && file.canRead() && file.isFile())) {
+      throw InvalidConfig(Some("File %s is missing, not readable, or not a file".format(s)))
+    }
+    val yaml = new Yaml()
+    val fis: InputStream = new FileInputStream(file)
+    try {
+      yaml.load(fis)
+    } catch {
+      case e =>
+        throw InvalidConfig(Some("Error reading %s".format(s)))
+    } finally {
+      fis.close()
     }
   }
 
