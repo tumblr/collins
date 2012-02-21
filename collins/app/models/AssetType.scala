@@ -25,7 +25,7 @@ object AssetType extends Magic[AssetType](Some("asset_type")) {
     }
   }
   def findByName(name: String): Option[AssetType] = Model.withConnection { implicit con =>
-    Cache.getOrElseUpdate("AssetType.findByName(%s)".format(name)) {
+    Cache.getOrElseUpdate("AssetType.findByName(%s)".format(name.toUpperCase)) {
       AssetType.find("name={name}").on('name -> name).singleOption()
     }
   }
