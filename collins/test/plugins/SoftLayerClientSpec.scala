@@ -24,14 +24,21 @@ object SoftLayerClientSpec extends mutable.Specification {
       //val res = client.setNote(101410, "Cancelled server per WEBOPS-630")()
       true
     }
+    "Support tickets" in {
+      val client = new SoftLayerPlugin(Play.maybeApplication.get)
+      val body = "We are working on using the API to submit tickets. Please disregard"
+      val res = client.createTicket()
+      true
+    }
   }
 
   def setup = {
     Play.start(
       FakeApplication(
         additionalConfiguration = Map(
-          "softLayerClient.username" -> username,
-          "softLayerClient.password" -> password),
+          "softlayer.enabled" -> "true",
+          "softlayer.username" -> username,
+          "softlayer.password" -> password),
         withoutPlugins = Seq("play.api.db.evolutions.EvolutionsPlugin", "play.api.db.DBPlugin")
       )
     )

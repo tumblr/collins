@@ -94,9 +94,17 @@ $(document).ready(function() {
   // handles ajaxy forms, can manage modals, data refreshes, and errors.
   $("form[data-form]").each(function() {
     var e = $(this);
-    e.submit(function(target) {
+    e.submit(function(target,t2) {
       target.preventDefault();
-      $(target).attr('disabled', 'disabled');
+      if (e.attr('running')) {
+        return;
+      } else {
+        e.find('[type=submit]').each(function() {
+          $(this).attr('disabled', 'disabled');
+          $(this).addClass('disabled');
+        });
+        e.attr('running', true);
+      }
       var $form = $(this),
                   form = this,
                   url = $form.attr('action'),
@@ -122,7 +130,11 @@ $(document).ready(function() {
 	  alert(response.message);
 	}
       }).complete(function() {
-        $(target).removeAttr('disabled');
+        e.removeAttr('running');
+        e.find('[type=submit]').each(function() {
+          $(this).removeAttr('disabled');
+          $(this).removeClass('disabled');
+        });
       });
     });
   });

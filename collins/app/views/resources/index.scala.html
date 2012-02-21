@@ -18,7 +18,8 @@
     @notice("success")
     @notice("error")
 
-    @form(app.routes.Resources.find(0,50,"DESC")) {
+    @form(app.routes.Resources.find(0,50,"DESC","and")) {
+    <input type="hidden" name="operation" value="and">
     <div class="clearfix">
       <label for="ASSET_TAG">Asset Tag</label>
       <div class="input">
@@ -48,25 +49,20 @@
         </div>
       </div>
     </div>
-    <div class="clearfix">
-      <label for="IPMI_ADDRESS">IPMI Address</label>
-      <div class="input">
-        <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS">
-        <span class="help-inline">IPMI Address</span>
-      </div>
-    </div>
     @assetMeta.map { case(asset) =>
     <div class="clearfix">
       <label for="@asset.name">@asset.label</label>
       <div class="input">
         @{
-           asset.name match {
+	   asset.name match {
+             case "DATACENTER_NAME" => optionDisplay(asset, 0)
              case "DISK_TYPE" => optionDisplay(asset, 2)
              case "DISK_STORAGE_TOTAL" => optionDisplay(asset, 1)
              case "CPU_SPEED_GHZ" => optionDisplay(asset, 3)
              case "MEMORY_SIZE_TOTAL" => optionDisplay(asset, 1)
              case "NIC_SPEED" => optionDisplay(asset, 4)
-             case "NODECLASS" => optionDisplay(asset, 0)
+	     case "NODECLASS" => optionDisplay(asset, 0)
+             case "POOL" => optionDisplay(asset, 0)
              case "PRIMARY_ROLE" => optionDisplay(asset, 0)
              case _ => basicFormatter(asset)
            }
@@ -74,6 +70,18 @@
       </div>
     </div>
     }
+    <div class="clearfix">
+      <label for="status">Asset Status</label>
+      <div class="input">
+        <select name="status" id="status">
+          <option value="" selected="selected"></option>
+          @Status.Enum.values.toSeq.map { v =>
+          <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
+          }
+        </select>
+        <span class="help-inline">Asset Status (New, Incomplete, etc)</span>
+      </div>
+    </div>
     <div class="clearfix">
       <label for="type">Asset Type</label>
       <div class="input">
@@ -87,18 +95,12 @@
       </div>
     </div>
     <div class="clearfix">
-      <label for="status">Asset Status</label>
+      <label for="IPMI_ADDRESS">IPMI Address</label>
       <div class="input">
-        <select name="status" id="status">
-          <option value="" selected="selected"></option>
-          @Status.Enum.values.toSeq.map { v =>
-          <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
-          }
-        </select>
-        <span class="help-inline">Asset Status (New, Incomplete, etc)</span>
+        <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS">
+        <span class="help-inline">IPMI Address</span>
       </div>
     </div>
-
     <div class="actions">
       <input type="submit" class="btn primary" value="Search">
       <button type="reset" class="btn">Reset</button>

@@ -36,13 +36,23 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
   def apply(asset: Asset, asset_meta: AssetMeta.Enum, group_id: Int, value: String) =
     new AssetMetaValue(Id(asset.getId), Id(asset_meta.id), group_id, value)
 
+  def exists(mv: AssetMetaValue, con: Connection): Boolean = {
+    implicit val c: Connection = con
+    AssetMetaValue.count("asset_id={aid} AND asset_meta_id={ami} AND value={value}").on(
+      'aid -> mv.asset_id.get,
+      'ami -> mv.asset_meta_id.get,
+      'value -> mv.value
+    ).as(scalar[Long]) > 0
+  }
+
   def purge(mvs: Seq[AssetMetaValue])(implicit con: Connection) = {
     mvs.foreach { mv =>
+      val exists = AssetMetaValue.exists(mv, con)
       AssetMetaValue.delete("asset_id={aid} AND asset_meta_id={ami}").on(
         'aid -> mv.asset_id.get,
         'ami -> mv.asset_meta_id.get
       ).executeUpdate() match {
-        case 1 =>
+        case yes if yes == 1 && !exists =>
           val ami = mv.asset_meta_id.get
           AssetLog(NotAssigned, mv.asset_id, new Date().asTimestamp, AssetLog.Formats.PlainText.id.toByte,
                    AssetLog.Sources.Internal.id.toByte,

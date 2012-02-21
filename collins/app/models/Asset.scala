@@ -20,21 +20,6 @@ case class Asset(
 {
   require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
 
-  def isSoftLayerAsset(): Boolean = tag.toLowerCase.startsWith("sl-")
-  def softLayerId(): Option[Long] = isSoftLayerAsset match {
-    case true => try {
-      Some(tag.split("-", 2).last.toLong)
-    } catch {
-      case e => None
-    }
-    case false => None
-  }
-  def softLayerUrl(): Option[String] = isSoftLayerAsset match {
-    case true => softLayerId.map { slId =>
-      "https://manage.softlayer.com/Hardware/view/%d".format(slId)
-    }
-    case false => None
-  }
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "TAG" -> JsString(tag),
