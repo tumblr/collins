@@ -164,29 +164,39 @@ $(document).ready(function() {
         e.attr('running', true);
       }
       var $form = $(this),
-                  form = this,
-                  url = $form.attr('action'),
-		  data = $form.serialize(),
-		  modalEl = $form.attr('data-modal'),
-		  errorEl = $form.attr('data-error'),
-		  refreshSelector = $form.attr('data-refresh');
+      form = this,
+      url = $form.attr('action'),
+      data = $form.serialize(),
+      modalEl = $form.attr('data-modal'),
+      errorEl = $form.attr('data-error'),
+      refreshSelector = $form.attr('data-refresh');
 
       $.post(url, data).success(function(d) {
-	form.reset();
+        form.reset();
         if (errorEl) {
-	  $(elId(errorEl)).empty().hide();
-	}
-	if (modalEl) {
-	  $(elId(modalEl)).modal('hide');
-	}
+          $(elId(errorEl)).empty().hide();
+        }
+        if (modalEl) {
+          $(elId(modalEl)).modal('hide');
+        }
         refresher(refreshSelector);
       }).error(function(d) {
-	var response = JSON.parse(d.responseText);
-	if (errorEl) {
-          $(elId(errorEl)).empty().append(response.data.message).show();
-	} else {
-	  alert(response.message);
-	}
+        var response = JSON.parse(d.responseText);
+        if (errorEl) {
+          var classes = $(elId(errorEl)).attr('data-on-error');
+          if (classes) { $(elId(errorEl)).removeClass(classes); }
+          if (d.status != 400) {
+            var html = "";
+            if (classes) { html += '<div class="' + classes + '">Error</div>'; }
+            html += '<pre>' + response.data.message + '</pre>';
+            $(elId(errorEl)).empty().append(html).show();
+          } else {
+            if (classes) { $(elId(errorEl)).addClass(classes); }
+            $(elId(errorEl)).empty().append(response.data.message).show();
+          }
+        } else {
+          alert(response.message);
+        }
       }).complete(function() {
         e.removeAttr('running');
         e.find('[type=submit]').each(function() {
