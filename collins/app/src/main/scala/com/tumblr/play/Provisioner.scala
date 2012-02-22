@@ -15,7 +15,7 @@ import scala.sys.process._
 // Token is used for looking up an asset, notify is the address to use for notification
 // Profile would be the same as the profile identifier
 case class ProvisionerRequest(token: String, profile: ProvisionerProfile, notification: Option[String] = None)
-case class ProvisionerProfile(identifier: String, label: String) extends Ordered[ProvisionerProfile] {
+case class ProvisionerProfile(identifier: String, label: String, prefix: String, allow_suffix: Boolean) extends Ordered[ProvisionerProfile] {
   override def compare(that: ProvisionerProfile): Int = {
     this.label.compare(that.label)
   }
@@ -139,21 +139,38 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
   }
 
   private[this] def processYaml[K,V](yaml: MutableMap[K, V]): Seq[ProvisionerProfile] = {
-    def getLabel[K,V](id: String, prof: MutableMap[K, V]): String = {
+    def getStringValue[K,V](id: String, prof: MutableMap[K, V], keys: Set[String]): String = {
       for (entry <- prof) {
         entry match {
-          case ("label", value: String) => return value
-          case (":label", value: String) => return value
+          case (label: String, value: String) if keys.contains(label) => return value
           case _ =>
         }
       }
-      throw InvalidConfig(Some("missing label for %s in profile yaml configuration".format(id)))
+      throw InvalidConfig(Some("missing %s for %s in profile yaml configuration".format(keys.mkString(" or "), id)))
+    }
+    def getBooleanValue[K,V](id: String, prof: MutableMap[K, V], keys: Set[String], default: Option[Boolean] = None): Boolean = {
+      for (entry <- prof) {
+        entry match {
+          case (label: String, value: Boolean) if keys.contains(label) => return value
+          case _ =>
+        }
+      }
+      default.getOrElse {
+        throw InvalidConfig(Some("missing %s for %s in profile yaml configuration".format(keys.mkString(" or "), id)))
+      }
     }
     def processProfiles[K,V](profs: MutableMap[K, V]): Seq[ProvisionerProfile] = {
       profs.foldLeft(Seq[ProvisionerProfile]()) { case (total, current) =>
         current match {
           case (id: String, value: java.util.Map[_, _]) =>
-            Seq(ProvisionerProfile(id, getLabel(id, value.asScala))) ++ total
+            val scalaMap = value.asScala
+            val profile = ProvisionerProfile(
+              id,
+              getStringValue(id, scalaMap, Set("label",":label")),
+              getStringValue(id, scalaMap, Set("prefix", ":prefix")),
+              getBooleanValue(id, scalaMap, Set("allow_suffix", ":allow_suffix"), Some(false))
+            )
+            Seq(profile) ++ total
           case _ => 
             total
         }
