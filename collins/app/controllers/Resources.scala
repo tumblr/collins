@@ -1,7 +1,7 @@
 package controllers
 
 import models._
-import util.{AssetStateMachine, Helpers, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
+import util.{Helpers, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
 import views._
 
 import akka.util.duration._
