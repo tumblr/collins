@@ -513,14 +513,27 @@
     <div class="clearfix">
       <label for="role">Role</label>
       <div class="input">
-        <select name="role" id="role">
+        <select name="role" id="role" data-show="suffix-container,hostname-container">
           <option value="" selected="selected"></option>
           @Provisioner.pluginEnabled.map { p =>
             @p.profiles.toSeq.map { v =>
-            <option value="@v.identifier">@v.label</option>
+            <option value="@v.identifier" data-show-display="@v.allow_suffix.toString" data-aggregate-value="@v.prefix">@v.label</option>
             }
           }
         </select>
+      </div>
+    </div>
+    <div class="clearfix hide" id="suffix-container">
+      <label for="suffix">Hostname Suffix</label>
+      <div class="input">
+	      <input name="suffix" id="suffix">
+	      <span class="help-block">Optional suffix for hostname. If you provisioned a dev machine and picked mackenzie as your suffix, the hostname would be dev-mackenzie-HASH</span>
+      </div>
+    </div>
+    <div class="clearfix hide" id="hostname-container">
+      <label>Hostname</label>
+      <div class="input">
+	      <span class="uneditable-input" data-aggregate="role,suffix"></span>
       </div>
     </div>
     <div class="clearfix">
