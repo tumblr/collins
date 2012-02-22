@@ -45,7 +45,7 @@ trait AssetApi {
 
   // POST /asset/:tag/provision
   def provisionAsset(tag: String) = SecureAction { implicit req =>
-    import com.tumblr.play.ProvisionerProfile
+    import com.tumblr.play.{CommandResult, ProvisionerProfile}
     def onSuccess(asset: Asset, profile: ProvisionerProfile) {
       Model.withTransaction { implicit con =>
         val id = profile.identifier
@@ -55,9 +55,11 @@ trait AssetApi {
         MetaWrapper.createMeta(asset, Map("NODECLASS" -> id))
       }
     }
-    def onFailure(asset: Asset, role: String, exitCode: Int) {
+    def onFailure(asset: Asset, role: String, cmd: CommandResult) {
       Model.withConnection { implicit con =>
-        AssetLog.warning(asset, "Provisioning as %s failed, exit code %d".format(role, exitCode),
+        AssetLog.warning(
+          asset,
+          "Provisioning as %s failed, exit code %d, output %s".format(role, cmd.exitCode, cmd.output),
           AssetLog.Formats.PlainText, AssetLog.Sources.User).create()
       }
     }
@@ -78,18 +80,21 @@ trait AssetApi {
                 BackgroundProcessor.send(ProvisionerProcessor(request)) { res =>
                   val reply = res match {
                     case (Some(error), _) =>
-                      onFailure(asset, request.profile.label, -100)
+                      onFailure(asset,
+                        request.profile.label,
+                        CommandResult(-100, "Error: %s".format(error.getMessage))
+                      )
                       Api.getErrorMessage(
-                        "There was an error processing your request: %s".format(error.getMessage),
+                        "There was an exception processing your request: %s".format(error.getMessage),
                         Results.InternalServerError,
                         Some(error)
                       )
                     case (_, opt) =>
-                      val success = opt.getOrElse(-99)
-                      if (success != 0) {
+                      val success = opt.getOrElse(CommandResult(-99, "No result data"))
+                      if (success.exitCode != 0) {
                         onFailure(asset, request.profile.label, success)
-                        Api.getErrorMessage("There was an error processing your request %d".format(success),
-                          Results.InternalServerError, None)
+                        val msg = "There was an error processing your request. Exit Code %d\n%s".format(success.exitCode, success.output)
+                        Api.getErrorMessage(msg, Results.InternalServerError, None)
                       } else {
                         onSuccess(asset, request.profile)
                         ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(0))))
