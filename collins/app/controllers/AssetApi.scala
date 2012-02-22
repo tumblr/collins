@@ -64,15 +64,16 @@ trait AssetApi {
     Asset.findByTag(tag).map { asset =>
       Form(of(
         "role" -> text,
-        "contact" -> text(3)
+        "contact" -> text(3),
+        "suffix" -> optional(text(3))
       )).bindFromRequest.fold(
         err => {
           formatResponseData(Api.getErrorMessage("contact and role must be specified"))
         },
         suc => {
           Provisioner.pluginEnabled { plugin =>
-            val (role, contact) = suc
-            plugin.makeRequest(asset.tag, role, Some(contact)).map { request =>
+            val (role, contact, suffix) = suc
+            plugin.makeRequest(asset.tag, role, Some(contact), suffix).map { request =>
               AsyncResult {
                 BackgroundProcessor.send(ProvisionerProcessor(request)) { res =>
                   val reply = res match {

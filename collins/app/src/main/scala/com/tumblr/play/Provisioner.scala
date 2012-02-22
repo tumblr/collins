@@ -14,7 +14,7 @@ import scala.sys.process._
 
 // Token is used for looking up an asset, notify is the address to use for notification
 // Profile would be the same as the profile identifier
-case class ProvisionerRequest(token: String, profile: ProvisionerProfile, notification: Option[String] = None)
+case class ProvisionerRequest(token: String, profile: ProvisionerProfile, notification: Option[String] = None, suffix: Option[String] = None)
 case class ProvisionerProfile(identifier: String, label: String, prefix: String, allow_suffix: Boolean) extends Ordered[ProvisionerProfile] {
   override def compare(that: ProvisionerProfile): Int = {
     this.label.compare(that.label)
@@ -32,9 +32,9 @@ trait ProvisionerInterface {
   def profile(id: String): Option[ProvisionerProfile] = {
     profiles.find(_.identifier == id)
   }
-  def makeRequest(token: String, id: String, notification: Option[String] = None): Option[ProvisionerRequest] = {
+  def makeRequest(token: String, id: String, notification: Option[String] = None, suffix: Option[String] = None): Option[ProvisionerRequest] = {
     profile(id).map { p =>
-      ProvisionerRequest(token, p, notification)
+      ProvisionerRequest(token, p, notification, suffix)
     }
   }
 }
@@ -133,6 +133,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
       cmd.replace("<tag>", request.token)
         .replace("<profile-id>", request.profile.identifier)
         .replace("<notify>", request.notification.getOrElse(""))
+        .replace("<suffix>", request.suffix.filter(_ => request.profile.allow_suffix).getOrElse(""))
     }.getOrElse {
       throw InvalidConfig(Some("provisioner.command must be specified"))
     }
