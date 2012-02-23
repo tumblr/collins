@@ -181,7 +181,16 @@ $(document).ready(function() {
         }
         refresher(refreshSelector);
       }).error(function(d) {
-        var response = JSON.parse(d.responseText);
+        var response = {};
+        var response = try {
+          response = JSON.parse(d.responseText);
+        } catch(ex) {
+          response = {
+            data: {
+              message: "An internal error occurred. See collins server logs."
+            }
+          }
+        }
         if (errorEl) {
           var classes = $(elId(errorEl)).attr('data-on-error');
           if (classes) { $(elId(errorEl)).removeClass(classes); }
