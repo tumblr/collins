@@ -83,7 +83,7 @@ trait AssetWebApi {
       }
     }
     def onFailure(asset: Asset, role: String, cmd: CommandResult) {
-      val msg = "Provisioning as %s failed - %s".format(cmd.toString)
+      val msg = "Provisioning as %s failed - %s".format(role, cmd.toString)
       UserTattler.warning(asset, user, msg)
     }
     Asset.findByTag(tag).map { asset =>
