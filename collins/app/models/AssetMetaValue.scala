@@ -45,15 +45,19 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
     ).as(scalar[Long]) > 0
   }
 
+  // FIXME move to config
+  private[this] lazy val ExcludedAttributes: Set[Long] = Set("SHA").map { v =>
+    AssetMeta.findByName(v).map(_.getId).getOrElse(-1L)
+  }
   def purge(mvs: Seq[AssetMetaValue])(implicit con: Connection) = {
     mvs.foreach { mv =>
       val exists = AssetMetaValue.exists(mv, con)
+      val ami = mv.asset_meta_id.get
       AssetMetaValue.delete("asset_id={aid} AND asset_meta_id={ami}").on(
         'aid -> mv.asset_id.get,
-        'ami -> mv.asset_meta_id.get
+        'ami -> ami
       ).executeUpdate() match {
-        case yes if yes == 1 && !exists =>
-          val ami = mv.asset_meta_id.get
+        case yes if yes == 1 && !exists && !ExcludedAttributes.contains(ami) =>
           AssetLog(NotAssigned, mv.asset_id, new Date().asTimestamp, AssetLog.Formats.PlainText.id.toByte,
                    AssetLog.Sources.Internal.id.toByte,
                    AssetLog.MessageTypes.Notice.id.toByte,

@@ -59,6 +59,7 @@ private[controllers] case class UpdateAsset(
 
   def execute(tag: String)(implicit req: Request[AnyContent]): Either[ResponseData,Boolean] = {
     Api.withAssetFromTag(tag) { asset =>
+      val old = asset.copy()
       validateRequest(asset) match {
         case Left(error) => Left(Api.getErrorMessage(error))
         case Right(options) =>
@@ -71,7 +72,15 @@ private[controllers] case class UpdateAsset(
           }
           res match {
             case Left(error) => Left(Api.getErrorMessage(error.getMessage))
-            case Right(success) => Right(success)
+            case Right(success) => success match {
+              case true =>
+                util.StateManager.pluginEnabled { plugin =>
+                  plugin.transition(old, asset)
+                }
+                Right(true)
+              case false =>
+                Right(false)
+            }
           }
       }
     }

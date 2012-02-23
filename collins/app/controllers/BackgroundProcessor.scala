@@ -1,8 +1,9 @@
 package controllers
 
-import models.{AssetLifecycle, AssetLog, MetaWrapper, Model, Status => AStatus}
+import models.{AssetLifecycle, MetaWrapper, Model, Status => AStatus}
 import util.{Provisioner, SoftLayer}
-import com.tumblr.play.ProvisionerRequest
+import com.tumblr.play.{CommandResult, ProvisionerRequest}
+import com.twitter.util.Future
 
 import akka.actor.Actor._
 import akka.actor.Actor
@@ -26,15 +27,22 @@ case class AssetUpdateProcessor(tag: String, userTimeout: Option[Duration] = Non
   }
 }
 
-case class ProvisionerProcessor(request: ProvisionerRequest, userTimeout: Option[Duration] = None)(implicit req: Request[AnyContent]) extends BackgroundProcess[Int]
+case class ProvisionerProcessor(request: ProvisionerRequest, userTimeout: Option[Duration] = None)(implicit req: Request[AnyContent]) extends BackgroundProcess[CommandResult]
 {
   override def defaultTimeout: Duration = Duration.parse("60 seconds")
   val timeout = userTimeout.getOrElse(defaultTimeout)
 
-  def run(): Int = {
+  def run(): CommandResult = {
     Provisioner.pluginEnabled { plugin =>
-      plugin.provision(request)()
-    }.getOrElse(-2)
+      val future = plugin.test(request).flatMap { res =>
+        if (res.exitCode == 0) {
+          plugin.provision(request)
+        } else {
+          Future(res)
+        }
+      }
+      future()
+    }.getOrElse(CommandResult(-2, "Provisioner plugin not enabled"))
   }
 }
 
@@ -114,8 +122,6 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
                       "status" -> AStatus.Enum.Cancelled.toString,
                       "reason" -> reason
                     ), con)
-                    AssetLog.informational(asset, "User requested server cancellation",
-                      AssetLog.Formats.PlainText, AssetLog.Sources.Internal).create()
                   }
                   plugin.setNote(n, "Cancelled: %s".format(reason))()
                   Right(ticketId)

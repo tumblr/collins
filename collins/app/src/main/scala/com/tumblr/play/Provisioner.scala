@@ -1,11 +1,12 @@
 package com.tumblr.play
 
 import com.google.common.util.concurrent.UncheckedExecutionException
-import com.twitter.util.Future
+import com.twitter.util.{Future, FuturePool}
 import org.yaml.snakeyaml.Yaml
 import play.api.{Application, Configuration, Logger, PlayException, Plugin}
 
 import java.io.{File, FileInputStream, InputStream}
+import java.util.concurrent.Executors
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.SortedSet
@@ -14,10 +15,16 @@ import scala.sys.process._
 
 // Token is used for looking up an asset, notify is the address to use for notification
 // Profile would be the same as the profile identifier
-case class ProvisionerRequest(token: String, profile: ProvisionerProfile, notification: Option[String] = None)
-case class ProvisionerProfile(identifier: String, label: String) extends Ordered[ProvisionerProfile] {
+case class ProvisionerRequest(token: String, profile: ProvisionerProfile, notification: Option[String] = None, suffix: Option[String] = None)
+case class ProvisionerProfile(identifier: String, label: String, prefix: String, allow_suffix: Boolean) extends Ordered[ProvisionerProfile] {
   override def compare(that: ProvisionerProfile): Int = {
     this.label.compare(that.label)
+  }
+}
+
+case class CommandResult(exitCode: Int, output: String, stderr: Option[String] = None) {
+  override def toString(): String = {
+    "Exit Code: %d, Stdout: %s, Stderr: %s".format(exitCode, output, stderr.getOrElse(""))
   }
 }
 
@@ -28,13 +35,14 @@ trait ProvisionerInterface {
   }
   def profiles: Set[ProvisionerProfile]
   def canProvision(thing: ThingWithStatus): Boolean
-  def provision(request: ProvisionerRequest): Future[Int]
+  def provision(request: ProvisionerRequest): Future[CommandResult]
+  def test(request: ProvisionerRequest): Future[CommandResult]
   def profile(id: String): Option[ProvisionerProfile] = {
     profiles.find(_.identifier == id)
   }
-  def makeRequest(token: String, id: String, notification: Option[String] = None): Option[ProvisionerRequest] = {
+  def makeRequest(token: String, id: String, notification: Option[String] = None, suffix: Option[String] = None): Option[ProvisionerRequest] = {
     profile(id).map { p =>
-      ProvisionerRequest(token, p, notification)
+      ProvisionerRequest(token, p, notification, suffix)
     }
   }
 }
@@ -42,6 +50,7 @@ trait ProvisionerInterface {
 class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterface {
   protected[this] val configuration: Option[Configuration] = app.configuration.getConfig("provisioner")
   protected[this] val commandTemplate: Option[String] = configuration.flatMap(_.getString("command"))
+  protected[this] val checkCommandTemplate: Option[String] = configuration.flatMap(_.getString("checkCommand"))
   protected[this] def InvalidConfig(s: Option[String] = None): Exception = PlayException(
     "Invalid Configuration",
     s.getOrElse("provisioner.enabled is true but provisioner.command or provisioner.profiles not specified"),
@@ -50,6 +59,8 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
   protected[this] val cachePlugin = new CachePlugin(app, None, 30)
   protected[this] val allowedStatus: Set[Int] =
     configuration.flatMap(_.getString("allowedStatus")).getOrElse("1,2,3,5,7").split(",").map(_.toInt).toSet
+  protected[this] val executor = Executors.newCachedThreadPool()
+  protected[this] val pool = FuturePool(executor)
 
   // overrides Plugin.enabled
   override def enabled: Boolean = {
@@ -80,6 +91,9 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
   override def onStop() {
     cachePlugin.clear()
     cachePlugin.onStop()
+    try executor.shutdown() catch {
+      case _ => // swallow this
+    }
   }
 
   // overrides ProvisionerInterface.profiles
@@ -111,49 +125,99 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
   }
 
   // overrides ProvisionerInterface.provision
-  override def provision(request: ProvisionerRequest): Future[Int] = {
-    val cmd = command(request)
+  override def provision(request: ProvisionerRequest): Future[CommandResult] = {
+    pool[CommandResult] {
+      val result = runCommand(command(request, commandTemplate))
+      if (result.exitCode != 0) {
+        logger.warn("Command code: %d, output %s".format(result.exitCode, result.output))
+      }
+      result
+    }
+  }
+
+  override def test(request: ProvisionerRequest): Future[CommandResult] = {
+    val cmd = try command(request, checkCommandTemplate) catch {
+      case _ => return Future(CommandResult(0,"No check command specified"))
+    }
+    pool[CommandResult] {
+      val result = runCommand(cmd)
+      if (result.exitCode != 0) {
+        logger.warn("Command code: %d, output %s".format(result.exitCode, result.output))
+      }
+      result
+    }
+  }
+
+  protected def runCommand(cmd: String): CommandResult = {
     val process = Process(cmd)
-    val sb = new StringBuilder()
+    val stdout = new StringBuilder()
+    val stderr = new StringBuilder()
     val exitStatus = try {
-      process ! ProcessLogger({s => sb.append(s)})
+      process ! ProcessLogger(
+        s => stdout.append(s + "\n"),
+        e => stderr.append(e + "\n")
+      )
     } catch {
       case e: Throwable =>
-        sb.append(e.getMessage)
+        stderr.append(e.getMessage)
         -1
     }
-    logger.warn("Command output: " + sb.toString)
-    Future(exitStatus)
+    CommandResult(exitStatus, stdout.toString, Some(stderr.toString))
   }
 
   protected def haveProfiles(): Boolean = profiles.size > 0
 
-  protected def command(request: ProvisionerRequest): String = {
-    commandTemplate.map { cmd =>
+  protected def command(request: ProvisionerRequest, cmdString: Option[String]): String = {
+    cmdString.map { cmd =>
       cmd.replace("<tag>", request.token)
         .replace("<profile-id>", request.profile.identifier)
         .replace("<notify>", request.notification.getOrElse(""))
+        .replace("<suffix>", request.suffix.filter(_ => request.profile.allow_suffix).getOrElse(""))
+        .replace("<logfile>", getLogLocation(request))
     }.getOrElse {
       throw InvalidConfig(Some("provisioner.command must be specified"))
     }
   }
 
+  private def getLogLocation(request: ProvisionerRequest): String = {
+    val tmpDir = System.getProperty("java.io.tmpdir", "/tmp").stripSuffix("/")
+    val filename = request.token.replaceAll("[^a-zA-Z0-9\\-]", "") + '-' + request.profile.identifier
+    tmpDir + "/" + filename + ".log"
+  }
+
   private[this] def processYaml[K,V](yaml: MutableMap[K, V]): Seq[ProvisionerProfile] = {
-    def getLabel[K,V](id: String, prof: MutableMap[K, V]): String = {
+    def getStringValue[K,V](id: String, prof: MutableMap[K, V], keys: Set[String]): String = {
       for (entry <- prof) {
         entry match {
-          case ("label", value: String) => return value
-          case (":label", value: String) => return value
+          case (label: String, value: String) if keys.contains(label) => return value
           case _ =>
         }
       }
-      throw InvalidConfig(Some("missing label for %s in profile yaml configuration".format(id)))
+      throw InvalidConfig(Some("missing %s for %s in profile yaml configuration".format(keys.mkString(" or "), id)))
+    }
+    def getBooleanValue[K,V](id: String, prof: MutableMap[K, V], keys: Set[String], default: Option[Boolean] = None): Boolean = {
+      for (entry <- prof) {
+        entry match {
+          case (label: String, value: Boolean) if keys.contains(label) => return value
+          case _ =>
+        }
+      }
+      default.getOrElse {
+        throw InvalidConfig(Some("missing %s for %s in profile yaml configuration".format(keys.mkString(" or "), id)))
+      }
     }
     def processProfiles[K,V](profs: MutableMap[K, V]): Seq[ProvisionerProfile] = {
       profs.foldLeft(Seq[ProvisionerProfile]()) { case (total, current) =>
         current match {
           case (id: String, value: java.util.Map[_, _]) =>
-            Seq(ProvisionerProfile(id, getLabel(id, value.asScala))) ++ total
+            val scalaMap = value.asScala
+            val profile = ProvisionerProfile(
+              id,
+              getStringValue(id, scalaMap, Set("label",":label")),
+              getStringValue(id, scalaMap, Set("prefix", ":prefix")),
+              getBooleanValue(id, scalaMap, Set("allow_suffix", ":allow_suffix"), Some(false))
+            )
+            Seq(profile) ++ total
           case _ => 
             total
         }

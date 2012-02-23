@@ -4,7 +4,7 @@ import conversions._
 import AssetMeta.Enum.{PowerPort, RackPosition}
 import models.{Status => AStatus}
 
-import util.{AssetStateMachine, Helpers, LldpRepresentation, LshwRepresentation}
+import util.{ApiTattler, AssetStateMachine, Helpers, InternalTattler, LldpRepresentation, LshwRepresentation}
 import util.parsers.{LldpParser, LshwParser}
 import Helpers.formatPowerPort
 
@@ -29,19 +29,15 @@ object AssetLifecycle {
   def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum] = None): Status[AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
+      val _status = status.getOrElse(Status.Enum.Incomplete)
       Model.withTransaction { implicit con =>
-        val _status = status.getOrElse(Status.Enum.Incomplete)
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
           case true => Some(IpmiInfo.createForAsset(asset))
           case false => None
         }
-        AssetLog.informational(
-          asset,
-          "Initial intake successful, status now %s".format(_status.toString),
-          AssetLog.Formats.PlainText,
-          AssetLog.Sources.Internal
-        ).create()
+        InternalTattler.informational(asset, None,
+          "Initial intake successful, status now %s".format(_status.toString), con)
         Right(Tuple2(asset, ipmi))
       }
     } catch {
@@ -60,14 +56,9 @@ object AssetLifecycle {
     )
     try {
       Model.withTransaction { implicit con =>
-        AssetLog.informational(
-          asset, reason, AssetLog.Formats.PlainText, AssetLog.Sources.Internal
-        ).create()
+        InternalTattler.informational(asset, None, reason, con)
         AssetStateMachine(asset).decommission().executeUpdate()
-        AssetLog.informational(
-          asset, "Asset decommissioned successfully", AssetLog.Formats.PlainText,
-          AssetLog.Sources.Internal
-        ).create()
+        InternalTattler.informational(asset, None, "Asset decommissioned successfully", con)
       }
       Right(true)
     } catch {
@@ -87,12 +78,7 @@ object AssetLifecycle {
     allCatch[Boolean].either {
       Model.withTransaction { implicit con =>
         AssetStateMachine(asset).update().executeUpdate()
-        AssetLog.informational(
-          asset,
-          "Asset state updated",
-          AssetLog.Formats.PlainText,
-          AssetLog.Sources.Internal
-        ).create()
+        InternalTattler.informational(asset, None, "Asset state updated")
         true
       }
     }.left.map(e => handleException(asset, "Error saving values or in state transition", e))
@@ -122,6 +108,11 @@ object AssetLifecycle {
   }
 
   def updateAssetStatus(asset: Asset, options: Map[String,String], con: Connection): Status[Boolean] = {
+    Helpers.haveFeature("sloppyStatus") match {
+      case Some(true) =>
+      case _ =>
+        return Left(new Exception("sloppyStatus not enabled"))
+    }
     implicit val conn: Connection = con
     val stat = options.get("status").getOrElse("none")
     allCatch[Boolean].either {
@@ -133,12 +124,7 @@ object AssetLifecycle {
       val defaultReason = "Asset state updated from %s to %s".format(old, stat)
       val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
       Asset.update(asset.copy(status = status.id, updated = Some(new Date().asTimestamp)))
-      AssetLog.warning(
-        asset,
-        reason,
-        AssetLog.Formats.PlainText,
-        AssetLog.Sources.Api
-      ).create()
+      ApiTattler.warning(asset, None, reason, con)
       true
     }.left.map(e => handleException(asset, "Error updating status for asset", e))
   }
@@ -210,9 +196,10 @@ object AssetLifecycle {
         AssetMetaValue.create(AssetMetaValue(asset, AssetMeta.Enum.ChassisTag.id, chassis_tag))
         MetaWrapper.createMeta(asset, filtered)
         AssetStateMachine(asset).update().executeUpdate()
-        AssetLog.informational(asset, "Parsing and storing LSHW data succeeded, asset now New",
-          AssetLog.Formats.PlainText, AssetLog.Sources.Internal
-        ).create()
+        InternalTattler.informational(asset, None,
+          "Parsing and storing LSHW data succeeded",
+          con
+        )
         true
       }
     }.left.map(e => handleException(asset, "Exception updating asset", e))

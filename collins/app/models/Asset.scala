@@ -120,7 +120,7 @@ object Asset extends Magic[Asset](Some("asset")) {
     }
   }
   def findByTag(tag: String): Option[Asset] = Model.withConnection { implicit con =>
-    Cache.getOrElseUpdate("Asset.findByTag(%s)".format(tag)) {
+    Cache.getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
       Asset.find("tag={tag}").on('tag -> tag).first()
     }
   }
