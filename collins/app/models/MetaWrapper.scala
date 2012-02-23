@@ -4,7 +4,9 @@ import util.Cache
 
 import anorm._
 import anorm.SqlParser._
+import conversions._
 import java.sql.Connection
+import java.util.Date
 
 /**
  * Provide a convenience wrapper on top of a row of meta/value data
@@ -35,7 +37,13 @@ object MetaWrapper {
       AssetMetaValue(asset, meta.id.get, v)
     }.toSeq
     AssetMetaValue.purge(metaValues)
-    AssetMetaValue.create(metaValues.filter(v => v.value != null && v.value.nonEmpty))
+    val values = metaValues.filter(v => v.value != null && v.value.nonEmpty)
+    values.size match {
+      case 0 =>
+      case n =>
+        AssetMetaValue.create(values)
+        Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
+    }
   }
 
   def findMeta(asset: Asset, name: String, count: Int = 1): Seq[MetaWrapper] = {
