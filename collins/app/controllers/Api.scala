@@ -14,7 +14,7 @@ private[controllers] case class ResponseData(status: Results.Status, data: JsObj
   def map[T](fn: ResponseData => T) = fn(this)
 }
 
-trait Api extends ApiResponse with AssetApi with AssetLogApi with IpmiApi {
+trait Api extends ApiResponse with AssetApi with AssetWebApi with AssetLogApi with IpmiApi {
   this: SecureController =>
 
   protected implicit val securitySpec = SecuritySpec(true)
@@ -57,6 +57,9 @@ object Api {
       }
     }
   }
+
+  def statusResponse(status: Boolean, code: Results.Status = Results.Ok) =
+    ResponseData(code, JsObject(Seq("SUCCESS" -> JsBoolean(status))))
 
   def getErrorMessage(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable] = None) = {
     val json = ApiResponse.formatJsonError(msg, ex)

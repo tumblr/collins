@@ -22,7 +22,11 @@ case class ProvisionerProfile(identifier: String, label: String, prefix: String,
   }
 }
 
-case class CommandResult(exitCode: Int, output: String, stderr: Option[String] = None)
+case class CommandResult(exitCode: Int, output: String, stderr: Option[String] = None) {
+  override def toString(): String = {
+    "Exit Code: %d, Stdout: %s, Stderr: %s".format(exitCode, output, stderr.getOrElse(""))
+  }
+}
 
 trait ProvisionerInterface {
   protected[this] val logger = Logger(getClass)
