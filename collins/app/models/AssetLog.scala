@@ -147,6 +147,10 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
       apply(asset, message, format, source, AssetLog.MessageTypes.Notice)
   }
 
+  def note(asset: Asset, message: String, format: AssetLog.Formats, source: AssetLog.Sources) = {
+      apply(asset, message, format, source, AssetLog.MessageTypes.Note)
+  }
+
   // Normal operational messages - may be harvested for reporting, measuring throughput, etc - no
   // action required
   def informational(asset: Asset, message: String, format: AssetLog.Formats, source: AssetLog.Sources) = {
@@ -156,10 +160,6 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
   //Info useful to developers for debugging the application, not useful during operations
   def debug(asset: Asset, message: String, format: AssetLog.Formats, source: AssetLog.Sources) = {
       apply(asset, message, format, source, AssetLog.MessageTypes.Debug)
-  }
-
-  def note(asset: Asset, message: String, format: AssetLog.Formats, source: AssetLog.Sources) = {
-      apply(asset, message, format, source, AssetLog.MessageTypes.Note)
   }
 
   def list(asset: Option[Asset], page: Int = 0, pageSize: Int = 10, sort: String = "DESC", filter: String = ""): Page[AssetLog] = {

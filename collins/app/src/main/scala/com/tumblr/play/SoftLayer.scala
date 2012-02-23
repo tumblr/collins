@@ -34,6 +34,7 @@ trait SoftLayerInterface {
   // Interactive API
   def cancelServer(id: Long, reason: String = "No longer needed"): Future[Long]
   def getTicketSubjects(): Seq[Tuple2[Long,String]]
+  def rebootServer(id: Long, rebootType: RebootType): Future[Boolean]
   def setNote(id: Long, note: String): Future[Boolean]
 
   protected def softLayerApiUrl: String =
@@ -120,6 +121,22 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
       }
     } handle {
       case e => 0L
+    }
+  }
+
+  override def rebootServer(id: Long, rebootType: RebootType = RebootSoft): Future[Boolean] = {
+    val url = rebootType match {
+      case RebootSoft => softLayerUrl("/SoftLayer_Hardware_Server/%d/rebootSoft.json".format(id))
+      case RebootHard => softLayerUrl("/SoftLayer_Hardware_Server/%d/rebootHard.json".format(id))
+    }
+    val request = RequestBuilder()
+      .url(url)
+      .setHeader("Content-Type", "application/json")
+      .buildGet();
+    makeRequest(request) map { r =>
+      true
+    } handle {
+      case e => false
     }
   }
 

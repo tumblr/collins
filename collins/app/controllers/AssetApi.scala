@@ -43,98 +43,6 @@ trait AssetApi {
     }
   }}
 
-  // POST /asset/:tag/provision
-  def provisionAsset(tag: String) = SecureAction { implicit req =>
-    import com.tumblr.play.{CommandResult, ProvisionerProfile}
-    def onSuccess(asset: Asset, profile: ProvisionerProfile) {
-      Model.withTransaction { implicit con =>
-        val id = profile.identifier
-        val label = profile.label
-        AssetLog.note(asset, "Provisioned as %s".format(label), AssetLog.Formats.PlainText,
-          AssetLog.Sources.User).create()
-        MetaWrapper.createMeta(asset, Map("NODECLASS" -> id))
-      }
-    }
-    def onFailure(asset: Asset, role: String, cmd: CommandResult) {
-      Model.withConnection { implicit con =>
-        AssetLog.warning(
-          asset,
-          "Provisioning as %s failed, exit code %d, output %s".format(role, cmd.exitCode, cmd.output),
-          AssetLog.Formats.PlainText, AssetLog.Sources.User).create()
-      }
-    }
-    Asset.findByTag(tag).map { asset =>
-      Form(of(
-        "role" -> text,
-        "contact" -> text(3),
-        "suffix" -> optional(text(3))
-      )).bindFromRequest.fold(
-        err => {
-          formatResponseData(Api.getErrorMessage("contact and role must be specified"))
-        },
-        suc => {
-          Provisioner.pluginEnabled { plugin =>
-            val (role, contact, suffix) = suc
-            plugin.makeRequest(asset.tag, role, Some(contact), suffix).map { request =>
-              AsyncResult {
-                BackgroundProcessor.send(ProvisionerProcessor(request)) { res =>
-                  val reply = res match {
-                    case (Some(error), _) =>
-                      onFailure(asset,
-                        request.profile.label,
-                        CommandResult(-100, "Error: %s".format(error.getMessage))
-                      )
-                      Api.getErrorMessage(
-                        "There was an exception processing your request: %s".format(error.getMessage),
-                        Results.InternalServerError,
-                        Some(error)
-                      )
-                    case (_, opt) =>
-                      val success = opt.getOrElse(CommandResult(-99, "No result data"))
-                      if (success.exitCode != 0) {
-                        onFailure(asset, request.profile.label, success)
-                        val msg = "There was an error processing your request. Exit Code %d\n%s".format(success.exitCode, success.output)
-                        Api.getErrorMessage(msg, Results.InternalServerError, None)
-                      } else {
-                        onSuccess(asset, request.profile)
-                        ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(0))))
-                      }
-                  }
-                  formatResponseData(reply)
-                }
-              }
-            }.getOrElse {
-              formatResponseData(Api.getErrorMessage("Invalid profile specified"))
-            }
-          }.getOrElse {
-            formatResponseData(Api.getErrorMessage("Provisioner plugin not enabled"))
-          }
-        }
-      )
-    }.getOrElse {
-      formatResponseData(Api.getErrorMessage("Specified asset tag is invalid"))
-    }
-  }(SecuritySpec(true, "infra"))
-
-
-  // POST /asset/:tag/cancel
-  def cancelAsset(tag: String) = SecureAction { implicit req =>
-    AsyncResult {
-      BackgroundProcessor.send(AssetCancelProcessor(tag)) { case(ex,res) =>
-        val rd: ResponseData = ex.map { err =>
-          Api.getErrorMessage(err.getMessage)
-        }.orElse{
-          res.get match {
-            case Left(err) => Some(err)
-            case Right(success) =>
-              Some(ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(success)))))
-          }
-        }.get
-        formatResponseData(rd)
-      }
-    }
-  }(SecuritySpec(true, "infra"))
-
   // GET /api/assets?params
   private val finder = new actions.FindAsset()
   def getAssets(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
@@ -155,19 +63,16 @@ trait AssetApi {
   def updateAsset(tag: String) = SecureAction { implicit req =>
     actions.UpdateAsset.get().execute(tag) match {
       case Left(l) => formatResponseData(l)
-      case Right(s) => formatResponseData(statusResponse(s))
+      case Right(s) => formatResponseData(Api.statusResponse(s))
     }
   }(SecuritySpec(true, "infra"))
-
-  private def statusResponse(status: Boolean, code: play.api.mvc.Results.Status = Results.Ok) =
-    ResponseData(code, JsObject(Seq("SUCCESS" -> JsBoolean(status))))
 
   // DELETE /api/asset/attribute/:attribute/:tag
   def deleteAssetAttribute(tag: String, attribute: String) = SecureAction { implicit req =>
     Api.withAssetFromTag(tag) { asset =>
       AssetLifecycle.updateAssetAttributes(asset, Map(attribute -> ""))
       .left.map(err => Api.getErrorMessage("Error deleting asset attributes", Results.InternalServerError, Some(err)))
-      .right.map(status => statusResponse(status, Results.Status(StatusValues.ACCEPTED)))
+      .right.map(status => Api.statusResponse(status, Results.Status(StatusValues.ACCEPTED)))
     }.fold(l => l, r => r).map(s => formatResponseData(s))
   }(SecuritySpec(true, "infra"))
 

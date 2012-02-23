@@ -29,9 +29,10 @@
       <li><a href="#hardware-details">Hardware Details</a></li>
       <li><a href="#lldp-info">LLDP Info</a></li>
       <li class="dropdown" data-dropdown="dropdown">
-        <a href="#" class="dropdown-toggle"><strong>Actions</strong></a>
+      <a href="#" class="dropdown-toggle"><strong>Actions</strong></a>
         <ul class="dropdown-menu">
           <li><a href="#" data-keyboard="true" data-controls-modal="asset-note">Create Note</a></li>
+          <li class="divider"></li>
           @SoftLayer.pluginEnabled.map { p =>
             @if(p.isSoftLayerAsset(aa.asset)) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
@@ -40,6 +41,11 @@
           @Provisioner.pluginEnabled.map { p =>
             @if(p.canProvision(aa.asset)) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
+            }
+          }
+          @SoftLayer.pluginEnabled.map { p =>
+            @if(p.isSoftLayerAsset(aa.asset)) {
+            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="reboot-server">Reboot Server</a></li>
             }
           }
         </ul>
@@ -496,6 +502,41 @@
   }
 </div>
 
+<div id="reboot-server" class="modal hide fade" data-modal-cleanup="rebootError">
+  <div class="modal-header">
+    <a href="#" class="close">&times;</a>
+    <h3>Server Reboot</h3>
+  </div>
+  @form(app.routes.CookieApi.rebootAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "rebootError", Symbol("data-modal") -> "reboot-server", Symbol("data-refresh") -> ".window") {
+  <div class="modal-body">
+    <p><span class="label important">Warning</span> Rebooting a production server</p>
+    <ul>
+      <li><strong>Hard</strong> - This is equivalent to pressing the reset button</li>
+      <li><strong>Soft</strong> - Graceful reboot via remote management card</li>
+    </ul>
+    <p>If that all sounds good, pick a reboot type and then click the button below</p>
+    <div class="clearfix">
+      <label for="type">Reboot Type</label>
+      <div class="input">
+        <select name="type" id="type">
+          <option value="" selected="selected"></option>
+          <option value="soft">Soft</option>
+          <option value="hard">Hard</option>
+        </select>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="rebootError" style="margin-right: 15px;"></label>
+      <span class="alert-message error hide" id="rebootError"></span>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn">Reboot Server</button>
+    <button type="reset" data-closes-modal="reboot-server" class="btn primary">Go back to browsing tumblr</button>
+  </div>
+  }
+</div>
+
 <div id="provision-server" class="modal hide fade" data-modal-cleanup="provisionError">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
@@ -553,7 +594,6 @@
   </div>
   }
 </div>
-
 
 <div id="asset-note" class="modal hide fade" data-modal-cleanup="noteError">
   <div class="modal-header">
