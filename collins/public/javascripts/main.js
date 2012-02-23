@@ -182,7 +182,7 @@ $(document).ready(function() {
         refresher(refreshSelector);
       }).error(function(d) {
         var response = {};
-        var response = try {
+        try {
           response = JSON.parse(d.responseText);
         } catch(ex) {
           response = {
