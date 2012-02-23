@@ -92,3 +92,32 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
     case e => throw new IllegalStateException("Unknown asset status found: " + e)
   }
 }
+
+// Manages somewhat specific transitions for a given environment
+class SoftLayerStateManager extends com.tumblr.play.state.Manager {
+  type T = Asset
+
+  import models.{AssetLifecycle, AssetType, MetaWrapper, Model}
+  override def transition(old: Asset, current: Asset): Unit = {
+    val types = Map("SERVER_NODE" -> Set("PRIMARY_ROLE","POOL"))
+    AssetType.findById(current.asset_type)
+      .map(at => AssetType.Enum(at.getId))
+      .filter(at => types.contains(at.toString))
+      .filter(_ => current.status == 2)
+      .filter { at =>
+        types(at.toString).foldLeft(0) { case(found, metaName) =>
+          found + MetaWrapper.findMeta(current, metaName).map(_ => 1).getOrElse(0)
+        } == types(at.toString).size
+      }
+      .foreach { t =>
+        val options = Map(
+          "status" -> "Allocated",
+          "reason" -> "Triggered by rule"
+        )
+        AssetLifecycle.updateAssetStatus(current, options)
+      }
+  }
+  override def canTransition(a: AnyRef): Boolean = {
+    a.isInstanceOf[Asset]
+  }
+}

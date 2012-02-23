@@ -46,6 +46,41 @@ $(document).ready(function() {
     });
   });
 
+  $("[data-aggregate]").each(function() {
+    var e = $(this);
+    var aggregates = e.attr('data-aggregate').split(",").map(function(v) { return elId(v); });
+    var onChange = function() {
+      var found = [];
+      aggregates.forEach(function(id) {
+        $(id).each(function() {
+          var a = $(this);
+          var foundValue = false;
+          a.find('option:selected[data-aggregate-value]').each(function() {
+            found.push($(this).attr('data-aggregate-value'));
+            foundValue = true;
+          });
+          if (!foundValue) {
+            found.push(a.val());
+          }
+        });
+      });
+      var newFound = [];
+      found.forEach(function(v) {
+        if (v.length > 0) {
+          newFound.push(v);
+        }
+      });
+      e.text(newFound.join('-'));
+    };
+    aggregates.forEach(function(v) {
+      var a = $(v);
+      a.each(function() {
+        $(this).change(onChange);
+        $(this).keyup(onChange);
+      });
+    });
+  });
+
   // Captures alt-key value in a string and advances to specified href once
   // entered. e.g <a data-altkey="yes" href="/step2">Yes</a>
   // would send you to /step2 when you typed in 'yes'
@@ -64,6 +99,29 @@ $(document).ready(function() {
       }
     });
   });
+
+  $("[data-show]").each(function() {
+    var e = $(this);
+    var selectors = e.attr('data-show').split(',');
+    var showSelectors = selectors.map(function(name) { return elId(name) });
+    e.change(function() {
+      e.find('option:selected').each(function() {
+        var el = $(this);
+	if (el.attr('data-show-display') == "true") {
+          showSelectors.forEach(function(v) { $(v).show(); });
+	} else {
+          showSelectors.forEach(function(v) {
+	    $(v).hide();
+	    $(v).find("input").each(function() {
+              $(this).val("");
+	      $(this).keyup();
+            });
+          });
+	}
+      });
+    });
+  });
+
 
   // if this is clicked it should close a modal
   $("[data-closes-modal]").each(function() {
@@ -106,29 +164,48 @@ $(document).ready(function() {
         e.attr('running', true);
       }
       var $form = $(this),
-                  form = this,
-                  url = $form.attr('action'),
-		  data = $form.serialize(),
-		  modalEl = $form.attr('data-modal'),
-		  errorEl = $form.attr('data-error'),
-		  refreshSelector = $form.attr('data-refresh');
+      form = this,
+      url = $form.attr('action'),
+      data = $form.serialize(),
+      modalEl = $form.attr('data-modal'),
+      errorEl = $form.attr('data-error'),
+      refreshSelector = $form.attr('data-refresh');
 
       $.post(url, data).success(function(d) {
-	form.reset();
+        form.reset();
         if (errorEl) {
-	  $(elId(errorEl)).empty().hide();
-	}
-	if (modalEl) {
-	  $(elId(modalEl)).modal('hide');
-	}
+          $(elId(errorEl)).empty().hide();
+        }
+        if (modalEl) {
+          $(elId(modalEl)).modal('hide');
+        }
         refresher(refreshSelector);
       }).error(function(d) {
-	var response = JSON.parse(d.responseText);
-	if (errorEl) {
-          $(elId(errorEl)).empty().append(response.data.message).show();
-	} else {
-	  alert(response.message);
-	}
+        var response = {};
+        try {
+          response = JSON.parse(d.responseText);
+        } catch(ex) {
+          response = {
+            data: {
+              message: "An internal error occurred. See collins server logs."
+            }
+          }
+        }
+        if (errorEl) {
+          var classes = $(elId(errorEl)).attr('data-on-error');
+          if (classes) { $(elId(errorEl)).removeClass(classes); }
+          if (d.status != 400) {
+            var html = "";
+            if (classes) { html += '<div class="' + classes + '">Error</div>'; }
+            html += '<pre>' + response.data.message + '</pre>';
+            $(elId(errorEl)).empty().append(html).show();
+          } else {
+            if (classes) { $(elId(errorEl)).addClass(classes); }
+            $(elId(errorEl)).empty().append(response.data.message).show();
+          }
+        } else {
+          alert(response.message);
+        }
       }).complete(function() {
         e.removeAttr('running');
         e.find('[type=submit]').each(function() {
