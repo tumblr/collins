@@ -1,7 +1,7 @@
 package controllers
 
-import com.tumblr.play.{CommandResult, ProvisionerProfile, RebootType}
-
+import com.tumblr.play.{CommandResult, ProvisionerProfile}
+import forms._
 import models._
 import util._
 
@@ -30,46 +30,6 @@ trait AssetWebApi {
         formatResponseData(rd)
       }
     }
-  }}(SecuritySpec(true, "infra"))
-
-  def rebootAsset(tag: String) = Authenticated { user => Action { implicit req =>
-    def onSuccess(asset: Asset, msg: String) = {
-      UserTattler.notice(asset, user, msg)
-      Api.statusResponse(true)
-    }
-    def onFailure(asset: Asset, msg: String) = {
-      UserTattler.warning(asset, user, msg)
-      Api.getErrorMessage(msg)
-    }
-    val errMsg = "Reboot type (soft/hard) must be specified"
-    val msg = Form(of("type" -> text)).bindFromRequest.fold(
-      err => {
-        Api.getErrorMessage(errMsg)
-      },
-      suc => suc match {
-        case RebootType(rebootType) =>
-          Asset.findByTag(tag).map { asset =>
-            SoftLayer.pluginEnabled.map { plugin =>
-              plugin.softLayerId(asset).map { id =>
-                plugin.rebootServer(id, rebootType)() match {
-                  case true =>
-                    onSuccess(asset, "Successfull reboot")
-                  case false =>
-                    onFailure(asset, "Unable to do %s reboot".format(rebootType))
-                }
-              }.getOrElse {
-                Api.getErrorMessage("Asset with tag %s is not a softlayer asset".format(asset.tag))
-              }
-            }.getOrElse {
-              Api.getErrorMessage("SoftLayer plugin not enabled")
-            }
-          }.getOrElse {
-            Api.getErrorMessage("Invalid Asset tag specified")
-          }
-        case _ =>
-          Api.getErrorMessage(errMsg)
-      })
-    formatResponseData(msg)
   }}(SecuritySpec(true, "infra"))
 
   // POST /asset/:tag/provision
