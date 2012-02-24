@@ -14,12 +14,12 @@ import com.tumblr.play.{PowerAction, PowerOff, PowerOn, PowerCycle, RebootSoft, 
 trait AssetManagementApi {
   this: Api with SecureController =>
 
-  def powerManagement(tag: String) = Authenticated { user => Action { implicit req =>
-    def onSuccess(asset: Asset, msg: String) = {
+  object PowerHelper {
+    def onSuccess(asset: Asset, msg: String, user: Option[User]) = {
       UserTattler.notice(asset, user, msg)
       Api.statusResponse(true)
     }
-    def onFailure(asset: Asset, msg: String) = {
+    def onFailure(asset: Asset, msg: String, user: Option[User]) = {
       UserTattler.warning(asset, user, msg)
       Api.getErrorMessage(msg)
     }
@@ -33,12 +33,30 @@ trait AssetManagementApi {
         case _ => None
       }
     }
+  }
+
+  def powerStatus(tag: String) = Authenticated { user => Action { implicit req =>
+    val response = PowerManagement.pluginEnabled { plugin =>
+      Asset.findByTag(tag).map { asset =>
+        plugin.powerState(asset)() match {
+          case success if success.isSuccess =>
+            ResponseData(Results.Ok, JsObject(Seq("MESSAGE" -> JsString(success.description))))
+          case failure =>
+            PowerHelper.onFailure(asset,
+              "Failed to get power status: %s".format(failure.description), user)
+        }
+      }.getOrElse(Api.getErrorMessage("Invalid asset tag specified", Results.NotFound))
+    }.getOrElse(Api.getErrorMessage("PowerManagement plugin not enabled"))
+    formatResponseData(response)
+  }}(SecuritySpec(true, Nil))
+
+  def powerManagement(tag: String) = Authenticated { user => Action { implicit req =>
     val errMsg = "Power management action must be one of: off, on, rebootSoft, rebootHard"
     val response = Form(of("action" -> of[PowerAction])).bindFromRequest.fold(
       err => Api.getErrorMessage(errMsg),
       action => PowerManagement.pluginEnabled { plugin =>
         Asset.findByTag(tag).map { asset =>
-          hasPermissions(asset, action) match {
+          PowerHelper.hasPermissions(asset, action) match {
             case Some(msg) =>
               Api.getErrorMessage(msg)
             case None =>
@@ -51,9 +69,13 @@ trait AssetManagementApi {
               }
               future() match {
                 case success if success.isSuccess =>
-                  onSuccess(asset, "Successful power event: %s".format(action.toString))
+                  PowerHelper.onSuccess(asset, "Successful power event: %s".format(action.toString),
+                    user)
                 case failure =>
-                  onFailure(asset, "Failed power event %s: %s".format(action.toString, failure.description))
+                  PowerHelper.onFailure(
+                    asset,
+                    "Failed power event %s: %s".format(action.toString, failure.description),
+                    user)
               }
           }
         }.getOrElse(Api.getErrorMessage("Invalid asset tag specified", Results.NotFound))

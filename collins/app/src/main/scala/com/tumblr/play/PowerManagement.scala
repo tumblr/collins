@@ -47,9 +47,8 @@ trait PowerManagement extends Plugin {
     def isSuccess: Boolean
     def description: String
   }
-  case object Success extends PowerCommandStatus {
+  case class Success(override val description: String = "Command successful") extends PowerCommandStatus {
     override val isSuccess = true
-    override val description = "Command successful"
   }
   case object RateLimit extends PowerCommandStatus {
     override val isSuccess = false
@@ -62,6 +61,7 @@ trait PowerManagement extends Plugin {
   def powerCycle(e: AssetWithTag): PowerStatus
   def powerOff(e: AssetWithTag): PowerStatus
   def powerOn(e: AssetWithTag): PowerStatus
+  def powerState(e: AssetWithTag): PowerStatus
   def rebootHard(e: AssetWithTag): PowerStatus
   def rebootSoft(e: AssetWithTag): PowerStatus
 }

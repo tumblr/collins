@@ -18,6 +18,7 @@ GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
 POST    /asset/:tag/cancel          app.CookieApi.cancelAsset(tag: String)
 POST    /asset/:tag/provision       app.CookieApi.provisionAsset(tag: String)
 POST    /asset/:tag/power           app.CookieApi.powerManagement(tag: String)
+GET     /asset/:tag/power           app.CookieApi.powerStatus(tag: String)
 
 # Admin pages
 GET     /admin/stats                controllers.Admin.stats
@@ -39,6 +40,7 @@ GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?=
 DELETE  /api/asset/:tag/attribute/:attribute   app.Api.deleteAssetAttribute(tag: String, attribute: String)
 POST    /api/asset/:tag/ipmi        app.Api.updateIpmi(tag: String)
 POST    /api/asset/:tag/power       app.Api.powerManagement(tag: String)
+GET     /api/asset/:tag/power       app.Api.powerStatus(tag: String)
 
 PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)

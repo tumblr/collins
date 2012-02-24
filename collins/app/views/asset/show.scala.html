@@ -65,7 +65,7 @@
       <tbody>
         <tr>
           <th>Hostname</th>
-          <td>@aa.asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse{"Unknown"}</td>
+          <td>@aa.asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse{Unknown}</td>
           <td>Hostname</td>
         </tr>
         <tr>
@@ -251,6 +251,12 @@
 
   <div class="tab-pane" id="ipmi-info">
     <h3>IPMI Info</h3>
+    @PowerManagement.pluginEnabled.map { p =>
+    <div class="clearfix" style="float: right; margin-right: 100px;">
+      <button class="primary btn" data-remote="/asset/@aa.asset.tag/power" data-insert="power-status" data-extract="data.MESSAGE">Power Status</button>
+      <span id="power-status"></span>
+    </div>
+    }
     @if(aa.ipmi.nonEmpty) {
     <table class="zebra-striped condensed-table" id="ipmiInfo">
       <thead>
@@ -276,7 +282,7 @@
       </tbody>
     </table>
     } else {
-    <div>None Available</div>
+    <div class="clearfix" style="margin-top: 15px;">None Available</div>
     }
   </div>
 
