@@ -222,12 +222,36 @@ $(document).ready(function() {
     var remoteUrl = e.attr('data-remote');
     var method = e.attr('data-method') || 'GET';
     var refreshSelector = e.attr('data-refresh');
+    var insertSelector = e.attr('data-insert');
+    var extractor = e.attr('data-extract');
     e.click(function() {
+      var button = $(this);
+      button.attr('disabled', 'disabled');
+      button.addClass('disabled');
       $.ajax({
         type: method,
         url: remoteUrl,
         success: function(o) {
-          refresher(refreshSelector);
+          if (refreshSelector) {
+            refresher(refreshSelector);
+          } else if (insertSelector && extractor) {
+            var tmpEx = extractor.split(".")
+            var tmp = o;
+            try {
+              tmpEx.forEach(function(v) {
+                tmp = tmp[v];
+              })
+              $(elId(insertSelector)).empty().show().text(tmp);
+            } catch(ex) {
+              $(elId(insertSelector)).empty().show().text("Invalid extractor specified");
+            }
+          } else {
+            console.log(o);
+          }
+        },
+        complete: function() {
+          button.removeAttr('disabled');
+          button.removeClass('disabled');
         }
       });
     });

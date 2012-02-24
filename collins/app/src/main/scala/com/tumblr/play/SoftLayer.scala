@@ -129,6 +129,11 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
   override def powerOn(e: AssetWithTag): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerOn.json")
   }
+  override def powerState(e: AssetWithTag): PowerStatus = {
+    doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/getServerPowerState.json", Some({ s =>
+      s.replace("\"", "")
+    }))
+  }
   override def rebootHard(e: AssetWithTag): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/rebootHard.json")
   }
@@ -204,7 +209,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     }
   }
 
-  private def doPowerOperation(e: AssetWithTag, url: String): PowerStatus = {
+  private def doPowerOperation(e: AssetWithTag, url: String, captureFn: Option[String => String] = None): PowerStatus = {
     softLayerId(e).map { id =>
       val request = RequestBuilder()
         .url(softLayerUrl(url.format(id)))
@@ -214,7 +219,10 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
         Response(r).contentString.toLowerCase match {
           case rl if rl.contains("at this time") => RateLimit
           case err if err.contains("error") => Failure()
-          case _ => Success
+          case responseString => captureFn match {
+            case None => Success()
+            case Some(fn) => Success(fn(responseString))
+          }
         }
       } handle { 
         case e => Failure("IPMI may not be enabled, internal error")
