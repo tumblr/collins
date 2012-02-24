@@ -51,7 +51,7 @@ trait AssetManagementApi {
   }}(SecuritySpec(true, Nil))
 
   def powerManagement(tag: String) = Authenticated { user => Action { implicit req =>
-    val errMsg = "Power management action must be one of: off, on, rebootSoft, rebootHard"
+    val errMsg = "Power management action must be one of: powerOff, powerOn, powerCycle, rebootSoft, rebootHard"
     val response = Form(of("action" -> of[PowerAction])).bindFromRequest.fold(
       err => Api.getErrorMessage(errMsg),
       action => PowerManagement.pluginEnabled { plugin =>
