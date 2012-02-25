@@ -1,6 +1,7 @@
 package util
 
 import play.api.{Configuration, Mode, Play}
+import models.Asset
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -23,6 +24,17 @@ object Helpers {
   def formatPowerPort(label: String) = {
     import models.AssetMeta.Enum.PowerPort
     PowerPort.toString + "_" + label
+  }
+
+  def ignoreDangerousCommand(tag: String): Boolean = {
+    getFeature("ignoreDangerousCommands")
+      .map(_.split(",").toSet[String].map(_.toLowerCase))
+      .filter(_.contains(tag.toLowerCase))
+      .map(_ => true)
+      .getOrElse(false)
+  }
+  def ignoreDangerousCommand(asset: Asset): Boolean = {
+    ignoreDangerousCommand(asset.tag)
   }
 
   def mapToQueryString(prefix: String, map: Map[String, Seq[String]]): String = {
