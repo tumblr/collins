@@ -35,6 +35,8 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
     case CancelledState() =>
       state = DecommissionedState()
       this
+    case DecommissionedState() =>
+      this
   }
 
   def cancel() = transition("cancel") {
