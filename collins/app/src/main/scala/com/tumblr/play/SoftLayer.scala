@@ -13,15 +13,12 @@ import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse, QueryStrin
 import org.jboss.netty.util.CharsetUtil.UTF_8
 import scala.util.control.Exception.allCatch
 
-trait SoftLayerInterface {
+trait SoftLayerInterface extends PowerManagement {
   val SOFTLAYER_API_HOST = "api.softlayer.com:443"
+
   protected val logger = Logger(getClass)
   protected def username: String
   protected def password: String
-
-  type AssetWithTag = {
-    def tag: String
-  }
 
   // Informational API
   def isSoftLayerAsset(asset: AssetWithTag): Boolean
@@ -34,7 +31,6 @@ trait SoftLayerInterface {
   // Interactive API
   def cancelServer(id: Long, reason: String = "No longer needed"): Future[Long]
   def getTicketSubjects(): Seq[Tuple2[Long,String]]
-  def rebootServer(id: Long, rebootType: RebootType): Future[Boolean]
   def setNote(id: Long, note: String): Future[Boolean]
 
   protected def softLayerApiUrl: String =
@@ -124,20 +120,25 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     }
   }
 
-  override def rebootServer(id: Long, rebootType: RebootType = RebootSoft): Future[Boolean] = {
-    val url = rebootType match {
-      case RebootSoft => softLayerUrl("/SoftLayer_Hardware_Server/%d/rebootSoft.json".format(id))
-      case RebootHard => softLayerUrl("/SoftLayer_Hardware_Server/%d/rebootHard.json".format(id))
-    }
-    val request = RequestBuilder()
-      .url(url)
-      .setHeader("Content-Type", "application/json")
-      .buildGet();
-    makeRequest(request) map { r =>
-      true
-    } handle {
-      case e => false
-    }
+  override def powerCycle(e: AssetWithTag): PowerStatus = {
+    doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerCycle.json")
+  }
+  override def powerOff(e: AssetWithTag): PowerStatus = {
+    doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerOff.json")
+  }
+  override def powerOn(e: AssetWithTag): PowerStatus = {
+    doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerOn.json")
+  }
+  override def powerState(e: AssetWithTag): PowerStatus = {
+    doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/getServerPowerState.json", Some({ s =>
+      s.replace("\"", "")
+    }))
+  }
+  override def rebootHard(e: AssetWithTag): PowerStatus = {
+    doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/rebootHard.json")
+  }
+  override def rebootSoft(e: AssetWithTag): PowerStatus = {
+    doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/rebootSoft.json")
   }
 
   override def setNote(id: Long, note: String): Future[Boolean] = {
@@ -206,6 +207,27 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     client(request) ensure {
       client.release()
     }
+  }
+
+  private def doPowerOperation(e: AssetWithTag, url: String, captureFn: Option[String => String] = None): PowerStatus = {
+    softLayerId(e).map { id =>
+      val request = RequestBuilder()
+        .url(softLayerUrl(url.format(id)))
+        .setHeader("Accept", "application/json")
+        .buildGet();
+      makeRequest(request).map { r =>
+        Response(r).contentString.toLowerCase match {
+          case rl if rl.contains("at this time") => RateLimit
+          case err if err.contains("error") => Failure()
+          case responseString => captureFn match {
+            case None => Success()
+            case Some(fn) => Success(fn(responseString))
+          }
+        }
+      } handle { 
+        case e => Failure("IPMI may not be enabled, internal error")
+      }
+    }.getOrElse(Future(Failure("Asset can not be managed with SoftLayer API")))
   }
 
 }

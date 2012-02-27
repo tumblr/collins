@@ -103,14 +103,11 @@ trait AssetLogApi {
       ).bindFromRequest.fold(
         error => Some("Message must not be empty"),
         success => {
-          val typeString = success._2.getOrElse(DefaultMessageType.toString).toUpperCase
-          val source = AssetLog.Sources.withName(success._3.map(s => "USER").getOrElse("API"))
-          val escapedMessage = Jsoup.clean(success._1, Whitelist.basicWithImages())
-          val msg = if (source == AssetLog.Sources.User) {
-            "%s: %s".format(username, escapedMessage)
-          } else {
-            escapedMessage
-          }
+          val (f_msg, f_type, f_source) = success
+          val typeString = f_type.getOrElse(DefaultMessageType.toString).toUpperCase
+          val source = AssetLog.Sources.withName(f_source.map(s => "USER").getOrElse("API"))
+          val escapedMessage = Jsoup.clean(f_msg, Whitelist.basicWithImages())
+          val msg = "%s: %s".format(username, escapedMessage)
           try {
             val mtype = AssetLog.MessageTypes.withName(typeString)
             Model.withConnection { implicit con =>
@@ -135,7 +132,7 @@ trait AssetLogApi {
       }).map { err =>
         Left(Api.getErrorMessage(err))
       }.getOrElse {
-        Right(ResponseData(Results.Created, JsObject(Seq("SUCCESS" -> JsBoolean(true)))))
+        Right(Api.statusResponse(true, Results.Created))
       }
     }.fold(l => l, r => r)
     formatResponseData(responseData)

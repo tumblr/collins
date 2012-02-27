@@ -29,7 +29,7 @@ case class AssetUpdateProcessor(tag: String, userTimeout: Option[Duration] = Non
 
 case class ProvisionerProcessor(request: ProvisionerRequest, userTimeout: Option[Duration] = None)(implicit req: Request[AnyContent]) extends BackgroundProcess[CommandResult]
 {
-  override def defaultTimeout: Duration = Duration.parse("60 seconds")
+  override def defaultTimeout: Duration = Duration.parse("90 seconds")
   val timeout = userTimeout.getOrElse(defaultTimeout)
 
   def run(): CommandResult = {
