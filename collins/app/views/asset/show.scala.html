@@ -3,7 +3,7 @@
 @import helper._
 @import util.notice
 @import _root_.util.conversions._
-@import _root_.util.{Helpers, Provisioner, SoftLayer}
+@import _root_.util.{Helpers, PowerManagement, Provisioner, SoftLayer}
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
@@ -38,14 +38,12 @@
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
             }
           }
+          @PowerManagement.pluginEnabled.map { p =>
+            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="power-server">Power Management</a></li>
+          }
           @Provisioner.pluginEnabled.map { p =>
             @if(p.canProvision(aa.asset)) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
-            }
-          }
-          @SoftLayer.pluginEnabled.map { p =>
-            @if(p.isSoftLayerAsset(aa.asset)) {
-            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="reboot-server">Reboot Server</a></li>
             }
           }
         </ul>
@@ -67,7 +65,7 @@
       <tbody>
         <tr>
           <th>Hostname</th>
-          <td>@aa.asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse{"Unknown"}</td>
+          <td>@aa.asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse{Unknown}</td>
           <td>Hostname</td>
         </tr>
         <tr>
@@ -253,6 +251,12 @@
 
   <div class="tab-pane" id="ipmi-info">
     <h3>IPMI Info</h3>
+    @PowerManagement.pluginEnabled.map { p =>
+    <div class="clearfix" style="float: right; margin-right: 100px;">
+      <button class="primary btn" data-remote="/asset/@aa.asset.tag/power" data-insert="power-status" data-extract="data.MESSAGE">Power Status</button>
+      <span id="power-status"></span>
+    </div>
+    }
     @if(aa.ipmi.nonEmpty) {
     <table class="zebra-striped condensed-table" id="ipmiInfo">
       <thead>
@@ -278,7 +282,7 @@
       </tbody>
     </table>
     } else {
-    <div>None Available</div>
+    <div class="clearfix" style="margin-top: 15px;">None Available</div>
     }
   </div>
 
@@ -502,37 +506,43 @@
   }
 </div>
 
-<div id="reboot-server" class="modal hide fade" data-modal-cleanup="rebootError">
+<div id="power-server" class="modal hide fade" data-modal-cleanup="powerError">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
-    <h3>Server Reboot</h3>
+    <h3>Server Power Management</h3>
   </div>
-  @form(app.routes.CookieApi.rebootAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "rebootError", Symbol("data-modal") -> "reboot-server", Symbol("data-refresh") -> ".window") {
+  @form(app.routes.CookieApi.powerManagement(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "powerError", Symbol("data-modal") -> "power-server", Symbol("data-refresh") -> ".window") {
   <div class="modal-body">
-    <p><span class="label important">Warning</span> Rebooting a production server</p>
+    <p><span class="label important">Warning</span> This is a disruptive action</p>
     <ul>
-      <li><strong>Hard</strong> - This is equivalent to pressing the reset button</li>
-      <li><strong>Soft</strong> - Graceful reboot via remote management card</li>
+      <li><strong>Hard Reboot</strong> - This is equivalent to pressing the reset button</li>
+      <li><strong>Soft Reboot</strong> - Graceful reboot via IPMI</li>
+      <li><strong>Power Off</strong> - Power off the server via IPMI</li>
+      <li><strong>Power On</strong> - Power on the server via IPMI</li>
+      <li><strong>Power Cycle</strong> - Equivalent to unplugging the server from the power strip then plugging it back in.</li>
     </ul>
     <p>If that all sounds good, pick a reboot type and then click the button below</p>
+    <p><strong>Note</strong> If a reboot command has been issued successfully in the past 20 minutes, another power management action will not be allowed.</p>
     <div class="clearfix">
-      <label for="type">Reboot Type</label>
+      <label for="action">PM Action</label>
       <div class="input">
-        <select name="type" id="type">
+        <select name="action" id="action">
           <option value="" selected="selected"></option>
-          <option value="soft">Soft</option>
-          <option value="hard">Hard</option>
+          <option value="rebootSoft">Soft Reboot</option>
+          <option value="rebootHard">Hard Reboot</option>
+          <option value="powerOff">Power Off</option>
+          <option value="powerOn">Power On</option>
+          <option value="powerCycle">Power Cycle</option>
         </select>
       </div>
     </div>
     <div class="clearfix">
-      <label for="rebootError" style="margin-right: 15px;"></label>
-      <span class="alert-message error hide" id="rebootError"></span>
+      <span class="alert-message error hide" id="powerError" style="box-sizing: border-box; float: left; width: 100%;"></span>
     </div>
   </div>
   <div class="modal-footer">
-    <button type="submit" class="btn">Reboot Server</button>
-    <button type="reset" data-closes-modal="reboot-server" class="btn primary">Go back to browsing tumblr</button>
+    <button type="submit" class="btn">Potentially Mess Up Server</button>
+    <button type="reset" data-closes-modal="power-server" class="btn primary">Go back to browsing tumblr</button>
   </div>
   }
 </div>
