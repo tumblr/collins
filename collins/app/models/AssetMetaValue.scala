@@ -46,7 +46,7 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
   }
 
   // FIXME move to config
-  private[this] lazy val ExcludedAttributes: Set[Long] = Set("SHA").map { v =>
+  private[this] lazy val ExcludedAttributes: Set[Long] = Set("CONFIG_SHA", "SHA", "TUMBLR_SHA").map { v =>
     AssetMeta.findByName(v).map(_.getId).getOrElse(-1L)
   }
   def purge(mvs: Seq[AssetMetaValue])(implicit con: Connection) = {
