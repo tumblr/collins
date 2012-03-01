@@ -24,12 +24,6 @@ object SoftLayerClientSpec extends mutable.Specification {
       //val res = client.setNote(101410, "Cancelled server per WEBOPS-630")()
       true
     }
-    "Support tickets" in {
-      val client = new SoftLayerPlugin(Play.maybeApplication.get)
-      val body = "We are working on using the API to submit tickets. Please disregard"
-      val res = client.createTicket()
-      true
-    }
   }
 
   def setup = {

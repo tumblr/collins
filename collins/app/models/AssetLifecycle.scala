@@ -150,7 +150,7 @@ object AssetLifecycle {
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
 
-    allCatch[Boolean].either {
+    val res = allCatch[Boolean].either {
       val values = Seq(
         AssetMetaValue(asset, RackPosition, rackpos),
         AssetMetaValue(asset, PowerPort, 0, power1),
@@ -159,11 +159,16 @@ object AssetLifecycle {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
-        AssetStateMachine(asset).update().executeUpdate()
-        MetaWrapper.createMeta(asset, filtered)
-        true
+        AssetStateMachine(asset).update().executeUpdate() match {
+          case Some(newAsset) =>
+            MetaWrapper.createMeta(newAsset, filtered)
+            true
+          case None =>
+            false
+        }
       }
-    }.left.map(e => handleException(asset, "Exception updating asset", e))
+    }
+    res.left.map(e => handleException(asset, "Exception updating asset", e))
   }
 
   protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
