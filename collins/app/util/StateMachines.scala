@@ -69,9 +69,13 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
       this
   }
 
-  def executeUpdate()(implicit con: Connection) = transition("executeUpdate") {
+  def executeUpdate()(implicit con: Connection): Option[Asset] = transition("executeUpdate") {
     case DecommissionedState() =>
-      val res = Asset.update(asset.copy(status = stateToStatus().id, updated = Some(new Date().asTimestamp)))
+      val newAsset = asset.copy(status = stateToStatus().id, updated = Some(new Date().asTimestamp))
+      val res = Asset.update(newAsset) match {
+        case 1 => Some(newAsset)
+        case n => None
+      }
       Helpers.haveFeature("deleteIpmiOnDecommission", false) match {
         case None | Some(true) =>
           IpmiInfo.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
@@ -84,7 +88,11 @@ class AssetStateMachine(asset: Asset) extends StateMachine {
       }
       res
     case _ =>
-      Asset.update(asset.copy(status = stateToStatus().id, updated = Some(new Date().asTimestamp)))
+      val newAsset = asset.copy(status = stateToStatus().id, updated = Some(new Date().asTimestamp))
+      Asset.update(newAsset) match {
+        case 1 => Some(newAsset)
+        case n => None
+      }
   }
 
   private def stateToStatus() = state match {

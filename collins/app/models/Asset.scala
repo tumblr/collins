@@ -93,7 +93,7 @@ object Asset extends Magic[Asset](Some("asset")) {
   override def create(asset: Asset)(implicit con: Connection) = {
     super.create(asset) match {
       case newasset =>
-        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag))
+        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag.toLowerCase))
         newasset
     }
   }
@@ -101,7 +101,7 @@ object Asset extends Magic[Asset](Some("asset")) {
   override def update(asset: Asset)(implicit con: Connection) = {
     super.update(asset) match {
       case updated =>
-        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag))
+        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag.toLowerCase))
         Cache.invalidate("Asset.findById(%d)".format(asset.getId))
         updated
     }

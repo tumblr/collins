@@ -30,7 +30,6 @@ trait SoftLayerInterface extends PowerManagement {
 
   // Interactive API
   def cancelServer(id: Long, reason: String = "No longer needed"): Future[Long]
-  def getTicketSubjects(): Seq[Tuple2[Long,String]]
   def setNote(id: Long, note: String): Future[Boolean]
 
   protected def softLayerApiUrl: String =
@@ -156,50 +155,6 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     } handle {
       case e => false
     }
-  }
-
-  def createTicket(): Unit = {
-    val subjects = getTicketSubjects()
-    subjects.foreach { s =>
-      println(s)
-    }
-  }
-
-  def getTicketSubjects(): Seq[Tuple2[Long,String]] = {
-    cachePlugin.getOrElseUpdate("ticketSubjects", {
-      val url = softLayerUrl("/SoftLayer_Ticket_Subject/getAllObjects")
-      val request = RequestBuilder()
-        .url(url)
-        .setHeader("Content-Type", "application/json")
-        .buildGet()
-      val future = makeRequest(request) map { r =>
-        val content = Response(r).contentString
-        val json = Json.parse(content)
-        json match {
-          case JsArray(values) =>
-            try {
-              values.foldLeft(Seq[Tuple2[Long,String]]()) { case (total, current) =>
-                val id = (current \ "id").as[Long]
-                val name = (current \ "name").as[String]
-                val tuple = (id, name)
-                Seq(tuple) ++ total
-              }.sortBy(_._2)
-            } catch {
-              case e =>
-                logger.warn("Unable to get ticket subjects, invalid format")
-                Seq()
-            }
-          case n =>
-            logger.warn("Unexpected response from API")
-            Seq()
-        }
-      } handle {
-        case e =>
-          logger.warn("Error getting ticket subjects", e)
-          Seq()
-      }
-      future()
-    })
   }
 
   protected def makeRequest(request: HttpRequest): Future[HttpResponse] = {
