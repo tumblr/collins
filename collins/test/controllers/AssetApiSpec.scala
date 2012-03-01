@@ -87,8 +87,6 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         result must haveJsonData.which { txt =>
           txt must /("data") */("SUCCESS" -> true)
         }
-        val req2 = FakeRequest("GET", assetUrl)
-        val result2 = Extract.from(api.getAsset(assetTag).apply(req2))
         getAsset() must haveJsonData.which { txt =>
           txt must /("data") */("ASSET")/("STATUS" -> "Unallocated")
           txt must /("data") */("ATTRIBS") */("0") */("RACK_POSITION" -> "rack 1")

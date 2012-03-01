@@ -1,6 +1,5 @@
 package models
 
-import util.AssetStateMachine
 import test.ApplicationSpecification
 
 import org.specs2._
@@ -27,7 +26,7 @@ class AssetSpec extends ApplicationSpecification {
           val maybeAsset = Asset.findByTag(assetTag)
           maybeAsset must beSome[Asset]
           val realAsset = maybeAsset.get
-          AssetStateMachine(realAsset).update().executeUpdate() mustEqual 1
+          Asset.update(realAsset.copy(status = Status.Enum.New.id))
           Asset.findByTag(assetTag).map { a =>
             a.getStatus().getId mustEqual(Status.Enum.New.id)
           }.getOrElse(failure("Couldn't find asset but expected to"))
