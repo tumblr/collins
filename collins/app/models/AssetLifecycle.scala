@@ -57,7 +57,7 @@ object AssetLifecycle {
     try {
       Model.withTransaction { implicit con =>
         InternalTattler.informational(asset, None, reason, con)
-        AssetStateMachine(asset).decommission().executeUpdate()
+        AssetStateMachine(asset).decommission()
         InternalTattler.informational(asset, None, "Asset decommissioned successfully", con)
       }
       Right(true)
@@ -77,8 +77,18 @@ object AssetLifecycle {
   protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     allCatch[Boolean].either {
       Model.withTransaction { implicit con =>
-        AssetStateMachine(asset).update().executeUpdate()
-        InternalTattler.informational(asset, None, "Asset state updated")
+        val nextState = Status.Enum(asset.status) match {
+          case Status.Enum.Incomplete => Status.Enum.New
+          case Status.Enum.New => Status.Enum.Unallocated
+          case Status.Enum.Unallocated => Status.Enum.Allocated
+          case Status.Enum.Allocated => Status.Enum.Cancelled
+          case Status.Enum.Cancelled => Status.Enum.Decommissioned
+          case Status.Enum.Maintenance => Status.Enum.Unallocated
+          case n => n
+        }
+        val newAsset = asset.copy(status = nextState.id)
+        Asset.update(newAsset)
+        InternalTattler.informational(newAsset, None, "Asset state updated")
         true
       }
     }.left.map(e => handleException(asset, "Error saving values or in state transition", e))
@@ -159,13 +169,10 @@ object AssetLifecycle {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
-        AssetStateMachine(asset).update().executeUpdate() match {
-          case Some(newAsset) =>
-            MetaWrapper.createMeta(newAsset, filtered)
-            true
-          case None =>
-            false
-        }
+        val newAsset = asset.copy(status = Status.Enum.Unallocated.id)
+        Asset.update(newAsset)
+        MetaWrapper.createMeta(newAsset, filtered)
+        true
       }
     }
     res.left.map(e => handleException(asset, "Exception updating asset", e))
@@ -200,8 +207,9 @@ object AssetLifecycle {
         }
         AssetMetaValue.create(AssetMetaValue(asset, AssetMeta.Enum.ChassisTag.id, chassis_tag))
         MetaWrapper.createMeta(asset, filtered)
-        AssetStateMachine(asset).update().executeUpdate()
-        InternalTattler.informational(asset, None,
+        val newAsset = asset.copy(status = Status.Enum.New.id)
+        Asset.update(newAsset)
+        InternalTattler.informational(newAsset, None,
           "Parsing and storing LSHW data succeeded",
           con
         )

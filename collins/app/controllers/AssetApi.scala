@@ -78,7 +78,6 @@ trait AssetApi {
 
   // DELETE /api/asset/:tag
   def deleteAsset(tag: String) = SecureAction { implicit req =>
-    import com.twitter.util.StateMachine.InvalidStateTransition
     val options = Form("reason" -> optional(text(1))).bindFromRequest.fold(
       err => None,
       reason => reason.map { r => Map("reason" -> r) }
@@ -86,14 +85,8 @@ trait AssetApi {
     val result = Api.withAssetFromTag(tag) { asset =>
       AssetLifecycle.decommissionAsset(asset, options)
         .left.map { e =>
-          e match {
-            case ex: InvalidStateTransition =>
-              val msg = "Illegal state transition: %s".format(ex.getMessage)
-              Api.getErrorMessage(msg, Results.Status(StatusValues.CONFLICT))
-            case ex =>
-              val msg = "Error saving response: %s".format(e.getMessage)
-              Api.getErrorMessage(msg, Results.InternalServerError)
-          }
+          val msg = "Illegal state transition: %s".format(e.getMessage)
+          Api.getErrorMessage(msg, Results.Status(StatusValues.CONFLICT))
         }
         .right.map(s => ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsBoolean(s)))))
     }
