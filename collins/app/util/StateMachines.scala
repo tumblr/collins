@@ -23,7 +23,8 @@ case class AssetStateMachine(asset: Asset) {
       }
       Helpers.haveFeature("deleteMetaOnDecommission", false) match {
         case None | Some(true) =>
-        AssetMetaValue.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
+          AssetMetaValue.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
+        case _ =>
       }
       res
   }
