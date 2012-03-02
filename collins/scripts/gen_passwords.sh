@@ -21,9 +21,19 @@ function get_pass() {
 }
 
 FILE="htpasswd_file"
-for username in alaiacano andrew arnoud bennett bmatheny bradley brent brian dallas derek evan fredrik haseman jacob jason jbunting johnny keith ken kyle mackenzie matt mschenck nagios nick oshu pau peterson tim travis tylr wiktor; do
+read names # take names from stdin
+
+if [ -z "$names" ];
+then
+    echo "no names provided.  pipe some in.  ex: echo \"me you theotherguy\" | $0"
+    exit 1
+fi
+
+for username in $names; do
 	get_pass 12
 	echo "$username - $password"
 	FILE_V=`htpasswd -n -b -s $username $password`
 	echo "${FILE_V}:infra" >> $FILE
 done
+
+echo "done.  passwords in $FILE"
