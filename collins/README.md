@@ -6,14 +6,5 @@ run the application.
 
 ## Remaining TODO
 
- * Address FIXME's in source
- * Intake UI for things besides servers (routers, etc)
- * LLDP info as part of IT intake stage 2
- * Add source attribute to `asset_log`
- * Implement onHandlerNotFound, onHandlerError, etc
- * Light up IPMI during intake
  * Lucene index for values
- * Add remaining intake steps to API
- * Finish documentation 
- * Decent tests
- * Deployment automation
+ * Improve tests
