@@ -1,11 +1,12 @@
 @(assets: Page[Asset])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.{Helpers, SoftLayer}
+@import _root_.util.SoftLayer
+@import _root_.util.views.Pagination
 @import util.notice
 
 @link(newPage: Int) = @{
-  Helpers.mapToQueryString(app.routes.Resources.find(newPage, assets.size, "DESC", "and").toString, req.queryString)
+  Pagination.paginate(app.routes.Resources.find(newPage, 50, "DESC", "and").toString, req.queryString)
 }
 @main("Asset Search Results") {
 <div class="page-header">

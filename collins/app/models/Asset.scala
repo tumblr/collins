@@ -62,15 +62,15 @@ case class Asset(
         AssetMetaValue.findOneByAssetId(specs, id.get).toList
     }
   }
- 
+
+  private[this] lazy val HiddenMeta: Set[String] = Helpers.getFeature("hideMeta")
+      .map(_.split(",").map(_.trim.toUpperCase).toSet)
+      .getOrElse(Set[String]())
   def getAllAttributes: Asset.AllAttributes = {
     val (lshwRep, mvs) = LshwHelper.reconstruct(this)
     val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
     val ipmi = IpmiInfo.findByAsset(this)
-    val filtered: Seq[MetaWrapper] = Helpers.getFeature("hideMeta").map { hidden =>
-      val filterSet = hidden.split(",").map(_.trim.toUpperCase).toSet
-      mvs2.filter(f => !filterSet.contains(f.getName))
-    }.getOrElse(mvs2)
+    val filtered: Seq[MetaWrapper] = mvs2.filter(f => !HiddenMeta.contains(f.getName))
     Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, filtered)
   }
 }
