@@ -1,4 +1,4 @@
-# --- Sample dataset
+# --- New Asset Type
 
 # --- !Ups
 

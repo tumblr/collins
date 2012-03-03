@@ -38,7 +38,7 @@ object Status extends Magic[Status](Some("status")) {
 
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {
-    val New, Unallocated, Allocated, Cancelled, Maintenance, Decommissioned, Incomplete = Value
+    val New, Unallocated, Allocated, Cancelled, Maintenance, Decommissioned, Incomplete, Provisioning, Provisioned = Value
   }
 
 }

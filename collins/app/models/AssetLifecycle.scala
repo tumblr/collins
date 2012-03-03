@@ -86,9 +86,11 @@ object AssetLifecycle {
           case Status.Enum.Maintenance => Status.Enum.Unallocated
           case n => n
         }
-        val newAsset = asset.copy(status = nextState.id)
-        Asset.update(newAsset)
-        InternalTattler.informational(newAsset, None, "Asset state updated")
+        if (nextState.id != asset.status) {
+          val newAsset = asset.copy(status = nextState.id)
+          Asset.update(newAsset)
+          InternalTattler.informational(newAsset, None, "Asset state updated")
+        }
         true
       }
     }.left.map(e => handleException(asset, "Error saving values or in state transition", e))
