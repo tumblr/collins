@@ -35,12 +35,14 @@
           <li><a href="#" data-keyboard="true" data-controls-modal="asset-note">Create Note</a></li>
           <li class="divider"></li>
           @SoftLayer.pluginEnabled.map { p =>
-            @if(p.isSoftLayerAsset(aa.asset)) {
+            @if(p.isSoftLayerAsset(aa.asset) && SoftLayer.cancelAllowed(aa.asset) ) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
             }
           }
           @PowerManagement.pluginEnabled.map { p =>
+            @if(PowerManagement.powerAllowed(aa.asset)) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="power-server">Power Management</a></li>
+            }
           }
           @Provisioner.pluginEnabled.map { p =>
             @if(p.canProvision(aa.asset)) {
