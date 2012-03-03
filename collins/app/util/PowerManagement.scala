@@ -15,4 +15,16 @@ object PowerManagement {
       fn(p)
     }
   }
+
+  private[this] lazy val DisallowedPowerStates: Set[Int] =
+    Helpers.getConfig("powermanagement")
+      .flatMap(_.getString("disallowStatus"))
+      .getOrElse("1,2,3,4,5,6,7,8,9,10")
+      .split(",")
+      .map(_.toInt)
+      .toSet
+
+  def powerAllowed(asset: models.Asset): Boolean = {
+    !DisallowedPowerStates.contains(asset.status)
+  }
 }
