@@ -4,6 +4,7 @@
 @import util.notice
 @import _root_.util.conversions._
 @import _root_.util.{Helpers, PowerManagement, Provisioner, SoftLayer}
+@import _root_.util.views.TagDecorator
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
@@ -112,7 +113,7 @@
             mv.getName match {
               case "CANCEL_TICKET" => optionDisplay(0, SoftLayer.ticketLink(mv.getValue), mv.getValue)
               case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
-              case _ => mv.getValue
+              case _ => TagDecorator.decorate(mv)
             }
           }
           </td>

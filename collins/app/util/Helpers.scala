@@ -26,25 +26,12 @@ object Helpers {
     PowerPort.toString + "_" + label
   }
 
-  def ignoreDangerousCommand(tag: String): Boolean = {
-    getFeature("ignoreDangerousCommands")
+  private[this] lazy val IgnoreAssets: Set[String] = getFeature("ignoreDangerousCommands")
       .map(_.split(",").toSet[String].map(_.toLowerCase))
-      .filter(_.contains(tag.toLowerCase))
-      .map(_ => true)
-      .getOrElse(false)
-  }
+      .getOrElse(Set[String]())
+  def ignoreDangerousCommand(tag: String): Boolean = IgnoreAssets.contains(tag.toLowerCase)
   def ignoreDangerousCommand(asset: Asset): Boolean = {
     ignoreDangerousCommand(asset.tag)
-  }
-
-  def mapToQueryString(prefix: String, map: Map[String, Seq[String]]): String = {
-    val qs = map.map { case(k,v) =>
-      v.map{s => "%s=%s".format(k, java.net.URLEncoder.encode(s,"UTF-8"))}.mkString("&")
-    }.mkString("&")
-    prefix match {
-      case hasQs if hasQs.contains("?") => hasQs + "&" + qs
-      case noQs => noQs + "?" + qs
-    }
   }
 
   def getConfig(name: String): Option[Configuration] = {
