@@ -44,9 +44,6 @@ trait AssetWebApi {
       val id = profile.identifier
       val label = profile.label
       UserTattler.note(asset, user, "Provisioned as %s".format(label))
-      Model.withTransaction { implicit con =>
-        MetaWrapper.createMeta(asset, Map("NODECLASS" -> id))
-      }
     }
     def onFailure(asset: Asset, role: String, cmd: CommandResult) {
       val msg = "Provisioning as %s failed - %s".format(role, cmd.toString)
