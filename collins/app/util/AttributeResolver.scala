@@ -19,22 +19,22 @@ object AttributeResolver {
     Some(AssetMeta(Id(new java.lang.Long(am.id)), am.toString, -1, "label", "description"))
   } catch {
     case _ => // If an exception was thrown, try the database
-      AssetMeta.findByName(key.toUpperCase)
+      AssetMeta.findByName(key)
   }
 
   def apply(map: Map[String,String]): ResultTuple = {
     val init: ResultTuple = (Seq[IpmiTuple](), Seq[AssetMetaTuple]())
     map.foldLeft(init) { case(total, kv) =>
-      val k = kv._1
-      val v = kv._2
+      val (k, v) = kv
+      val (ipmi, meta) = total
       asIpmi(k) match {
         case None => asAssetMeta(k) match {
           case None => throw new Exception("%s is not an asset meta field or IPMI".format(k))
           case Some(assetMeta) =>
-            total._1 -> ((assetMeta -> v) +: total._2)
+            ipmi -> ((assetMeta -> v) +: meta)
         }
-        case Some(ipmi) =>
-          ((ipmi -> v) +: total._1) -> total._2
+        case Some(ipmiInfo) =>
+          ((ipmiInfo -> v) +: ipmi) -> meta
       }
     }
   }
