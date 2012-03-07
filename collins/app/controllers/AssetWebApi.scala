@@ -48,7 +48,8 @@ trait AssetWebApi {
       val attribs: Map[String,String] = Map() ++
         role.primary_role.map(s => Map("PRIMARY_ROLE" -> s)).getOrElse(Map()) ++
         role.secondary_role.map(s => Map("SECONDARY_ROLE" -> s)).getOrElse(Map()) ++
-        role.pool.map(s => Map("POOL" -> s)).getOrElse(Map());
+        role.pool.map(s => Map("POOL" -> s)).getOrElse(Map()) ++
+        AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap;
 
       if (attribs.nonEmpty) {
         AssetLifecycle.updateAssetAttributes(asset, attribs)
