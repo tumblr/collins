@@ -1,5 +1,6 @@
 package controllers
 
+import actors._
 import models.Asset
 import util._
 
@@ -37,6 +38,15 @@ trait Api extends ApiResponse with AssetApi with AssetManagementApi with AssetWe
     ))))
   }
 
+  def asyncPing(sleepMs: Long) = Action { implicit req =>
+    AsyncResult {
+      BackgroundProcessor.send(TestProcessor(sleepMs)) { case(ex, res) =>
+        println("Got result %s".format(res.toString))
+        formatResponseData(Api.statusResponse(res.getOrElse(false)))
+      }
+    }
+  }
+
   def errorPing(id: Int) = Action { implicit req =>
     req.queryString.map { case(k,v) =>
       k match {
@@ -61,8 +71,8 @@ object Api {
   def statusResponse(status: Boolean, code: Results.Status = Results.Ok) =
     ResponseData(code, JsObject(Seq("SUCCESS" -> JsBoolean(status))))
 
-  def getErrorMessage(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable] = None) = {
-    val json = ApiResponse.formatJsonError(msg, ex)
+  def getErrorMessage(msg: String, status: Results.Status = Results.BadRequest, exception: Option[Throwable] = None) = {
+    val json = ApiResponse.formatJsonError(msg, exception)
     ResponseData(status, json)
   }
 }

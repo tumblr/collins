@@ -1,7 +1,7 @@
 import play.api._
 import play.api.mvc._
 
-import controllers.{ApiResponse, BackgroundProcessor}
+import controllers.ApiResponse
 import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, IpmiCommandProcessor}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 
