@@ -5,7 +5,6 @@ import models.MetaWrapper
 
 import play.api.Configuration
 import play.api.mvc.Content
-import play.api.templates.Html
 
 case class DecoratorConfigurationException(source: String, key: String)
   extends Exception("Didn't find key %s in decorator configuration for %s".format(key))

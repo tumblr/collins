@@ -15,8 +15,11 @@ import scala.sys.process._
 
 // Token is used for looking up an asset, notify is the address to use for notification
 // Profile would be the same as the profile identifier
+case class ProvisionerRoleData(primary_role: Option[String], pool: Option[String], secondary_role: Option[String], requires_primary_role: Boolean, requires_pool: Boolean, requires_secondary_role: Boolean) {
+  def this() = this(None,None,None,false,false,false)
+}
 case class ProvisionerRequest(token: String, profile: ProvisionerProfile, notification: Option[String] = None, suffix: Option[String] = None)
-case class ProvisionerProfile(identifier: String, label: String, prefix: String, allow_suffix: Boolean) extends Ordered[ProvisionerProfile] {
+case class ProvisionerProfile(identifier: String, label: String, prefix: String, allow_suffix: Boolean, role: ProvisionerRoleData) extends Ordered[ProvisionerProfile] {
   override def compare(that: ProvisionerProfile): Int = {
     this.label.compare(that.label)
   }
@@ -186,6 +189,13 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
   }
 
   private[this] def processYaml[K,V](yaml: MutableMap[K, V]): Seq[ProvisionerProfile] = {
+    def getOptionalStringValue[K,V](id: String, prof: MutableMap[K, V], keys: Set[String]): Option[String] = {
+      try {
+        Some(getStringValue(id, prof, keys))
+      } catch {
+        case e => None
+      }
+    }
     def getStringValue[K,V](id: String, prof: MutableMap[K, V], keys: Set[String]): String = {
       for (entry <- prof) {
         entry match {
@@ -215,7 +225,15 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
               id,
               getStringValue(id, scalaMap, Set("label",":label")),
               getStringValue(id, scalaMap, Set("prefix", ":prefix")),
-              getBooleanValue(id, scalaMap, Set("allow_suffix", ":allow_suffix"), Some(false))
+              getBooleanValue(id, scalaMap, Set("allow_suffix", ":allow_suffix"), Some(false)),
+              ProvisionerRoleData(
+                getOptionalStringValue(id, scalaMap, Set("primary_role",":primary_role")),
+                getOptionalStringValue(id, scalaMap, Set("pool",":pool")),
+                getOptionalStringValue(id, scalaMap, Set("secondary_role",":secondary_role")),
+                getBooleanValue(id, scalaMap, Set("requires_primary_role",":requires_primary_role"), Some(true)),
+                getBooleanValue(id, scalaMap, Set("requires_pool",":requires_pool"), Some(true)),
+                getBooleanValue(id, scalaMap, Set("requires_secondary_role",":requires_secondary_role"), Some(false))
+              )
             )
             Seq(profile) ++ total
           case _ => 

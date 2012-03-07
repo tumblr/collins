@@ -4,7 +4,7 @@
 @import util.notice
 @import _root_.util.conversions._
 @import _root_.util.{Helpers, PowerManagement, Provisioner, SoftLayer}
-@import _root_.util.views.TagDecorator
+@import _root_.util.views.{ProvisionerHelper, TagDecorator}
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
@@ -476,7 +476,7 @@
 </div> <!-- row -->
 
 <!-- modals -->
-<div id="cancel-server" class="modal hide fade" data-modal-cleanup="cancelError">
+<div id="cancel-server" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
     <h3>Server Cancellation</h3>
@@ -499,7 +499,7 @@
     </div>
     <div class="clearfix">
       <label for="cancelError" style="margin-right: 15px;"></label>
-      <span class="alert-message error hide" id="cancelError"></span>
+      <span class="alert-message error hide hideAfterClose modalErrorMessage" id="cancelError" data-purge="true"></span>
     </div>
   </div>
   <div class="modal-footer">
@@ -509,7 +509,7 @@
   }
 </div>
 
-<div id="power-server" class="modal hide fade" data-modal-cleanup="powerError">
+<div id="power-server" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
     <h3>Server Power Management</h3>
@@ -540,7 +540,7 @@
       </div>
     </div>
     <div class="clearfix">
-      <span class="alert-message error hide" id="powerError" style="box-sizing: border-box; float: left; width: 100%;"></span>
+      <span class="alert-message error hide modalErrorMessage hideAfterClose" data-purge="true" id="powerError"></span>
     </div>
   </div>
   <div class="modal-footer">
@@ -550,7 +550,7 @@
   }
 </div>
 
-<div id="provision-server" class="modal hide fade" data-modal-cleanup="provisionError">
+<div id="provision-server" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
     <h3>Provision a Server</h3>
@@ -565,9 +565,9 @@
     </ul>
     <p>If that all sounds good, pick an appropriate profile below and provide your email for notification</p>
     <div class="clearfix">
-      <label for="role">Role</label>
+      <label for="profile">Profile</label>
       <div class="input">
-        <select name="role" id="role" data-show="suffix-container,hostname-container">
+        <select name="profile" id="profile" data-show="suffix-container,hostname-container" data-triggers="PROVISIONER_TRIGGERS">
           <option value="" selected="selected"></option>
           @Provisioner.pluginEnabled.map { p =>
             @p.profiles.toSeq.map { v =>
@@ -577,17 +577,40 @@
         </select>
       </div>
     </div>
-    <div class="clearfix hide" id="suffix-container">
-      <label for="suffix">Hostname Suffix</label>
-      <div class="input">
-	      <input name="suffix" id="suffix">
-	      <span class="help-block">Optional suffix for hostname. If you provisioned a dev machine and picked mackenzie as your suffix, the hostname would be dev-mackenzie-HASH</span>
+    <script type="text/javascript">
+      var PROVISIONER_TRIGGERS = {
+        "profiles": @ProvisionerHelper.profilesAsJson(),
+        "primary_roles": @ProvisionerHelper.primaryRolesAsJson(),
+        "pools": @ProvisionerHelper.poolsAsJson(),
+        "secondary_roles": @ProvisionerHelper.secondaryRolesAsJson()
+      };
+    </script>
+    <div class="clearfix hide hideAfterClose" id="primary-role-container">
+      <label for="primary_role">Primary Role</label>
+      <div class="input" data-purge="true">
       </div>
     </div>
-    <div class="clearfix hide" id="hostname-container">
+    <div class="clearfix hide hideAfterClose" id="pool-container">
+      <label for="pool">Pool</label>
+      <div class="input" data-purge="true">
+      </div>
+    </div>
+    <div class="clearfix hide hideAfterClose" id="secondary-role-container">
+      <label for="secondary_role">Secondary Role</label>
+      <div class="input" data-purge="true">
+      </div>
+    </div>
+    <div class="clearfix hide hideAfterClose" id="suffix-container">
+      <label for="suffix">Hostname Suffix</label>
+      <div class="input">
+        <input name="suffix" id="suffix" data-purge="true">
+	<span class="help-block">Optional suffix for hostname. If you provisioned a dev machine and picked mackenzie as your suffix, the hostname would be dev-mackenzie-HASH</span>
+      </div>
+    </div>
+    <div class="clearfix hide hideAfterClose" id="hostname-container">
       <label>Hostname</label>
       <div class="input">
-	      <span class="uneditable-input" data-aggregate="role,suffix"></span>
+        <span class="uneditable-input" data-purge="true" data-aggregate="profile,suffix"></span>
       </div>
     </div>
     <div class="clearfix">
@@ -598,7 +621,7 @@
     </div>
     <div class="clearfix">
       <label for="provisionError" style="margin-right: 15px;"></label>
-      <span class="hide" data-on-error="alert-message error" id="provisionError"></span>
+      <span class="alert-message error hide hideAfterClose modalErrorMessage" data-purge="true" id="provisionError"></span>
     </div>
   </div>
   <div class="modal-footer">
@@ -608,7 +631,7 @@
   }
 </div>
 
-<div id="asset-note" class="modal hide fade" data-modal-cleanup="noteError">
+<div id="asset-note" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
     <h3>Create new note</h3>
@@ -633,7 +656,7 @@
     </div>
     <div class="clearfix">
       <label for="noteError" style="margin-right: 15px;"></label>
-      <span class="alert-message error hide" id="noteError"></span>
+      <span class="alert-message error hide hideAfterClose modalErrorMessage" id="noteError"></span>
     </div>
     <input type="hidden" name="source" value="USER">
   </div>
@@ -643,4 +666,6 @@
   </div>
   }
 </div>
+
+<script src="@routes.Assets.at("javascripts/asset_show.js")" type="text/javascript"></script>
 }
