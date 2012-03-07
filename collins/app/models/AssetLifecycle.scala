@@ -207,8 +207,7 @@ object AssetLifecycle {
         if (lldpParsingResults.isLeft) {
           throw lldpParsingResults.left.get
         }
-        AssetMetaValue.create(AssetMetaValue(asset, AssetMeta.Enum.ChassisTag.id, chassis_tag))
-        MetaWrapper.createMeta(asset, filtered)
+        MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
         val newAsset = asset.copy(status = Status.Enum.New.id)
         Asset.update(newAsset)
         InternalTattler.informational(newAsset, None,
