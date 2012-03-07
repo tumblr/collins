@@ -87,7 +87,12 @@ private[controllers] case class UpdateAsset(
   }
 
   protected def onlyHasStatus(req: Request[AnyContent], options: Map[String,String]): Boolean = {
-    options.size == 1 && options.contains("status")
+    options.contains("status") match {
+      case true =>
+        options.size == 1 || (options.size == 2 && options.contains("reason"))
+      case false =>
+        false
+    }
   }
 
   protected def onlyHasAttributes(req: Request[AnyContent], options: Map[String,String]): Boolean = {

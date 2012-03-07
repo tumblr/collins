@@ -1,10 +1,11 @@
-@(aa: Asset.AllAttributes)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: Asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util.notice
 @import _root_.util.conversions._
 @import _root_.util.{Helpers, PowerManagement, Provisioner, SoftLayer}
-@import _root_.util.views.{ProvisionerHelper, TagDecorator}
+@import _root_.util.plugins.Maintenance
+@import _root_.util.views.{OptionSorter, ProvisionerHelper, TagDecorator}
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
@@ -33,11 +34,18 @@
       <a href="#" class="dropdown-toggle"><strong>Actions</strong></a>
         <ul class="dropdown-menu">
           <li><a href="#" data-keyboard="true" data-controls-modal="asset-note">Create Note</a></li>
+        @if(user.hasRole("infra")) {
           <li class="divider"></li>
           @SoftLayer.pluginEnabled.map { p =>
             @if(p.isSoftLayerAsset(aa.asset) && SoftLayer.cancelAllowed(aa.asset) ) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
             }
+          }
+          @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
+          <li><a href="#" data-keyboard="true" data-backdrop="static" data-controls-modal="asset-maintenance">Maintenance Start</a></li>
+          }
+          @if(Maintenance.canTransitionFromMaintenance(aa.asset)) {
+          <li><a href="#" data-keyboard="true" data-backdrop="static" data-controls-modal="asset-maintenance">Maintenance End</a></li>
           }
           @PowerManagement.pluginEnabled.map { p =>
             @if(PowerManagement.powerAllowed(aa.asset)) {
@@ -49,6 +57,7 @@
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
             }
           }
+        }
         </ul>
       </li>
     </ul>
@@ -476,6 +485,76 @@
 </div> <!-- row -->
 
 <!-- modals -->
+<div id="asset-maintenance" class="modal hide fade">
+  <div class="modal-header">
+    <a href="#" class="close">&times;</a>
+    <h3>Asset Maintenance</h3>
+  </div>
+  @form(app.routes.CookieApi.updateAssetForMaintenance(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "maintenanceError", Symbol("data-modal") -> "asset-maintenance", Symbol("data-refresh") -> ".window") {
+    @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
+    <div class="modal-body">
+      <p><span class="label important">Warning</span> asset <em>NOT</em> currently in maintenance mode. Putting an asset in maintenance mode will:</p>
+      <ul>
+        <li>Change the asset status</li>
+        <li>Cause it to be pulled from relavent configurations</li>
+        <li>Stop getting production traffic</li>
+      </ul>
+      <p>If that all sounds good, provide a reason and then click the button below</p>
+      <div class="clearfix">
+        <input type="hidden" name="status" value="Maintenance">
+        <label for="reason">Reason</label>
+        <div class="input">
+          <textarea name="reason" id="reason" class="xlarge" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="clearfix">
+        <label for="maintenanceError" style="margin-right: 15px;"></label>
+        <span class="alert-message error hide hideAfterClose modalErrorMessage" id="maintenanceError" data-purge="true"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn">Asset in Maintenance Mode</button>
+      <button type="reset" data-closes-modal="cancel-server" class="btn primary">Go back to browsing tumblr</button>
+    </div>
+    } else {
+    <div class="modal-body">
+      <p><span class="label important">Warning</span> asset <em>IS</em> currently in maintenance mode. Taking an asset out of maintenance mode will:</p>
+      <ul>
+        <li>Change the asset status</li>
+        <li>Cause it to be added back to relavent configurations</li>
+        <li>Start getting production traffic</li>
+      </ul>
+      <p>If that all sounds good, provide a reason and then click the button below. Be certain that you are putting the asset into an approprite status. For instance, if prior to maintenance an asset was Incomplete, you should probably move it back to Incomplete.</p>
+      <div class="clearfix">
+        <label for="status">Status</label>
+        <div class="input">
+          <select name="status" id="status">
+            <option value="" selected="selected"></option>
+            @OptionSorter.sortStrings(Status.Enum.values.toSeq, Some(" ")).map { v =>
+            <option value="@v._1">@v._2</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="clearfix">
+        <label for="reason">Reason</label>
+        <div class="input">
+          <textarea name="reason" id="reason" class="xlarge" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="clearfix">
+        <label for="maintenanceError" style="margin-right: 15px;"></label>
+        <span class="alert-message error hide hideAfterClose modalErrorMessage" id="maintenanceError" data-purge="true"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn">Asset out of Maintenance Mode</button>
+      <button type="reset" data-closes-modal="cancel-server" class="btn primary">Go back to browsing tumblr</button>
+    </div>
+    }
+  }
+</div>
+
 <div id="cancel-server" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>

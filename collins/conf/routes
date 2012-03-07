@@ -15,6 +15,7 @@ GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: 
 GET     /assets/logs                app.CookieApi.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
 POST    /asset/:tag/log             app.CookieApi.submitLogData(tag: String)
 GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
+POST    /asset/:tag/maintenance     app.CookieApi.updateAssetForMaintenance(tag: String)
 POST    /asset/:tag/cancel          app.CookieApi.cancelAsset(tag: String)
 POST    /asset/:tag/provision       app.CookieApi.provisionAsset(tag: String)
 POST    /asset/:tag/power           app.CookieApi.powerManagement(tag: String)

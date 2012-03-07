@@ -11,7 +11,7 @@ case class AssetStateMachine(asset: Asset) {
 
   def decommission()(implicit con: Connection): Option[Asset] = Status.Enum(asset.status) match {
     case Unallocated | Cancelled | Decommissioned =>
-      val newAsset = asset.copy(status = Decommissioned.id, updated = Some(new Date().asTimestamp))
+      val newAsset = asset.copy(status = Decommissioned.id, deleted = Some(new Date().asTimestamp))
       val res = Asset.update(newAsset) match {
         case 1 => Some(newAsset)
         case n => None
