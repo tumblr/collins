@@ -46,9 +46,9 @@ trait AssetWebApi {
       val label = profile.label
       val role = profile.role
       val attribs: Map[String,String] = Map() ++
-        role.primary_role.map(s => Map("PRIMARY_ROLE" -> s)).getOrElse(Map()) ++
-        role.secondary_role.map(s => Map("SECONDARY_ROLE" -> s)).getOrElse(Map()) ++
-        role.pool.map(s => Map("POOL" -> s)).getOrElse(Map()) ++
+        role.primary_role.map(s => Map("PRIMARY_ROLE" -> s)).getOrElse(Map("PRIMARY_ROLE" -> "")) ++
+        role.secondary_role.map(s => Map("SECONDARY_ROLE" -> s)).getOrElse(Map("SECONDARY_ROLE" -> "")) ++
+        role.pool.map(s => Map("POOL" -> s)).getOrElse(Map("POOL" -> "")) ++
         AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap;
 
       if (attribs.nonEmpty) {
