@@ -36,7 +36,7 @@ trait AssetApi {
       case Right(success) =>
         if (OutputType.isHtml(req)) {
           val attribs = success.attachment.get.asInstanceOf[Asset.AllAttributes]
-          Results.Ok(html.asset.show(attribs))
+          Results.Ok(html.asset.show(attribs, user.get))
         } else {
           formatResponseData(success)
         }
@@ -65,6 +65,33 @@ trait AssetApi {
       case Left(l) => formatResponseData(l)
       case Right(s) => formatResponseData(Api.statusResponse(s))
     }
+  }(SecuritySpec(true, "infra"))
+
+  def updateAssetForMaintenance(tag: String) = SecureAction { implicit req =>
+    def processRequest(status: String, reason: String) = {
+      Asset.findByTag(tag).map { asset =>
+        if (status.isEmpty || reason.isEmpty) {
+          Api.getErrorMessage("status and reason must be specified")
+        } else {
+          val st = if (status.toLowerCase == "maintenance") {
+            plugins.Maintenance.toMaintenance(asset, reason)
+          } else {
+            plugins.Maintenance.fromMaintenance(asset, reason, status)
+          }
+          st match {
+            case true => Api.statusResponse(true)
+            case false => Api.getErrorMessage("Failed setting status")
+          }
+        }
+      }.getOrElse(Api.getErrorMessage("Asset with specified tag not found"))
+    }
+    Form(of(
+      "status" -> text,
+      "reason" -> text
+    )).bindFromRequest.fold(
+      err => formatResponseData(Api.getErrorMessage("status and reason must be specified")),
+      succ => formatResponseData(processRequest(succ._1, succ._2))
+    )
   }(SecuritySpec(true, "infra"))
 
   // DELETE /api/asset/attribute/:attribute/:tag
