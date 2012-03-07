@@ -43,7 +43,7 @@ object ProvisionerHelper {
     val roles: Set[String] = AssetMeta.findByName(meta.toUpperCase).map { meta =>
       AssetMetaValue.findMetaValues(meta.getId).map(_.toUpperCase).toSet
     }.getOrElse(Set());
-    Html(Json.stringify(JsArray(roles.toList.map(JsString(_)))))
+    Html(Json.stringify(JsArray(roles.toList.sorted.map(JsString(_)))))
   }
 
 }
