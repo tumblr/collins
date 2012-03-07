@@ -52,6 +52,7 @@ GET     /api/tags                   app.Api.getTags
 GET     /api/tag/:tag               app.Api.getTagValues(tag: String)
 
 # For testing
+GET     /api/asyncPing              app.Api.asyncPing(sleepMs: Long ?= 1000)
 GET     /api/ping                   app.Api.ping
 GET     /api/errorPing              app.Api.errorPing(id: Int ?= 1)
 
