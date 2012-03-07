@@ -71,21 +71,21 @@ trait AssetWebApi {
         var role = request.profile.role
         if (!role.primary_role.isDefined && role.requires_primary_role) {
           if (primary_role.isDefined) {
-            role = role.copy(primary_role = Some(primary_role.get))
+            role = role.copy(primary_role = Some(primary_role.get.toUpperCase))
           } else {
             return Left("A primary_role is required but none was specified")
           }
         }
         if (!role.pool.isDefined && role.requires_pool) {
           if (pool.isDefined) {
-            role = role.copy(pool = Some(pool.get))
+            role = role.copy(pool = Some(pool.get.toUpperCase))
           } else {
             return Left("A pool is required but none was specified")
           }
         }
         if (!role.secondary_role.isDefined && role.requires_secondary_role) {
           if (secondary_role.isDefined) {
-            role = role.copy(secondary_role = Some(secondary_role.get))
+            role = role.copy(secondary_role = Some(secondary_role.get.toUpperCase))
           } else {
             return Left("A secondary_role is required but none was specified")
           }
