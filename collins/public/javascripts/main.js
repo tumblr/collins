@@ -134,12 +134,19 @@ $(document).ready(function() {
 
   // Bind to a modals hide event, resetting a form if it exists, and cleaning up
   // the referenced element.
-  $("[data-modal-cleanup]").each(function() {
+  $('.modal').each(function() {
     var e = $(this);
-    var toClean = $(elId(e.attr('data-modal-cleanup')));
     e.bind('hide', function() {
       e.children('form').each(function() { this.reset() });
-      toClean.each(function() { $(this).empty().hide() });
+      e.find('[data-purge=true]').each(function() {
+        $(this).empty();
+        if ($(this).is("input")) {
+          $(this).val("");
+        }
+      });
+      e.find('.hideAfterClose').each(function() {
+        $(this).hide();
+      });
     });
   });
 
