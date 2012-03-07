@@ -51,11 +51,12 @@ trait AssetWebApi {
         role.pool.map(s => Map("POOL" -> s)).getOrElse(Map("POOL" -> "")) ++
         AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap;
 
+      val newAsset = Asset.findById(asset.getId)
       if (attribs.nonEmpty) {
-        AssetLifecycle.updateAssetAttributes(asset, attribs)
+        AssetLifecycle.updateAssetAttributes(newAsset.get, attribs)
       }
 
-      UserTattler.note(asset, user, "Provisioned as %s".format(label))
+      UserTattler.note(newAsset.get, user, "Provisioned as %s".format(label))
     }
     def onFailure(asset: Asset, profile: String, cmd: CommandResult) {
       val msg = "Provisioning as %s failed - %s".format(profile, cmd.toString)
