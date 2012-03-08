@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	//"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -71,17 +71,17 @@ func main() {
 			subPath := path.Join(p_[len(p_)-i-1:]...)
 			remoteSuper := path.Clean(*flagRemoteSuper) + "/"
 			remote := path.Join(remoteSuper, subPath)
-			// log.Printf("rsync -acrv --rsh=ssh %s %s:%s\n", local, *flagRemoteHost, remote)
-			err, rsyncStdout, rsyncStderr := Run(
-					*flagRsync, "-acr",
+			rsyncStdout, rsyncStderr, err := Run2(
+					*flagRsync, "", "-acrv",
 					"--rsh=ssh", local,
 					*flagRemoteHost + ":" + remote,
 				)
 			if err != nil {
-				log.Printf("=== out ===\n%s\n=== err ===\n%s\n========\n", rsyncStdout, rsyncStderr)
-				log.Fatalf("rsync error (%s)", err)
+				log.Printf("=== out ===\n%s\n=== err ===\n%s\n========\n", string(rsyncStdout), string(rsyncStderr))
+				log.Fatalf("rsync error (%v)", err)
 			}
-			fmt.Printf("rsync OK: %s ——> %s:%s\n", local, *flagRemoteHost, remote)
+			//fmt.Printf("rsync OK: %s ——> %s:%s\n", local, *flagRemoteHost, remote)
+			//fmt.Printf("rsync -acrv --rsh=ssh %s %s:%s\n", local, *flagRemoteHost, remote)
 			os.Exit(0)
 		}
 	}
@@ -99,9 +99,10 @@ func InStringSlice(s string, list []string) bool {
 }
 
 // TODO: This should be moved to a pkg
-func Run(prog, dir string, argv ...string) (allout, allerr []byte, err error) {
+func Run2(prog, dir string, argv ...string) (allout, allerr []byte, err error) {
 	cmd := exec.Command(prog, argv...)
 	cmd.Dir = dir
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, nil, err
@@ -115,5 +116,6 @@ func Run(prog, dir string, argv ...string) (allout, allerr []byte, err error) {
 	}
 	allout, _ = ioutil.ReadAll(stdout)
 	allerr, _ = ioutil.ReadAll(stderr)
+
 	return allout, allerr, cmd.Wait()
 }
