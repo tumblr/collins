@@ -3,12 +3,14 @@ package controllers
 import actors._
 import com.tumblr.play.{CommandResult, ProvisionerProfile, ProvisionerRequest}
 import forms._
+import models.{Status => AStatus}
 import models._
 import util._
 
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.data._
+
 
 trait AssetWebApi {
   this: Api with SecureController =>
@@ -40,7 +42,7 @@ trait AssetWebApi {
   }}(SecuritySpec(true, "infra"))
 
   // POST /asset/:tag/provision
-  type ProvisionForm = Tuple6[String,String,Option[String],Option[String],Option[String],Option[String]]
+  type ProvisionForm = Tuple7[String,String,Option[String],Option[String],Option[String],Option[String],Option[Boolean]]
   def provisionAsset(tag: String) = Authenticated { user => Action { implicit req =>
     def onSuccess(asset: Asset, profile: ProvisionerProfile) {
       val label = profile.label
@@ -52,7 +54,19 @@ trait AssetWebApi {
     }
     def validate(asset: Asset, form: ProvisionForm): Either[String,ProvisionerRequest] = {
       Provisioner.pluginEnabled { plugin =>
-        val (profile, contact, suffix, primary_role, pool, secondary_role) = form
+        val (profile, contact, suffix, primary_role, pool, secondary_role, activate) = form
+        if (activate == Some(true)) {
+          if (AStatus.Enum(asset.status) != AStatus.Enum.Incomplete) {
+            return Left("Can not activate asset that is Incomplete")
+          }
+          if (!SoftLayer.pluginEnabled.map(_ => true).getOrElse(false)) {
+            return Left("SoftLayer plugin not enabled")
+          }
+          val plugin = SoftLayer.pluginEnabled.get
+          if (!plugin.isSoftLayerAsset(asset) || plugin.softLayerId(asset) == None) {
+            return Left("Asset is not a softlayer asset")
+          }
+        }
         val optrequest = plugin.makeRequest(asset.tag, profile, Some(contact), suffix)
         if (!optrequest.isDefined) {
           return Left("Invalid profile %s specified".format(profile))
@@ -85,6 +99,7 @@ trait AssetWebApi {
           role.primary_role.map(s => Map("PRIMARY_ROLE" -> s)).getOrElse(Map("PRIMARY_ROLE" -> "")) ++
           role.secondary_role.map(s => Map("SECONDARY_ROLE" -> s)).getOrElse(Map("SECONDARY_ROLE" -> "")) ++
           role.pool.map(s => Map("POOL" -> s)).getOrElse(Map("POOL" -> "")) ++
+          activate.filter(_ == true).map(_ => Map("CONTACT" -> contact)).getOrElse(Map())
           AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap;
         val newAsset = Asset.findById(asset.getId)
         if (attribs.nonEmpty) {
@@ -92,6 +107,33 @@ trait AssetWebApi {
         }
         Right(request.copy(profile = newProfile))
       }.getOrElse(Left("Provisioner plugin not enabled"));
+    }
+    def activate(asset: Asset, request: ProvisionerRequest) = AsyncResult {
+      val plugin = SoftLayer.pluginEnabled.get
+      val slId = plugin.softLayerId(asset).get
+      BackgroundProcessor.send(ActivationProcessor(slId)) { res =>
+        val reply = res match {
+          case (Some(error), _) =>
+            onFailure(asset,
+              request.profile.label,
+              CommandResult(-100, "Error activating: %s".format(error.getMessage))
+            )
+            Api.getErrorMessage(
+              "There was an exception processing your request: %s".format(error.getMessage),
+              Results.InternalServerError,
+              Some(error)
+            )
+          case (_, success) => success match {
+            case None =>
+              Api.getErrorMessage("Timeout running action")
+            case Some(true) =>
+              Api.statusResponse(true)
+            case Some(false) =>
+              Api.getErrorMessage("Activation of asset failed")
+          }
+        }
+        formatResponseData(reply)
+      }
     }
     def provision(asset: Asset, request: ProvisionerRequest) = AsyncResult {
       BackgroundProcessor.send(ProvisionerProcessor(request)) { res =>
@@ -127,7 +169,8 @@ trait AssetWebApi {
         "suffix" -> optional(text(3)),
         "primary_role" -> optional(text),
         "pool" -> optional(text),
-        "secondary_role" -> optional(text)
+        "secondary_role" -> optional(text),
+        "activate" -> optional(boolean)
       )).bindFromRequest.fold(
         err => {
           formatResponseData(Api.getErrorMessage("contact and profile must be specified"))
@@ -142,7 +185,10 @@ trait AssetWebApi {
               case Left(err) => formatResponseData(Api.getErrorMessage(
                 "Provisioning error: %s".format(err)
               ))
-              case Right(request) => provision(asset, request)
+              case Right(request) => suc._7 match {
+                case Some(true) => activate(asset, request)
+                case _ => provision(asset, request)
+              }
             }
           }
         }

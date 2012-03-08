@@ -29,6 +29,7 @@ trait SoftLayerInterface extends PowerManagement {
     "https://manage.softlayer.com/Support/editTicket/%d".format(id)
 
   // Interactive API
+  def activateServer(id: Long): Future[Boolean]
   def cancelServer(id: Long, reason: String = "No longer needed"): Future[Long]
   def setNote(id: Long, note: String): Future[Boolean]
 
@@ -138,6 +139,31 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
   }
   override def rebootSoft(e: AssetWithTag): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/rebootSoft.json")
+  }
+
+  override def activateServer(id: Long): Future[Boolean] = {
+    return Future(true)
+    val url = softLayerUrl("/SoftLayer_Hardware_Server/%d/sparePool.json".format(id))
+    val query = JsObject(
+      Seq("parameters" -> JsArray(
+        List(JsObject(Seq("action" -> JsString("activate")))))
+      )
+    )
+    val queryString = Json.stringify(query)
+    val value = ChannelBuffers.copiedBuffer(queryString, UTF_8)
+    val request = RequestBuilder()
+      .url(url)
+      .setHeader("Content-Type", "application/json")
+      .setHeader("Content-Length", queryString.length.toString)
+      .buildPost(value)
+    makeRequest(request) map { r =>
+      Json.parse(Response(r).contentString) match {
+        case JsBoolean(v) => v
+        case _ => false
+      }
+    } handle {
+      case e => false
+    }
   }
 
   override def setNote(id: Long, note: String): Future[Boolean] = {

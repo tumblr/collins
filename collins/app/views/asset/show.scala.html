@@ -53,8 +53,14 @@
             }
           }
           @Provisioner.pluginEnabled.map { p =>
-            @if(p.canProvision(aa.asset)) {
+            @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
+            } else {
+              @SoftLayer.pluginEnabled.map { p =>
+                @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+                <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Activate Server</a></li>
+                }
+              }
             }
           }
         }
@@ -124,6 +130,7 @@
             mv.getName match {
               case "CANCEL_TICKET" => optionDisplay(0, SoftLayer.ticketLink(mv.getValue), mv.getValue)
               case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
+              case "SYSTEM_PASSWORD" => if(user.hasRole("infra")) { TagDecorator.decorate(mv) } else { "********" }
               case _ => TagDecorator.decorate(mv)
             }
           }
@@ -632,17 +639,28 @@
 <div id="provision-server" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
+    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    <h3>Activate Server</h3>
+    } else {
     <h3>Provision a Server</h3>
+    }
   </div>
   @form(app.routes.CookieApi.provisionAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "provisionError", Symbol("data-modal") -> "provision-server", Symbol("data-refresh") -> ".window") {
   <div class="modal-body">
-    <p><span class="label important">Warning</span> Provisioning a server is a destructive process. Be certain that you want to do this. The provisioner will:</p>
+    <p><span class="label important">Warning</span>
+    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    Activating a server takes a couple of days. When the server has been activated out of the
+    softlayer spare pool, it will be allocated during the reconciler run automatically. Once
+    allocated, we will begin getting billed.
+    } else {
+    Provisioning a server is a destructive process. Be certain that you want to do this. The provisioner will:</p>
     <ul>
       <li>SSH into the machine</li>
       <li>Reboot it into kickstart mode</li>
       <li>Come back online without old data on disks</li>
     </ul>
-    <p>If that all sounds good, pick an appropriate profile below and provide your email for notification</p>
+    }
+    <p>If that all sounds good, pick an appropriate profile below and provide your hipchat for notification</p>
     <div class="clearfix">
       <label for="profile">Profile</label>
       <div class="input">
@@ -656,6 +674,9 @@
         </select>
       </div>
     </div>
+    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    <input type="hidden" name="activate" value="true">
+    }
     <script type="text/javascript">
       var PROVISIONER_TRIGGERS = {
         "profiles": @ProvisionerHelper.profilesAsJson(),
@@ -695,7 +716,7 @@
     <div class="clearfix">
       <label for="contact">Hipchat User</label>
       <div class="input">
-        <input name="contact" id="contact" placeholder="@User.fromMap(req.session.data).map(_.username).getOrElse("mackenzie")">
+        <input name="contact" id="contact" value="@User.fromMap(req.session.data).map(_.username).getOrElse("mackenzie")">
       </div>
     </div>
     <div class="clearfix">
@@ -704,7 +725,11 @@
     </div>
   </div>
   <div class="modal-footer">
+    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    <button type="submit" class="btn">Activate Server</button>
+    } else {
     <button type="submit" class="btn">Provision Server</button>
+    }
     <button type="reset" data-closes-modal="provision-server" class="btn primary">Go back to browsing tumblr</button>
   </div>
   }

@@ -14,6 +14,7 @@ import util.Helpers
 
 private[actors] class BackgroundProcessor extends Actor {
   def receive = {
+    case processor: ActivationProcessor => self.reply(processor.run())
     case processor: AssetUpdateProcessor => self.reply(processor.run())
     case processor: AssetCancelProcessor => self.reply(processor.run())
     case processor: ProvisionerProcessor => self.reply(processor.run())
