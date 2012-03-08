@@ -44,19 +44,7 @@ trait AssetWebApi {
   def provisionAsset(tag: String) = Authenticated { user => Action { implicit req =>
     def onSuccess(asset: Asset, profile: ProvisionerProfile) {
       val label = profile.label
-      val role = profile.role
-      val attribs: Map[String,String] = Map() ++
-        role.primary_role.map(s => Map("PRIMARY_ROLE" -> s)).getOrElse(Map("PRIMARY_ROLE" -> "")) ++
-        role.secondary_role.map(s => Map("SECONDARY_ROLE" -> s)).getOrElse(Map("SECONDARY_ROLE" -> "")) ++
-        role.pool.map(s => Map("POOL" -> s)).getOrElse(Map("POOL" -> "")) ++
-        AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap;
-
-      val newAsset = Asset.findById(asset.getId)
-      if (attribs.nonEmpty) {
-        AssetLifecycle.updateAssetAttributes(newAsset.get, attribs)
-      }
-
-      UserTattler.note(newAsset.get, user, "Provisioned as %s".format(label))
+      UserTattler.note(asset, user, "Provisioned as %s".format(label))
     }
     def onFailure(asset: Asset, profile: String, cmd: CommandResult) {
       val msg = "Provisioning as %s failed - %s".format(profile, cmd.toString)
@@ -93,6 +81,15 @@ trait AssetWebApi {
           }
         }
         val newProfile = request.profile.copy(role = role)
+        val attribs: Map[String,String] = Map() ++
+          role.primary_role.map(s => Map("PRIMARY_ROLE" -> s)).getOrElse(Map("PRIMARY_ROLE" -> "")) ++
+          role.secondary_role.map(s => Map("SECONDARY_ROLE" -> s)).getOrElse(Map("SECONDARY_ROLE" -> "")) ++
+          role.pool.map(s => Map("POOL" -> s)).getOrElse(Map("POOL" -> "")) ++
+          AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap;
+        val newAsset = Asset.findById(asset.getId)
+        if (attribs.nonEmpty) {
+          AssetLifecycle.updateAssetAttributes(newAsset.get, attribs)
+        }
         Right(request.copy(profile = newProfile))
       }.getOrElse(Left("Provisioner plugin not enabled"));
     }
