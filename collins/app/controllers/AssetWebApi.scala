@@ -99,7 +99,7 @@ trait AssetWebApi {
           role.primary_role.map(s => Map("PRIMARY_ROLE" -> s)).getOrElse(Map("PRIMARY_ROLE" -> "")) ++
           role.secondary_role.map(s => Map("SECONDARY_ROLE" -> s)).getOrElse(Map("SECONDARY_ROLE" -> "")) ++
           role.pool.map(s => Map("POOL" -> s)).getOrElse(Map("POOL" -> "")) ++
-          activate.filter(_ == true).map(_ => Map("CONTACT" -> contact)).getOrElse(Map())
+          activate.filter(_ == true).map(_ => Map("CONTACT" -> contact)).getOrElse(Map()) ++
           AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap;
         val newAsset = Asset.findById(asset.getId)
         if (attribs.nonEmpty) {
@@ -127,6 +127,10 @@ trait AssetWebApi {
             case None =>
               Api.getErrorMessage("Timeout running action")
             case Some(true) =>
+              val newAsset = Asset.findById(asset.getId).get
+              Model.withConnection { implicit con =>
+                Asset.update(newAsset.copy(status = AStatus.Enum.New.id))
+              }
               Api.statusResponse(true)
             case Some(false) =>
               Api.getErrorMessage("Activation of asset failed")

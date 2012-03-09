@@ -142,13 +142,8 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
   }
 
   override def activateServer(id: Long): Future[Boolean] = {
-    return Future(true)
     val url = softLayerUrl("/SoftLayer_Hardware_Server/%d/sparePool.json".format(id))
-    val query = JsObject(
-      Seq("parameters" -> JsArray(
-        List(JsObject(Seq("action" -> JsString("activate")))))
-      )
-    )
+    val query = JsObject(Seq("parameters" -> JsArray(List(JsString("activate")))))
     val queryString = Json.stringify(query)
     val value = ChannelBuffers.copiedBuffer(queryString, UTF_8)
     val request = RequestBuilder()
@@ -157,9 +152,10 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
       .setHeader("Content-Length", queryString.length.toString)
       .buildPost(value)
     makeRequest(request) map { r =>
-      Json.parse(Response(r).contentString) match {
+      val response = Response(r)
+      Json.parse(response.contentString) match {
         case JsBoolean(v) => v
-        case _ => false
+        case o => false
       }
     } handle {
       case e => false
