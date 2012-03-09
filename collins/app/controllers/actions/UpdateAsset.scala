@@ -72,15 +72,7 @@ private[controllers] case class UpdateAsset(
           }
           res match {
             case Left(error) => Left(Api.getErrorMessage(error.getMessage))
-            case Right(success) => success match {
-              case true =>
-                util.StateManager.pluginEnabled { plugin =>
-                  plugin.transition(old, asset)
-                }
-                Right(true)
-              case false =>
-                Right(false)
-            }
+            case Right(status) => Right(status)
           }
       }
     }

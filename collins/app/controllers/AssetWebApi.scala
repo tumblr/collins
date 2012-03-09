@@ -95,12 +95,14 @@ trait AssetWebApi {
           }
         }
         val newProfile = request.profile.copy(role = role)
-        val attribs: Map[String,String] = Map() ++
+        val aMap = Map("NODECLASS" -> request.profile.identifier) ++
+          suffix.map(s => Map("SUFFIX" -> s)).getOrElse(Map())
+        val attribs: Map[String,String] = Map("CONTACT" -> contact) ++
+          AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap ++
           role.primary_role.map(s => Map("PRIMARY_ROLE" -> s)).getOrElse(Map("PRIMARY_ROLE" -> "")) ++
           role.secondary_role.map(s => Map("SECONDARY_ROLE" -> s)).getOrElse(Map("SECONDARY_ROLE" -> "")) ++
           role.pool.map(s => Map("POOL" -> s)).getOrElse(Map("POOL" -> "")) ++
-          activate.filter(_ == true).map(_ => Map("CONTACT" -> contact)).getOrElse(Map()) ++
-          AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap;
+          activate.filter(_ == true).map(_ => aMap).getOrElse(Map());
         val newAsset = Asset.findById(asset.getId)
         if (attribs.nonEmpty) {
           AssetLifecycle.updateAssetAttributes(newAsset.get, attribs)
