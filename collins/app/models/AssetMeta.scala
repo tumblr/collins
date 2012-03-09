@@ -30,6 +30,7 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     super.create(am) match {
       case newam =>
         Cache.invalidate("AssetMeta.findByName(%s)".format(am.name))
+        Cache.invalidate("AssetMeta.findAll")
         newam
     }
   }
@@ -39,6 +40,12 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
       if (meta.id.isDefined) throw new IllegalArgumentException("Use update, id already defined")
       AssetMeta.create(meta) +: list
     }.reverse
+  }
+
+  def findAll(): Seq[AssetMeta] = Cache.getOrElseUpdate("AssetMeta.findAll") {
+    Model.withConnection { implicit con =>
+      AssetMeta.find().list()
+    }
   }
 
   def findById(id: Long) = Model.withConnection { implicit con =>

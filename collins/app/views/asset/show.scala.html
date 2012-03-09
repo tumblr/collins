@@ -1,9 +1,11 @@
-@(aa: Asset.AllAttributes)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: Asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util.notice
 @import _root_.util.conversions._
 @import _root_.util.{Helpers, PowerManagement, Provisioner, SoftLayer}
+@import _root_.util.plugins.Maintenance
+@import _root_.util.views.{OptionSorter, ProvisionerHelper, TagDecorator}
 @import _root_.models.IpmiInfo.Enum._
 
 @main("Asset Details") {
@@ -32,20 +34,36 @@
       <a href="#" class="dropdown-toggle"><strong>Actions</strong></a>
         <ul class="dropdown-menu">
           <li><a href="#" data-keyboard="true" data-controls-modal="asset-note">Create Note</a></li>
+        @if(user.hasRole("infra")) {
           <li class="divider"></li>
           @SoftLayer.pluginEnabled.map { p =>
-            @if(p.isSoftLayerAsset(aa.asset)) {
+            @if(p.isSoftLayerAsset(aa.asset) && SoftLayer.cancelAllowed(aa.asset) ) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
             }
           }
-          @PowerManagement.pluginEnabled.map { p =>
-            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="power-server">Power Management</a></li>
+          @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
+          <li><a href="#" data-keyboard="true" data-backdrop="static" data-controls-modal="asset-maintenance">Maintenance Start</a></li>
           }
-          @Provisioner.pluginEnabled.map { p =>
-            @if(p.canProvision(aa.asset)) {
-            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
+          @if(Maintenance.canTransitionFromMaintenance(aa.asset)) {
+          <li><a href="#" data-keyboard="true" data-backdrop="static" data-controls-modal="asset-maintenance">Maintenance End</a></li>
+          }
+          @PowerManagement.pluginEnabled.map { p =>
+            @if(PowerManagement.powerAllowed(aa.asset)) {
+            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="power-server">Power Management</a></li>
             }
           }
+          @Provisioner.pluginEnabled.map { p =>
+            @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete) {
+            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
+            } else {
+              @SoftLayer.pluginEnabled.map { p =>
+                @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+                <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Activate Server</a></li>
+                }
+              }
+            }
+          }
+        }
         </ul>
       </li>
     </ul>
@@ -112,7 +130,8 @@
             mv.getName match {
               case "CANCEL_TICKET" => optionDisplay(0, SoftLayer.ticketLink(mv.getValue), mv.getValue)
               case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
-              case _ => mv.getValue
+              case "SYSTEM_PASSWORD" => if(user.hasRole("infra")) { TagDecorator.decorate(mv) } else { "********" }
+              case _ => TagDecorator.decorate(mv)
             }
           }
           </td>
@@ -473,7 +492,77 @@
 </div> <!-- row -->
 
 <!-- modals -->
-<div id="cancel-server" class="modal hide fade" data-modal-cleanup="cancelError">
+<div id="asset-maintenance" class="modal hide fade">
+  <div class="modal-header">
+    <a href="#" class="close">&times;</a>
+    <h3>Asset Maintenance</h3>
+  </div>
+  @form(app.routes.CookieApi.updateAssetForMaintenance(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "maintenanceError", Symbol("data-modal") -> "asset-maintenance", Symbol("data-refresh") -> ".window") {
+    @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
+    <div class="modal-body">
+      <p><span class="label important">Warning</span> asset <em>NOT</em> currently in maintenance mode. Putting an asset in maintenance mode will:</p>
+      <ul>
+        <li>Change the asset status</li>
+        <li>Cause it to be pulled from relavent configurations</li>
+        <li>Stop getting production traffic</li>
+      </ul>
+      <p>If that all sounds good, provide a reason and then click the button below</p>
+      <div class="clearfix">
+        <input type="hidden" name="status" value="Maintenance">
+        <label for="reason">Reason</label>
+        <div class="input">
+          <textarea name="reason" id="reason" class="xlarge" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="clearfix">
+        <label for="maintenanceError" style="margin-right: 15px;"></label>
+        <span class="alert-message error hide hideAfterClose modalErrorMessage" id="maintenanceError" data-purge="true"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn">Asset in Maintenance Mode</button>
+      <button type="reset" data-closes-modal="cancel-server" class="btn primary">Go back to browsing tumblr</button>
+    </div>
+    } else {
+    <div class="modal-body">
+      <p><span class="label important">Warning</span> asset <em>IS</em> currently in maintenance mode. Taking an asset out of maintenance mode will:</p>
+      <ul>
+        <li>Change the asset status</li>
+        <li>Cause it to be added back to relavent configurations</li>
+        <li>Start getting production traffic</li>
+      </ul>
+      <p>If that all sounds good, provide a reason and then click the button below. Be certain that you are putting the asset into an approprite status. For instance, if prior to maintenance an asset was Incomplete, you should probably move it back to Incomplete.</p>
+      <div class="clearfix">
+        <label for="status">Status</label>
+        <div class="input">
+          <select name="status" id="status">
+            <option value="" selected="selected"></option>
+            @OptionSorter.sortStrings(Status.Enum.values.toSeq, Some(" ")).map { v =>
+            <option value="@v._1">@v._2</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="clearfix">
+        <label for="reason">Reason</label>
+        <div class="input">
+          <textarea name="reason" id="reason" class="xlarge" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="clearfix">
+        <label for="maintenanceError" style="margin-right: 15px;"></label>
+        <span class="alert-message error hide hideAfterClose modalErrorMessage" id="maintenanceError" data-purge="true"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn">Asset out of Maintenance Mode</button>
+      <button type="reset" data-closes-modal="cancel-server" class="btn primary">Go back to browsing tumblr</button>
+    </div>
+    }
+  }
+</div>
+
+<div id="cancel-server" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
     <h3>Server Cancellation</h3>
@@ -496,7 +585,7 @@
     </div>
     <div class="clearfix">
       <label for="cancelError" style="margin-right: 15px;"></label>
-      <span class="alert-message error hide" id="cancelError"></span>
+      <span class="alert-message error hide hideAfterClose modalErrorMessage" id="cancelError" data-purge="true"></span>
     </div>
   </div>
   <div class="modal-footer">
@@ -506,7 +595,7 @@
   }
 </div>
 
-<div id="power-server" class="modal hide fade" data-modal-cleanup="powerError">
+<div id="power-server" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
     <h3>Server Power Management</h3>
@@ -537,7 +626,7 @@
       </div>
     </div>
     <div class="clearfix">
-      <span class="alert-message error hide" id="powerError" style="box-sizing: border-box; float: left; width: 100%;"></span>
+      <span class="alert-message error hide modalErrorMessage hideAfterClose" data-purge="true" id="powerError"></span>
     </div>
   </div>
   <div class="modal-footer">
@@ -547,24 +636,35 @@
   }
 </div>
 
-<div id="provision-server" class="modal hide fade" data-modal-cleanup="provisionError">
+<div id="provision-server" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
+    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    <h3>Activate Server</h3>
+    } else {
     <h3>Provision a Server</h3>
+    }
   </div>
   @form(app.routes.CookieApi.provisionAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "provisionError", Symbol("data-modal") -> "provision-server", Symbol("data-refresh") -> ".window") {
   <div class="modal-body">
-    <p><span class="label important">Warning</span> Provisioning a server is a destructive process. Be certain that you want to do this. The provisioner will:</p>
+    <p><span class="label important">Warning</span>
+    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    Activating a server takes a couple of days. When the server has been activated out of the
+    softlayer spare pool, it will be allocated during the reconciler run automatically. Once
+    allocated, we will begin getting billed.
+    } else {
+    Provisioning a server is a destructive process. Be certain that you want to do this. The provisioner will:</p>
     <ul>
       <li>SSH into the machine</li>
       <li>Reboot it into kickstart mode</li>
       <li>Come back online without old data on disks</li>
     </ul>
-    <p>If that all sounds good, pick an appropriate profile below and provide your email for notification</p>
+    }
+    <p>If that all sounds good, pick an appropriate profile below and provide your hipchat for notification</p>
     <div class="clearfix">
-      <label for="role">Role</label>
+      <label for="profile">Profile</label>
       <div class="input">
-        <select name="role" id="role" data-show="suffix-container,hostname-container">
+        <select name="profile" id="profile" data-show="suffix-container,hostname-container" data-triggers="PROVISIONER_TRIGGERS">
           <option value="" selected="selected"></option>
           @Provisioner.pluginEnabled.map { p =>
             @p.profiles.toSeq.map { v =>
@@ -574,38 +674,68 @@
         </select>
       </div>
     </div>
-    <div class="clearfix hide" id="suffix-container">
-      <label for="suffix">Hostname Suffix</label>
-      <div class="input">
-	      <input name="suffix" id="suffix">
-	      <span class="help-block">Optional suffix for hostname. If you provisioned a dev machine and picked mackenzie as your suffix, the hostname would be dev-mackenzie-HASH</span>
+    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    <input type="hidden" name="activate" value="true">
+    }
+    <script type="text/javascript">
+      var PROVISIONER_TRIGGERS = {
+        "profiles": @ProvisionerHelper.profilesAsJson(),
+        "primary_roles": @ProvisionerHelper.primaryRolesAsJson(),
+        "pools": @ProvisionerHelper.poolsAsJson(),
+        "secondary_roles": @ProvisionerHelper.secondaryRolesAsJson()
+      };
+    </script>
+    <div class="clearfix hide hideAfterClose" id="primary-role-container">
+      <label for="primary_role">Primary Role</label>
+      <div class="input" data-purge="true">
       </div>
     </div>
-    <div class="clearfix hide" id="hostname-container">
+    <div class="clearfix haveChoice hide hideAfterClose" id="pool-container">
+      <label for="pool">Pool</label>
+      <div class="input" data-purge="true">
+      </div>
+    </div>
+    <div class="clearfix haveChoice hide hideAfterClose" id="secondary-role-container">
+      <label for="secondary_role">Secondary Role</label>
+      <div class="input" data-purge="true">
+      </div>
+    </div>
+    <div class="clearfix hide hideAfterClose" id="suffix-container">
+      <label for="suffix">Hostname Suffix</label>
+      <div class="input">
+        <input name="suffix" id="suffix" data-purge="true">
+	<span class="help-block">Optional suffix for hostname. If you provisioned a dev machine and picked mackenzie as your suffix, the hostname would be dev-mackenzie-HASH</span>
+      </div>
+    </div>
+    <div class="clearfix hide hideAfterClose" id="hostname-container">
       <label>Hostname</label>
       <div class="input">
-	      <span class="uneditable-input" data-aggregate="role,suffix"></span>
+        <span class="uneditable-input" data-purge="true" data-aggregate="profile,suffix"></span>
       </div>
     </div>
     <div class="clearfix">
       <label for="contact">Hipchat User</label>
       <div class="input">
-        <input name="contact" id="contact" placeholder="@User.fromMap(req.session.data).map(_.username).getOrElse("mackenzie")">
+        <input name="contact" id="contact" value="@User.fromMap(req.session.data).map(_.username).getOrElse("mackenzie")">
       </div>
     </div>
     <div class="clearfix">
       <label for="provisionError" style="margin-right: 15px;"></label>
-      <span class="hide" data-on-error="alert-message error" id="provisionError"></span>
+      <span class="alert-message error hide hideAfterClose modalErrorMessage" data-purge="true" id="provisionError"></span>
     </div>
   </div>
   <div class="modal-footer">
+    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    <button type="submit" class="btn">Activate Server</button>
+    } else {
     <button type="submit" class="btn">Provision Server</button>
+    }
     <button type="reset" data-closes-modal="provision-server" class="btn primary">Go back to browsing tumblr</button>
   </div>
   }
 </div>
 
-<div id="asset-note" class="modal hide fade" data-modal-cleanup="noteError">
+<div id="asset-note" class="modal hide fade">
   <div class="modal-header">
     <a href="#" class="close">&times;</a>
     <h3>Create new note</h3>
@@ -630,7 +760,7 @@
     </div>
     <div class="clearfix">
       <label for="noteError" style="margin-right: 15px;"></label>
-      <span class="alert-message error hide" id="noteError"></span>
+      <span class="alert-message error hide hideAfterClose modalErrorMessage" id="noteError"></span>
     </div>
     <input type="hidden" name="source" value="USER">
   </div>
@@ -640,4 +770,6 @@
   </div>
   }
 </div>
+
+<script src="@routes.Assets.at("javascripts/asset_show.js")" type="text/javascript"></script>
 }

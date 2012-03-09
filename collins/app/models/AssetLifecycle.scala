@@ -57,7 +57,7 @@ object AssetLifecycle {
     try {
       Model.withTransaction { implicit con =>
         InternalTattler.informational(asset, None, reason, con)
-        AssetStateMachine(asset).decommission().executeUpdate()
+        AssetStateMachine(asset).decommission()
         InternalTattler.informational(asset, None, "Asset decommissioned successfully", con)
       }
       Right(true)
@@ -77,8 +77,20 @@ object AssetLifecycle {
   protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     allCatch[Boolean].either {
       Model.withTransaction { implicit con =>
-        AssetStateMachine(asset).update().executeUpdate()
-        InternalTattler.informational(asset, None, "Asset state updated")
+        val nextState = Status.Enum(asset.status) match {
+          case Status.Enum.Incomplete => Status.Enum.New
+          case Status.Enum.New => Status.Enum.Unallocated
+          case Status.Enum.Unallocated => Status.Enum.Allocated
+          case Status.Enum.Allocated => Status.Enum.Cancelled
+          case Status.Enum.Cancelled => Status.Enum.Decommissioned
+          case Status.Enum.Maintenance => Status.Enum.Unallocated
+          case n => n
+        }
+        if (nextState.id != asset.status) {
+          val newAsset = asset.copy(status = nextState.id)
+          Asset.update(newAsset)
+          InternalTattler.informational(newAsset, None, "Asset state updated")
+        }
         true
       }
     }.left.map(e => handleException(asset, "Error saving values or in state transition", e))
@@ -150,7 +162,7 @@ object AssetLifecycle {
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
 
-    allCatch[Boolean].either {
+    val res = allCatch[Boolean].either {
       val values = Seq(
         AssetMetaValue(asset, RackPosition, rackpos),
         AssetMetaValue(asset, PowerPort, 0, power1),
@@ -159,11 +171,13 @@ object AssetLifecycle {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
-        AssetStateMachine(asset).update().executeUpdate()
-        MetaWrapper.createMeta(asset, filtered)
+        val newAsset = asset.copy(status = Status.Enum.Unallocated.id)
+        Asset.update(newAsset)
+        MetaWrapper.createMeta(newAsset, filtered)
         true
       }
-    }.left.map(e => handleException(asset, "Exception updating asset", e))
+    }
+    res.left.map(e => handleException(asset, "Exception updating asset", e))
   }
 
   protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -193,10 +207,10 @@ object AssetLifecycle {
         if (lldpParsingResults.isLeft) {
           throw lldpParsingResults.left.get
         }
-        AssetMetaValue.create(AssetMetaValue(asset, AssetMeta.Enum.ChassisTag.id, chassis_tag))
-        MetaWrapper.createMeta(asset, filtered)
-        AssetStateMachine(asset).update().executeUpdate()
-        InternalTattler.informational(asset, None,
+        MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
+        val newAsset = asset.copy(status = Status.Enum.New.id)
+        Asset.update(newAsset)
+        InternalTattler.informational(newAsset, None,
           "Parsing and storing LSHW data succeeded",
           con
         )

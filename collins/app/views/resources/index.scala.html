@@ -1,7 +1,7 @@
 @(assetMeta: Seq[AssetMeta])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.Helpers
+@import _root_.util.views.OptionSorter
 @import util.notice
 
 @basicFormatter(asset: AssetMeta) = {
@@ -54,14 +54,14 @@
       <label for="@asset.name">@asset.label</label>
       <div class="input">
         @{
-	   asset.name match {
+	         asset.name match {
              case "DATACENTER_NAME" => optionDisplay(asset, 0)
              case "DISK_TYPE" => optionDisplay(asset, 2)
              case "DISK_STORAGE_TOTAL" => optionDisplay(asset, 1)
              case "CPU_SPEED_GHZ" => optionDisplay(asset, 3)
              case "MEMORY_SIZE_TOTAL" => optionDisplay(asset, 1)
              case "NIC_SPEED" => optionDisplay(asset, 4)
-	     case "NODECLASS" => optionDisplay(asset, 0)
+	           case "NODECLASS" => optionDisplay(asset, 0)
              case "POOL" => optionDisplay(asset, 0)
              case "PRIMARY_ROLE" => optionDisplay(asset, 0)
              case "SECONDARY_ROLE" => optionDisplay(asset, 0)
@@ -76,8 +76,8 @@
       <div class="input">
         <select name="status" id="status">
           <option value="" selected="selected"></option>
-          @Status.Enum.values.toSeq.map { v =>
-          <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
+          @OptionSorter.sortStrings(Status.Enum.values.toSeq, Some(" ")).map { v =>
+          <option value="@v._1">@v._2</option>
           }
         </select>
         <span class="help-inline">Asset Status (New, Incomplete, etc)</span>
@@ -88,8 +88,8 @@
       <div class="input">
         <select name="type" id="type">
           <option value="" selected="selected"></option>
-          @AssetType.Enum.values.toSeq.map { v =>
-          <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
+          @OptionSorter.sortStrings(AssetType.Enum.values.toSeq, Some(" ")).map { v =>
+          <option value="@v._1">@v._2</option>
           }
         </select>
         <span class="help-inline">Type of Asset (Server Chassis, Server Node, etc)</span>

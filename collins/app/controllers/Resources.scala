@@ -169,7 +169,7 @@ trait Resources extends Controller {
     val respectedParams = grouped.getOrElse(true, Map[String,Seq[String]]())
     val rewrittenParams = grouped.get(false).map { unknownParams =>
       unknownParams.map { case(k,v) =>
-        k -> v.map { s => ("%s;%s".format(k,s)) }
+        k -> v.map { s => ("%s;%s".format(k,rewriteAttributeValue(s))) }
       }
     }.getOrElse(Map[String,Seq[String]]())
     val mergedParams: Seq[String] = Seq(
@@ -181,6 +181,15 @@ trait Resources extends Controller {
       case list => respectedParams ++ Map("attribute" -> list)
     }
     newRequestWithQuery(req, finalMap)
+  }
+
+  private def rewriteAttributeValue(v: String): String = {
+    v match {
+      case none if v.toLowerCase == "(none)" =>
+        ""
+      case _ =>
+        v
+    }
   }
 
   private def stripQuery(inputMap: Map[String, Seq[String]]) = {
