@@ -1,4 +1,3 @@
 5000:com.tumblr.play.CachePlugin
 5001:com.tumblr.play.SoftLayerPlugin
 5002:com.tumblr.play.ProvisionerPlugin
-5003:com.tumblr.play.state.ManagerPlugin

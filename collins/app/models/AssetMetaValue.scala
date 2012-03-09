@@ -2,7 +2,7 @@ package models
 
 import Model.defaults._
 import conversions._
-import util.Cache
+import util.{Cache, Helpers}
 
 import anorm._
 import anorm.SqlParser._
@@ -45,10 +45,10 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
     ).as(scalar[Long]) > 0
   }
 
-  // FIXME move to config
-  private[this] lazy val ExcludedAttributes: Set[Long] = Set("SHA").map { v =>
-    AssetMeta.findByName(v).map(_.getId).getOrElse(-1L)
-  }
+  private[this] lazy val ExcludedAttributes: Set[Long] = Helpers.getFeature("noLogPurges").map { v =>
+    val noLogSet = v.split(",").map(_.trim.toUpperCase).toSet
+    noLogSet.map(v => AssetMeta.findByName(v).map(_.getId).getOrElse(-1L))
+  }.getOrElse(Set[Long]())
   def purge(mvs: Seq[AssetMetaValue])(implicit con: Connection) = {
     mvs.foreach { mv =>
       val exists = AssetMetaValue.exists(mv, con)

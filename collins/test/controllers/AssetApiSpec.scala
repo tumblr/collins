@@ -45,6 +45,11 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
           s must /("data") */("IPMI")/("IPMI_GATEWAY" -> "10.0.0.1")
         }
       }
+      "Getting an asset" in new asset {
+        val req2 = FakeRequest("GET", assetUrl)
+        val result2 = Extract.from(api.getAsset(assetTag).apply(req2))
+        result2 must haveStatus(200)
+      }
       "Inventory hardware information via a POST" in new asset {
         val lshwData = getResource("lshw-basic.xml")
         val lldpData = getResource("lldpctl-two-nic.xml")
