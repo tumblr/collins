@@ -229,7 +229,7 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
           if (sort == "ASC") a.id asc
           else a.id desc
         }
-      ).page(page, pageSize).toList
+      ).page(offset, pageSize).toList
       val totalCount = from(assetLog)(a =>
         where(whereClause(a, asset_id, filter, negate))
         compute(count)

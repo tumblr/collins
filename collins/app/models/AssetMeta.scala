@@ -42,6 +42,13 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     }.reverse
   }
 
+  override def update(am: AssetMeta)(implicit con: Connection) = {
+    val r = super.update(am)
+    Cache.invalidate("AssetMeta.findByName(%s)".format(am.name))
+    Cache.invalidate("AssetMeta.findById(%d)".format(am.getId))
+    r
+  }
+
   def findAll(): Seq[AssetMeta] = Cache.getOrElseUpdate("AssetMeta.findAll") {
     Model.withConnection { implicit con =>
       AssetMeta.find().list()
