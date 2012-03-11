@@ -46,20 +46,12 @@ case class Asset(
     MetaWrapper.findMeta(this, name, count)
   }
   def getMetaAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
-    AssetMetaValue.findOneByAssetId(Set(spec), id.get).toList match {
+    MetaWrapper.findMeta(this, spec.toString, 1).toList match {
       case Nil => None
       case one :: Nil =>
         Some(one)
       case other =>
         throw new IndexOutOfBoundsException("Expected one value, if any")
-    }
-  }
-  def getMetaAttributes(specs: Set[AssetMeta.Enum] = Set.empty): List[MetaWrapper] = {
-    specs.isEmpty match {
-      case true =>
-        AssetMetaValue.findAllByAssetId(id.get).toList
-      case false =>
-        AssetMetaValue.findOneByAssetId(specs, id.get).toList
     }
   }
 

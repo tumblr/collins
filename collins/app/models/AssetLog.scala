@@ -143,7 +143,7 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
     columns(a.asset_id, a.message_type) are(indexed)
   ))
 
-  override def table = assetLog
+  override def tableDef = assetLog
   override def delete(t: AssetLog): Int = 0
 
   def apply(asset: Asset, message: String, format: LogFormat, source: LogSource, mt: LogMessageType) = {

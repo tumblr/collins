@@ -34,7 +34,7 @@ object MetaWrapper {
         AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
       }
       Cache.invalidate("MetaWrapper(%d).getMetaAttribute(%s)(1)".format(asset.getId, metaName))
-      AssetMetaValue(asset, meta.id.get, v)
+      AssetMetaValue(asset, meta.id, v)
     }.toSeq
     AssetMetaValue.purge(metaValues)
     val values = metaValues.filter(v => v.value != null && v.value.nonEmpty)

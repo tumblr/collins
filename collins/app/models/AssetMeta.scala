@@ -1,83 +1,78 @@
 package models
 
-import Model.defaults._
-
 import util.Cache
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.{Schema, Table}
 
-import anorm._
-import play.api.Play.current
-import java.sql._
+import java.sql.Connection
 
 case class AssetMeta(
-    id: Pk[java.lang.Long],
     name: String,
     priority: Int,
     label: String,
-    description: String)
+    description: String,
+    id: Long = 0) extends ValidatedEntity[Long]
 {
-  require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
-  require(description != null && description.length > 0, "Need a description")
-  def getId(): Long = id.get
+  override def validate() {
+    require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
+    require(description != null && description.length > 0, "Need a description")
+  }
+  def getId(): Long = id
 }
 
-object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
+object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
 
-  def apply(name: String, priority: Int, label: String, description: String) = {
-    new AssetMeta(NotAssigned, name, priority, label, description)
-  }
+  val assetMeta = table[AssetMeta]("asset_meta")
+  on(assetMeta)(a => declare(
+    a.id is(autoIncremented,primaryKey),
+    a.name is(unique),
+    a.priority is(indexed)
+  ))
 
-  override def create(am: AssetMeta)(implicit con: Connection) = {
-    super.create(am) match {
-      case newam =>
-        Cache.invalidate("AssetMeta.findByName(%s)".format(am.name))
-        Cache.invalidate("AssetMeta.findAll")
-        newam
-    }
-  }
-
-  def create(metas: Seq[AssetMeta])(implicit con: Connection): Seq[AssetMeta] = {
-    metas.foldLeft(List[AssetMeta]()) { case(list, meta) =>
-      if (meta.id.isDefined) throw new IllegalArgumentException("Use update, id already defined")
-      AssetMeta.create(meta) +: list
-    }.reverse
-  }
-
-  override def update(am: AssetMeta)(implicit con: Connection) = {
-    val r = super.update(am)
-    Cache.invalidate("AssetMeta.findByName(%s)".format(am.name))
-    Cache.invalidate("AssetMeta.findById(%d)".format(am.getId))
-    r
+  override def tableDef = assetMeta
+  override def cacheKeys(a: AssetMeta) = Seq(
+    "AssetMeta.findByName(%s)".format(a.name),
+    "AssetMeta.findById(%d)".format(a.id),
+    "AssetMeta.findAll",
+    "AssetMeta.getViewable"
+  )
+  override def delete(a: AssetMeta): Int = withConnection {
+    assetMeta.deleteWhere(p => p.id === a.id)
   }
 
   def findAll(): Seq[AssetMeta] = Cache.getOrElseUpdate("AssetMeta.findAll") {
-    Model.withConnection { implicit con =>
-      AssetMeta.find().list()
+    withConnection {
+      from(assetMeta)(s => select(s)).toList
     }
   }
 
-  def findById(id: Long) = Model.withConnection { implicit con =>
-    Cache.getOrElseUpdate("AssetMeta.findById(%d)".format(id)) {
-      AssetMeta.find("id={id}").on('id -> id).singleOption()
+  def findById(id: Long) = Cache.getOrElseUpdate("AssetMeta.findById(%d)".format(id)) {
+    withConnection {
+      assetMeta.lookup(id)
     }
   }
 
   def findByName(name: String, con: Connection): Option[AssetMeta] = {
-    implicit val c: Connection = con
+    findByName(name)
+  }
+
+  def findByName(name: String): Option[AssetMeta] = {
     Cache.getOrElseUpdate("AssetMeta.findByName(%s)".format(name.toUpperCase)) {
-      AssetMeta.find("name={name}").on('name -> name.toUpperCase).singleOption()
+      withConnection {
+        assetMeta.where(a =>
+          a.name.toUpperCase === name.toUpperCase
+        ).headOption
+      }
     }
   }
 
-  def findByName(name: String): Option[AssetMeta] = Model.withConnection { con =>
-    findByName(name, con)
-  }
-
-  def getViewable(): Seq[AssetMeta] = {
-    // change to use stuff in Enum
-    Model.withConnection { implicit connection =>
-      Cache.getOrElseUpdate("AssetMeta.getViewable") {
-        AssetMeta.find("priority > -1 order by priority asc").list()
-      }
+  def getViewable(): Seq[AssetMeta] = Cache.getOrElseUpdate("AssetMeta.getViewable") {
+    withConnection {
+      from(assetMeta)(a =>
+        where(a.priority gt -1)
+        select(a)
+        orderBy(a.priority asc)
+      ).toList
     }
   }
 
@@ -124,5 +119,3 @@ object AssetMeta extends Magic[AssetMeta](Some("asset_meta")) {
     val NicAddress = Value(33, "INTERFACE_ADDRESS")
   }
 }
-
-

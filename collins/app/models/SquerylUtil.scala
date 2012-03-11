@@ -9,16 +9,16 @@ trait ValidatedEntity[T] extends KeyedEntity[T] {
 }
 
 trait AnormAdapter[T <: ValidatedEntity[_]] { self: Schema =>
-  protected def table: Table[T] // Override
+  protected def tableDef: Table[T] // Override
 
   protected def withTransaction[A](f: => A): A = Model.withSquerylTransaction(f)
   protected def withConnection[A](f: => A): A = Model.withSqueryl(f)
   protected def cacheKeys(t: T): Seq[String] = Seq()
 
-  def create(t: T): T = withTransaction(table.insert(t))
+  def create(t: T): T = withTransaction(tableDef.insert(t))
   def update(t: T): Int = withTransaction {
     try {
-      table.update(t)
+      tableDef.update(t)
       1
     } catch {
       case _ => 0
@@ -27,9 +27,9 @@ trait AnormAdapter[T <: ValidatedEntity[_]] { self: Schema =>
   def delete(t: T): Int // Override
 
   override def callbacks = Seq(
-    beforeInsert(table) call(_.validate),
-    beforeUpdate(table) call(_.validate),
-    afterDelete(table) call(cacheKeys(_).map(Cache.invalidate(_))),
-    afterUpdate(table) call(cacheKeys(_).map(Cache.invalidate(_)))
+    beforeInsert(tableDef) call(_.validate),
+    beforeUpdate(tableDef) call(_.validate),
+    afterDelete(tableDef) call(cacheKeys(_).map(Cache.invalidate(_))),
+    afterUpdate(tableDef) call(cacheKeys(_).map(Cache.invalidate(_)))
   )
 }

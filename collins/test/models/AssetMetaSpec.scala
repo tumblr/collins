@@ -13,34 +13,48 @@ class AssetMetaSpec extends ApplicationSpecification {
 
   "The AssetMeta Model" should {
 
+    "Handle validation" in {
+      "Disallow empty or bad names" in {
+        val ams = Seq(
+          AssetMeta("", -1, "Foo", "Description"),
+          AssetMeta("Foo", -1, "Foo", "Description")
+        )
+        ams.foreach { am =>
+          am.validate() must throwA[IllegalArgumentException]
+          AssetMeta.create(am) must throwA[IllegalArgumentException]
+        }
+        true
+      }
+      "Disallow empty descriptions" in {
+        val am = AssetMeta("FOO", -1, "Label", "")
+        am.validate() must throwA[IllegalArgumentException]
+        AssetMeta.update(am) mustEqual 0
+      }
+    }
+
     "Support CRUD Operations" in {
 
       "CREATE" in new mockassetmeta {
-        val result = Model.withConnection { implicit con => AssetMeta.create(newMeta) }
-        result.id.isDefined must beTrue
-        result.getId must beGreaterThan(1L)
+        val result = AssetMeta.create(newMeta)
+        result.id must beGreaterThan(1L)
       }
 
       "UPDATE" in new mockassetmeta {
-        Model.withConnection { implicit con =>
-          val maybeMeta = AssetMeta.findByName(metaName)
-          maybeMeta must beSome[AssetMeta]
-          val realMeta = maybeMeta.get
-          realMeta.priority mustEqual -1
-          AssetMeta.update(realMeta.copy(priority = 1))
-          AssetMeta.findByName(metaName).map { a =>
-            a.priority mustEqual 1
-          }.getOrElse(failure("Couldn't find asset meta but expected to"))
-        }
+        val maybeMeta = AssetMeta.findByName(metaName)
+        maybeMeta must beSome[AssetMeta]
+        val realMeta = maybeMeta.get
+        realMeta.priority mustEqual -1
+        AssetMeta.update(realMeta.copy(priority = 1))
+        AssetMeta.findByName(metaName).map { a =>
+          a.priority mustEqual 1
+        }.getOrElse(failure("Couldn't find asset meta but expected to"))
       }
 
       "DELETE" in new mockassetmeta {
-        Model.withConnection { implicit con =>
-          AssetMeta.findByName(metaName).map { a =>
-            AssetMeta.delete("id={id}").on('id -> a.getId).executeUpdate() mustEqual 1
-            AssetMeta.findById(a.getId) must beNone
-          }.getOrElse(failure("Couldn't find asset meta but expected to"))
-        }
+        AssetMeta.findByName(metaName).map { a =>
+          AssetMeta.delete(a) mustEqual 1
+          AssetMeta.findById(a.getId) must beNone
+        }.getOrElse(failure("Couldn't find asset meta but expected to"))
       }
     }
 

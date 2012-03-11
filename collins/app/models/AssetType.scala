@@ -20,7 +20,7 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
     a.name is(unique)
   ))
 
-  override def table = assetType
+  override def tableDef = assetType
   override def cacheKeys(a: AssetType) = Seq(
     "AssetType.findById(%d)".format(a.id),
     "AssetType.findByName(%s)".format(a.name.toUpperCase)
