@@ -11,6 +11,7 @@ import play.api.libs.json._
 import java.sql.{Connection, Timestamp}
 import java.util.Date
 
+// Index on (asset_id, message_type)
 case class AssetLog(
   id: Pk[java.lang.Long],
   asset_id: Id[java.lang.Long],
@@ -171,9 +172,9 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
       case true => ""
       case false => try {
         val (id, equalityCheck) = if (filter.startsWith("!")) {
-          (AssetLog.MessageTypes.withName(filter.drop(1)).id, "!=")
+          (AssetLog.MessageTypes.withName(filter.drop(1).toUpperCase).id, "!=")
         } else {
-          (AssetLog.MessageTypes.withName(filter).id, "=")
+          (AssetLog.MessageTypes.withName(filter.toUpperCase).id, "=")
         }
         "and message_type %s %d".format(equalityCheck, id)
       } catch {
@@ -201,7 +202,7 @@ object AssetLog extends Magic[AssetLog](Some("asset_log")) {
             'pageSize -> pageSize,
             'offset -> offset
           ).list()
-          val totalRows = AssetLog.count("%s".format(messageFilter)).as(scalar[Long])
+          val totalRows = AssetLog.count("1=1 %s".format(messageFilter)).as(scalar[Long])
           Page(rows, page, offset, totalRows)
       }
     }
