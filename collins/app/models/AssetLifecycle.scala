@@ -114,6 +114,7 @@ object AssetLifecycle {
       )
       Model.withTransaction { implicit con =>
         MetaWrapper.createMeta(asset, options)
+        Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
         true
       }
     }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
@@ -171,9 +172,9 @@ object AssetLifecycle {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
-        val newAsset = asset.copy(status = Status.Enum.Unallocated.id)
-        Asset.update(newAsset)
+        val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
+        Asset.update(newAsset)
         true
       }
     }
@@ -208,7 +209,7 @@ object AssetLifecycle {
           throw lldpParsingResults.left.get
         }
         MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
-        val newAsset = asset.copy(status = Status.Enum.New.id)
+        val newAsset = asset.copy(status = Status.Enum.New.id, updated = Some(new Date().asTimestamp))
         Asset.update(newAsset)
         InternalTattler.informational(newAsset, None,
           "Parsing and storing LSHW data succeeded",
