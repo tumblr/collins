@@ -14,6 +14,7 @@ object ApplicationBuild extends Build {
       "com.twitter" %% "util-core" % "1.12.12",
       "com.twitter" %% "finagle-http" % "1.10.0",
       "org.jsoup" % "jsoup" % "1.6.1",
+      "org.squeryl" %% "squeryl" % "0.9.5-RC1",
       "org.yaml" % "snakeyaml" % "1.10"
     )
 
