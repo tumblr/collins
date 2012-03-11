@@ -21,7 +21,7 @@ object Status extends Schema with AnormAdapter[Status] { //Magic[Status](Some("s
     s.name is(unique)
   ))
 
-  override protected def table = status
+  override protected def tableDef = status
   override protected def cacheKeys(s: Status) = Seq(
     "Status.findById(%d)".format(s.id),
     "Status.findByName(%s)".format(s.name.toLowerCase)

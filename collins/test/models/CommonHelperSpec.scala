@@ -28,7 +28,7 @@ trait CommonHelperSpec[REP] extends test.ResourceFinder {
     mvs.map { mv =>
       val mid = mv.asset_meta_id.get
       val meta = enums.find { e => e.id == mid }.map { e =>
-        AssetMeta(mv.asset_meta_id, e.toString, -1, e.toString, e.toString)
+        AssetMeta(e.toString, -1, e.toString, e.toString, mv.asset_meta_id.get)
       }.getOrElse(throw new Exception("Found unhandled AssetMeta"))
       MetaWrapper(meta, mv)
     }

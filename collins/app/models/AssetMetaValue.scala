@@ -97,34 +97,9 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
     }
   }
 
-  def findOneByAssetId(spec: Set[AssetMeta.Enum], asset_id: Long): Seq[MetaWrapper] = {
-    val query = """
-      select * from asset_meta am
-      join asset_meta_value amv on am.id = amv.asset_meta_id
-      where amv.asset_id = {id}
-    """
-    val extra = spec.isEmpty match {
-      case true => ""
-      case false => " and amv.asset_meta_id in (%s)".format(spec.map { _.id }.mkString(","))
-    }
-    val finalQuery = query + extra
-    Model.withConnection { implicit connection =>
-      SQL(finalQuery).on('id -> asset_id).as(AssetMetaValue ~< AssetMeta ^^ flatten *).map {
-        case (mv, m) => MetaWrapper(m, mv)
-      }
-    }
-  }
-
-  def findAllByAssetId(id: Long): Seq[MetaWrapper] = {
-    val query = """
-      select * from asset_meta am
-      join asset_meta_value amv on am.id = amv.asset_meta_id
-      where amv.asset_id={id}
-    """
-    Model.withConnection { implicit connection =>
-      SQL(query).on('id -> id).as(AssetMeta ~< AssetMetaValue ^^ flatten *).map {
-        case (meta, metaValue) => MetaWrapper(meta, metaValue)
-      }
+  def findAllByAssetId(id: Long): Seq[MetaWrapper] = Model.withConnection { implicit connection =>
+    AssetMetaValue.find("asset_id={id}").on('id -> id).list.map { amv =>
+      MetaWrapper(amv.getMeta(), amv)
     }
   }
 
