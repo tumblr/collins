@@ -14,6 +14,7 @@ case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.l
   def getAsset(): Asset = {
     Asset.findById(asset_id.id).get
   }
+  def getAssetId(): Long = asset_id.get
   def getMeta(): AssetMeta = {
     AssetMeta.findById(asset_meta_id.id).get
   }
@@ -58,9 +59,8 @@ object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
         'ami -> ami
       ).executeUpdate() match {
         case yes if yes == 1 && !exists && !ExcludedAttributes.contains(ami) =>
-          AssetLog(NotAssigned, mv.asset_id, new Date().asTimestamp, AssetLog.Formats.PlainText.id.toByte,
-                   AssetLog.Sources.Internal.id.toByte,
-                   AssetLog.MessageTypes.Notice.id.toByte,
+          AssetLog(mv.getAssetId, new Date().asTimestamp, LogFormat.PlainText,
+                   LogSource.Internal, LogMessageType.Notice,
                    "Deleted old meta value, setting %s to %s".format(
                      AssetMeta.findById(ami).map { _.name }.getOrElse(ami.toString),
                      mv.value)

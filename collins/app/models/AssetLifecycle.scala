@@ -222,8 +222,8 @@ object AssetLifecycle {
   protected def parseLshw(asset: Asset, parser: LshwParser)(implicit con: Connection): Status[LshwRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
-        AssetLog.notice(asset, "Parsing LSHW failed", AssetLog.Formats.PlainText,
-          AssetLog.Sources.Internal).withException(ex).create()
+        AssetLog.notice(asset, "Parsing LSHW failed", LogFormat.PlainText,
+          LogSource.Internal).withException(ex).create()
         Left(ex)
       case Right(lshwRep) =>
         LshwHelper.updateAsset(asset, lshwRep) match {
@@ -232,7 +232,7 @@ object AssetLifecycle {
           case false =>
             val ex = new Exception("Parsing LSHW succeeded, saving failed")
             AssetLog.error(asset, "Parsing LSHW succeeded but saving it failed",
-              AssetLog.Formats.PlainText, AssetLog.Sources.Internal
+              LogFormat.PlainText, LogSource.Internal
             ).withException(ex).create()
             Left(ex)
         }
@@ -242,8 +242,8 @@ object AssetLifecycle {
   protected def parseLldp(asset: Asset, parser: LldpParser)(implicit con: Connection): Status[LldpRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
-        AssetLog.notice(asset, "Parsing LLDP failed", AssetLog.Formats.PlainText,
-          AssetLog.Sources.Internal).withException(ex).create()
+        AssetLog.notice(asset, "Parsing LLDP failed", LogFormat.PlainText,
+          LogSource.Internal).withException(ex).create()
         Left(ex)
       case Right(lldpRep) =>
         LldpHelper.updateAsset(asset, lldpRep) match {
@@ -252,7 +252,7 @@ object AssetLifecycle {
           case false =>
             val ex = new Exception("Parsing LLDP succeeded, saving failed")
             AssetLog.error(asset, "Parsing LLDP succeeded but saving it failed",
-              AssetLog.Formats.PlainText, AssetLog.Sources.Internal
+              LogFormat.PlainText, LogSource.Internal
             ).withException(ex).create()
             Left(ex)
         }
@@ -266,8 +266,8 @@ object AssetLifecycle {
         AssetLog.error(
           asset,
           msg,
-          AssetLog.Formats.PlainText,
-          AssetLog.Sources.Internal
+          LogFormat.PlainText,
+          LogSource.Internal
         ).withException(e).create()
       }
     } catch {

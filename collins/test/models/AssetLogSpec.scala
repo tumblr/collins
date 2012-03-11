@@ -14,9 +14,8 @@ class AssetLogSpec extends ApplicationSpecification {
   "The AssetLog Model" should {
 
     "CREATE" in new mocklog {
-      val result = Model.withConnection { implicit con => AssetLog.create(newLog) }
-      result.id.isDefined must beTrue
-      result.getId must beGreaterThan(1L)
+      val result = AssetLog.create(newLog)
+      result.id must be_>(0L)
     }
 
     "Support getters/finders" in {
@@ -90,8 +89,8 @@ class AssetLogSpec extends ApplicationSpecification {
     }
     val asset_id = asset.getId
     val msg = "Hello World"
-    val format = AssetLog.Formats.PlainText
-    val source = AssetLog.Sources.Internal
+    val format = LogFormat.PlainText
+    val source = LogSource.Internal
     val newLog = AssetLog.alert(asset, msg, format, source)
   }
 
