@@ -15,10 +15,12 @@ class StatusSpec extends ApplicationSpecification {
 
     "Handle validation" in {
       "Disallow empty names" in {
-        Status("", "Description") must throwA[IllegalArgumentException]
+        Status("", "Description").validate() must throwA[IllegalArgumentException]
+        Status.create(Status("", "Description")) must throwA[IllegalArgumentException]
       }
       "Disallow empty descriptions" in {
-        Status("Name", "") must throwA[IllegalArgumentException]
+        Status("Name", "").validate() must throwA[IllegalArgumentException]
+        Status.update(Status("Name", "")) mustEqual 0
       }
     }
 
@@ -37,37 +39,33 @@ class StatusSpec extends ApplicationSpecification {
       val status = Status("test1", "New test")
 
       "CREATE" in {
-        Model.withConnection { implicit con =>
-          val created = Status.create(status)
-          created.id.isDefined must beTrue
-        }
+        val created = Status.create(status)
+        created.id must be_>(0)
       }
 
       "READ" in {
-        Model.withConnection { implicit con =>
-          val _test1 = Status.findByName(status.name)
-          _test1 must beSome[Status]
-          val test1 = _test1.get
-          test1.getId must be_>=(5)
-          test1.name mustEqual status.name
-          test1.description mustEqual status.description
-        }
+        val _test1 = Status.findByName(status.name)
+        _test1 must beSome[Status]
+        val test1 = _test1.get
+        test1.id must be_>=(5)
+        test1.name mustEqual status.name
+        test1.description mustEqual status.description
       }
 
       "UPDATE" in {
-        Model.withConnection { implicit con =>
-          val test = Status.findByName(status.name).get
-          Status.update(test.copy(description = "updated test")) mustEqual 1
-          Status.find("name={name}").on('name -> status.name).single().description mustEqual "updated test"
-        }
+        val test = Status.findByName(status.name).get
+        println("\n\n\n\n")
+        println(test)
+        println(test.id)
+        Status.update(test.copy(description = "updated test")) mustEqual 1
+        println("\n\n\n\n")
+        Status.findByName(status.name).get.description mustEqual "updated test"
       }
 
       "DELETE" in {
-        Model.withConnection { implicit con =>
-          val testId = Status.findByName(status.name).get.getId
-          val query = Status.delete("id={id}").on('id -> testId).executeUpdate() mustEqual 1
-          Status.findById(testId) must beNone
-        }
+        val testStatus = Status.findByName(status.name).get
+        val query = Status.delete(testStatus) mustEqual 1
+        Status.findById(testStatus.id) must beNone
       }
     }
   }
