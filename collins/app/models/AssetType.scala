@@ -1,43 +1,60 @@
 package models
 
-import Model.defaults._
 import util.Cache
 
-import anorm._
-import anorm.SqlParser._
-import java.sql._
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.{Schema, Table}
 
-case class AssetType(id: Pk[java.lang.Integer], name: String) {
-  def getId(): Int = id.get
+case class AssetType(name: String, id: Int = 0) extends ValidatedEntity[Int] {
+  def getId(): Int = id
+  override def validate() {
+    require(name != null && name.length > 0, "Name must not be empty")
+  }
 }
 
-object AssetType extends Magic[AssetType](Some("asset_type")) {
-  def create(atypes: Seq[AssetType])(implicit con: Connection): Seq[AssetType] = {
-    atypes.foldLeft(List[AssetType]()) { case(list, atype) =>
-      if (atype.id.isDefined) throw new IllegalArgumentException("Use update, id already defined")
-      AssetType.create(atype) +: list
-    }.reverse
-  }
+object AssetType extends Schema with AnormAdapter[AssetType] {
 
-  def findById(id: Int): Option[AssetType] = Model.withConnection { implicit con =>
+  val assetType = table[AssetType]("asset_type")
+  on(assetType)(a => declare(
+    a.id is(autoIncremented,primaryKey),
+    a.name is(unique)
+  ))
+
+  override def table = assetType
+  override def cacheKeys(a: AssetType) = Seq(
+    "AssetType.findById(%d)".format(a.id),
+    "AssetType.findByName(%s)".format(a.name.toUpperCase)
+  )
+
+  def findById(id: Int): Option[AssetType] =
     Cache.getOrElseUpdate("AssetType.findById(%d)".format(id)) {
-      AssetType.find("id={id}").on('id -> id).singleOption()
+      withConnection {
+        assetType.lookup(id)
+      }
     }
-  }
-  def findByName(name: String): Option[AssetType] = Model.withConnection { implicit con =>
+
+  def findByName(name: String): Option[AssetType] =
     Cache.getOrElseUpdate("AssetType.findByName(%s)".format(name.toUpperCase)) {
-      AssetType.find("name={name}").on('name -> name).singleOption()
+      withConnection {
+        assetType.where(a =>
+          a.name.toLowerCase === name.toLowerCase
+        ).headOption
+      }
     }
-  }
 
   def fromEnum(enum: AssetType.Enum): AssetType =
-    new AssetType(Id(enum.id), enum.toString)
+    new AssetType(enum.toString, enum.id)
+
   def fromString(name: String): Option[AssetType] = {
     try {
       Some(fromEnum(Enum.withName(name)))
     } catch {
       case e => findByName(name)
     }
+  }
+
+  override def delete(a: AssetType): Int = withConnection {
+    assetType.deleteWhere(p => p.id === a.id)
   }
 
   type Enum = Enum.Value

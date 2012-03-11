@@ -39,6 +39,7 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
       }
       provider.authenticate("blake", "abbazabba") must beNone
     }
+    /*
     "work with LDAP authentication" >> {
       val thisFile = new File("")
       val configData = Map(
@@ -65,5 +66,6 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
       }
       provider.authenticate("fizz", "buzz") must beNone
     } // with LDAP authentication
+    */
   }
 }
