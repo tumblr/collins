@@ -22,7 +22,17 @@ class AssetLogSpec extends ApplicationSpecification {
     "Support getters/finders" in {
 
       "find with an asset" in new concretelog {
-        AssetLog.list(Some(asset)).total mustEqual 2
+        val logs = AssetLog.list(Some(asset))
+        logs.total mustEqual 1
+        logs.items(0).getFormat.id mustEqual format
+        logs.items(0).message mustEqual message
+      }
+
+      "find with another asset" in new mocklog {
+        val logs = AssetLog.list(Some(asset))
+        logs.total mustEqual 1
+        logs.items(0).getFormat mustEqual format
+        logs.items(0).message mustEqual msg
       }
 
       "find with a filter and no asset" in new concretelog {
@@ -34,6 +44,13 @@ class AssetLogSpec extends ApplicationSpecification {
         info.items(0).isInformational must beTrue
       }
 
+      "find with a filter and an asset" in new concretelog {
+        AssetLog.list(Some(asset),0,10,"DESC","Alert").total mustEqual 0
+        val info = AssetLog.list(Some(asset),0,10,"DESC","Informational")
+        info.total mustEqual 1
+        info.items(0).getAssetId mustEqual asset_id
+      }
+
       "find with a negating filter and no asset" in new concretelog {
         val alert = AssetLog.list(None,0,10,"DESC","!Informational")
         alert.total mustEqual 1
@@ -41,6 +58,14 @@ class AssetLogSpec extends ApplicationSpecification {
         val info = AssetLog.list(None,0,10,"DESC","!Alert")
         info.total mustEqual 1
         info.items(0).isInformational must beTrue
+      }
+
+      "find with a negating filter and an asset" in new mocklog {
+        val alert = AssetLog.list(Some(asset),0,10,"DESC","!Informational")
+        alert.total mustEqual 1
+        alert.items(0).isAlert must beTrue
+        alert.items(0).getAssetId mustEqual asset_id
+        AssetLog.list(Some(asset),0,10,"DESC","!Alert").total mustEqual 0
       }
 
       "find with a sort" in {
@@ -54,7 +79,16 @@ class AssetLogSpec extends ApplicationSpecification {
   } // Asset should
 
   trait mocklog extends Scope {
-    val asset = Asset.findById(1).get
+    val tag = "tumblrtag15"
+    def createAsset = Model.withConnection { implicit con =>
+      Asset.create(Asset(tag, Status.Enum.Incomplete, AssetType.Enum.ServerNode))
+      Asset.findByTag(tag).get
+    }
+    val asset = Asset.findByTag(tag) match {
+      case None => createAsset
+      case Some(a) => a
+    }
+    val asset_id = asset.getId
     val msg = "Hello World"
     val format = AssetLog.Formats.PlainText
     val source = AssetLog.Sources.Internal
@@ -63,7 +97,7 @@ class AssetLogSpec extends ApplicationSpecification {
 
   trait concretelog extends Scope {
     val id = 1
-    val asset_id = 1
+    val asset_id = 1L
     val format = 0
     val source = 0
     val message_type = 6 // Informational
