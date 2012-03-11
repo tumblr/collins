@@ -1,108 +1,147 @@
 package models
 
-import Model.defaults._
 import conversions._
 import util.{Cache, Helpers}
-
-import anorm._
-import anorm.SqlParser._
 import play.api.Logger
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.{Schema, Table}
 import java.sql.{Connection, Timestamp}
 import java.util.Date
 
-case class AssetMetaValue(asset_id: Id[java.lang.Long], asset_meta_id: Id[java.lang.Long], group_id: Int, value: String) {
+case class AssetMetaValue(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) {
   def getAsset(): Asset = {
-    Asset.findById(asset_id.id).get
+    Asset.findById(asset_id).get
   }
-  def getAssetId(): Long = asset_id.get
+  def getAssetId(): Long = asset_id
   def getMeta(): AssetMeta = {
-    AssetMeta.findById(asset_meta_id.id).get
+    AssetMeta.findById(asset_meta_id).get
   }
 }
 
-object AssetMetaValue extends Magic[AssetMetaValue](Some("asset_meta_value")) {
+object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
+
   private[this] val logger = Logger.logger
+  val tableDef = table[AssetMetaValue]("asset_meta_value")
+  on(tableDef)(a => declare(
+    a.asset_meta_id is(indexed),
+    a.group_id is(indexed),
+    a.group_id defaultsTo(0),
+    columns(a.asset_id, a.asset_meta_id) are(indexed)
+  ))
+
+  override def cacheKeys(a: AssetMetaValue) = Seq(
+    "AssetMetaValue.findMetaValues(%d)".format(a.asset_meta_id),
+    "AssetMetaValue.findAllByAssetId(%d)".format(a.asset_id),
+    fbam.format(a.asset_id, a.asset_meta_id)
+  )
 
   def apply(asset_id: Long, asset_meta_id: Long, value: String) =
-    new AssetMetaValue(Id(asset_id), Id(asset_meta_id), 0, value)
+    new AssetMetaValue(asset_id, asset_meta_id, 0, value)
   def apply(asset: Asset, asset_meta_id: Long, value: String) =
-    new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), 0, value)
+    new AssetMetaValue(asset.getId, asset_meta_id, 0, value)
   def apply(asset: Asset, asset_meta: AssetMeta.Enum, value: String) =
-    new AssetMetaValue(Id(asset.getId), Id(asset_meta.id), 0, value)
+    new AssetMetaValue(asset.getId, asset_meta.id, 0, value)
 
-  def apply(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) =
-    new AssetMetaValue(Id(asset_id), Id(asset_meta_id), group_id, value)
   def apply(asset: Asset, asset_meta_id: Long, group_id: Int, value: String) =
-    new AssetMetaValue(Id(asset.getId), Id(asset_meta_id), group_id, value)
+    new AssetMetaValue(asset.getId, asset_meta_id, group_id, value)
   def apply(asset: Asset, asset_meta: AssetMeta.Enum, group_id: Int, value: String) =
-    new AssetMetaValue(Id(asset.getId), Id(asset_meta.id), group_id, value)
+    new AssetMetaValue(asset.getId, asset_meta.id, group_id, value)
 
-  def exists(mv: AssetMetaValue, con: Connection): Boolean = {
-    implicit val c: Connection = con
-    AssetMetaValue.count("asset_id={aid} AND asset_meta_id={ami} AND value={value}").on(
-      'aid -> mv.asset_id.get,
-      'ami -> mv.asset_meta_id.get,
-      'value -> mv.value
-    ).as(scalar[Long]) > 0
+  def exists(mv: AssetMetaValue): Boolean = withConnection {
+    from(tableDef)(a =>
+      where {
+        a.asset_id === mv.asset_id and
+        a.asset_meta_id === mv.asset_meta_id and
+        a.value === mv.value
+      }
+      compute(count)
+    ) > 0
+  }
+
+  def delete(a: AssetMetaValue): Int = withConnection {
+    tableDef.deleteWhere(p =>
+      p.asset_id === a.asset_id and
+      p.asset_meta_id === a.asset_meta_id
+    )
+  }
+
+  def deleteByAssetId(id: Long): Int = withConnection {
+    tableDef.deleteWhere(p => p.asset_id === id)
+  }
+
+  def deleteByAssetIdAndMetaId(asset_id: Long, meta_id: Set[Long]): Int = withConnection {
+    tableDef.deleteWhere { p =>
+      (p.asset_id === asset_id) and
+      (p.asset_meta_id in meta_id)
+    }
   }
 
   private[this] lazy val ExcludedAttributes: Set[Long] = Helpers.getFeature("noLogPurges").map { v =>
     val noLogSet = v.split(",").map(_.trim.toUpperCase).toSet
     noLogSet.map(v => AssetMeta.findByName(v).map(_.getId).getOrElse(-1L))
   }.getOrElse(Set[Long]())
-  def purge(mvs: Seq[AssetMetaValue])(implicit con: Connection) = {
+  def purge(mvs: Seq[AssetMetaValue]) = {
     mvs.foreach { mv =>
-      val exists = AssetMetaValue.exists(mv, con)
-      val ami = mv.asset_meta_id.get
-      AssetMetaValue.delete("asset_id={aid} AND asset_meta_id={ami}").on(
-        'aid -> mv.asset_id.get,
-        'ami -> ami
-      ).executeUpdate() match {
-        case yes if yes == 1 && !exists && !ExcludedAttributes.contains(ami) =>
-          AssetLog(mv.getAssetId, new Date().asTimestamp, LogFormat.PlainText,
-                   LogSource.Internal, LogMessageType.Notice,
+      val exists = AssetMetaValue.exists(mv)
+      val ami = mv.asset_meta_id
+      deleteByAssetIdAndMetaId(mv.asset_id, Set(mv.asset_meta_id)) match {
+        case yes if yes >= 1 && !exists && !ExcludedAttributes.contains(ami) =>
+          AssetLog.notice(mv.getAsset,
                    "Deleted old meta value, setting %s to %s".format(
                      AssetMeta.findById(ami).map { _.name }.getOrElse(ami.toString),
-                     mv.value)
-                   ).create()
+                     mv.value),
+                   LogFormat.PlainText, LogSource.Internal
+           )
         case n =>
           logger.trace("Got %d rows for AssetMetaValue.delete", n)
       }
     }
   }
 
-  override def create(mv: AssetMetaValue)(implicit con: Connection): AssetMetaValue = {
-    AssetMetaValue.insert(mv)
-    Cache.invalidate("AssetMetaValue.findMetaValues(%d)".format(mv.asset_meta_id.get))
-    mv
-  }
-
-  def create(mvs: Seq[AssetMetaValue])(implicit con: Connection): Int = {
-    mvs.foldLeft(0) { case(count, mv) =>
-      AssetMetaValue.create(mv) match {
-        case _ => count + 1
-      }
+  def create(mvs: Seq[AssetMetaValue]): Int = withTransaction {
+    try {
+      mvs.foreach { mv => tableDef.insert(mv) }
+      mvs.size
+    } catch {
+      case e =>
+        e.printStackTrace()
+        0
     }
   }
 
   def findMetaValues(meta_id: Long): Seq[String] = {
-    val query = """
-      select distinct value from asset_meta_value amv
-      where amv.asset_meta_id = {id}
-    """
-    Model.withConnection { implicit con =>
-      Cache.getOrElseUpdate("AssetMetaValue.findMetaValues(%d)".format(meta_id)) {
-        SQL(query).on('id -> meta_id).as(str("value") *).sorted
+    Cache.getOrElseUpdate("AssetMetaValue.findMetaValues(%d)".format(meta_id)) {
+      withConnection {
+        from(tableDef)(a =>
+          where(a.asset_meta_id === meta_id)
+          select(a.value)
+        ).distinct.toList.sorted
       }
     }
   }
 
-  def findAllByAssetId(id: Long): Seq[MetaWrapper] = Model.withConnection { implicit connection =>
-    AssetMetaValue.find("asset_id={id}").on('id -> id).list.map { amv =>
-      MetaWrapper(amv.getMeta(), amv)
+  private[this] val fbam = "AssetMetaValue.findByAssetAndMeta(%d, %d)"
+  def findByAssetAndMeta(asset: Asset, meta: AssetMeta, count: Int): Seq[MetaWrapper] = {
+    Cache.getOrElseUpdate(fbam.format(asset.id, meta.id)) {
+    withConnection {
+      from(tableDef)(a =>
+        where(a.asset_id === asset.getId and a.asset_meta_id === meta.id)
+        select(a)
+      ).page(0, count).toList.map(mv => MetaWrapper(meta, mv))
+    }}
+  }
+
+  def findAllByAssetId(id: Long): Seq[MetaWrapper] = {
+    Cache.getOrElseUpdate("AssetMetaValue.findAllByAssetId(%d)".format(id)) {
+      withConnection {
+        from(tableDef)(a =>
+          where(a.asset_id === id)
+          select(a)
+        ).toList.map { amv =>
+          MetaWrapper(amv.getMeta(), amv)
+        }
+      }
     }
   }
 
 }
-
-

@@ -12,8 +12,8 @@ import java.util.Date
  * Provide a convenience wrapper on top of a row of meta/value data
  */
 case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
-  def getAssetId(): Long = _value.asset_id.id
-  def getMetaId(): Long = _meta.getId
+  def getAssetId(): Long = _value.asset_id
+  def getMetaId(): Long = _meta.id
   def getId(): (Long,Long) = (getAssetId(), getMetaId())
   def getName(): String = _meta.name
   def getGroupId(): Int = _value.group_id
@@ -30,10 +30,10 @@ object MetaWrapper {
   def createMeta(asset: Asset, metas: Map[String,String])(implicit con: Connection) = {
     val metaValues = metas.map { case(k,v) =>
       val metaName = k.toUpperCase
-      val meta: AssetMeta = AssetMeta.findByName(metaName, con).getOrElse {
+      val meta: AssetMeta = AssetMeta.findByName(metaName).getOrElse {
         AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
+        AssetMeta.findByName(metaName).get
       }
-      Cache.invalidate("MetaWrapper(%d).getMetaAttribute(%s)(1)".format(asset.getId, metaName))
       AssetMetaValue(asset, meta.id, v)
     }.toSeq
     AssetMetaValue.purge(metaValues)
@@ -42,24 +42,13 @@ object MetaWrapper {
       case 0 =>
       case n =>
         AssetMetaValue.create(values)
-        Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
     }
   }
 
   def findMeta(asset: Asset, name: String, count: Int = 1): Seq[MetaWrapper] = {
-    Cache.getOrElseUpdate("MetaWrapper(%d).getMetaAttribute(%s)(%d)".format(asset.getId, name.toUpperCase, count)) {
-      Model.withConnection { implicit con =>
-        AssetMeta.findByName(name, con).map { meta =>
-          val values = AssetMetaValue.find(
-            "asset_id={asset_id} AND asset_meta_id={asset_meta_id} LIMIT %d".format(count)
-          ).on(
-            'asset_id -> asset.getId,
-            'asset_meta_id -> meta.getId
-          ).list()
-          values.map { amv => MetaWrapper(meta, amv) }
-        }.getOrElse(Nil)
-      }
-    }
+    AssetMeta.findByName(name).map { meta =>
+      AssetMetaValue.findByAssetAndMeta(asset, meta, count)
+    }.getOrElse(Nil)
   }
 
   def findMeta(asset: Asset, name: String): Option[MetaWrapper] = {

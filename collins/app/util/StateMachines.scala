@@ -13,7 +13,6 @@ object AssetStateMachine {
   lazy val DeleteAttributes: Set[Long] = DeleteSomeAttributes.map { v =>
     AssetMeta.findByName(v).map(_.getId).getOrElse(-1L)
   }
-  lazy val DeleteAttributesString = DeleteAttributes.mkString(",")
 }
 
 case class AssetStateMachine(asset: Asset) {
@@ -33,12 +32,10 @@ case class AssetStateMachine(asset: Asset) {
       }
       Helpers.haveFeature("deleteMetaOnDecommission", false) match {
         case None | Some(true) =>
-          AssetMetaValue.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
+          AssetMetaValue.deleteByAssetId(asset.getId)
         case _ =>
       }
-      AssetMetaValue.delete("asset_id={id} AND asset_meta_id IN(%s)".format(AssetStateMachine.DeleteAttributesString))
-        .on('id -> asset.getId)
-        .executeUpdate()
+      AssetMetaValue.deleteByAssetIdAndMetaId(asset.getId, AssetStateMachine.DeleteAttributes)
       res
   }
 }

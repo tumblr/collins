@@ -82,11 +82,16 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
           "attribute" -> Seq("foo;bar","fizz;buzz")
         ))
         val req = FakeRequest("POST", assetUrl).copy(body = body)
+        println("Before updating asset\n\n\n")
         val result = Extract.from(api.updateAsset(assetTag).apply(req))
         result must haveStatus(200)
         result must haveJsonData.which { txt =>
           txt must /("data") */("SUCCESS" -> true)
         }
+        val amf = AssetMeta.findByName("FOO")
+        println("\n\n\nFoo: " + amf)
+        println(AssetMetaValue.findAllByAssetId(2L))
+        println("\n\n\n")
         getAsset() must haveJsonData.which { txt =>
           txt must /("data") */("ASSET")/("STATUS" -> "Unallocated")
           txt must /("data") */("ATTRIBS") */("0") */("RACK_POSITION" -> "rack 1")
