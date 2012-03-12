@@ -3,7 +3,6 @@ package controllers
 import models.{Asset, IpmiInfo, Model}
 import util.{IpAddress, SecuritySpec}
 
-import anorm.{Id, NotAssigned}
 import play.api.data._
 import play.api.http.{Status => StatusValues}
 import play.api.libs.json.{JsBoolean, JsObject}

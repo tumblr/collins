@@ -20,7 +20,7 @@ trait CommonHelperSpec[REP] extends test.ResourceFinder {
 
 
   def getStub(): Asset = {
-    Asset(anorm.Id(1), "test", Status.Enum.New.id, AssetType.Enum.ServerNode.id, new Date().asTimestamp, None, None)
+    Asset("test", Status.Enum.New.id, AssetType.Enum.ServerNode.id, new Date().asTimestamp, None, None, 1)
   }
 
   def metaValue2metaWrapper(mvs: Seq[AssetMetaValue]): Seq[MetaWrapper] = {

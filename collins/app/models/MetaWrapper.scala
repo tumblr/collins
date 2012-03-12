@@ -2,11 +2,10 @@ package models
 
 import util.Cache
 
-import anorm._
-import anorm.SqlParser._
 import conversions._
-import java.sql.Connection
 import java.util.Date
+import org.squeryl.Query
+import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, ExistsExpression, ExpressionNode, LogicalBoolean}
 
 /**
  * Provide a convenience wrapper on top of a row of meta/value data
@@ -27,7 +26,9 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   override def toString(): String = getValue()
 }
 object MetaWrapper {
-  def createMeta(asset: Asset, metas: Map[String,String])(implicit con: Connection) = {
+  import org.squeryl.PrimitiveTypeMode._
+
+  def createMeta(asset: Asset, metas: Map[String,String]) = {
     val metaValues = metas.map { case(k,v) =>
       val metaName = k.toUpperCase
       val meta: AssetMeta = AssetMeta.findByName(metaName).getOrElse {
@@ -64,125 +65,81 @@ object MetaWrapper {
     } else if (params._2.nonEmpty) {
       MetaWrapper.findAssetsByMeta(page, params._2, afinder, operation)
     } else {
-      val finderQuery = afinder.asQueryFragment()
-      val finderQueryFrag = finderQuery.sql.query match {
-        case empty if empty.isEmpty => "1=1"
-        case notEmpty => notEmpty
+      Asset.find(page, afinder)
+    }
+  }
+
+  /**
+   * select distinct asset_id from amv where
+   *  ((amv.asset_meta_id like foo(0).id and amv.value like foo(0).value) and/or
+   *   (amv.asset_meta_id like foo(1).id and amv.value like foo(1).value)) and
+   *    ...
+   *  (amv.asset_meta_id not in (amvs))
+   */
+  type AssetMetaFinder = Seq[Tuple2[AssetMeta, String]]
+  def findAssetsByMeta(page: PageParams, toFind: AssetMetaFinder, afinder: AssetFinder, operation: Option[String]): Page[Asset] = {
+    Model.withSqueryl {
+    val whereClause = {amv: AssetMetaValue =>
+      val expressions: Seq[LogicalBoolean] = Seq(
+        includes(amv, toFind, operation).map(exists(_)),
+        excludes(amv, toFind, operation).map(notExists(_))
+      ).filter(_ != None).map(_.get)
+      expressions.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
+    }
+
+    val assetIds: Set[Long] = from(AssetMetaValue.tableDef)(amv =>
+      where(whereClause(amv))
+      select(amv.asset_id)
+      orderBy(amv.asset_id.withSort(page.sort))
+    ).distinct.toSet
+    val totalCount: Long = from(AssetMetaValue.tableDef)(amv =>
+      where(whereClause(amv))
+      compute(countDistinct(amv.asset_id))
+    )
+    val assets = Asset.find(assetIds)
+    Page(assets, page.page, page.offset, totalCount)
+    }
+  }
+
+  protected def excludes(amv: AssetMetaValue, toFind: AssetMetaFinder, bool: Option[String]): Option[Query[Long]] = {
+    val clauses = toFind.filter(_._2.isEmpty) // Find empty values, our marker
+    val whereClauses = clauses match {
+      case Nil =>
+        return None
+      case list => list.map { case(am, v) =>
+        (amv.asset_meta_id === am.id and amv.value.withPossibleRegex(v))
       }
-      val paramsNoPaging = finderQuery.params
-      val paramsWithPaging = Seq(
-        ('pageSize -> toParameterValue(page.size)),
-        ('offset -> toParameterValue(page.offset))
-      ) ++ paramsNoPaging
-      Model.withConnection { implicit con =>
-        val assets = Asset.find(
-          "%s limit {pageSize} offset {offset}".format(finderQueryFrag)
-        ).on(paramsWithPaging:_*).list()
-        val count = Asset.count("%s".format(finderQueryFrag)).on(paramsNoPaging:_*).as(scalar[Long])
-        Page(assets, page.page, page.offset, count)
-      }
     }
+    val whereClause = whereClauses.reduceRight((a, b) =>
+      new BinaryOperatorNodeLogicalBoolean(a, b, "and")
+    )
+    Some(from(AssetMetaValue.tableDef)(a =>
+      where(whereClause)
+      select(a.asset_id)
+    ))
   }
 
-  def findAssetsByMeta(page: PageParams, params: Seq[Tuple2[AssetMeta, String]], afinder: AssetFinder, operation: Option[String] = None): Page[Asset] = {
-    val assetQuery = afinder.asQueryFragment()
-    val assetQueryFragment = assetQuery.sql.query match {
-      case empty if empty.isEmpty => ""
-      case nonEmpty => nonEmpty + " and "
-    }
-
-    val metaQuery = collectParams(params, operation)
-
-    val subQuery = """
-      select %s from asset_meta_value amv
-      where %s""".format("distinct asset_id", metaQuery.sql.query)
-
-    val paramsWithoutPaging = assetQuery.params ++ metaQuery.params
-    val allQueryParams = Seq(
-      ('pageSize -> toParameterValue(page.size)),
-      ('offset -> toParameterValue(page.offset))
-    ) ++ paramsWithoutPaging
-
-    Model.withConnection { implicit con =>
-      val assets = Asset.find(
-        "%s id in (%s) limit {pageSize} offset {offset}".format(
-          assetQueryFragment,
-          subQuery
-        )
-      ).on(allQueryParams:_*).list()
-      val count = Asset.count(
-        "%s id in (%s)".format(
-          assetQueryFragment,
-          subQuery
-        )
-      ).on(paramsWithoutPaging:_*).as(scalar[Long])
-      Page(assets, page.page, page.offset, count)
-    }
-  }
-
-  sealed trait QueryType {
-    val sql: SimpleSql[Row]
-  }
-  case class ExcludeQuery(sql: SimpleSql[Row]) extends QueryType
-  case class IncludeQuery(sql: SimpleSql[Row]) extends QueryType
-  // This generates a subquery that looks roughly like
-  //  ((value1 LIKE thing) OR (value2 LIKE other)...) AND ((value3 NOT EXISTS) AND (value4 NOT EXISTS))
-  //  This creates a query that finds assets that match specific values, and is missing certain
-  //  other attributes. This is not straight forward code.
-  private[this] def collectParams(assetMeta: Seq[Tuple2[AssetMeta, String]], operation: Option[String]): SimpleSql[Row] = {
-    val (isAnd, andOrString) = operation.map(_.trim.toLowerCase).map {
-      case "and" => (true, " and ")
-      case _ => (false, " or ")
-    }.getOrElse((false," or "))
-    val result: Seq[QueryType] = assetMeta.zipWithIndex.map { case(tuple, size) =>
-      val metaName = "asset_meta_id_%d".format(size) // Name for query expansion
-      val metaValueName = "asset_meta_value_value_%d".format(size) // value for query expansion
-      val metaId = tuple._1.getId // meta id of thing we're querying for
-      val initValue = tuple._2 // initial value that we're looking for, associated with metaId
-      if (initValue.isEmpty) { // if it's empty, generate a sub-query that excludes these assets
-        val filterQuery = """
-        (select CASE count(*) WHEN 0 THEN 1 ELSE 0 END from asset_meta_value amv2 where amv2.asset_id = amv.asset_id
-        and amv2.asset_meta_id={%s})
-        """.format(metaName) // if count is positive 0 (exclude this asset), otherwise 1.
-        ExcludeQuery(SqlQuery(filterQuery).on(metaName -> metaId))
-      } else {
-        val regexValue = regexWrap(initValue) // regex to use for searching
-        val includeQuery = if (isAnd) {
-          """
-          (select count(*) from asset_meta_value amv2 where amv2.asset_id = amv.asset_id
-            and amv2.asset_meta_id={%s} AND amv2.value REGEXP {%s})
-          """.format(metaName, metaValueName)
+  protected def includes(amv: AssetMetaValue, toFind: AssetMetaFinder, bool: Option[String]): Option[Query[Long]] = {
+    val isAnd = (bool.toBinaryOperator == "and")
+    val clauses = toFind.filter(_._2.nonEmpty)
+    val whereClauses = clauses match {
+      case Nil =>
+        return None
+      case list => list.map { case(am, v) =>
+        if (isAnd) {
+          (amv.asset_meta_id === am.id and amv.value.withPossibleRegex(v))
         } else {
-          "(amv.asset_meta_id={%s} AND amv.value REGEXP {%s})".format(metaName, metaValueName)
+          (amv.asset_meta_id === am.id and amv.value.withPossibleRegex(v))
         }
-        val simpleQuery = SqlQuery(includeQuery).on(metaName -> metaId, metaValueName -> regexValue)
-        IncludeQuery(simpleQuery)
       }
     }
-    val includes = result.filter(_.isInstanceOf[IncludeQuery]).map(_.sql)
-    val excludes = result.filter(_.isInstanceOf[ExcludeQuery]).map(_.sql)
-    // the and/or stuff should be configurable but it's not
-    val includeSql = includes match {
-      case Nil => None
-      case rows => Some(DaoSupport.flattenSql(rows, andOrString))
+    val whereClause = whereClauses.reduceRight{(a, b) =>
+      new BinaryOperatorNodeLogicalBoolean(a, b, bool.toBinaryOperator)
     }
-    val excludeSql = excludes match {
-      case Nil => None
-      case rows => Some(DaoSupport.flattenSql(rows, " and "))
-    }
-    DaoSupport.flattenSql(Seq(includeSql, excludeSql).filter(_.isDefined).map(_.get), " and ")
+    Some(from(AssetMetaValue.tableDef)(a =>
+      where(whereClause)
+      select(a.asset_id)
+    ))
   }
 
-  private[this] def regexWrap(s: String): String = {
-    val prefixed = s.startsWith("^") match {
-      case true => s
-      case false => ".*" + s
-    }
-    s.endsWith("$") match {
-      case true => prefixed
-      case false => prefixed + ".*"
-    }
-  }
 }
-
-

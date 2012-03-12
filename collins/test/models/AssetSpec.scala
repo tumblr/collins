@@ -16,8 +16,7 @@ class AssetSpec extends ApplicationSpecification {
     "Support CRUD Operations" in {
 
       "CREATE" in new mockasset {
-        val result = Model.withConnection { implicit con => Asset.create(newAsset) }
-        result.id.isDefined must beTrue
+        val result = Asset.create(newAsset)
         result.getId must beGreaterThan(1L)
       }
 
@@ -36,7 +35,7 @@ class AssetSpec extends ApplicationSpecification {
       "DELETE" in new mockasset {
         Model.withConnection { implicit con =>
           Asset.findByTag(assetTag).map { a =>
-            Asset.delete("id={id}").on('id -> a.getId).executeUpdate() mustEqual 1
+            Asset.delete(a) mustEqual 1
             Asset.findById(a.getId) must beNone
           }.getOrElse(failure("Couldn't find asset but expected to"))
         }
@@ -47,6 +46,7 @@ class AssetSpec extends ApplicationSpecification {
 
       "findByTag" in new concreteasset {
         Asset.findByTag(assetTag) must beSome[Asset]
+        Asset.findByTag(assetTag).get.tag mustEqual assetTag
       }
 
       "findLikeTag" in new concreteasset {
@@ -54,14 +54,6 @@ class AssetSpec extends ApplicationSpecification {
         val assets = Asset.findLikeTag(assetTag.take(assetTag.size - 1), page)
         assets.total must beGreaterThan(0L)
         assets.items must have {_.tag == assetTag}
-      }
-
-      "findByMeta" in new concreteasset {
-        val criteria = List(
-          AssetMeta.Enum.ChassisTag -> "chassis tag abc"
-        )
-        val assets = Asset.findByMeta(criteria)
-        assets must haveSize(1)
       }
 
       "getAllAttributes" in new concreteasset {

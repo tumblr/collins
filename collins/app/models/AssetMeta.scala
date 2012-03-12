@@ -22,14 +22,13 @@ case class AssetMeta(
 
 object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
 
-  val assetMeta = table[AssetMeta]("asset_meta")
-  on(assetMeta)(a => declare(
+  override val tableDef = table[AssetMeta]("asset_meta")
+  on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
     a.name is(unique),
     a.priority is(indexed)
   ))
 
-  override def tableDef = assetMeta
   override def cacheKeys(a: AssetMeta) = Seq(
     "AssetMeta.findByName(%s)".format(a.name),
     "AssetMeta.findById(%d)".format(a.id),
@@ -37,18 +36,18 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     "AssetMeta.getViewable"
   )
   override def delete(a: AssetMeta): Int = withConnection {
-    assetMeta.deleteWhere(p => p.id === a.id)
+    tableDef.deleteWhere(p => p.id === a.id)
   }
 
   def findAll(): Seq[AssetMeta] = Cache.getOrElseUpdate("AssetMeta.findAll") {
     withConnection {
-      from(assetMeta)(s => select(s)).toList
+      from(tableDef)(s => select(s)).toList
     }
   }
 
   def findById(id: Long) = Cache.getOrElseUpdate("AssetMeta.findById(%d)".format(id)) {
     withConnection {
-      assetMeta.lookup(id)
+      tableDef.lookup(id)
     }
   }
 
@@ -59,7 +58,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
   def findByName(name: String): Option[AssetMeta] = {
     Cache.getOrElseUpdate("AssetMeta.findByName(%s)".format(name.toUpperCase)) {
       withConnection {
-        assetMeta.where(a =>
+        tableDef.where(a =>
           a.name.toUpperCase === name.toUpperCase
         ).headOption
       }
@@ -68,7 +67,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
 
   def getViewable(): Seq[AssetMeta] = Cache.getOrElseUpdate("AssetMeta.getViewable") {
     withConnection {
-      from(assetMeta)(a =>
+      from(tableDef)(a =>
         where(a.priority gt -1)
         select(a)
         orderBy(a.priority asc)

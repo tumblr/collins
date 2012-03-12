@@ -3,6 +3,7 @@ package models
 import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress}
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Query, Schema, Session, Table}
+import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import play.api._
 import play.api.libs.json._
@@ -55,12 +56,18 @@ case class IpmiInfo(
 }
 
 object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
-  
-  val tableDef = table[IpmiInfo]("ipmi_info")
   private[this] val logger = Logger.logger
-
   val DefaultPasswordLength = 12
   val RandomUsername = false
+
+  val tableDef = table[IpmiInfo]("ipmi_info")
+  on(tableDef)(i => declare(
+    i.id is(autoIncremented,primaryKey),
+    i.asset_id is(unique),
+    i.address is(unique),
+    i.gateway is(indexed),
+    i.netmask is(indexed)
+  ))
 
   override def cacheKeys(a: IpmiInfo) = Seq(
     "IpmiInfo.findByAsset(%d)".format(a.asset_id)
@@ -82,51 +89,25 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  import java.sql.Timestamp
-  import conversions._
-  import org.squeryl.Query
-  import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
-  def aFinderToQuery(finder: AssetFinder, a: MockAsset): LogicalBoolean = {
-    val statusId: Option[Int] = finder.status.map(_.id)
-    val typeId: Option[Int] = finder.assetType.map(_.id)
-    val createdAfter: Option[Timestamp] = finder.createdAfter.map(_.asTimestamp)
-    val createdBefore: Option[Timestamp] = finder.createdBefore.map(_.asTimestamp)
-    val updatedAfter: Option[Timestamp] = finder.updatedAfter.map(_.asTimestamp)
-    val updatedBefore: Option[Timestamp] = finder.updatedBefore.map(_.asTimestamp)
-    val ops = List[LogicalBoolean](
-      (a.tag === finder.tag.?) and
-      (a.status === statusId.?) and
-      (a.created gte createdAfter.?) and
-      (a.created lte createdBefore.?) and
-      (a.updated gte updatedAfter.?) and
-      (a.updated lte updatedBefore.?)
-    )
-    ops.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
-  }
-
   type IpmiQuerySeq = Seq[Tuple2[IpmiInfo.Enum, String]]
-  import anorm.Id
   def findAssetsByIpmi(page: PageParams, ipmi: IpmiQuerySeq, finder: AssetFinder): Page[Asset] = {
-    def whereClause(assetRow: MockAsset, ipmiRow: IpmiInfo) = {
+    def whereClause(assetRow: Asset, ipmiRow: IpmiInfo) = {
       where(
         assetRow.id === ipmiRow.asset_id and
-        aFinderToQuery(finder, assetRow) and
+        finder.asLogicalBoolean(assetRow) and
         collectParams(ipmi, ipmiRow)
       )
     }
     withConnection {
-      val results = from(MockAsset.tableDef, tableDef)((assetRow, ipmiRow) =>
+      val results = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
         whereClause(assetRow, ipmiRow)
         select(assetRow)
       ).page(page.offset, page.size).toList
-      val totalCount = from(MockAsset.tableDef, tableDef)((assetRow, ipmiRow) =>
+      val totalCount = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
         whereClause(assetRow, ipmiRow)
         compute(count)
       )
-      val pageResults = results.map { asset =>
-        Asset(Id(asset.id), asset.tag, asset.status, asset.asset_type, asset.created, asset.updated, asset.deleted)
-      }
-      Page(pageResults, page.page, page.offset, totalCount)
+      Page(results, page.page, page.offset, totalCount)
     }
   }
 
