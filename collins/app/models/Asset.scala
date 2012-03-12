@@ -1,50 +1,24 @@
 package models
 
-import Model.defaults._
 import conversions._
 import util.{Cache, Helpers, LldpRepresentation, LshwRepresentation}
 
-import anorm._
-import anorm.SqlParser._
 import play.api.libs.json._
 
 import org.squeryl.Schema
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
-import java.sql.{Connection, Timestamp}
+import java.sql.Timestamp
 import java.util.Date
 
-case class MockAsset(
-  tag: String,
-  status: Int,
-  asset_type: Int,
-  created: Timestamp,
-  updated: Option[Timestamp],
-  deleted: Option[Timestamp],
-  id: Long) extends ValidatedEntity[Long]
+case class Asset(tag: String, status: Int, asset_type: Int,
+    created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp],
+    id: Long = 0) extends ValidatedEntity[Long]
 {
-  def getId(): Long = id
   override def validate() {
     require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
   }
-}
-object MockAsset extends Schema with AnormAdapter[MockAsset] {
-  import org.squeryl.PrimitiveTypeMode._
-  val tableDef = table[MockAsset]("asset")
-  override def cacheKeys(a: MockAsset) = Seq(
-  )
-  override def delete(t: MockAsset): Int = {
-    tableDef.deleteWhere(s => s.id === t.id)
-  }
-}
-
-case class Asset(
-    id: Pk[java.lang.Long],
-    tag: String,
-    status: Int,
-    asset_type: Int,
-    created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp])
-{
-  require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
 
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
@@ -55,7 +29,7 @@ case class Asset(
     "UPDATED" -> JsString(updated.map { Helpers.dateFormat(_) }.getOrElse(""))
   )
 
-  def getId(): Long = id.get
+  def getId(): Long = id
   def isNew(): Boolean = {
     status == models.Status.Enum.New.id
   }
@@ -93,87 +67,83 @@ case class Asset(
   }
 }
 
-object Asset extends Magic[Asset](Some("asset")) {
+object Asset extends Schema with AnormAdapter[Asset] {
 
   private[this] val TagR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
+
+  override val tableDef = table[Asset]("asset")
+  on(tableDef)(a => declare(
+    a.id is(autoIncremented,primaryKey),
+    a.tag is(unique),
+    a.status is(indexed),
+    a.asset_type is(indexed),
+    a.created is(indexed),
+    a.updated is(indexed)
+  ))
+  override def cacheKeys(asset: Asset) = Seq(
+    "Asset.findByTag(%s)".format(asset.tag.toLowerCase),
+    "Asset.findById(%d)".format(asset.id)
+  )
+
   def isValidTag(tag: String): Boolean = {
     tag != null && tag.nonEmpty && TagR(tag).matches
   }
 
   def apply(tag: String, status: Status.Enum, asset_type: AssetType.Enum) = {
-    new Asset(NotAssigned, tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
+    new Asset(tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
   }
-
   def apply(tag: String, status: Status.Enum, asset_type: AssetType) = {
-    new Asset(NotAssigned, tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
+    new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
   }
 
-  override def create(asset: Asset)(implicit con: Connection) = {
-    super.create(asset) match {
-      case newasset =>
-        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag.toLowerCase))
-        newasset
+  override def delete(asset: Asset): Int = withConnection {
+    tableDef.deleteWhere(a => a.id === asset.id)
+  }
+
+  def find(page: PageParams, afinder: AssetFinder): Page[Asset] = withConnection {
+    val results = from(tableDef)(a =>
+      where(afinder.asLogicalBoolean(a))
+      select(a)
+    ).page(page.offset, page.size).toList
+    val totalCount = from(tableDef)(a =>
+      where(afinder.asLogicalBoolean(a))
+      compute(count)
+    )
+    Page(results, page.page, page.offset, totalCount)
+  }
+
+  def find(assets: Set[Long]): Seq[Asset] = withConnection {
+    assets.size match {
+      case 0 => Seq()
+      case n => tableDef.where(asset => asset.id in assets).toList
     }
   }
 
-  override def update(asset: Asset)(implicit con: Connection) = {
-    super.update(asset) match {
-      case updated =>
-        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag.toLowerCase))
-        Cache.invalidate("Asset.findById(%d)".format(asset.getId))
-        updated
+  def findById(id: Long) = Cache.getOrElseUpdate("Asset.findById(%d)".format(id)) {
+    withConnection {
+      tableDef.lookup(id)
     }
   }
 
-  def create(assets: Seq[Asset])(implicit con: Connection): Seq[Asset] = {
-    assets.foldLeft(List[Asset]()) { case(list, asset) =>
-      if (asset.id.isDefined) throw new IllegalArgumentException("id of asset must be NotAssigned")
-      Asset.create(asset) +: list
-    }.reverse
-  }
-
-  def findById(id: Long): Option[Asset] = Model.withConnection { implicit con =>
-    Cache.getOrElseUpdate("Asset.findById(%d)".format(id)) {
-      Asset.find("id={id}").on('id -> id).singleOption()
-    }
-  }
-  def findByTag(tag: String): Option[Asset] = Model.withConnection { implicit con =>
+  def findByTag(tag: String): Option[Asset] = {
     Cache.getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
-      Asset.find("tag={tag}").on('tag -> tag).first()
+      withConnection {
+        tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
+      }
     }
-  }
-  def findLikeTag(tag: String, params: PageParams): Page[Asset] = Model.withConnection { implicit con =>
-    val tags = tag + "%"
-    val orderBy = params.sort.toUpperCase match {
-      case "ASC" => "ORDER BY ID ASC"
-      case _ => "ORDER BY ID DESC"
-    }
-    val assets = Asset.find("tag like {tag} %s limit {pageSize} offset {offset}".format(orderBy)).on(
-      'tag -> tags,
-      'pageSize -> params.size,
-      'offset -> params.offset
-    ).list()
-    val count = Asset.count("tag like {tag}").on(
-      'tag -> tags
-    ).as(scalar[Long])
-    Page(assets, params.page, params.offset, count)
   }
 
-  def findByMeta(list: Seq[(AssetMeta.Enum,String)]): Seq[Asset] = {
-    val query = "select distinct asset_id from asset_meta_value where "
-    var count = 0
-    val params = list.map { case(k,v) =>
-      val id: String = k.toString + "_" + count
-      count += 1
-      val fragment = "asset_meta_value.asset_meta_id = %d and asset_meta_value.value like {%s}".format(k.id, id)
-      (fragment, (Symbol(id), toParameterValue(v)))
-    }
-    val subquery = query + params.map { _._1 }.mkString(" and ")
-    Model.withConnection { implicit connection =>
-      Asset.find("select * from asset WHERE id in (%s)".format(subquery)).on(
-        params.map(_._2):_*
-      ).list()
-    }
+  def findLikeTag(tag: String, params: PageParams): Page[Asset] = withConnection {
+    val results = from(tableDef)(a =>
+      where(a.tag.withPossibleRegex(tag))
+      select(a)
+      orderBy(a.id.withSort(params.sort))
+    ).page(params.offset, params.size).toList
+    val totalCount = from(tableDef)(a =>
+      where(a.tag.withPossibleRegex(tag))
+      compute(count)
+    )
+    Page(results, params.page, params.offset, totalCount)
   }
 
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], mvs: Seq[MetaWrapper]) {
@@ -208,43 +178,21 @@ case class AssetFinder(
   updatedAfter: Option[Date],
   updatedBefore: Option[Date])
 {
-  // Without this, toParameterValue sees dates as java.util.Date instead of Timestamp and the wrong
-  // ToStatement is used
-  import DaoSupport._
-
-  type Intable = {def id: Int}
-  def asQueryFragment(): SimpleSql[Row] = {
-    val _status = getEnumSimple("asset.status", status)
-    val _atype = getEnumSimple("asset.asset_type", assetType)
-    val _created = createDateSimple("asset.created", createdAfter, createdBefore)
-    val _updated = createDateSimple("asset.updated", updatedAfter, updatedBefore)
-    val _tag = tag.map { t =>
-      val name = "%s_0".format("asset_tag")
-      SqlQuery("%s={%s}".format("asset.tag", name)).on(name -> t)
-    }
-    flattenSql(Seq(_status, _atype, _created, _updated, _tag).collect { case Some(i) => i })
-  }
-
-  private def getEnumSimple(param: String, enum: Option[Intable]): Option[SimpleSql[Row]] = {
-    enum.map { e =>
-      val name = "%s_0".format(param.replace(".","_"));
-      SqlQuery("%s={%s}".format(param, name)).on(name -> e.id)
-    }
-  }
-  private def createDateSimple(param: String, after: Option[Date], before: Option[Date]): Option[SimpleSql[Row]] = {
-    val afterName = "%s_after_0".format(param.replace(".","_"))
-    val beforeName = "%s_before_0".format(param.replace(".","_"))
-    val _after = after.map { date =>
-      SqlQuery("%s >= {%s}".format(param, afterName)).on(afterName -> date.asTimestamp)
-    }
-    val _before = before.map { date =>
-      SqlQuery("%s <= {%s}".format(param, beforeName)).on(beforeName -> date.asTimestamp)
-    }
-    val filtered: Seq[SimpleSql[Row]] = Seq(_after, _before).collect { case Some(i) => i }
-    if (filtered.nonEmpty) {
-      Some(flattenSql(filtered))
-    } else {
-      None
-    }
+  def asLogicalBoolean(a: Asset): LogicalBoolean = {
+    val statusId: Option[Int] = status.map(_.id)
+    val typeId: Option[Int] = assetType.map(_.id)
+    val createdAfterTs: Option[Timestamp] = createdAfter.map(_.asTimestamp)
+    val createdBeforeTs: Option[Timestamp] = createdBefore.map(_.asTimestamp)
+    val updatedAfterTs: Option[Timestamp] = updatedAfter.map(_.asTimestamp)
+    val updatedBeforeTs: Option[Timestamp] = updatedBefore.map(_.asTimestamp)
+    val ops = List[LogicalBoolean](
+      (a.tag === tag.?) and
+      (a.status === statusId.?) and
+      (a.created gte createdAfterTs.?) and
+      (a.created lte createdBeforeTs.?) and
+      (a.updated gte updatedAfterTs.?) and
+      (a.updated lte updatedBeforeTs.?)
+    )
+    ops.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }
 }

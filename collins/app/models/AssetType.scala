@@ -14,7 +14,7 @@ case class AssetType(name: String, id: Int = 0) extends ValidatedEntity[Int] {
 
 object AssetType extends Schema with AnormAdapter[AssetType] {
 
-  val tableDef = table[AssetType]("asset_type")
+  override val tableDef = table[AssetType]("asset_type")
   on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
     a.name is(unique)
