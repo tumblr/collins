@@ -30,7 +30,7 @@ trait CommonHelper[T] {
    * Given some asset, reconstruct its representation from meta values
    */
   def reconstruct(asset: Asset): Reconstruction = {
-    val assetMeta = AssetMetaValue.findAllByAssetId(asset.getId)
+    val assetMeta = AssetMetaValue.findByAsset(asset)
     reconstruct(asset, assetMeta)
   }
   protected def filterNot(m: Seq[MetaWrapper], s: Set[Long]): Seq[MetaWrapper] = {

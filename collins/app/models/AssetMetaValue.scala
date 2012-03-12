@@ -30,8 +30,8 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   ))
 
   override def cacheKeys(a: AssetMetaValue) = Seq(
-    "AssetMetaValue.findMetaValues(%d)".format(a.asset_meta_id),
-    "AssetMetaValue.findAllByAssetId(%d)".format(a.asset_id),
+    "AssetMetaValue.findByMeta(%d)".format(a.asset_meta_id),
+    "AssetMetaValue.findByAsset(%d)".format(a.asset_id),
     fbam.format(a.asset_id, a.asset_meta_id)
   )
 
@@ -98,13 +98,6 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }
   }
 
-  protected def deleteByAssetIdAndMetaId(asset_id: Long, meta_id: Set[Long]): Int = withConnection {
-    tableDef.deleteWhere { p =>
-      (p.asset_id === asset_id) and
-      (p.asset_meta_id in meta_id)
-    }
-  }
-
   def create(mvs: Seq[AssetMetaValue]): Int = withTransaction {
     try {
       mvs.foreach { mv => tableDef.insert(mv) }
@@ -116,11 +109,11 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }
   }
 
-  def findMetaValues(meta_id: Long): Seq[String] = {
-    Cache.getOrElseUpdate("AssetMetaValue.findMetaValues(%d)".format(meta_id)) {
+  def findByMeta(meta: AssetMeta): Seq[String] = {
+    Cache.getOrElseUpdate("AssetMetaValue.findByMeta(%d)".format(meta.id)) {
       withConnection {
         from(tableDef)(a =>
-          where(a.asset_meta_id === meta_id)
+          where(a.asset_meta_id === meta.id)
           select(a.value)
         ).distinct.toList.sorted
       }
@@ -138,16 +131,23 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }}
   }
 
-  def findAllByAssetId(id: Long): Seq[MetaWrapper] = {
-    Cache.getOrElseUpdate("AssetMetaValue.findAllByAssetId(%d)".format(id)) {
+  def findByAsset(asset: Asset): Seq[MetaWrapper] = {
+    Cache.getOrElseUpdate("AssetMetaValue.findByAsset(%d)".format(asset.id)) {
       withConnection {
         from(tableDef)(a =>
-          where(a.asset_id === id)
+          where(a.asset_id === asset.id)
           select(a)
         ).toList.map { amv =>
           MetaWrapper(amv.getMeta(), amv)
         }
       }
+    }
+  }
+
+  protected def deleteByAssetIdAndMetaId(asset_id: Long, meta_id: Set[Long]): Int = withConnection {
+    tableDef.deleteWhere { p =>
+      (p.asset_id === asset_id) and
+      (p.asset_meta_id in meta_id)
     }
   }
 
