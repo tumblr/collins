@@ -25,8 +25,9 @@ object Model {
     case mysql if mysql.toLowerCase.contains("mysql") => new MySQLInnoDBAdapter
   }
 
-  def withSqueryl[A](c: Connection)(f: => A): A = {
-    PrimitiveTypeMode.using(new Session(c, adapter))(f)
+  def withSqueryl[A](c: Connection)(f: Session => A): A = {
+    val session = new Session(c, adapter)
+    PrimitiveTypeMode.using(session)(f(session))
   }
   def withSqueryl[A](f: => A): A = {
     withConnection { con =>

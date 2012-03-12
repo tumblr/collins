@@ -2,7 +2,7 @@ package models
 
 import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress}
 import org.squeryl.PrimitiveTypeMode._
-import org.squeryl.{Query, Schema, Table}
+import org.squeryl.{Query, Schema, Session, Table}
 
 import play.api._
 import play.api.libs.json._
@@ -130,7 +130,7 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  def createForAsset(asset: Asset): IpmiInfo = {
+  def createForAsset(asset: Asset)(implicit session: Session): IpmiInfo = {
     val assetId = asset.getId
     val (gateway, address, netmask) = getAddress()
     val username = getUsername(asset)
@@ -138,7 +138,7 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     val ipmiInfo = IpmiInfo(
       assetId, username, password, gateway, address, netmask
     )
-    tableDef.insert(ipmiInfo) // FIXME this will be broken if called outside of a transaction
+    tableDef.insert(ipmiInfo)
   }
 
   type Enum = Enum.Value
