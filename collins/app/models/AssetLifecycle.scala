@@ -32,7 +32,7 @@ object AssetLifecycle {
       val _status = status.getOrElse(Status.Enum.Incomplete)
       Model.withTransaction { implicit con =>
         val asset = Asset.create(Asset(tag, _status, assetType))
-        val ipmi = Model.withSqueryl(con) {
+        val ipmi = Model.withSqueryl(con) { implicit session =>
           generateIpmi match {
             case true => Some(IpmiInfo.createForAsset(asset))
             case false => None

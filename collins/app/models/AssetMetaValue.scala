@@ -65,13 +65,13 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     )
   }
 
-  def deleteByAssetId(id: Long): Int = withConnection {
-    tableDef.deleteWhere(p => p.asset_id === id)
+  def deleteByAsset(asset: Asset): Int = withConnection {
+    tableDef.deleteWhere(p => p.asset_id === asset.getId)
   }
 
-  def deleteByAssetIdAndMetaId(asset_id: Long, meta_id: Set[Long]): Int = withConnection {
+  def deleteByAssetAndMetaId(asset: Asset, meta_id: Set[Long]): Int = withConnection {
     tableDef.deleteWhere { p =>
-      (p.asset_id === asset_id) and
+      (p.asset_id === asset.getId) and
       (p.asset_meta_id in meta_id)
     }
   }
@@ -95,6 +95,13 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
         case n =>
           logger.trace("Got %d rows for AssetMetaValue.delete", n)
       }
+    }
+  }
+
+  protected def deleteByAssetIdAndMetaId(asset_id: Long, meta_id: Set[Long]): Int = withConnection {
+    tableDef.deleteWhere { p =>
+      (p.asset_id === asset_id) and
+      (p.asset_meta_id in meta_id)
     }
   }
 
@@ -122,7 +129,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
 
   private[this] val fbam = "AssetMetaValue.findByAssetAndMeta(%d, %d)"
   def findByAssetAndMeta(asset: Asset, meta: AssetMeta, count: Int): Seq[MetaWrapper] = {
-    Cache.getOrElseUpdate(fbam.format(asset.id, meta.id)) {
+    Cache.getOrElseUpdate(fbam.format(asset.getId, meta.id)) {
     withConnection {
       from(tableDef)(a =>
         where(a.asset_id === asset.getId and a.asset_meta_id === meta.id)
