@@ -14,13 +14,12 @@ case class AssetType(name: String, id: Int = 0) extends ValidatedEntity[Int] {
 
 object AssetType extends Schema with AnormAdapter[AssetType] {
 
-  val assetType = table[AssetType]("asset_type")
-  on(assetType)(a => declare(
+  val tableDef = table[AssetType]("asset_type")
+  on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
     a.name is(unique)
   ))
 
-  override def tableDef = assetType
   override def cacheKeys(a: AssetType) = Seq(
     "AssetType.findById(%d)".format(a.id),
     "AssetType.findByName(%s)".format(a.name.toUpperCase)
@@ -29,14 +28,14 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
   def findById(id: Int): Option[AssetType] =
     Cache.getOrElseUpdate("AssetType.findById(%d)".format(id)) {
       withConnection {
-        assetType.lookup(id)
+        tableDef.lookup(id)
       }
     }
 
   def findByName(name: String): Option[AssetType] =
     Cache.getOrElseUpdate("AssetType.findByName(%s)".format(name.toUpperCase)) {
       withConnection {
-        assetType.where(a =>
+        tableDef.where(a =>
           a.name.toLowerCase === name.toLowerCase
         ).headOption
       }
@@ -54,7 +53,7 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
   }
 
   override def delete(a: AssetType): Int = withConnection {
-    assetType.deleteWhere(p => p.id === a.id)
+    tableDef.deleteWhere(p => p.id === a.id)
   }
 
   type Enum = Enum.Value

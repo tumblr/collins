@@ -27,7 +27,7 @@ case class AssetStateMachine(asset: Asset) {
       }
       Helpers.haveFeature("deleteIpmiOnDecommission", false) match {
         case None | Some(true) =>
-          IpmiInfo.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
+          IpmiInfo.deleteByAsset(asset)
         case _ =>
       }
       Helpers.haveFeature("deleteMetaOnDecommission", false) match {
