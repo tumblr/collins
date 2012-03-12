@@ -8,8 +8,34 @@ import anorm._
 import anorm.SqlParser._
 import play.api.libs.json._
 
+import org.squeryl.Schema
+
 import java.sql.{Connection, Timestamp}
 import java.util.Date
+
+case class MockAsset(
+  tag: String,
+  status: Int,
+  asset_type: Int,
+  created: Timestamp,
+  updated: Option[Timestamp],
+  deleted: Option[Timestamp],
+  id: Long) extends ValidatedEntity[Long]
+{
+  def getId(): Long = id
+  override def validate() {
+    require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
+  }
+}
+object MockAsset extends Schema with AnormAdapter[MockAsset] {
+  import org.squeryl.PrimitiveTypeMode._
+  val tableDef = table[MockAsset]("asset")
+  override def cacheKeys(a: MockAsset) = Seq(
+  )
+  override def delete(t: MockAsset): Int = {
+    tableDef.deleteWhere(s => s.id === t.id)
+  }
+}
 
 case class Asset(
     id: Pk[java.lang.Long],

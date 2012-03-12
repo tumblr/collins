@@ -26,7 +26,7 @@ trait IpmiApi {
         val g = IpAddress.toLong(gateway.get)
         val n = IpAddress.toLong(netmask.get)
         val p = IpmiInfo.encryptPassword(password.get)
-        IpmiInfo(NotAssigned, Id(asset.getId), username.get, p, g, a, n)
+        IpmiInfo(asset.getId, username.get, p, g, a, n)
       }
     }
   }
@@ -51,13 +51,11 @@ trait IpmiApi {
         ipmiForm => {
           try {
             val newInfo = ipmiForm.merge(asset, ipmiInfo)
-            val (status, success) = Model.withTransaction { implicit con =>
-              newInfo.id match {
-                case update if update.isDefined =>
-                  (Results.Ok, IpmiInfo.update(newInfo) == 1)
-                case _ =>
-                  (Results.Created, IpmiInfo.create(newInfo).id.isDefined)
-              }
+            val (status, success) = newInfo.id match {
+              case update if update > 0 =>
+                (Results.Ok, IpmiInfo.update(newInfo) == 1)
+              case _ =>
+                (Results.Created, IpmiInfo.create(newInfo).id > 0)
             }
             Right(ResponseData(status, JsObject(Seq("SUCCESS" -> JsBoolean(success)))))
           } catch {

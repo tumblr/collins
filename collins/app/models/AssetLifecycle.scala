@@ -32,9 +32,11 @@ object AssetLifecycle {
       val _status = status.getOrElse(Status.Enum.Incomplete)
       Model.withTransaction { implicit con =>
         val asset = Asset.create(Asset(tag, _status, assetType))
-        val ipmi = generateIpmi match {
-          case true => Some(IpmiInfo.createForAsset(asset))
-          case false => None
+        val ipmi = Model.withSqueryl(con) {
+          generateIpmi match {
+            case true => Some(IpmiInfo.createForAsset(asset))
+            case false => None
+          }
         }
         InternalTattler.informational(asset, None,
           "Initial intake successful, status now %s".format(_status.toString), con)
