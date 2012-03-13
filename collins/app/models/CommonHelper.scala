@@ -1,7 +1,5 @@
 package models
 
-import java.sql.Connection
-
 trait CommonHelper[T] {
   type Reconstruction = Tuple2[T, Seq[MetaWrapper]]
   type FilteredSeq[T1] = Tuple2[Seq[T1], Map[Int, Seq[MetaWrapper]]]
@@ -19,7 +17,7 @@ trait CommonHelper[T] {
   /**
    * Given some representation, update an asset with appropriate values
    */
-  def updateAsset(asset: Asset, rep: T)(implicit con: Connection): Boolean = {
+  def updateAsset(asset: Asset, rep: T): Boolean = {
     // FIXME: Need to delete specific asset meta values before accepting an update
     // FIXME: Came from LshwHelper
     val mvs = construct(asset, rep)

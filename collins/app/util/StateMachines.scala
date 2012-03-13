@@ -18,7 +18,7 @@ object AssetStateMachine {
 case class AssetStateMachine(asset: Asset) {
   import Status.Enum._
 
-  def decommission()(implicit con: Connection): Option[Asset] = Status.Enum(asset.status) match {
+  def decommission(): Option[Asset] = Status.Enum(asset.status) match {
     case Unallocated | Cancelled | Decommissioned =>
       val newAsset = asset.copy(status = Decommissioned.id, deleted = Some(new Date().asTimestamp))
       val res = Asset.update(newAsset) match {
@@ -34,8 +34,8 @@ case class AssetStateMachine(asset: Asset) {
         case None | Some(true) =>
           AssetMetaValue.deleteByAsset(asset)
         case _ =>
+          AssetMetaValue.deleteByAssetAndMetaId(asset, AssetStateMachine.DeleteAttributes)
       }
-      AssetMetaValue.deleteByAssetAndMetaId(asset, AssetStateMachine.DeleteAttributes)
       res
   }
 }

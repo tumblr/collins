@@ -26,19 +26,15 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
   )
 
   def findById(id: Int): Option[AssetType] =
-    Cache.getOrElseUpdate("AssetType.findById(%d)".format(id)) {
-      withConnection {
-        tableDef.lookup(id)
-      }
+    getOrElseUpdate("AssetType.findById(%d)".format(id)) {
+      tableDef.lookup(id)
     }
 
   def findByName(name: String): Option[AssetType] =
-    Cache.getOrElseUpdate("AssetType.findByName(%s)".format(name.toUpperCase)) {
-      withConnection {
-        tableDef.where(a =>
-          a.name.toLowerCase === name.toLowerCase
-        ).headOption
-      }
+    getOrElseUpdate("AssetType.findByName(%s)".format(name.toUpperCase)) {
+      tableDef.where(a =>
+        a.name.toLowerCase === name.toLowerCase
+      ).headOption
     }
 
   def fromEnum(enum: AssetType.Enum): AssetType =
@@ -52,7 +48,7 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
     }
   }
 
-  override def delete(a: AssetType): Int = withConnection {
+  override def delete(a: AssetType): Int = inTransaction {
     tableDef.deleteWhere(p => p.id === a.id)
   }
 

@@ -1,10 +1,7 @@
 package models
 
-import util.Cache
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
-
-import java.sql.Connection
 
 case class AssetMeta(
     name: String,
@@ -35,44 +32,32 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     "AssetMeta.findAll",
     "AssetMeta.getViewable"
   )
-  override def delete(a: AssetMeta): Int = withConnection {
+  override def delete(a: AssetMeta): Int = inTransaction {
     tableDef.deleteWhere(p => p.id === a.id)
   }
 
-  def findAll(): Seq[AssetMeta] = Cache.getOrElseUpdate("AssetMeta.findAll") {
-    withConnection {
-      from(tableDef)(s => select(s)).toList
-    }
+  def findAll(): Seq[AssetMeta] = getOrElseUpdate("AssetMeta.findAll") {
+    from(tableDef)(s => select(s)).toList
   }
 
-  def findById(id: Long) = Cache.getOrElseUpdate("AssetMeta.findById(%d)".format(id)) {
-    withConnection {
-      tableDef.lookup(id)
-    }
-  }
-
-  def findByName(name: String, con: Connection): Option[AssetMeta] = {
-    findByName(name)
+  def findById(id: Long) = getOrElseUpdate("AssetMeta.findById(%d)".format(id)) {
+    tableDef.lookup(id)
   }
 
   def findByName(name: String): Option[AssetMeta] = {
-    Cache.getOrElseUpdate("AssetMeta.findByName(%s)".format(name.toUpperCase)) {
-      withConnection {
-        tableDef.where(a =>
-          a.name.toUpperCase === name.toUpperCase
-        ).headOption
-      }
+    getOrElseUpdate("AssetMeta.findByName(%s)".format(name.toUpperCase)) {
+      tableDef.where(a =>
+        a.name.toUpperCase === name.toUpperCase
+      ).headOption
     }
   }
 
-  def getViewable(): Seq[AssetMeta] = Cache.getOrElseUpdate("AssetMeta.getViewable") {
-    withConnection {
-      from(tableDef)(a =>
-        where(a.priority gt -1)
-        select(a)
-        orderBy(a.priority asc)
-      ).toList
-    }
+  def getViewable(): Seq[AssetMeta] = getOrElseUpdate("AssetMeta.getViewable") {
+    from(tableDef)(a =>
+      where(a.priority gt -1)
+      select(a)
+      orderBy(a.priority asc)
+    ).toList
   }
 
   type Enum = Enum.Value

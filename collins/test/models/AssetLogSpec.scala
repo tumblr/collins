@@ -79,7 +79,7 @@ class AssetLogSpec extends ApplicationSpecification {
 
   trait mocklog extends Scope {
     val tag = "tumblrtag15"
-    def createAsset = Model.withConnection { implicit con =>
+    def createAsset = {
       Asset.create(Asset(tag, Status.Enum.Incomplete, AssetType.Enum.ServerNode))
       Asset.findByTag(tag).get
     }

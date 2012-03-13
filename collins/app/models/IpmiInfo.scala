@@ -2,13 +2,11 @@ package models
 
 import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress}
 import org.squeryl.PrimitiveTypeMode._
-import org.squeryl.{Query, Schema, Session, Table}
+import org.squeryl.Schema
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import play.api._
 import play.api.libs.json._
-
-import java.sql.Connection
 
 case class IpmiInfo(
   asset_id: Long,
@@ -73,19 +71,17 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     "IpmiInfo.findByAsset(%d)".format(a.asset_id)
   )
 
-  override def delete(a: IpmiInfo): Int = withConnection {
+  override def delete(a: IpmiInfo): Int = inTransaction {
     tableDef.deleteWhere(i => i.id === a.id)
   }
 
-  def deleteByAsset(a: Asset): Int = withConnection {
+  def deleteByAsset(a: Asset): Int = inTransaction {
     tableDef.deleteWhere(i => i.asset_id === a.getId)
   }
 
   def findByAsset(asset: Asset): Option[IpmiInfo] = {
-    Cache.getOrElseUpdate("IpmiInfo.findByAsset(%d)".format(asset.getId)) {
-      withConnection {
-        tableDef.where(a => a.asset_id === asset.getId).headOption
-      }
+    getOrElseUpdate("IpmiInfo.findByAsset(%d)".format(asset.getId)) {
+      tableDef.where(a => a.asset_id === asset.getId).headOption
     }
   }
 
@@ -98,7 +94,7 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
         collectParams(ipmi, ipmiRow)
       )
     }
-    withConnection {
+    inTransaction {
       val results = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
         whereClause(assetRow, ipmiRow)
         select(assetRow)
@@ -111,7 +107,7 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  def createForAsset(asset: Asset)(implicit session: Session): IpmiInfo = {
+  def createForAsset(asset: Asset): IpmiInfo = inTransaction {
     val assetId = asset.getId
     val (gateway, address, netmask) = getAddress()
     val username = getUsername(asset)
@@ -139,9 +135,7 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
   }
 
   protected def getNextAvailableAddress(netmask: Long): Long = {
-    val currentMax: Long = withConnection {
-      from(tableDef)(t => compute(nvl(max(t.address), 2)))
-    }
+    val currentMax: Long = from(tableDef)(t => compute(nvl(max(t.address), 2)))
     IpAddress.nextAvailableAddress(currentMax, netmask)
   }
 

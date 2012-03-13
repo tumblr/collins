@@ -1,7 +1,6 @@
 package models
 
 import util._
-import java.sql.Connection
 
 object LldpHelper extends CommonHelper[LldpRepresentation] {
   import AssetMeta.Enum._

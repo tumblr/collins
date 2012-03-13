@@ -8,7 +8,7 @@ import play.api.libs.json._
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
 
-import java.sql.{Connection, Timestamp}
+import java.sql.Timestamp
 import java.util.Date
 
 object LogFormat extends Enumeration {
@@ -125,7 +125,7 @@ case class AssetLog(
     this.copy(message = newMessage);
   }
 
-  def create()(implicit con: Connection) = {
+  def create() = {
     if (id == 0) {
       AssetLog.create(this)
     } else {
@@ -137,13 +137,12 @@ case class AssetLog(
 
 object AssetLog extends Schema with AnormAdapter[AssetLog] {
 
-  val assetLog = table[AssetLog]("asset_log")
-  on(assetLog)(a => declare(
+  override val tableDef = table[AssetLog]("asset_log")
+  on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
     columns(a.asset_id, a.message_type) are(indexed)
   ))
 
-  override def tableDef = assetLog
   override def delete(t: AssetLog): Int = 0
 
   def apply(asset: Asset, message: String, format: LogFormat, source: LogSource, mt: LogMessageType) = {
@@ -212,30 +211,21 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
     } catch {
       case e => None
     }
-    val uSort = sort.toUpperCase match {
-      case "ASC" => "ASC"
-      case _ => "DESC"
-    }
-    _list(asset.map(_.getId), page, pageSize, uSort, messageType, negate)
+    _list(asset.map(_.getId), page, pageSize, sort, messageType, negate)
   }
 
-  private def _list(asset_id: Option[Long], page: Int, pageSize: Int, sort: String, filter: Option[LogMessageType], negate: Boolean = false): Page[AssetLog] = {
+  private def _list(asset_id: Option[Long], page: Int, pageSize: Int, sort: String, filter: Option[LogMessageType], negate: Boolean = false): Page[AssetLog] = inTransaction {
     val offset = pageSize * page
-    withConnection {
-      val results = from(assetLog)(a =>
-        where(whereClause(a, asset_id, filter, negate))
-        select(a)
-        orderBy {
-          if (sort == "ASC") a.id asc
-          else a.id desc
-        }
-      ).page(offset, pageSize).toList
-      val totalCount = from(assetLog)(a =>
-        where(whereClause(a, asset_id, filter, negate))
-        compute(count)
-      )
-      Page(results, page, offset, totalCount)
-    }
+    val results = from(tableDef)(a =>
+      where(whereClause(a, asset_id, filter, negate))
+      select(a)
+      orderBy(a.id.withSort(sort))
+    ).page(offset, pageSize).toList
+    val totalCount = from(tableDef)(a =>
+      where(whereClause(a, asset_id, filter, negate))
+      compute(count)
+    )
+    Page(results, page, offset, totalCount)
   }
 
   private def whereClause(a: AssetLog, asset_id: Option[Long], filter: Option[LogMessageType], negate: Boolean) = {

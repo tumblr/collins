@@ -96,11 +96,21 @@ object Asset extends Schema with AnormAdapter[Asset] {
     new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
   }
 
-  override def delete(asset: Asset): Int = withConnection {
+  override def delete(asset: Asset): Int = inTransaction {
     tableDef.deleteWhere(a => a.id === asset.id)
   }
 
-  def find(page: PageParams, afinder: AssetFinder): Page[Asset] = withConnection {
+  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] = {
+    if (params._1.nonEmpty) {
+      IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
+    } else if (params._2.nonEmpty) {
+      AssetMetaValue.findAssetsByMeta(page, params._2, afinder, operation)
+    } else {
+      Asset.find(page, afinder)
+    }
+  }
+
+  def find(page: PageParams, afinder: AssetFinder): Page[Asset] = inTransaction {
     val results = from(tableDef)(a =>
       where(afinder.asLogicalBoolean(a))
       select(a)
@@ -112,7 +122,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     Page(results, page.page, page.offset, totalCount)
   }
 
-  def find(assets: Set[Long]): Seq[Asset] = withConnection {
+  def find(assets: Set[Long]): Seq[Asset] = inTransaction {
     assets.size match {
       case 0 => Seq()
       case n => tableDef.where(asset => asset.id in assets).toList
@@ -120,20 +130,18 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }
 
   def findById(id: Long) = Cache.getOrElseUpdate("Asset.findById(%d)".format(id)) {
-    withConnection {
-      tableDef.lookup(id)
-    }
+    inTransaction { tableDef.lookup(id) }
   }
 
   def findByTag(tag: String): Option[Asset] = {
     Cache.getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
-      withConnection {
+      inTransaction {
         tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
       }
     }
   }
 
-  def findLikeTag(tag: String, params: PageParams): Page[Asset] = withConnection {
+  def findLikeTag(tag: String, params: PageParams): Page[Asset] = inTransaction {
     val results = from(tableDef)(a =>
       where(a.tag.withPossibleRegex(tag))
       select(a)
