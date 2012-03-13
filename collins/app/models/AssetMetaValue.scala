@@ -103,6 +103,8 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       val i = includes(amv, toFind, op)
       mergeBooleans(e, i)
     }
+    // TODO this should join on asset, not re-query, otherwise we pull back large chunks of data
+    // that aren't needed due to pagination constraints
     inTransaction {
       val assetIds: Set[Long] = from(AssetMetaValue.tableDef)(amv =>
         where(whereClause(amv))
