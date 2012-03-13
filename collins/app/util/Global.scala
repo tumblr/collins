@@ -34,9 +34,11 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     setCryptoKey(key)
     Model.initialize()
   }
+
   override def onStop(app: Application) {
     logger.info("Stopping application")
     super.onStop(app)
+    Model.shutdown()
   }
 
   override def onError(request: RequestHeader, ex: Throwable): Result = {
