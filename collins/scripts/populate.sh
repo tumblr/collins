@@ -15,7 +15,7 @@ two-nic"
 lldp_files=($LldpFiles)
 num_lldp_files=${#lldp_files[*]}
 
-for i in `seq 22 31`; do
+for i in `seq 32 1500`; do
   TAG="tumblrtag${i}"
   LSHW_FILE="./test/resources/lshw-${lshw_files[$((RANDOM%num_lshw_files))]}.xml"
   LLDP_FILE="./test/resources/lldpctl-${lldp_files[$((RANDOM%num_lldp_files))]}.xml"

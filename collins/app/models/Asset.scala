@@ -122,10 +122,20 @@ object Asset extends Schema with AnormAdapter[Asset] {
     Page(results, page.page, page.offset, totalCount)
   }
 
-  def find(assets: Set[Long]): Seq[Asset] = inTransaction {
+  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[Asset] = inTransaction {
+    val totalCount: Long = from(tableDef)(asset =>
+      where(asset.id in assets and finder.asLogicalBoolean(asset))
+      compute(count)
+    )
     assets.size match {
-      case 0 => Seq()
-      case n => tableDef.where(asset => asset.id in assets).toList
+      case 0 => Page(Seq(), page.page, page.offset, totalCount)
+      case n =>
+        val results = from(tableDef)(asset =>
+          where(asset.id in assets and finder.asLogicalBoolean(asset))
+          select(asset)
+          orderBy(asset.id.withSort(page.sort))
+        ).page(page.offset, page.size).toList
+        Page(results, page.page, page.offset, totalCount)
     }
   }
 
