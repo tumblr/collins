@@ -58,7 +58,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
 
   def create(mvs: Seq[AssetMetaValue]): Int = inTransaction {
     try {
-      mvs.foreach { mv => tableDef.insert(mv) }
+      tableDef.insert(mvs)
       mvs.size
     } catch {
       case e =>
