@@ -21,24 +21,20 @@ class AssetSpec extends ApplicationSpecification {
       }
 
       "UPDATE" in new mockasset {
-        Model.withConnection { implicit con =>
-          val maybeAsset = Asset.findByTag(assetTag)
-          maybeAsset must beSome[Asset]
-          val realAsset = maybeAsset.get
-          Asset.update(realAsset.copy(status = Status.Enum.New.id))
-          Asset.findByTag(assetTag).map { a =>
-            a.getStatus().getId mustEqual(Status.Enum.New.id)
-          }.getOrElse(failure("Couldn't find asset but expected to"))
-        }
+        val maybeAsset = Asset.findByTag(assetTag)
+        maybeAsset must beSome[Asset]
+        val realAsset = maybeAsset.get
+        Asset.update(realAsset.copy(status = Status.Enum.New.id))
+        Asset.findByTag(assetTag).map { a =>
+          a.getStatus().getId mustEqual(Status.Enum.New.id)
+        }.getOrElse(failure("Couldn't find asset but expected to"))
       }
 
       "DELETE" in new mockasset {
-        Model.withConnection { implicit con =>
-          Asset.findByTag(assetTag).map { a =>
-            Asset.delete(a) mustEqual 1
-            Asset.findById(a.getId) must beNone
-          }.getOrElse(failure("Couldn't find asset but expected to"))
-        }
+        Asset.findByTag(assetTag).map { a =>
+          Asset.delete(a) mustEqual 1
+          Asset.findById(a.getId) must beNone
+        }.getOrElse(failure("Couldn't find asset but expected to"))
       }
     }
 

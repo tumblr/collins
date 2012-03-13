@@ -15,38 +15,31 @@ case class Status(name: String, description: String, id: Int = 0) extends Valida
 
 object Status extends Schema with AnormAdapter[Status] { //Magic[Status](Some("status")) {
 
-  val status = table[Status]("status")
-  on(status)(s => declare(
+  override val tableDef = table[Status]("status")
+  on(tableDef)(s => declare(
     s.id is (autoIncremented,primaryKey),
     s.name is(unique)
   ))
 
-  override protected def tableDef = status
   override protected def cacheKeys(s: Status) = Seq(
     "Status.findById(%d)".format(s.id),
     "Status.findByName(%s)".format(s.name.toLowerCase)
   )
 
-  def findById(id: Int): Option[Status] = {
-    Cache.getOrElseUpdate("Status.findById(%d)".format(id)) {
-      withConnection {
-        status.lookup(id)
-      }
-    }
+  def findById(id: Int): Option[Status] = getOrElseUpdate("Status.findById(%d)".format(id)) {
+    tableDef.lookup(id)
   }
 
   def findByName(name: String): Option[Status] = {
-    Cache.getOrElseUpdate("Status.findByName(%s)".format(name.toLowerCase)) {
-      withConnection {
-        status.where(s =>
-          s.name.toLowerCase === name.toLowerCase
-        ).headOption
-      }
+    getOrElseUpdate("Status.findByName(%s)".format(name.toLowerCase)) {
+      tableDef.where(s =>
+        s.name.toLowerCase === name.toLowerCase
+      ).headOption
     }
   }
 
-  override def delete(s: Status): Int = withConnection {
-    status.deleteWhere(p => p.id === s.id)
+  override def delete(s: Status): Int = inTransaction {
+    tableDef.deleteWhere(p => p.id === s.id)
   }
 
   type Enum = Enum.Value

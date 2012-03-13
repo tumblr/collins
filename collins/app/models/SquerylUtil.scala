@@ -9,10 +9,11 @@ trait ValidatedEntity[T] extends KeyedEntity[T] {
 }
 
 trait BasicModel[T] { self: Schema =>
+  import org.squeryl.PrimitiveTypeMode
+
   protected def tableDef: Table[T] // Override
 
-  protected def withTransaction[A](f: => A): A = Model.withSquerylTransaction(f)
-  protected def withConnection[A](f: => A): A = Model.withSqueryl(f)
+  def inTransaction[A](f: => A): A = PrimitiveTypeMode.inTransaction(f)
   protected def cacheKeys(t: T): Seq[String] = Seq()
   override def callbacks = Seq(
     afterDelete(tableDef) call(cacheKeys(_).map(Cache.invalidate(_))),
@@ -20,12 +21,20 @@ trait BasicModel[T] { self: Schema =>
     afterInsert(tableDef) call(cacheKeys(_).map(Cache.invalidate(_)))
   )
 
-  def create(t: T): T = withTransaction(tableDef.insert(t))
+  def create(t: T): T = inTransaction(tableDef.insert(t))
   def delete(t: T): Int // Override
+
+  protected def getOrElseUpdate[T <: AnyRef](key: String)(op: => T)(implicit m: Manifest[T]): T = {
+    Cache.getOrElseUpdate(key) {
+      inTransaction {
+        op
+      }
+    }(m)
+  }
 }
 
 trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema =>
-  def update(t: T): Int = withTransaction {
+  def update(t: T): Int = inTransaction {
     try {
       tableDef.update(t)
       1

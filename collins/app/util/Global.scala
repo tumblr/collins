@@ -2,6 +2,7 @@ import play.api._
 import play.api.mvc._
 
 import controllers.ApiResponse
+import models.Model
 import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, IpmiCommandProcessor}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 
@@ -31,6 +32,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
     setAuthentication(auth)
     setCryptoKey(key)
+    Model.initialize()
   }
   override def onStop(app: Application) {
     logger.info("Stopping application")

@@ -82,11 +82,9 @@ trait AssetLogApi {
       }
       try {
         val mtype = LogMessageType.withName(typeString)
-        Model.withConnection { implicit con =>
-          AssetLog.create(
-            AssetLog(asset, Json.stringify(msg), LogFormat.Json, LogSource.Api, mtype)
-          )
-        }
+        AssetLog.create(
+          AssetLog(asset, Json.stringify(msg), LogFormat.Json, LogSource.Api, mtype)
+        )
         None
       } catch {
         case _ => Some("Invalid message type specified. Valid types are: %s".format(
@@ -111,11 +109,9 @@ trait AssetLogApi {
           val msg = "%s: %s".format(username, escapedMessage)
           try {
             val mtype = LogMessageType.withName(typeString)
-            Model.withConnection { implicit con =>
-              AssetLog.create(
-                AssetLog(asset, msg, LogFormat.PlainText, source, mtype)
-              )
-            }
+            AssetLog.create(
+              AssetLog(asset, msg, LogFormat.PlainText, source, mtype)
+            )
             None
           } catch {
             case _ => Some("Invalid message type specified. Valid types are: %s".format(
