@@ -104,16 +104,13 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       mergeBooleans(e, i)
     }
     inTransaction {
-      val assets = from(tableDef, Asset.tableDef)((amv, asset) =>
-        where(whereClause(amv) and amv.asset_id === asset.id and afinder.asLogicalBoolean(asset))
-        select(asset)
-        orderBy(asset.id.withSort(page.sort))
-      ).distinct.page(page.offset, page.size).toList
-      val totalCount = from(tableDef, Asset.tableDef)((amv, asset) =>
-        where(whereClause(amv) and amv.asset_id === asset.id and afinder.asLogicalBoolean(asset))
-        compute(count)
-      )
-      Page(assets, page.page, page.offset, totalCount)
+      logger.debug("Starting asset collection")
+      val assets = from(tableDef)(amv =>
+        where(whereClause(amv))
+        select(amv.asset_id)
+      ).distinct.toSet
+      logger.debug("Finished asset collection")
+      Asset.find(page, afinder, assets)
     }
   }
 
@@ -195,11 +192,10 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       return None
     }
     if (isAnd) {
-      Some(
-        clauses.map { case(am, v) =>
-          exists(matchClause(amv, am, v)): LogicalBoolean
-        }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
-      )
+      val clauseExpressions = clauses.map { case(am, v) =>
+        exists(matchClause(amv, am, v)): LogicalBoolean
+      }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
+      Some(clauseExpressions)
     } else {
       Some(
         clauses.map { case(am, v) =>
