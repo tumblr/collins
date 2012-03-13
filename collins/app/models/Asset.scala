@@ -12,6 +12,12 @@ import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 import java.sql.Timestamp
 import java.util.Date
 
+object AssetConfig {
+  lazy val HiddenMeta: Set[String] = Helpers.getFeature("hideMeta")
+      .map(_.split(",").map(_.trim.toUpperCase).toSet)
+      .getOrElse(Set[String]())
+}
+
 case class Asset(tag: String, status: Int, asset_type: Int,
     created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp],
     id: Long = 0) extends ValidatedEntity[Long]
@@ -40,29 +46,27 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     AssetType.findById(asset_type).get
   }
   def getMetaAttribute(name: String): Option[MetaWrapper] = {
-    MetaWrapper.findMeta(this, name)
-  }
-  def getMetaAttribute(name: String, count: Int): Seq[MetaWrapper] = {
-    MetaWrapper.findMeta(this, name, count)
-  }
-  def getMetaAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
-    MetaWrapper.findMeta(this, spec.toString, 1).toList match {
-      case Nil => None
-      case one :: Nil =>
-        Some(one)
-      case other =>
-        throw new IndexOutOfBoundsException("Expected one value, if any")
+    AssetMeta.findByName(name).flatMap { meta =>
+      AssetMetaValue.findByAssetAndMeta(this, meta, 1) match {
+        case Nil => None
+        case head :: Nil => Some(head)
+      }
     }
   }
+  def getMetaAttribute(name: String, count: Int): Seq[MetaWrapper] = {
+    AssetMeta.findByName(name).map { meta =>
+      AssetMetaValue.findByAssetAndMeta(this, meta, count)
+    }.getOrElse(Nil)
+  }
+  def getMetaAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
+    getMetaAttribute(spec.toString)
+  }
 
-  private[this] lazy val HiddenMeta: Set[String] = Helpers.getFeature("hideMeta")
-      .map(_.split(",").map(_.trim.toUpperCase).toSet)
-      .getOrElse(Set[String]())
   def getAllAttributes: Asset.AllAttributes = {
     val (lshwRep, mvs) = LshwHelper.reconstruct(this)
     val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
     val ipmi = IpmiInfo.findByAsset(this)
-    val filtered: Seq[MetaWrapper] = mvs2.filter(f => !HiddenMeta.contains(f.getName))
+    val filtered: Seq[MetaWrapper] = mvs2.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
     Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, filtered)
   }
 }

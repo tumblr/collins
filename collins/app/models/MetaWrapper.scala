@@ -22,6 +22,7 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getValue(): String = _value.value
   override def toString(): String = getValue()
 }
+
 object MetaWrapper {
   def createMeta(asset: Asset, metas: Map[String,String]) = {
     val metaValues = metas.map { case(k,v) =>
@@ -38,19 +39,6 @@ object MetaWrapper {
       case 0 =>
       case n =>
         AssetMetaValue.create(values)
-    }
-  }
-
-  def findMeta(asset: Asset, name: String, count: Int = 1): Seq[MetaWrapper] = {
-    AssetMeta.findByName(name).map { meta =>
-      AssetMetaValue.findByAssetAndMeta(asset, meta, count)
-    }.getOrElse(Nil)
-  }
-
-  def findMeta(asset: Asset, name: String): Option[MetaWrapper] = {
-    findMeta(asset, name, 1) match {
-      case Nil => None
-      case head :: Nil => Some(head)
     }
   }
 
