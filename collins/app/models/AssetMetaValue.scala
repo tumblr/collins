@@ -103,14 +103,17 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       val i = includes(amv, toFind, op)
       mergeBooleans(e, i)
     }
-    // TODO this should join on asset, not re-query, otherwise we pull back large chunks of data
-    // that aren't needed due to pagination constraints
     inTransaction {
-      val assetIds: Set[Long] = from(AssetMetaValue.tableDef)(amv =>
-        where(whereClause(amv))
-        select(amv.asset_id)
-      ).distinct.toSet
-      Asset.find(page, afinder, assetIds)
+      val assets = from(tableDef, Asset.tableDef)((amv, asset) =>
+        where(whereClause(amv) and amv.asset_id === asset.id and afinder.asLogicalBoolean(asset))
+        select(asset)
+        orderBy(asset.id.withSort(page.sort))
+      ).distinct.page(page.offset, page.size).toList
+      val totalCount = from(tableDef, Asset.tableDef)((amv, asset) =>
+        where(whereClause(amv) and amv.asset_id === asset.id and afinder.asLogicalBoolean(asset))
+        compute(count)
+      )
+      Page(assets, page.page, page.offset, totalCount)
     }
   }
 
@@ -170,9 +173,16 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     if (clauses.length == 0) {
       return None
     }
+    // Don't need value for excludes match, just want assets that have a value
+    val subqueries = clauses.map { case(am, v) =>
+      from(tableDef)(a =>
+        where(a.asset_id === amv.asset_id and a.asset_meta_id === am.id)
+        select(&(1))
+      )
+    }
     Some(
-      clauses.map { case(am, v) =>
-        notExists(matchClause(amv, am, v)): LogicalBoolean
+      subqueries.map { s =>
+        notExists(s): LogicalBoolean
       }.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
     )
   }
