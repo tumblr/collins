@@ -3,6 +3,7 @@ package models
 import conversions._
 import util.{Cache, Helpers, LldpRepresentation, LshwRepresentation}
 
+import play.api.Logger
 import play.api.libs.json._
 
 import org.squeryl.Schema
@@ -74,6 +75,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
 object Asset extends Schema with AnormAdapter[Asset] {
 
   private[this] val TagR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
+  private[this] val logger = Logger.logger
 
   override val tableDef = table[Asset]("asset")
   on(tableDef)(a => declare(
@@ -127,18 +129,21 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }
 
   def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[Asset] = inTransaction {
-    val totalCount: Long = from(tableDef)(asset =>
-      where(asset.id in assets and finder.asLogicalBoolean(asset))
-      compute(count)
-    )
     assets.size match {
-      case 0 => Page(Seq(), page.page, page.offset, totalCount)
+      case 0 => Page(Seq(), page.page, page.offset, 0)
       case n =>
+        logger.debug("Starting Asset.find count")
+        val totalCount: Long = from(tableDef)(asset =>
+          where(asset.id in assets and finder.asLogicalBoolean(asset))
+          compute(count)
+        )
+        logger.debug("Finished Asset.find count")
         val results = from(tableDef)(asset =>
           where(asset.id in assets and finder.asLogicalBoolean(asset))
           select(asset)
           orderBy(asset.id.withSort(page.sort))
         ).page(page.offset, page.size).toList
+        logger.debug("Finished Asset.find find")
         Page(results, page.page, page.offset, totalCount)
     }
   }
