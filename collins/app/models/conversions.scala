@@ -55,12 +55,21 @@ sealed private[models] class PossibleRegex(left: StringExpression[_]) {
   protected def isRegex(pattern: String): Boolean = {
     RegexChars.find(pattern.contains(_)).map(_ => true).getOrElse(false)
   }
-  protected def wrapRegex(pattern: String): String = bookend("^", pattern, "$")
   protected def wrapLike(s: String): String = bookend("%", s, "%")
+  protected def wrapRegex(pattern: String): String = {
+    val prefixed = pattern.startsWith("^") match {
+      case true => pattern
+      case false => ".*" + pattern
+    }
+    pattern.endsWith("$") match {
+      case true => prefixed
+      case false => prefixed + ".*"
+    }
+  }
 
   // Bookend a string with start/end unless already starts with start/ends with end
   protected def bookend(prefix: String, s: String, suffix: String): String = {
-    val withPrefix = Option(s.startsWith("^"))
+    val withPrefix = Option(s.startsWith(prefix))
       .filter(_ == false)
       .map(_ => prefix + s)
       .getOrElse(s)

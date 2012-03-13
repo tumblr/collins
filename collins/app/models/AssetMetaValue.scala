@@ -99,31 +99,16 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   def findAssetsByMeta(page: PageParams, toFind: AssetMetaFinder, afinder: AssetFinder,
                        op: Option[String]): Page[Asset] = {
     val whereClause = {amv: AssetMetaValue =>
-      val expressions: Seq[LogicalBoolean] = Seq(
-        includes(amv, toFind, op).map(exists(_)),
-        excludes(amv, toFind, op).map(notExists(_))
-      ).filter(_ != None).map(_.get)
-      val safeExpressions = expressions match {
-        case Nil => Seq((1 === 1))
-        case list => list
-      }
-      safeExpressions.reduceRight{
-        (a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and")
-      }
+      val e = excludes(amv, toFind, op)
+      val i = includes(amv, toFind, op)
+      mergeBooleans(e, i)
     }
-
     inTransaction {
       val assetIds: Set[Long] = from(AssetMetaValue.tableDef)(amv =>
         where(whereClause(amv))
         select(amv.asset_id)
-        orderBy(amv.asset_id.withSort(page.sort))
-      ).distinct.page(page.offset, page.size).toSet
-      val totalCount: Long = from(AssetMetaValue.tableDef)(amv =>
-        where(whereClause(amv))
-        compute(countDistinct(amv.asset_id))
-      )
-      val assets = Asset.find(assetIds)
-      Page(assets, page.page, page.offset, totalCount)
+      ).distinct.toSet
+      Asset.find(page, afinder, assetIds)
     }
   }
 
@@ -176,45 +161,40 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       }
     }
   }
-  protected def excludes(amv: AssetMetaValue, toFind: AssetMetaFinder, bool: Option[String]): Option[Query[Long]] = {
-    val clauses = toFind.filter(_._2.isEmpty) // Find empty values, our marker
-    val whereClauses = clauses match {
-      case Nil =>
-        return None
-      case list => list.map { case(am, v) =>
-        (amv.asset_meta_id === am.id and amv.value.withPossibleRegex(v))
-      }
+
+  protected def excludes(amv: AssetMetaValue, toFind: AssetMetaFinder, bool: Option[String]
+    ): Option[LogicalBoolean] = {
+    val clauses = toFind.filter(_._2.isEmpty)
+    if (clauses.length == 0) {
+      return None
     }
-    val whereClause = whereClauses.reduceRight((a, b) =>
-      new BinaryOperatorNodeLogicalBoolean(a, b, "and")
+    Some(
+      clauses.map { case(am, v) =>
+        notExists(matchClause(amv, am, v)): LogicalBoolean
+      }.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
     )
-    Some(from(AssetMetaValue.tableDef)(a =>
-      where(whereClause)
-      select(a.asset_id)
-    ))
   }
 
-  protected def includes(amv: AssetMetaValue, toFind: AssetMetaFinder, bool: Option[String]): Option[Query[Long]] = {
+  protected def includes(amv: AssetMetaValue, toFind: AssetMetaFinder, bool: Option[String]
+    ): Option[LogicalBoolean] = {
     val isAnd = (bool.toBinaryOperator == "and")
     val clauses = toFind.filter(_._2.nonEmpty)
-    val whereClauses = clauses match {
-      case Nil =>
-        return None
-      case list => list.map { case(am, v) =>
-        if (isAnd) {
-          (amv.asset_meta_id === am.id and amv.value.withPossibleRegex(v))
-        } else {
-          (amv.asset_meta_id === am.id and amv.value.withPossibleRegex(v))
-        }
-      }
+    if (clauses.length == 0) {
+      return None
     }
-    val whereClause = whereClauses.reduceRight{(a, b) =>
-      new BinaryOperatorNodeLogicalBoolean(a, b, bool.toBinaryOperator)
+    if (isAnd) {
+      Some(
+        clauses.map { case(am, v) =>
+          exists(matchClause(amv, am, v)): LogicalBoolean
+        }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
+      )
+    } else {
+      Some(
+        clauses.map { case(am, v) =>
+          amv.asset_meta_id === am.id and amv.value.withPossibleRegex(v)
+        }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "or"))
+      )
     }
-    Some(from(AssetMetaValue.tableDef)(a =>
-      where(whereClause)
-      select(a.asset_id)
-    ))
   }
 
   protected def logChange(oldValue: Option[AssetMetaValue], newValue: AssetMetaValue) {
@@ -230,5 +210,20 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
 
   protected def shouldLogChange(oldValue: Option[AssetMetaValue], newValue: AssetMetaValue): Boolean = {
     oldValue.isDefined && AssetMetaValueConfig.ExcludedAttributes.contains(newValue.asset_meta_id)
+  }
+
+  private def matchClause(amv: AssetMetaValue, am: AssetMeta, v: String) = {
+    from(tableDef)(a =>
+      where(
+        a.asset_id === amv.asset_id and a.asset_meta_id === am.id and a.value.withPossibleRegex(v)
+      )
+      select(&(1))
+    )
+  }
+
+  private def mergeBooleans(o: Option[LogicalBoolean]*) = {
+    o.filter(_.isDefined).map(_.get).reduceRight((a, b) =>
+      new BinaryOperatorNodeLogicalBoolean(a, b, "and")
+    )
   }
 }
