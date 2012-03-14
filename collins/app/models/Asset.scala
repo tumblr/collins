@@ -208,20 +208,14 @@ case class AssetFinder(
   updatedBefore: Option[Date])
 {
   def asLogicalBoolean(a: Asset): LogicalBoolean = {
-    val statusId: Option[Int] = status.map(_.id)
-    val typeId: Option[Int] = assetType.map(_.id)
-    val createdAfterTs: Option[Timestamp] = createdAfter.map(_.asTimestamp)
-    val createdBeforeTs: Option[Timestamp] = createdBefore.map(_.asTimestamp)
-    val updatedAfterTs: Option[Timestamp] = updatedAfter.map(_.asTimestamp)
-    val updatedBeforeTs: Option[Timestamp] = updatedBefore.map(_.asTimestamp)
-    val ops = List[LogicalBoolean](
-      (a.tag === tag.?) and
-      (a.status === statusId.?) and
-      (a.created gte createdAfterTs.?) and
-      (a.created lte createdBeforeTs.?) and
-      (a.updated gte updatedAfterTs.?) and
-      (a.updated lte updatedBeforeTs.?)
-    )
+    val statusBool = status.map((a.status === _.id))
+    val typeBool = assetType.map((a.asset_type === _.id))
+    val createdAfterTs = createdAfter.map((a.created gte _.asTimestamp))
+    val createdBeforeTs = createdBefore.map((a.created lte _.asTimestamp))
+    val updatedAfterTs = Some((a.updated gte updatedAfter.map(_.asTimestamp).?))
+    val updatedBeforeTs = Some((a.updated lte updatedBefore.map(_.asTimestamp).?))
+    val ops = Seq(statusBool, typeBool, createdAfterTs, createdBeforeTs, updatedAfterTs,
+      updatedBeforeTs).filter(_ != None).map(_.get)
     ops.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }
 }
