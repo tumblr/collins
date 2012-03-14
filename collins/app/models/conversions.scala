@@ -2,13 +2,13 @@ package models
 
 import java.util.Date
 import java.sql.Timestamp
-import org.squeryl.dsl.StringExpression
+import org.squeryl.dsl.{NonNumericalExpression, StringExpression}
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, ExpressionNode, LogicalBoolean, OrderByArg, TypedExpressionNode}
 
 object conversions {
   implicit def dateToTimestamp(date: Date) = new DateToTimestamp(date)
   implicit def ops2bo(o: Option[String]) = new LogicalBooleanFromString(o)
-  implicit def reOrLike[E <% StringExpression[_]](s: E) = new PossibleRegex(s)
+  implicit def reOrLike[E <% StringExpression[String]](s: E) = new PossibleRegex(s)
   implicit def orderByString2oba[E <% TypedExpressionNode[_]](e: E) = new OrderByFromString(e)
 }
 
@@ -40,12 +40,14 @@ sealed private[models] class LogicalBooleanFromString(s: Option[String]) {
   }
 }
 
-sealed private[models] class PossibleRegex(left: StringExpression[_]) {
+sealed private[models] class PossibleRegex(left: StringExpression[String]) {
   protected val RegexChars = List('[','\\','^','$','.','|','?','*','+','(',')')
   import org.squeryl.PrimitiveTypeMode._
 
   def withPossibleRegex(pattern: String): LogicalBoolean = {
-    if (isRegex(pattern)) {
+    if (isExact(pattern)) {
+      (left === withoutAnchors(pattern))
+    } else if (isRegex(pattern)) {
       left.regex(wrapRegex(pattern))
     } else {
       left.like(wrapLike(pattern))
@@ -55,15 +57,21 @@ sealed private[models] class PossibleRegex(left: StringExpression[_]) {
   protected def isRegex(pattern: String): Boolean = {
     RegexChars.find(pattern.contains(_)).map(_ => true).getOrElse(false)
   }
+  protected def isExact(pattern: String): Boolean = {
+    // exact match if the only regex that is specified are start and end anchors
+    pattern.startsWith("^") && pattern.endsWith("$") && !isRegex(withoutAnchors(pattern))
+  }
+  protected def withoutAnchors(p: String) = p.stripPrefix("^").stripSuffix("$")
+
   protected def wrapLike(s: String): String = bookend("%", s, "%")
   protected def wrapRegex(pattern: String): String = {
     val prefixed = pattern.startsWith("^") match {
       case true => pattern
-      case false => ".*" + pattern
+      case false => ".*" + pattern.stripPrefix(".*")
     }
     pattern.endsWith("$") match {
       case true => prefixed
-      case false => prefixed + ".*"
+      case false => prefixed.stripSuffix(".*") + ".*"
     }
   }
 
