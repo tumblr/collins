@@ -114,7 +114,6 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
         compute(count)
       )
       logger.debug("Finished asset collection")
-      //Asset.find(page, afinder, assets)
       Page(assets, page.page, page.offset, totalCount)
     }
   }
@@ -169,6 +168,8 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }
   }
 
+  // Generates parts of findAssetsByMeta query for exclusion in results based on parameter
+  // values that are empty.
   protected def excludes(asset: Asset, toFind: AssetMetaFinder, bool: Option[String]
     ): Option[LogicalBoolean] = {
     val clauses = toFind.filter(_._2.isEmpty)
@@ -189,29 +190,18 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     )
   }
 
+  // Generate parts of the findAssetsByMeta query for inclusion in results
   protected def includes(asset: Asset, toFind: AssetMetaFinder, bool: Option[String]
     ): Option[LogicalBoolean] = {
-    val isAnd = (bool.toBinaryOperator == "and")
+    val operator = bool.toBinaryOperator
     val clauses = toFind.filter(_._2.nonEmpty)
     if (clauses.length == 0) {
       return None
     }
-    if (isAnd) {
-      val clauseExpressions = clauses.map { case(am, v) =>
-        exists(matchClause(asset, am, v)): LogicalBoolean
-      }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
-      Some(clauseExpressions)
-    } else {
-      val query = from(tableDef)(a =>
-        where(
-          clauses.map { case(am, v) =>
-            (a.asset_meta_id === am.id and a.value.withPossibleRegex(v))
-          }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "or"))
-        )
-        select(a.asset_id)
-      )
-      Some(asset.id in query)
-    }
+    val clauseExpressions = clauses.map { case(am, v) =>
+      exists(matchClause(asset, am, v)): LogicalBoolean
+    }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, operator))
+    Some(clauseExpressions)
   }
 
   protected def logChange(oldValue: Option[AssetMetaValue], newValue: AssetMetaValue) {
