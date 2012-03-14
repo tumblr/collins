@@ -33,7 +33,9 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     "AssetMeta.getViewable"
   )
   override def delete(a: AssetMeta): Int = inTransaction {
-    tableDef.deleteWhere(p => p.id === a.id)
+    afterDeleteCallback(a) {
+      tableDef.deleteWhere(p => p.id === a.id)
+    }
   }
 
   def findAll(): Seq[AssetMeta] = getOrElseUpdate("AssetMeta.findAll") {

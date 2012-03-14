@@ -72,11 +72,15 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
   )
 
   override def delete(a: IpmiInfo): Int = inTransaction {
-    tableDef.deleteWhere(i => i.id === a.id)
+    afterDeleteCallback(a) {
+      tableDef.deleteWhere(i => i.id === a.id)
+    }
   }
 
   def deleteByAsset(a: Asset): Int = inTransaction {
-    tableDef.deleteWhere(i => i.asset_id === a.getId)
+    findByAsset(a).map { ipmi =>
+      delete(ipmi)
+    }.getOrElse(0)
   }
 
   def findByAsset(asset: Asset): Option[IpmiInfo] = {
