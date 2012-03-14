@@ -41,7 +41,6 @@ object Model {
   }
 
   def shutdown() {
-    println("Shutdown called")
     shutdownStats(statLogger.getAndSet(null))
   }
 
@@ -54,20 +53,17 @@ object Model {
   protected def shutdownStats(r: (Connection,LocalH2SinkStatisticsListener)) {
     if (r != null) {
       val (c, l) = r
-      println("Running shutdownStats and wiping old data files")
       swallow(l.generateStatSummary(new File("./profileOfH2Tests.html"), 25))
       Thread.sleep(250)
       swallow(l.shutdown)
       swallow(StatsSchema.drop)
       swallow(c.close)
     }
-    println("Running shutdownStats and doing generic cleanup")
     Session.cleanupResources
     cleanupStatFiles()
   }
 
   protected def createSinkStatisticsListener() = {
-    println("Creating sink listener")
     Class.forName("org.h2.Driver"); // load class up
     val dir = "."
     val filename = "collins-db-usage-stats"

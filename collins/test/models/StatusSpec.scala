@@ -54,11 +54,7 @@ class StatusSpec extends ApplicationSpecification {
 
       "UPDATE" in {
         val test = Status.findByName(status.name).get
-        println("\n\n\n\n")
-        println(test)
-        println(test.id)
         Status.update(test.copy(description = "updated test")) mustEqual 1
-        println("\n\n\n\n")
         Status.findByName(status.name).get.description mustEqual "updated test"
       }
 

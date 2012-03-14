@@ -98,19 +98,24 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
 
   def findAssetsByMeta(page: PageParams, toFind: AssetMetaFinder, afinder: AssetFinder,
                        op: Option[String]): Page[Asset] = {
-    val whereClause = {amv: AssetMetaValue =>
-      val e = excludes(amv, toFind, op)
-      val i = includes(amv, toFind, op)
+    val whereClause = {asset: Asset =>
+      val e = excludes(asset, toFind, op)
+      val i = includes(asset, toFind, op)
       mergeBooleans(e, i)
     }
     inTransaction {
       logger.debug("Starting asset collection")
-      val assets = from(tableDef)(amv =>
-        where(whereClause(amv))
-        select(amv.asset_id)
-      ).distinct.toSet
+      val assets = from(Asset.tableDef)(asset =>
+        where(whereClause(asset) and afinder.asLogicalBoolean(asset))
+        select(asset)
+      ).distinct.page(page.offset, page.size).toList
+      val totalCount: Long = from(Asset.tableDef)(asset =>
+        where(whereClause(asset) and afinder.asLogicalBoolean(asset))
+        compute(count)
+      )
       logger.debug("Finished asset collection")
-      Asset.find(page, afinder, assets)
+      //Asset.find(page, afinder, assets)
+      Page(assets, page.page, page.offset, totalCount)
     }
   }
 
@@ -164,7 +169,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }
   }
 
-  protected def excludes(amv: AssetMetaValue, toFind: AssetMetaFinder, bool: Option[String]
+  protected def excludes(asset: Asset, toFind: AssetMetaFinder, bool: Option[String]
     ): Option[LogicalBoolean] = {
     val clauses = toFind.filter(_._2.isEmpty)
     if (clauses.length == 0) {
@@ -173,7 +178,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     // Don't need value for excludes match, just want assets that have a value
     val subqueries = clauses.map { case(am, v) =>
       from(tableDef)(a =>
-        where(a.asset_id === amv.asset_id and a.asset_meta_id === am.id)
+        where(a.asset_id === asset.id and a.asset_meta_id === am.id)
         select(&(1))
       )
     }
@@ -184,7 +189,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     )
   }
 
-  protected def includes(amv: AssetMetaValue, toFind: AssetMetaFinder, bool: Option[String]
+  protected def includes(asset: Asset, toFind: AssetMetaFinder, bool: Option[String]
     ): Option[LogicalBoolean] = {
     val isAnd = (bool.toBinaryOperator == "and")
     val clauses = toFind.filter(_._2.nonEmpty)
@@ -193,15 +198,19 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }
     if (isAnd) {
       val clauseExpressions = clauses.map { case(am, v) =>
-        exists(matchClause(amv, am, v)): LogicalBoolean
+        exists(matchClause(asset, am, v)): LogicalBoolean
       }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
       Some(clauseExpressions)
     } else {
-      Some(
-        clauses.map { case(am, v) =>
-          amv.asset_meta_id === am.id and amv.value.withPossibleRegex(v)
-        }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "or"))
+      val query = from(tableDef)(a =>
+        where(
+          clauses.map { case(am, v) =>
+            (a.asset_meta_id === am.id and a.value.withPossibleRegex(v))
+          }.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "or"))
+        )
+        select(a.asset_id)
       )
+      Some(asset.id in query)
     }
   }
 
@@ -220,10 +229,10 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     oldValue.isDefined && AssetMetaValueConfig.ExcludedAttributes.contains(newValue.asset_meta_id)
   }
 
-  private def matchClause(amv: AssetMetaValue, am: AssetMeta, v: String) = {
+  private def matchClause(asset: Asset, am: AssetMeta, v: String) = {
     from(tableDef)(a =>
       where(
-        a.asset_id === amv.asset_id and a.asset_meta_id === am.id and a.value.withPossibleRegex(v)
+        a.asset_id === asset.id and a.asset_meta_id === am.id and a.value.withPossibleRegex(v)
       )
       select(&(1))
     )
