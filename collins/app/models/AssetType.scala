@@ -49,7 +49,9 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
   }
 
   override def delete(a: AssetType): Int = inTransaction {
-    tableDef.deleteWhere(p => p.id === a.id)
+    afterDeleteCallback(a) {
+      tableDef.deleteWhere(p => p.id === a.id)
+    }
   }
 
   type Enum = Enum.Value

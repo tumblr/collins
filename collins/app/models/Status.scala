@@ -39,7 +39,9 @@ object Status extends Schema with AnormAdapter[Status] { //Magic[Status](Some("s
   }
 
   override def delete(s: Status): Int = inTransaction {
-    tableDef.deleteWhere(p => p.id === s.id)
+    afterDeleteCallback(s) {
+      tableDef.deleteWhere(p => p.id === s.id)
+    }
   }
 
   type Enum = Enum.Value

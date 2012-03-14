@@ -68,21 +68,23 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   }
 
   override def delete(a: AssetMetaValue): Int = inTransaction {
-    tableDef.deleteWhere(p =>
-      p.asset_id === a.asset_id and
-      p.asset_meta_id === a.asset_meta_id
-    )
+    afterDeleteCallback(a) {
+      tableDef.deleteWhere(p =>
+        p.asset_id === a.asset_id and
+        p.asset_meta_id === a.asset_meta_id
+      )
+    }
   }
 
   def deleteByAsset(asset: Asset): Int = inTransaction {
-    tableDef.deleteWhere(p => p.asset_id === asset.getId)
+    val meta = AssetMetaValue(asset, 0, "")
+    afterDeleteCallback(meta) {
+      tableDef.deleteWhere(p => p.asset_id === asset.getId)
+    }
   }
 
   def deleteByAssetAndMetaId(asset: Asset, meta_id: Set[Long]): Int = inTransaction {
-    tableDef.deleteWhere { p =>
-      (p.asset_id === asset.getId) and
-      (p.asset_meta_id in meta_id)
-    }
+    deleteByAssetIdAndMetaId(asset.id, meta_id)
   }
 
   def find(mv: AssetMetaValue, useValue: Boolean = true): Option[AssetMetaValue] = inTransaction {
@@ -154,17 +156,24 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       if (deleteCount > 0 && shouldLogChange(oldValue, newValue)) {
         logChange(oldValue, newValue)
       } else {
-        logger.debug("Got %d rows for AssetMetaValue.purge", deleteCount)
+        logger.debug("Got %d rows for AssetMetaValue.purge".format(deleteCount))
       }
     }
   }
 
   protected def deleteByAssetIdAndMetaId(asset_id: Long, meta_id: Set[Long]): Int = {
     inTransaction {
-      tableDef.deleteWhere { p =>
+      val results = tableDef.deleteWhere { p =>
         (p.asset_id === asset_id) and
         (p.asset_meta_id in meta_id)
       }
+      meta_id.foreach { id =>
+        val meta = AssetMetaValue(asset_id, id, "")
+        afterDeleteCallback(meta) {
+          // no op
+        }
+      }
+      results
     }
   }
 

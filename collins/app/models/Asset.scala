@@ -103,7 +103,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }
 
   override def delete(asset: Asset): Int = inTransaction {
-    tableDef.deleteWhere(a => a.id === asset.id)
+    afterDeleteCallback(asset) {
+      tableDef.deleteWhere(a => a.id === asset.id)
+    }
   }
 
   def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] = {
