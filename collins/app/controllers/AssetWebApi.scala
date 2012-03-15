@@ -130,9 +130,7 @@ trait AssetWebApi {
               Api.getErrorMessage("Timeout running action")
             case Some(true) =>
               val newAsset = Asset.findById(asset.getId).get
-              Model.withConnection { implicit con =>
-                Asset.update(newAsset.copy(status = AStatus.Enum.New.id))
-              }
+              Asset.update(newAsset.copy(status = AStatus.Enum.New.id))
               Api.statusResponse(true)
             case Some(false) =>
               Api.getErrorMessage("Activation of asset failed")

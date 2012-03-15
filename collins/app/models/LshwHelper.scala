@@ -1,7 +1,6 @@
 package models
 
 import util._
-import java.sql.Connection
 
 object LshwHelper extends CommonHelper[LshwRepresentation] {
   import AssetMeta.Enum._

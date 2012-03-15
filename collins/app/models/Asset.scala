@@ -1,24 +1,31 @@
 package models
 
-import Model.defaults._
 import conversions._
 import util.{Cache, Helpers, LldpRepresentation, LshwRepresentation}
 
-import anorm._
-import anorm.SqlParser._
+import play.api.Logger
 import play.api.libs.json._
 
-import java.sql.{Connection, Timestamp}
+import org.squeryl.Schema
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
+
+import java.sql.Timestamp
 import java.util.Date
 
-case class Asset(
-    id: Pk[java.lang.Long],
-    tag: String,
-    status: Int,
-    asset_type: Int,
-    created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp])
+object AssetConfig {
+  lazy val HiddenMeta: Set[String] = Helpers.getFeature("hideMeta")
+      .map(_.split(",").map(_.trim.toUpperCase).toSet)
+      .getOrElse(Set[String]())
+}
+
+case class Asset(tag: String, status: Int, asset_type: Int,
+    created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp],
+    id: Long = 0) extends ValidatedEntity[Long]
 {
-  require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
+  override def validate() {
+    require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
+  }
 
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
@@ -29,7 +36,7 @@ case class Asset(
     "UPDATED" -> JsString(updated.map { Helpers.dateFormat(_) }.getOrElse(""))
   )
 
-  def getId(): Long = id.get
+  def getId(): Long = id
   def isNew(): Boolean = {
     status == models.Status.Enum.New.id
   }
@@ -40,122 +47,132 @@ case class Asset(
     AssetType.findById(asset_type).get
   }
   def getMetaAttribute(name: String): Option[MetaWrapper] = {
-    MetaWrapper.findMeta(this, name)
+    AssetMeta.findByName(name).flatMap { meta =>
+      AssetMetaValue.findByAssetAndMeta(this, meta, 1) match {
+        case Nil => None
+        case head :: Nil => Some(head)
+      }
+    }
   }
   def getMetaAttribute(name: String, count: Int): Seq[MetaWrapper] = {
-    MetaWrapper.findMeta(this, name, count)
+    AssetMeta.findByName(name).map { meta =>
+      AssetMetaValue.findByAssetAndMeta(this, meta, count)
+    }.getOrElse(Nil)
   }
   def getMetaAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
-    AssetMetaValue.findOneByAssetId(Set(spec), id.get).toList match {
-      case Nil => None
-      case one :: Nil =>
-        Some(one)
-      case other =>
-        throw new IndexOutOfBoundsException("Expected one value, if any")
-    }
-  }
-  def getMetaAttributes(specs: Set[AssetMeta.Enum] = Set.empty): List[MetaWrapper] = {
-    specs.isEmpty match {
-      case true =>
-        AssetMetaValue.findAllByAssetId(id.get).toList
-      case false =>
-        AssetMetaValue.findOneByAssetId(specs, id.get).toList
-    }
+    getMetaAttribute(spec.toString)
   }
 
-  private[this] lazy val HiddenMeta: Set[String] = Helpers.getFeature("hideMeta")
-      .map(_.split(",").map(_.trim.toUpperCase).toSet)
-      .getOrElse(Set[String]())
   def getAllAttributes: Asset.AllAttributes = {
     val (lshwRep, mvs) = LshwHelper.reconstruct(this)
     val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
     val ipmi = IpmiInfo.findByAsset(this)
-    val filtered: Seq[MetaWrapper] = mvs2.filter(f => !HiddenMeta.contains(f.getName))
+    val filtered: Seq[MetaWrapper] = mvs2.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
     Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, filtered)
   }
 }
 
-object Asset extends Magic[Asset](Some("asset")) {
+object Asset extends Schema with AnormAdapter[Asset] {
 
   private[this] val TagR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
+  private[this] val logger = Logger.logger
+
+  override val tableDef = table[Asset]("asset")
+  on(tableDef)(a => declare(
+    a.id is(autoIncremented,primaryKey),
+    a.tag is(unique),
+    a.status is(indexed),
+    a.asset_type is(indexed),
+    a.created is(indexed),
+    a.updated is(indexed)
+  ))
+  override def cacheKeys(asset: Asset) = Seq(
+    "Asset.findByTag(%s)".format(asset.tag.toLowerCase),
+    "Asset.findById(%d)".format(asset.id)
+  )
+
   def isValidTag(tag: String): Boolean = {
     tag != null && tag.nonEmpty && TagR(tag).matches
   }
 
   def apply(tag: String, status: Status.Enum, asset_type: AssetType.Enum) = {
-    new Asset(NotAssigned, tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
+    new Asset(tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
   }
-
   def apply(tag: String, status: Status.Enum, asset_type: AssetType) = {
-    new Asset(NotAssigned, tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
+    new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
   }
 
-  override def create(asset: Asset)(implicit con: Connection) = {
-    super.create(asset) match {
-      case newasset =>
-        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag.toLowerCase))
-        newasset
+  override def delete(asset: Asset): Int = inTransaction {
+    afterDeleteCallback(asset) {
+      tableDef.deleteWhere(a => a.id === asset.id)
     }
   }
 
-  override def update(asset: Asset)(implicit con: Connection) = {
-    super.update(asset) match {
-      case updated =>
-        Cache.invalidate("Asset.findByTag(%s)".format(asset.tag.toLowerCase))
-        Cache.invalidate("Asset.findById(%d)".format(asset.getId))
-        updated
+  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] = {
+    if (params._1.nonEmpty) {
+      IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
+    } else if (params._2.nonEmpty) {
+      AssetMetaValue.findAssetsByMeta(page, params._2, afinder, operation)
+    } else {
+      Asset.find(page, afinder)
     }
   }
 
-  def create(assets: Seq[Asset])(implicit con: Connection): Seq[Asset] = {
-    assets.foldLeft(List[Asset]()) { case(list, asset) =>
-      if (asset.id.isDefined) throw new IllegalArgumentException("id of asset must be NotAssigned")
-      Asset.create(asset) +: list
-    }.reverse
+  def find(page: PageParams, afinder: AssetFinder): Page[Asset] = inTransaction {
+    val results = from(tableDef)(a =>
+      where(afinder.asLogicalBoolean(a))
+      select(a)
+    ).page(page.offset, page.size).toList
+    val totalCount = from(tableDef)(a =>
+      where(afinder.asLogicalBoolean(a))
+      compute(count)
+    )
+    Page(results, page.page, page.offset, totalCount)
   }
 
-  def findById(id: Long): Option[Asset] = Model.withConnection { implicit con =>
-    Cache.getOrElseUpdate("Asset.findById(%d)".format(id)) {
-      Asset.find("id={id}").on('id -> id).singleOption()
+  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[Asset] = inTransaction {
+    assets.size match {
+      case 0 => Page(Seq(), page.page, page.offset, 0)
+      case n =>
+        logger.debug("Starting Asset.find count")
+        val totalCount: Long = from(tableDef)(asset =>
+          where(asset.id in assets and finder.asLogicalBoolean(asset))
+          compute(count)
+        )
+        logger.debug("Finished Asset.find count")
+        val results = from(tableDef)(asset =>
+          where(asset.id in assets and finder.asLogicalBoolean(asset))
+          select(asset)
+          orderBy(asset.id.withSort(page.sort))
+        ).page(page.offset, page.size).toList
+        logger.debug("Finished Asset.find find")
+        Page(results, page.page, page.offset, totalCount)
     }
   }
-  def findByTag(tag: String): Option[Asset] = Model.withConnection { implicit con =>
+
+  def findById(id: Long) = Cache.getOrElseUpdate("Asset.findById(%d)".format(id)) {
+    inTransaction { tableDef.lookup(id) }
+  }
+
+  def findByTag(tag: String): Option[Asset] = {
     Cache.getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
-      Asset.find("tag={tag}").on('tag -> tag).first()
+      inTransaction {
+        tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
+      }
     }
-  }
-  def findLikeTag(tag: String, params: PageParams): Page[Asset] = Model.withConnection { implicit con =>
-    val tags = tag + "%"
-    val orderBy = params.sort.toUpperCase match {
-      case "ASC" => "ORDER BY ID ASC"
-      case _ => "ORDER BY ID DESC"
-    }
-    val assets = Asset.find("tag like {tag} %s limit {pageSize} offset {offset}".format(orderBy)).on(
-      'tag -> tags,
-      'pageSize -> params.size,
-      'offset -> params.offset
-    ).list()
-    val count = Asset.count("tag like {tag}").on(
-      'tag -> tags
-    ).as(scalar[Long])
-    Page(assets, params.page, params.offset, count)
   }
 
-  def findByMeta(list: Seq[(AssetMeta.Enum,String)]): Seq[Asset] = {
-    val query = "select distinct asset_id from asset_meta_value where "
-    var count = 0
-    val params = list.map { case(k,v) =>
-      val id: String = k.toString + "_" + count
-      count += 1
-      val fragment = "asset_meta_value.asset_meta_id = %d and asset_meta_value.value like {%s}".format(k.id, id)
-      (fragment, (Symbol(id), toParameterValue(v)))
-    }
-    val subquery = query + params.map { _._1 }.mkString(" and ")
-    Model.withConnection { implicit connection =>
-      Asset.find("select * from asset WHERE id in (%s)".format(subquery)).on(
-        params.map(_._2):_*
-      ).list()
-    }
+  def findLikeTag(tag: String, params: PageParams): Page[Asset] = inTransaction {
+    val results = from(tableDef)(a =>
+      where(a.tag.withPossibleRegex(tag))
+      select(a)
+      orderBy(a.id.withSort(params.sort))
+    ).page(params.offset, params.size).toList
+    val totalCount = from(tableDef)(a =>
+      where(a.tag.withPossibleRegex(tag))
+      compute(count)
+    )
+    Page(results, params.page, params.offset, totalCount)
   }
 
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], mvs: Seq[MetaWrapper]) {
@@ -190,43 +207,15 @@ case class AssetFinder(
   updatedAfter: Option[Date],
   updatedBefore: Option[Date])
 {
-  // Without this, toParameterValue sees dates as java.util.Date instead of Timestamp and the wrong
-  // ToStatement is used
-  import DaoSupport._
-
-  type Intable = {def id: Int}
-  def asQueryFragment(): SimpleSql[Row] = {
-    val _status = getEnumSimple("asset.status", status)
-    val _atype = getEnumSimple("asset.asset_type", assetType)
-    val _created = createDateSimple("asset.created", createdAfter, createdBefore)
-    val _updated = createDateSimple("asset.updated", updatedAfter, updatedBefore)
-    val _tag = tag.map { t =>
-      val name = "%s_0".format("asset_tag")
-      SqlQuery("%s={%s}".format("asset.tag", name)).on(name -> t)
-    }
-    flattenSql(Seq(_status, _atype, _created, _updated, _tag).collect { case Some(i) => i })
-  }
-
-  private def getEnumSimple(param: String, enum: Option[Intable]): Option[SimpleSql[Row]] = {
-    enum.map { e =>
-      val name = "%s_0".format(param.replace(".","_"));
-      SqlQuery("%s={%s}".format(param, name)).on(name -> e.id)
-    }
-  }
-  private def createDateSimple(param: String, after: Option[Date], before: Option[Date]): Option[SimpleSql[Row]] = {
-    val afterName = "%s_after_0".format(param.replace(".","_"))
-    val beforeName = "%s_before_0".format(param.replace(".","_"))
-    val _after = after.map { date =>
-      SqlQuery("%s >= {%s}".format(param, afterName)).on(afterName -> date.asTimestamp)
-    }
-    val _before = before.map { date =>
-      SqlQuery("%s <= {%s}".format(param, beforeName)).on(beforeName -> date.asTimestamp)
-    }
-    val filtered: Seq[SimpleSql[Row]] = Seq(_after, _before).collect { case Some(i) => i }
-    if (filtered.nonEmpty) {
-      Some(flattenSql(filtered))
-    } else {
-      None
-    }
+  def asLogicalBoolean(a: Asset): LogicalBoolean = {
+    val statusBool = status.map((a.status === _.id))
+    val typeBool = assetType.map((a.asset_type === _.id))
+    val createdAfterTs = createdAfter.map((a.created gte _.asTimestamp))
+    val createdBeforeTs = createdBefore.map((a.created lte _.asTimestamp))
+    val updatedAfterTs = Some((a.updated gte updatedAfter.map(_.asTimestamp).?))
+    val updatedBeforeTs = Some((a.updated lte updatedBefore.map(_.asTimestamp).?))
+    val ops = Seq(statusBool, typeBool, createdAfterTs, createdBeforeTs, updatedAfterTs,
+      updatedBeforeTs).filter(_ != None).map(_.get)
+    ops.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }
 }

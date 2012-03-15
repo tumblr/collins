@@ -26,16 +26,24 @@ trait AuthenticationAccessor {
 
 object AuthenticationProvider {
   val Default = new MockAuthenticationProvider
-  val Types = Set("ldap", "file", "default")
+  val Types = Set("ldap", "file", "default", "ipa")
   def get(name: String, config: Configuration): AuthenticationProvider = {
     name match {
-      case "ldap" =>
-        new LdapAuthenticationProvider(config)
-      case "file" =>
-        new FileAuthenticationProvider(config)
       case "default" =>
         Default
+      case "file" =>
+        new FileAuthenticationProvider(config)
+      case "ipa" =>
+        new IpaAuthenticationProvider(config)
+      case "ldap" =>
+        new LdapAuthenticationProvider(config)
     }
+  }
+}
+
+class IpaAuthenticationProvider(config: Configuration) extends LdapAuthenticationProvider(config) {
+  override protected def groupQuery(username: String): String = {
+    "(&(cn=*)(member=%s))".format(getSecurityPrincipal(username))
   }
 }
 
@@ -49,33 +57,49 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
   // validation
   require(config.getString("host").isDefined, "LDAP requires a host attribute")
   require(config.getString("searchbase").isDefined, "LDAP requires a searchbase attribute")
-  config.getString("type").map { cfg =>
-    require(cfg.toLowerCase == "ldap", "If specified, authentication type must be LDAP")
-  }
+  require(config.getString("usersub").isDefined, "LDAP requires a usersub attribute")
+  require(config.getString("groupsub").isDefined, "LDAP requires a groupsub attribute")
 
   // LDAP values
   val host = config.getString("host").get
   val searchbase = config.getString("searchbase").get
-  val url = "ldap://%s/%s".format(host, searchbase)
+  val useSsl = config.getBoolean("ssl") match {
+    case Some(true) => "ldaps"
+    case _ => "ldap"
+  }
+  val url = "%s://%s/%s".format(useSsl, host, searchbase)
+  val usersub = config.getString("usersub").get
+  val groupsub = config.getString("groupsub").get
   logger.debug("LDAP URL: %s".format(url))
 
   // setup for LDAP
-  private val env = Map(
+  protected val env = Map(
     Context.INITIAL_CONTEXT_FACTORY -> "com.sun.jndi.ldap.LdapCtxFactory",
     Context.PROVIDER_URL -> url,
     Context.SECURITY_AUTHENTICATION -> "simple")
 
+  protected def getPrincipal(username: String): String = {
+    "uid=%s,%s".format(username, usersub)
+  }
+
+  protected def getSecurityPrincipal(username: String): String = {
+    "%s,%s".format(getPrincipal(username), searchbase)
+  }
+
+  protected def groupQuery(username: String): String = {
+    "(&(cn=*)(memberUid=%s))".format(username)
+  }
+
   // Authenticate via LDAP
   override def authenticate(username: String, password: String): Option[User] = {
-    val principal = "uid=%s,cn=users".format(username)
     val userEnv = Map(
-      Context.SECURITY_PRINCIPAL -> (principal + "," + searchbase),
+      Context.SECURITY_PRINCIPAL -> getSecurityPrincipal(username),
       Context.SECURITY_CREDENTIALS -> password) ++ env
 
     var ctx: InitialDirContext = null
     try {
       ctx = new InitialDirContext(new JHashTable[String,String](userEnv.asJava))
-      val uid = getUid(principal, ctx)
+      val uid = getUid(getPrincipal(username), ctx)
       require(uid > 0, "Unable to find UID for user")
       val groups = getGroups(username, ctx)
       val user = UserImpl(username, "*", groups.map { _._2 }.toSeq, uid, true)
@@ -107,7 +131,7 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
   protected def getGroups(username: String, ctx: InitialDirContext): Seq[(Int,String)] = {
     val ctrl = new SearchControls
     ctrl.setSearchScope(SearchControls.SUBTREE_SCOPE)
-    val query = "(&(cn=*)(memberUid=%s))".format(username)
+    val query = groupQuery(username)
     val it = for (
          result <- ctx.search("", query, ctrl);
          attribs = result.asInstanceOf[SearchResult].getAttributes();
