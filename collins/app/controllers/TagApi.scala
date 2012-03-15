@@ -26,7 +26,7 @@ trait TagApi {
   def getTagValues(tag: String) = SecureAction { implicit req =>
     val response =
       AssetMeta.findByName(tag).map { m =>
-        val s: Set[String] = AssetMetaValue.findMetaValues(m.getId).sorted.toSet
+        val s: Set[String] = AssetMetaValue.findByMeta(m).sorted.toSet
         val js = JsObject(Seq("values" -> JsArray(s.toList.map(JsString(_)))))
         ResponseData(Results.Ok, js)
       }.getOrElse(Api.getErrorMessage("Tag not found", Results.NotFound))

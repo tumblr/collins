@@ -1,39 +1,47 @@
 package models
 
-import Model.defaults._
 import util.Cache
 
-import anorm._
-import java.sql._
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.Schema
 
-case class Status(id: Pk[java.lang.Integer], name: String, description: String) {
-  require(name != null && name.length > 0, "Name must not be empty")
-  require(description != null && description.length > 0, "Description must not be empty")
-  def getId(): Int = id.get
+case class Status(name: String, description: String, id: Int = 0) extends ValidatedEntity[Int] {
+  def getId(): Int = id
+  override def validate() {
+    require(name != null && name.length > 0, "Name must not be empty")
+    require(description != null && description.length > 0, "Description must not be empty")
+  }
 }
-object Status extends Magic[Status](Some("status")) {
 
-  def apply(name: String, description: String) = {
-    new Status(NotAssigned, name, description)
+object Status extends Schema with AnormAdapter[Status] { //Magic[Status](Some("status")) {
+
+  override val tableDef = table[Status]("status")
+  on(tableDef)(s => declare(
+    s.id is (autoIncremented,primaryKey),
+    s.name is(unique)
+  ))
+
+  override protected def cacheKeys(s: Status) = Seq(
+    "Status.findById(%d)".format(s.id),
+    "Status.findByName(%s)".format(s.name.toLowerCase)
+  )
+
+  def findById(id: Int): Option[Status] = getOrElseUpdate("Status.findById(%d)".format(id)) {
+    tableDef.lookup(id)
   }
 
-  def findById(id: Int): Option[Status] = Model.withConnection { implicit con =>
-    Cache.getOrElseUpdate("Status.findById(%d)".format(id)) {
-      Status.find("id={id}").on('id -> id).first()
+  def findByName(name: String): Option[Status] = {
+    getOrElseUpdate("Status.findByName(%s)".format(name.toLowerCase)) {
+      tableDef.where(s =>
+        s.name.toLowerCase === name.toLowerCase
+      ).headOption
     }
   }
 
-  def findByName(name: String): Option[Status] = Model.withConnection { implicit con =>
-    Cache.getOrElseUpdate("Status.findByName(%s)".format(name)) {
-      Status.find("name={name}").on('name -> name).first()
+  override def delete(s: Status): Int = inTransaction {
+    afterDeleteCallback(s) {
+      tableDef.deleteWhere(p => p.id === s.id)
     }
-  }
-
-  def create(statuses: Seq[Status])(implicit con: Connection): Seq[Status] = {
-    statuses.foldLeft(List[Status]()) { case(list, status) =>
-      if (status.id.isDefined) throw new IllegalArgumentException("Can only create for status with id 0")
-      Status.create(status) +: list
-    }.reverse
   }
 
   type Enum = Enum.Value
