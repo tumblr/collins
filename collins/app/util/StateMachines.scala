@@ -13,13 +13,12 @@ object AssetStateMachine {
   lazy val DeleteAttributes: Set[Long] = DeleteSomeAttributes.map { v =>
     AssetMeta.findByName(v).map(_.getId).getOrElse(-1L)
   }
-  lazy val DeleteAttributesString = DeleteAttributes.mkString(",")
 }
 
 case class AssetStateMachine(asset: Asset) {
   import Status.Enum._
 
-  def decommission()(implicit con: Connection): Option[Asset] = Status.Enum(asset.status) match {
+  def decommission(): Option[Asset] = Status.Enum(asset.status) match {
     case Unallocated | Cancelled | Decommissioned =>
       val newAsset = asset.copy(status = Decommissioned.id, deleted = Some(new Date().asTimestamp))
       val res = Asset.update(newAsset) match {
@@ -28,17 +27,15 @@ case class AssetStateMachine(asset: Asset) {
       }
       Helpers.haveFeature("deleteIpmiOnDecommission", false) match {
         case None | Some(true) =>
-          IpmiInfo.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
+          IpmiInfo.deleteByAsset(asset)
         case _ =>
       }
       Helpers.haveFeature("deleteMetaOnDecommission", false) match {
         case None | Some(true) =>
-          AssetMetaValue.delete("asset_id={id}").on('id -> asset.getId).executeUpdate()
+          AssetMetaValue.deleteByAsset(asset)
         case _ =>
+          AssetMetaValue.deleteByAssetAndMetaId(asset, AssetStateMachine.DeleteAttributes)
       }
-      AssetMetaValue.delete("asset_id={id} AND asset_meta_id IN(%s)".format(AssetStateMachine.DeleteAttributesString))
-        .on('id -> asset.getId)
-        .executeUpdate()
       res
   }
 }

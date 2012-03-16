@@ -10,11 +10,11 @@
   <option value="(none)">(None)</option>
   @{
   displayAs match {
-      case 0 => AssetMetaValue.findMetaValues(assetMeta.getId).map { value => formatValue(value, value) }
-      case 1 => AssetMetaValue.findMetaValues(assetMeta.getId).sortBy(_.toLong).map { value => formatValue(value, ByteStorageUnit(value.toLong).toHuman) }
+      case 0 => AssetMetaValue.findByMeta(assetMeta).map { value => formatValue(value, value) }
+      case 1 => AssetMetaValue.findByMeta(assetMeta).sortBy(_.toLong).map { value => formatValue(value, ByteStorageUnit(value.toLong).toHuman) }
       case 2 => Disk.Type.values.toSeq.map { v => formatValue(v.toString, v.toString) }
-      case 3 => AssetMetaValue.findMetaValues(assetMeta.getId).sortBy(_.toDouble).map { value => formatValue(value, value + " GHz") }
-      case 4 => AssetMetaValue.findMetaValues(assetMeta.getId).sortBy(_.toLong).map { value => formatValue(value, BitStorageUnit(value.toLong).toHuman) }
+      case 3 => AssetMetaValue.findByMeta(assetMeta).sortBy(_.toDouble).map { value => formatValue(value, value + " GHz") }
+      case 4 => AssetMetaValue.findByMeta(assetMeta).sortBy(_.toLong).map { value => formatValue(value, BitStorageUnit(value.toLong).toHuman) }
     }
   }
 </select>
