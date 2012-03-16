@@ -41,7 +41,7 @@ object ProvisionerHelper {
 
   protected def metaAsJson(meta: String): Html = {
     val roles: Set[String] = AssetMeta.findByName(meta.toUpperCase).map { meta =>
-      AssetMetaValue.findMetaValues(meta.getId).map(_.toUpperCase).toSet
+      AssetMetaValue.findByMeta(meta).map(_.toUpperCase).toSet
     }.getOrElse(Set());
     Html(Json.stringify(JsArray(roles.toList.sorted.map(JsString(_)))))
   }

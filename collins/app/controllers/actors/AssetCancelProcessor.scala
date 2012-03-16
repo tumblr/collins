@@ -2,7 +2,7 @@ package controllers
 package actors
 
 import akka.util.Duration
-import models.{AssetLifecycle, MetaWrapper, Model, Status => AStatus}
+import models.{Asset, AssetLifecycle, MetaWrapper, Model, Status => AStatus}
 import play.api.mvc.{AnyContent, Request}
 import util.SoftLayer
 
@@ -26,12 +26,12 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
                 case 0L =>
                   Left(Api.getErrorMessage("There was an error cancelling this server"))
                 case ticketId =>
-                  Model.withTransaction { implicit con =>
+                  Asset.inTransaction {
                     MetaWrapper.createMeta(asset, Map("CANCEL_TICKET" -> ticketId.toString))
                     AssetLifecycle.updateAssetStatus(asset, Map(
                       "status" -> AStatus.Enum.Cancelled.toString,
                       "reason" -> reason
-                    ), con)
+                    ))
                   }
                   plugin.setNote(n, "Cancelled: %s".format(reason))()
                   Right(ticketId)

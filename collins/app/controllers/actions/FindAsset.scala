@@ -82,7 +82,7 @@ private[controllers] class FindAsset() {
       case Left(err) => Left("Error executing search: " + err)
       case Right(valid) =>
         val pageParams = PageParams(page, size, sort)
-        val results = MetaWrapper.findAssets(pageParams, valid._1, valid._2, valid._3)
+        val results = Asset.find(pageParams, valid._1, valid._2, valid._3)
         Right(results)
     }
   }
