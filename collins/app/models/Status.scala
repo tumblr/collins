@@ -1,7 +1,6 @@
 package models
 
-import util.Cache
-
+import play.api.libs.json._
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Schema
 
@@ -10,6 +9,13 @@ case class Status(name: String, description: String, id: Int = 0) extends Valida
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
     require(description != null && description.length > 0, "Description must not be empty")
+  }
+  override def asJson: String = {
+    Json.stringify(JsObject(Seq(
+      "ID" -> JsNumber(id),
+      "NAME" -> JsString(name),
+      "DESCRIPTION" -> JsString(description)
+    )))
   }
 }
 
@@ -29,6 +35,8 @@ object Status extends Schema with AnormAdapter[Status] { //Magic[Status](Some("s
   def findById(id: Int): Option[Status] = getOrElseUpdate("Status.findById(%d)".format(id)) {
     tableDef.lookup(id)
   }
+
+  override def get(s: Status) = findById(s.id).get
 
   def findByName(name: String): Option[Status] = {
     getOrElseUpdate("Status.findByName(%s)".format(name.toLowerCase)) {

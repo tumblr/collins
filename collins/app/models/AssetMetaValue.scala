@@ -225,7 +225,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   }
 
   protected def shouldLogChange(oldValue: Option[AssetMetaValue], newValue: AssetMetaValue): Boolean = {
-    oldValue.isDefined && AssetMetaValueConfig.ExcludedAttributes.contains(newValue.asset_meta_id)
+    oldValue.isDefined && !AssetMetaValueConfig.ExcludedAttributes.contains(newValue.asset_meta_id)
   }
 
   private def matchClause(asset: Asset, am: AssetMeta, v: String) = {

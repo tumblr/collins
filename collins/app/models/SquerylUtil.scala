@@ -7,9 +7,16 @@ import org.squeryl.{KeyedEntity, Schema, Table}
 import org.squeryl.dsl.QueryDsl
 import org.squeryl.dsl.ast.LogicalBoolean
 import org.squeryl.internals.PosoLifecycleEvent
+import scala.transient
 
 trait ValidatedEntity[T] extends KeyedEntity[T] {
   def validate(): Unit
+  def asJson: String
+  @transient private var persisted: Option[Boolean] = None
+  def forComparision {
+    persisted = Some(false)
+  }
+  override def isPersisted: Boolean = persisted.getOrElse(super.isPersisted)
 }
 
 trait BasicModel[T <: AnyRef] { self: Schema =>
@@ -18,6 +25,7 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
   import org.squeryl.PrimitiveTypeMode
 
   protected def tableDef: Table[T] // Override
+  protected def createEventName: Option[String] = None
 
   def inTransaction[A](f: => A): A = PrimitiveTypeMode.inTransaction(f)
   protected def cacheKeys(t: T): Seq[String] = Seq()
@@ -35,7 +43,14 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
     }
   }
 
-  def create(t: T): T = inTransaction(tableDef.insert(t))
+  def create(t: T): T = inTransaction {
+    val newValue = tableDef.insert(t)
+    createEventName.map { name =>
+      util.plugins.Callback.fire(name, null, newValue)
+    }
+    newValue
+  }
+
   def delete(t: T): Int // Override
 
   protected def afterDeleteCallback[A](t: T)(f: => A): A = {
@@ -56,9 +71,19 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
 }
 
 trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema =>
+  protected def updateEventName: Option[String] = None
+
+  def get(t: T): T
+
   def update(t: T): Int = inTransaction {
     try {
+      val oldValue = get(t)
       tableDef.update(t)
+      updateEventName.map { name =>
+        oldValue.forComparision
+        t.forComparision
+        util.plugins.Callback.fire(name, oldValue, t)
+      }
       1
     } catch {
       case _ => 0

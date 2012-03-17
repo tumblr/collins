@@ -27,6 +27,9 @@ case class IpmiInfo(
       require(s != null && s.length > 0, "Username and Password must not be empty")
     }
   }
+  override def asJson: String = {
+    Json.stringify(JsObject(forJsonObject))
+  }
 
   def dottedAddress(): String = IpAddress.toString(address)
   def dottedGateway(): String = IpAddress.toString(gateway)
@@ -87,6 +90,10 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     getOrElseUpdate("IpmiInfo.findByAsset(%d)".format(asset.getId)) {
       tableDef.where(a => a.asset_id === asset.getId).headOption
     }
+  }
+
+  override def get(i: IpmiInfo) = getOrElseUpdate("IpmiInfo.get(%d)".format(i.id)) {
+    tableDef.lookup(i.id).get
   }
 
   type IpmiQuerySeq = Seq[Tuple2[IpmiInfo.Enum, String]]

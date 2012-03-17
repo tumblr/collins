@@ -53,6 +53,9 @@ case class AssetLog(
   override def validate() {
     require(message != null && message.length > 0)
   }
+  override def asJson: String = {
+    Json.stringify(JsObject(forJsonObject))
+  }
 
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
@@ -137,6 +140,8 @@ case class AssetLog(
 
 object AssetLog extends Schema with AnormAdapter[AssetLog] {
 
+  //override val createEventName = Some("asset_log_create")
+
   override val tableDef = table[AssetLog]("asset_log")
   on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
@@ -198,6 +203,10 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
   //Info useful to developers for debugging the application, not useful during operations
   def debug(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
       apply(asset, message, format, source, LogMessageType.Debug)
+  }
+
+  override def get(log: AssetLog) = getOrElseUpdate("AssetLog.get(%d)".format(log.id)) {
+    tableDef.lookup(log.id).get
   }
 
   def list(asset: Option[Asset], page: Int = 0, pageSize: Int = 10, sort: String = "DESC", filter: String = ""): Page[AssetLog] = {
