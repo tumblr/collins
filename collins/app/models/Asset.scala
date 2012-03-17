@@ -26,6 +26,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   override def validate() {
     require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
   }
+  override def asJson: String = {
+    Json.stringify(JsObject(forJsonObject))
+  }
 
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
@@ -37,9 +40,10 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   )
 
   def getId(): Long = id
-  def isNew(): Boolean = {
-    status == models.Status.Enum.New.id
-  }
+  def isNew(): Boolean = status == models.Status.Enum.New.id
+  def isProvisioning(): Boolean = status == models.Status.Enum.Provisioning.id
+  def isProvisioned(): Boolean = status == models.Status.Enum.Provisioned.id
+
   def getStatus(): Status = {
     Status.findById(status).get
   }
@@ -76,6 +80,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   private[this] val TagR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
   private[this] val logger = Logger.logger
+  override protected val createEventName = Some("asset_create")
+  override protected val updateEventName = Some("asset_update")
 
   override val tableDef = table[Asset]("asset")
   on(tableDef)(a => declare(
@@ -150,15 +156,14 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def findById(id: Long) = Cache.getOrElseUpdate("Asset.findById(%d)".format(id)) {
-    inTransaction { tableDef.lookup(id) }
+  def findById(id: Long) = getOrElseUpdate("Asset.findById(%d)".format(id)) {
+    tableDef.lookup(id)
   }
+  def get(a: Asset) = findById(a.id).get
 
   def findByTag(tag: String): Option[Asset] = {
-    Cache.getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
-      inTransaction {
-        tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
-      }
+    getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
+      tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
     }
   }
 
