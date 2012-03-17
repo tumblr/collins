@@ -99,6 +99,7 @@ case class AssetLog(
 
   def getId(): Long = id
   def getAssetId(): Long = asset_id
+  def getAssetTag(): String = getAsset().tag
   def getAsset(): Asset = Asset.findById(getAssetId()).get
 
   def withException(ex: Throwable) = {
@@ -140,7 +141,7 @@ case class AssetLog(
 
 object AssetLog extends Schema with AnormAdapter[AssetLog] {
 
-  //override val createEventName = Some("asset_log_create")
+  override val createEventName = Some("asset_log_create")
 
   override val tableDef = table[AssetLog]("asset_log")
   on(tableDef)(a => declare(
