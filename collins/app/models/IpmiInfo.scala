@@ -1,6 +1,6 @@
 package models
 
-import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress}
+import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress, IpAddressCalc}
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Schema
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
@@ -75,7 +75,7 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
 
   def createForAsset(asset: Asset): IpmiInfo = inTransaction {
     val assetId = asset.getId
-    val (gateway, address, netmask) = getAddress()
+    val (gateway, address, netmask) = getNextAvailableAddress()
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
     val ipmiInfo = IpmiInfo(
@@ -132,12 +132,19 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     tableDef.lookup(i.id).get
   }
 
-  def getNextAvailableAddress(gateway: Long, netmask: Long): Long = inTransaction {
-    val currentMax: Long = from(tableDef)(t =>
-      compute(nvl(max(t.address), 2))
+  def getNextAvailableAddress(overrideStart: Option[String] = None): Tuple3[Long,Long,Long] = {
+    val network = getNetwork
+    val startAt = overrideStart.orElse(getStartAddress)
+    val calc = IpAddressCalc(network, startAt)
+    val gateway: Long = getGateway().getOrElse(calc.minAddressAsLong)
+    val netmask: Long = calc.netmaskAsLong
+    val currentMax: Option[Long] = getCurrentMaxAddress(
+      calc.minAddressAsLong, calc.maxAddressAsLong
     )
-    IpAddress.nextAvailableAddress(currentMax, netmask)
+    val address: Long = calc.nextAvailableAsLong(currentMax)
+    (gateway, address, netmask)
   }
+
 
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {
@@ -176,35 +183,33 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  protected def getAddress(): Tuple3[Long,Long,Long] = {
-    val gateway: Long = getGateway()
-    val netmask: Long = getNetmask()
-    val address: Long = getNextAvailableAddress(netmask)
-    (gateway, address, netmask)
-  }
-
-  protected def getNextAvailableAddress(netmask: Long): Long = inTransaction {
-    val currentMax: Long = from(tableDef)(t =>
-      compute(nvl(max(t.address), 2))
+  protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long): Option[Long] = inTransaction {
+    from(tableDef)(t =>
+      where(
+        (t.address gte minAddress) and
+        (t.address lte maxAddress)
+      )
+      compute(max(t.address))
     )
-    IpAddress.nextAvailableAddress(currentMax, netmask)
   }
 
-  protected def getGateway(): Long = {
-    getAddressFromConfig("gateway")
-  }
-  protected def getNetmask(): Long = {
-    getAddressFromConfig("netmask")
-  }
-
-  protected def getAddressFromConfig(key: String): Long = {
-    getConfig() match {
-      case None => throw new RuntimeException("no ipmi configuration found")
-      case Some(config) => config.getString(key) match {
-        case Some(value) => IpAddress.toLong(value)
-        case None => throw new RuntimeException("no %s key found in configuration".format(key))
-      }
+  protected def getGateway(): Option[Long] = getConfig() match {
+    case None => None
+    case Some(config) => config.getString("gateway") match {
+      case Some(value) => Option(IpAddress.toLong(value))
+      case None => None
     }
+  }
+  protected def getNetwork(): String = getConfig() match {
+    case None => throw new RuntimeException("no ipmi configuration found")
+    case Some(config) => config.getString("network") match {
+      case Some(value) => value
+      case None => throw new RuntimeException("ipmi.network not specified")
+    }
+  }
+  protected def getStartAddress(): Option[String] = getConfig() match {
+    case None => None
+    case Some(c) => c.getString("startAddress")
   }
 
   protected def decrypt(password: String) = {

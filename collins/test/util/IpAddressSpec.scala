@@ -37,12 +37,15 @@ class IpAddressSpec extends Specification with DataTables {
 
     "handle basic nextAvailableAddress functionality" >> {
       "initial address" || "expected next address" |
-      "10.0.0.1"        !! "10.0.0.2"              |
-      "10.0.0.254"      !! "10.0.1.2"              |> {
+      "10.0.0.0"        !! "10.0.0.2"              |
+      "10.0.0.2"        !! "10.0.0.3"              |
+      "10.0.0.254"      !! "10.0.1.1"              |> {
       (initial,expected) =>
         val initialAsLong = IpAddress.toLong(initial)
-        val next = IpAddress.nextAvailableAddress(initialAsLong, 0)
-        next mustEqual(IpAddress.toLong(expected))
+        val netmaskAsLong = IpAddress.toLong("255.255.254.0")
+        val ipCalc = IpAddressCalc(initialAsLong, netmaskAsLong, None)
+        ipCalc.broadcastAddress mustEqual "10.0.1.255"
+        ipCalc.nextAvailable(Some(initialAsLong)) mustEqual expected
       }
     }
 
