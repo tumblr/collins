@@ -10,6 +10,8 @@ class IpAddressSpec extends Specification with DataTables {
     "support converting string addresses to long" >> {
       "address"         || "long"      |
       "170.112.108.147" !! 2859494547L |
+      "172.16.32.1"     !! 2886737921L |
+      "172.16.32.10"    !! 2886737930L |
       "10.60.25.33"     !! 171710753L  |
       "10.0.0.1"        !! 167772161L  |
       "255.255.224.0"   !! 4294959104L |
@@ -22,6 +24,8 @@ class IpAddressSpec extends Specification with DataTables {
     "support converting long addresses to strings" >> {
       "long"      | "address"         |
       2859494547L ! "170.112.108.147" |
+      2886737921L ! "172.16.32.1"     |
+      2886737930L ! "172.16.32.10"    |
       167772161L  ! "10.0.0.1"        |
       4294959104L ! "255.255.224.0"   |
       171710753L  ! "10.60.25.33"     |

@@ -59,7 +59,6 @@ case class IpmiInfo(
 object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
   private[this] val logger = Logger.logger
   val DefaultPasswordLength = 12
-  val RandomUsername = false
 
   val tableDef = table[IpmiInfo]("ipmi_info")
   on(tableDef)(i => declare(
@@ -74,6 +73,17 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     "IpmiInfo.findByAsset(%d)".format(a.asset_id)
   )
 
+  def createForAsset(asset: Asset): IpmiInfo = inTransaction {
+    val assetId = asset.getId
+    val (gateway, address, netmask) = getAddress()
+    val username = getUsername(asset)
+    val password = generateEncryptedPassword()
+    val ipmiInfo = IpmiInfo(
+      assetId, username, password, gateway, address, netmask
+    )
+    tableDef.insert(ipmiInfo)
+  }
+
   override def delete(a: IpmiInfo): Int = inTransaction {
     afterDeleteCallback(a) {
       tableDef.deleteWhere(i => i.id === a.id)
@@ -86,14 +96,8 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }.getOrElse(0)
   }
 
-  def findByAsset(asset: Asset): Option[IpmiInfo] = {
-    getOrElseUpdate("IpmiInfo.findByAsset(%d)".format(asset.getId)) {
-      tableDef.where(a => a.asset_id === asset.getId).headOption
-    }
-  }
-
-  override def get(i: IpmiInfo) = getOrElseUpdate("IpmiInfo.get(%d)".format(i.id)) {
-    tableDef.lookup(i.id).get
+  def encryptPassword(pass: String): String = {
+    CryptoCodec(getCryptoKeyFromFramework()).Encode(pass)
   }
 
   type IpmiQuerySeq = Seq[Tuple2[IpmiInfo.Enum, String]]
@@ -118,15 +122,21 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  def createForAsset(asset: Asset): IpmiInfo = inTransaction {
-    val assetId = asset.getId
-    val (gateway, address, netmask) = getAddress()
-    val username = getUsername(asset)
-    val password = generateEncryptedPassword()
-    val ipmiInfo = IpmiInfo(
-      assetId, username, password, gateway, address, netmask
+  def findByAsset(asset: Asset): Option[IpmiInfo] = {
+    getOrElseUpdate("IpmiInfo.findByAsset(%d)".format(asset.getId)) {
+      tableDef.where(a => a.asset_id === asset.getId).headOption
+    }
+  }
+
+  override def get(i: IpmiInfo) = getOrElseUpdate("IpmiInfo.get(%d)".format(i.id)) {
+    tableDef.lookup(i.id).get
+  }
+
+  def getNextAvailableAddress(gateway: Long, netmask: Long): Long = inTransaction {
+    val currentMax: Long = from(tableDef)(t =>
+      compute(nvl(max(t.address), 2))
     )
-    tableDef.insert(ipmiInfo)
+    IpAddress.nextAvailableAddress(currentMax, netmask)
   }
 
   type Enum = Enum.Value
@@ -138,6 +148,34 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     val IpmiNetmask = Value("IPMI_NETMASK")
   }
 
+  case class Username(asset: Asset, config: Option[Configuration], randomUsername: Boolean = false) {
+    def this(asset: Asset, config: Configuration, randomUsername: Boolean) =
+      this(asset, Some(config), randomUsername)
+
+    def isRandom: Boolean = config match {
+      case None => randomUsername
+      case Some(cfg) => cfg.getBoolean("randomUsername") match {
+        case Some(bool) => bool
+        case None => randomUsername
+      }
+    }
+
+    def fromAsset: String = "%s-ipmi".format(asset.tag)
+
+    def get(): String = {
+      isRandom match {
+        case true => CryptoCodec.randomString(8)
+        case false => config match {
+          case None => fromAsset
+          case Some(cfg) => cfg.getString("username") match {
+            case Some(uname) => uname
+            case None => fromAsset
+          }
+        }
+      }
+    }
+  }
+
   protected def getAddress(): Tuple3[Long,Long,Long] = {
     val gateway: Long = getGateway()
     val netmask: Long = getNetmask()
@@ -145,8 +183,10 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     (gateway, address, netmask)
   }
 
-  protected def getNextAvailableAddress(netmask: Long): Long = {
-    val currentMax: Long = from(tableDef)(t => compute(nvl(max(t.address), 2)))
+  protected def getNextAvailableAddress(netmask: Long): Long = inTransaction {
+    val currentMax: Long = from(tableDef)(t =>
+      compute(nvl(max(t.address), 2))
+    )
     IpAddress.nextAvailableAddress(currentMax, netmask)
   }
 
@@ -192,27 +232,13 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  def encryptPassword(pass: String): String = {
-    CryptoCodec(getCryptoKeyFromFramework()).Encode(pass)
-  }
-
   protected def generateEncryptedPassword(): String = {
     val length = getPasswordLength()
     CryptoCodec(getCryptoKeyFromFramework()).Encode(CryptoCodec.randomString(length))
   }
 
   protected def getUsername(asset: Asset): String = {
-    val randomUsername = getConfig() match {
-      case None => RandomUsername
-      case Some(config) => config.getBoolean("randomUsername") match {
-        case Some(bool) => bool
-        case None => RandomUsername
-      }
-    }
-    randomUsername match {
-      case true => CryptoCodec.randomString(8)
-      case false => asset.tag + "-ipmi"
-    }
+    Username(asset, getConfig, false).get
   }
 
   protected def getConfig(): Option[Configuration] = {
@@ -238,6 +264,5 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
     results.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }
-
 
 }
