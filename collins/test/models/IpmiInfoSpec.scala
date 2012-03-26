@@ -14,7 +14,17 @@ class IpmiInfoSpec extends ApplicationSpecification {
 
   args(sequential = true)
 
-  def ipmiAsset = Asset.findByTag("tumblrtag1").get
+  def ipmiAsset(tag: String = "tumblrtag1") = Asset.findByTag(tag).get
+  def newIpmiAsset(tag: String) = {
+    val asset = Asset(tag, Status.Enum.Incomplete, AssetType.Enum.ServerNode)
+    try {
+      Asset.create(asset)
+    } catch {
+      case e =>
+        println("Caught creating asset with tag %s".format(tag))
+        throw e
+    }
+  }
 
   "The IpmiInfo Model" should {
 
@@ -32,7 +42,7 @@ class IpmiInfoSpec extends ApplicationSpecification {
 
     "Support find methods" in {
       "findByAsset" in {
-        IpmiInfo.findByAsset(ipmiAsset) must beSome[IpmiInfo]
+        IpmiInfo.findByAsset(ipmiAsset()) must beSome[IpmiInfo]
       }
       "nextAvailableAddress" in {
         val startAt = Some("172.16.32.20")
@@ -47,23 +57,21 @@ class IpmiInfoSpec extends ApplicationSpecification {
         s mustEqual "172.16.33.1"
       }
       "createForAsset is next address" in {
-        IpmiInfo.deleteByAsset(ipmiAsset) mustEqual 1
-        IpmiInfo.createForAsset(ipmiAsset).dottedAddress mustEqual "172.16.32.20"
-        IpmiInfo.deleteByAsset(ipmiAsset) mustEqual 1
-        IpmiInfo.createForAsset(ipmiAsset).dottedAddress mustEqual "172.16.32.20"
-        val asset = Asset("ipmiAssetTag1", Status.Enum.Incomplete, AssetType.Enum.ServerNode)
-        val a2 = Asset.create(asset)
+        val a1 = newIpmiAsset("ipmiAssetTag1")
+        val a2 = newIpmiAsset("ipmiAssetTag2")
+        val a3 = newIpmiAsset("ipmiAssetTag3")
+        IpmiInfo.createForAsset(a1).dottedAddress mustEqual "172.16.32.20"
         IpmiInfo.createForAsset(a2).dottedAddress mustEqual "172.16.32.21"
+        IpmiInfo.createForAsset(a3).dottedAddress mustEqual "172.16.32.22"
       }
       "createForAsset with rollover" in {
-        val asset = Asset.findByTag("ipmiAssetTag1").get
+        val asset = ipmiAsset("ipmiAssetTag3")
         val ipmiInfo = IpmiInfo.findByAsset(asset).get
         IpmiInfo.update(ipmiInfo.copy(address = IpAddress.toLong("172.16.32.254"))) mustEqual 1
-        val asset3 = Asset("ipmiAssetTag2", Status.Enum.Incomplete, AssetType.Enum.ServerNode)
-        val a3 = Asset.create(asset3)
-        val ipmi3 = IpmiInfo.createForAsset(a3)
-        ipmi3.dottedAddress mustEqual "172.16.33.1"
-        ipmi3.dottedGateway mustEqual "172.16.32.1"
+        val a4 = newIpmiAsset("ipmiAssetTag4")
+        val ipmi4 = IpmiInfo.createForAsset(a4)
+        ipmi4.dottedAddress mustEqual "172.16.33.1"
+        ipmi4.dottedGateway mustEqual "172.16.32.1"
       }
     }
 
@@ -73,21 +81,21 @@ class IpmiInfoSpec extends ApplicationSpecification {
           "username"       -> "root",
           "randomUsername" -> "false"
         ))
-        val ipmiUsername = new IpmiInfo.Username(ipmiAsset, config, false)
+        val ipmiUsername = new IpmiInfo.Username(ipmiAsset(), config, false)
         ipmiUsername.get mustEqual "root"
       }
       "when randomUsername is set, override passed in config values" in {
         val config = Configuration.from(Map(
           "randomUsername" -> "true"
         ))
-        val ipmiUsername = new IpmiInfo.Username(ipmiAsset, config, false)
+        val ipmiUsername = new IpmiInfo.Username(ipmiAsset(), config, false)
         ipmiUsername.get mustNotEqual ipmiUsername.get
       }
       "when randomUsername is unset, respect passed in config values" in {
-        val ipmiUsername = new IpmiInfo.Username(ipmiAsset, None, false)
+        val ipmiUsername = new IpmiInfo.Username(ipmiAsset(), None, false)
         ipmiUsername.get mustEqual ipmiUsername.get
 
-        val ipmiUsername2 = new IpmiInfo.Username(ipmiAsset, None, true)
+        val ipmiUsername2 = new IpmiInfo.Username(ipmiAsset(), None, true)
         ipmiUsername2.get mustNotEqual ipmiUsername2.get
       }
     }
