@@ -1,5 +1,7 @@
 package util
 
+import org.apache.commons.net.util.SubnetUtils
+
 import java.net.InetAddress
 import java.nio.ByteBuffer
 
@@ -39,17 +41,78 @@ object IpAddress {
     bb.getLong(0)
   }
 
-  // FIXME: this is horribly naive and broken, it completely ignores the netmask
-  def nextAvailableAddress(address: Long, netmask: Long): Long = {
-    lastOctet(address) match {
-      case next if next >= 254 => address + 4 // 4 = n.255, n+1.0, n+1.1, n+1.2
-      case _ => address + 1
-    }
-  }
-
   def firstOctet(address: Long) = (address >> 24) & 0xff
   def secondOctet(address: Long) = (address >> 16) & 0xff
   def thirdtOctet(address: Long) = (address >> 8) & 0xff
   def lastOctet(address: Long) = address & 0xff
 
+}
+
+object IpAddressCalc {
+  def apply(address: Long, netmask: Long, startAt: Option[String]) = {
+    val subnet = new SubnetUtils(IpAddress.toString(address), IpAddress.toString(netmask))
+    new IpAddressCalc(subnet.getInfo.getCidrSignature, startAt)
+  }
+  def apply(address: String, netmask: String, startAt: Option[String]) = {
+    val subnet = new SubnetUtils(address, netmask)
+    new IpAddressCalc(subnet.getInfo.getCidrSignature, startAt)
+  }
+}
+
+case class IpAddressCalc(network: String, startAt: Option[String] = None) {
+  val subnetInfo = new SubnetUtils(network).getInfo
+  def broadcastAddress: String = subnetInfo.getBroadcastAddress
+  def broadcastAddressAsLong = IpAddress.toLong(broadcastAddress)
+  def lastOctetInRange: Long = IpAddress.lastOctet(maxAddressAsLong)
+  def minAddress: String = subnetInfo.getLowAddress()
+  def minAddressAsLong = IpAddress.toLong(minAddress)
+  def maxAddress: String = subnetInfo.getHighAddress()
+  def maxAddressAsLong = IpAddress.toLong(maxAddress)
+  def netmask: String = subnetInfo.getNetmask
+  def netmaskAsLong = IpAddress.toLong(netmask)
+  def nextAvailable(currentMax: Option[Long] = None) =
+    IpAddress.toString(nextAvailableAsLong(currentMax))
+  def nextAvailableAsLong(currentMax: Option[Long] = None): Long = currentMax match {
+    case Some(l) =>
+      incrementAsLong(l)
+    case None => startAt match {
+      case Some(start) => subnetInfo.isInRange(start) match {
+        case true =>
+          IpAddress.toLong(start)
+        case false =>
+          minAddressAsLong + 1
+      }
+      case None =>
+        minAddressAsLong + 1
+    }
+  }
+  protected def increment(address: Long): String = {
+    IpAddress.toString(incrementAsLong(address))
+  }
+  protected def incrementAsLong(address: Long): Long = {
+    val nextAddress = IpAddress.lastOctet(address) match {
+      // 4 = n + 1 is broadcast, n + 2 is network, n + 3 is first address
+      case next if next >= lastOctetInRange => address + 3
+      case byTwo if IpAddress.lastOctet(address) == 0 => address + 2
+      case _ => address + 1
+    }
+    val nextAddressString = IpAddress.toString(nextAddress)
+    try {
+      subnetInfo.isInRange(nextAddressString) match {
+        case true => nextAddress
+        case false => throw new RuntimeException(
+          "Next available address %s is not in network block %s".format(
+            nextAddressString, network
+          )
+        )
+      }
+    } catch {
+      case e => 
+        throw new RuntimeException(
+          "Next available address %s is not a valid address in %s".format(
+            nextAddressString, network
+          )
+        )
+    }
+  }
 }

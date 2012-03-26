@@ -35,11 +35,35 @@ class IpmiInfoSpec extends ApplicationSpecification {
         IpmiInfo.findByAsset(ipmiAsset) must beSome[IpmiInfo]
       }
       "nextAvailableAddress" in {
-        val netmask = IpAddress.toLong("255.255.240.0")
-        val gateway = IpAddress.toLong("172.16.32.1")
-        val l = IpmiInfo.getNextAvailableAddress(gateway, netmask)
+        val startAt = Some("172.16.32.20")
+        val l = IpmiInfo.getNextAvailableAddress(startAt)._2
         val s = IpAddress.toString(l)
-        s mustEqual "172.16.32.2"
+        s mustEqual "172.16.32.20"
+      }
+      "nextAvailableAddress, rollover" in {
+        val startAt = Some("172.16.33.1")
+        val l = IpmiInfo.getNextAvailableAddress(startAt)._2
+        val s = IpAddress.toString(l)
+        s mustEqual "172.16.33.1"
+      }
+      "createForAsset is next address" in {
+        IpmiInfo.deleteByAsset(ipmiAsset) mustEqual 1
+        IpmiInfo.createForAsset(ipmiAsset).dottedAddress mustEqual "172.16.32.20"
+        IpmiInfo.deleteByAsset(ipmiAsset) mustEqual 1
+        IpmiInfo.createForAsset(ipmiAsset).dottedAddress mustEqual "172.16.32.20"
+        val asset = Asset("ipmiAssetTag1", Status.Enum.Incomplete, AssetType.Enum.ServerNode)
+        val a2 = Asset.create(asset)
+        IpmiInfo.createForAsset(a2).dottedAddress mustEqual "172.16.32.21"
+      }
+      "createForAsset with rollover" in {
+        val asset = Asset.findByTag("ipmiAssetTag1").get
+        val ipmiInfo = IpmiInfo.findByAsset(asset).get
+        IpmiInfo.update(ipmiInfo.copy(address = IpAddress.toLong("172.16.32.254"))) mustEqual 1
+        val asset3 = Asset("ipmiAssetTag2", Status.Enum.Incomplete, AssetType.Enum.ServerNode)
+        val a3 = Asset.create(asset3)
+        val ipmi3 = IpmiInfo.createForAsset(a3)
+        ipmi3.dottedAddress mustEqual "172.16.33.1"
+        ipmi3.dottedGateway mustEqual "172.16.32.1"
       }
     }
 
