@@ -71,8 +71,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     val (lshwRep, mvs) = LshwHelper.reconstruct(this)
     val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
     val ipmi = IpmiInfo.findByAsset(this)
+    val addresses = IpAddresses.findAllByAsset(this)
     val filtered: Seq[MetaWrapper] = mvs2.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
-    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, filtered)
+    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, filtered)
   }
 }
 
@@ -120,6 +121,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     } else if (params._2.nonEmpty) {
       AssetMetaValue.findAssetsByMeta(page, params._2, afinder, operation)
     } else {
+      println("Afinder is " + afinder)
       Asset.find(page, afinder)
     }
   }
@@ -180,7 +182,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     Page(results, params.page, params.offset, totalCount)
   }
 
-  case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], mvs: Seq[MetaWrapper]) {
+  case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], mvs: Seq[MetaWrapper]) {
     def exposeCredentials(showCreds: Boolean = false) = {
       this.copy(ipmi = this.ipmi.map { _.withExposedCredentials(showCreds) })
     }
@@ -194,6 +196,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         "HARDWARE" -> JsObject(lshw.forJsonObject),
         "LLDP" -> JsObject(lldp.forJsonObject),
         "IPMI" -> JsObject(ipmiMap),
+        "ADDRESSES" -> JsArray(addresses.toList.map(j => JsObject(j.forJsonObject()))),
         "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map { case(groupId, mv) =>
           groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) })
         }.toSeq)
@@ -213,13 +216,14 @@ case class AssetFinder(
   updatedBefore: Option[Date])
 {
   def asLogicalBoolean(a: Asset): LogicalBoolean = {
+    val tagBool = tag.map((a.tag === _))
     val statusBool = status.map((a.status === _.id))
     val typeBool = assetType.map((a.asset_type === _.id))
     val createdAfterTs = createdAfter.map((a.created gte _.asTimestamp))
     val createdBeforeTs = createdBefore.map((a.created lte _.asTimestamp))
     val updatedAfterTs = Some((a.updated gte updatedAfter.map(_.asTimestamp).?))
     val updatedBeforeTs = Some((a.updated lte updatedBefore.map(_.asTimestamp).?))
-    val ops = Seq(statusBool, typeBool, createdAfterTs, createdBeforeTs, updatedAfterTs,
+    val ops = Seq(tagBool, statusBool, typeBool, createdAfterTs, createdBeforeTs, updatedAfterTs,
       updatedBeforeTs).filter(_ != None).map(_.get)
     ops.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }

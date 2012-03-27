@@ -41,9 +41,6 @@ class IpmiInfoSpec extends ApplicationSpecification {
     }
 
     "Support find methods" in {
-      "findByAsset" in {
-        IpmiInfo.findByAsset(ipmiAsset()) must beSome[IpmiInfo]
-      }
       "nextAvailableAddress" in {
         val startAt = Some("172.16.32.20")
         val l = IpmiInfo.getNextAvailableAddress(startAt)._2
@@ -63,6 +60,8 @@ class IpmiInfoSpec extends ApplicationSpecification {
         IpmiInfo.createForAsset(a1).dottedAddress mustEqual "172.16.32.20"
         IpmiInfo.createForAsset(a2).dottedAddress mustEqual "172.16.32.21"
         IpmiInfo.createForAsset(a3).dottedAddress mustEqual "172.16.32.22"
+        IpmiInfo.deleteByAsset(a3) mustEqual 1
+        IpmiInfo.createForAsset(a3).dottedAddress mustEqual "172.16.32.22"
       }
       "createForAsset with rollover" in {
         val asset = ipmiAsset("ipmiAssetTag3")
@@ -72,6 +71,9 @@ class IpmiInfoSpec extends ApplicationSpecification {
         val ipmi4 = IpmiInfo.createForAsset(a4)
         ipmi4.dottedAddress mustEqual "172.16.33.1"
         ipmi4.dottedGateway mustEqual "172.16.32.1"
+      }
+      "findByAsset" in {
+        IpmiInfo.findByAsset(ipmiAsset()) must beSome[IpmiInfo]
       }
     }
 
