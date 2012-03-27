@@ -1,6 +1,7 @@
 package controllers
 
 import models.{Asset, AssetLog, Model}
+import models.{LogMessageType, LogFormat, LogSource}
 import util.{Helpers, SecuritySpec}
 
 import play.api.data._
@@ -14,7 +15,7 @@ import org.jsoup.safety.Whitelist
 trait AssetLogApi {
   this: Api with SecureController =>
 
-  val DefaultMessageType = AssetLog.MessageTypes.Informational
+  val DefaultMessageType = LogMessageType.Informational
 
   // GET /api/asset/:tag/log
   def getLogData(tag: String, page: Int, size: Int, sort: String, filter: String) = SecureAction { implicit req =>
@@ -80,16 +81,14 @@ trait AssetLogApi {
         case js => js
       }
       try {
-        val mtype = AssetLog.MessageTypes.withName(typeString)
-        Model.withConnection { implicit con =>
-          AssetLog.create(
-            AssetLog(asset, Json.stringify(msg), AssetLog.Formats.Json, AssetLog.Sources.Api, mtype)
-          )
-        }
+        val mtype = LogMessageType.withName(typeString)
+        AssetLog.create(
+          AssetLog(asset, Json.stringify(msg), LogFormat.Json, LogSource.Api, mtype)
+        )
         None
       } catch {
         case _ => Some("Invalid message type specified. Valid types are: %s".format(
-          AssetLog.MessageTypes.values.mkString(","))
+          LogMessageType.values.mkString(","))
         )
       }
     }
@@ -105,20 +104,18 @@ trait AssetLogApi {
         success => {
           val (f_msg, f_type, f_source) = success
           val typeString = f_type.getOrElse(DefaultMessageType.toString).toUpperCase
-          val source = AssetLog.Sources.withName(f_source.map(s => "USER").getOrElse("API"))
+          val source = LogSource.withName(f_source.map(s => "USER").getOrElse("API"))
           val escapedMessage = Jsoup.clean(f_msg, Whitelist.basicWithImages())
           val msg = "%s: %s".format(username, escapedMessage)
           try {
-            val mtype = AssetLog.MessageTypes.withName(typeString)
-            Model.withConnection { implicit con =>
-              AssetLog.create(
-                AssetLog(asset, msg, AssetLog.Formats.PlainText, source, mtype)
-              )
-            }
+            val mtype = LogMessageType.withName(typeString)
+            AssetLog.create(
+              AssetLog(asset, msg, LogFormat.PlainText, source, mtype)
+            )
             None
           } catch {
             case _ => Some("Invalid message type specified. Valid types are: %s".format(
-              AssetLog.MessageTypes.values.mkString(","))
+              LogMessageType.values.mkString(","))
             )
           }
         }

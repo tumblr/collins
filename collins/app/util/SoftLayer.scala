@@ -33,4 +33,16 @@ object SoftLayer {
     }
   }
 
+  private[this] lazy val AllowedCancelStates: Set[Int] =
+    Helpers.getConfig("softlayer")
+      .flatMap(_.getString("allowedCancelStatus"))
+      .getOrElse("1,2,3,4,5,6,7,8,9")
+      .split(",")
+      .map(_.toInt)
+      .toSet
+
+  def cancelAllowed(asset: models.Asset): Boolean = {
+    AllowedCancelStates.contains(asset.status)
+  }
+
 }

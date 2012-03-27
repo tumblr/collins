@@ -77,3 +77,9 @@ table {
 a[data-collapsible] {
   cursor: pointer;
 }
+
+.modalErrorMessage {
+  box-sizing: border-box;
+  float: left;
+  width: 100%;
+}

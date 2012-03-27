@@ -42,8 +42,14 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         result must haveStatus(201)
         result must haveJsonData.which { s =>
           s must /("data") */("ASSET")/("STATUS" -> "Incomplete")
-          s must /("data") */("IPMI")/("IPMI_GATEWAY" -> "10.0.0.1")
+          s must /("data") */("IPMI")/("IPMI_GATEWAY" -> "172.16.32.1")
+          s must /("data") */("IPMI")/("IPMI_NETMASK" -> "255.255.240.0")
         }
+      }
+      "Getting an asset" in new asset {
+        val req2 = FakeRequest("GET", assetUrl)
+        val result2 = Extract.from(api.getAsset(assetTag).apply(req2))
+        result2 must haveStatus(200)
       }
       "Inventory hardware information via a POST" in new asset {
         val lshwData = getResource("lshw-basic.xml")
@@ -82,6 +88,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         result must haveJsonData.which { txt =>
           txt must /("data") */("SUCCESS" -> true)
         }
+        val amf = AssetMeta.findByName("FOO")
         getAsset() must haveJsonData.which { txt =>
           txt must /("data") */("ASSET")/("STATUS" -> "Unallocated")
           txt must /("data") */("ATTRIBS") */("0") */("RACK_POSITION" -> "rack 1")

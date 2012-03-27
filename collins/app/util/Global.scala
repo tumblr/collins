@@ -1,7 +1,8 @@
 import play.api._
 import play.api.mvc._
 
-import controllers.{ApiResponse, BackgroundProcessor}
+import controllers.ApiResponse
+import models.Model
 import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, IpmiCommandProcessor}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 
@@ -9,7 +10,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   private[this] val logger = Logger.logger
 
   private val RequiredConfig = Set(
-    "crypto.key", "ipmi.gateway", "ipmi.netmask"
+    "crypto.key", "ipmi.network"
   )
 
   override def onStart(app: Application) {
@@ -31,10 +32,13 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
     setAuthentication(auth)
     setCryptoKey(key)
+    Model.initialize()
   }
+
   override def onStop(app: Application) {
     logger.info("Stopping application")
     super.onStop(app)
+    Model.shutdown()
   }
 
   override def onError(request: RequestHeader, ex: Throwable): Result = {

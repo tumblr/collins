@@ -134,12 +134,19 @@ $(document).ready(function() {
 
   // Bind to a modals hide event, resetting a form if it exists, and cleaning up
   // the referenced element.
-  $("[data-modal-cleanup]").each(function() {
+  $('.modal').each(function() {
     var e = $(this);
-    var toClean = $(elId(e.attr('data-modal-cleanup')));
     e.bind('hide', function() {
       e.children('form').each(function() { this.reset() });
-      toClean.each(function() { $(this).empty().hide() });
+      e.find('[data-purge=true]').each(function() {
+        $(this).empty();
+        if ($(this).is("input")) {
+          $(this).val("");
+        }
+      });
+      e.find('.hideAfterClose').each(function() {
+        $(this).hide();
+      });
     });
   });
 
@@ -194,15 +201,10 @@ $(document).ready(function() {
         if (errorEl) {
           var classes = $(elId(errorEl)).attr('data-on-error');
           if (classes) { $(elId(errorEl)).removeClass(classes); }
-          if (d.status != 400) {
-            var html = "";
-            if (classes) { html += '<div class="' + classes + '">Error</div>'; }
-            html += '<pre>' + response.data.message + '</pre>';
-            $(elId(errorEl)).empty().append(html).show();
-          } else {
-            if (classes) { $(elId(errorEl)).addClass(classes); }
-            $(elId(errorEl)).empty().append(response.data.message).show();
-          }
+          var html = "";
+          if (classes) { html += '<div class="' + classes + '">Error</div>'; }
+          html += '<span style="font-family: monaco">' + response.data.message + '</span>';
+          $(elId(errorEl)).empty().append(html).show();
         } else {
           alert(response.message);
         }

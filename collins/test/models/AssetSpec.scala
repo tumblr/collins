@@ -1,6 +1,5 @@
 package models
 
-import util.AssetStateMachine
 import test.ApplicationSpecification
 
 import org.specs2._
@@ -17,30 +16,25 @@ class AssetSpec extends ApplicationSpecification {
     "Support CRUD Operations" in {
 
       "CREATE" in new mockasset {
-        val result = Model.withConnection { implicit con => Asset.create(newAsset) }
-        result.id.isDefined must beTrue
+        val result = Asset.create(newAsset)
         result.getId must beGreaterThan(1L)
       }
 
       "UPDATE" in new mockasset {
-        Model.withConnection { implicit con =>
-          val maybeAsset = Asset.findByTag(assetTag)
-          maybeAsset must beSome[Asset]
-          val realAsset = maybeAsset.get
-          AssetStateMachine(realAsset).update().executeUpdate() mustEqual 1
-          Asset.findByTag(assetTag).map { a =>
-            a.getStatus().getId mustEqual(Status.Enum.New.id)
-          }.getOrElse(failure("Couldn't find asset but expected to"))
-        }
+        val maybeAsset = Asset.findByTag(assetTag)
+        maybeAsset must beSome[Asset]
+        val realAsset = maybeAsset.get
+        Asset.update(realAsset.copy(status = Status.Enum.New.id))
+        Asset.findByTag(assetTag).map { a =>
+          a.getStatus().getId mustEqual(Status.Enum.New.id)
+        }.getOrElse(failure("Couldn't find asset but expected to"))
       }
 
       "DELETE" in new mockasset {
-        Model.withConnection { implicit con =>
-          Asset.findByTag(assetTag).map { a =>
-            Asset.delete("id={id}").on('id -> a.getId).executeUpdate() mustEqual 1
-            Asset.findById(a.getId) must beNone
-          }.getOrElse(failure("Couldn't find asset but expected to"))
-        }
+        Asset.findByTag(assetTag).map { a =>
+          Asset.delete(a) mustEqual 1
+          Asset.findById(a.getId) must beNone
+        }.getOrElse(failure("Couldn't find asset but expected to"))
       }
     }
 
@@ -48,6 +42,7 @@ class AssetSpec extends ApplicationSpecification {
 
       "findByTag" in new concreteasset {
         Asset.findByTag(assetTag) must beSome[Asset]
+        Asset.findByTag(assetTag).get.tag mustEqual assetTag
       }
 
       "findLikeTag" in new concreteasset {
@@ -56,60 +51,6 @@ class AssetSpec extends ApplicationSpecification {
         assets.total must beGreaterThan(0L)
         assets.items must have {_.tag == assetTag}
       }
-
-      "findByMeta" in new concreteasset {
-        val criteria = List(
-          AssetMeta.Enum.ChassisTag -> "chassis tag abc"
-        )
-        val assets = Asset.findByMeta(criteria)
-        assets must haveSize(1)
-        atLeastOnceWhen(assets(0).getMetaAttributes()) {
-          case a if a.getNameEnum() == Some(AssetMeta.Enum.ChassisTag) =>
-            a.getValue() mustEqual "chassis tag abc"
-        }
-      }
-
-      "getMetaAttributes" in {
-        "one" in new concreteasset {
-          val maybeAsset = Asset.findById(assetId)
-          maybeAsset must beSome[Asset]
-          val asset = maybeAsset.get
-          val attribs = asset.getMetaAttributes(Set(AssetMeta.Enum.ChassisTag))
-          attribs must haveSize(1)
-          val attrib = attribs.head
-          attrib.getValue mustEqual "chassis tag abc"
-          attrib.getNameEnum must beSome(AssetMeta.Enum.ChassisTag)
-        }
-
-        "none" in new concreteasset {
-          val maybeAsset = Asset.findById(assetId)
-          maybeAsset must beSome[Asset]
-          val asset = maybeAsset.get
-          val attribs = asset.getMetaAttributes()
-          attribs.size must be_>=(2)
-        }
-
-        "many" in new concreteasset {
-          val maybeAsset = Asset.findById(assetId)
-          maybeAsset must beSome[Asset]
-          val asset = maybeAsset.get
-          asset.tag mustEqual assetTag
-          asset.getStatus.name mustEqual assetStatus.toString
-          asset.getType.name mustEqual "Server Node"
-          val attribs = asset.getMetaAttributes(Set(
-            AssetMeta.Enum.ServiceTag,
-            AssetMeta.Enum.ChassisTag))
-          attribs must have size(2)
-          val enums = attribs.map { _.getNameEnum() }.filter { _.isDefined }.map { _.get }
-          enums must contain(AssetMeta.Enum.ServiceTag, AssetMeta.Enum.ChassisTag).only
-          forallWhen(attribs) {
-            case a if a.getNameEnum() == Some(AssetMeta.Enum.ServiceTag) =>
-              a.getValue mustEqual "dell service tag 123"
-            case b if b.getNameEnum() == Some(AssetMeta.Enum.ChassisTag) =>
-              b.getValue mustEqual "chassis tag abc"
-          }
-        } //many
-      } // getMetaAttributes
 
       "getAllAttributes" in new concreteasset {
         val maybeAsset = Asset.findByTag(assetTag)
