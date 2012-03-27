@@ -1,32 +1,34 @@
 package models
 
-import Model.defaults._
-import util.{CryptoAccessor, CryptoCodec, Helpers, IpAddress}
+import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress}
+import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
-import anorm._
-import anorm.SqlParser._
 import play.api._
 import play.api.libs.json._
 
-import java.sql.Connection
-
 case class IpmiInfo(
-  id: Pk[java.lang.Long],
-  asset_id: Id[java.lang.Long],
+  asset_id: Long,
   username: String,
   password: String,
   gateway: Long,
   address: Long,
-  netmask: Long)
+  netmask: Long,
+  id: Long = 0) extends IpAddressable
 {
   import IpmiInfo.Enum._
-  def dottedAddress(): String = IpAddress.toString(address)
-  def dottedGateway(): String = IpAddress.toString(gateway)
-  def dottedNetmask(): String = IpAddress.toString(netmask)
-  def decryptedPassword(): String = IpmiInfo.decrypt(password)
-  def getId(): Long = id.get
-  def getAssetId(): Long = asset_id.get
 
+  override def validate() {
+    super.validate()
+    List(username, password).foreach { s =>
+      require(s != null && s.length > 0, "Username and Password must not be empty")
+    }
+  }
+
+  override def asJson: String = {
+    Json.stringify(JsObject(forJsonObject))
+  }
+
+  def decryptedPassword(): String = IpmiInfo.decrypt(password)
   def withExposedCredentials(exposeCredentials: Boolean = false) = {
     if (exposeCredentials) {
       this.copy(password = decryptedPassword())
@@ -45,52 +47,59 @@ case class IpmiInfo(
   )
 }
 
-object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
-  private[this] val logger = Logger.logger
+object IpmiInfo extends IpAddressStorage[IpmiInfo] {
+  import org.squeryl.PrimitiveTypeMode._
 
   val DefaultPasswordLength = 12
-  val RandomUsername = false
 
-  def findByAsset(asset: Asset): Option[IpmiInfo] = {
-    Model.withConnection { implicit con =>
-      IpmiInfo.find("asset_id={asset_id}").on('asset_id -> asset.getId).singleOption()
-    }
+  val tableDef = table[IpmiInfo]("ipmi_info")
+  on(tableDef)(i => declare(
+    i.id is(autoIncremented,primaryKey),
+    i.asset_id is(unique),
+    i.address is(unique),
+    i.gateway is(indexed),
+    i.netmask is(indexed)
+  ))
+
+  def createForAsset(asset: Asset): IpmiInfo = inTransaction {
+    val assetId = asset.getId
+    val (gateway, address, netmask) = getNextAvailableAddress()
+    val username = getUsername(asset)
+    val password = generateEncryptedPassword()
+    val ipmiInfo = IpmiInfo(
+      assetId, username, password, gateway, address, netmask
+    )
+    tableDef.insert(ipmiInfo)
+  }
+
+  def encryptPassword(pass: String): String = {
+    CryptoCodec(getCryptoKeyFromFramework()).Encode(pass)
   }
 
   type IpmiQuerySeq = Seq[Tuple2[IpmiInfo.Enum, String]]
   def findAssetsByIpmi(page: PageParams, ipmi: IpmiQuerySeq, finder: AssetFinder): Page[Asset] = {
-    val queryPlaceholder = """
-      select %s from asset
-      join ipmi_info ipmi on asset.id = ipmi.asset_id
-      where %s
-    """
-    val queryFragment = finder.asQueryFragment()
-    val collectedParams = collectParams(ipmi)
-    val finderQuery = DaoSupport.flattenSql(Seq(queryFragment, collectedParams))
-    val finderQueryFrag = finderQuery.sql.query
-    val query = queryPlaceholder.format("*", finderQueryFrag) + " limit {pageSize} offset {offset}"
-    val countQuery = queryPlaceholder.format("count(*)", finderQueryFrag)
-    val paramsNoPaging = finderQuery.params
-    val paramsWithPaging = Seq(
-      ('pageSize -> toParameterValue(page.size)),
-      ('offset -> toParameterValue(page.offset))
-    ) ++ paramsNoPaging
-    Model.withConnection { implicit con =>
-      val assets = SQL(query).on(paramsWithPaging:_*).as(Asset *)
-      val count = SQL(countQuery).on(paramsNoPaging:_*).as(scalar[Long])
-      Page(assets, page.page, page.offset, count)
+    def whereClause(assetRow: Asset, ipmiRow: IpmiInfo) = {
+      where(
+        assetRow.id === ipmiRow.asset_id and
+        finder.asLogicalBoolean(assetRow) and
+        collectParams(ipmi, ipmiRow)
+      )
+    }
+    inTransaction {
+      val results = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
+        whereClause(assetRow, ipmiRow)
+        select(assetRow)
+      ).page(page.offset, page.size).toList
+      val totalCount = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
+        whereClause(assetRow, ipmiRow)
+        compute(count)
+      )
+      Page(results, page.page, page.offset, totalCount)
     }
   }
 
-  def createForAsset(asset: Asset)(implicit con: Connection): IpmiInfo = {
-    val assetId = asset.getId
-    val (gateway, address, netmask) = getAddress()
-    val username = getUsername(asset)
-    val password = generateEncryptedPassword()
-    val ipmiInfo = IpmiInfo(
-      NotAssigned, Id(assetId), username, password, gateway, address, netmask
-    )
-    IpmiInfo.create(ipmiInfo)
+  override def get(i: IpmiInfo) = getOrElseUpdate(getKey.format(i.id)) {
+    tableDef.lookup(i.id).get
   }
 
   type Enum = Enum.Value
@@ -102,31 +111,30 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
     val IpmiNetmask = Value("IPMI_NETMASK")
   }
 
-  protected def getAddress()(implicit con: Connection): Tuple3[Long,Long,Long] = {
-    val gateway: Long = getGateway()
-    val netmask: Long = getNetmask()
-    val address: Long = getNextAvailableAddress(netmask)
-    (gateway, address, netmask)
-  }
+  case class Username(asset: Asset, config: Option[Configuration], randomUsername: Boolean = false) {
+    def this(asset: Asset, config: Configuration, randomUsername: Boolean) =
+      this(asset, Some(config), randomUsername)
 
-  protected def getNextAvailableAddress(netmask: Long)(implicit con: Connection): Long = {
-    val currentMax = IpmiInfo.find("select MAX(address) as address from ipmi_info").as(long("address"))
-    IpAddress.nextAvailableAddress(currentMax, netmask)
-  }
+    def isRandom: Boolean = config match {
+      case None => randomUsername
+      case Some(cfg) => cfg.getBoolean("randomUsername") match {
+        case Some(bool) => bool
+        case None => randomUsername
+      }
+    }
 
-  protected def getGateway(): Long = {
-    getAddressFromConfig("gateway")
-  }
-  protected def getNetmask(): Long = {
-    getAddressFromConfig("netmask")
-  }
+    def fromAsset: String = "%s-ipmi".format(asset.tag)
 
-  protected def getAddressFromConfig(key: String): Long = {
-    getConfig() match {
-      case None => throw new RuntimeException("no ipmi configuration found")
-      case Some(config) => config.getString(key) match {
-        case Some(value) => IpAddress.toLong(value)
-        case None => throw new RuntimeException("no %s key found in configuration".format(key))
+    def get(): String = {
+      isRandom match {
+        case true => CryptoCodec.randomString(8)
+        case false => config match {
+          case None => fromAsset
+          case Some(cfg) => cfg.getString("username") match {
+            case Some(uname) => uname
+            case None => fromAsset
+          }
+        }
       }
     }
   }
@@ -156,58 +164,37 @@ object IpmiInfo extends Magic[IpmiInfo](Some("ipmi_info")) {
     }
   }
 
-  def encryptPassword(pass: String): String = {
-    CryptoCodec(getCryptoKeyFromFramework()).Encode(pass)
-  }
-
   protected def generateEncryptedPassword(): String = {
     val length = getPasswordLength()
     CryptoCodec(getCryptoKeyFromFramework()).Encode(CryptoCodec.randomString(length))
   }
 
   protected def getUsername(asset: Asset): String = {
-    val randomUsername = getConfig() match {
-      case None => RandomUsername
-      case Some(config) => config.getBoolean("randomUsername") match {
-        case Some(bool) => bool
-        case None => RandomUsername
-      }
-    }
-    randomUsername match {
-      case true => CryptoCodec.randomString(8)
-      case false => asset.tag + "-ipmi"
-    }
+    Username(asset, getConfig, false).get
   }
 
-  protected def getConfig(): Option[Configuration] = {
+  override protected def getConfig(): Option[Configuration] = {
     Helpers.getConfig("ipmi")
   }
 
   // Converts our query parameters to fragments and parameters for a query
-  private[this] def collectParams(ipmi: Seq[Tuple2[IpmiInfo.Enum, String]]): SimpleSql[Row] = {
+  private[this] def collectParams(ipmi: Seq[Tuple2[IpmiInfo.Enum, String]], ipmiRow: IpmiInfo): LogicalBoolean = {
     import Enum._
-    val results = ipmi.zipWithIndex.map { case(tuple, size) =>
-      val enum = tuple._1
-      val value = tuple._2
+    val results: Seq[LogicalBoolean] = ipmi.map { case(enum, value) =>
       enum match {
         case IpmiAddress =>
-          val sub = "address_%d".format(size)
-          SqlQuery("address={%s}".format(sub)).on(sub -> IpAddress.toLong(value))
+          (ipmiRow.address === IpAddress.toLong(value))
         case IpmiUsername =>
-          val sub = "username_%d".format(size)
-          SqlQuery("username={%s}".format(sub)).on(sub -> value)
+          (ipmiRow.username === value)
         case IpmiGateway =>
-          val sub = "gateway_%d".format(size)
-          SqlQuery("gateway={%s}".format(sub)).on(sub -> IpAddress.toLong(value))
+          (ipmiRow.gateway === IpAddress.toLong(value))
         case IpmiNetmask =>
-          val sub = "netmask_%d".format(size)
-          SqlQuery("netmask={%s}".format(sub)).on(sub -> IpAddress.toLong(value))
+          (ipmiRow.netmask === IpAddress.toLong(value))
         case e =>
           throw new Exception("Unhandled IPMI tag: %s".format(e))
       }
     }
-    DaoSupport.flattenSql(results)
+    results.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }
-
 
 }

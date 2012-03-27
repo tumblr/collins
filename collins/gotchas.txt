@@ -1,0 +1,4 @@
+Squeryl
+
+ * All vals and vars in a case class are considered columns, whether they are or not. If you need one, make it private.
+ * Make sure your ID is part of the case class constructor otherwise the copy method won't carry over the value

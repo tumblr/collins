@@ -15,6 +15,7 @@ GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: 
 GET     /assets/logs                app.CookieApi.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
 POST    /asset/:tag/log             app.CookieApi.submitLogData(tag: String)
 GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
+POST    /asset/:tag/maintenance     app.CookieApi.updateAssetForMaintenance(tag: String)
 POST    /asset/:tag/cancel          app.CookieApi.cancelAsset(tag: String)
 POST    /asset/:tag/provision       app.CookieApi.provisionAsset(tag: String)
 POST    /asset/:tag/power           app.CookieApi.powerManagement(tag: String)
@@ -34,6 +35,14 @@ POST    /login                      controllers.Application.authenticate
 GET     /logout                     controllers.Application.logout
 
 # API
+
+# IP Address API
+GET     /api/asset/:tag/addresses            app.Api.getForAsset(tag: String)
+GET     /api/asset/with/address/:address     app.Api.assetFromAddress(address: String)
+POST    /api/asset/:tag/address              app.Api.allocateAddress(tag: String)
+DELETE  /api/asset/:tag/addresses            app.Api.purgeAddresses(tag: String)
+
+# Log API
 PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 
@@ -48,7 +57,11 @@ DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
 GET     /api/asset/:tag             app.Api.getAsset(tag: String)
 GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC")
 
+GET     /api/tags                   app.Api.getTags
+GET     /api/tag/:tag               app.Api.getTagValues(tag: String)
+
 # For testing
+GET     /api/asyncPing              app.Api.asyncPing(sleepMs: Long ?= 1000)
 GET     /api/ping                   app.Api.ping
 GET     /api/errorPing              app.Api.errorPing(id: Int ?= 1)
 

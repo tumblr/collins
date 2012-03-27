@@ -1,9 +1,9 @@
 package controllers
 
+import views.html
 import models.{Status => AStatus}
 import models._
 import util._
-import views.html
 
 import play.api.data._
 import play.api.http.{Status => StatusValues}
@@ -36,7 +36,7 @@ trait AssetApi {
       case Right(success) =>
         if (OutputType.isHtml(req)) {
           val attribs = success.attachment.get.asInstanceOf[Asset.AllAttributes]
-          Results.Ok(html.asset.show(attribs))
+          Results.Ok(html.asset.show(attribs, user.get))
         } else {
           formatResponseData(success)
         }
@@ -67,6 +67,33 @@ trait AssetApi {
     }
   }(SecuritySpec(true, "infra"))
 
+  def updateAssetForMaintenance(tag: String) = SecureAction { implicit req =>
+    def processRequest(status: String, reason: String) = {
+      Asset.findByTag(tag).map { asset =>
+        if (status.isEmpty || reason.isEmpty) {
+          Api.getErrorMessage("status and reason must be specified")
+        } else {
+          val st = if (status.toLowerCase == "maintenance") {
+            plugins.Maintenance.toMaintenance(asset, reason)
+          } else {
+            plugins.Maintenance.fromMaintenance(asset, reason, status)
+          }
+          st match {
+            case true => Api.statusResponse(true)
+            case false => Api.getErrorMessage("Failed setting status")
+          }
+        }
+      }.getOrElse(Api.getErrorMessage("Asset with specified tag not found"))
+    }
+    Form(of(
+      "status" -> text,
+      "reason" -> text
+    )).bindFromRequest.fold(
+      err => formatResponseData(Api.getErrorMessage("status and reason must be specified")),
+      succ => formatResponseData(processRequest(succ._1, succ._2))
+    )
+  }(SecuritySpec(true, "infra"))
+
   // DELETE /api/asset/attribute/:attribute/:tag
   def deleteAssetAttribute(tag: String, attribute: String) = SecureAction { implicit req =>
     Api.withAssetFromTag(tag) { asset =>
@@ -78,7 +105,6 @@ trait AssetApi {
 
   // DELETE /api/asset/:tag
   def deleteAsset(tag: String) = SecureAction { implicit req =>
-    import com.twitter.util.StateMachine.InvalidStateTransition
     val options = Form("reason" -> optional(text(1))).bindFromRequest.fold(
       err => None,
       reason => reason.map { r => Map("reason" -> r) }
@@ -86,14 +112,8 @@ trait AssetApi {
     val result = Api.withAssetFromTag(tag) { asset =>
       AssetLifecycle.decommissionAsset(asset, options)
         .left.map { e =>
-          e match {
-            case ex: InvalidStateTransition =>
-              val msg = "Illegal state transition: %s".format(ex.getMessage)
-              Api.getErrorMessage(msg, Results.Status(StatusValues.CONFLICT))
-            case ex =>
-              val msg = "Error saving response: %s".format(e.getMessage)
-              Api.getErrorMessage(msg, Results.InternalServerError)
-          }
+          val msg = "Illegal state transition: %s".format(e.getMessage)
+          Api.getErrorMessage(msg, Results.Status(StatusValues.CONFLICT))
         }
         .right.map(s => ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsBoolean(s)))))
     }

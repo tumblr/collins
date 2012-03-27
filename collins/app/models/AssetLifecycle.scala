@@ -11,7 +11,6 @@ import Helpers.formatPowerPort
 import play.api.Logger
 
 import scala.util.control.Exception.allCatch
-import java.sql.Connection
 import java.util.Date
 
 // Supports meta operations on assets
@@ -23,22 +22,26 @@ object AssetLifecycle {
 
   private[this] val logger = Logger.logger
 
-  type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
+  type AssetIpmi = Tuple3[Asset,Option[IpmiInfo],Seq[IpAddresses]]
   type Status[T] = Either[Throwable,T]
 
-  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum] = None): Status[AssetIpmi] = {
+  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum], addressCount: Int): Status[AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
       val _status = status.getOrElse(Status.Enum.Incomplete)
-      Model.withTransaction { implicit con =>
+      Asset.inTransaction {
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
           case true => Some(IpmiInfo.createForAsset(asset))
           case false => None
         }
+        val addresses = addressCount match {
+          case none if none <= 0 => Seq()
+          case n => IpAddresses.createForAsset(asset, addressCount)
+        }
         InternalTattler.informational(asset, None,
-          "Initial intake successful, status now %s".format(_status.toString), con)
-        Right(Tuple2(asset, ipmi))
+          "Initial intake successful, status now %s".format(_status.toString))
+        Right(Tuple3(asset, ipmi, addresses))
       }
     } catch {
       case e =>
@@ -55,10 +58,10 @@ object AssetLifecycle {
       "Decommission of asset requested, status is %s".format(asset.getStatus().name)
     )
     try {
-      Model.withTransaction { implicit con =>
-        InternalTattler.informational(asset, None, reason, con)
-        AssetStateMachine(asset).decommission().executeUpdate()
-        InternalTattler.informational(asset, None, "Asset decommissioned successfully", con)
+      Asset.inTransaction {
+        InternalTattler.informational(asset, None, reason)
+        AssetStateMachine(asset).decommission()
+        InternalTattler.informational(asset, None, "Asset decommissioned successfully")
       }
       Right(true)
     } catch {
@@ -76,9 +79,21 @@ object AssetLifecycle {
 
   protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     allCatch[Boolean].either {
-      Model.withTransaction { implicit con =>
-        AssetStateMachine(asset).update().executeUpdate()
-        InternalTattler.informational(asset, None, "Asset state updated")
+      Asset.inTransaction {
+        val nextState = Status.Enum(asset.status) match {
+          case Status.Enum.Incomplete => Status.Enum.New
+          case Status.Enum.New => Status.Enum.Unallocated
+          case Status.Enum.Unallocated => Status.Enum.Allocated
+          case Status.Enum.Allocated => Status.Enum.Cancelled
+          case Status.Enum.Cancelled => Status.Enum.Decommissioned
+          case Status.Enum.Maintenance => Status.Enum.Unallocated
+          case n => n
+        }
+        if (nextState.id != asset.status) {
+          val newAsset = asset.copy(status = nextState.id)
+          Asset.update(newAsset)
+          InternalTattler.informational(newAsset, None, "Asset state updated")
+        }
         true
       }
     }.left.map(e => handleException(asset, "Error saving values or in state transition", e))
@@ -100,20 +115,20 @@ object AssetLifecycle {
       options.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
         return Left(new Exception("Attribute %s is restricted".format(kv._1)))
       )
-      Model.withTransaction { implicit con =>
+      Asset.inTransaction {
         MetaWrapper.createMeta(asset, options)
+        Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
         true
       }
     }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
   }
 
-  def updateAssetStatus(asset: Asset, options: Map[String,String], con: Connection): Status[Boolean] = {
+  def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     Helpers.haveFeature("sloppyStatus") match {
       case Some(true) =>
       case _ =>
         return Left(new Exception("sloppyStatus not enabled"))
     }
-    implicit val conn: Connection = con
     val stat = options.get("status").getOrElse("none")
     allCatch[Boolean].either {
       val status = AStatus.Enum.withName(stat)
@@ -123,16 +138,12 @@ object AssetLifecycle {
       val old = AStatus.Enum(asset.status).toString
       val defaultReason = "Asset state updated from %s to %s".format(old, stat)
       val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
-      Asset.update(asset.copy(status = status.id, updated = Some(new Date().asTimestamp)))
-      ApiTattler.warning(asset, None, reason, con)
+      Asset.inTransaction {
+        Asset.update(asset.copy(status = status.id, updated = Some(new Date().asTimestamp)))
+        ApiTattler.warning(asset, None, reason)
+      }
       true
     }.left.map(e => handleException(asset, "Error updating status for asset", e))
-  }
-
-  def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    Model.withTransaction { con =>
-      updateAssetStatus(asset, options, con)
-    }
   }
 
   protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -150,20 +161,22 @@ object AssetLifecycle {
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
 
-    allCatch[Boolean].either {
+    val res = allCatch[Boolean].either {
       val values = Seq(
         AssetMetaValue(asset, RackPosition, rackpos),
         AssetMetaValue(asset, PowerPort, 0, power1),
         AssetMetaValue(asset, PowerPort, 1, power2))
-      Model.withTransaction { implicit con =>
+      Asset.inTransaction {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
-        AssetStateMachine(asset).update().executeUpdate()
-        MetaWrapper.createMeta(asset, filtered)
+        val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
+        MetaWrapper.createMeta(newAsset, filtered)
+        Asset.update(newAsset)
         true
       }
-    }.left.map(e => handleException(asset, "Exception updating asset", e))
+    }
+    res.left.map(e => handleException(asset, "Exception updating asset", e))
   }
 
   protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -184,7 +197,7 @@ object AssetLifecycle {
     val lldpParser = new LldpParser(lldp)
 
     allCatch[Boolean].either {
-      Model.withTransaction { implicit con =>
+      Asset.inTransaction {
         val lshwParsingResults = parseLshw(asset, lshwParser)
         if (lshwParsingResults.isLeft) {
           throw lshwParsingResults.left.get
@@ -193,23 +206,20 @@ object AssetLifecycle {
         if (lldpParsingResults.isLeft) {
           throw lldpParsingResults.left.get
         }
-        AssetMetaValue.create(AssetMetaValue(asset, AssetMeta.Enum.ChassisTag.id, chassis_tag))
-        MetaWrapper.createMeta(asset, filtered)
-        AssetStateMachine(asset).update().executeUpdate()
-        InternalTattler.informational(asset, None,
-          "Parsing and storing LSHW data succeeded",
-          con
-        )
+        MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
+        val newAsset = asset.copy(status = Status.Enum.New.id, updated = Some(new Date().asTimestamp))
+        Asset.update(newAsset)
+        InternalTattler.informational(newAsset, None, "Parsing and storing LSHW data succeeded")
         true
       }
     }.left.map(e => handleException(asset, "Exception updating asset", e))
   }
 
-  protected def parseLshw(asset: Asset, parser: LshwParser)(implicit con: Connection): Status[LshwRepresentation] = {
+  protected def parseLshw(asset: Asset, parser: LshwParser): Status[LshwRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
-        AssetLog.notice(asset, "Parsing LSHW failed", AssetLog.Formats.PlainText,
-          AssetLog.Sources.Internal).withException(ex).create()
+        AssetLog.notice(asset, "Parsing LSHW failed", LogFormat.PlainText,
+          LogSource.Internal).withException(ex).create()
         Left(ex)
       case Right(lshwRep) =>
         LshwHelper.updateAsset(asset, lshwRep) match {
@@ -218,18 +228,18 @@ object AssetLifecycle {
           case false =>
             val ex = new Exception("Parsing LSHW succeeded, saving failed")
             AssetLog.error(asset, "Parsing LSHW succeeded but saving it failed",
-              AssetLog.Formats.PlainText, AssetLog.Sources.Internal
+              LogFormat.PlainText, LogSource.Internal
             ).withException(ex).create()
             Left(ex)
         }
     } //catch
   } // updateServer
 
-  protected def parseLldp(asset: Asset, parser: LldpParser)(implicit con: Connection): Status[LldpRepresentation] = {
+  protected def parseLldp(asset: Asset, parser: LldpParser): Status[LldpRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
-        AssetLog.notice(asset, "Parsing LLDP failed", AssetLog.Formats.PlainText,
-          AssetLog.Sources.Internal).withException(ex).create()
+        AssetLog.notice(asset, "Parsing LLDP failed", LogFormat.PlainText,
+          LogSource.Internal).withException(ex).create()
         Left(ex)
       case Right(lldpRep) =>
         LldpHelper.updateAsset(asset, lldpRep) match {
@@ -238,7 +248,7 @@ object AssetLifecycle {
           case false =>
             val ex = new Exception("Parsing LLDP succeeded, saving failed")
             AssetLog.error(asset, "Parsing LLDP succeeded but saving it failed",
-              AssetLog.Formats.PlainText, AssetLog.Sources.Internal
+              LogFormat.PlainText, LogSource.Internal
             ).withException(ex).create()
             Left(ex)
         }
@@ -248,14 +258,12 @@ object AssetLifecycle {
   private def handleException(asset: Asset, msg: String, e: Throwable): Throwable = {
     logger.warn(msg, e)
     try {
-      Model.withConnection { implicit con =>
-        AssetLog.error(
-          asset,
-          msg,
-          AssetLog.Formats.PlainText,
-          AssetLog.Sources.Internal
-        ).withException(e).create()
-      }
+      AssetLog.error(
+        asset,
+        msg,
+        LogFormat.PlainText,
+        LogSource.Internal
+      ).withException(e).create()
     } catch {
       case ex =>
         logger.error("Database problems", ex)

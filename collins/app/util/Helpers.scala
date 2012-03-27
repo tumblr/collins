@@ -1,6 +1,7 @@
 package util
 
 import play.api.{Configuration, Mode, Play}
+import models.Asset
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -25,14 +26,12 @@ object Helpers {
     PowerPort.toString + "_" + label
   }
 
-  def mapToQueryString(prefix: String, map: Map[String, Seq[String]]): String = {
-    val qs = map.map { case(k,v) =>
-      v.map{s => "%s=%s".format(k, java.net.URLEncoder.encode(s,"UTF-8"))}.mkString("&")
-    }.mkString("&")
-    prefix match {
-      case hasQs if hasQs.contains("?") => hasQs + "&" + qs
-      case noQs => noQs + "?" + qs
-    }
+  private[this] lazy val IgnoreAssets: Set[String] = getFeature("ignoreDangerousCommands")
+      .map(_.split(",").toSet[String].map(_.toLowerCase))
+      .getOrElse(Set[String]())
+  def ignoreDangerousCommand(tag: String): Boolean = IgnoreAssets.contains(tag.toLowerCase)
+  def ignoreDangerousCommand(asset: Asset): Boolean = {
+    ignoreDangerousCommand(asset.tag)
   }
 
   def getConfig(name: String): Option[Configuration] = {

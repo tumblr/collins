@@ -1,11 +1,11 @@
 @(name: String, selected: String)
 
-@import _root_.models.AssetLog
+@import _root_.models.LogMessageType
 
 @formatValue(value: String, display: String) = {
 <option value="@value" @if(value == selected) {selected="selected"}>@display</option>
 }
 
 <select name="@name" id="@name">
-	@AssetLog.MessageTypes.values.toSeq.map { v => @formatValue(v.toString, v.toString) }
+	@LogMessageType.values.toSeq.map { v => @formatValue(v.toString, v.toString) }
 </select>
