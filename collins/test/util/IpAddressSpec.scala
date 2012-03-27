@@ -49,6 +49,21 @@ class IpAddressSpec extends Specification with DataTables {
       }
     }
 
+    "handle initial nextAvailableAddress functionality" >> {
+      "initial address" || "expected next address" |
+      "10.0.0.0"        !! "10.0.0.2"              |
+      "10.0.0.2"        !! "10.0.0.3"              |
+      "10.0.0.254"      !! "10.0.1.1"              |> {
+      (initial,expected) =>
+        val gatewayAsLong = IpAddress.toLong("10.0.0.0")
+        val netmaskAsLong = IpAddress.toLong("255.255.254.0")
+        val ipCalc = IpAddressCalc(gatewayAsLong, netmaskAsLong, None)
+        val initialAsLong = Option(initial).filter(_ != "10.0.0.0").map(IpAddress.toLong(_))
+        ipCalc.broadcastAddress mustEqual "10.0.1.255"
+        ipCalc.nextAvailable(initialAsLong) mustEqual expected
+      }
+    }
+
   } // IpAddress conversions should
 
 }

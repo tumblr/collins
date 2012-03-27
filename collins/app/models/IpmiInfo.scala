@@ -1,8 +1,6 @@
 package models
 
-import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress, IpAddressCalc}
-import org.squeryl.PrimitiveTypeMode._
-import org.squeryl.Schema
+import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress}
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import play.api._
@@ -15,29 +13,22 @@ case class IpmiInfo(
   gateway: Long,
   address: Long,
   netmask: Long,
-  id: Long = 0) extends ValidatedEntity[Long]
+  id: Long = 0) extends IpAddressable
 {
   import IpmiInfo.Enum._
 
   override def validate() {
-    List(gateway, address, netmask).foreach { i =>
-      require(i > 0, "IP gateway, address and netmask must be positive")
-    }
+    super.validate()
     List(username, password).foreach { s =>
       require(s != null && s.length > 0, "Username and Password must not be empty")
     }
   }
+
   override def asJson: String = {
     Json.stringify(JsObject(forJsonObject))
   }
 
-  def dottedAddress(): String = IpAddress.toString(address)
-  def dottedGateway(): String = IpAddress.toString(gateway)
-  def dottedNetmask(): String = IpAddress.toString(netmask)
   def decryptedPassword(): String = IpmiInfo.decrypt(password)
-  def getId(): Long = id
-  def getAssetId(): Long = asset_id
-
   def withExposedCredentials(exposeCredentials: Boolean = false) = {
     if (exposeCredentials) {
       this.copy(password = decryptedPassword())
@@ -56,8 +47,9 @@ case class IpmiInfo(
   )
 }
 
-object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
-  private[this] val logger = Logger.logger
+object IpmiInfo extends IpAddressStorage[IpmiInfo] {
+  import org.squeryl.PrimitiveTypeMode._
+
   val DefaultPasswordLength = 12
 
   val tableDef = table[IpmiInfo]("ipmi_info")
@@ -69,10 +61,6 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     i.netmask is(indexed)
   ))
 
-  override def cacheKeys(a: IpmiInfo) = Seq(
-    "IpmiInfo.findByAsset(%d)".format(a.asset_id)
-  )
-
   def createForAsset(asset: Asset): IpmiInfo = inTransaction {
     val assetId = asset.getId
     val (gateway, address, netmask) = getNextAvailableAddress()
@@ -82,18 +70,6 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
       assetId, username, password, gateway, address, netmask
     )
     tableDef.insert(ipmiInfo)
-  }
-
-  override def delete(a: IpmiInfo): Int = inTransaction {
-    afterDeleteCallback(a) {
-      tableDef.deleteWhere(i => i.id === a.id)
-    }
-  }
-
-  def deleteByAsset(a: Asset): Int = inTransaction {
-    findByAsset(a).map { ipmi =>
-      delete(ipmi)
-    }.getOrElse(0)
   }
 
   def encryptPassword(pass: String): String = {
@@ -122,29 +98,9 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  def findByAsset(asset: Asset): Option[IpmiInfo] = {
-    getOrElseUpdate("IpmiInfo.findByAsset(%d)".format(asset.getId)) {
-      tableDef.where(a => a.asset_id === asset.getId).headOption
-    }
-  }
-
-  override def get(i: IpmiInfo) = getOrElseUpdate("IpmiInfo.get(%d)".format(i.id)) {
+  override def get(i: IpmiInfo) = getOrElseUpdate(getKey.format(i.id)) {
     tableDef.lookup(i.id).get
   }
-
-  def getNextAvailableAddress(overrideStart: Option[String] = None): Tuple3[Long,Long,Long] = {
-    val network = getNetwork
-    val startAt = overrideStart.orElse(getStartAddress)
-    val calc = IpAddressCalc(network, startAt)
-    val gateway: Long = getGateway().getOrElse(calc.minAddressAsLong)
-    val netmask: Long = calc.netmaskAsLong
-    val currentMax: Option[Long] = getCurrentMaxAddress(
-      calc.minAddressAsLong, calc.maxAddressAsLong
-    )
-    val address: Long = calc.nextAvailableAsLong(currentMax)
-    (gateway, address, netmask)
-  }
-
 
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {
@@ -183,35 +139,6 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long): Option[Long] = inTransaction {
-    from(tableDef)(t =>
-      where(
-        (t.address gte minAddress) and
-        (t.address lte maxAddress)
-      )
-      compute(max(t.address))
-    )
-  }
-
-  protected def getGateway(): Option[Long] = getConfig() match {
-    case None => None
-    case Some(config) => config.getString("gateway") match {
-      case Some(value) => Option(IpAddress.toLong(value))
-      case None => None
-    }
-  }
-  protected def getNetwork(): String = getConfig() match {
-    case None => throw new RuntimeException("no ipmi configuration found")
-    case Some(config) => config.getString("network") match {
-      case Some(value) => value
-      case None => throw new RuntimeException("ipmi.network not specified")
-    }
-  }
-  protected def getStartAddress(): Option[String] = getConfig() match {
-    case None => None
-    case Some(c) => c.getString("startAddress")
-  }
-
   protected def decrypt(password: String) = {
     logger.debug("Decrypting %s".format(password))
     CryptoCodec(getCryptoKeyFromFramework()).Decode(password).getOrElse("")
@@ -246,7 +173,7 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     Username(asset, getConfig, false).get
   }
 
-  protected def getConfig(): Option[Configuration] = {
+  override protected def getConfig(): Option[Configuration] = {
     Helpers.getConfig("ipmi")
   }
 
