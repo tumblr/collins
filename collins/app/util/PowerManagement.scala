@@ -16,6 +16,8 @@ object PowerManagement {
     }
   }
 
+  def isPluginEnabled = pluginEnabled.isDefined
+
   private[this] lazy val DisallowedPowerStates: Set[Int] =
     Helpers.getConfig("powermanagement")
       .flatMap(_.getString("disallowStatus"))
@@ -24,7 +26,15 @@ object PowerManagement {
       .map(_.toInt)
       .toSet
 
+  private[this] lazy val AllowedAssetTypes: Set[Int] =
+    Helpers.getConfig("powermanagement")
+      .flatMap(_.getString("allowAssetTypes"))
+      .getOrElse("1")
+      .split(",")
+      .map(_.toInt)
+      .toSet
+
   def powerAllowed(asset: models.Asset): Boolean = {
-    !DisallowedPowerStates.contains(asset.status)
+    !DisallowedPowerStates.contains(asset.status) && isPluginEnabled && AllowedAssetTypes.contains(asset.asset_type)
   }
 }

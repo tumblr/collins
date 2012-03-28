@@ -46,6 +46,25 @@ $(document).ready(function() {
     });
   });
 
+  $("table.sortable").each(function() {
+    var e = $(this);
+    var rows = e.attr('data-size') || 10;
+    e.dataTable({
+      "aaSorting": [[1, "desc"]],
+      "bAutoWidth": false,
+      "bFilter": false,
+      "bInfo": false,
+      "bPaginate": false,
+      "iDisplayLength": rows,
+      "fnHeaderCallback": function(nHead, aData, iStart, iEnd, aiDisplay) {
+var els = nHead.getElementsByTagName('th');
+for (var i = 0; i < els.length; i++) {
+  $(els[i]).height('18px');
+}
+      },
+    });
+  });
+
   $("[data-aggregate]").each(function() {
     var e = $(this);
     var aggregates = e.attr('data-aggregate').split(",").map(function(v) { return elId(v); });
@@ -374,6 +393,10 @@ $(document).ready(function() {
         tagLocation = i;
       }
     });
+
+    if (dataSrc.search("javascript://") === 0) {
+      dataSrc = window[dataSrc.slice(13)];
+    }
 
     oTable = e.dataTable({
       "bProcessing": true,

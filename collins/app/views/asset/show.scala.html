@@ -5,10 +5,10 @@
 @import _root_.util.conversions._
 @import _root_.util.{Helpers, PowerManagement, Provisioner, SoftLayer}
 @import _root_.util.plugins.Maintenance
-@import _root_.util.views.{OptionSorter, ProvisionerHelper, TagDecorator}
+@import _root_.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
 @import _root_.models.IpmiInfo.Enum._
 
-@main("Asset Details") {
+@main(Titler(aa.asset)) {
 <div class="row">
   <div class="span14">
     @notice("message", Some("notice"))
@@ -19,17 +19,23 @@
 
 <div class="row">
   <div class="span14">
-    <h1>Asset Details <small>@aa.asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse{@aa.asset.tag}</small></h1>
+    @Summary(aa.asset)
   </div>
 
   <div class="span14">
 
     <ul class="tabs" data-tabs="tabs">
       <li class="active"><a href="#overview">Overview</a></li>
+      @if(aa.ipmi.nonEmpty || PowerManagement.powerAllowed(aa.asset)) {
       <li><a href="#ipmi-info">IPMI Info</a></li>
+      }
       <li><a href="#log-data">Logs</a></li>
+      @if(aa.lshw.cpuCount > 0) {
       <li><a href="#hardware-details">Hardware Details</a></li>
+      }
+      @if(aa.lldp.interfaceCount > 0) {
       <li><a href="#lldp-info">LLDP Info</a></li>
+      }
       <li class="dropdown" data-dropdown="dropdown">
       <a href="#" class="dropdown-toggle"><strong>Actions</strong></a>
         <ul class="dropdown-menu">
@@ -53,7 +59,7 @@
             }
           }
           @Provisioner.pluginEnabled.map { p =>
-            @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete) {
+            @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete && aa.asset.getType() == "Server Node") {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
             } else {
               @SoftLayer.pluginEnabled.map { p =>
@@ -81,16 +87,20 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <th>Hostname</th>
-          <td>@aa.asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse{Unknown}</td>
-          <td>Hostname</td>
-        </tr>
+        @aa.asset.getMetaAttribute("HOSTNAME").map { hostname =>
+          <tr>
+            <th>Hostname</th>
+            <td>@hostname</td>
+            <td>Hostname</td>
+          </tr>
+        }
+        @if(aa.addresses.size > 0) {
         <tr>
           <th>Ip Addresses</th>
-          <td>@aa.addresses.map(_.dottedAddress).mkString(", ")</td>
+          <td>@TagDecorator.decorate("IP_ADDRESS", aa.addresses.map(_.dottedAddress).toList, ", ")</td>
           <td>Primary IP Addresses</td>
         </tr>
+        }
         <tr>
           <th>Asset Tag</th>
           @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
@@ -144,15 +154,21 @@
     <script type="text/javascript">
       var userNotesCols = [
         {"mDataProp": "CREATED", "sWidth": "20%"},
-	{"mDataProp": "MESSAGE", "sWidth": "80%", "bSortable": false}
+        {"mDataProp": "TYPE", "sWidth": "15%", "bSortable": false},
+	{"mDataProp": "MESSAGE", "sWidth": "65%", "bSortable": false}
       ];
+      var userNotesLevels = [
+        "NOTE", "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING"
+      ];
+      var userNotesUri = "/asset/@aa.asset.tag/logs?filter=" + escape(userNotesLevels.join(';'));
     </script>
-    <h3>User Notes <small>Notes people have left</small></h3>
+    <h3>User Notes <small>Important Notes</small></h3>
     <div id="log_data_note_container">
-      <table id="log_data_note" class="log-data zebra-striped condensed-table" data-cols='userNotesCols' data-source="/asset/@aa.asset.tag/logs?filter=NOTE">
+      <table id="log_data_note" data-size="25" class="log-data zebra-striped condensed-table" data-cols='userNotesCols' data-source="javascript://userNotesUri">
         <thead>
           <tr>
             <th>Date</th>
+            <th>Level</th>
             <th>Message</th>
           </tr>
         </thead>
@@ -161,12 +177,14 @@
         <tfoot>
           <tr>
             <th>Date</th>
+            <th>Level</th>
             <th>Message</th>
           </tr>
         </tfoot>
       </table>
     </div>
 
+    @if(aa.asset.getType().name == "Server Node") {
     <h3>Hardware Summary</h3>
     @if(aa.lshw.cpuCount > 0) {
     <table class="zebra-striped condensed-table" id="hardwareSummary">
@@ -266,6 +284,7 @@
     } else {
     <div>None Available</div>
     }
+  }
   </div> <!-- overview -->
 
   <div class="tab-pane" id="ipmi-info">
@@ -461,10 +480,14 @@
         {"mDataProp": "TYPE", "sWidth": "15%", "bSortable": false},
 	{"mDataProp": "MESSAGE", "sWidth": "55%", "bSortable": false}
       ];
+      var logDataLevels = [
+        "NOTE", "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING"
+      ];
+      var logDataUri = "/asset/@aa.asset.tag/logs?filter=!" + escape(logDataLevels.join(';'));
     </script>
     <h3>Log Data <small>Log data about asset</small></h3>
     <div id="log_data_container">
-      <table id="log_data" class="log-data zebra-striped condensed-table" data-cols="logDataCols" data-source="/asset/@aa.asset.tag/logs?filter=!NOTE">
+      <table id="log_data" data-size="25" class="log-data zebra-striped condensed-table" data-cols="logDataCols" data-source="javascript://logDataUri">
         <thead>
           <tr>
             <th>Date</th>
