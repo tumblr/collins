@@ -63,7 +63,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
 
   def createForAsset(asset: Asset): IpmiInfo = inTransaction {
     val assetId = asset.getId
-    val (gateway, address, netmask) = getNextAvailableAddress()
+    val (gateway, address, netmask) = getNextAvailableAddress()(None)
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
     val ipmiInfo = IpmiInfo(
@@ -154,7 +154,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   }
 
   protected def getPasswordLength(): Int = {
-    getConfig() match {
+    getConfig()(None) match {
       case None => DefaultPasswordLength
       case Some(config) => config.getInt("passwordLength") match {
         case None => DefaultPasswordLength
@@ -170,10 +170,10 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   }
 
   protected def getUsername(asset: Asset): String = {
-    Username(asset, getConfig, false).get
+    Username(asset, getConfig()(None), false).get
   }
 
-  override protected def getConfig(): Option[Configuration] = {
+  override protected def getConfig()(implicit scope: Option[String]): Option[Configuration] = {
     Helpers.getConfig("ipmi")
   }
 

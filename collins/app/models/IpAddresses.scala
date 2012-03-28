@@ -35,15 +35,15 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     columns(i.asset_id, i.address) are(indexed)
   ))
 
-  def createForAsset(asset: Asset, count: Int): Seq[IpAddresses] = {
+  def createForAsset(asset: Asset, count: Int, scope: Option[String]): Seq[IpAddresses] = {
     (0 until count).map { i =>
-      createForAsset(asset)
+      createForAsset(asset, scope)
     }
   }
 
-  def createForAsset(asset: Asset): IpAddresses = inTransaction {
+  def createForAsset(asset: Asset, scope: Option[String]): IpAddresses = inTransaction {
     val assetId = asset.getId
-    val (gateway, address, netmask) = getNextAvailableAddress()
+    val (gateway, address, netmask) = getNextAvailableAddress()(scope)
     val ipAddresses = IpAddresses(assetId, gateway, address, netmask)
     tableDef.insert(ipAddresses)
   }
@@ -67,8 +67,13 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     tableDef.lookup(i.id).get
   }
 
-  override protected def getConfig(): Option[Configuration] = {
-    Helpers.getConfig("ipAddresses")
+  override protected def getConfig()(implicit scope: Option[String]): Option[Configuration] = {
+    Helpers.getConfig("ipAddresses").flatMap { config =>
+      scope match {
+        case None => Some(config)
+        case Some(s) => config.getConfig(s)
+      }
+    }
   }
 
 }
