@@ -15,8 +15,7 @@ private[controllers] object CreateAsset {
   val createForm = Form(of(
     "generate_ipmi" -> optional(boolean),
     "type" -> optional(of[AssetType.Enum]),
-    "status" -> optional(of[AStatus.Enum]),
-    "generate_addresses" -> optional(of[Int])
+    "status" -> optional(of[AStatus.Enum])
   ))
 }
 
@@ -24,7 +23,7 @@ private[controllers] object CreateAsset {
 private[controllers] class CreateAsset() {
   val defaultAssetType = AssetType.Enum.ServerNode
 
-  type Success = (Option[Boolean],AssetType,Option[AStatus.Enum],Option[Int])
+  type Success = (Option[Boolean],AssetType,Option[AStatus.Enum])
   def validateRequest()(implicit request: Request[AnyContent]): Either[String,Success] = {
     CreateAsset.createForm.bindFromRequest.fold(
       err => {
@@ -50,8 +49,7 @@ private[controllers] class CreateAsset() {
         val gen_ipmi = success._1
         val atype = AssetType.fromEnum(success._2.getOrElse(defaultAssetType))
         val status = success._3
-        val addresses = success._4
-        Right((gen_ipmi, atype, status, addresses))
+        Right((gen_ipmi, atype, status))
       }
     )
   }
@@ -68,12 +66,12 @@ private[controllers] class CreateAsset() {
     }
   }
 
-  protected def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo], addys: Seq[IpAddresses]): JsObject = {
+  protected def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
     val seq: Seq[Tuple2[String,JsValue]] = ipmi.map { ipmi_info =>
         Seq("ASSET" -> JsObject(asset.forJsonObject),
             "IPMI" -> JsObject(ipmi_info.withExposedCredentials(true).forJsonObject))
     }.getOrElse(Seq("ASSET" -> JsObject(asset.forJsonObject)))
-    JsObject(seq ++ Seq("ADDRESSES" -> JsArray(addys.map(j => JsObject(j.forJsonObject)).toList)))
+    JsObject(seq)
   }
 
   def apply(tag: String)(implicit req: Request[AnyContent]) = {
@@ -81,14 +79,14 @@ private[controllers] class CreateAsset() {
       case Some(data) => data
       case None => validateRequest() match {
         case Left(error) => Api.getErrorMessage(error)
-        case Right((optGenerateIpmi, assetType, status, addresses)) =>
+        case Right((optGenerateIpmi, assetType, status)) =>
           val generateIpmi = optGenerateIpmi.getOrElse({
             assetType.getId == AssetType.Enum.ServerNode.id
           })
-          AssetLifecycle.createAsset(tag, assetType, generateIpmi, status, addresses.getOrElse(0)) match {
+          AssetLifecycle.createAsset(tag, assetType, generateIpmi, status) match {
             case Left(ex) => Api.getErrorMessage(ex.getMessage)
-            case Right((asset, ipmi, addresses)) =>
-              ResponseData(Results.Created, getCreateMessage(asset, ipmi, addresses))
+            case Right((asset, ipmi)) =>
+              ResponseData(Results.Created, getCreateMessage(asset, ipmi))
           }
       }
     }
