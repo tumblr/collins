@@ -29,6 +29,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   import org.squeryl.PrimitiveTypeMode._
 
   lazy val className: String = getClass.getName.toString
+  lazy val findAllByAssetKey: String = "%s.findAllByAsset(".format(className) + "%d)"
   lazy val findByAssetKey: String = "%s.findByAsset(".format(className) + "%d)"
   lazy val getKey: String = "%s.get(".format(className) + "%d)"
 
@@ -37,6 +38,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
 
   override def cacheKeys(a: T) = Seq(
     findByAssetKey.format(a.asset_id),
+    findAllByAssetKey.format(a.asset_id),
     getKey.format(a.id)
   )
 
@@ -54,8 +56,10 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     }
   }
 
-  def findAllByAsset(asset: Asset): Seq[T] = inTransaction {
-    tableDef.where(a => a.asset_id === asset.getId).toList
+  def findAllByAsset(asset: Asset)(implicit mf: Manifest[T]): Seq[T] = {
+    getOrElseUpdate(findAllByAssetKey.format(asset.getId)) {
+      tableDef.where(a => a.asset_id === asset.getId).toList
+    }
   }
 
   def findByAsset(asset: Asset)(implicit mf: Manifest[T]): Option[T] = {

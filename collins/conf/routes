@@ -39,7 +39,8 @@ GET     /logout                     controllers.Application.logout
 # IP Address API
 GET     /api/asset/:tag/addresses            app.Api.getForAsset(tag: String)
 GET     /api/asset/with/address/:address     app.Api.assetFromAddress(address: String)
-POST    /api/asset/:tag/address              app.Api.allocateAddress(tag: String)
+PUT     /api/asset/:tag/address              app.Api.allocateAddress(tag: String)
+POST    /api/asset/:tag/address              app.Api.updateAddress(tag: String)
 DELETE  /api/asset/:tag/addresses            app.Api.purgeAddresses(tag: String)
 
 # Log API
