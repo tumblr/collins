@@ -10,7 +10,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   private[this] val logger = Logger.logger
 
   private val RequiredConfig = Set(
-    "crypto.key", "ipmi.gateway", "ipmi.netmask"
+    "crypto.key", "ipmi.network"
   )
 
   override def onStart(app: Application) {
