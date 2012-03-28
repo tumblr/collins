@@ -1,7 +1,7 @@
 package controllers
 
 import models.{Asset, IpAddresses}
-import util.{IpAddress, UserTattler}
+import util.{IpAddress, UserTattler, SecuritySpec}
 import play.api.http.{Status => StatusValues}
 import play.api.mvc._
 import play.api.libs.json._
@@ -56,7 +56,7 @@ trait IpAddressApi {
         case e => Api.getErrorMessage("Invalid pool specified")
       }
     }
-  }}
+  }}(SecuritySpec(true, Seq("infra")))
 
   // GET /api/asset/with/address/:address
   def assetFromAddress(address: String) = SecureAction { implicit req =>
@@ -65,14 +65,14 @@ trait IpAddressApi {
         ResponseData(Results.Ok, JsObject(s.forJsonObject()))
       ).getOrElse(Api.getErrorMessage("No assets found with specified address", Results.NotFound))
     )
-  }
+  }(SecuritySpec(true, Nil))
 
   // GET /api/asset/:tag/addresses
   def getForAsset(tag: String) = SecureAction { implicit req =>
     withTag(tag) { asset =>
       addressesToJson(IpAddresses.findAllByAsset(asset))
     }
-  }
+  }(SecuritySpec(true, Nil))
 
   // POST /api/asset/:tag/address
   def updateAddress(tag: String) = Authenticated { user => Action { implicit req =>
@@ -86,8 +86,10 @@ trait IpAddressApi {
             val newAddress = ipAddressForm.merge(asset, addressInfo)
             val (status, success) = newAddress.id match {
               case update if update > 0 =>
+                UserTattler.notice(asset, user, "Updated IP address %s".format(newAddress.dottedAddress))
                 (Results.Ok, IpAddresses.update(newAddress) == 1)
               case _ =>
+                UserTattler.notice(asset, user, "Created IP address %s".format(newAddress.dottedAddress))
                 (Results.Created, IpAddresses.create(newAddress).id > 0)
             }
             Api.statusResponse(success, status)
@@ -100,7 +102,7 @@ trait IpAddressApi {
         }
       )
     }
-  }}
+  }}(SecuritySpec(true, Seq("infra")))
 
   // DELETE /api/asset/:tag/addresses
   def purgeAddresses(tag: String) = Authenticated { user => Action { implicit req =>
@@ -109,7 +111,7 @@ trait IpAddressApi {
       UserTattler.notice(asset, user, "Deleted %d IP addresses".format(deleted))
       ResponseData(Results.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
     }
-  }}
+  }}(SecuritySpec(true, Seq("infra")))
 
   protected def addressesToJson(addresses: Seq[IpAddresses], status: Results.Status = Results.Ok) =
     ResponseData(status, JsObject(Seq("ADDRESSES" -> JsArray(
