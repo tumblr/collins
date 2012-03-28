@@ -2,7 +2,8 @@ package models
 
 import play.api.Configuration
 import play.api.libs.json._
-import util.{Helpers, IpAddress}
+import util.{Helpers, IpAddress, IpAddressCalc}
+import org.squeryl.dsl.ast.LogicalBoolean
 
 case class IpAddresses(
   asset_id: Long,
@@ -48,6 +49,40 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     tableDef.insert(ipAddresses)
   }
 
+  protected[this] def generateFindQuery(addressRow: IpAddresses, address: String): LogicalBoolean = {
+    try {
+      if (address.split('.').size != 4) throw new Exception("Try again later")
+      (addressRow.address === IpAddress.toLong(address))
+    } catch {
+      case e =>
+        val padded = IpAddress.padRight(address, "0")
+        val netmask = IpAddress.netmaskFromPad(padded, "0")
+        val calc = IpAddressCalc(padded, netmask, None)
+        (addressRow.address gte calc.minAddressAsLong) and
+        (addressRow.address lte calc.maxAddressAsLong)
+    }
+  }
+
+  def findAssetsByAddress(page: PageParams, addys: Seq[String], finder: AssetFinder): Page[Asset] = {
+    def whereClause(assetRow: Asset, addressRow: IpAddresses) = {
+      where(
+        (assetRow.id === addressRow.asset_id) and
+        generateFindQuery(addressRow, addys.head) and
+        finder.asLogicalBoolean(assetRow)
+      )
+    }
+    inTransaction {
+      val results = from(Asset.tableDef, tableDef)((assetRow, addressRow) =>
+        whereClause(assetRow, addressRow)
+        select(assetRow)
+      ).page(page.offset, page.size).toList
+      val totalCount = from(Asset.tableDef, tableDef)((assetRow, addressRow) =>
+        whereClause(assetRow, addressRow)
+        compute(count)
+      )
+      Page(results, page.page, page.offset, totalCount)
+    }
+  }
   def findByAddress(address: String): Option[Asset] = inTransaction {
     val addressAsLong = try {
       IpAddress.toLong(address)

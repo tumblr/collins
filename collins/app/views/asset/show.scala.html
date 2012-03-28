@@ -88,7 +88,7 @@
         </tr>
         <tr>
           <th>Ip Addresses</th>
-          <td>@aa.asset.getMetaAttribute("INTERFACE_ADDRESS", 2).mkString(", ")</td>
+          <td>@aa.addresses.map(_.dottedAddress).mkString(", ")</td>
           <td>Primary IP Addresses</td>
         </tr>
         <tr>
@@ -385,8 +385,6 @@
       @aa.lshw.nics.zipWithIndex.map { case(nic,id) =>
         <tr>
           <th>@id</th>
-          <td>@{nic.info.map(n => n.interface).getOrElse("Unknown")}</td>
-          <td>@{nic.info.map(n => n.address).getOrElse("Unknown")}</td>
           <td>@{nic.speed.toHuman}/s</td>
           <td>@nic.macAddress</td>
           <td>@nic.description</td>

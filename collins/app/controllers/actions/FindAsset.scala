@@ -82,8 +82,14 @@ private[controllers] class FindAsset() {
       case Left(err) => Left("Error executing search: " + err)
       case Right(valid) =>
         val pageParams = PageParams(page, size, sort)
-        val results = Asset.find(pageParams, valid._1, valid._2, valid._3)
-        Right(results)
+        try {
+          val results = Asset.find(pageParams, valid._1, valid._2, valid._3)
+          Right(results)
+        } catch {
+          case e =>
+            e.printStackTrace
+            Left("Error executing search: " + e.getMessage)
+        }
     }
   }
 }

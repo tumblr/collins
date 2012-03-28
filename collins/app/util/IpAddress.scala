@@ -41,6 +41,28 @@ object IpAddress {
     bb.getLong(0)
   }
 
+  def padRight(address: String, fill: String) = {
+    address.split('.').toList match {
+      case first :: second :: third :: last :: Nil => address
+      case first :: second :: third :: Nil =>
+        "%s.%s.%s.%s".format(first, second, third, fill)
+      case first :: second :: Nil =>
+        "%s.%s.%s.%s".format(first, second, fill, fill)
+      case first :: Nil =>
+        "%s.%s.%s.%s".format(first, fill, fill, fill)
+      case _ => "%s.%s.%s.%s".format(fill, fill, fill, fill)
+    }
+  }
+  def netmaskFromPad(address: String, fill: String) = {
+    address.split('.').filter(_ == fill).size match {
+      case 4 => "0.0.0.0"
+      case 3 => "255.0.0.0"
+      case 2 => "255.255.0.0"
+      case 1 => "255.255.255.0"
+      case 0 => "255.255.255.255"
+    }
+  }
+
   def firstOctet(address: Long) = (address >> 24) & 0xff
   def secondOctet(address: Long) = (address >> 16) & 0xff
   def thirdtOctet(address: Long) = (address >> 8) & 0xff
