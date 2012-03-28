@@ -15,12 +15,15 @@ trait IpAddressApi {
       case useDefault if useDefault < 1 || useDefault > 10 => 1
       case n => n
     }
+    val pool: String = getString("pool", "")
     withTag(tag) { asset =>
-      val created = (0 until count).map(_ =>
-        IpAddresses.createForAsset(asset)
-      )
-      UserTattler.notice(asset, user, "Created %d IP addresses".format(created.size))
-      addressesToJson(created)
+      try {
+        val created = IpAddresses.createForAsset(asset, count, Some(pool))
+        UserTattler.notice(asset, user, "Created %d IP addresses".format(created.size))
+        addressesToJson(created)
+      } catch {
+        case e => Api.getErrorMessage("Invalid pool specified")
+      }
     }
   }}
 
@@ -62,6 +65,12 @@ trait IpAddressApi {
 
   protected def getInt(k: String, default: Int)(implicit req: Request[AnyContent]): Int =
     Form(k -> optional(of[Int])).bindFromRequest.fold(
+      e => default,
+      s => s.getOrElse(default)
+    )
+
+  protected def getString(k: String, default: String)(implicit req: Request[AnyContent]): String =
+    Form(k -> optional(of[String])).bindFromRequest.fold(
       e => default,
       s => s.getOrElse(default)
     )

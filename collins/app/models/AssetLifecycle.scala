@@ -22,10 +22,10 @@ object AssetLifecycle {
 
   private[this] val logger = Logger.logger
 
-  type AssetIpmi = Tuple3[Asset,Option[IpmiInfo],Seq[IpAddresses]]
+  type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
   type Status[T] = Either[Throwable,T]
 
-  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum], addressCount: Int): Status[AssetIpmi] = {
+  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum]): Status[AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
       val _status = status.getOrElse(Status.Enum.Incomplete)
@@ -35,13 +35,9 @@ object AssetLifecycle {
           case true => Some(IpmiInfo.createForAsset(asset))
           case false => None
         }
-        val addresses = addressCount match {
-          case none if none <= 0 => Seq()
-          case n => IpAddresses.createForAsset(asset, addressCount)
-        }
         InternalTattler.informational(asset, None,
           "Initial intake successful, status now %s".format(_status.toString))
-        Right(Tuple3(asset, ipmi, addresses))
+        Right(Tuple2(asset, ipmi))
       }
     } catch {
       case e =>
