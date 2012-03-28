@@ -33,7 +33,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   lazy val getKey: String = "%s.get(".format(className) + "%d)"
 
   // abstract
-  protected def getConfig(): Option[Configuration]
+  protected def getConfig()(implicit scope: Option[String]): Option[Configuration]
 
   override def cacheKeys(a: T) = Seq(
     findByAssetKey.format(a.asset_id),
@@ -64,7 +64,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     }
   }
 
-  def getNextAvailableAddress(overrideStart: Option[String] = None): Tuple3[Long,Long,Long] = {
+  def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long,Long,Long] = {
     val network = getNetwork
     val startAt = overrideStart.orElse(getStartAddress)
     val calc = IpAddressCalc(network, startAt)
@@ -87,21 +87,21 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     )
   }
 
-  protected def getGateway(): Option[Long] = getConfig() match {
+  protected def getGateway()(implicit scope: Option[String]): Option[Long] = getConfig() match {
     case None => None
     case Some(config) => config.getString("gateway") match {
       case Some(value) => Option(IpAddress.toLong(value))
       case None => None
     }
   }
-  protected def getNetwork(): String = getConfig() match {
+  protected def getNetwork()(implicit scope: Option[String]): String = getConfig() match {
     case None => throw new RuntimeException("no %s configuration found".format(className))
     case Some(config) => config.getString("network") match {
       case Some(value) => value
       case None => throw new RuntimeException("%s.network not specified".format(className))
     }
   }
-  protected def getStartAddress(): Option[String] = getConfig() match {
+  protected def getStartAddress()(implicit scope: Option[String]): Option[String] = getConfig() match {
     case None => None
     case Some(c) => c.getString("startAddress")
   }
