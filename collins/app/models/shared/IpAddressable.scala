@@ -3,6 +3,7 @@ package models
 import util.{IpAddress, IpAddressCalc}
 import org.squeryl.Schema
 import play.api.{Configuration, Logger}
+import java.sql.SQLException
 
 trait IpAddressable extends ValidatedEntity[Long] {
 
@@ -79,6 +80,22 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     )
     val address: Long = calc.nextAvailableAsLong(currentMax)
     (gateway, address, netmask)
+  }
+
+  // This is needed because if two clients both cause getNextAvailableAddress at the same time, they
+  // both have the same value from getCurrentMaxAddress. One of them will successfully insert while
+  // the other will fail. This allows a few retries before giving up.
+  protected def createWithRetry(retryCount: Int)(f: => T): T = {
+    (0 until retryCount).foreach { _ =>
+      try {
+        val res = f
+        return res
+      } catch {
+        case e: SQLException =>
+        case e => throw e
+      }
+    }
+    throw new Exception("Unable to create address after %d tries".format(retryCount))
   }
 
   protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long): Option[Long] = inTransaction {

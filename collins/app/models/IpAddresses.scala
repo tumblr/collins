@@ -44,9 +44,11 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
 
   def createForAsset(asset: Asset, scope: Option[String]): IpAddresses = inTransaction {
     val assetId = asset.getId
-    val (gateway, address, netmask) = getNextAvailableAddress()(scope)
-    val ipAddresses = IpAddresses(assetId, gateway, address, netmask)
-    tableDef.insert(ipAddresses)
+    createWithRetry(10) {
+      val (gateway, address, netmask) = getNextAvailableAddress()(scope)
+      val ipAddresses = IpAddresses(assetId, gateway, address, netmask)
+      tableDef.insert(ipAddresses)
+    }
   }
 
   protected[this] def generateFindQuery(addressRow: IpAddresses, address: String): LogicalBoolean = {
