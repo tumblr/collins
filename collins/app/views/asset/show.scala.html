@@ -59,7 +59,7 @@
             }
           }
           @Provisioner.pluginEnabled.map { p =>
-            @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete && aa.asset.getType() == "Server Node") {
+            @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete && aa.asset.getType().name == "Server Node") {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
             } else {
               @SoftLayer.pluginEnabled.map { p =>
