@@ -1,6 +1,6 @@
 package util
 
-import models.{Asset, AssetMeta, AssetMetaValue, IpmiInfo, Status}
+import models.{Asset, AssetMeta, AssetMetaValue, IpAddresses, IpmiInfo, Status}
 import models.conversions._
 
 import java.util.Date
@@ -28,6 +28,11 @@ case class AssetStateMachine(asset: Asset) {
       Helpers.haveFeature("deleteIpmiOnDecommission", false) match {
         case None | Some(true) =>
           IpmiInfo.deleteByAsset(asset)
+        case _ =>
+      }
+      Helpers.haveFeature("deleteIpAddressOnDecommission", false) match {
+        case None | Some(true) =>
+          IpAddresses.deleteByAsset(asset)
         case _ =>
       }
       Helpers.haveFeature("deleteMetaOnDecommission", false) match {

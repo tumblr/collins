@@ -36,9 +36,16 @@ private[controllers] object FindAsset {
     ) // of(AssetFinderWrapper
   ) // Form
 
-  def formatResultAsRd(results: Page[Asset]): ResponseData = {
+  def formatResultAsRd(results: Page[Asset], details: Boolean = false): ResponseData = {
+    val jsList = results.items.map { a =>
+      if (details) {
+        a.getAllAttributes.exposeCredentials(false).toJsonObject
+      } else {
+        JsObject(a.forJsonObject)
+      }
+    }.toList
     ResponseData(Results.Ok, JsObject(results.getPaginationJsObject() ++ Seq(
-      "Data" -> JsArray(results.items.map { i => JsObject(i.forJsonObject) }.toList)
+      "Data" -> JsArray(jsList)
     )), results.getPaginationHeaders)
   }
 }
