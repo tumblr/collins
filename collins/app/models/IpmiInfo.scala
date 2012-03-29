@@ -63,13 +63,15 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
 
   def createForAsset(asset: Asset): IpmiInfo = inTransaction {
     val assetId = asset.getId
-    val (gateway, address, netmask) = getNextAvailableAddress()(None)
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
-    val ipmiInfo = IpmiInfo(
-      assetId, username, password, gateway, address, netmask
-    )
-    tableDef.insert(ipmiInfo)
+    createWithRetry(5) {
+      val (gateway, address, netmask) = getNextAvailableAddress()(None)
+      val ipmiInfo = IpmiInfo(
+        assetId, username, password, gateway, address, netmask
+      )
+      tableDef.insert(ipmiInfo)
+    }
   }
 
   def encryptPassword(pass: String): String = {
