@@ -114,7 +114,9 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     val LldpVlanId = Value(30, "LLDP_VLAN_ID")
     val LldpVlanName = Value(31, "LLDP_VLAN_NAME")
 
+    // DO NOT USE - Deprecated
     val NicName = Value(32, "INTERFACE_NAME")
+    // DO NOT USE - Deprecated
     val NicAddress = Value(33, "INTERFACE_ADDRESS")
   }
 }

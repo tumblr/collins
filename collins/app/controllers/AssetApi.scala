@@ -45,10 +45,15 @@ trait AssetApi {
 
   // GET /api/assets?params
   private val finder = new actions.FindAsset()
-  def getAssets(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
+  def getAssets(page: Int, size: Int, sort: String, details: String) = SecureAction { implicit req =>
+    val detailsBoolean = details.trim.toLowerCase match {
+      case "true" | "1" | "yes" => true
+      case _ => false
+    }
     val rd = finder(page, size, sort) match {
       case Left(err) => Api.getErrorMessage(err)
-      case Right(success) => actions.FindAsset.formatResultAsRd(success)
+      case Right(success) =>
+        actions.FindAsset.formatResultAsRd(success, detailsBoolean)
     }
     formatResponseData(rd)
   }

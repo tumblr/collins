@@ -39,7 +39,7 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty)
           case c: Cpu => holder.copy(cpus = c +: holder.cpus)
           case m: Memory => holder.copy(memory = m.copy(bank = holder.memory.size) +: holder.memory)
           case d: Disk => holder.copy(disks = d +: holder.disks)
-          case n: Nic => holder.copy(nics = n.copy(info = findNicInfo(n.macAddress, xml)) +: holder.nics)
+          case n: Nic => holder.copy(nics = n +: holder.nics)
           case _ => holder
         }
       }
@@ -123,18 +123,6 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty)
         }
       }
       Nic(speed, mac, asset.description, asset.product, asset.vendor)
-  }
-
-  protected def findNicInfo(mac: String, e: Elem): Option[NicInfo] = {
-    val node = (e \ "node").find { n =>
-      (n \ "@class" text) == "network" && (n \ "serial" text) == mac
-    }
-    node.map { n =>
-      val addressNode = (n \ "configuration" \ "setting").find(nn => (nn \ "@id" text) == "ip")
-      val address = addressNode.map(m => (m \ "@value" text)).getOrElse("")
-      val logicalName = (n \ "logicalname" text)
-      NicInfo(address, logicalName)
-    }
   }
 
   protected def getCoreNodes(elem: Elem): NodeSeq = {
