@@ -1,6 +1,6 @@
 package models
 
-import util.Cache
+import util.{Cache, CryptoCodec}
 
 import conversions._
 import java.util.Date
@@ -19,11 +19,15 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getPriority(): Int = _meta.priority
   def getLabel(): String = _meta.label
   def getDescription(): String = _meta.description
-  def getValue(): String = _value.value
+  def getValue(): String = AssetMetaValueConfig.EncryptedMeta.contains(getName) match {
+    case true => CryptoCodec.withKeyFromFramework.Decode(_value.value).getOrElse(_value.value)
+    case false => _value.value
+  }
   override def toString(): String = getValue()
 }
 
 object MetaWrapper {
+  def apply(amv: AssetMetaValue): MetaWrapper = MetaWrapper(amv.getMeta, amv)
   def createMeta(asset: Asset, metas: Map[String,String]) = {
     val metaValues = metas.map { case(k,v) =>
       val metaName = k.toUpperCase

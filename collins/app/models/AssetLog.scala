@@ -241,10 +241,8 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
       val negate = fs.startsWith("!")
       val mt = negate match {
         case true =>
-          println(fs.drop(1).toUpperCase)
           LogMessageType.withName(fs.drop(1).toUpperCase)
         case false =>
-          println(fs.toUpperCase)
           LogMessageType.withName(fs.toUpperCase)
       }
       if (negate || tuple._1) {
