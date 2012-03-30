@@ -13,7 +13,7 @@
     @notice("error")
     @notice("warning")
     @form(app.routes.Resources.intake(asset.getId, 2), 'class -> "form-stacked") {
-    @inputText(f(ChassisTag.toString), 'label -> "Scan the Chassis Tag", 'class -> "focus")(twitterBootstrapInput)
+    @inputText(f(ChassisTag.toString), 'label -> "Scan the Chassis Tag", 'class -> "focus", 'autocomplete -> "off")(twitterBootstrapInput)
     <input type="hidden" name="stage" value="2">
     <div class="actions">
       <input type="submit" class="btn primary" value="Next &rarr;">

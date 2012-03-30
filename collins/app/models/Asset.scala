@@ -16,7 +16,7 @@ import java.util.Date
 object AssetConfig {
   lazy val HiddenMeta: Set[String] = Helpers.getFeature("hideMeta")
       .map(_.split(",").map(_.trim.toUpperCase).toSet)
-      .getOrElse(Set[String]())
+      .getOrElse(Set[String]());
 }
 
 case class Asset(tag: String, status: Int, asset_type: Int,
@@ -187,6 +187,15 @@ object Asset extends Schema with AnormAdapter[Asset] {
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], mvs: Seq[MetaWrapper]) {
     def exposeCredentials(showCreds: Boolean = false) = {
       this.copy(ipmi = this.ipmi.map { _.withExposedCredentials(showCreds) })
+          .copy(mvs = this.metaValuesWithExposedCredentials(showCreds))
+    }
+
+    protected def metaValuesWithExposedCredentials(showCreds: Boolean): Seq[MetaWrapper] = {
+      if (showCreds) {
+        mvs
+      } else {
+        mvs.filter(mv => !AssetMetaValueConfig.EncryptedMeta.contains(mv.getName))
+      }
     }
 
     def toJsonObject(): JsObject = {
