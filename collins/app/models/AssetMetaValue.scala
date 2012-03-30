@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Cache, Helpers, InternalTattler}
+import util.{Cache, CryptoCodec, Helpers, InternalTattler}
 import play.api.Logger
 import java.sql.Timestamp
 import java.util.Date
@@ -14,7 +14,7 @@ object AssetMetaValueConfig {
   lazy val ExcludedAttributes: Set[Long] = Helpers.getFeature("noLogPurges").map { v =>
     val noLogSet = v.split(",").map(_.trim.toUpperCase).toSet
     noLogSet.map(v => AssetMeta.findByName(v).map(_.getId).getOrElse(-1L))
-  }.getOrElse(Set[Long]());
+  }.getOrElse(Set[Long]())
   lazy val EncryptedMeta: Set[String] = Helpers.getFeature("encryptedTags")
       .map(_.split(",").map(_.trim.toUpperCase).toSet)
       .getOrElse(Set[String]());
@@ -58,6 +58,21 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     "AssetMetaValue.findByAsset(%d)".format(a.asset_id),
     fbam.format(a.asset_id, a.asset_meta_id)
   )
+  override def callbacks = super.callbacks ++ Seq(
+    beforeInsert(tableDef).map(v =>
+      Option(shouldEncrypt(v))
+        .filter(_ == true)
+        .map(_ => getEncrypted(v))
+        .getOrElse(v)
+    )
+  )
+
+  def shouldEncrypt(v: AssetMetaValue): Boolean = {
+    AssetMetaValueConfig.EncryptedMeta.contains(v.getMeta().name)
+  }
+  def getEncrypted(v: AssetMetaValue): AssetMetaValue = {
+    v.copy(value = CryptoCodec.withKeyFromFramework.Encode(v.value))
+  }
 
   def create(mvs: Seq[AssetMetaValue]): Int = inTransaction {
     try {

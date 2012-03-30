@@ -65,7 +65,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
     val assetId = asset.getId
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
-    createWithRetry(5) {
+    createWithRetry(10) {
       val (gateway, address, netmask) = getNextAvailableAddress()(None)
       val ipmiInfo = IpmiInfo(
         assetId, username, password, gateway, address, netmask
@@ -75,7 +75,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   }
 
   def encryptPassword(pass: String): String = {
-    CryptoCodec(getCryptoKeyFromFramework()).Encode(pass)
+    CryptoCodec.withKeyFromFramework.Encode(pass)
   }
 
   type IpmiQuerySeq = Seq[Tuple2[IpmiInfo.Enum, String]]
@@ -143,16 +143,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
 
   protected def decrypt(password: String) = {
     logger.debug("Decrypting %s".format(password))
-    CryptoCodec(getCryptoKeyFromFramework()).Decode(password).getOrElse("")
-  }
-
-  protected def getCryptoKeyFromFramework(): String = {
-    Play.maybeApplication.map { app =>
-      app.global match {
-        case c: CryptoAccessor => c.getCryptoKey()
-        case _ => throw new RuntimeException("Application is not a CryptoAccessor")
-      }
-    }.getOrElse(throw new RuntimeException("Not in application context"))
+    CryptoCodec.withKeyFromFramework.Decode(password).getOrElse("")
   }
 
   protected def getPasswordLength(): Int = {
@@ -168,7 +159,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
 
   protected def generateEncryptedPassword(): String = {
     val length = getPasswordLength()
-    CryptoCodec(getCryptoKeyFromFramework()).Encode(CryptoCodec.randomString(length))
+    CryptoCodec.withKeyFromFramework.Encode(CryptoCodec.randomString(length))
   }
 
   protected def getUsername(asset: Asset): String = {

@@ -8,3 +8,5 @@ dist
 tags
 *.log
 profileOfH2Tests.html
+test.rb
+*.db
