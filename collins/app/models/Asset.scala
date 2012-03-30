@@ -43,6 +43,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   def isNew(): Boolean = status == models.Status.Enum.New.id
   def isProvisioning(): Boolean = status == models.Status.Enum.Provisioning.id
   def isProvisioned(): Boolean = status == models.Status.Enum.Provisioned.id
+  def isMaintenance(): Boolean = status == models.Status.Enum.Maintenance.id
 
   def getStatus(): Status = {
     Status.findById(status).get
