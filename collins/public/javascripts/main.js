@@ -105,7 +105,7 @@ for (var i = 0; i < els.length; i++) {
   // would send you to /step2 when you typed in 'yes'
   $("[data-altkey]").each(function() {
     var e = $(this);
-    var altKey = e.attr('alt-key').toLowerCase();
+    var altKey = e.attr('data-altkey').toLowerCase();
     var keyLen = altKey.length;
     var soFar = "";
     $(document).keypress(function(event) {
