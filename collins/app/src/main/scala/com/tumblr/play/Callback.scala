@@ -101,11 +101,18 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
       override def apply(pce: PropertyChangeEvent): Boolean = {
         config.map { cfg =>
           cfg.getString("matchMethod").map { methodName =>
+            val negate = methodName.startsWith("!")
             val value = f(pce)
             if (value != null) {
               try {
-                val method = value.getClass().getMethod(methodName)
-                method.invoke(value).asInstanceOf[Boolean]
+                if (negate) {
+                  val mn = methodName.drop(1)
+                  val method = value.getClass().getMethod(mn)
+                  !method.invoke(value).asInstanceOf[Boolean]
+                } else {
+                  val method = value.getClass().getMethod(methodName)
+                  method.invoke(value).asInstanceOf[Boolean]
+                }
               } catch {
                 case e => false
               }

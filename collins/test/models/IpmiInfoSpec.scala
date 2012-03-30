@@ -43,13 +43,13 @@ class IpmiInfoSpec extends ApplicationSpecification {
     "Support find methods" in {
       "nextAvailableAddress" in {
         val startAt = Some("172.16.32.20")
-        val l = IpmiInfo.getNextAvailableAddress(startAt)._2
+        val l = IpmiInfo.getNextAvailableAddress(startAt)(None)._2
         val s = IpAddress.toString(l)
         s mustEqual "172.16.32.20"
       }
       "nextAvailableAddress, rollover" in {
         val startAt = Some("172.16.33.1")
-        val l = IpmiInfo.getNextAvailableAddress(startAt)._2
+        val l = IpmiInfo.getNextAvailableAddress(startAt)(None)._2
         val s = IpAddress.toString(l)
         s mustEqual "172.16.33.1"
       }

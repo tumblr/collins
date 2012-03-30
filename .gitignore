@@ -1,3 +1,5 @@
 *.swp
 .idea/
 .idea_modules/
+target/
+boot/

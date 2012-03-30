@@ -69,6 +69,8 @@ trait Resources extends Controller {
               Redirect(app.routes.Resources.index).flashing(
                 "message" -> "Could not find any matching assets"
               )
+            case 1 =>
+              Redirect(app.routes.CookieApi.getAsset(success.items(0).tag))
             case n =>
               Results.Ok(html.asset.list(success))
           }

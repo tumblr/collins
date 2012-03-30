@@ -3,6 +3,7 @@ package models
 import util.{IpAddress, IpAddressCalc}
 import org.squeryl.Schema
 import play.api.{Configuration, Logger}
+import java.sql.SQLException
 
 trait IpAddressable extends ValidatedEntity[Long] {
 
@@ -29,6 +30,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   import org.squeryl.PrimitiveTypeMode._
 
   lazy val className: String = getClass.getName.toString
+  lazy val findAllByAssetKey: String = "%s.findAllByAsset(".format(className) + "%d)"
   lazy val findByAssetKey: String = "%s.findByAsset(".format(className) + "%d)"
   lazy val getKey: String = "%s.get(".format(className) + "%d)"
 
@@ -37,6 +39,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
 
   override def cacheKeys(a: T) = Seq(
     findByAssetKey.format(a.asset_id),
+    findAllByAssetKey.format(a.asset_id),
     getKey.format(a.id)
   )
 
@@ -54,8 +57,10 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     }
   }
 
-  def findAllByAsset(asset: Asset): Seq[T] = inTransaction {
-    tableDef.where(a => a.asset_id === asset.getId).toList
+  def findAllByAsset(asset: Asset)(implicit mf: Manifest[T]): Seq[T] = {
+    getOrElseUpdate(findAllByAssetKey.format(asset.getId)) {
+      tableDef.where(a => a.asset_id === asset.getId).toList
+    }
   }
 
   def findByAsset(asset: Asset)(implicit mf: Manifest[T]): Option[T] = {
@@ -75,6 +80,22 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     )
     val address: Long = calc.nextAvailableAsLong(currentMax)
     (gateway, address, netmask)
+  }
+
+  // This is needed because if two clients both cause getNextAvailableAddress at the same time, they
+  // both have the same value from getCurrentMaxAddress. One of them will successfully insert while
+  // the other will fail. This allows a few retries before giving up.
+  protected def createWithRetry(retryCount: Int)(f: => T): T = {
+    (0 until retryCount).foreach { _ =>
+      try {
+        val res = f
+        return res
+      } catch {
+        case e: SQLException =>
+        case e => throw e
+      }
+    }
+    throw new Exception("Unable to create address after %d tries".format(retryCount))
   }
 
   protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long): Option[Long] = inTransaction {

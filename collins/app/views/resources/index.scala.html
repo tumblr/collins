@@ -49,6 +49,15 @@
         </div>
       </div>
     </div>
+    <div class="clearfix">
+      <label>IP Address</label>
+      <div class="input">
+        <div class="inline-inputs">
+          <input id="ipAddress" type="text" name="IP_ADDRESS"/>
+          <span class="help-inline">IP Address of Asset</span>
+        </div>
+      </div>
+    </div>
     @assetMeta.map { case(asset) =>
     <div class="clearfix">
       <label for="@asset.name">@asset.label</label>
