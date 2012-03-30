@@ -14,7 +14,10 @@ object AssetMetaValueConfig {
   lazy val ExcludedAttributes: Set[Long] = Helpers.getFeature("noLogPurges").map { v =>
     val noLogSet = v.split(",").map(_.trim.toUpperCase).toSet
     noLogSet.map(v => AssetMeta.findByName(v).map(_.getId).getOrElse(-1L))
-  }.getOrElse(Set[Long]())
+  }.getOrElse(Set[Long]());
+  lazy val EncryptedMeta: Set[String] = Helpers.getFeature("encryptedTags")
+      .map(_.split(",").map(_.trim.toUpperCase).toSet)
+      .getOrElse(Set[String]());
 }
 
 case class AssetMetaValue(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) {
