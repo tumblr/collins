@@ -1,7 +1,8 @@
 package util
 
 import models.Asset
-import play.api.Configuration
+import play.api.{Configuration, Mode, Play}
+
 
 // Globally useful configurations
 object AppConfig extends Config {
@@ -14,4 +15,11 @@ object AppConfig extends Config {
   val IpmiKey = "ipmi"
   def ipmi: Option[Configuration] = Config.get(IpmiKey)
   def ipmiMap = Config.toMap(IpmiKey)
+
+  def isProd() = getApplicationMode() == Mode.Prod
+  def getApplicationMode(): Mode.Mode = {
+    Play.maybeApplication.map { app =>
+      app.mode
+    }.getOrElse(Mode.Dev)
+  }
 }
