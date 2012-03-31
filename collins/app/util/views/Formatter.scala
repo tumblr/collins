@@ -7,9 +7,8 @@ import java.util.Date
 // Used with views/asset/list
 object Formatter {
   val ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
-  private[this] val DATE_FORMAT = new SimpleDateFormat(ISO_8601_FORMAT)
   def dateFormat(date: Date): String = {
-    DATE_FORMAT.format(date)
+    new SimpleDateFormat(ISO_8601_FORMAT).format(date)
   }
 
   def elipse(source: String, maxLength: Int = 25, filler: String = "..."): String = {
