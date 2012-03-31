@@ -7,6 +7,7 @@ import models.{Asset, AssetLifecycle, Status => AStatus}
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
 import util.Helpers.formatPowerPort
 
+import play.api.Logger
 import play.api.data._
 import play.api.mvc._
 
@@ -46,6 +47,7 @@ private[controllers] case class UpdateAsset(
   powerPort2: Option[String],
   status: Option[AStatus.Enum])
 {
+  private[this] val logger = Logger.logger
 
   def attributes(): Map[String,String] = attribute.map(s => attributes(s)).getOrElse(Map.empty)
   def attributes(s: String): Map[String,String] = s.split(";", 2) match {
@@ -59,7 +61,6 @@ private[controllers] case class UpdateAsset(
 
   def execute(tag: String)(implicit req: Request[AnyContent]): Either[ResponseData,Boolean] = {
     Api.withAssetFromTag(tag) { asset =>
-      val old = asset.copy()
       validateRequest(asset) match {
         case Left(error) => Left(Api.getErrorMessage(error))
         case Right(options) =>

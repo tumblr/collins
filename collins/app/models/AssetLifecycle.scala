@@ -74,25 +74,7 @@ object AssetLifecycle {
   }
 
   protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    allCatch[Boolean].either {
-      Asset.inTransaction {
-        val nextState = Status.Enum(asset.status) match {
-          case Status.Enum.Incomplete => Status.Enum.New
-          case Status.Enum.New => Status.Enum.Unallocated
-          case Status.Enum.Unallocated => Status.Enum.Allocated
-          case Status.Enum.Allocated => Status.Enum.Cancelled
-          case Status.Enum.Cancelled => Status.Enum.Decommissioned
-          case Status.Enum.Maintenance => Status.Enum.Unallocated
-          case n => n
-        }
-        if (nextState.id != asset.status) {
-          val newAsset = asset.copy(status = nextState.id)
-          Asset.update(newAsset)
-          InternalTattler.informational(newAsset, None, "Asset state updated")
-        }
-        true
-      }
-    }.left.map(e => handleException(asset, "Error saving values or in state transition", e))
+    updateAssetAttributes(asset, options)
   }
 
   protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
