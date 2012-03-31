@@ -1,7 +1,7 @@
 package controllers
 
 import models._
-import util.{Helpers, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
+import util.{Feature, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
 import views._
 
 import akka.util.duration._
@@ -154,7 +154,7 @@ trait Resources extends Controller {
   private def intakeAllowed(asset: Asset)(implicit r: Request[AnyContent]): Boolean = {
     val isNew = asset.isNew
     val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
-    val intakeSupported = Helpers.haveFeature("intakeSupported", false).getOrElse(true)
+    val intakeSupported = Feature("intakeSupported").toBoolean(true)
     val rightRole = hasRole(getUser(r), Seq("infra"))
     intakeSupported && isNew && rightType && rightRole
   }

@@ -62,6 +62,8 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
     }
   }
 
+  def typeNames: Set[String] = Enum.values.map(_.toString)
+
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {
     val ServerNode = Value("SERVER_NODE")

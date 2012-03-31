@@ -4,7 +4,7 @@ import conversions._
 import AssetMeta.Enum.{PowerPort, RackPosition}
 import models.{Status => AStatus}
 
-import util.{ApiTattler, AssetStateMachine, Helpers, InternalTattler, LldpRepresentation, LshwRepresentation}
+import util.{ApiTattler, AssetStateMachine, Feature, Helpers, InternalTattler, LldpRepresentation, LshwRepresentation}
 import util.parsers.{LldpParser, LshwParser}
 import Helpers.formatPowerPort
 
@@ -108,7 +108,6 @@ object AssetLifecycle {
       options.find(kv => restricted(kv._1)).map(kv =>
         return Left(new Exception("Attribute %s is restricted".format(kv._1)))
       )
-      println(options)
       Asset.inTransaction {
         MetaWrapper.createMeta(asset, options)
         Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
@@ -118,9 +117,7 @@ object AssetLifecycle {
   }
 
   def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    Helpers.haveFeature("sloppyStatus") match {
-      case Some(true) =>
-      case _ =>
+    Feature("sloppyStatus").whenDisabledOrUnset {
         return Left(new Exception("sloppyStatus not enabled"))
     }
     val stat = options.get("status").getOrElse("none")
