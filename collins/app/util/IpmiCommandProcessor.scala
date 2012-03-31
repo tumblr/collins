@@ -50,7 +50,7 @@ abstract class IpmiCommand {
   }
 
   def run(): Option[String] = {
-    if (!Helpers.isProd() && !debug) {
+    if (!AppConfig.isProd() && !debug) {
       return None
     }
     val cmd = substitute(getIpmiCommand())
