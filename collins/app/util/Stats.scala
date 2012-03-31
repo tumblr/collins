@@ -3,6 +3,7 @@ package util
 import com.yammer.metrics.scala.Instrumented
 import com.yammer.metrics.core.Timer
 
+import java.util.Date
 import scala.collection.JavaConverters._
 import scala.collection.immutable.SortedMap
 
@@ -30,6 +31,8 @@ case class AppStats(name: String, timer: Timer) {
 object Stats extends Instrumented {
   private val api = metrics.timer("API")
   private val web = metrics.timer("Web")
+
+  val StartupTime = new Date()
 
   def get(): List[AppStats] = {
     val met = metricsRegistry.allMetrics.asScala.map { case(metricName, metric) =>
