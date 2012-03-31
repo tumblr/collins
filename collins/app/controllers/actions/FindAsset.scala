@@ -3,7 +3,8 @@ package actions
 
 import forms._
 import models.{Asset, AssetFinder, AssetType, MetaWrapper, Page, PageParams, Status}
-import util.{AttributeResolver, Helpers}
+import util.AttributeResolver
+import util.views.Formatter.ISO_8601_FORMAT
 
 import play.api.data._
 import play.api.libs.json._
@@ -17,10 +18,10 @@ private[controllers] object FindAsset {
         "tag" -> optional(text(1)),
         "status" -> optional(of[Status.Enum]),
         "type" -> optional(of[AssetType.Enum]),
-        "createdAfter" -> optional(date(Helpers.ISO_8601_FORMAT)),
-        "createdBefore" -> optional(date(Helpers.ISO_8601_FORMAT)),
-        "updatedAfter" -> optional(date(Helpers.ISO_8601_FORMAT)),
-        "updatedBefore" -> optional(date(Helpers.ISO_8601_FORMAT))
+        "createdAfter" -> optional(date(ISO_8601_FORMAT)),
+        "createdBefore" -> optional(date(ISO_8601_FORMAT)),
+        "updatedAfter" -> optional(date(ISO_8601_FORMAT)),
+        "updatedBefore" -> optional(date(ISO_8601_FORMAT))
       ),
       "attribute" -> optional(text(3)).verifying("Invalid attribute specified", res => res match {
         case None => true

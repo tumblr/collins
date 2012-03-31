@@ -1,7 +1,8 @@
 package models
 
 import conversions._
-import util.{Cache, Feature, Helpers, LldpRepresentation, LshwRepresentation}
+import util.{Cache, Feature, LldpRepresentation, LshwRepresentation}
+import util.views.Formatter.dateFormat
 
 import play.api.Logger
 import play.api.libs.json._
@@ -33,8 +34,8 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     "TAG" -> JsString(tag),
     "STATUS" -> JsString(getStatus().name),
     "TYPE" -> JsString(getType().name),
-    "CREATED" -> JsString(Helpers.dateFormat(created)),
-    "UPDATED" -> JsString(updated.map { Helpers.dateFormat(_) }.getOrElse(""))
+    "CREATED" -> JsString(dateFormat(created)),
+    "UPDATED" -> JsString(updated.map { dateFormat(_) }.getOrElse(""))
   )
 
   def getId(): Long = id

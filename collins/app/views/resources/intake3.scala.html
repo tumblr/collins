@@ -1,7 +1,7 @@
 @(asset: Asset, f: Form[actions.Stage3Form])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.Helpers.formatPowerPort
+@import _root_.util.views.Formatter.formatPowerPort
 @import util.notice
 @import AssetMeta.Enum.{ChassisTag, RackPosition, ServiceTag}
 

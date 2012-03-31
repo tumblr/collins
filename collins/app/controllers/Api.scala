@@ -3,6 +3,7 @@ package controllers
 import actors._
 import models.Asset
 import util._
+import util.views.Formatter.dateFormat
 
 import play.api._
 import play.api.data._
@@ -23,7 +24,7 @@ trait Api extends ApiResponse with AssetApi with AssetManagementApi with AssetWe
   def ping = Action { implicit req =>
     formatResponseData(ResponseData(Results.Ok, JsObject(Seq(
       "Data" -> JsObject(Seq(
-        "Timestamp" -> JsString(Helpers.dateFormat(new Date())),
+        "Timestamp" -> JsString(dateFormat(new Date())),
         "TestObj" -> JsObject(Seq(
           "TestString" -> JsString("test"),
           "TestList" -> JsArray(List(JsNumber(1), JsNumber(2)))

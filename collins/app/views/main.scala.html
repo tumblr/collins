@@ -1,10 +1,10 @@
 @(title: String, loggedIn: Boolean = true)(content: Html)(implicit req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.Helpers
+@import _root_.util.views.Formatter
 
 @createLink(a: AssetType.Enum) = {
-  <a href="@app.routes.Resources.displayCreateForm(a.toString)">@Helpers.camelCase(a.toString, " ")</a>
+  <a href="@app.routes.Resources.displayCreateForm(a.toString)">@Formatter.camelCase(a.toString, " ")</a>
 }
 
 <!DOCTYPE html>

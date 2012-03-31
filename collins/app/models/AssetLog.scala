@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.Helpers
+import util.views.Formatter.dateFormat
 
 import play.api.libs.json._
 
@@ -61,7 +61,7 @@ case class AssetLog(
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "ASSET_TAG" -> JsString(Asset.findById(getAssetId()).get.tag),
-    "CREATED" -> JsString(Helpers.dateFormat(created)),
+    "CREATED" -> JsString(dateFormat(created)),
     "FORMAT" -> JsString(getFormat().toString()),
     "SOURCE" -> JsString(getSource().toString()),
     "TYPE" -> JsString(getMessageType().toString()),

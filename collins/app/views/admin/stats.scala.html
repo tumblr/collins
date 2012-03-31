@@ -1,6 +1,6 @@
 @(cacheStats: com.tumblr.play.CacheStats)(implicit flash: Flash, req: Request[AnyContent])
 
-@import _root_.util.Helpers
+@import _root_.util.views.Formatter
 
 @main("Admin Stats") {
 <div class="page-header">
@@ -32,7 +32,7 @@
         </tr>
         <tr>
           <th>Hit Rate</th>
-          <td>@Helpers.formatDouble(cacheStats.hitRate) %</td>
+          <td>@Formatter.forPercent(cacheStats.hitRate) %</td>
         </tr>
         <tr>
           <th>Miss Count</th>
@@ -40,7 +40,7 @@
         </tr>
         <tr>
           <th>Miss Rate</th>
-          <td>@Helpers.formatDouble(cacheStats.missRate) %</td>
+          <td>@Formatter.forPercent(cacheStats.missRate) %</td>
         </tr>
         <tr>
           <th>Request Count</th>

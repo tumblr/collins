@@ -1,7 +1,7 @@
 package controllers
 
 import models._
-import util.Helpers
+import util.views.Formatter.formatPowerPort
 import test._
 
 import play.api.libs.json._
@@ -74,7 +74,6 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
       }
       "Update the status after getting rack position and such" in new asset {
         import AssetMeta.Enum.RackPosition
-        import Helpers.formatPowerPort
         val rp: String = RackPosition.toString
         val body = AnyContentAsUrlFormEncoded(Map(
           rp -> Seq("rack 1"),

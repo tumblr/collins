@@ -2,7 +2,7 @@ package controllers
 import play.api.data.FormError
 import play.api.data.format._
 import models.{AssetType,Status}
-import util.Helpers.camelCase
+import util.views.Formatter.camelCase
 
 import com.tumblr.play.{Power, PowerAction}
 

@@ -1,8 +1,17 @@
 package util
 package views
 
+import java.text.SimpleDateFormat
+import java.util.Date
+
 // Used with views/asset/list
 object Formatter {
+  val ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
+  private[this] val DATE_FORMAT = new SimpleDateFormat(ISO_8601_FORMAT)
+  def dateFormat(date: Date): String = {
+    DATE_FORMAT.format(date)
+  }
+
   def elipse(source: String, maxLength: Int = 25, filler: String = "..."): String = {
     val sourceLength = source.length // 12 characters
     val fillerLength = filler.length // 3 characters
@@ -12,5 +21,18 @@ object Formatter {
     } else {
       source
     }
+  }
+
+  def forPercent(d: Double) = "%.2f".format(100*d)
+
+  def formatPowerPort(label: String) = {
+    import models.AssetMeta.Enum.PowerPort
+    PowerPort.toString + "_" + label
+  }
+
+  private[this] val words = """([a-zA-Z]+)""".r
+  private[this] val separators = """([^a-zA-Z]+)""".r
+  def camelCase(value: String, sep: String = "") = {
+    separators.replaceAllIn(words.replaceAllIn(value, m => m.matched.toLowerCase.capitalize), sep)
   }
 }
