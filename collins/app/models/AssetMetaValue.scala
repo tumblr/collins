@@ -99,14 +99,15 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   }
 
   def deleteByAssetAndMetaId(asset: Asset, meta_id: Set[Long]): Int = inTransaction {
-    deleteByAssetIdAndMetaId(asset.id, meta_id)
+    deleteByAssetIdAndMetaId(asset.id, meta_id, None)
   }
 
-  def find(mv: AssetMetaValue, useValue: Boolean = true): Option[AssetMetaValue] = inTransaction {
+  def find(mv: AssetMetaValue, useValue: Boolean, groupId: Option[Int]): Option[AssetMetaValue] = inTransaction {
     from(tableDef)(a =>
       where {
         a.asset_id === mv.asset_id and
         a.asset_meta_id === mv.asset_meta_id and
+        a.group_id === groupId.? and
         a.value === mv.value.inhibitWhen(useValue == false)
       }
       select(a)
@@ -165,9 +166,9 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }
   }
 
-  def purge(mvs: Seq[AssetMetaValue]) = {
-    mvs.map(mv => (find(mv, false), mv)).foreach { case(oldValue, newValue) =>
-      val deleteCount = deleteByAssetIdAndMetaId(newValue.asset_id, Set(newValue.asset_meta_id))
+  def purge(mvs: Seq[AssetMetaValue], groupId: Option[Int]) = {
+    mvs.map(mv => (find(mv, false, groupId), mv)).foreach { case(oldValue, newValue) =>
+      val deleteCount = deleteByAssetIdAndMetaId(newValue.asset_id, Set(newValue.asset_meta_id), groupId)
       if (deleteCount > 0 && shouldLogChange(oldValue, newValue)) {
         logChange(oldValue, newValue)
       } else {
@@ -176,10 +177,11 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }
   }
 
-  protected def deleteByAssetIdAndMetaId(asset_id: Long, meta_id: Set[Long]): Int = {
+  protected def deleteByAssetIdAndMetaId(asset_id: Long, meta_id: Set[Long], groupId: Option[Int]): Int = {
     inTransaction {
       val results = tableDef.deleteWhere { p =>
         (p.asset_id === asset_id) and
+        (p.group_id === groupId.?) and
         (p.asset_meta_id in meta_id)
       }
       meta_id.foreach { id =>

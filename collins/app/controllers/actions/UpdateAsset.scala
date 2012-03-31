@@ -21,11 +21,12 @@ object UpdateAsset {
       RackPosition.toString -> optional(text(1)),
       formatPowerPort("A") -> optional(text(1)),
       formatPowerPort("B") -> optional(text(1)),
-      "status" -> optional(of[AStatus.Enum])
+      "status" -> optional(of[AStatus.Enum]),
+      "groupId" -> optional(number(0))
     )
   )
-  def get() = new UpdateAsset(None, None, None, None, None, None, None, None)
-  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, None, None, None, None)
+  def get() = new UpdateAsset(None, None, None, None, None, None, None, None, None)
+  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, None, None, None, None, None)
   def toMap(form: UpdateAsset): Map[String,String] = Map.empty ++
     form.lshw.map(s => Map("lshw" -> s)).getOrElse(Map.empty) ++
     form.lldp.map(s => Map("lldp" -> s)).getOrElse(Map.empty) ++
@@ -34,7 +35,8 @@ object UpdateAsset {
     form.powerPort1.map(s => Map(formatPowerPort("A") -> s)).getOrElse(Map.empty) ++
     form.powerPort2.map(s => Map(formatPowerPort("B") -> s)).getOrElse(Map.empty) ++
     form.attributes ++
-    form.status.map(s => Map("status" -> s.toString)).getOrElse(Map.empty)
+    form.status.map(s => Map("status" -> s.toString)).getOrElse(Map.empty) ++
+    form.groupId.map(s => Map("groupId" -> s.toString)).getOrElse(Map.empty)
 }
 
 private[controllers] case class UpdateAsset(
@@ -45,7 +47,8 @@ private[controllers] case class UpdateAsset(
   rackPosition: Option[String],
   powerPort1: Option[String],
   powerPort2: Option[String],
-  status: Option[AStatus.Enum])
+  status: Option[AStatus.Enum],
+  groupId: Option[Long])
 {
   private[this] val logger = Logger.logger
 
@@ -89,10 +92,16 @@ private[controllers] case class UpdateAsset(
   }
 
   protected def onlyHasAttributes(req: Request[AnyContent], options: Map[String,String]): Boolean = {
-    val a1: Boolean = req.queryString.size == 1 && req.queryString.contains("attribute")
-    val a2: Option[Boolean] = req.body.asUrlFormEncoded.map { m =>
-      m.size == 1 && m.contains("attribute")
+    def checkMap(query: Map[String, Seq[String]]): Boolean = {
+      val keys = query.keySet
+      keys.size match {
+        case 1 => keys("attribute")
+        case 2 => keys("attribute") && keys("groupId")
+        case n => false
+      }
     }
+    val a1 = checkMap(req.queryString)
+    val a2: Option[Boolean] = req.body.asUrlFormEncoded.map(checkMap(_))
     a2 match {
       case Some(b) => b
       case None => a1
