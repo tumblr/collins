@@ -25,21 +25,16 @@ case class AssetStateMachine(asset: Asset) {
         case 1 => Some(newAsset)
         case n => None
       }
-      Helpers.haveFeature("deleteIpmiOnDecommission", false) match {
-        case None | Some(true) =>
-          IpmiInfo.deleteByAsset(asset)
-        case _ =>
+      Feature("deleteIpmiOnDecommission").whenEnabledOrUnset {
+        IpmiInfo.deleteByAsset(asset)
       }
-      Helpers.haveFeature("deleteIpAddressOnDecommission", false) match {
-        case None | Some(true) =>
-          IpAddresses.deleteByAsset(asset)
-        case _ =>
+      Feature("deleteIpAddressOnDecommission").whenEnabledOrUnset {
+        IpAddresses.deleteByAsset(asset)
       }
-      Helpers.haveFeature("deleteMetaOnDecommission", false) match {
-        case None | Some(true) =>
-          AssetMetaValue.deleteByAsset(asset)
-        case _ =>
-          AssetMetaValue.deleteByAssetAndMetaId(asset, AssetStateMachine.DeleteAttributes)
+      Feature("deleteMetaOnDecommission").whenEnabledOrUnset {
+        AssetMetaValue.deleteByAsset(asset)
+      }.orElse {
+        AssetMetaValue.deleteByAssetAndMetaId(asset, AssetStateMachine.DeleteAttributes)
       }
       res
   }

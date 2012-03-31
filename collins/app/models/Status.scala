@@ -52,6 +52,8 @@ object Status extends Schema with AnormAdapter[Status] { //Magic[Status](Some("s
     }
   }
 
+  def statusNames: Set[String] = Enum.values.map(_.toString)
+
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {
     val New, Unallocated, Allocated, Cancelled, Maintenance, Decommissioned, Incomplete, Provisioning, Provisioned = Value

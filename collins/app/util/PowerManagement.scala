@@ -2,8 +2,23 @@ package util
 
 import play.api.{Play, Plugin}
 import com.tumblr.play.{PowerManagement => PowerMgmt}
+import models.{AssetType, Status}
 
-object PowerManagement {
+trait PowerManagementConfig extends Config {
+  lazy val DisallowedPowerStates: Set[Int] = Config.statusAsSet(
+    "powermanagement", "disallowStatus", Status.statusNames.mkString(",")
+  )
+
+  lazy val AllowedAssetTypes: Set[Int] =
+    getString("powermanagement","allowAssetTypes","SERVER_NODE")
+      .split(",").clean
+      .map(name => AssetType.findByName(name).map(_.id).getOrElse(-1))
+      .toSet;
+}
+
+object PowerManagementConfig extends PowerManagementConfig
+
+object PowerManagement extends PowerManagementConfig {
   def pluginEnabled: Option[PowerMgmt] = {
     Play.maybeApplication.flatMap { app =>
       app.plugin[PowerMgmt].filter(_.enabled)
@@ -17,22 +32,6 @@ object PowerManagement {
   }
 
   def isPluginEnabled = pluginEnabled.isDefined
-
-  private[this] lazy val DisallowedPowerStates: Set[Int] =
-    Helpers.getConfig("powermanagement")
-      .flatMap(_.getString("disallowStatus"))
-      .getOrElse("1,2,3,4,5,6,7,8,9,10")
-      .split(",")
-      .map(_.toInt)
-      .toSet
-
-  private[this] lazy val AllowedAssetTypes: Set[Int] =
-    Helpers.getConfig("powermanagement")
-      .flatMap(_.getString("allowAssetTypes"))
-      .getOrElse("1")
-      .split(",")
-      .map(_.toInt)
-      .toSet
 
   def powerAllowed(asset: models.Asset): Boolean = {
     !DisallowedPowerStates.contains(asset.status) && isPluginEnabled && AllowedAssetTypes.contains(asset.asset_type)
