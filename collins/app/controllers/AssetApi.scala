@@ -100,7 +100,12 @@ trait AssetApi {
   // DELETE /api/asset/attribute/:attribute/:tag
   def deleteAssetAttribute(tag: String, attribute: String) = SecureAction { implicit req =>
     Api.withAssetFromTag(tag) { asset =>
-      AssetLifecycle.updateAssetAttributes(asset, Map(attribute -> ""))
+      val gid = Form("groupId" -> optional(number(0))).bindFromRequest.fold(
+        err => None,
+        gid => gid.map(_.toString)
+      )
+      val updateMap = Map(attribute -> "") ++ gid.map(g => Map("groupId" -> g)).getOrElse(Map.empty)
+      AssetLifecycle.updateAssetAttributes(asset, updateMap)
       .left.map(err => Api.getErrorMessage("Error deleting asset attributes", Results.InternalServerError, Some(err)))
       .right.map(status => Api.statusResponse(status, Results.Status(StatusValues.ACCEPTED)))
     }.fold(l => l, r => r).map(s => formatResponseData(s))

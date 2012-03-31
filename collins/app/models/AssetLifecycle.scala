@@ -103,11 +103,13 @@ object AssetLifecycle {
 
   def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String] = RestrictedKeys): Status[Boolean] = {
     allCatch[Boolean].either {
-      options.find(kv => restricted(kv._1)).map(kv =>
+      val groupId = options.get("groupId").map(_.toInt)
+      val opts = options - "groupId"
+      opts.find(kv => restricted(kv._1)).map(kv =>
         return Left(new Exception("Attribute %s is restricted".format(kv._1)))
       )
       Asset.inTransaction {
-        MetaWrapper.createMeta(asset, options)
+        MetaWrapper.createMeta(asset, opts, groupId)
         Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
         true
       }

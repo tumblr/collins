@@ -28,16 +28,17 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
 
 object MetaWrapper {
   def apply(amv: AssetMetaValue): MetaWrapper = MetaWrapper(amv.getMeta, amv)
-  def createMeta(asset: Asset, metas: Map[String,String]) = {
+  def createMeta(asset: Asset, metas: Map[String,String], groupId: Option[Int] = None) = {
     val metaValues = metas.map { case(k,v) =>
       val metaName = k.toUpperCase
       val meta: AssetMeta = AssetMeta.findByName(metaName).getOrElse {
         AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
         AssetMeta.findByName(metaName).get
       }
-      AssetMetaValue(asset, meta.id, v)
+      groupId.map(AssetMetaValue(asset, meta.id, _, v))
+        .getOrElse(AssetMetaValue(asset, meta.id, v))
     }.toSeq
-    AssetMetaValue.purge(metaValues)
+    AssetMetaValue.purge(metaValues, groupId)
     val values = metaValues.filter(v => v.value != null && v.value.nonEmpty)
     values.size match {
       case 0 =>
