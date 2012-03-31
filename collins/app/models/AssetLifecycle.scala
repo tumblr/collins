@@ -4,9 +4,9 @@ import conversions._
 import AssetMeta.Enum.{PowerPort, RackPosition}
 import models.{Status => AStatus}
 
-import util.{ApiTattler, AssetStateMachine, Config, Feature, Helpers, InternalTattler, LldpRepresentation, LshwRepresentation}
+import util.{ApiTattler, AssetStateMachine, Config, Feature, InternalTattler, LldpRepresentation, LshwRepresentation}
 import util.parsers.{LldpParser, LshwParser}
-import Helpers.formatPowerPort
+import util.views.Formatter.formatPowerPort
 
 import play.api.Logger
 

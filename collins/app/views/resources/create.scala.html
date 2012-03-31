@@ -1,10 +1,10 @@
 @(atype: AssetType.Enum)(implicit flash: Flash, req: Request[AnyContent])
 
-@import _root_.util.Helpers
+@import _root_.util.views.Formatter.camelCase
 @import util.notice
 
 @main("Asset Creator") {
-<div class="page-header"><h1>Asset Creator <small>Create a @Helpers.camelCase(atype.toString, " ")</small></h1></div>
+<div class="page-header"><h1>Asset Creator <small>Create a @camelCase(atype.toString, " ")</small></h1></div>
 <div class="row">
   <div class="span14">
     @notice("error")
@@ -14,7 +14,7 @@
       <div class="clearfix">
         <label for="type">Asset Type</label>
         <div class="input">
-          <span id="type" class="uneditable-input">@Helpers.camelCase(atype.toString, " ")</span>
+          <span id="type" class="uneditable-input">@camelCase(atype.toString, " ")</span>
           <input type="hidden" name="type" value="@atype.toString">
         </div>
       </div>
@@ -42,7 +42,7 @@
           <select name="status" id="status">
             <option value="" selected="selected"></option>
             @Status.Enum.values.toSeq.map { v =>
-            <option value="@v.toString">@Helpers.camelCase(v.toString, " ")</option>
+            <option value="@v.toString">@camelCase(v.toString, " ")</option>
             }
           </select>
           <span class="help-inline">Asset Status (New, Incomplete, etc)</span>
@@ -50,7 +50,7 @@
       </div>
 
       <div class="actions">
-        <input type="submit" class="btn primary" value="Create @Helpers.camelCase(atype.toString, " ")">
+        <input type="submit" class="btn primary" value="Create @camelCase(atype.toString, " ")">
         <button type="reset" class="btn">Reset</button>
       </div>
     </form>

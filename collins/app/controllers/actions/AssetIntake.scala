@@ -3,7 +3,7 @@ package actions
 
 import models.{Asset, AssetLifecycle, AssetMeta, AssetMetaValue, Model}
 import models.AssetMeta.Enum.{ChassisTag, PowerPort, RackPosition}
-import util.Helpers.formatPowerPort
+import util.views.Formatter.formatPowerPort
 
 import play.api.mvc._
 import play.api.data._

@@ -5,7 +5,7 @@ import forms._
 
 import models.{Asset, AssetLifecycle, Status => AStatus}
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
-import util.Helpers.formatPowerPort
+import util.views.Formatter.formatPowerPort
 
 import play.api.Logger
 import play.api.data._
