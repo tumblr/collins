@@ -13,12 +13,27 @@ import play.api.Logger
 import scala.util.control.Exception.allCatch
 import java.util.Date
 
+object AssetLifecycleConfig {
+  // Don't want people trying to set status/tag/etc via attribute
+  val PossibleAssetKeys = Set("STATUS", "TAG", "TYPE", "IP_ADDRESS")
+  // A few keys we generally want changable after intake
+  val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
+  // User configured excludes, only applied to non-servers
+  val ConfiguredExcludes = Helpers.getFeature("allowTagUpdates")
+      .map(_.split(",").map(_.trim.toUpperCase).toSet)
+      .getOrElse(Set[String]());
+  val RestrictedKeys = AssetMeta.Enum.values.map { _.toString }.toSet ++ PossibleAssetKeys -- ExcludedKeys
+
+  def withExcludes(includeUser: Boolean = false) = includeUser match {
+    case false => RestrictedKeys
+    case true => RestrictedKeys -- ConfiguredExcludes
+  }
+}
+
 // Supports meta operations on assets
 object AssetLifecycle {
-  // Don't want people trying to set status/tag/etc via attribute
-  val POSSIBLE_ASSET_KEYS = Set("STATUS", "TAG", "TYPE", "IP_ADDRESS")
-  val EXCLUDED_KEYS = Set(AssetMeta.Enum.ChassisTag.toString)
-  val RESTRICTED_KEYS = AssetMeta.Enum.values.map { _.toString }.toSet ++ POSSIBLE_ASSET_KEYS -- EXCLUDED_KEYS
+
+  import AssetLifecycleConfig.RestrictedKeys
 
   private[this] val logger = Logger.logger
 
@@ -74,7 +89,7 @@ object AssetLifecycle {
   }
 
   protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    updateAssetAttributes(asset, options)
+    updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(true))
   }
 
   protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -88,11 +103,12 @@ object AssetLifecycle {
     }
   }
 
-  def updateAssetAttributes(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String] = RestrictedKeys): Status[Boolean] = {
     allCatch[Boolean].either {
-      options.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
+      options.find(kv => restricted(kv._1)).map(kv =>
         return Left(new Exception("Attribute %s is restricted".format(kv._1)))
       )
+      println(options)
       Asset.inTransaction {
         MetaWrapper.createMeta(asset, options)
         Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
@@ -135,7 +151,7 @@ object AssetLifecycle {
     val power2 = options(formatPowerPort("B"))
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))
-    filtered.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
+    filtered.find(kv => RestrictedKeys(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
 
@@ -168,7 +184,7 @@ object AssetLifecycle {
     val chassis_tag = options("CHASSIS_TAG")
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))
-    filtered.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
+    filtered.find(kv => RestrictedKeys(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
     val lshwParser = new LshwParser(lshw, lshwConfig)
