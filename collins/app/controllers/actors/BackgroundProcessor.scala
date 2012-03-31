@@ -10,7 +10,7 @@ import akka.routing.CyclicIterator
 import play.api.libs.akka._
 import play.api.libs.concurrent.{Redeemed, Thrown}
 
-import util.Helpers
+import util.Config
 
 private[actors] class BackgroundProcessor extends Actor {
   def receive = {
@@ -24,7 +24,7 @@ private[actors] class BackgroundProcessor extends Actor {
 
 object BackgroundProcessor {
   val DefaultActorCount = Runtime.getRuntime().availableProcessors()*2
-  val actorCount = Helpers.subAsMap("").get("actorCount").map(_.toInt).getOrElse(DefaultActorCount)
+  val actorCount = Config.toMap.get("actorCount").map(_.toInt).getOrElse(DefaultActorCount)
   val ref = loadBalancerActor(
     new CyclicIterator((1 to actorCount)
       .map(_ => actorOf[BackgroundProcessor].start())

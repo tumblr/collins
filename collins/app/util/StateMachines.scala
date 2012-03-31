@@ -7,9 +7,7 @@ import java.util.Date
 import java.sql._
 
 object AssetStateMachine {
-  lazy val DeleteSomeAttributes: Set[String] = Helpers.getFeature("deleteSomeMetaOnRepurpose").map { v =>
-    v.split(",").map(_.trim.toUpperCase).toSet
-  }.getOrElse(Set[String]())
+  lazy val DeleteSomeAttributes: Set[String] = Feature("deleteSomeMetaOnRepurpose").toSet
   lazy val DeleteAttributes: Set[Long] = DeleteSomeAttributes.map { v =>
     AssetMeta.findByName(v).map(_.getId).getOrElse(-1L)
   }

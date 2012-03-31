@@ -1,6 +1,6 @@
 package models
 
-import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress}
+import util._
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import play.api._
@@ -167,7 +167,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   }
 
   override protected def getConfig()(implicit scope: Option[String]): Option[Configuration] = {
-    Helpers.getConfig("ipmi")
+    AppConfig.ipmi
   }
 
   // Converts our query parameters to fragments and parameters for a query

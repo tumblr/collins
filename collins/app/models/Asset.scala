@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Cache, Helpers, LldpRepresentation, LshwRepresentation}
+import util.{Cache, Feature, Helpers, LldpRepresentation, LshwRepresentation}
 
 import play.api.Logger
 import play.api.libs.json._
@@ -14,9 +14,7 @@ import java.sql.Timestamp
 import java.util.Date
 
 object AssetConfig {
-  lazy val HiddenMeta: Set[String] = Helpers.getFeature("hideMeta")
-      .map(_.split(",").map(_.trim.toUpperCase).toSet)
-      .getOrElse(Set[String]());
+  lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
 }
 
 case class Asset(tag: String, status: Int, asset_type: Int,

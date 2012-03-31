@@ -15,8 +15,6 @@ import java.util.Date
 trait AssetApi {
   this: Api with SecureController =>
 
-  private lazy val lshwConfig = Helpers.subAsMap("lshw")
-
   // GET /api/asset/:tag
   def getAsset(tag: String) = Authenticated { user => Action { implicit req =>
     val result = Api.withAssetFromTag(tag) { asset =>

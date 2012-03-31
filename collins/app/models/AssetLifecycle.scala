@@ -4,7 +4,7 @@ import conversions._
 import AssetMeta.Enum.{PowerPort, RackPosition}
 import models.{Status => AStatus}
 
-import util.{ApiTattler, AssetStateMachine, Feature, Helpers, InternalTattler, LldpRepresentation, LshwRepresentation}
+import util.{ApiTattler, AssetStateMachine, Config, Feature, Helpers, InternalTattler, LldpRepresentation, LshwRepresentation}
 import util.parsers.{LldpParser, LshwParser}
 import Helpers.formatPowerPort
 
@@ -19,9 +19,7 @@ object AssetLifecycleConfig {
   // A few keys we generally want changable after intake
   val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
   // User configured excludes, only applied to non-servers
-  val ConfiguredExcludes = Helpers.getFeature("allowTagUpdates")
-      .map(_.split(",").map(_.trim.toUpperCase).toSet)
-      .getOrElse(Set[String]());
+  val ConfiguredExcludes = Feature("allowTagUpdates").toSet
   val RestrictedKeys = AssetMeta.Enum.values.map { _.toString }.toSet ++ PossibleAssetKeys -- ExcludedKeys
 
   def withExcludes(includeUser: Boolean = false) = includeUser match {
@@ -80,7 +78,7 @@ object AssetLifecycle {
     }
   }
 
-  private lazy val lshwConfig = Helpers.subAsMap("lshw")
+  private lazy val lshwConfig = Config.toMap("lshw")
   def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     asset.asset_type == AssetType.Enum.ServerNode.id match {
       case true => updateServer(asset, options)

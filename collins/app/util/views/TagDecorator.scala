@@ -32,7 +32,7 @@ object TagDecorator {
   }
 
   protected lazy val Decorators: Map[String,Decorator] =
-    Helpers.getConfig("tagdecorators").map { decorators =>
+    Config.get("tagdecorators").map { decorators =>
       decorators.subKeys.foldLeft(Map[String,Decorator]()) { case(total,current) =>
         val config = decorators.getConfig(current).get
         Map(current -> createDecorator(current, config)) ++ total

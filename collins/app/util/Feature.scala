@@ -34,4 +34,7 @@ case class Feature(name: String, verified: Boolean = false, override val source:
   } else {
     default
   }
+
+  def toSet(upcase: Boolean = true): Set[String] = getStringSet(Key, name, None, upcase)
+  def toSet: Set[String] = toSet()
 }

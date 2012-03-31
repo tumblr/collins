@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Cache, CryptoCodec, Helpers, InternalTattler}
+import util.{Cache, CryptoCodec, Feature, InternalTattler}
 import play.api.Logger
 import java.sql.Timestamp
 import java.util.Date
@@ -11,13 +11,10 @@ import org.squeryl.{Query, Schema}
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, ExistsExpression, ExpressionNode, LogicalBoolean}
 
 object AssetMetaValueConfig {
-  lazy val ExcludedAttributes: Set[Long] = Helpers.getFeature("noLogPurges").map { v =>
-    val noLogSet = v.split(",").map(_.trim.toUpperCase).toSet
-    noLogSet.map(v => AssetMeta.findByName(v).map(_.getId).getOrElse(-1L))
-  }.getOrElse(Set[Long]())
-  lazy val EncryptedMeta: Set[String] = Helpers.getFeature("encryptedTags")
-      .map(_.split(",").map(_.trim.toUpperCase).toSet)
-      .getOrElse(Set[String]());
+  lazy val ExcludedAttributes: Set[Long] = Feature("noLogPurges").toSet.map { name =>
+    AssetMeta.findByName(name).map(_.getId).getOrElse(-1L)
+  }
+  lazy val EncryptedMeta: Set[String] = Feature("encryptedTags").toSet
 }
 
 case class AssetMetaValue(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) {
