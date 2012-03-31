@@ -3,7 +3,7 @@ import play.api.mvc._
 
 import controllers.ApiResponse
 import models.Model
-import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, IpmiCommandProcessor}
+import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
@@ -33,6 +33,20 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     setAuthentication(auth)
     setCryptoKey(key)
     Model.initialize()
+  }
+
+  override def onRouteRequest(request: RequestHeader): Option[Handler] = {
+    if (request.path.startsWith("/api")) {
+      Stats.apiRequest {
+        super.onRouteRequest(request)
+      }
+    } else if (!request.path.startsWith("/assets/")) {
+      Stats.webRequest {
+        super.onRouteRequest(request)
+      }
+    } else {
+      super.onRouteRequest(request)
+    }
   }
 
   override def onStop(app: Application) {

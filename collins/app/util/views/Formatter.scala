@@ -34,4 +34,5 @@ object Formatter {
   def camelCase(value: String, sep: String = "") = {
     separators.replaceAllIn(words.replaceAllIn(value, m => m.matched.toLowerCase.capitalize), sep)
   }
+
 }
