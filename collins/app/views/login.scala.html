@@ -1,4 +1,4 @@
-@(loginForm: Form[(String,String)])(implicit flash: Flash, req: Request[AnyContent])
+@(loginForm: Form[(String,String,Option[String])])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util.notice
@@ -20,6 +20,9 @@
     }
     <div class="actions">
       <input type="submit" class="btn primary" value="Sign in">
+      @if(loginForm("location").value.isDefined) {
+      <input type="hidden" name="location" value="@loginForm("location").value.get">
+      }
       <button type="reset" class="btn">Cancel</button>
     </div>
 }

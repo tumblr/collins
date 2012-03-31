@@ -88,13 +88,17 @@ trait SecureController extends Controller {
 
 /** Used for regular web access, authenticates based on session */
 trait SecureWebController extends SecureController {
-  val unauthorizedRoute = routes.Application.login
+  val unauthorizedRoute = routes.Application.login.url
   def securityMessage(req: RequestHeader) = ("security" -> "The specified resource requires additional authorization")
 
   override protected def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
 
   override def onUnauthorized = Action { implicit request =>
-    Results.Redirect(unauthorizedRoute).flashing(securityMessage(request))
+    if (request.path != "/login") {
+      Results.Redirect(unauthorizedRoute + "?location=" + request.path)
+    } else {
+      Results.Redirect(unauthorizedRoute).flashing(securityMessage(request))
+    }
   }
 
   /** Use sessions storage for authenticate/etc */

@@ -1,4 +1,4 @@
-@(cacheStats: com.tumblr.play.CacheStats)(implicit flash: Flash, req: Request[AnyContent])
+@(cacheStats: com.tumblr.play.CacheStats, appStats: List[_root_.util.AppStats])(implicit flash: Flash, req: Request[AnyContent])
 
 @import _root_.util.views.Formatter
 
@@ -6,6 +6,34 @@
 <div class="page-header">
   <h1>Admin Stats</h1>
 </div>
+<div class="row">
+  <div class="span14">
+    @appStats.map { stats =>
+    <h3><a data-collapsible="@{stats.name}Stats">@{stats.name.capitalize} Stats</a></h3>
+    <table id="@{stats.name}Stats" class="zebra-striped condensed-table">
+
+      <thead>
+        <tr>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @stats.toMap.map { case(statName, statValue) =>
+        <tr>
+          <th>@statName</th>
+          <td>@statValue</td>
+        </tr>
+        }
+      </tbody>
+
+    </table>
+    }
+  </div>
+</div>
+
+
 <div class="row">
   <div class="span14">
     <h3><a data-collapsible="cacheStats">Cache Stats</a></h3>
@@ -51,4 +79,5 @@
     </table>
   </div>
 </div>
+
 }
