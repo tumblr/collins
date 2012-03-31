@@ -17,7 +17,7 @@ trait AssetWebApi {
 
   // POST /asset/:tag/cancel
   def cancelAsset(tag: String) = Authenticated { user => Action { implicit req =>
-    if (Helpers.ignoreDangerousCommand(tag)) {
+    if (AppConfig.ignoreAsset(tag)) {
       formatResponseData(
         Api.getErrorMessage("Specified asset has been configured to not permit this operation")
       )
@@ -180,7 +180,7 @@ trait AssetWebApi {
           formatResponseData(Api.getErrorMessage("contact and profile must be specified"))
         },
         suc => {
-          if (Helpers.ignoreDangerousCommand(asset)) {
+          if (AppConfig.ignoreAsset(asset)) {
             formatResponseData(Api.getErrorMessage(
               "Asset has been configured to ignore dangerous commands"
             ))

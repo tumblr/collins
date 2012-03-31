@@ -2,7 +2,7 @@ package models
 
 import play.api.Configuration
 import play.api.libs.json._
-import util.{Helpers, IpAddress, IpAddressCalc}
+import util.{Config, IpAddress, IpAddressCalc}
 import org.squeryl.dsl.ast.LogicalBoolean
 
 case class IpAddresses(
@@ -105,11 +105,8 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
   }
 
   override protected def getConfig()(implicit scope: Option[String]): Option[Configuration] = {
-    Helpers.getConfig("ipAddresses").flatMap { config =>
-      scope match {
-        case None => Some(config)
-        case Some(s) => config.getConfig(s)
-      }
+    Config.get("ipAddresses").map { cfg =>
+      scope.flatMap(s => cfg.getConfig(s)).getOrElse(cfg)
     }
   }
 

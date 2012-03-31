@@ -32,6 +32,8 @@ class FeatureSpec extends Specification with Mockito {
         Feature("foo", source = Map("features.bar" -> "true")).disabled must beTrue
         Feature("bar", source = Map("features.foo" -> "true")).disabled must beTrue
       }
+    } // Implement
+    "Convert" in {
       "toBoolean" in {
         Feature("foo", source = Map("features.bar" -> "true")).toBoolean(true) must beTrue
         Feature("foo", source = Map("features.bar" -> "true")).toBoolean(false) must beFalse
@@ -40,7 +42,30 @@ class FeatureSpec extends Specification with Mockito {
         Feature("foo", source = Map("features.foo" -> "true")).toBoolean(false) must beTrue
         Feature("foo", source = Map("features.foo" -> "false")).toBoolean(false) must beFalse
       }
-    } // Implement in
+      "toMap" in {
+        val config = Map(
+          "lshw.description" -> "Description here",
+          "lshw.enabled"     -> "true",
+          "globalthing"      -> "indeed",
+          "other.thing"      -> "123"
+        )
+        val cfg = Config(config)
+        cfg.getString("globalthing", "stuff").toString mustEqual "indeed"
+        cfg.getBoolean("lshw", "enabled") mustEqual Some(true)
+        val lshw = cfg.get("lshw")
+        lshw must beSome
+        lshw.get.getBoolean("enabled") mustEqual Some(true)
+        val lshwMap = cfg.toMap("lshw")
+        lshwMap must havePairs("description" -> "Description here", "enabled" -> "true")
+      }
+      "toSet" in {
+        Feature("foo", source = Map("features.foo" -> "Fizz,Buzz, Baz, Blam"))
+          .toSet(false) must contain("Fizz", "Buzz", "Baz", "Blam")
+        Feature("foo", source = Map("features.foo" -> "Fizz,Buzz, Baz, Blam"))
+          .toSet must contain("FIZZ", "BUZZ", "BAZ", "BLAM")
+        Feature("foo", source = Map("features.stuff" -> "thing")).toSet must be empty
+      }
+    } // Convert
     "Handle" in {
       "Bad data" in {
         Feature("foo", source = Map("features.foo" -> "lkajsd")).isSet must throwA[Exception]

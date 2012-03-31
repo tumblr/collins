@@ -50,7 +50,7 @@ abstract class IpmiCommand {
   }
 
   def run(): Option[String] = {
-    if (Helpers.getApplicationMode() != Mode.Prod && !debug) {
+    if (!Helpers.isProd() && !debug) {
       return None
     }
     val cmd = substitute(getIpmiCommand())
@@ -70,12 +70,12 @@ abstract class IpmiCommand {
   }
 
   protected def defaultTimeout: Duration = {
-    val config = Helpers.subAsMap("ipmi")
+    val config = AppConfig.ipmiMap
     Duration.parse(config.getOrElse("timeout", "2 seconds"))
   }
 
   protected def getIpmiCommand(): String = {
-    val config = Helpers.subAsMap("ipmi")
+    val config = AppConfig.ipmiMap
     if (config.isEmpty)
       throw new IllegalStateException("No ipmi configuration available")
     val identifyCmd = config.get(configKey)

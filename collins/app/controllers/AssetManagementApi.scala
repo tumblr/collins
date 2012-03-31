@@ -24,7 +24,7 @@ trait AssetManagementApi {
       Api.getErrorMessage(msg)
     }
     def hasPermissions(asset: Asset, action: PowerAction): Option[String] = {
-      if (Helpers.ignoreDangerousCommand(asset)) {
+      if (AppConfig.ignoreAsset(asset)) {
         return Some("Specified asset has been configured to not allow this operation")
       }
       action match {

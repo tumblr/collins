@@ -26,40 +26,7 @@ object Helpers {
     PowerPort.toString + "_" + label
   }
 
-  private[this] lazy val IgnoreAssets: Set[String] = getFeature("ignoreDangerousCommands")
-      .map(_.split(",").toSet[String].map(_.toLowerCase))
-      .getOrElse(Set[String]())
-  def ignoreDangerousCommand(tag: String): Boolean = IgnoreAssets.contains(tag.toLowerCase)
-  def ignoreDangerousCommand(asset: Asset): Boolean = {
-    ignoreDangerousCommand(asset.tag)
-  }
-
-  def getConfig(name: String): Option[Configuration] = {
-    Play.maybeApplication.map { app =>
-      app.configuration.getConfig(name)
-    }.getOrElse(None)
-  }
-
-  def getFeature(name: String): Option[String] = {
-    getConfig("features").flatMap { _.getString(name) }
-  }
-
-  def subAsMap(subKey: String, default: Map[String,String] = Map.empty): Map[String,String] = {
-    Play.maybeApplication.map { app =>
-      if (subKey.isEmpty) {
-        app.configuration.keys.map { key =>
-          key -> app.configuration.getString(key).get
-        }.toMap
-      } else {
-        app.configuration.getConfig(subKey).map { config =>
-          config.keys.map { key =>
-            key -> config.getString(key).get
-          }.toMap
-        }
-      }.getOrElse(default)
-    }.getOrElse(default)
-  }
-
+  def isProd() = getApplicationMode() == Mode.Prod
   def getApplicationMode(): Mode.Mode = {
     Play.maybeApplication.map { app =>
       app.mode
