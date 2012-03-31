@@ -1,0 +1,12 @@
+# sbt detritus
+target/
+*.class
+dist/
+boot/
+
+# intellij detritus
+.idea
+*.iml
+
+# gem detritus
+*.lock
