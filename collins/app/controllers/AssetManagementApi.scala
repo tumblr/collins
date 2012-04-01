@@ -49,7 +49,11 @@ trait AssetManagementApi {
       Asset.findByTag(tag).map { asset =>
         plugin.powerState(asset)() match {
           case success if success.isSuccess =>
-            ResponseData(Results.Ok, JsObject(Seq("MESSAGE" -> JsString(success.description))))
+            val status = success.description.contains("on") match {
+              case true => "on"
+              case false => "off"
+            }
+            ResponseData(Results.Ok, JsObject(Seq("MESSAGE" -> JsString(status))))
           case failure =>
             PowerHelper.onFailure(asset,
               "Failed to get power status: %s".format(failure.description), user, PowerState)
