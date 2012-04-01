@@ -5,9 +5,9 @@ import models.{LogMessageType, LogFormat, LogSource}
 
 sealed abstract class Tattler(val source: LogSource.LogSource, val pString: Option[String] = None) {
   protected def message(user: Option[User], msg: String) = {
-    pString.map(s => s + ": " + msg).getOrElse {
-      "User %s: %s".format(user.map(_.username).getOrElse("unknown"), msg)
-    }
+    val username = user.orElse(AppConfig.getUser()).map(_.username)
+      .orElse(pString).orElse(Some("Unknown")).get
+    "User %s: %s".format(username, msg)
   }
   def critical(asset: Asset, user: Option[User], msg: String): AssetLog = {
     AssetLog.critical(

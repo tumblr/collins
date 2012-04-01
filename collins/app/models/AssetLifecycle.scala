@@ -217,11 +217,8 @@ object AssetLifecycle {
           case true =>
             Right(lshwRep)
           case false =>
-            val ex = new Exception("Parsing LSHW succeeded, saving failed")
-            AssetLog.error(asset, "Parsing LSHW succeeded but saving it failed",
-              LogFormat.PlainText, LogSource.Internal
-            ).withException(ex).create()
-            Left(ex)
+            val ex = new Exception("Parsing LSHW succeeded but saving failed")
+            Left(handleException(asset, ex.getMessage, ex))
         }
     } //catch
   } // updateServer
@@ -237,11 +234,8 @@ object AssetLifecycle {
           case true =>
             Right(lldpRep)
           case false =>
-            val ex = new Exception("Parsing LLDP succeeded, saving failed")
-            AssetLog.error(asset, "Parsing LLDP succeeded but saving it failed",
-              LogFormat.PlainText, LogSource.Internal
-            ).withException(ex).create()
-            Left(ex)
+            val ex = new Exception("Parsing LLDP succeeded but saving failed")
+            Left(handleException(asset, ex.getMessage, ex))
         }
     }
   }
