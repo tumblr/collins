@@ -131,7 +131,7 @@ object AssetLifecycle {
       val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
       Asset.inTransaction {
         Asset.update(asset.copy(status = status.id, updated = Some(new Date().asTimestamp)))
-        ApiTattler.warning(asset, None, reason)
+        ApiTattler.informational(asset, None, reason)
       }
       true
     }.left.map(e => handleException(asset, "Error updating status for asset", e))

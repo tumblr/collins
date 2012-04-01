@@ -626,10 +626,10 @@
     <p><span class="label important">Warning</span> This is a disruptive action</p>
     <ul>
       <li><strong>Hard Reboot</strong> - This is equivalent to pressing the reset button</li>
-      <li><strong>Soft Reboot</strong> - Graceful reboot via IPMI</li>
-      <li><strong>Power Off</strong> - Power off the server via IPMI</li>
-      <li><strong>Power On</strong> - Power on the server via IPMI</li>
-      <li><strong>Power Cycle</strong> - Equivalent to unplugging the server from the power strip then plugging it back in.</li>
+      <li><strong>Soft Reboot</strong> - Graceful reboot via IPMI, uses ACPI to notify OS</li>
+      <li><strong>Power Off</strong> - Power off the server, without grace (like pressing the power button)</li>
+      <li><strong>Power On</strong> - Power up chassis</li>
+      <li><strong>Power Off Graceful</strong> - Initiate soft-shutdown of OS via ACPI</li>
     </ul>
     <p>If that all sounds good, pick a reboot type and then click the button below</p>
     <p><strong>Note</strong> If a reboot command has been issued successfully in the past 20 minutes, another power management action will not be allowed.</p>
@@ -642,7 +642,7 @@
           <option value="rebootHard">Hard Reboot</option>
           <option value="powerOff">Power Off</option>
           <option value="powerOn">Power On</option>
-          <option value="powerCycle">Power Cycle</option>
+          <option value="powerSoft">Power Off Graceful</option>
         </select>
       </div>
     </div>

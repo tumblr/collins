@@ -12,14 +12,14 @@ import com.twitter.util.{Future, FuturePool}
 import java.util.concurrent.Executors
 
 object IpmiPowerManagementConfig {
-  val PowerCycleKey = "powerCycle"
   val PowerOffKey = "powerOff"
   val PowerOnKey = "powerOn"
+  val PowerSoftKey = "powerSoft"
   val PowerStateKey = "powerState"
   val RebootHardKey = "rebootHard"
   val RebootSoftKey = "rebootSoft"
   val RequiredKeys: Set[String] = Set(
-    PowerCycleKey, PowerOffKey, PowerOnKey, PowerStateKey, RebootHardKey, RebootSoftKey
+    PowerOffKey, PowerOnKey, PowerSoftKey, PowerStateKey, RebootHardKey, RebootSoftKey
   )
 }
 
@@ -78,9 +78,9 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
     }
   }
 
-  def powerCycle(e: AssetWithTag): PowerStatus = run(e, PowerCycleKey)
   def powerOff(e: AssetWithTag): PowerStatus = run(e, PowerOffKey)
   def powerOn(e: AssetWithTag): PowerStatus = run(e, PowerOnKey)
+  def powerSoft(e: AssetWithTag): PowerStatus = run(e, PowerSoftKey)
   def powerState(e: AssetWithTag): PowerStatus = run(e, PowerStateKey)
   def rebootHard(e: AssetWithTag): PowerStatus = run(e, RebootHardKey)
   def rebootSoft(e: AssetWithTag): PowerStatus = run(e, RebootSoftKey)

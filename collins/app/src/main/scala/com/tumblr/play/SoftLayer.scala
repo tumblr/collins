@@ -120,8 +120,14 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     }
   }
 
+  /*
   override def powerCycle(e: AssetWithTag): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerCycle.json")
+  }
+  */
+  override def powerSoft(e: AssetWithTag): PowerStatus = {
+    // This does not actually exist at SL
+    doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerSoft.json")
   }
   override def powerOff(e: AssetWithTag): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerOff.json")
