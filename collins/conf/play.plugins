@@ -2,3 +2,4 @@
 5001:com.tumblr.play.SoftLayerPlugin
 5002:com.tumblr.play.ProvisionerPlugin
 5003:com.tumblr.play.CallbackManagerPlugin
+5004:util.plugins.IpmiPowerManagement

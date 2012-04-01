@@ -104,10 +104,15 @@ trait Resources extends Controller {
           case Stage1Form() => AsyncResult {
             IpmiCommandProcessor.send(IpmiIdentifyCommand(asset, 30.seconds)) { opt =>
               opt match {
-                case Some(error) =>
-                  Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
-                    "message" -> error
-                  )
+                case Some(results) =>
+                  results.isSuccess match {
+                    case true =>
+                      Ok(html.resources.intake(asset, None))
+                    case false =>
+                      Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
+                        "message" -> results.toString
+                      )
+                  }
                 case None =>
                   Ok(html.resources.intake(asset, None))
               }

@@ -5,6 +5,7 @@ import controllers.ApiResponse
 import models.Model
 import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
+import java.io.File
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
@@ -15,6 +16,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
 
   override def onStart(app: Application) {
     verifyConfiguration(app.configuration)
+    setupLogging(app)
     // FIXME Run evolutions if needed
     val auth = app.configuration.getConfig("authentication") match {
       case None => AuthenticationProvider.Default
@@ -137,4 +139,15 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
   def getAuthentication() = authentication.get
+
+  protected def setupLogging(app: Application) {
+    if (Play.isDev(app)) {
+      Option(this.getClass.getClassLoader.getResource("dev_logger.xml"))
+        .map(_.getFile())
+        .foreach { file =>
+          System.setProperty("logger.file", file)
+          Logger.init(new File("."))
+        }
+    }
+  }
 }
