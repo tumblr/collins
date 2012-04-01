@@ -9,6 +9,11 @@ sealed abstract class Tattler(val source: LogSource.LogSource, val pString: Opti
       "User %s: %s".format(user.map(_.username).getOrElse("unknown"), msg)
     }
   }
+  def critical(asset: Asset, user: Option[User], msg: String): AssetLog = {
+    AssetLog.critical(
+      asset, message(user, msg), LogFormat.PlainText, source
+    ).create()
+  }
   def warning(asset: Asset, user: Option[User], msg: String): AssetLog = {
     AssetLog.warning(
       asset, message(user, msg), LogFormat.PlainText, source

@@ -1,8 +1,7 @@
 package util
 
-import models.Asset
+import models.{Asset, User}
 import play.api.{Configuration, Mode, Play}
-import java.util.concurrent.atomic.AtomicLong
 
 // Globally useful configurations
 object AppConfig extends Config {
@@ -22,4 +21,12 @@ object AppConfig extends Config {
       app.mode
     }.getOrElse(Mode.Dev)
   }
+
+  private val UserSession = new ThreadLocal[Option[User]] {
+    override def initialValue(): Option[User] = None
+  }
+
+  def setUser(user: Option[User]) = UserSession.set(user)
+  def getUser(): Option[User] = UserSession.get()
+  def removeUser() = UserSession.remove()
 }

@@ -50,7 +50,7 @@ trait AssetWebApi {
     }
     def onFailure(asset: Asset, profile: String, cmd: CommandResult) {
       val msg = "Provisioning as %s failed - %s".format(profile, cmd.toString)
-      UserTattler.warning(asset, user, msg)
+      UserTattler.critical(asset, user, msg)
     }
     def validate(asset: Asset, form: ProvisionForm): Either[String,ProvisionerRequest] = {
       Provisioner.pluginEnabled { plugin =>
