@@ -3,11 +3,13 @@ package util
 import models.{Asset, IpmiInfo}
 
 import akka.actor.Actor
-import Actor._
+import akka.actor.Actor._
 import akka.dispatch.FutureTimeoutException
+import akka.routing.Routing.loadBalancerActor
+import akka.routing.CyclicIterator
 import akka.util.Duration
 import akka.util.duration._
-import play.api.Mode
+import play.api.{Logger, Mode}
 import play.api.libs.akka._
 import play.api.libs.concurrent.{Redeemed, Thrown}
 
@@ -20,79 +22,118 @@ class IpmiCommandProcessor extends Actor {
   }
 }
 
-object IpmiCommandProcessor {
-  lazy val ref = actorOf[IpmiCommandProcessor].start()
+case class IpmiCommandResult(exitCode: Int, stdout: String, stderr: String) {
+  override def toString(): String = {
+    val ec = "Exit Code: %d".format(exitCode)
+    val ss = if (stdout.isEmpty) "" else "Stdout: %s".format(stdout.replaceAll("\n","_"))
+    val se = if (stderr.isEmpty) "" else "Stderr: %s".format(stderr.replaceAll("\n","_"))
+    List(ec, ss, se).filter(_.nonEmpty).mkString(", ")
+  }
+  def isSuccess: Boolean = exitCode == 0
+}
+object IpmiCommandResult {
+  def apply(error: String) = new IpmiCommandResult(-1, "", error.trim)
+}
 
-  def send[A](cmd: IpmiCommand)(result: Option[String] => A) = {
-    ref.?(cmd)(timeout = cmd.timeout).mapTo[Option[String]].asPromise.extend1 {
+object IpmiCommandProcessor {
+  val ref = loadBalancerActor(
+    new CyclicIterator((1 to ActorConfig.ActorCount)
+      .map(_ => actorOf[IpmiCommandProcessor].start())
+      .toList
+    )
+  )
+  def send[A](cmd: IpmiCommand)(result: Option[IpmiCommandResult] => A) = {
+    ref.?(cmd)(timeout = cmd.timeout).mapTo[Option[IpmiCommandResult]].asPromise.extend1 {
       case Redeemed(v) => result(v)
       case Thrown(e) => e match {
         case t: FutureTimeoutException =>
-          result(Option("Command took longer than %d seconds: %s".format(cmd.timeout.toSeconds, t.getMessage)))
+          result(Option(IpmiCommandResult(
+            "Command took longer than %d seconds: %s".format(cmd.timeout.toSeconds, t.getMessage)
+          )))
         case _ =>
-          result(Option(e.getMessage))
+          result(Option(IpmiCommandResult(e.getMessage)))
       }
     }
   }
 }
 
 abstract class IpmiCommand {
-  val duration: Duration
+  val interval: Duration
   val timeout: Duration
   val configKey: String
   var debug: Boolean = false
 
   protected def ipmiInfo: IpmiInfo
 
+  protected val logger = Logger(getClass)
+
   protected lazy val (address, username, password) = {
     val ipmi = ipmiInfo
     (ipmi.dottedAddress(), ipmi.username, ipmi.decryptedPassword())
   }
 
-  def run(): Option[String] = {
-    if (!AppConfig.isProd() && !debug) {
+  def shouldRun(): Boolean = {
+    AppConfig.isProd() || debug
+  }
+
+  def getConfig(): Map[String,String] = {
+    AppConfig.ipmiMap
+  }
+
+  def run(): Option[IpmiCommandResult] = {
+    if (!shouldRun) {
       return None
     }
-    val cmd = substitute(getIpmiCommand())
-    val process = Process(cmd, None, ("IPMI_PASSWORD" -> password))
-    val sb = new StringBuilder()
+    val command = substitute(getIpmiCommand())
+    val process = Process(command, None, ("IPMI_PASSWORD" -> password))
+    val stdout = new StringBuilder()
+    val stderr = new StringBuilder()
     val exitStatus = try {
-      process ! ProcessLogger({s => sb.append(s)})
+      process ! ProcessLogger(
+        s => stdout.append(s + "\n"),
+        e => stderr.append(e + "\n")
+      )
     } catch {
       case e: Throwable =>
-        sb.append(e.getMessage)
+        stderr.append(e.getMessage)
         -1
     }
-    exitStatus match {
-      case 0 => None
-      case n => Some(sb.toString)
+    val stdoutString = stdout.toString.trim
+    val stderrString = stderr.toString.trim
+    val icr = IpmiCommandResult(exitStatus, stdoutString, stderrString)
+    if (!icr.isSuccess) {
+      logger.error("Error running command '%s'".format(command))
+      logger.error(icr.toString)
+    } else {
+      logger.info("Ran command %s".format(command))
+      logger.info(icr.toString)
     }
+    Some(icr)
   }
 
   protected def defaultTimeout: Duration = {
-    val config = AppConfig.ipmiMap
-    Duration.parse(config.getOrElse("timeout", "2 seconds"))
+    Duration.parse(getConfig.getOrElse("timeout", "2 seconds"))
   }
 
   protected def getIpmiCommand(): String = {
-    val config = AppConfig.ipmiMap
+    val config = getConfig
     if (config.isEmpty)
-      throw new IllegalStateException("No ipmi configuration available")
-    val identifyCmd = config.get(configKey)
-    if (!identifyCmd.isDefined)
-      throw new IllegalStateException("No ipmi.%s configuration available".format(configKey))
-    identifyCmd.get
+      throw new IllegalStateException("No valid ipmi configuration available")
+    val ipmiCmd = config.get(configKey)
+    if (!ipmiCmd.isDefined)
+      throw new IllegalStateException("No %s configuration available".format(configKey))
+    ipmiCmd.get
   }
 
   protected def substitute(cmd: String): String = {
     cmd.replace("<host>", address)
       .replace("<username>", username)
       .replace("<password>", password)
-      .replace("<interval>", duration.toSeconds.toString)
+      .replace("<interval>", interval.toSeconds.toString)
   }
 }
 
-case class IpmiIdentifyCommand(asset: Asset, duration: Duration, userTimeout: Option[Duration] = None)
+case class IpmiIdentifyCommand(asset: Asset, interval: Duration, userTimeout: Option[Duration] = None)
   extends IpmiCommand
 {
   val configKey = "identify"
@@ -106,5 +147,3 @@ case class IpmiIdentifyCommand(asset: Asset, duration: Duration, userTimeout: Op
     _ipmi.get
   }
 }
-
-

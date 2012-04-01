@@ -1,6 +1,8 @@
 package controllers
 package actors
 
+import util.ActorConfig
+
 import akka.actor.Actor._
 import akka.actor.Actor
 import akka.dispatch.FutureTimeoutException
@@ -9,8 +11,6 @@ import akka.routing.CyclicIterator
 
 import play.api.libs.akka._
 import play.api.libs.concurrent.{Redeemed, Thrown}
-
-import util.Config
 
 private[actors] class BackgroundProcessor extends Actor {
   def receive = {
@@ -23,10 +23,8 @@ private[actors] class BackgroundProcessor extends Actor {
 }
 
 object BackgroundProcessor {
-  val DefaultActorCount = Runtime.getRuntime().availableProcessors()*2
-  val actorCount = Config.toMap.get("actorCount").map(_.toInt).getOrElse(DefaultActorCount)
   val ref = loadBalancerActor(
-    new CyclicIterator((1 to actorCount)
+    new CyclicIterator((1 to ActorConfig.ActorCount)
       .map(_ => actorOf[BackgroundProcessor].start())
       .toList
     )
