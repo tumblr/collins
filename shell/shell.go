@@ -10,7 +10,7 @@ import (
 func WhichOrDefault(cmd, dflt string) string {
 	p, err := exec.LookPath(cmd)
 	if err != nil {
-		return dfl
+		return dflt
 	}
 	return p
 }
