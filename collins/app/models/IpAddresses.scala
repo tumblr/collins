@@ -10,6 +10,7 @@ case class IpAddresses(
   gateway: Long,
   address: Long,
   netmask: Long,
+  pool: String,
   id: Long = 0) extends IpAddressable
 {
   override def asJson: String = {
@@ -20,7 +21,8 @@ case class IpAddresses(
     "ASSET_ID" -> JsNumber(getAssetId()),
     "ADDRESS" -> JsString(dottedAddress),
     "GATEWAY" -> JsString(dottedGateway),
-    "NETMASK" -> JsString(dottedNetmask)
+    "NETMASK" -> JsString(dottedNetmask),
+    "POOL" -> JsString(pool)
   )
 }
 
@@ -33,6 +35,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     i.address is(unique),
     i.gateway is(indexed),
     i.netmask is(indexed),
+    i.pool is(indexed),
     columns(i.asset_id, i.address) are(indexed)
   ))
 
@@ -46,22 +49,18 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     val assetId = asset.getId
     createWithRetry(10) {
       val (gateway, address, netmask) = getNextAvailableAddress()(scope)
-      val ipAddresses = IpAddresses(assetId, gateway, address, netmask)
+      val ipAddresses = IpAddresses(assetId, gateway, address, netmask, scope.getOrElse(""))
       tableDef.insert(ipAddresses)
     }
   }
 
-  protected[this] def generateFindQuery(addressRow: IpAddresses, address: String): LogicalBoolean = {
-    try {
-      if (address.split('.').size != 4) throw new Exception("Try again later")
-      (addressRow.address === IpAddress.toLong(address))
-    } catch {
-      case e =>
-        val padded = IpAddress.padRight(address, "0")
-        val netmask = IpAddress.netmaskFromPad(padded, "0")
-        val calc = IpAddressCalc(padded, netmask, None)
-        (addressRow.address gte calc.minAddressAsLong) and
-        (addressRow.address lte calc.maxAddressAsLong)
+  def deleteByAssetAndPool(asset: Asset, pool: Option[String]): Int = inTransaction {
+    val rows = tableDef.where(i =>
+      i.asset_id === asset.id and
+      i.pool === pool.?
+    ).toList
+    rows.foldLeft(0) { case(sum, ipInfo) =>
+      sum + delete(ipInfo)
     }
   }
 
@@ -85,6 +84,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
       Page(results, page.page, page.offset, totalCount)
     }
   }
+
   def findByAddress(address: String): Option[Asset] = inTransaction {
     val addressAsLong = try {
       IpAddress.toLong(address)
@@ -100,6 +100,13 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     ).headOption
   }
 
+  def findInPool(pool: String): Seq[IpAddresses] = inTransaction {
+    from(tableDef)(i =>
+      where(i.pool === pool)
+      select(i)
+    ).toList
+  }
+
   override def get(i: IpAddresses) = getOrElseUpdate(getKey.format(i.id)) {
     tableDef.lookup(i.id).get
   }
@@ -107,6 +114,20 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
   override protected def getConfig()(implicit scope: Option[String]): Option[Configuration] = {
     Config.get("ipAddresses").map { cfg =>
       scope.flatMap(s => cfg.getConfig(s)).getOrElse(cfg)
+    }
+  }
+
+  protected[this] def generateFindQuery(addressRow: IpAddresses, address: String): LogicalBoolean = {
+    try {
+      if (address.split('.').size != 4) throw new Exception("Try again later")
+      (addressRow.address === IpAddress.toLong(address))
+    } catch {
+      case e =>
+        val padded = IpAddress.padRight(address, "0")
+        val netmask = IpAddress.netmaskFromPad(padded, "0")
+        val calc = IpAddressCalc(padded, netmask, None)
+        (addressRow.address gte calc.minAddressAsLong) and
+        (addressRow.address lte calc.maxAddressAsLong)
     }
   }
 

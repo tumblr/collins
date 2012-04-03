@@ -12,20 +12,22 @@ import java.sql.SQLException
 trait IpAddressApi {
   this: Api with SecureController =>
 
-  case class IpAddressForm(address: Option[String], gateway: Option[String], netmask: Option[String]) {
+  case class IpAddressForm(address: Option[String], gateway: Option[String], netmask: Option[String], pool: Option[String]) {
     def merge(asset: Asset, ipaddress: Option[IpAddresses]): IpAddresses = {
       ipaddress.map { ip =>
         ip.copy(
           address = address.map(IpAddress.toLong(_)).getOrElse(ip.address),
           gateway = gateway.map(IpAddress.toLong(_)).getOrElse(ip.gateway),
-          netmask = netmask.map(IpAddress.toLong(_)).getOrElse(ip.netmask)
+          netmask = netmask.map(IpAddress.toLong(_)).getOrElse(ip.netmask),
+          pool = pool.map(getPoolName(_)).getOrElse(ip.pool)
         )
       }.getOrElse {
         if (address.isDefined && gateway.isDefined && netmask.isDefined) {
           val a = IpAddress.toLong(address.get)
           val g = IpAddress.toLong(gateway.get)
           val n = IpAddress.toLong(netmask.get)
-          IpAddresses(asset.getId, g, a, n)
+          val p = getPoolName(pool.getOrElse("default"))
+          IpAddresses(asset.getId, g, a, n, p)
         } else {
           throw new Exception("If creating a new IP the address, gateway and netmask must be specified")
         }
@@ -36,7 +38,8 @@ trait IpAddressApi {
     of(IpAddressForm.apply _, IpAddressForm.unapply _)(
       "address" -> optional(text(7)),
       "gateway" -> optional(text(7)),
-      "netmask" -> optional(text(7))
+      "netmask" -> optional(text(7)),
+      "pool" -> optional(text)
     )
   )
 
@@ -46,7 +49,7 @@ trait IpAddressApi {
       case useDefault if useDefault < 1 || useDefault > 10 => 1
       case n => n
     }
-    val pool: String = getString("pool", "")
+    val pool: String = getPoolName(getString("pool", ""))
     withTag(tag) { asset =>
       try {
         val created = IpAddresses.createForAsset(asset, count, Some(pool))
@@ -64,6 +67,21 @@ trait IpAddressApi {
       IpAddresses.findByAddress(address).map(s =>
         ResponseData(Results.Ok, JsObject(s.forJsonObject()))
       ).getOrElse(Api.getErrorMessage("No assets found with specified address", Results.NotFound))
+    )
+  }(SecuritySpec(true, Nil))
+
+  // GET /api/assets/with/addresses/in/:pool
+  def assetsFromPool(pool: String) = SecureAction { implicit req =>
+    formatResponseData(
+      IpAddresses.findInPool(getPoolName(pool)) match {
+        case Nil =>
+          Api.getErrorMessage("No such pool or no assets in pool", Results.NotFound)
+        case list =>
+          val jsList = list.map { e =>
+            JsObject(Asset.findById(e.asset_id).get.forJsonObject)
+          }.toList
+          ResponseData(Results.Ok, JsObject(Seq("ASSETS" -> JsArray(jsList))))
+      }
     )
   }(SecuritySpec(true, Nil))
 
@@ -106,8 +124,9 @@ trait IpAddressApi {
 
   // DELETE /api/asset/:tag/addresses
   def purgeAddresses(tag: String) = Authenticated { user => Action { implicit req =>
+    val pool = Option(getString("pool", "garbage")).filter(_ != "garbage")
     withTag(tag) { asset =>
-      val deleted = IpAddresses.deleteByAsset(asset)
+      val deleted = IpAddresses.deleteByAssetAndPool(asset, pool)
       UserTattler.notice(asset, user, "Deleted %d IP addresses".format(deleted))
       ResponseData(Results.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
     }
@@ -136,4 +155,9 @@ trait IpAddressApi {
       s => s.getOrElse(default)
     )
 
+  protected def getPoolName(p: String) = if (p.toLowerCase == "default") {
+    ""
+  } else {
+    p.toLowerCase
+  }
 }
