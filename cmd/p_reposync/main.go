@@ -10,8 +10,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"TumblrDevTool/git"
-	"TumblrDevTool/shell"
+	"tumblr/git"
+	"tumblr/shell"
 )
 
 var (

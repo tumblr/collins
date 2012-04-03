@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 	"github.com/4ad/doozer"
-	"TumblrDevTool/stat"
+	"tumblr/stat"
 )
 
 var (
