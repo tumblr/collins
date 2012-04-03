@@ -50,7 +50,9 @@ func main() {
 func bench(dzr *doozer.Conn, cargo int, id, twin string, n, k int) error {
 	fmt.Printf("bench id=%s twin=%s n=%d k=%d\n", id, twin, n, k)
 	body := make([]byte, cargo)
-	var readSampler, syncSampler, writeSampler stat.TimeSampler
+	var totalSampler, readSampler, syncSampler, writeSampler stat.TimeSampler
+
+	totalSampler.Start()
 
 	rev, err := dzr.Rev()
 	if err != nil {
@@ -101,10 +103,15 @@ func bench(dzr *doozer.Conn, cargo int, id, twin string, n, k int) error {
 		}
 		readSampler.Stop()
 	}
-	fmt.Printf(" read: %g/%g ns, sync: %g/%g ns, write: %g/%g ns\n", 
+
+	totalSampler.Stop()
+
+	fmt.Printf("doozer bench id=%s twin=%s iterations=%d files=%d\n", id, twin, n, k)
+	fmt.Printf("read: %g/%g ns, sync: %g/%g ns, write: %g/%g ns, total: %g ns\n", 
 		readSampler.Average(), readSampler.StdDev(),
 		syncSampler.Average(), syncSampler.StdDev(),
 		writeSampler.Average(), writeSampler.StdDev(),
+		totalSampler.Average(),
 	)
 	return nil
 }
