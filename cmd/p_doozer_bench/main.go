@@ -8,7 +8,7 @@ import (
 	"os"
 	"strconv"
 	"github.com/4ad/doozer"
-	//"TumblrDevTool/shell"
+	"TumblrDevTool/stat"
 )
 
 var (
@@ -17,6 +17,7 @@ var (
 	flagTwin    *string = flag.String("twin", "", "String ID of the other benchmark client")
 	flagN       *int    = flag.Int("n", 20, "Number of benchmark iterations")
 	flagK       *int    = flag.Int("k", 10, "Number of nodes to touch during an iteration")
+	flagCargo   *int    = flag.Int("cargo", 2200, "Payload size for reads and writes")
 )
 
 func main() {
@@ -31,21 +32,25 @@ func main() {
 	if *flagK < 1 {
 		log.Fatalf("need a positive number of nodes per iteration")
 	}
+	if *flagCargo < 1 {
+		log.Fatalf("need positive payload size")
+	}
 
 	dzr, err := doozer.Dial(*flagDoozerd)
 	if err != nil {
 		log.Fatalf("dial (%s)", err)
 	}
 	defer dzr.Close()
-	if err := bench(dzr, *flagID, *flagTwin, *flagN, *flagK); err != nil {
+	if err := bench(dzr, *flagCargo, *flagID, *flagTwin, *flagN, *flagK); err != nil {
 		fmt.Fprintf(os.Stderr, "Bench error (%s)\n", err)
 		os.Exit(1)
 	}
 }
 
-func bench(dzr *doozer.Conn, id, twin string, n, k int) error {
+func bench(dzr *doozer.Conn, cargo int, id, twin string, n, k int) error {
 	fmt.Printf("bench id=%s twin=%s n=%d k=%d\n", id, twin, n, k)
-	body := make([]byte, 2200)
+	body := make([]byte, cargo)
+	var readSampler, syncSampler, writeSampler stat.TimeSampler
 
 	rev, err := dzr.Rev()
 	if err != nil {
@@ -56,6 +61,7 @@ func bench(dzr *doozer.Conn, id, twin string, n, k int) error {
 	var syncRev int64 = -1
 	for i := 0; i < n; i++ {
 		// Perform K writes to K different nodes
+		writeSampler.Start()
 		for j := 0; j < k; j++ {
 			name := "/" + id + "/a" + strconv.Itoa(j)
 			rev, err = dzr.Set(name, rev, body)
@@ -64,6 +70,7 @@ func bench(dzr *doozer.Conn, id, twin string, n, k int) error {
 				return err
 			}
 		}
+		writeSampler.Stop()
 
 		// Mark completion of write cycle at a special node
 		rev, err = dzr.Set("/" + id + "/sync", rev, []byte(strconv.Itoa(i)))
@@ -74,13 +81,16 @@ func bench(dzr *doozer.Conn, id, twin string, n, k int) error {
 
 		// Wait for twin to complete the same iteration i
 		fmt.Printf("i=%d, waiting\n", i)
+		syncSampler.Start()
 		syncRev, err = syncOnEqual(dzr, "/" + twin + "/sync", i, syncRev)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "i=%d, sync /%s/sync (%s)\n", i, twin, err)
 			return err
 		}
+		syncSampler.Stop()
 
 		// Perform 10*k reads 
+		readSampler.Start()
 		for j := 0; j < 10*k; j++ {
 			name := "/" + id + "/a" + strconv.Itoa(j%k)
 			_, rev, err = dzr.Get(name, nil)
@@ -89,10 +99,13 @@ func bench(dzr *doozer.Conn, id, twin string, n, k int) error {
 				return err
 			}
 		}
-
-		fmt.Printf("iteration %d done\n", i)
+		readSampler.Stop()
 	}
-	fmt.Printf("bench done\n")
+	fmt.Printf(" read: %g/%g ns, sync: %g/%g ns, write: %g/%g ns\n", 
+		readSampler.Average(), readSampler.StdDev(),
+		syncSampler.Average(), syncSampler.StdDev(),
+		writeSampler.Average(), writeSampler.StdDev(),
+	)
 	return nil
 }
 
