@@ -20,8 +20,11 @@ object MigrateAddresses extends App {
     val calc = IpAddressCalc(address, netmask, None)
     calc.minAddress
   }
+  def isPrivate(address: String): Boolean = {
+    address.startsWith("10.")
+  }
   def netmaskForIp(address: String): String = {
-    if (address.startsWith("10.")) {
+    if (isPrivate(address)) {
       "255.255.248.0"
     } else {
       "255.255.255.224"
@@ -47,7 +50,7 @@ object MigrateAddresses extends App {
           ip, IpAddress.toLong(ip), gateway, netmask
         ))
         try {
-          val address = IpAddresses(aid, IpAddress.toLong(gateway), IpAddress.toLong(ip), IpAddress.toLong(netmask))
+          val address = IpAddresses(aid, IpAddress.toLong(gateway), IpAddress.toLong(ip), IpAddress.toLong(netmask), "")
           IpAddresses.create(address)
         } catch {
           case e =>
