@@ -30,7 +30,8 @@ case class Memory(size: ByteStorageUnit, bank: Int, description: String, product
 {
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "SIZE" -> JsNumber(size.inBytes),
-    "SIZE_S" -> JsString(size.toHuman),
+    "SIZE_S" -> JsString(size.inBytes.toString),
+    "SIZE_HUMAN" -> JsString(size.toHuman),
     "BANK" -> JsNumber(bank),
     "DESCRIPTION" -> JsString(description)
   );
@@ -40,7 +41,8 @@ case class Nic(speed: BitStorageUnit, macAddress: String, description: String, p
 {
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "SPEED" -> JsNumber(speed.inBits),
-    "SPEED_S" -> JsString(speed.toHuman),
+    "SPEED_S" -> JsString(speed.inBits.toString),
+    "SPEED_HUMAN" -> JsString(speed.toHuman),
     "MAC_ADDRESS" -> JsString(macAddress),
     "DESCRIPTION" -> JsString(description)
   )
@@ -53,7 +55,8 @@ case class Disk(size: ByteStorageUnit, diskType: Disk.Type, description: String,
   def isCdRom(): Boolean = diskType == Disk.Type.CdRom
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "SIZE" -> JsNumber(size.inBytes),
-    "SIZE_S" -> JsString(size.toHuman),
+    "SIZE_S" -> JsString(size.inBytes.toString),
+    "SIZE_HUMAN" -> JsString(size.toHuman),
     "TYPE" -> JsString(diskType.toString),
     "DESCRIPTION" -> JsString(description)
   );

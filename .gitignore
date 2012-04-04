@@ -11,3 +11,4 @@ boot/
 
 # gem detritus
 *.lock
+*.swp
