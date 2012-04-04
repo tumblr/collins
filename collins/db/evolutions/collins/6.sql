@@ -2,7 +2,7 @@
 
 # --- !Ups
 
-ALTER TABLE ip_addresses ADD COLUMN pool CHAR(32) NOT NULL DEFAULT '' AFTER netmask;
+ALTER TABLE ip_addresses ADD COLUMN pool CHAR(32) NOT NULL DEFAULT '';
 CREATE INDEX pool_idx ON ip_addresses (pool);
 
 # --- !Downs
