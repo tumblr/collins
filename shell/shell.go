@@ -15,24 +15,40 @@ func WhichOrDefault(cmd, dflt string) string {
 	return p
 }
 
-// Run2 runs program prog in directory dir with arguments argv and returns its stdout and stderr
-func Run2(prog, dir string, argv ...string) (allout, allerr []byte, err error) {
+// Run runs program prog in directory dir with arguments argv and returns its stdout and stderr
+func Run(prog, dir string, stdin string, argv ...string) (stdout, stderr string, err error) {
 	cmd := exec.Command(prog, argv...)
 	cmd.Dir = dir
 
-	stdout, err := cmd.StdoutPipe()
+	stdinIO, err := cmd.StdinPipe()
 	if err != nil {
-		return nil, nil, err
+		return "", "", err
 	}
-	stderr, err := cmd.StderrPipe()
+	stdoutIO, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, nil, err
+		return "", "", err
+	}
+	stderrIO, err := cmd.StderrPipe()
+	if err != nil {
+		return "", "", err
 	}
 	if err := cmd.Start(); err != nil {
-		return nil, nil, err
+		return "", "", err
 	}
-	allout, _ = ioutil.ReadAll(stdout)
-	allerr, _ = ioutil.ReadAll(stderr)
+	// Since Run is meant for non-interactive execution, we pump all the stdin first,
+	// then we (sequentially) read all of stdout and then all of stderr.
+	// XXX: Is it possible to block if the program's stderr buffer fills while we are
+	// consuming the stdout?
+	_, err = stdinIO.Write([]byte(stdin))
+	if err != nil {
+		return "", "", err
+	}
+	err = stdinIO.Close()
+	if err != nil {
+		return "", "", err
+	}
+	stdoutBuf, _ := ioutil.ReadAll(stdoutIO)
+	stderrBuf, _ := ioutil.ReadAll(stderrIO)
 
-	return allout, allerr, cmd.Wait()
+	return string(stdoutBuf), string(stderrBuf), cmd.Wait()
 }
