@@ -15,6 +15,11 @@ func WhichOrDefault(cmd, dflt string) string {
 	return p
 }
 
+func IsExitError(err error) bool {
+	_, ok := err.(*exec.ExitError)
+	return ok
+}
+
 // Run runs program prog in directory dir with arguments argv and returns its stdout and stderr
 func Run(prog, dir string, stdin string, argv ...string) (stdout, stderr string, err error) {
 	cmd := exec.Command(prog, argv...)
