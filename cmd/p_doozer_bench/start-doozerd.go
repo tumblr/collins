@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
+	//"time"
 	"tumblr/shell"
 	"tumblr/script"
 )
@@ -15,33 +17,69 @@ var (
 //   Wrap reading of flags and parsing of templates into one call on startup
 //   Hide the ScriptTemplate and just use global-level routines
 //   Combine all scripts in a single exe
+//   Run command with mixed output
 func main() {
 	err := script.Parse("doozer-bench.t")
 	if err != nil {
 		log.Fatalf("cannot read template (%s)", err)
 	}
 
-	// Start leader
-	fmt.Printf("Scripting on leader %s\n", Box[0])
-	remoteLeaderScript, err := script.Execute("start-doozerd-leader", script.M{ "Bind": Box[0] })
+	startLeader(Box[0])
+	startSlave(Box[1], Box[0])
+	//fmt.Printf("sleep for a bit\n")
+	//time.Sleep(time.Second*5)
+	//inviteMember(Box[0], Box[0])
+	startSlave(Box[2], Box[0])
+	startSlave(Box[3], Box[0])
+}
+
+func inviteMember(box string, leader string) {
+	fmt.Printf("inviteMember %s\n", leader)
+	remoteScript, err := script.Execute("invite-doozerd-member", script.M{ "Leader": leader })
+	if err != nil {
+		log.Fatalf("executing invite member template (%s)", err)
+	}
+	stdout, stderr, err := shell.Run("ssh", "", remoteScript, box, "tcsh")
+	if err != nil {
+		fmt.Printf("————————— stdout —————————\n%s\n", stdout)
+		fmt.Printf("————————— stderr —————————\n%s\n", stderr)
+		fmt.Printf("——————————————————————————\n")
+		if !shell.IsExitError(err) {
+			log.Fatalf("remote leader execution (%s)", err)
+		}
+	}
+}
+
+func startLeader(leader string) {
+	fmt.Printf("startLeader %s\n", leader)
+	remoteScript, err := script.Execute("start-doozerd-leader", script.M{ "Bind": leader })
 	if err != nil {
 		log.Fatalf("executing leader template (%s)", err)
 	}
-	_, _, err = shell.Run("ssh", "", remoteLeaderScript, Box[0], "tcsh")
+	stdout, stderr, err := shell.Run("ssh", "", remoteScript, leader, "tcsh")
 	if err != nil {
-		log.Fatalf("remote leader execution (%s)", err)
-	}
-
-	// Start slaves
-	for i := 1; i < len(Box); i++ {
-		fmt.Printf("Scripting on %s\n", Box[i])
-		remoteSlaveScript, err := script.Execute("start-doozerd-slave", script.M{ "Bind": Box[i], "Leader": Box[0] })
-		if err != nil {
-			log.Fatalf("executing slave %s template (%s)", Box[i], err)
+		fmt.Printf("————————— stdout —————————\n%s\n", stdout)
+		fmt.Printf("————————— stderr —————————\n%s\n", stderr)
+		fmt.Printf("——————————————————————————\n")
+		if !shell.IsExitError(err) {
+			log.Fatalf("remote leader execution (%s)", err)
 		}
-		_, _, err = shell.Run("ssh", "", remoteSlaveScript, Box[i], "tcsh")
-		if err != nil {
-			log.Fatalf("remote slave %s execution (%s)", Box[i], err)
+	}
+}
+
+func startSlave(box string, leader string) {
+	fmt.Printf("startSlave %s -> %s\n", box, leader)
+	remoteScript, err := script.Execute("start-doozerd-slave", script.M{ "Bind": box, "Leader": leader })
+	if err != nil {
+		log.Fatalf("executing slave %s template (%s)", box, err)
+	}
+	stdout, stderr, err := shell.Run("ssh", "", remoteScript, box, "tcsh")
+	if err != nil {
+		fmt.Printf("————————— stdout —————————\n%s\n", stdout)
+		fmt.Printf("————————— stderr —————————\n%s\n", stderr)
+		fmt.Printf("——————————————————————————\n")
+		if !shell.IsExitError(err) {
+			log.Fatalf("remote slave %s execution (%s)", box, err)
 		}
 	}
 }

@@ -3,14 +3,18 @@
 mkdir /home/petar/var
 mkdir /home/petar/var/doozer-bench
 setenv GOMAXPROCS 3
-/home/petar/doozer-bench.devbox/doozerd -l {{.Bind}}:8040 -w :8080 >& /home/petar/var/doozer-bench/doozerd &
+/home/petar/doozer-bench.devbox/doozerd -c example -l {{.Bind}}:8040 -w :8080 >& /home/petar/var/doozer-bench/doozerd &
+{{ end }}
+
+{{ define "invite-doozerd-member" }}
+echo '' | /home/petar/doozer-bench.devbox/doozer -a 'doozer:?cn=example&ca={{.Leader}}:8040' set /ctl/cal/1 0
 {{ end }}
 
 {{ define "start-doozerd-slave" }}
 mkdir /home/petar/var
 mkdir /home/petar/var/doozer-bench
 setenv GOMAXPROCS 3
-/home/petar/doozer-bench.devbox/doozerd -l {{.Bind}}:8040 -w :8080 -a {{.Leader}}:8040 >& /home/petar/var/doozer-bench/doozerd &
+/home/petar/doozer-bench.devbox/doozerd -c example -l {{.Bind}}:8040 -w :8080 -a {{.Leader}}:8040 >& /home/petar/var/doozer-bench/doozerd &
 {{ end }}
 
 {{ define "stop-doozerd" }}

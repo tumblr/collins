@@ -20,6 +20,8 @@ var (
 	flagCargo   *int    = flag.Int("cargo", 2200, "Payload size for reads and writes")
 )
 
+// XXX: It would be more helpful if time sampling is per individual read/write (not in batches since they have different counts)
+// XXX: Need to get the 2-member mode running
 func main() {
 	flag.Parse()
 	fmt.Printf("Doozer Benchmark Client\n")

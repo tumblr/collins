@@ -15,10 +15,16 @@ var (
 		Twin    string
 	}{
 		{
-			Box:     ,
-			Doozerd: ,
-			Id:      ,
-			Twin:    ,
+			Box:     "10.60.24.250",
+			Doozerd: "10.60.29.155",
+			Id:      "a",
+			Twin:    "b",
+		},
+		{
+			Box:     "10.60.24.66",
+			Doozerd: "10.60.29.155", //"10.60.25.184",
+			Id:      "b",
+			Twin:    "a",
 		},
 	}
 )
@@ -41,7 +47,7 @@ func main() {
 			fmt.Printf("————————— stderr —————————\n%s\n", stderr)
 			fmt.Printf("——————————————————————————\n")
 			if !shell.IsExitError(err) {
-				log.Fatalf("remote %s execution (%s)", Box[i], err)
+				log.Fatalf("remote %s execution (%s)", b.Box, err)
 			}
 		}
 	}
