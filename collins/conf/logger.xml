@@ -21,7 +21,7 @@
   <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
   <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
 
-  <root level="ERROR">
+  <root level="INFO">
     <appender-ref ref="FILE" />
     <appender-ref ref="STDOUT" />
   </root>

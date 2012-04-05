@@ -1,12 +1,45 @@
 package util
 
-import play.api.{Play, Plugin}
-import com.tumblr.play.{PowerManagement => PowerMgmt}
+import play.api.{Play, Plugin, Logger}
+import com.tumblr.play.{Power, PowerAction, PowerManagement => PowerMgmt}
+import models.{Asset, AssetType, Status}
 
-object PowerManagement {
+trait PowerManagementConfig extends Config {
+  val ConfigKey = "powermanagement"
+  lazy val DisallowedAssetStates: Set[Int] = Config.statusAsSet(
+    ConfigKey, "disallowStatus", Status.statusNames.mkString(",")
+  )
+
+  lazy val DisallowedWhenAllocated: Set[PowerAction] =
+    getString(ConfigKey, "disallowWhenAllocated", "")
+      .split(",").clean.toSet.map { a => Power(a) }
+
+  lazy val AllowedAssetTypes: Set[Int] =
+    getString(ConfigKey,"allowAssetTypes","SERVER_NODE")
+      .split(",").clean
+      .map(name => AssetType.Enum.withName(name).id)
+      .toSet;
+}
+
+object PowerManagementConfig extends PowerManagementConfig
+
+object PowerManagement extends PowerManagementConfig {
+  protected[this] val logger = Logger(getClass)
+
   def pluginEnabled: Option[PowerMgmt] = {
     Play.maybeApplication.flatMap { app =>
-      app.plugin[PowerMgmt].filter(_.enabled)
+      val plugins: Seq[PowerMgmt] = app.plugins.filter { plugin =>
+        plugin.isInstanceOf[PowerMgmt] && plugin.enabled
+      }.map(_.asInstanceOf[PowerMgmt])
+      plugins.size match {
+        case 1 => plugins.headOption
+        case n => // On case we have multiple, try and choose the one that was specified
+          app.configuration.getConfig("powermanagement").flatMap { cfg =>
+            cfg.getString("class").flatMap { klass =>
+              plugins.find(_.getClass.toString.contains(klass)) // Option[PowerMgmt]
+            }
+          }.orElse(plugins.headOption)
+      }
     }
   }
 
@@ -16,15 +49,27 @@ object PowerManagement {
     }
   }
 
-  private[this] lazy val DisallowedPowerStates: Set[Int] =
-    Helpers.getConfig("powermanagement")
-      .flatMap(_.getString("disallowStatus"))
-      .getOrElse("1,2,3,4,5,6,7,8,9,10")
-      .split(",")
-      .map(_.toInt)
-      .toSet
+  def isPluginEnabled = pluginEnabled.isDefined
 
-  def powerAllowed(asset: models.Asset): Boolean = {
-    !DisallowedPowerStates.contains(asset.status)
+  def assetTypeAllowed(asset: Asset): Boolean = AllowedAssetTypes.contains(asset.asset_type)
+  def actionAllowed(asset: Asset, action: PowerAction): Boolean = {
+    if (asset.getStatus().name == "Allocated" && DisallowedWhenAllocated.contains(action)) {
+      false
+    } else {
+      true
+    }
+  }
+
+  def powerAllowed(asset: Asset): Boolean = {
+    val assetStateAllowed = !DisallowedAssetStates.contains(asset.status)
+    val pluginIsEnabled = isPluginEnabled
+    val typeAllowed = assetTypeAllowed(asset)
+    val allowed = assetStateAllowed &&
+                  pluginIsEnabled &&
+                  typeAllowed;
+    logger.debug("AssetState allowed? " + assetStateAllowed)
+    logger.debug("Plugin enabled? " + pluginIsEnabled)
+    logger.debug("AssetType allowed? " + typeAllowed)
+    allowed
   }
 }

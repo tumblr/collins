@@ -1,7 +1,8 @@
 package models
 
 import conversions._
-import util.{Cache, Helpers, LldpRepresentation, LshwRepresentation}
+import util.{Cache, Feature, LldpRepresentation, LshwRepresentation}
+import util.views.Formatter.dateFormat
 
 import play.api.Logger
 import play.api.libs.json._
@@ -14,9 +15,7 @@ import java.sql.Timestamp
 import java.util.Date
 
 object AssetConfig {
-  lazy val HiddenMeta: Set[String] = Helpers.getFeature("hideMeta")
-      .map(_.split(",").map(_.trim.toUpperCase).toSet)
-      .getOrElse(Set[String]())
+  lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
 }
 
 case class Asset(tag: String, status: Int, asset_type: Int,
@@ -26,20 +25,25 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   override def validate() {
     require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
   }
+  override def asJson: String = {
+    Json.stringify(JsObject(forJsonObject))
+  }
 
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "TAG" -> JsString(tag),
     "STATUS" -> JsString(getStatus().name),
     "TYPE" -> JsString(getType().name),
-    "CREATED" -> JsString(Helpers.dateFormat(created)),
-    "UPDATED" -> JsString(updated.map { Helpers.dateFormat(_) }.getOrElse(""))
+    "CREATED" -> JsString(dateFormat(created)),
+    "UPDATED" -> JsString(updated.map { dateFormat(_) }.getOrElse(""))
   )
 
   def getId(): Long = id
-  def isNew(): Boolean = {
-    status == models.Status.Enum.New.id
-  }
+  def isNew(): Boolean = status == models.Status.Enum.New.id
+  def isProvisioning(): Boolean = status == models.Status.Enum.Provisioning.id
+  def isProvisioned(): Boolean = status == models.Status.Enum.Provisioned.id
+  def isMaintenance(): Boolean = status == models.Status.Enum.Maintenance.id
+
   def getStatus(): Status = {
     Status.findById(status).get
   }
@@ -67,8 +71,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     val (lshwRep, mvs) = LshwHelper.reconstruct(this)
     val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
     val ipmi = IpmiInfo.findByAsset(this)
+    val addresses = IpAddresses.findAllByAsset(this)
     val filtered: Seq[MetaWrapper] = mvs2.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
-    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, filtered)
+    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, filtered)
   }
 }
 
@@ -76,6 +81,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   private[this] val TagR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
   private[this] val logger = Logger.logger
+  override protected val createEventName = Some("asset_create")
+  override protected val updateEventName = Some("asset_update")
 
   override val tableDef = table[Asset]("asset")
   on(tableDef)(a => declare(
@@ -113,6 +120,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
       IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
     } else if (params._2.nonEmpty) {
       AssetMetaValue.findAssetsByMeta(page, params._2, afinder, operation)
+    } else if (params._3.nonEmpty) {
+      IpAddresses.findAssetsByAddress(page, params._3, afinder)
     } else {
       Asset.find(page, afinder)
     }
@@ -150,15 +159,14 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def findById(id: Long) = Cache.getOrElseUpdate("Asset.findById(%d)".format(id)) {
-    inTransaction { tableDef.lookup(id) }
+  def findById(id: Long) = getOrElseUpdate("Asset.findById(%d)".format(id)) {
+    tableDef.lookup(id)
   }
+  def get(a: Asset) = findById(a.id).get
 
   def findByTag(tag: String): Option[Asset] = {
-    Cache.getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
-      inTransaction {
-        tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
-      }
+    getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
+      tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
     }
   }
 
@@ -175,9 +183,18 @@ object Asset extends Schema with AnormAdapter[Asset] {
     Page(results, params.page, params.offset, totalCount)
   }
 
-  case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], mvs: Seq[MetaWrapper]) {
+  case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], mvs: Seq[MetaWrapper]) {
     def exposeCredentials(showCreds: Boolean = false) = {
       this.copy(ipmi = this.ipmi.map { _.withExposedCredentials(showCreds) })
+          .copy(mvs = this.metaValuesWithExposedCredentials(showCreds))
+    }
+
+    protected def metaValuesWithExposedCredentials(showCreds: Boolean): Seq[MetaWrapper] = {
+      if (showCreds) {
+        mvs
+      } else {
+        mvs.filter(mv => !AssetMetaValueConfig.EncryptedMeta.contains(mv.getName))
+      }
     }
 
     def toJsonObject(): JsObject = {
@@ -189,6 +206,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         "HARDWARE" -> JsObject(lshw.forJsonObject),
         "LLDP" -> JsObject(lldp.forJsonObject),
         "IPMI" -> JsObject(ipmiMap),
+        "ADDRESSES" -> JsArray(addresses.toList.map(j => JsObject(j.forJsonObject()))),
         "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map { case(groupId, mv) =>
           groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) })
         }.toSeq)
@@ -208,13 +226,14 @@ case class AssetFinder(
   updatedBefore: Option[Date])
 {
   def asLogicalBoolean(a: Asset): LogicalBoolean = {
+    val tagBool = tag.map((a.tag === _))
     val statusBool = status.map((a.status === _.id))
     val typeBool = assetType.map((a.asset_type === _.id))
     val createdAfterTs = createdAfter.map((a.created gte _.asTimestamp))
     val createdBeforeTs = createdBefore.map((a.created lte _.asTimestamp))
     val updatedAfterTs = Some((a.updated gte updatedAfter.map(_.asTimestamp).?))
     val updatedBeforeTs = Some((a.updated lte updatedBefore.map(_.asTimestamp).?))
-    val ops = Seq(statusBool, typeBool, createdAfterTs, createdBeforeTs, updatedAfterTs,
+    val ops = Seq(tagBool, statusBool, typeBool, createdAfterTs, createdBeforeTs, updatedAfterTs,
       updatedBeforeTs).filter(_ != None).map(_.get)
     ops.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }

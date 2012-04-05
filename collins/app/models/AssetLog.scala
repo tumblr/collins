@@ -1,12 +1,13 @@
 package models
 
 import conversions._
-import util.Helpers
+import util.views.Formatter.dateFormat
 
 import play.api.libs.json._
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
+import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import java.sql.Timestamp
 import java.util.Date
@@ -53,11 +54,14 @@ case class AssetLog(
   override def validate() {
     require(message != null && message.length > 0)
   }
+  override def asJson: String = {
+    Json.stringify(JsObject(forJsonObject))
+  }
 
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "ASSET_TAG" -> JsString(Asset.findById(getAssetId()).get.tag),
-    "CREATED" -> JsString(Helpers.dateFormat(created)),
+    "CREATED" -> JsString(dateFormat(created)),
     "FORMAT" -> JsString(getFormat().toString()),
     "SOURCE" -> JsString(getSource().toString()),
     "TYPE" -> JsString(getMessageType().toString()),
@@ -96,6 +100,7 @@ case class AssetLog(
 
   def getId(): Long = id
   def getAssetId(): Long = asset_id
+  def getAssetTag(): String = getAsset().tag
   def getAsset(): Asset = Asset.findById(getAssetId()).get
 
   def withException(ex: Throwable) = {
@@ -136,6 +141,8 @@ case class AssetLog(
 }
 
 object AssetLog extends Schema with AnormAdapter[AssetLog] {
+
+  override val createEventName = Some("asset_log_create")
 
   override val tableDef = table[AssetLog]("asset_log")
   on(tableDef)(a => declare(
@@ -200,46 +207,54 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
       apply(asset, message, format, source, LogMessageType.Debug)
   }
 
-  def list(asset: Option[Asset], page: Int = 0, pageSize: Int = 10, sort: String = "DESC", filter: String = ""): Page[AssetLog] = {
-    val negate = filter.startsWith("!")
-    val messageType = try {
-      if (negate) {
-        Some(LogMessageType.withName(filter.drop(1).toUpperCase))
-      } else {
-        Some(LogMessageType.withName(filter.toUpperCase))
-      }
-    } catch {
-      case e => None
-    }
-    _list(asset.map(_.getId), page, pageSize, sort, messageType, negate)
+  override def get(log: AssetLog) = getOrElseUpdate("AssetLog.get(%d)".format(log.id)) {
+    tableDef.lookup(log.id).get
   }
 
-  private def _list(asset_id: Option[Long], page: Int, pageSize: Int, sort: String, filter: Option[LogMessageType], negate: Boolean = false): Page[AssetLog] = inTransaction {
+  def list(asset: Option[Asset], page: Int = 0, pageSize: Int = 10, sort: String = "DESC", filter: String = ""): Page[AssetLog] = inTransaction {
     val offset = pageSize * page
+    val asset_id = asset.map(_.getId)
     val results = from(tableDef)(a =>
-      where(whereClause(a, asset_id, filter, negate))
+      where(whereClause(a, asset_id, filter))
       select(a)
       orderBy(a.id.withSort(sort))
     ).page(offset, pageSize).toList
     val totalCount = from(tableDef)(a =>
-      where(whereClause(a, asset_id, filter, negate))
+      where(whereClause(a, asset_id, filter))
       compute(count)
     )
     Page(results, page, offset, totalCount)
   }
 
-  private def whereClause(a: AssetLog, asset_id: Option[Long], filter: Option[LogMessageType], negate: Boolean) = {
+  private def whereClause(a: AssetLog, asset_id: Option[Long], filter: String) = {
     filter match {
-      case None =>
+      case e if e.isEmpty =>
         (a.asset_id === asset_id.?)
-      case Some(f) =>
-        (a.asset_id === asset_id.?) and {
-          if (negate) {
-            (a.message_type <> filter.get)
-          } else {
-            (a.message_type === filter.get)
-          }
-        }
+      case ne =>
+        (a.asset_id === asset_id.?) and
+        filterToClause(ne, a)
+    }
+  }
+
+  private def filterToClause(filter: String, log: AssetLog): LogicalBoolean = {
+    val (negated, filters) = filter.split(';').foldLeft(false,Set[LogMessageType]()) { case(tuple, fs) => 
+      val negate = fs.startsWith("!")
+      val mt = negate match {
+        case true =>
+          LogMessageType.withName(fs.drop(1).toUpperCase)
+        case false =>
+          LogMessageType.withName(fs.toUpperCase)
+      }
+      if (negate || tuple._1) {
+        (true, tuple._2 ++ Set(mt))
+      } else {
+        (false, tuple._2 ++ Set(mt))
+      }
+    }
+    if (negated) {
+      (log.message_type notIn filters)
+    } else {
+      (log.message_type in filters)
     }
   }
 

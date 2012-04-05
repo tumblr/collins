@@ -3,7 +3,8 @@ package actions
 
 import forms._
 import models.{Asset, AssetFinder, AssetType, MetaWrapper, Page, PageParams, Status}
-import util.{AttributeResolver, Helpers}
+import util.AttributeResolver
+import util.views.Formatter.ISO_8601_FORMAT
 
 import play.api.data._
 import play.api.libs.json._
@@ -17,10 +18,10 @@ private[controllers] object FindAsset {
         "tag" -> optional(text(1)),
         "status" -> optional(of[Status.Enum]),
         "type" -> optional(of[AssetType.Enum]),
-        "createdAfter" -> optional(date(Helpers.ISO_8601_FORMAT)),
-        "createdBefore" -> optional(date(Helpers.ISO_8601_FORMAT)),
-        "updatedAfter" -> optional(date(Helpers.ISO_8601_FORMAT)),
-        "updatedBefore" -> optional(date(Helpers.ISO_8601_FORMAT))
+        "createdAfter" -> optional(date(ISO_8601_FORMAT)),
+        "createdBefore" -> optional(date(ISO_8601_FORMAT)),
+        "updatedAfter" -> optional(date(ISO_8601_FORMAT)),
+        "updatedBefore" -> optional(date(ISO_8601_FORMAT))
       ),
       "attribute" -> optional(text(3)).verifying("Invalid attribute specified", res => res match {
         case None => true
@@ -36,9 +37,16 @@ private[controllers] object FindAsset {
     ) // of(AssetFinderWrapper
   ) // Form
 
-  def formatResultAsRd(results: Page[Asset]): ResponseData = {
+  def formatResultAsRd(results: Page[Asset], details: Boolean = false): ResponseData = {
+    val jsList = results.items.map { a =>
+      if (details) {
+        a.getAllAttributes.exposeCredentials(false).toJsonObject
+      } else {
+        JsObject(a.forJsonObject)
+      }
+    }.toList
     ResponseData(Results.Ok, JsObject(results.getPaginationJsObject() ++ Seq(
-      "Data" -> JsArray(results.items.map { i => JsObject(i.forJsonObject) }.toList)
+      "Data" -> JsArray(jsList)
     )), results.getPaginationHeaders)
   }
 }
@@ -82,8 +90,14 @@ private[controllers] class FindAsset() {
       case Left(err) => Left("Error executing search: " + err)
       case Right(valid) =>
         val pageParams = PageParams(page, size, sort)
-        val results = Asset.find(pageParams, valid._1, valid._2, valid._3)
-        Right(results)
+        try {
+          val results = Asset.find(pageParams, valid._1, valid._2, valid._3)
+          Right(results)
+        } catch {
+          case e =>
+            e.printStackTrace
+            Left("Error executing search: " + e.getMessage)
+        }
     }
   }
 }

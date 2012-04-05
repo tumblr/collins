@@ -17,7 +17,7 @@ trait AssetWebApi {
 
   // POST /asset/:tag/cancel
   def cancelAsset(tag: String) = Authenticated { user => Action { implicit req =>
-    if (Helpers.ignoreDangerousCommand(tag)) {
+    if (AppConfig.ignoreAsset(tag)) {
       formatResponseData(
         Api.getErrorMessage("Specified asset has been configured to not permit this operation")
       )
@@ -50,7 +50,7 @@ trait AssetWebApi {
     }
     def onFailure(asset: Asset, profile: String, cmd: CommandResult) {
       val msg = "Provisioning as %s failed - %s".format(profile, cmd.toString)
-      UserTattler.warning(asset, user, msg)
+      UserTattler.critical(asset, user, msg)
     }
     def validate(asset: Asset, form: ProvisionForm): Either[String,ProvisionerRequest] = {
       Provisioner.pluginEnabled { plugin =>
@@ -73,24 +73,24 @@ trait AssetWebApi {
         }
         val request = optrequest.get
         var role = request.profile.role
-        if (!role.primary_role.isDefined && role.requires_primary_role) {
+        if (!role.primary_role.isDefined) {
           if (primary_role.isDefined) {
             role = role.copy(primary_role = Some(primary_role.get.toUpperCase))
-          } else {
+          } else if (role.requires_primary_role) {
             return Left("A primary_role is required but none was specified")
           }
         }
-        if (!role.pool.isDefined && role.requires_pool) {
+        if (!role.pool.isDefined) {
           if (pool.isDefined) {
             role = role.copy(pool = Some(pool.get.toUpperCase))
-          } else {
+          } else if (role.requires_pool) {
             return Left("A pool is required but none was specified")
           }
         }
-        if (!role.secondary_role.isDefined && role.requires_secondary_role) {
+        if (!role.secondary_role.isDefined) {
           if (secondary_role.isDefined) {
             role = role.copy(secondary_role = Some(secondary_role.get.toUpperCase))
-          } else {
+          } else if (role.requires_secondary_role) {
             return Left("A secondary_role is required but none was specified")
           }
         }
@@ -180,7 +180,7 @@ trait AssetWebApi {
           formatResponseData(Api.getErrorMessage("contact and profile must be specified"))
         },
         suc => {
-          if (Helpers.ignoreDangerousCommand(asset)) {
+          if (AppConfig.ignoreAsset(asset)) {
             formatResponseData(Api.getErrorMessage(
               "Asset has been configured to ignore dangerous commands"
             ))

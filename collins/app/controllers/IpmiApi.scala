@@ -1,6 +1,6 @@
 package controllers
 
-import models.{Asset, IpmiInfo, Model}
+import models.{Asset, IpmiInfo}
 import util.{IpAddress, SecuritySpec}
 
 import play.api.data._

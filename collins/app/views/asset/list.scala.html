@@ -2,7 +2,7 @@
 
 @import helper._
 @import _root_.util.SoftLayer
-@import _root_.util.views.Pagination
+@import _root_.util.views.{ListHelper, Formatter, Pagination}
 @import util.notice
 
 @link(newPage: Int) = @{
@@ -17,28 +17,36 @@
     @notice("message", Some("notice"))
     @notice("error")
     @notice("warning")
-    <table class="condensed-table zebra-striped">
+    <table class="condensed-table zebra-striped sortable" data-size="50">
       <thead>
         <tr>
-	  <th>Asset Tag</th>
-	  <th>Hostname</th>
+          <th>Asset Tag</th>
+          @if(ListHelper.showHostname(assets)) {
+          <th>Hostname</th>
+          }
 	  <th>Primary Role</th>
           <th>Status</th>
           <th>Created</th>
           <th>Last Updated</th>
-          @SoftLayer.pluginEnabled.map{plugin => <th>SoftLayer Link</th>}
+          @if(ListHelper.showSoftLayerLink(assets)) {
+          <th>SL Link</th>
+          }
         </tr>
       </thead>
       <tbody>
         @assets.items.map { asset =>
         <tr>
-	  <td><a href="@app.routes.CookieApi.getAsset(asset.tag)">@asset.tag</a></td>
-	  <td>@asset.getMetaAttribute("HOSTNAME").map(_.getValue).getOrElse { <em>Unknown</em> }</td>
+          <td><a href="@app.routes.CookieApi.getAsset(asset.tag)">@asset.tag</a></td>
+          @if(ListHelper.showHostname(assets)) {
+          <td>@asset.getMetaAttribute("HOSTNAME").map(v => Formatter.elipse(v.getValue)).getOrElse { <em>Unknown</em> }</td>
+          }
 	  <td>@asset.getMetaAttribute("PRIMARY_ROLE").map(_.getValue).getOrElse { <em>Unknown</em> }</td>
-	  <td>@asset.getStatus().name</td>
+	  <td>@Formatter.elipse(asset.getStatus().name, 12)</td>
           <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
           <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
-          @SoftLayer.pluginEnabled.map{plugin => @slLink(asset)}
+          @if(ListHelper.showSoftLayerLink(assets)) {
+            @slLink(asset)
+          }
         </tr>
         }
       </tbody>

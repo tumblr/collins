@@ -9,6 +9,21 @@ import play.api.templates.Html
 
 object TagDecorator {
 
+  // optionalDelimiter only used if no decorator defined
+  def decorate(key: String, values: Seq[String], optionalDelimiter: String): Content = {
+    getDecorator(key) match {
+      case None => Html(values.mkString(optionalDelimiter))
+      case Some(d) => Html(d.format(key, values))
+    }
+  }
+
+  def decorate(key: String, value: String): Content = {
+    getDecorator(key) match {
+      case None => Html(value)
+      case Some(d) => Html(d.format(key, value))
+    }
+  }
+
   def decorate(meta: MetaWrapper): Content = {
     getDecorator(meta.getName) match {
       case None => Html(meta.getValue)
@@ -17,7 +32,7 @@ object TagDecorator {
   }
 
   protected lazy val Decorators: Map[String,Decorator] =
-    Helpers.getConfig("tagdecorators").map { decorators =>
+    Config.get("tagdecorators").map { decorators =>
       decorators.subKeys.foldLeft(Map[String,Decorator]()) { case(total,current) =>
         val config = decorators.getConfig(current).get
         Map(current -> createDecorator(current, config)) ++ total

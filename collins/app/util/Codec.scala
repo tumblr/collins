@@ -13,6 +13,8 @@ import org.bouncycastle.crypto.paddings.{PaddedBufferedBlockCipher, PKCS7Padding
 import org.bouncycastle.crypto.params.ParametersWithIV
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 
+import play.api.Play
+
 trait CryptoAccessor {
   def getCryptoKey(): String
 }
@@ -28,6 +30,18 @@ object CryptoCodec {
     val chars = for (i <- 0 until length) yield allowedChars(Random.nextInt(allowedCharsSz))
     chars.mkString
   }
+
+  def withKeyFromFramework = new CryptoCodec(getCryptoKeyFromFramework)
+
+  protected def getCryptoKeyFromFramework(): String = {
+    Play.maybeApplication.map { app =>
+      app.global match {
+        case c: CryptoAccessor => c.getCryptoKey()
+        case _ => throw new RuntimeException("Application is not a CryptoAccessor")
+      }
+    }.getOrElse(throw new RuntimeException("Not in application context"))
+  }
+
 }
 
 class CryptoCodec(privateKey: String, saltSize: Int = 8, iterations: Int = 100) {

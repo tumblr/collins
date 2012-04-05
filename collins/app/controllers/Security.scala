@@ -78,6 +78,10 @@ trait SecureController extends Controller {
   protected def onUnauthorized: Action[AnyContent]
 
   protected def getUser(request: RequestHeader): User
+  protected def setUser(user: Option[User]): Option[User] = {
+    AppConfig.setUser(user)
+    user
+  }
 
   def Authenticated(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification) =
     SecureController.Authenticated(authenticate, onUnauthorized, hasRole)(action)
@@ -88,27 +92,31 @@ trait SecureController extends Controller {
 
 /** Used for regular web access, authenticates based on session */
 trait SecureWebController extends SecureController {
-  val unauthorizedRoute = routes.Application.login
+  val unauthorizedRoute = routes.Application.login.url
   def securityMessage(req: RequestHeader) = ("security" -> "The specified resource requires additional authorization")
 
   override protected def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
 
   override def onUnauthorized = Action { implicit request =>
-    Results.Redirect(unauthorizedRoute).flashing(securityMessage(request))
+    if (request.path != "/login") {
+      Results.Redirect(unauthorizedRoute + "?location=" + request.path)
+    } else {
+      Results.Redirect(unauthorizedRoute).flashing(securityMessage(request))
+    }
   }
 
   /** Use sessions storage for authenticate/etc */
   override def authenticate(request: RequestHeader) = User.fromMap(request.session.data) match {
     case Some(user) => user.isAuthenticated match {
       case true =>
-        Some(user)
+        setUser(Some(user))
       case false =>
         logger.debug("SecureWebController.authenticate: user found, not authenticated")
-        None
+        setUser(None)
     }
     case None =>
       logger.debug("SecureWebController.authenticate: user not found, session data not found")
-      None
+      setUser(None)
   }
 }
 
@@ -125,21 +133,21 @@ trait SecureApiController extends SecureController {
     request.headers.get(HeaderNames.AUTHORIZATION) match {
       case None =>
         logger.debug("Got API request with no auth header")
-        None
+        setUser(None)
       case Some(header) =>
         try {
           parseAuthHeader(header) match {
             case None =>
               logger.debug("Failed to authenticate request")
-              None
+              setUser(None)
             case Some(u) =>
               logger.debug("Logged in user %s".format(u.username))
-              Some(u)
+              setUser(Some(u))
           }
         } catch {
           case e: Throwable =>
             logger.warn("Caught exception authenticating user: " + e.getMessage)
-            None
+            setUser(None)
         }
     }
   }

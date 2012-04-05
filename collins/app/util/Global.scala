@@ -3,18 +3,20 @@ import play.api.mvc._
 
 import controllers.ApiResponse
 import models.Model
-import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, IpmiCommandProcessor}
+import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
+import java.io.File
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
 
   private val RequiredConfig = Set(
-    "crypto.key", "ipmi.gateway", "ipmi.netmask"
+    "crypto.key", "ipmi.network"
   )
 
   override def onStart(app: Application) {
     verifyConfiguration(app.configuration)
+    setupLogging(app)
     // FIXME Run evolutions if needed
     val auth = app.configuration.getConfig("authentication") match {
       case None => AuthenticationProvider.Default
@@ -33,6 +35,20 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     setAuthentication(auth)
     setCryptoKey(key)
     Model.initialize()
+  }
+
+  override def onRouteRequest(request: RequestHeader): Option[Handler] = {
+    if (request.path.startsWith("/api")) {
+      Stats.apiRequest {
+        super.onRouteRequest(request)
+      }
+    } else if (!request.path.startsWith("/assets/")) {
+      Stats.webRequest {
+        super.onRouteRequest(request)
+      }
+    } else {
+      super.onRouteRequest(request)
+    }
   }
 
   override def onStop(app: Application) {
@@ -123,4 +139,15 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
   def getAuthentication() = authentication.get
+
+  protected def setupLogging(app: Application) {
+    if (Play.isDev(app)) {
+      Option(this.getClass.getClassLoader.getResource("dev_logger.xml"))
+        .map(_.getFile())
+        .foreach { file =>
+          System.setProperty("logger.file", file)
+          Logger.init(new File("."))
+        }
+    }
+  }
 }

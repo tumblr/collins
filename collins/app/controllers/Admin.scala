@@ -1,6 +1,6 @@
 package controllers
 
-import util.{Cache, SecuritySpec}
+import util.{Cache, SecuritySpec, Stats}
 import views._
 
 import play.api.Play
@@ -11,7 +11,7 @@ object Admin extends SecureWebController {
   implicit val spec = SecuritySpec(true, Seq("infra"))
 
   def stats = SecureAction { implicit req =>
-    Ok(html.admin.stats(Cache.stats()))
+    Ok(html.admin.stats(Cache.stats(), Stats.get()))
   }
 
   def logs = SecureAction { implicit req =>

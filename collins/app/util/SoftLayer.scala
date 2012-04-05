@@ -1,9 +1,19 @@
 package util
 
+import models.Status
 import play.api.{Play, Plugin}
 import com.tumblr.play.SoftLayerPlugin
 
+object SoftLayerConfig {
+  lazy val AllowedCancelStates: Set[Int] =
+    Config.statusAsSet(
+      "softlayer", "allowedCancelStatus", Status.statusNames.mkString(",")
+  )
+}
+
 object SoftLayer {
+
+  import SoftLayerConfig._
 
   def pluginEnabled: Option[SoftLayerPlugin] = {
     Play.maybeApplication.flatMap { app =>
@@ -32,14 +42,6 @@ object SoftLayer {
       p.softLayerUrl(asset)
     }
   }
-
-  private[this] lazy val AllowedCancelStates: Set[Int] =
-    Helpers.getConfig("softlayer")
-      .flatMap(_.getString("allowedCancelStatus"))
-      .getOrElse("1,2,3,4,5,6,7,8,9")
-      .split(",")
-      .map(_.toInt)
-      .toSet
 
   def cancelAllowed(asset: models.Asset): Boolean = {
     AllowedCancelStates.contains(asset.status)
