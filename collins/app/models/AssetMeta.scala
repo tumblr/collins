@@ -1,5 +1,7 @@
 package models
 
+import play.api.libs.json._
+
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
 
@@ -13,6 +15,15 @@ case class AssetMeta(
   override def validate() {
     require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
     require(description != null && description.length > 0, "Need a description")
+  }
+  override def asJson: String = {
+    Json.stringify(JsObject(Seq(
+      "ID" -> JsNumber(id),
+      "NAME" -> JsString(name),
+      "PRIORITY" -> JsNumber(priority),
+      "LABEL" -> JsString(label),
+      "DESCRIPTION" -> JsString(description)
+    )))
   }
   def getId(): Long = id
 }
@@ -45,6 +56,8 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
   def findById(id: Long) = getOrElseUpdate("AssetMeta.findById(%d)".format(id)) {
     tableDef.lookup(id)
   }
+
+  override def get(a: AssetMeta) = findById(a.id).get
 
   def findByName(name: String): Option[AssetMeta] = {
     getOrElseUpdate("AssetMeta.findByName(%s)".format(name.toUpperCase)) {
@@ -101,7 +114,9 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     val LldpVlanId = Value(30, "LLDP_VLAN_ID")
     val LldpVlanName = Value(31, "LLDP_VLAN_NAME")
 
+    // DO NOT USE - Deprecated
     val NicName = Value(32, "INTERFACE_NAME")
+    // DO NOT USE - Deprecated
     val NicAddress = Value(33, "INTERFACE_ADDRESS")
   }
 }

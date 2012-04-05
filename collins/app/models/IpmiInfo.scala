@@ -1,8 +1,6 @@
 package models
 
-import util.{Cache, CryptoAccessor, CryptoCodec, Helpers, IpAddress}
-import org.squeryl.PrimitiveTypeMode._
-import org.squeryl.Schema
+import util._
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import play.api._
@@ -15,26 +13,22 @@ case class IpmiInfo(
   gateway: Long,
   address: Long,
   netmask: Long,
-  id: Long = 0) extends ValidatedEntity[Long]
+  id: Long = 0) extends IpAddressable
 {
   import IpmiInfo.Enum._
 
   override def validate() {
-    List(gateway, address, netmask).foreach { i =>
-      require(i > 0, "IP gateway, address and netmask must be positive")
-    }
+    super.validate()
     List(username, password).foreach { s =>
       require(s != null && s.length > 0, "Username and Password must not be empty")
     }
   }
 
-  def dottedAddress(): String = IpAddress.toString(address)
-  def dottedGateway(): String = IpAddress.toString(gateway)
-  def dottedNetmask(): String = IpAddress.toString(netmask)
-  def decryptedPassword(): String = IpmiInfo.decrypt(password)
-  def getId(): Long = id
-  def getAssetId(): Long = asset_id
+  override def asJson: String = {
+    Json.stringify(JsObject(forJsonObject))
+  }
 
+  def decryptedPassword(): String = IpmiInfo.decrypt(password)
   def withExposedCredentials(exposeCredentials: Boolean = false) = {
     if (exposeCredentials) {
       this.copy(password = decryptedPassword())
@@ -53,10 +47,10 @@ case class IpmiInfo(
   )
 }
 
-object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
-  private[this] val logger = Logger.logger
+object IpmiInfo extends IpAddressStorage[IpmiInfo] {
+  import org.squeryl.PrimitiveTypeMode._
+
   val DefaultPasswordLength = 12
-  val RandomUsername = false
 
   val tableDef = table[IpmiInfo]("ipmi_info")
   on(tableDef)(i => declare(
@@ -67,26 +61,21 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     i.netmask is(indexed)
   ))
 
-  override def cacheKeys(a: IpmiInfo) = Seq(
-    "IpmiInfo.findByAsset(%d)".format(a.asset_id)
-  )
-
-  override def delete(a: IpmiInfo): Int = inTransaction {
-    afterDeleteCallback(a) {
-      tableDef.deleteWhere(i => i.id === a.id)
+  def createForAsset(asset: Asset): IpmiInfo = inTransaction {
+    val assetId = asset.getId
+    val username = getUsername(asset)
+    val password = generateEncryptedPassword()
+    createWithRetry(10) {
+      val (gateway, address, netmask) = getNextAvailableAddress()(None)
+      val ipmiInfo = IpmiInfo(
+        assetId, username, password, gateway, address, netmask
+      )
+      tableDef.insert(ipmiInfo)
     }
   }
 
-  def deleteByAsset(a: Asset): Int = inTransaction {
-    findByAsset(a).map { ipmi =>
-      delete(ipmi)
-    }.getOrElse(0)
-  }
-
-  def findByAsset(asset: Asset): Option[IpmiInfo] = {
-    getOrElseUpdate("IpmiInfo.findByAsset(%d)".format(asset.getId)) {
-      tableDef.where(a => a.asset_id === asset.getId).headOption
-    }
+  def encryptPassword(pass: String): String = {
+    CryptoCodec.withKeyFromFramework.Encode(pass)
   }
 
   type IpmiQuerySeq = Seq[Tuple2[IpmiInfo.Enum, String]]
@@ -111,15 +100,8 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  def createForAsset(asset: Asset): IpmiInfo = inTransaction {
-    val assetId = asset.getId
-    val (gateway, address, netmask) = getAddress()
-    val username = getUsername(asset)
-    val password = generateEncryptedPassword()
-    val ipmiInfo = IpmiInfo(
-      assetId, username, password, gateway, address, netmask
-    )
-    tableDef.insert(ipmiInfo)
+  override def get(i: IpmiInfo) = getOrElseUpdate(getKey.format(i.id)) {
+    tableDef.lookup(i.id).get
   }
 
   type Enum = Enum.Value
@@ -131,51 +113,41 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     val IpmiNetmask = Value("IPMI_NETMASK")
   }
 
-  protected def getAddress(): Tuple3[Long,Long,Long] = {
-    val gateway: Long = getGateway()
-    val netmask: Long = getNetmask()
-    val address: Long = getNextAvailableAddress(netmask)
-    (gateway, address, netmask)
-  }
+  case class Username(asset: Asset, config: Option[Configuration], randomUsername: Boolean = false) {
+    def this(asset: Asset, config: Configuration, randomUsername: Boolean) =
+      this(asset, Some(config), randomUsername)
 
-  protected def getNextAvailableAddress(netmask: Long): Long = {
-    val currentMax: Long = from(tableDef)(t => compute(nvl(max(t.address), 2)))
-    IpAddress.nextAvailableAddress(currentMax, netmask)
-  }
+    def isRandom: Boolean = config match {
+      case None => randomUsername
+      case Some(cfg) => cfg.getBoolean("randomUsername") match {
+        case Some(bool) => bool
+        case None => randomUsername
+      }
+    }
 
-  protected def getGateway(): Long = {
-    getAddressFromConfig("gateway")
-  }
-  protected def getNetmask(): Long = {
-    getAddressFromConfig("netmask")
-  }
+    def fromAsset: String = "%s-ipmi".format(asset.tag)
 
-  protected def getAddressFromConfig(key: String): Long = {
-    getConfig() match {
-      case None => throw new RuntimeException("no ipmi configuration found")
-      case Some(config) => config.getString(key) match {
-        case Some(value) => IpAddress.toLong(value)
-        case None => throw new RuntimeException("no %s key found in configuration".format(key))
+    def get(): String = {
+      isRandom match {
+        case true => CryptoCodec.randomString(8)
+        case false => config match {
+          case None => fromAsset
+          case Some(cfg) => cfg.getString("username") match {
+            case Some(uname) => uname
+            case None => fromAsset
+          }
+        }
       }
     }
   }
 
   protected def decrypt(password: String) = {
     logger.debug("Decrypting %s".format(password))
-    CryptoCodec(getCryptoKeyFromFramework()).Decode(password).getOrElse("")
-  }
-
-  protected def getCryptoKeyFromFramework(): String = {
-    Play.maybeApplication.map { app =>
-      app.global match {
-        case c: CryptoAccessor => c.getCryptoKey()
-        case _ => throw new RuntimeException("Application is not a CryptoAccessor")
-      }
-    }.getOrElse(throw new RuntimeException("Not in application context"))
+    CryptoCodec.withKeyFromFramework.Decode(password).getOrElse("")
   }
 
   protected def getPasswordLength(): Int = {
-    getConfig() match {
+    getConfig()(None) match {
       case None => DefaultPasswordLength
       case Some(config) => config.getInt("passwordLength") match {
         case None => DefaultPasswordLength
@@ -185,31 +157,17 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
   }
 
-  def encryptPassword(pass: String): String = {
-    CryptoCodec(getCryptoKeyFromFramework()).Encode(pass)
-  }
-
   protected def generateEncryptedPassword(): String = {
     val length = getPasswordLength()
-    CryptoCodec(getCryptoKeyFromFramework()).Encode(CryptoCodec.randomString(length))
+    CryptoCodec.withKeyFromFramework.Encode(CryptoCodec.randomString(length))
   }
 
   protected def getUsername(asset: Asset): String = {
-    val randomUsername = getConfig() match {
-      case None => RandomUsername
-      case Some(config) => config.getBoolean("randomUsername") match {
-        case Some(bool) => bool
-        case None => RandomUsername
-      }
-    }
-    randomUsername match {
-      case true => CryptoCodec.randomString(8)
-      case false => asset.tag + "-ipmi"
-    }
+    Username(asset, getConfig()(None), false).get
   }
 
-  protected def getConfig(): Option[Configuration] = {
-    Helpers.getConfig("ipmi")
+  override protected def getConfig()(implicit scope: Option[String]): Option[Configuration] = {
+    AppConfig.ipmi
   }
 
   // Converts our query parameters to fragments and parameters for a query
@@ -231,6 +189,5 @@ object IpmiInfo extends Schema with AnormAdapter[IpmiInfo] {
     }
     results.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }
-
 
 }

@@ -4,28 +4,41 @@ import conversions._
 import AssetMeta.Enum.{PowerPort, RackPosition}
 import models.{Status => AStatus}
 
-import util.{ApiTattler, AssetStateMachine, Helpers, InternalTattler, LldpRepresentation, LshwRepresentation}
+import util.{ApiTattler, AssetStateMachine, Config, Feature, InternalTattler, LldpRepresentation, LshwRepresentation}
 import util.parsers.{LldpParser, LshwParser}
-import Helpers.formatPowerPort
+import util.views.Formatter.formatPowerPort
 
 import play.api.Logger
 
 import scala.util.control.Exception.allCatch
 import java.util.Date
 
+object AssetLifecycleConfig {
+  // Don't want people trying to set status/tag/etc via attribute
+  val PossibleAssetKeys = Set("STATUS", "TAG", "TYPE", "IP_ADDRESS")
+  // A few keys we generally want changable after intake
+  val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
+  // User configured excludes, only applied to non-servers
+  val ConfiguredExcludes = Feature("allowTagUpdates").toSet
+  val RestrictedKeys = AssetMeta.Enum.values.map { _.toString }.toSet ++ PossibleAssetKeys -- ExcludedKeys
+
+  def withExcludes(includeUser: Boolean = false) = includeUser match {
+    case false => RestrictedKeys
+    case true => RestrictedKeys -- ConfiguredExcludes
+  }
+}
+
 // Supports meta operations on assets
 object AssetLifecycle {
-  // Don't want people trying to set status/tag/etc via attribute
-  val POSSIBLE_ASSET_KEYS = Set("STATUS", "TAG", "TYPE")
-  val EXCLUDED_KEYS = Set(AssetMeta.Enum.ChassisTag.toString)
-  val RESTRICTED_KEYS = AssetMeta.Enum.values.map { _.toString }.toSet ++ POSSIBLE_ASSET_KEYS -- EXCLUDED_KEYS
+
+  import AssetLifecycleConfig.RestrictedKeys
 
   private[this] val logger = Logger.logger
 
   type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
   type Status[T] = Either[Throwable,T]
 
-  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum] = None): Status[AssetIpmi] = {
+  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum]): Status[AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
       val _status = status.getOrElse(Status.Enum.Incomplete)
@@ -65,7 +78,7 @@ object AssetLifecycle {
     }
   }
 
-  private lazy val lshwConfig = Helpers.subAsMap("lshw")
+  private lazy val lshwConfig = Config.toMap("lshw")
   def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     asset.asset_type == AssetType.Enum.ServerNode.id match {
       case true => updateServer(asset, options)
@@ -74,25 +87,7 @@ object AssetLifecycle {
   }
 
   protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    allCatch[Boolean].either {
-      Asset.inTransaction {
-        val nextState = Status.Enum(asset.status) match {
-          case Status.Enum.Incomplete => Status.Enum.New
-          case Status.Enum.New => Status.Enum.Unallocated
-          case Status.Enum.Unallocated => Status.Enum.Allocated
-          case Status.Enum.Allocated => Status.Enum.Cancelled
-          case Status.Enum.Cancelled => Status.Enum.Decommissioned
-          case Status.Enum.Maintenance => Status.Enum.Unallocated
-          case n => n
-        }
-        if (nextState.id != asset.status) {
-          val newAsset = asset.copy(status = nextState.id)
-          Asset.update(newAsset)
-          InternalTattler.informational(newAsset, None, "Asset state updated")
-        }
-        true
-      }
-    }.left.map(e => handleException(asset, "Error saving values or in state transition", e))
+    updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(true))
   }
 
   protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -106,13 +101,15 @@ object AssetLifecycle {
     }
   }
 
-  def updateAssetAttributes(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String] = RestrictedKeys): Status[Boolean] = {
     allCatch[Boolean].either {
-      options.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
+      val groupId = options.get("groupId").map(_.toInt)
+      val opts = options - "groupId"
+      opts.find(kv => restricted(kv._1)).map(kv =>
         return Left(new Exception("Attribute %s is restricted".format(kv._1)))
       )
       Asset.inTransaction {
-        MetaWrapper.createMeta(asset, options)
+        MetaWrapper.createMeta(asset, opts, groupId)
         Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
         true
       }
@@ -120,9 +117,7 @@ object AssetLifecycle {
   }
 
   def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    Helpers.haveFeature("sloppyStatus") match {
-      case Some(true) =>
-      case _ =>
+    Feature("sloppyStatus").whenDisabledOrUnset {
         return Left(new Exception("sloppyStatus not enabled"))
     }
     val stat = options.get("status").getOrElse("none")
@@ -136,7 +131,7 @@ object AssetLifecycle {
       val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
       Asset.inTransaction {
         Asset.update(asset.copy(status = status.id, updated = Some(new Date().asTimestamp)))
-        ApiTattler.warning(asset, None, reason)
+        ApiTattler.informational(asset, None, reason)
       }
       true
     }.left.map(e => handleException(asset, "Error updating status for asset", e))
@@ -153,7 +148,7 @@ object AssetLifecycle {
     val power2 = options(formatPowerPort("B"))
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))
-    filtered.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
+    filtered.find(kv => RestrictedKeys(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
 
@@ -168,6 +163,7 @@ object AssetLifecycle {
           "Should have created %d rows, created %d".format(values.length, created))
         val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
+        ApiTattler.informational(newAsset, None, "Intake now complete, asset Unallocated")
         Asset.update(newAsset)
         true
       }
@@ -186,7 +182,7 @@ object AssetLifecycle {
     val chassis_tag = options("CHASSIS_TAG")
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))
-    filtered.find(kv => RESTRICTED_KEYS(kv._1)).map(kv =>
+    filtered.find(kv => RestrictedKeys(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
     val lshwParser = new LshwParser(lshw, lshwConfig)
@@ -222,11 +218,8 @@ object AssetLifecycle {
           case true =>
             Right(lshwRep)
           case false =>
-            val ex = new Exception("Parsing LSHW succeeded, saving failed")
-            AssetLog.error(asset, "Parsing LSHW succeeded but saving it failed",
-              LogFormat.PlainText, LogSource.Internal
-            ).withException(ex).create()
-            Left(ex)
+            val ex = new Exception("Parsing LSHW succeeded but saving failed")
+            Left(handleException(asset, ex.getMessage, ex))
         }
     } //catch
   } // updateServer
@@ -242,11 +235,8 @@ object AssetLifecycle {
           case true =>
             Right(lldpRep)
           case false =>
-            val ex = new Exception("Parsing LLDP succeeded, saving failed")
-            AssetLog.error(asset, "Parsing LLDP succeeded but saving it failed",
-              LogFormat.PlainText, LogSource.Internal
-            ).withException(ex).create()
-            Left(ex)
+            val ex = new Exception("Parsing LLDP succeeded but saving failed")
+            Left(handleException(asset, ex.getMessage, ex))
         }
     }
   }

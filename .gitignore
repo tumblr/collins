@@ -6,7 +6,9 @@ boot/
 
 # intellij detritus
 .idea
+.idea_modules/
 *.iml
 
 # gem detritus
 *.lock
+*.swp

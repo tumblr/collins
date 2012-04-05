@@ -23,7 +23,7 @@
     <div class="clearfix">
       <label for="ASSET_TAG">Asset Tag</label>
       <div class="input">
-        <input type="text" class="focus" id="ASSET_TAG" name="ASSET_TAG">
+        <input type="text" class="focus" id="ASSET_TAG" name="ASSET_TAG" autocomplete="off">
         <span class="help-inline">Tumblr Asset Tag</span>
       </div>
     </div>
@@ -46,6 +46,15 @@
           and
           <input id="updatedBefore" class="mini" data-type="date" type="text" name="updatedBefore" min="2011-12-01" placeholder="End"/>
           <span class="help-block">Asset was last updated after Start date and before End date</span>
+        </div>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label>IP Address</label>
+      <div class="input">
+        <div class="inline-inputs">
+          <input id="ipAddress" type="text" name="IP_ADDRESS"/>
+          <span class="help-inline">IP Address of Asset</span>
         </div>
       </div>
     </div>

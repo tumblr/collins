@@ -1,7 +1,7 @@
 package controllers
 
 import models._
-import util.{Helpers, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
+import util.{Feature, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
 import views._
 
 import akka.util.duration._
@@ -69,6 +69,8 @@ trait Resources extends Controller {
               Redirect(app.routes.Resources.index).flashing(
                 "message" -> "Could not find any matching assets"
               )
+            case 1 =>
+              Redirect(app.routes.CookieApi.getAsset(success.items(0).tag))
             case n =>
               Results.Ok(html.asset.list(success))
           }
@@ -102,10 +104,15 @@ trait Resources extends Controller {
           case Stage1Form() => AsyncResult {
             IpmiCommandProcessor.send(IpmiIdentifyCommand(asset, 30.seconds)) { opt =>
               opt match {
-                case Some(error) =>
-                  Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
-                    "message" -> error
-                  )
+                case Some(results) =>
+                  results.isSuccess match {
+                    case true =>
+                      Ok(html.resources.intake(asset, None))
+                    case false =>
+                      Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
+                        "message" -> results.toString
+                      )
+                  }
                 case None =>
                   Ok(html.resources.intake(asset, None))
               }
@@ -152,7 +159,7 @@ trait Resources extends Controller {
   private def intakeAllowed(asset: Asset)(implicit r: Request[AnyContent]): Boolean = {
     val isNew = asset.isNew
     val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
-    val intakeSupported = Helpers.haveFeature("intakeSupported", false).getOrElse(true)
+    val intakeSupported = Feature("intakeSupported").toBoolean(true)
     val rightRole = hasRole(getUser(r), Seq("infra"))
     intakeSupported && isNew && rightType && rightRole
   }

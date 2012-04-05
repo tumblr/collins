@@ -2,7 +2,7 @@ package controllers
 
 import models.{Asset, AssetLog, Model}
 import models.{LogMessageType, LogFormat, LogSource}
-import util.{Helpers, SecuritySpec}
+import util.SecuritySpec
 
 import play.api.data._
 import play.api.libs.json._

@@ -1,18 +1,48 @@
-@(cacheStats: com.tumblr.play.CacheStats)(implicit flash: Flash, req: Request[AnyContent])
+@(cacheStats: com.tumblr.play.CacheStats, appStats: List[_root_.util.AppStats])(implicit flash: Flash, req: Request[AnyContent])
 
-@import _root_.util.Helpers
+@import _root_.util.views.Formatter
+@import _root_.util.Stats
 
 @main("Admin Stats") {
 <div class="page-header">
   <h1>Admin Stats</h1>
+  Server Start Time: @Formatter.dateFormat(Stats.StartupTime)
 </div>
 <div class="row">
   <div class="span14">
-    <h3><a data-collapsible="cacheStats">Cache Stats</a></h3>
-    <div style="float: right;">
-      <button class="btn" data-refresh='.window' data-remote="/admin/cache/clear" data-method="POST">Clear Cache</button>
-    </div>
+    @appStats.map { stats =>
+    <h3><a data-collapsible="@{stats.name}Stats">@{stats.name.capitalize} Stats</a></h3>
+    <table id="@{stats.name}Stats" class="zebra-striped condensed-table">
 
+      <thead>
+        <tr>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @stats.toMap.map { case(statName, statValue) =>
+        <tr>
+          <th>@statName</th>
+          <td>@statValue</td>
+        </tr>
+        }
+      </tbody>
+
+    </table>
+    }
+  </div>
+</div>
+
+
+<div class="row">
+  <div class="span14">
+    <h3 style="display: inline; float: left;"><a data-collapsible="cacheStats">Cache Stats</a></h3>
+    <button style="float: right" class="btn" data-refresh='.window' data-remote="/admin/cache/clear" data-method="POST">Clear Cache</button>
+  </div>
+
+  <div class="span14">
     <table id="cacheStats" class="zebra-striped condensed-table">
 
       <thead>
@@ -32,7 +62,7 @@
         </tr>
         <tr>
           <th>Hit Rate</th>
-          <td>@Helpers.formatDouble(cacheStats.hitRate) %</td>
+          <td>@Formatter.forPercent(cacheStats.hitRate) %</td>
         </tr>
         <tr>
           <th>Miss Count</th>
@@ -40,7 +70,7 @@
         </tr>
         <tr>
           <th>Miss Rate</th>
-          <td>@Helpers.formatDouble(cacheStats.missRate) %</td>
+          <td>@Formatter.forPercent(cacheStats.missRate) %</td>
         </tr>
         <tr>
           <th>Request Count</th>
@@ -51,4 +81,5 @@
     </table>
   </div>
 </div>
+
 }

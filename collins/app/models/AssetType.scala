@@ -1,6 +1,6 @@
 package models
 
-import util.Cache
+import play.api.libs.json._
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
@@ -9,6 +9,12 @@ case class AssetType(name: String, id: Int = 0) extends ValidatedEntity[Int] {
   def getId(): Int = id
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
+  }
+  override def asJson: String = {
+    Json.stringify(JsObject(Seq(
+      "ID" -> JsNumber(id),
+      "NAME" -> JsString(name)
+    )))
   }
 }
 
@@ -29,6 +35,8 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
     getOrElseUpdate("AssetType.findById(%d)".format(id)) {
       tableDef.lookup(id)
     }
+
+  override def get(a: AssetType) = findById(a.id).get
 
   def findByName(name: String): Option[AssetType] =
     getOrElseUpdate("AssetType.findByName(%s)".format(name.toUpperCase)) {
@@ -53,6 +61,8 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
       tableDef.deleteWhere(p => p.id === a.id)
     }
   }
+
+  def typeNames: Set[String] = Enum.values.map(_.toString)
 
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {

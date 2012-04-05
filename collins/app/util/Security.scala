@@ -1,8 +1,17 @@
 package util
 
-import play.api._
 import models.{User, UserImpl}
+
+import play.api._
+
+import sun.misc.BASE64Encoder
+import java.io.File
+import java.security.MessageDigest
+import java.util.Date
+import java.util.concurrent.atomic.AtomicReference
+
 import annotation.implicitNotFound
+import io.Source
 
 @implicitNotFound(msg = "Didn't find an implicit SecuritySpecification but expected one")
 trait SecuritySpecification {
@@ -145,20 +154,54 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
 }
 
 class FileAuthenticationProvider(config: Configuration) extends AuthenticationProvider {
-  import scala.io.Source
-  import sun.misc.BASE64Encoder
-  import java.io.File
-  import java.security.MessageDigest
+  @volatile private var lastModificationTime = 0L
+  @volatile private var lastCheckTime = 0L
+  private val usersMap = new AtomicReference[Map[String, UserImpl]](Map.empty)
+  private val maximumTime = 30L
 
-  require(config.getString("file").isDefined, "FILE requires an authentication.file attribute")
-  config.getString("type").map { cfg =>
+  config.getString("type").foreach { cfg =>
     require(cfg.toLowerCase == "file", "If specified, authentication type must be file")
   }
-  val file = new File(config.getString("file").get)
-  require(file.exists() && file.canRead(), "File %s does not exist".format(config.getString("file").get))
 
-  val users = {
-    val _users = Source.fromFile(file, "UTF-8").getLines().map { line =>
+  private val filename = config.getString("file").getOrElse {
+    throw new IllegalArgumentException("authentication.file not specified")
+  }
+
+  override def authenticate(username: String, password: String): Option[User] = {
+    user(username) match {
+      case None => None
+      case Some(u) => (hash(password) == u.password) match {
+        case true =>
+          val newUser = u.copy(_password = "*", _authenticated = true)
+          Some(newUser)
+        case false => None
+      }
+    }
+  }
+
+  protected def user(username: String): Option[UserImpl] = {
+    if (!useCache) {
+      refreshCache
+    }
+    usersMap.get().get(username)
+  }
+
+  protected def useCache: Boolean = {
+    lastCheckTime > (now - maximumTime)
+  }
+
+  protected def refreshCache() {
+    val file = getFile
+    val mTime = epoch(file.lastModified)
+    if (lastModificationTime >= mTime) {
+      return
+    }
+    lastModificationTime = mTime
+    usersMap.set(usersFromFile())
+  }
+
+  protected def usersFromFile(): Map[String,UserImpl] = {
+    Source.fromFile(getFile, "UTF-8").getLines().map { line =>
       val split = line.split(":", 3)
       if (split.length != 3) {
         throw new Exception("Invalid line format for users")
@@ -166,24 +209,23 @@ class FileAuthenticationProvider(config: Configuration) extends AuthenticationPr
       val username = split(0)
       val password = split(1)
       val roles = split(2).split(",").toSeq
-      UserImpl(username, password, roles, username.hashCode, false)
-    }.toSeq
-    _users.map { user =>
-      user.username -> user
+      (username -> UserImpl(username, password, roles, username.hashCode, false))
     }.toMap
   }
 
-  override def authenticate(username: String, password: String): Option[User] = {
-    users.get(username) match {
-      case None => None
-      case Some(user) => (hash(password) == user.password) match {
-        case true =>
-          val newUser = user.copy(_password = "*", _authenticated = true)
-          Some(newUser)
-        case false => None
-      }
-    }
+  protected def getFile: File = {
+    val file = new File(filename)
+    require(file.exists() && file.canRead(), "File %s does not exist".format(filename))
+    file
   }
+
+  protected def epoch(seed: Long = 0): Long = if (seed <= 0) {
+    (new Date().getTime()/1000L)
+  } else {
+    seed/1000L
+  }
+  protected def now: Long = epoch(0)
+
 
   // This is consistent with how apache encrypts SHA1
   protected def hash(s: String): String = {

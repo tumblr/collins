@@ -1,6 +1,6 @@
 package controllers
 
-import models.{AssetMeta, AssetMetaValue}
+import models.{AssetMeta, AssetMetaValue, AssetMetaValueConfig}
 import util.SecuritySpec
 
 import play.api.libs.json._
@@ -26,11 +26,15 @@ trait TagApi {
   def getTagValues(tag: String) = SecureAction { implicit req =>
     val response =
       AssetMeta.findByName(tag).map { m =>
-        val s: Set[String] = AssetMetaValue.findByMeta(m).sorted.toSet
-        val js = JsObject(Seq("values" -> JsArray(s.toList.map(JsString(_)))))
-        ResponseData(Results.Ok, js)
+        if (AssetMetaValueConfig.EncryptedMeta.contains(m.name)) {
+          Api.getErrorMessage("Refusing to give backs values for %s".format(m.name))
+        } else {
+          val s: Set[String] = AssetMetaValue.findByMeta(m).sorted.toSet
+          val js = JsObject(Seq("values" -> JsArray(s.toList.map(JsString(_)))))
+          ResponseData(Results.Ok, js)
+        }
       }.getOrElse(Api.getErrorMessage("Tag not found", Results.NotFound))
     formatResponseData(response)
-  }(SecuritySpec(true))
+  }(SecuritySpec(true, Seq("infra")))
 
 }

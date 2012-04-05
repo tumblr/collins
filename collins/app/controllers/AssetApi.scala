@@ -15,8 +15,6 @@ import java.util.Date
 trait AssetApi {
   this: Api with SecureController =>
 
-  private lazy val lshwConfig = Helpers.subAsMap("lshw")
-
   // GET /api/asset/:tag
   def getAsset(tag: String) = Authenticated { user => Action { implicit req =>
     val result = Api.withAssetFromTag(tag) { asset =>
@@ -45,10 +43,15 @@ trait AssetApi {
 
   // GET /api/assets?params
   private val finder = new actions.FindAsset()
-  def getAssets(page: Int, size: Int, sort: String) = SecureAction { implicit req =>
+  def getAssets(page: Int, size: Int, sort: String, details: String) = SecureAction { implicit req =>
+    val detailsBoolean = details.trim.toLowerCase match {
+      case "true" | "1" | "yes" => true
+      case _ => false
+    }
     val rd = finder(page, size, sort) match {
       case Left(err) => Api.getErrorMessage(err)
-      case Right(success) => actions.FindAsset.formatResultAsRd(success)
+      case Right(success) =>
+        actions.FindAsset.formatResultAsRd(success, detailsBoolean)
     }
     formatResponseData(rd)
   }
@@ -97,7 +100,12 @@ trait AssetApi {
   // DELETE /api/asset/attribute/:attribute/:tag
   def deleteAssetAttribute(tag: String, attribute: String) = SecureAction { implicit req =>
     Api.withAssetFromTag(tag) { asset =>
-      AssetLifecycle.updateAssetAttributes(asset, Map(attribute -> ""))
+      val gid = Form("groupId" -> optional(number(0))).bindFromRequest.fold(
+        err => None,
+        gid => gid.map(_.toString)
+      )
+      val updateMap = Map(attribute -> "") ++ gid.map(g => Map("groupId" -> g)).getOrElse(Map.empty)
+      AssetLifecycle.updateAssetAttributes(asset, updateMap)
       .left.map(err => Api.getErrorMessage("Error deleting asset attributes", Results.InternalServerError, Some(err)))
       .right.map(status => Api.statusResponse(status, Results.Status(StatusValues.ACCEPTED)))
     }.fold(l => l, r => r).map(s => formatResponseData(s))

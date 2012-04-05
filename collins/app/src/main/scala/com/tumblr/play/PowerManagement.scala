@@ -10,8 +10,11 @@ case object PowerOff extends PowerAction {
 case object PowerOn extends PowerAction {
   override def toString: String = "PowerOn"
 }
-case object PowerCycle extends PowerAction {
-  override def toString: String = "PowerCycle"
+case object PowerSoft extends PowerAction {
+  override def toString: String = "PowerSoft"
+}
+case object PowerState extends PowerAction {
+  override def toString: String = "PowerState"
 }
 
 sealed trait Reboot extends PowerAction
@@ -25,7 +28,8 @@ case object RebootHard extends Reboot {
 object Power {
   def off() = PowerOff
   def on() = PowerOn
-  def cycle() = PowerCycle
+  def soft() = PowerSoft
+  def state() = PowerState
   def rebootSoft() = RebootSoft
   def rebootHard() = RebootHard
   def apply(s: String): PowerAction = unapply(s) match {
@@ -33,11 +37,12 @@ object Power {
     case None => throw new MatchError("No such power action " + s)
   }
   def unapply(t: String) = t.toLowerCase match {
-    case r if RebootSoft.toString.toLowerCase == r => Some(Power.rebootSoft())
-    case r if RebootHard.toString.toLowerCase == r => Some(Power.rebootHard())
-    case r if PowerOff.toString.toLowerCase == r => Some(Power.off())
-    case r if PowerOn.toString.toLowerCase == r => Some(Power.on())
-    case r if PowerCycle.toString.toLowerCase == r => Some(Power.cycle())
+    case r if rebootSoft().toString.toLowerCase == r => Some(rebootSoft())
+    case r if rebootHard().toString.toLowerCase == r => Some(rebootHard())
+    case r if off().toString.toLowerCase == r => Some(off())
+    case r if on().toString.toLowerCase == r => Some(on())
+    case r if soft().toString.toLowerCase == r => Some(soft())
+    case r if state().toString.toLowerCase == r => Some(state())
     case _ => None
   }
 }
@@ -58,7 +63,7 @@ trait PowerManagement extends Plugin {
     override val isSuccess = false
   }
   type PowerStatus = Future[PowerCommandStatus]
-  def powerCycle(e: AssetWithTag): PowerStatus
+  def powerSoft(e: AssetWithTag): PowerStatus
   def powerOff(e: AssetWithTag): PowerStatus
   def powerOn(e: AssetWithTag): PowerStatus
   def powerState(e: AssetWithTag): PowerStatus

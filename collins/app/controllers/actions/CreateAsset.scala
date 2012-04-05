@@ -2,12 +2,13 @@ package controllers
 package actions
 
 import forms._
-import models.{Asset, AssetLifecycle, AssetType, IpmiInfo, Status => AStatus}
+import models.{Asset, AssetLifecycle, AssetType, IpAddresses, IpmiInfo, Status => AStatus}
 
 import play.api.data._
 import play.api.http.{Status => StatusValues}
 import play.api.libs.json._
 import play.api.mvc._
+import play.api.data.format.Formats._
 
 private[controllers] object CreateAsset {
   val params = Set("generate_ipmi", "type", "status")
@@ -66,7 +67,7 @@ private[controllers] class CreateAsset() {
   }
 
   protected def getCreateMessage(asset: Asset, ipmi: Option[IpmiInfo]): JsObject = {
-    val seq = ipmi.map { ipmi_info =>
+    val seq: Seq[Tuple2[String,JsValue]] = ipmi.map { ipmi_info =>
         Seq("ASSET" -> JsObject(asset.forJsonObject),
             "IPMI" -> JsObject(ipmi_info.withExposedCredentials(true).forJsonObject))
     }.getOrElse(Seq("ASSET" -> JsObject(asset.forJsonObject)))

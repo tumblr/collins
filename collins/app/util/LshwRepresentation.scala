@@ -30,27 +30,22 @@ case class Memory(size: ByteStorageUnit, bank: Int, description: String, product
 {
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "SIZE" -> JsNumber(size.inBytes),
-    "SIZE_S" -> JsString(size.toHuman),
+    "SIZE_S" -> JsString(size.inBytes.toString),
+    "SIZE_HUMAN" -> JsString(size.toHuman),
     "BANK" -> JsNumber(bank),
     "DESCRIPTION" -> JsString(description)
   );
 }
-case class NicInfo(address: String, interface: String) {
-  def forJsonObject(): Seq[(String,JsValue)] = Seq(
-    "ADDRESS" -> JsString(address),
-    "INTERFACE" -> JsString(interface)
-  )
-}
-case class Nic(speed: BitStorageUnit, macAddress: String, description: String, product: String, vendor: String, info: Option[NicInfo] = None)
+case class Nic(speed: BitStorageUnit, macAddress: String, description: String, product: String, vendor: String)
   extends LshwAsset
 {
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "SPEED" -> JsNumber(speed.inBits),
-    "SPEED_S" -> JsString(speed.toHuman),
+    "SPEED_S" -> JsString(speed.inBits.toString),
+    "SPEED_HUMAN" -> JsString(speed.toHuman),
     "MAC_ADDRESS" -> JsString(macAddress),
-    "DESCRIPTION" -> JsString(description),
-    "ADDITIONAL" -> info.map(i => JsObject(i.forJsonObject.map(k => (k._1, k._2)))).getOrElse(JsNull)
-  );
+    "DESCRIPTION" -> JsString(description)
+  )
 }
 
 case class Disk(size: ByteStorageUnit, diskType: Disk.Type, description: String, product: String, vendor: String)
@@ -60,7 +55,8 @@ case class Disk(size: ByteStorageUnit, diskType: Disk.Type, description: String,
   def isCdRom(): Boolean = diskType == Disk.Type.CdRom
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "SIZE" -> JsNumber(size.inBytes),
-    "SIZE_S" -> JsString(size.toHuman),
+    "SIZE_S" -> JsString(size.inBytes.toString),
+    "SIZE_HUMAN" -> JsString(size.toHuman),
     "TYPE" -> JsString(diskType.toString),
     "DESCRIPTION" -> JsString(description)
   );
@@ -116,12 +112,6 @@ case class LshwRepresentation(
     new ByteStorageUnit(sum.bytes + disk.size.bytes)
   }
 
-  def interfaceNames: Seq[String] = nics.collect {
-    case n if n.info.isDefined && n.info.get.interface.nonEmpty => n.info.get.interface
-  }
-  def ipAddresses: Seq[String] = nics.collect {
-    case n if n.info.isDefined && n.info.get.address.nonEmpty => n.info.get.address
-  }
   def nicCount: Int = nics.size
   def hasGbNic: Boolean = nics.find { _.speed.inGigabits == 1 }.map { _ => true }.getOrElse(false)
   def has10GbNic: Boolean = nics.find { _.speed.inGigabits == 10 }.map { _ => true }.getOrElse(false)

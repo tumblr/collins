@@ -1,7 +1,7 @@
 package util
 package views
 
-import Helpers.camelCase
+import Formatter.camelCase
 
 object OptionSorter {
 

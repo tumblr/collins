@@ -42,8 +42,6 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
           rep.totalUsableStorage.toHuman mustEqual "5.46 TB"
 
-          rep.interfaceNames must contain("bond0")
-          rep.ipAddresses.size mustEqual 0
           rep.nicCount mustEqual 2
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -73,8 +71,6 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalFlashStorage.toHuman mustEqual "1.27 TB"
           rep.totalUsableStorage.toHuman mustEqual "1.55 TB"
 
-          rep.interfaceNames.size mustEqual 0
-          rep.ipAddresses.size mustEqual 0
           rep.nicCount mustEqual 2
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -100,8 +96,6 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalStorage.toHuman mustEqual "5.46 TB"
           rep.diskCount mustEqual 6
 
-          rep.interfaceNames.size mustEqual 0
-          rep.ipAddresses.size mustEqual 0
           rep.nicCount mustEqual 3
           rep.hasGbNic must beTrue
           rep.has10GbNic must beTrue
@@ -162,8 +156,6 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalStorage.toHuman mustEqual "930.99 GB"
           rep.diskCount mustEqual 3
 
-          rep.interfaceNames must contain("bond0", "bond1")
-          rep.ipAddresses must contain("50.97.173.12")
           rep.nicCount mustEqual 4
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -189,8 +181,6 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalStorage.toHuman mustEqual "930.99 GB"
           rep.diskCount mustEqual 3
 
-          rep.interfaceNames must contain("bond0", "bond1")
-          rep.ipAddresses must contain("50.22.38.73", "10.60.29.29")
           rep.nicCount mustEqual 4
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -213,9 +203,6 @@ class LshwParserSpec extends mutable.Specification {
           rep.memoryBanksUnused mustEqual 6
           rep.memoryBanksTotal mustEqual 12
 
-          rep.interfaceNames must contain("bond0", "bond1")
-          rep.ipAddresses must contain("184.172.29.71", "10.80.96.225")
-   
           rep.totalStorage.toHuman mustEqual "465.76 GB"
           rep.hasFlashStorage must beFalse
           rep.totalFlashStorage.toHuman mustEqual "0 Bytes"

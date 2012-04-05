@@ -1,6 +1,6 @@
 package models
 
-import util.Cache
+import util.{Cache, CryptoCodec}
 
 import conversions._
 import java.util.Date
@@ -19,21 +19,26 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getPriority(): Int = _meta.priority
   def getLabel(): String = _meta.label
   def getDescription(): String = _meta.description
-  def getValue(): String = _value.value
+  def getValue(): String = AssetMetaValueConfig.EncryptedMeta.contains(getName) match {
+    case true => CryptoCodec.withKeyFromFramework.Decode(_value.value).getOrElse(_value.value)
+    case false => _value.value
+  }
   override def toString(): String = getValue()
 }
 
 object MetaWrapper {
-  def createMeta(asset: Asset, metas: Map[String,String]) = {
+  def apply(amv: AssetMetaValue): MetaWrapper = MetaWrapper(amv.getMeta, amv)
+  def createMeta(asset: Asset, metas: Map[String,String], groupId: Option[Int] = None) = {
     val metaValues = metas.map { case(k,v) =>
       val metaName = k.toUpperCase
       val meta: AssetMeta = AssetMeta.findByName(metaName).getOrElse {
         AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
         AssetMeta.findByName(metaName).get
       }
-      AssetMetaValue(asset, meta.id, v)
+      groupId.map(AssetMetaValue(asset, meta.id, _, v))
+        .getOrElse(AssetMetaValue(asset, meta.id, v))
     }.toSeq
-    AssetMetaValue.purge(metaValues)
+    AssetMetaValue.purge(metaValues, groupId)
     val values = metaValues.filter(v => v.value != null && v.value.nonEmpty)
     values.size match {
       case 0 =>
