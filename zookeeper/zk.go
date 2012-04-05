@@ -9,9 +9,6 @@
 package zookeeper
 
 /*
-#cgo CFLAGS: -I/usr/include/c-client-src -I/usr/include/zookeeper
-#cgo LDFLAGS: -lzookeeper_mt
-
 #include <zookeeper.h>
 #include "helpers.h"
 */
@@ -459,7 +456,7 @@ func dial(servers string, recvTimeout time.Duration, clientId *ClientId) (*Conn,
 }
 
 // ClientId returns the client ID for the existing session with ZooKeeper.
-// This is useful to reestablish an existing session via ReInit.
+// This is useful to reestablish an existing session via Redial.
 func (conn *Conn) ClientId() *ClientId {
 	conn.mutex.RLock()
 	defer conn.mutex.RUnlock()
@@ -896,7 +893,7 @@ type ChangeFunc func(oldValue string, oldStat *Stat) (newValue string, err error
 //
 // changeFunc must work correctly if called multiple times in case
 // the modification fails due to concurrent changes, and it may return
-// an error that will cause the the RetryChange function to stop and
+// an error that will cause the RetryChange function to stop and
 // return the same error.
 //
 // This mechanism is not suitable for a node that is frequently modified
@@ -968,7 +965,7 @@ func (conn *Conn) RetryChange(path string, flags int, acl []ACL, changeFunc Chan
 // lies in the other side of this logic, when events actually happen.
 //
 // Since Cgo doesn't allow calling back into Go, we actually fire a new
-// goroutine the very first time Init is called, and allow it to block
+// goroutine the very first time Dial is called, and allow it to block
 // in a pthread condition variable within a C function. This condition
 // will only be notified once a ZooKeeper watch callback appends new
 // entries to the event list.  When this happens, the C function returns

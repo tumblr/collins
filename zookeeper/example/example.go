@@ -1,29 +1,33 @@
 package main
 
 import (
+	"time"
 	"tumblr/zookeeper"
 )
 
 func main() {
-	zk, session, err := zookeeper.Init("localhost:2181", 5000)
+	zk, session, err := zookeeper.Dial("localhost:2181", 5*time.Second)
 	if err != nil {
-		println("Couldn't connect: " + err.String())
+		println("Couldn't connect: ", err)
 		return
 	}
 
 	defer zk.Close()
 
 	// Wait for connection.
+	println("waiting for connection ...")
 	event := <-session
+	println("session event arrived")
 	if event.State != zookeeper.STATE_CONNECTED {
 		println("Couldn't connect")
 		return
 	}
+	println("connected successfully")
 
 	_, err = zk.Create("/counter", "0", 0, zookeeper.WorldACL(zookeeper.PERM_ALL))
 	if err != nil {
-		println(err.String())
+		println("problem creating: ", err)
 	} else {
-		println("Created!")
+		println("created successfully")
 	}
 }
