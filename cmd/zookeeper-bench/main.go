@@ -102,7 +102,7 @@ func bench(zk *zookeeper.Conn, cargo int, id, twin string, n, k int) error {
 		}
 
 		// Wait for twin to complete the same iteration i
-		fmt.Printf("i=%d, waiting\n", i)
+		fmt.Printf("i=%d waiting /%s_sync=%d ——————————————————\n", i, twin, i)
 		syncSampler.Start()
 		err = syncOnEqual(zk, twin + "_sync", i)
 		syncSampler.Stop()
@@ -145,8 +145,8 @@ func syncOnEqual(zk *zookeeper.Conn, rootNode string, waitForValue int) error {
 		for _, child := range children {
 			if child == rootNode {
 				hasNode = true
+				break
 			}
-			break
 		}
 		if hasNode {
 			break
@@ -164,7 +164,6 @@ func syncOnEqual(zk *zookeeper.Conn, rootNode string, waitForValue int) error {
 		if err == nil && value == waitForValue {
 			return nil
 		}
-		fmt.Printf("cont'd wait on value='%s'\n", string(data))
 		<-watch
 	}
 	panic("unr")
