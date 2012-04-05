@@ -5,26 +5,25 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
-	"github.com/4ad/doozer"
+	"time"
 	"tumblr/stat"
+	"tumblr/zookeeper"
 )
 
 var (
-	flagDoozerd *string = flag.String("doozerd", "", "Doozerd host:port to connect to")
-	flagID      *string = flag.String("id", "", "String ID of this client")
-	flagTwin    *string = flag.String("twin", "", "String ID of the other benchmark client")
-	flagN       *int    = flag.Int("n", 20, "Number of benchmark iterations")
-	flagK       *int    = flag.Int("k", 10, "Number of nodes to touch during an iteration")
-	flagCargo   *int    = flag.Int("cargo", 2200, "Payload size for reads and writes")
+	flagZookeeper *string = flag.String("zk", "", "Comma-separated list of Zookeeper host:port servers")
+	flagID        *string = flag.String("id", "", "String ID of this client")
+	flagTwin      *string = flag.String("twin", "", "String ID of the other benchmark client")
+	flagN         *int    = flag.Int("n", 20, "Number of benchmark iterations")
+	flagK         *int    = flag.Int("k", 10, "Number of nodes to touch during an iteration")
+	flagCargo     *int    = flag.Int("cargo", 2200, "Payload size for reads and writes")
 )
 
 // XXX: It would be more helpful if time sampling is per individual read/write (not in batches since they have different counts)
-// XXX: Need to get the 2-member mode running
 func main() {
 	flag.Parse()
-	fmt.Printf("Doozer Benchmark Client\n")
+	fmt.Printf("Zookeeper benchmark tool\n")
 	if len(*flagID) == 0  || len(*flagTwin) == 0 || *flagID == *flagTwin {
 		log.Fatalf("need to specify client and twin IDs that are different")
 	}
@@ -38,77 +37,94 @@ func main() {
 		log.Fatalf("need positive payload size")
 	}
 
-	dzr, err := doozer.Dial(*flagDoozerd)
+	// Dial zookeeper
+	zk, session, err := zookeeper.Dial(*flagZookeeper, 5*time.Second)
 	if err != nil {
 		log.Fatalf("dial (%s)", err)
 	}
-	defer dzr.Close()
-	if err := bench(dzr, *flagCargo, *flagID, *flagTwin, *flagN, *flagK); err != nil {
-		fmt.Fprintf(os.Stderr, "Bench error (%s)\n", err)
-		os.Exit(1)
+	defer zk.Close()
+
+	// Wait for connection
+	println("waiting for connection ...")
+	event := <-session
+	if event.State != zookeeper.STATE_CONNECTED {
+		log.Fatalf("Could not connect")
+	}
+
+	if err := bench(zk, *flagCargo, *flagID, *flagTwin, *flagN, *flagK); err != nil {
+		log.Fatalf("Bench error (%s)\n", err)
 	}
 }
 
-func bench(dzr *doozer.Conn, cargo int, id, twin string, n, k int) error {
-	fmt.Printf("bench id=%s twin=%s n=%d k=%d\n", id, twin, n, k)
+var acl []zookeeper.ACL = zookeeper.WorldACL(zookeeper.PERM_ALL)
+
+func bench(zk *zookeeper.Conn, cargo int, id, twin string, n, k int) error {
+	fmt.Printf("zookeeper bench id=%s twin=%s n=%d k=%d\n", id, twin, n, k)
 	body := make([]byte, cargo)
 	var totalSampler, readSampler, syncSampler, writeSampler stat.TimeSampler
 
 	totalSampler.Start()
 
-	rev, err := dzr.Rev()
+	// Create subdirectory, sync znode and K files
+	_, err := zk.Create("/" + id, "", 0, acl)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "rev (%s)\n", err)
-		return err
+		log.Fatalf("create dir (%s)", err)
+	}
+	_, err = zk.Create("/" + id + "_sync", "", 0, acl)
+	if err != nil {
+		log.Fatalf("create sync file (%s)", err)
+	}
+	for j := 0; j < k; j++ {
+		_, err := zk.Create("/" + id + "/a" + strconv.Itoa(j), "", 0, acl)
+		if err != nil {
+			log.Fatalf("create file %d (%s)", j, err)
+		}
 	}
 
-	var syncRev int64 = -1
+	// Start benchmark iterations
 	for i := 0; i < n; i++ {
+
 		// Perform K writes to K different nodes
-		writeSampler.Start()
 		for j := 0; j < k; j++ {
 			name := "/" + id + "/a" + strconv.Itoa(j)
-			rev, err = dzr.Set(name, rev, body)
+			writeSampler.Start()
+			_, err := zk.Set(name, string(body), -1)
+			writeSampler.Stop()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "i=%d, set %s (%s)\n", i, name, err)
-				return err
+				log.Fatalf("i=%d, set %s (%s)\n", i, name, err)
 			}
 		}
-		writeSampler.Stop()
 
 		// Mark completion of write cycle at a special node
-		rev, err = dzr.Set("/" + id + "/sync", rev, []byte(strconv.Itoa(i)))
+		_, err := zk.Set("/" + id + "_sync", strconv.Itoa(i), -1)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "i=%d, set /%s/sync (%s)\n", i, id, err)
-			return err
+			log.Fatalf("i=%d, set /%s/sync (%s)\n", i, id, err)
 		}
 
 		// Wait for twin to complete the same iteration i
 		fmt.Printf("i=%d, waiting\n", i)
 		syncSampler.Start()
-		syncRev, err = syncOnEqual(dzr, "/" + twin + "/sync", i, syncRev)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "i=%d, sync /%s/sync (%s)\n", i, twin, err)
-			return err
-		}
+		err = syncOnEqual(zk, twin + "_sync", i)
 		syncSampler.Stop()
+		if err != nil {
+			log.Fatalf("i=%d, sync /%s/sync (%s)\n", i, twin, err)
+		}
 
 		// Perform 10*k reads 
-		readSampler.Start()
 		for j := 0; j < 10*k; j++ {
 			name := "/" + id + "/a" + strconv.Itoa(j%k)
-			_, rev, err = dzr.Get(name, nil)
+			readSampler.Start()
+			_, _, err = zk.Get(name)
+			readSampler.Stop()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "i=%d, j=%d, get %s (%s)\n", i, j, name, err)
-				return err
+				log.Fatalf("i=%d, j=%d, get %s (%s)\n", i, j, name, err)
 			}
 		}
-		readSampler.Stop()
 	}
 
 	totalSampler.Stop()
 
-	fmt.Printf("doozer bench id=%s twin=%s iterations=%d files=%d\n", id, twin, n, k)
+	fmt.Printf("zookeeper bench id=%s twin=%s iterations=%d files=%d\n", id, twin, n, k)
 	fmt.Printf("read: %g/%g ns, sync: %g/%g ns, write: %g/%g ns, total: %g ns\n", 
 		readSampler.Average(), readSampler.StdDev(),
 		syncSampler.Average(), syncSampler.StdDev(),
@@ -118,20 +134,38 @@ func bench(dzr *doozer.Conn, cargo int, id, twin string, n, k int) error {
 	return nil
 }
 
-func syncOnEqual(dzr *doozer.Conn, node string, value int, afterRev int64) (syncRev int64, err error) {
-	var rev int64 = afterRev
+func syncOnEqual(zk *zookeeper.Conn, rootNode string, waitForValue int) error {
+	// wait until node exists
 	for {
-		ev, err := dzr.Wait(node, rev+1)
+		children, _, watch, err := zk.ChildrenW("/")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "sync(%s,%d) wait error (%s)\n", node, value, err)
-			return 0, err
+			log.Fatalf("children root (%s)", err)
 		}
-		rev = ev.Rev
-		v0, err := strconv.Atoi(string(ev.Body))
-		if err == nil && v0 == value {
-			return rev, nil
+		var hasNode bool
+		for _, child := range children {
+			if child == rootNode {
+				hasNode = true
+			}
+			break
 		}
-		fmt.Printf("cont'd wait on v='%s' rev=%d\n", string(ev.Body), rev)
+		if hasNode {
+			break
+		}
+		<-watch
+	}
+
+	// wait until value desired
+	for {
+		data, _, watch, err := zk.GetW("/" + rootNode)
+		if err != nil {
+			log.Fatalf("sync(/%s,%d) wait error (%s)\n", rootNode, waitForValue, err)
+		}
+		value, err := strconv.Atoi(data)
+		if err == nil && value == waitForValue {
+			return nil
+		}
+		fmt.Printf("cont'd wait on value='%s'\n", string(data))
+		<-watch
 	}
 	panic("unr")
 }
