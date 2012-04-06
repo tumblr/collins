@@ -2,6 +2,7 @@ package script
 
 import (
 	"bytes"
+	"fmt"
 	"text/template"
 )
 
@@ -35,6 +36,21 @@ func Parse(glob string) error {
 	return nil
 }
 
+func MustParse(glob string) {
+	err := Parse(glob)
+	if err != nil {
+		panic(fmt.Sprintf("script parse (%s)", err))
+	}
+}
+
 func Execute(name string, data interface{}) (string, error) {
 	return scripts.Execute(name, data)
+}
+
+func MustExecute(name string, data interface{}) string {
+	s, err := scripts.Execute(name, data)
+	if err != nil {
+		panic(fmt.Sprintf("script execute template (%s)", err))
+	}
+	return s
 }
