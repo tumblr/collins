@@ -163,6 +163,7 @@ object AssetLifecycle {
           "Should have created %d rows, created %d".format(values.length, created))
         val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
+        ApiTattler.informational(newAsset, None, "Intake now complete, asset Unallocated")
         Asset.update(newAsset)
         true
       }

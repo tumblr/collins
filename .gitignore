@@ -1,5 +1,14 @@
-*.swp
-.idea/
-.idea_modules/
+# sbt detritus
 target/
+*.class
+dist/
 boot/
+
+# intellij detritus
+.idea
+.idea_modules/
+*.iml
+
+# gem detritus
+*.lock
+*.swp
