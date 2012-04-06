@@ -25,15 +25,15 @@ func Run(prog, dir string, stdin string, argv ...string) (stdout, stderr string,
 	cmd := exec.Command(prog, argv...)
 	cmd.Dir = dir
 
-	stdinIO, err := cmd.StdinPipe()
+	stdinWriter, err := cmd.StdinPipe()
 	if err != nil {
 		return "", "", err
 	}
-	stdoutIO, err := cmd.StdoutPipe()
+	stdoutReader, err := cmd.StdoutPipe()
 	if err != nil {
 		return "", "", err
 	}
-	stderrIO, err := cmd.StderrPipe()
+	stderrReader, err := cmd.StderrPipe()
 	if err != nil {
 		return "", "", err
 	}
@@ -44,16 +44,40 @@ func Run(prog, dir string, stdin string, argv ...string) (stdout, stderr string,
 	// then we (sequentially) read all of stdout and then all of stderr.
 	// XXX: Is it possible to block if the program's stderr buffer fills while we are
 	// consuming the stdout?
-	_, err = stdinIO.Write([]byte(stdin))
+	_, err = stdinWriter.Write([]byte(stdin))
 	if err != nil {
 		return "", "", err
 	}
-	err = stdinIO.Close()
+	err = stdinWriter.Close()
 	if err != nil {
 		return "", "", err
 	}
-	stdoutBuf, _ := ioutil.ReadAll(stdoutIO)
-	stderrBuf, _ := ioutil.ReadAll(stderrIO)
+	stdoutBuf, _ := ioutil.ReadAll(stdoutReader)
+	stderrBuf, _ := ioutil.ReadAll(stderrReader)
 
 	return string(stdoutBuf), string(stderrBuf), cmd.Wait()
+}
+
+// RunCombined runs program prog in directory dir with arguments argv and returns its combined stdout and stderr
+func RunCombined(prog, dir string, stdin string, argv ...string) (combined string, err error) {
+	cmd := exec.Command(prog, argv...)
+	cmd.Dir = dir
+
+	if len(stdin) > 0 {
+		stdinWriter, err := cmd.StdinPipe()
+		if err != nil {
+			return "", err
+		}
+		_, err = stdinWriter.Write([]byte(stdin))
+		if err != nil {
+			return "", err
+		}
+		err = stdinWriter.Close()
+		if err != nil {
+			return "", err
+		}
+	}
+
+	comb, err := cmd.CombinedOutput()
+	return string(comb), err
 }
