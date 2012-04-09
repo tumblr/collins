@@ -4,8 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
-	_ "tumblr/c"
+	. "tumblr/c"
 )
 
 /* Zookeeper-specific */
@@ -38,8 +37,6 @@ func cmdStartZookeeper() {
 		MustRunScriptRemotely(Hosts[i], 
 			MustParseAndExecute(startZookeeperScript, M{ "Dir": RemoteDir, "ServerID": i+1 }),
 		)
-		fmt.Printf("Sleeping a bit\n")
-		time.Sleep(2*time.Second)
 	}
 }
 
@@ -53,15 +50,28 @@ func cmdStopZookeeper() {
 }
 
 const startBenchmarkScript =
+	`cd {{.Dir}} 
+	setenv LD_LIBRARY_PATH .
+	./zookeeper-bench -id {{.ID}} -twin {{.TwinID}} -k 50 -n 100 -zk ` + 
+		`'{{ printCommaSeparated .Hosts }}'` + 
+		` >& var/commander/zookeeper-bench &
 	`
-	cd {{.Dir}}
-	./zookeeper-bench -id {{.ID}} -twin {{.TwinID}} -k 50 -n 100 -zk &
-	`
+
 func cmdStartBenchmark() {
 	for i := 0; i < 2; i++ {
+		fmt.Printf("Starting benchmark on %s\n", Hosts[i+2])
 		MustRunScriptRemotely(Hosts[i+2], 
-			MustParseAndExecute(startBenchmarkScript, M{ "Dir": RemoteDir, "ID": i, "TwinID": 1-i }),
+			MustParseAndExecute(startBenchmarkScript, M{ "Dir": RemoteDir, "ID": i, "TwinID": 1-i, "Hosts": Hosts }),
 		)
+	}
+}
+
+const stopBenchmarkScript = "killall zookeeper-bench"
+
+func cmdStopBenchmark() {
+	for i := 0; i < 2; i++ {
+		fmt.Printf("Stoping %s\n", Hosts[i+2])
+		MustRunScriptRemotely(Hosts[i+2], stopBenchmarkScript) 
 	}
 }
 
@@ -76,7 +86,7 @@ var (
 	flagBundle *string = flag.String("bundle", "bundle", "Path to deploy bundle")
 )
 
-// XXX: Add general boilerplate to run the available commands
+// TODO: Add general boilerplate to run the available commands
 func main() {
 	SourceDir = *flagBundle
 
@@ -90,6 +100,8 @@ func main() {
 		cmdStopZookeeper()
 	case "StartBenchmark":
 		cmdStartBenchmark()
+	case "StopBenchmark":
+		cmdStopBenchmark()
 	default:
 		usage("unrecognized command")
 	}
