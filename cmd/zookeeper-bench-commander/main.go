@@ -1,50 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"os"
-	"text/template"
 	"time"
-	"tumblr/shell"
+	_ "tumblr/c"
 )
-
-// XXX: Add Run variant that prints out the program's combined output as it goes (std in grey, err in red, or prefixed)
-func MustRun(prog, stdin string, args ...string) {
-	combined, err := shell.RunCombined(prog, "", stdin, args...)
-	if err != nil {
-		panic(fmt.Sprintf("Running '%s %v': (%s)\nStdin:\n%s\nCombined:\n%s\n", prog, args, err, stdin, combined))
-	}
-}
-
-func MustParse(source string) *template.Template {
-	t := template.New("noname")
-	return template.Must(t.Parse(source))
-}
-
-type M map[string]interface{}
-
-func MustParseAndExecute(source string, data interface{}) string {
-	t := MustParse(source)
-	var w bytes.Buffer
-	err := t.Execute(&w, data)
-	if err != nil {
-		panic(fmt.Sprintf("template execute (%s)", err))
-	}
-	return string(w.Bytes())
-}
-
-func MustRunScriptRemotely(host, remoteScript string) {
-	MustRun("ssh", remoteScript, host, "tcsh")
-}
-
-func Upload(host, sourceDir, remoteDir string) {
-	fmt.Printf("Making directory(ies) '%s:%s'\n", host, remoteDir)
-	MustRunScriptRemotely(host, `mkdir -p ` + remoteDir)
-	fmt.Printf("rsync-ing local '%s' to remote '%s:%s'\n", sourceDir, host, remoteDir)
-	MustRun("rsync", "", "-acrv", "--rsh=ssh", sourceDir + "/", host + ":" + remoteDir + "/")
-}
 
 /* Zookeeper-specific */
 
@@ -64,9 +26,10 @@ const startZookeeperScript =
 	`
 	cd {{.Dir}}
 	mkdir -p var/zookeeper
+	mkdir -p var/commander
 	rm -rf var/zookeeper/* || /bin/true
 	echo {{.ServerID}} > var/zookeeper/myid
-	./start-multiple.sh &
+	./start-multiple.sh >& var/commander/zookeeper-multiple.log &
 	`
 
 func cmdStartZookeeper() {

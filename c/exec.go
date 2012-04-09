@@ -1,6 +1,7 @@
-package shell
+package c
 
 import (
+	"fmt"
 	"os/exec"
 	"io/ioutil"
 )
@@ -81,3 +82,13 @@ func RunCombined(prog, dir string, stdin string, argv ...string) (combined strin
 	comb, err := cmd.CombinedOutput()
 	return string(comb), err
 }
+
+// MustRun is identical to RunCombined except it panics if the execution fails in anyway
+// TODO: Add Run variant that prints out the program's combined output as it goes (std in grey, err in red, or prefixed)
+func MustRun(prog, stdin string, args ...string) {
+	combined, err := RunCombined(prog, "", stdin, args...)
+	if err != nil {
+		panic(fmt.Sprintf("Running '%s %v': (%s)\nStdin:\n%s\nCombined:\n%s\n", prog, args, err, stdin, combined))
+	}
+}
+
