@@ -12,5 +12,6 @@ func Upload(host, sourceDir, remoteDir string) {
 }
 
 func MustRunScriptRemotely(host, remoteScript string) {
+	fmt.Printf("Executing remotely on %s:\n%s\n", host, remoteScript)
 	MustRun("ssh", remoteScript, host, "tcsh")
 }

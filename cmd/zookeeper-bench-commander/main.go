@@ -53,15 +53,19 @@ const startBenchmarkScript =
 	`cd {{.Dir}} 
 	setenv LD_LIBRARY_PATH .
 	./zookeeper-bench -id {{.ID}} -twin {{.TwinID}} -k 50 -n 100 -zk ` + 
-		`'{{ printCommaSeparated .Hosts }}'` + 
+		`'{{ printCommaSeparated .HostPorts }}'` + 
 		` >& var/commander/zookeeper-bench &
 	`
 
 func cmdStartBenchmark() {
+	hostPorts := make([]string, len(Hosts))
+	for i, _ := range Hosts {
+		hostPorts[i] = Hosts[i] + ":2181"
+	}
 	for i := 0; i < 2; i++ {
 		fmt.Printf("Starting benchmark on %s\n", Hosts[i+2])
 		MustRunScriptRemotely(Hosts[i+2], 
-			MustParseAndExecute(startBenchmarkScript, M{ "Dir": RemoteDir, "ID": i, "TwinID": 1-i, "Hosts": Hosts }),
+			MustParseAndExecute(startBenchmarkScript, M{ "Dir": RemoteDir, "ID": i, "TwinID": 1-i, "HostPorts": hostPorts }),
 		)
 	}
 }

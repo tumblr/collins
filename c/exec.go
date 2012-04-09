@@ -88,7 +88,15 @@ func RunCombined(prog, dir string, stdin string, argv ...string) (combined strin
 func MustRun(prog, stdin string, args ...string) {
 	combined, err := RunCombined(prog, "", stdin, args...)
 	if err != nil {
-		panic(fmt.Sprintf("Running '%s %v': (%s)\nStdin:\n%s\nCombined:\n%s\n", prog, args, err, stdin, combined))
+		panic(fmt.Sprintf("Running '%s %v', causes (%s)\nStdin:\n%s\nStdout+Stderr:\n%s\n", prog, args, err, stdin, combined))
 	}
+}
+
+func MustRunCombined(prog, stdin string, args ...string) string {
+	combined, err := RunCombined(prog, "", stdin, args...)
+	if err != nil {
+		panic(fmt.Sprintf("Running '%s %v', causes (%s)\nStdin:\n%s\nStdout+Stderr:\n%s\n", prog, args, err, stdin, combined))
+	}
+	return combined
 }
 
