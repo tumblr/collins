@@ -1,7 +1,6 @@
 package wentworth
 
 import (
-	"tumblr/thrift"
 	"tumblr/wentworth/thrift/wentworth"
 )
 
@@ -12,6 +11,10 @@ type Error struct {
 
 func NewError(werr *wentworth.WentworthException) *Error {
 	return &Error{ werr.Description }
+}
+
+func (e *Error) Error() string {
+	return e.description
 }
 
 func (e *Error) Exception() *wentworth.WentworthException {
