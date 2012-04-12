@@ -27,6 +27,11 @@ func NewConn(hostPort string) (*Conn, error) {
 	}
 	transport = thrift.NewTFramedTransport(transport)
 
+	err = transport.Open()
+	if err != nil {
+		return nil, err
+	}
+
 	// Make protocol
 	protocolFactory := thrift.NewTBinaryProtocolFactoryDefault()
 
