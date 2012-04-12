@@ -12,7 +12,7 @@ type Conn struct {
 	client    *wentworth.WentworthServiceClient
 }
 
-func NewConn(hostPort string) (*Conn, error) {
+func Dial(hostPort string) (*Conn, error) {
 	// Resolve address
 	addr, err := net.ResolveTCPAddr("tcp", hostPort)
 	if err != nil {
