@@ -8,6 +8,12 @@ import (
 )
 
 type Listener struct {
+	processorFactory        thrift.TProcessorFactory
+	serverTransport         thrift.TServerTransport
+	inputTransportFactory   thrift.TTransportFactory
+	outputTransportFactory  thrift.TTransportFactory
+	inputProtocolFactory    thrift.TProtocolFactory
+	outputProtocolFactory   thrift.TProtocolFactory
 }
 
 // HALT midway
@@ -25,9 +31,6 @@ func Listen(hostPort string) (*Listener, error) {
 
 	protocolFactory := thrift.NewTBinaryProtocolFactoryDefault()
 	transportFactory := thrift.NewTFramedTransportFactory(thrift.NewTTransportFactory())
-
-	// TODO: This line creates a single-threaded server. Probably suffices. What to do for multi-threaded?
-	server := thrift.NewTSimpleServer4(processor, serverTransport, transportFactory, protocolFactory)
 
 	x := &Listener{
 	}
