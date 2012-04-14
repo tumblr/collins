@@ -3,19 +3,30 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
+//	"time"
+	"flag"
+	"log"
+)
+
+//import _ "net/http/pprof"
+
+
+var (
+    listenAddr = flag.String("http", ":8080", "http listen address")
 )
 
 var generator *TimestampGen
 
 func main() {
+    flag.Parse()
+
 	generator = NewTimestampGen(0, 6, 10)
 
 	http.HandleFunc("/get-id", GetId)
 	http.HandleFunc("/next-id", NextId)
 	http.HandleFunc("/start-id", StartId)
 
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(*listenAddr, nil))
 }
 
 func GetId(w http.ResponseWriter, r *http.Request) {
@@ -23,11 +34,13 @@ func GetId(w http.ResponseWriter, r *http.Request) {
 }
 
 func NextId(w http.ResponseWriter, r *http.Request) {
-	id, err := generator.NextId(time.Now().UnixNano())
-	if err != nil {
-		http.Error(w, err.Error(), 502)
-		return
-	}
+//	id, err := generator.NextId(time.Now().UnixNano())
+//	if err != nil {
+//		http.Error(w, err.Error(), 502)
+//		return
+//	}
+
+    id := 123
 
 	fmt.Fprintf(w, "%d", id)
 }
