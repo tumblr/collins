@@ -11,8 +11,8 @@ func (e Error) Error() string {
 }
 
 type TimestampGen struct {
-	nodeSaltWidth  uint8  // bits of salt
-	indexWidth     uint8  // bits of index
+	nodeSaltWidth  uint8 // bits of salt
+	indexWidth     uint8 // bits of index
 	timestampDelta int64 // adjust the epoch
 
 	maxIndex uint64 // the largest index which will fit in indexWidth
@@ -38,29 +38,29 @@ func NewTimestampGen(nodeId uint64, saltWidth uint8, indexWidth uint8) *Timestam
 
 // use the current time to generate the next id
 func (gen *TimestampGen) NextId(time int64) (uint64, error) {
-    if gen.lastTime > time {
+	if gen.lastTime > time {
 		return 0, Error{"time reversal"}
 	}
 
 	gen.mu.Lock()
 	defer gen.mu.Unlock()
 
-    if gen.lastTime != time {
-        gen.lastIndex = 0
-    }
+	if gen.lastTime != time {
+		gen.lastIndex = 0
+	}
 
-    gen.lastIndex++
+	gen.lastIndex++
 	if gen.lastIndex > gen.maxIndex {
 		return 0, Error{"index overflow"}
 	}
 
-    gen.lastTime = time
+	gen.lastTime = time
 
-    adjustedTime := uint64(time - gen.timestampDelta)
+	adjustedTime := uint64(time - gen.timestampDelta)
 
-    id := adjustedTime << (gen.nodeSaltWidth + gen.indexWidth)
-    id |= gen.lastIndex << gen.nodeSaltWidth
-    id |= gen.nodeId
+	id := adjustedTime << (gen.nodeSaltWidth + gen.indexWidth)
+	id |= gen.lastIndex << gen.nodeSaltWidth
+	id |= gen.nodeId
 
 	return id, nil
 }
