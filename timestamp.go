@@ -62,6 +62,10 @@ func (gen *TimestampGen) NextId(time int64) (uint64, error) {
 	id |= gen.lastIndex << gen.nodeSaltWidth
 	id |= gen.nodeId
 
+	if gen.startId == 0 {
+		gen.startId = id
+	}
+
 	return id, nil
 }
 
