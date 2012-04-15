@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"time"
 )
-import _ "net/http/pprof"
 
 var (
 	listenAddr = flag.String("http", ":8080", "http listen address")
+	generator  *TimestampGen
 )
-
-var generator *TimestampGen
 
 func main() {
 	flag.Parse()
