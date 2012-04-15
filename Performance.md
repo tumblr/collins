@@ -1,3 +1,10 @@
+Raw benchmarking with Go:
+
+	± % go test -bench=".*"
+	PASS
+	BenchmarkTimestampGen	 5000000	       411 ns/op
+	ok  	tumblr/goidgen	2.519s
+
 Initial trivial implementation: (#194b2f0b) (wkm/goidgen)
 
 	± % ./hstress -c4 -p8 -u /next-id -b1,2,3,4,5 127.0.0.1 8080
