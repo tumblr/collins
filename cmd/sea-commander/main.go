@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	. "tumblr/c"
 )
 
@@ -25,7 +26,7 @@ var (
 // Upload SEA Zookeeper bundle
 func cmdUpload() {
 	for _, host := range Hosts {
-		fmt.Printf("Uploading to %s\n", Hosts[i])
+		fmt.Printf("Uploading to %s\n", host)
 		UploadDir(host, SourceDir, RemoteDir)
 	}
 }
@@ -66,9 +67,9 @@ func cmdStartZookeeper() {
 	for i := 0; i < len(Hosts); i++ {
 		fmt.Printf("Starting %s\n", Hosts[i])
 
-		// Prepare and place Zookeeper config file
+		// Prepare and place host-specific Zookeeper config file
 		zkcfg := MustParseAndExecute(zookeeperConfig, M{ "Workers": workers })
-		?
+		UploadString(Hosts[i], zkcfg, path.Join(RemoteDir, "zoo-multiple.cfg"))
 
 		// Launch Zookeeper
 		MustRunScriptRemotely(Hosts[i], 
@@ -125,10 +126,8 @@ func main() {
 		cmdStartZookeeper()
 	case "StopZookeeper":
 		cmdStopZookeeper()
-	case "StartBenchmark":
-		cmdStartBenchmark()
-	case "StopBenchmark":
-		cmdStopBenchmark()
+	case "WipeZookeeper":
+		cmdWipeZookeeper()
 	default:
 		usage("unrecognized command")
 	}
