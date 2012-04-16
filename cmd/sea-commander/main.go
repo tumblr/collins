@@ -26,7 +26,7 @@ var (
 func cmdUpload() {
 	for _, host := range Hosts {
 		fmt.Printf("Uploading to %s\n", Hosts[i])
-		Upload(host, SourceDir, RemoteDir)
+		UploadDir(host, SourceDir, RemoteDir)
 	}
 }
 
@@ -66,8 +66,9 @@ func cmdStartZookeeper() {
 	for i := 0; i < len(Hosts); i++ {
 		fmt.Printf("Starting %s\n", Hosts[i])
 
-		// Prepare nad place Zookeeper config file
+		// Prepare and place Zookeeper config file
 		zkcfg := MustParseAndExecute(zookeeperConfig, M{ "Workers": workers })
+		?
 
 		// Launch Zookeeper
 		MustRunScriptRemotely(Hosts[i], 
