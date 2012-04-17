@@ -1,4 +1,4 @@
-package c
+ackage c
 
 import (
 	"fmt"
@@ -23,6 +23,7 @@ func UploadFile(host, sourceFile, remoteFile string) {
 	MustRun("rsync", "", "-acv", "--rsh=ssh", sourceFile, host + ":" + remoteFile)
 }
 
+// UploadString uploads the string s onto a file called remoteFile on host
 func UploadString(host, s, remoteFile string) {
 	// Prepare tmp file
 	f, err := ioutil.TempFile("", "tumblr-upload-")
