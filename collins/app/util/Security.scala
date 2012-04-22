@@ -3,19 +3,42 @@ package util
 import models.{User, UserImpl}
 
 import play.api._
-
+import com.tumblr.play.{PermissionsHelper, Privileges}
+import java.io.File
+import java.util.concurrent.atomic.AtomicReference
 import annotation.implicitNotFound
 
 @implicitNotFound(msg = "Didn't find an implicit SecuritySpecification but expected one")
 trait SecuritySpecification {
   val isSecure: Boolean
-  val requiredCredentials: Seq[String]
+  val requiredCredentials: Set[String]
+  val securityConcern: String
 }
-case class SecuritySpec(isSecure: Boolean, requiredCredentials: Seq[String]) extends SecuritySpecification
-object SecuritySpec {
+
+case class SecuritySpec(
+  isSecure: Boolean,
+  requiredCredentials: Set[String],
+  securityConcern: String = SecuritySpec.LegacyMarker
+) extends SecuritySpecification {
+  def this(secure: Boolean, creds: Seq[String]) = this(secure, creds.toSet, SecuritySpec.LegacyMarker)
+}
+
+object SecuritySpec { //extends FileWatcher {
+  val LegacyMarker = "SecuritySpec Version 1.1"
   def apply(isSecure: Boolean, requiredCredentials: String) =
-    new SecuritySpec(isSecure, Seq(requiredCredentials))
-  def apply(isSecure: Boolean) = new SecuritySpec(isSecure, Nil)
+    new SecuritySpec(isSecure, Set(requiredCredentials))
+  def apply(creds: Set[String]) = new SecuritySpec(true, creds)
+  def apply(secure: Boolean, creds: Seq[String]) =
+    new SecuritySpec(secure, creds.toSet)
+  def apply(isSecure: Boolean) = new SecuritySpec(isSecure, Set[String]())
+  def fromConfig(concern: String, default: SecuritySpecification): SecuritySpecification = {
+    AuthenticationProvider.permissions(concern) match {
+      case None =>
+        SecuritySpec(default.isSecure, default.requiredCredentials, default.securityConcern)
+      case Some(set) =>
+        new SecuritySpec(true, set, concern)
+    }
+  }
 }
 
 trait AuthenticationProvider {
@@ -29,6 +52,16 @@ trait AuthenticationAccessor {
 object AuthenticationProvider {
   val Default = new MockAuthenticationProvider
   val Types = Set("ldap", "file", "default", "ipa")
+  val filename = Config.getString("authentication", "permissionsFile", "errorfile").toString
+
+  private val logger = Logger.logger
+
+  private val privs = new AtomicReference[Privileges](Privileges.empty)
+  lazy private val watcher = FileWatcher.watch(filename) { f =>
+    val tmp = PermissionsHelper.fromFile(f.getAbsolutePath)
+    privs.set(tmp)
+  }
+
   def get(name: String, config: Configuration): AuthenticationProvider = {
     name match {
       case "default" =>
@@ -41,4 +74,60 @@ object AuthenticationProvider {
         new LdapAuthenticationProvider(config)
     }
   }
+
+  def permissions(concern: String): Option[Set[String]] = {
+    val p = privileges
+    if (p.hasConcern(concern)) {
+      val c = p.getConcern(concern)
+      logger.debug("Concern '%s' has concerns '%s'".format(
+        concern, c.mkString(",")))
+      Some(c)
+    } else {
+      logger.debug("Missing configuration for concern %s".format(concern))
+      None
+    }
+  }
+
+  def userIsAuthorized(user: User, spec: SecuritySpecification): Boolean = {
+    val p = privileges
+    val concern = spec.securityConcern
+    if (concern == SecuritySpec.LegacyMarker) {
+      logger.debug("Found legacy security spec, defaulting to basic roles")
+      loggedAuth {
+        user.roles.intersect(spec.requiredCredentials).size > 0
+      }
+    } else {
+      logger.debug("Have concern '%s'".format(concern))
+      loggedAuth {
+        user.roles
+          .find { role =>
+            val perm = p.groupHasPermission(role, concern)
+            logger.debug("Checking group permission for role %s concern %s was %s".format(
+              role, concern, perm.toString))
+            perm
+          }
+          .map(_ => true)
+          .getOrElse {
+            val perm = p.userHasPermission(user.username, concern)
+            logger.debug("Checking user permission for username %s concern %s was %s".format(
+              user.username, concern, perm.toString))
+            perm
+          }
+      }
+    }
+  }
+
+  private def loggedAuth(f: => Boolean): Boolean = {
+    val r = f
+    logger.debug("Result of authentication was %s".format(r.toString))
+    r
+  }
+
+  private def privileges: Privileges = {
+    watcher.tick
+    val p = privs.get
+    logger.debug("Privileges - %s".format(p))
+    p
+  }
+
 }

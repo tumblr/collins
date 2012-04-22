@@ -59,7 +59,7 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
       val uid = getUid(getPrincipal(username), ctx)
       require(uid > 0, "Unable to find UID for user")
       val groups = getGroups(username, ctx)
-      val user = UserImpl(username, "*", groups.map { _._2 }.toSeq, uid, true)
+      val user = UserImpl(username, "*", groups.map { _._2 }.toSet, uid, true)
       logger.trace("Succesfully authenticated %s".format(username))
       Some(user)
     } catch {
