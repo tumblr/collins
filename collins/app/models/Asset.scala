@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Cache, Feature, LldpRepresentation, LshwRepresentation}
+import util.{Feature, LldpRepresentation, LshwRepresentation}
 import util.views.Formatter.dateFormat
 
 import play.api.Logger
