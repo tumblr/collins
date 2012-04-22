@@ -11,7 +11,6 @@ import play.api.mvc._
 import play.api.libs.json._
 import play.api.data._
 
-
 trait AssetWebApi {
   this: Api with SecureController =>
 
@@ -39,7 +38,7 @@ trait AssetWebApi {
         }
       }
     }
-  }}(SecuritySpec(true, "infra"))
+  }}(Permissions.AssetWebApi.CancelAsset)
 
   // POST /asset/:tag/provision
   type ProvisionForm = Tuple7[String,String,Option[String],Option[String],Option[String],Option[String],Option[Boolean]]
@@ -200,6 +199,6 @@ trait AssetWebApi {
     }.getOrElse {
       formatResponseData(Api.getErrorMessage("Specified asset tag is invalid"))
     }
-  }}(SecuritySpec(true, "infra"))
+  }}(Permissions.AssetWebApi.ProvisionAsset)
 
 }

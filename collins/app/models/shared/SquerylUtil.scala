@@ -1,6 +1,6 @@
 package models
 
-import util.Cache
+import util.plugins.Cache
 
 import play.api.Logger
 import org.squeryl.{KeyedEntity, Schema, Table}

@@ -9,12 +9,13 @@ abstract class User(val username: String, val password: String) {
   def authenticate(username: String, password: String) = User.authenticate(username, password)
   def isAuthenticated(): Boolean
   def id(): Int
-  def roles(): Seq[String]
+  def roles(): Set[String]
   def hasRole(name: String): Boolean = roles().contains(name)
   def getRole[T](name: String): Option[String] = hasRole(name) match {
     case true => Some(name)
     case false => None
   }
+  def isAdmin(): Boolean = hasRole("infra")
   def toMap(): Map[String,String] = Map(
     User.ID -> id().toString(),
     User.USERNAME -> username,
@@ -22,7 +23,7 @@ abstract class User(val username: String, val password: String) {
     User.ROLES -> roles().mkString(",")
     )
 }
-case class UserImpl(_username: String, _password: String, _roles: Seq[String], _id: Int, _authenticated: Boolean)
+case class UserImpl(_username: String, _password: String, _roles: Set[String], _id: Int, _authenticated: Boolean)
   extends User(_username, _password)
 {
   override def id() = _id
@@ -66,7 +67,7 @@ object User {
     } else {
       val username = user(USERNAME).get
       val password = "*"
-      val rles = user(ROLES).get.split(",").toSeq
+      val rles = user(ROLES).get.split(",").toSet
       val is_auth = user(IS_AUTHENTICATED).get.equals("true")
       val _id = user(ID).get.toInt
       Some(new User(username, password) {

@@ -1,0 +1,72 @@
+@(aa: Asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import _root_.util.{PowerManagement, Provisioner, SoftLayer}
+@import _root_.util.plugins.Maintenance
+@import _root_.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
+@import _root_.controllers.Permissions
+
+<div class="row">
+  <div class="span14">
+    @Summary(aa.asset)
+  </div>
+
+  <div class="span14">
+
+    <ul class="tabs" data-tabs="tabs">
+      <li class="active"><a href="#overview">Overview</a></li>
+      @if(aa.ipmi.nonEmpty || PowerManagement.powerAllowed(aa.asset)) {
+      <li><a href="#ipmi-info">IPMI Info</a></li>
+      }
+      <li><a href="#log-data">Logs</a></li>
+      @if(aa.lshw.cpuCount > 0) {
+      <li><a href="#hardware-details">Hardware Details</a></li>
+      }
+      @if(aa.lldp.interfaceCount > 0) {
+      <li><a href="#lldp-info">LLDP Info</a></li>
+      }
+      <li class="dropdown" data-dropdown="dropdown">
+      <a href="#" class="dropdown-toggle"><strong>Actions</strong></a>
+        <ul class="dropdown-menu">
+          <li><a href="#" data-keyboard="true" data-controls-modal="asset-note">Create Note</a></li>
+          <li class="divider"></li>
+          @if(Permissions.please(user, Permissions.AssetWebApi.CancelAsset)) {
+            @SoftLayer.pluginEnabled.map { p =>
+              @if(p.isSoftLayerAsset(aa.asset) && SoftLayer.cancelAllowed(aa.asset) ) {
+                <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
+              }
+            }
+          }
+          @if(Permissions.please(user, Permissions.AssetApi.UpdateAssetForMaintenance)) {
+            @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
+              <li><a href="#" data-keyboard="true" data-backdrop="static" data-controls-modal="asset-maintenance">Maintenance Start</a></li>
+            }
+            @if(Maintenance.canTransitionFromMaintenance(aa.asset)) {
+              <li><a href="#" data-keyboard="true" data-backdrop="static" data-controls-modal="asset-maintenance">Maintenance End</a></li>
+            }
+          }
+          @if(Permissions.please(user, Permissions.AssetManagementApi.PowerManagement)) {
+            @PowerManagement.pluginEnabled.map { p =>
+              @if(PowerManagement.powerAllowed(aa.asset)) {
+                <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="power-server">Power Management</a></li>
+              }
+            }
+          }
+	  @if(Permissions.please(user, Permissions.AssetWebApi.ProvisionAsset)) {
+	    @Provisioner.pluginEnabled.map { p =>
+              @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete && aa.asset.getType().name == "Server Node") {
+                <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
+              } else {
+                @SoftLayer.pluginEnabled.map { p =>
+                  @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+                    <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Activate Server</a></li>
+                  }
+                }
+              }
+	    }
+	  }
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
+
