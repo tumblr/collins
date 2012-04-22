@@ -1,6 +1,7 @@
 package controllers
 
-import util.{Cache, SecuritySpec, Stats}
+import util.{SecuritySpec, Stats}
+import util.plugins.Cache
 import views._
 
 import play.api.Play

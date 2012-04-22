@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Cache, CryptoCodec, Feature, InternalTattler}
+import util.{CryptoCodec, Feature, InternalTattler}
 import play.api.Logger
 import java.sql.Timestamp
 import java.util.Date
