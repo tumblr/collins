@@ -160,7 +160,7 @@ trait Resources extends Controller {
     val isNew = asset.isNew
     val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
     val intakeSupported = Feature("intakeSupported").toBoolean(true)
-    val rightRole = hasRole(getUser(r), Seq("infra"))
+    val rightRole = getUser(r).isAdmin
     intakeSupported && isNew && rightType && rightRole
   }
 

@@ -13,5 +13,5 @@ trait ControllerSpec {
       Results.Unauthorized(Txt("Invalid username/password specified"))
     }
   }
-  def getLoggedInUser(group: String) = Some(UserImpl("test", "*", Seq(group), 123, true))
+  def getLoggedInUser(group: String) = Some(UserImpl("test", "*", Set(group), 123, true))
 }

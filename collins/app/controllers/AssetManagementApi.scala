@@ -61,7 +61,7 @@ trait AssetManagementApi {
       }.getOrElse(Api.getErrorMessage("Invalid asset tag specified", Results.NotFound))
     }.getOrElse(Api.getErrorMessage("PowerManagement plugin not enabled"))
     formatResponseData(response)
-  }}(SecuritySpec(true, Nil))
+  }}(Permissions.AssetManagementApi.PowerStatus)
 
   def powerManagement(tag: String) = Authenticated { user => Action { implicit req =>
     val errMsg = "Power management action must be one of: powerOff, powerOn, powerSoft, rebootSoft, rebootHard"
@@ -96,6 +96,6 @@ trait AssetManagementApi {
       }.getOrElse(Api.getErrorMessage("PowerManagement plugin not enabled"))
     )
     formatResponseData(response)
-  }}(SecuritySpec(true, "infra"))
+  }}(Permissions.AssetManagementApi.PowerManagement)
 
 }
