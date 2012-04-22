@@ -2,6 +2,7 @@
 
 @import helper._
 @import _root_.util.views.Formatter
+@import _root_.controllers.Permissions
 
 @createLink(a: AssetType.Enum) = {
   <a href="@app.routes.Resources.displayCreateForm(a.toString)">@Formatter.camelCase(a.toString, " ")</a>
@@ -38,8 +39,10 @@
             <ul class="nav" style="float: right;">
               <li><a href="@app.routes.Resources.index">Search</a></li>
               @User.fromMap(req.session.data).map { u =>
-              @u.getRole("infra").map { role =>
-              <li><a href="@routes.Admin.logs">Logging</a></li>
+              @if(Permissions.please(u, Permissions.Admin.Logs)) {              
+                <li><a href="@routes.Admin.logs">Logging</a></li>
+              }
+              @if(Permissions.please(u, Permissions.AssetApi.CreateAsset)) {
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle">Create</a>
                 <ul class="dropdown-menu">

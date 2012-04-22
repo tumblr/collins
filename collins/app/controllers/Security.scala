@@ -29,7 +29,7 @@ object SecureController {
   def Authenticated(
     authenticate: RequestHeader => Option[User],
     onUnauthorized: Action[AnyContent],
-    hasRole: (User, Seq[String]) => Boolean)(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification): Action[AnyContent] = {
+    authorize: (User, SecuritySpecification) => Boolean)(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification): Action[AnyContent] = {
     val newAction = Action { request =>
       spec.isSecure match {
         case false =>
@@ -39,17 +39,16 @@ object SecureController {
           authenticate(request) match {
             case Some(user) =>
               logger.debug("Auth required and successful")
-              spec.requiredCredentials match {
-                case Nil =>
-                  logger.debug("No credentials required, processing action")
+              if (spec.requiredCredentials.isEmpty) {
+                logger.debug("No credentials required, processing action")
+                getAction(Some(user), action, request)
+              } else {
+                if (authorize(user, spec)) {
+                  logger.debug("Credentials required and found, processing action")
                   getAction(Some(user), action, request)
-                case seq => hasRole(user, seq) match {
-                  case true =>
-                    logger.debug("Credentials required and found, processing action")
-                    getAction(Some(user), action, request)
-                  case false =>
-                    logger.debug("Credentials required and NOT found")
-                    onUnauthorized(request)
+                } else {
+                  logger.warn("Credentials required and NOT found for %s".format(user.username))
+                  onUnauthorized(request)
                 }
               }
             case None =>
@@ -68,9 +67,9 @@ object SecureController {
 trait SecureController extends Controller {
   protected val logger = Logger.logger
 
-  /** Controllers that extend this trait can override the default hasRole behavior */
-  protected def hasRole(user: User, roles: Seq[String]): Boolean = {
-    user.roles.intersect(roles).size == roles.size
+  /** Controllers that extend this trait can override the default authorize behavior */
+  protected def authorize(user: User, spec: SecuritySpecification): Boolean = {
+    AuthenticationProvider.userIsAuthorized(user, spec)
   }
   /** Authenticate a request, return a User if the request can be authenticated */
   protected def authenticate(request: RequestHeader): Option[User]
@@ -84,7 +83,7 @@ trait SecureController extends Controller {
   }
 
   def Authenticated(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification) =
-    SecureController.Authenticated(authenticate, onUnauthorized, hasRole)(action)
+    SecureController.Authenticated(authenticate, onUnauthorized, authorize)(action)
 
   def SecureAction(block: Request[AnyContent] => Result)(implicit spec: SecuritySpecification) =
     Authenticated(_ => Action(block))
@@ -98,10 +97,16 @@ trait SecureWebController extends SecureController {
   override protected def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
 
   override def onUnauthorized = Action { implicit request =>
-    if (request.path != "/login") {
-      Results.Redirect(unauthorizedRoute + "?location=" + request.path)
+    // If user is not logged in and accesses a page, store the location so they can be redirected
+    // after authentication
+    if (User.fromMap(request.session.data).isDefined) {
+      Results.Redirect("/").flashing(securityMessage(request))
     } else {
-      Results.Redirect(unauthorizedRoute).flashing(securityMessage(request))
+      if (request.path != "/login") {
+        Results.Redirect(unauthorizedRoute + "?location=" + request.path)
+      } else { // Otherwise they really don't have permissions
+        Results.Redirect(unauthorizedRoute)
+      }
     }
   }
 

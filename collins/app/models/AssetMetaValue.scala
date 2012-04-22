@@ -234,7 +234,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     oldValue match {
       case None =>
       case Some(oValue) =>
-        val msg = "Deleting old %s value '%s', setting to '%s".format(
+        val msg = "Deleting old %s value '%s', setting to '%s'".format(
                     AssetMeta.findById(newValue.asset_meta_id).map(_.name).getOrElse("Unknown"),
                     oValue.value, newValue.value)
         InternalTattler.notice(newValue.getAsset, None, msg)
