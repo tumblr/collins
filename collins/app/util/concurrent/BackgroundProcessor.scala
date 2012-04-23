@@ -6,6 +6,7 @@ import akka.actor.Actor
 import akka.dispatch.FutureTimeoutException
 import akka.routing.Routing.loadBalancerActor
 import akka.routing.CyclicIterator
+import akka.util.Duration
 
 import play.api.libs.akka._
 import play.api.libs.concurrent.{Redeemed, Thrown}
@@ -16,9 +17,9 @@ private[concurrent] class BackgroundProcessor extends Actor {
   }
 }
 
-case class SexyTimeoutException(timeout: Duration) extends Exception(message) {
+case class SexyTimeoutException(timeout: Duration) extends Exception("Command timeout after %d seconds".format(timeout.toSeconds.toString)) {
   override def toString(): String = {
-    "Command timeout after %d seconds".format(timeout.toSeconds.toString)
+    this.getMessage()
   }
 }
 object BackgroundProcessor {
