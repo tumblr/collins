@@ -18,6 +18,7 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
       val authFile = findResource("htpasswd_users")
       val configData = Map(
         "authentication.type" -> "file",
+        "authentication.permissionsFile" -> "conf/permissions.yaml",
         "authentication.file" -> authFile.getAbsolutePath
       )
       val config = Configuration.from(configData)
@@ -26,8 +27,8 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
       val provider = AuthenticationProvider.get("file", authConfig.get)
       provider must haveClass[FileAuthenticationProvider]
       val users = Seq(
-        ("blake", "password123", Seq("engineering")),
-        ("testuser", "FizzBuzzAbc", Seq("ny","also"))
+        ("blake", "password123", Set("engineering")),
+        ("testuser", "FizzBuzzAbc", Set("ny","also"))
       )
       users.foreach { case(username,password,roles) =>
         val user = provider.authenticate(username, password)
