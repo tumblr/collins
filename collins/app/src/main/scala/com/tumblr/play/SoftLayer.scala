@@ -146,6 +146,12 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
   override def rebootSoft(e: AssetWithTag): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/rebootSoft.json")
   }
+  override def verify(e: AssetWithTag): PowerStatus = {
+    Future.value(Failure("verify not implemented for softlayer"))
+  }
+  override def identify(e: AssetWithTag): PowerStatus = {
+    Future.value(Failure("identify not implemented for softlayer"))
+  }
 
   override def activateServer(id: Long): Future[Boolean] = {
     val url = softLayerUrl("/SoftLayer_Hardware_Server/%d/sparePool.json".format(id))

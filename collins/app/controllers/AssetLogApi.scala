@@ -39,7 +39,7 @@ trait AssetLogApi {
       )), headers))
     }
     formatResponseData(result.fold(l => l, r => r))
-  }
+  }(Permissions.AssetLogApi.Get)
 
   // GET /assets/logs
   def getAllLogData(page: Int, size: Int, sort: String, filter: String) = SecureAction { implicit req =>
@@ -63,7 +63,7 @@ trait AssetLogApi {
       )), headers)
     }
     formatResponseData(result)
-  }
+  }(Permissions.AssetLogApi.GetAll)
 
   // PUT /api/asset/:tag/log
   def submitLogData(tag: String) = Authenticated { user => Action { implicit req =>
@@ -133,7 +133,7 @@ trait AssetLogApi {
       }
     }.fold(l => l, r => r)
     formatResponseData(responseData)
-  }}(SecuritySpec(true, Seq("infra")))
+  }}(Permissions.AssetLogApi.Create)
 
 
 }
