@@ -1,0 +1,24 @@
+package util
+
+import models.{User, UserImpl}
+
+class MockAuthenticationProvider extends AuthenticationProvider {
+  val users = Map(
+    "blake" -> UserImpl("blake", "admin:first", Set("engineering","infra","ops"), 1024, false),
+    "matt" -> UserImpl("matt", "foobar", Set("engineering", "management"), 1025, false),
+    "test" -> UserImpl("test", "fizz", Set[String](), 1026, false),
+    "joeengineer" -> UserImpl("joeengineer", "flah", Set("engineering"), 1027, false)
+  )
+
+  override def authenticate(username: String, password: String): Option[User] = {
+    users.get(username) match {
+      case None => None
+      case Some(user) => (password == user.password) match {
+        case true =>
+          val newUser = user.copy(_password = "*", _authenticated = true)
+          Some(newUser)
+        case false => None
+      }
+    }
+  }
+}

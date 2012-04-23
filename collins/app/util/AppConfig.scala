@@ -7,6 +7,8 @@ import play.api.{Configuration, Mode, Play}
 object AppConfig extends Config {
   val IgnoredAssets = Feature("ignoreDangerousCommands").toSet
 
+  def adminGroup = Set("infra")
+
   // Ignore asset for dangerous commands
   def ignoreAsset(tag: String): Boolean = IgnoredAssets(tag.toUpperCase)
   def ignoreAsset(asset: Asset): Boolean = ignoreAsset(asset.tag)

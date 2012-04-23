@@ -1,6 +1,6 @@
 package models
 
-import util.{Cache, CryptoCodec}
+import util.CryptoCodec
 
 import conversions._
 import java.util.Date
