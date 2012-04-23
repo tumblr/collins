@@ -1,4 +1,5 @@
 package util
+package plugins
 
 import com.tumblr.play.CachePlugin
 import play.api.{Application, Mode}

@@ -18,7 +18,7 @@ trait AssetApi {
   // GET /api/asset/:tag
   def getAsset(tag: String) = Authenticated { user => Action { implicit req =>
     val result = Api.withAssetFromTag(tag) { asset =>
-      val exposeCredentials = hasRole(user.get, Seq("infra"))
+      val exposeCredentials = user.get.isAdmin
       val allAttributes = asset.getAllAttributes.exposeCredentials(exposeCredentials)
       Right(ResponseData(Results.Ok, allAttributes.toJsonObject, attachment = Some(allAttributes)))
     }
@@ -39,7 +39,7 @@ trait AssetApi {
           formatResponseData(success)
         }
     }
-  }}
+  }}(Permissions.AssetApi.GetAsset)
 
   // GET /api/assets?params
   private val finder = new actions.FindAsset()
@@ -54,13 +54,13 @@ trait AssetApi {
         actions.FindAsset.formatResultAsRd(success, detailsBoolean)
     }
     formatResponseData(rd)
-  }
+  }(Permissions.AssetApi.GetAssets)
 
   // PUT /api/asset/:tag
   private val assetCreator = new actions.CreateAsset()
   def createAsset(tag: String) = SecureAction { implicit req =>
     formatResponseData(assetCreator(tag))
-  }(SecuritySpec(true, "infra"))
+  }(Permissions.AssetApi.CreateAsset)
 
   // POST /api/asset/:tag
   def updateAsset(tag: String) = SecureAction { implicit req =>
@@ -68,7 +68,7 @@ trait AssetApi {
       case Left(l) => formatResponseData(l)
       case Right(s) => formatResponseData(Api.statusResponse(s))
     }
-  }(SecuritySpec(true, "infra"))
+  }(Permissions.AssetApi.UpdateAsset)
 
   def updateAssetForMaintenance(tag: String) = SecureAction { implicit req =>
     def processRequest(status: String, reason: String) = {
@@ -95,7 +95,7 @@ trait AssetApi {
       err => formatResponseData(Api.getErrorMessage("status and reason must be specified")),
       succ => formatResponseData(processRequest(succ._1, succ._2))
     )
-  }(SecuritySpec(true, "infra"))
+  }(Permissions.AssetApi.UpdateAssetForMaintenance)
 
   // DELETE /api/asset/attribute/:attribute/:tag
   def deleteAssetAttribute(tag: String, attribute: String) = SecureAction { implicit req =>
@@ -109,7 +109,7 @@ trait AssetApi {
       .left.map(err => Api.getErrorMessage("Error deleting asset attributes", Results.InternalServerError, Some(err)))
       .right.map(status => Api.statusResponse(status, Results.Status(StatusValues.ACCEPTED)))
     }.fold(l => l, r => r).map(s => formatResponseData(s))
-  }(SecuritySpec(true, "infra"))
+  }(Permissions.AssetApi.DeleteAssetAttribute)
 
   // DELETE /api/asset/:tag
   def deleteAsset(tag: String) = SecureAction { implicit req =>
@@ -127,7 +127,7 @@ trait AssetApi {
     }
     val responseData = result.fold(l => l, r => r)
     formatResponseData(responseData)
-  }(SecuritySpec(true, "infra"))
+  }(Permissions.AssetApi.DeleteAsset)
 
 
 }

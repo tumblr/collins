@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Cache, CryptoCodec, Feature, InternalTattler}
+import util.{CryptoCodec, Feature, InternalTattler}
 import play.api.Logger
 import java.sql.Timestamp
 import java.util.Date
@@ -234,7 +234,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     oldValue match {
       case None =>
       case Some(oValue) =>
-        val msg = "Deleting old %s value '%s', setting to '%s".format(
+        val msg = "Deleting old %s value '%s', setting to '%s'".format(
                     AssetMeta.findById(newValue.asset_meta_id).map(_.name).getOrElse("Unknown"),
                     oValue.value, newValue.value)
         InternalTattler.notice(newValue.getAsset, None, msg)
