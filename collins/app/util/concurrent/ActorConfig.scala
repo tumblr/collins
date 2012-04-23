@@ -1,4 +1,5 @@
 package util
+package concurrent
 
 object ActorConfig {
   val DefaultActorCount = Runtime.getRuntime().availableProcessors()*2

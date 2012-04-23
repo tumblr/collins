@@ -1,6 +1,8 @@
 package util
 
 import models.{Asset, IpmiInfo}
+import concurrent.BackgroundProcess
+import com.tumblr.play.CommandResult
 
 import akka.actor.Actor
 import akka.actor.Actor._
@@ -16,50 +18,20 @@ import play.api.libs.concurrent.{Redeemed, Thrown}
 import scala.collection.mutable.StringBuilder
 import scala.sys.process._
 
-class IpmiCommandProcessor extends Actor {
-  def receive = {
-    case cmd: IpmiCommand => self.reply(cmd.run())
+object IpmiCommand {
+  type BackgroundResult = Tuple2[Option[Throwable], Option[Option[CommandResult]]]
+  def fromResult(r: BackgroundResult): Either[Throwable,Option[CommandResult]] = r match {
+    case (None, None) =>
+      Left(new Exception("No command result AND no throwable"))
+    case (Some(ex), _) =>
+      Left(ex)
+    case (None, Some(res)) =>
+      Right(res)
   }
 }
 
-case class IpmiCommandResult(exitCode: Int, stdout: String, stderr: String) {
-  override def toString(): String = {
-    val ec = "Exit Code: %d".format(exitCode)
-    val ss = if (stdout.isEmpty) "" else "Stdout: %s".format(stdout.replaceAll("\n","_"))
-    val se = if (stderr.isEmpty) "" else "Stderr: %s".format(stderr.replaceAll("\n","_"))
-    List(ec, ss, se).filter(_.nonEmpty).mkString(", ")
-  }
-  def isSuccess: Boolean = exitCode == 0
-}
-object IpmiCommandResult {
-  def apply(error: String) = new IpmiCommandResult(-1, "", error.trim)
-}
-
-object IpmiCommandProcessor {
-  val ref = loadBalancerActor(
-    new CyclicIterator((1 to ActorConfig.ActorCount)
-      .map(_ => actorOf[IpmiCommandProcessor].start())
-      .toList
-    )
-  )
-  def send[A](cmd: IpmiCommand)(result: Option[IpmiCommandResult] => A) = {
-    ref.?(cmd)(timeout = cmd.timeout).mapTo[Option[IpmiCommandResult]].asPromise.extend1 {
-      case Redeemed(v) => result(v)
-      case Thrown(e) => e match {
-        case t: FutureTimeoutException =>
-          result(Option(IpmiCommandResult(
-            "Command took longer than %d seconds: %s".format(cmd.timeout.toSeconds, t.getMessage)
-          )))
-        case _ =>
-          result(Option(IpmiCommandResult(e.getMessage)))
-      }
-    }
-  }
-}
-
-abstract class IpmiCommand {
+abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
   val interval: Duration
-  val timeout: Duration
   val configKey: String
   var debug: Boolean = false
 
@@ -80,7 +52,7 @@ abstract class IpmiCommand {
     AppConfig.ipmiMap
   }
 
-  def run(): Option[IpmiCommandResult] = {
+  def run(): Option[CommandResult] = {
     if (!shouldRun) {
       return None
     }
@@ -100,18 +72,18 @@ abstract class IpmiCommand {
     }
     val stdoutString = stdout.toString.trim
     val stderrString = stderr.toString.trim
-    val icr = IpmiCommandResult(exitStatus, stdoutString, stderrString)
-    if (!icr.isSuccess) {
+    val cr = CommandResult(exitStatus, stdoutString, Some(stderrString))
+    if (!cr.isSuccess) {
       logger.error("Error running command '%s'".format(command))
-      logger.error(icr.toString)
+      logger.error(cr.toString)
     } else {
       logger.info("Ran command %s".format(command))
-      logger.info(icr.toString)
+      logger.info(cr.toString)
     }
-    Some(icr)
+    Some(cr)
   }
 
-  protected def defaultTimeout: Duration = {
+  override protected def defaultTimeout: Duration = {
     Duration.parse(getConfig.getOrElse("timeout", "2 seconds"))
   }
 
@@ -130,20 +102,5 @@ abstract class IpmiCommand {
       .replace("<username>", username)
       .replace("<password>", password)
       .replace("<interval>", interval.toSeconds.toString)
-  }
-}
-
-case class IpmiIdentifyCommand(asset: Asset, interval: Duration, userTimeout: Option[Duration] = None)
-  extends IpmiCommand
-{
-  val configKey = "identify"
-  val timeout = userTimeout.getOrElse(defaultTimeout)
-
-  override protected def ipmiInfo: IpmiInfo = {
-    val _ipmi = IpmiInfo.findByAsset(asset)
-    if (!_ipmi.isDefined) {
-      throw new IllegalStateException("Could not find IPMI info for asset")
-    }
-    _ipmi.get
   }
 }

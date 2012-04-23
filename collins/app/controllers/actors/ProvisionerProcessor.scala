@@ -6,6 +6,7 @@ import com.tumblr.play.{CommandResult, ProvisionerRequest}
 import com.twitter.util.Future
 import play.api.mvc.{AnyContent, Request}
 import util.Provisioner
+import util.concurrent.BackgroundProcess
 
 case class ProvisionerProcessor(request: ProvisionerRequest, userTimeout: Option[Duration] = None)(implicit req: Request[AnyContent]) extends BackgroundProcess[CommandResult]
 {

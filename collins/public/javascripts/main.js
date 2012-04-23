@@ -188,6 +188,7 @@ $(document).ready(function() {
       data = $form.serialize(),
       modalEl = $form.attr('data-modal'),
       errorEl = $form.attr('data-error'),
+      successEl = $form.attr('data-success'),
       refreshSelector = $form.attr('data-refresh');
 
       $.post(url, data).success(function(d) {
@@ -201,6 +202,9 @@ $(document).ready(function() {
         if (refreshSelector) {
           $(refreshSelector).each(function() { $(this).trigger('refresh'); });
         }
+        if (successEl) {
+          $(elId(successEl)).show();
+        }
       }).error(function(d) {
         var response = {};
         try {
@@ -211,6 +215,9 @@ $(document).ready(function() {
               message: "An internal error occurred. See collins server logs."
             }
           }
+        }
+        if (successEl) {
+          $(elId(successEl)).hide();
         }
         if (errorEl) {
           var classes = $(elId(errorEl)).attr('data-on-error');

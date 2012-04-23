@@ -41,7 +41,7 @@
             <ul class="nav" style="float: right;">
               <li><a href="@app.routes.Resources.index">Search</a></li>
               @User.fromMap(req.session.data).map { u =>
-              @if(Permissions.please(u, Permissions.Admin.Logs)) {              
+              @if(Permissions.please(u, Permissions.AssetLogApi.GetAll)) {              
                 <li><a href="@routes.Admin.logs">Logging</a></li>
               }
               @if(Permissions.please(u, Permissions.AssetApi.CreateAsset)) {
