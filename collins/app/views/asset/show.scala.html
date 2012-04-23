@@ -426,9 +426,10 @@
       var logDataLevels = [
         "NOTE", "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING"
       ];
-      var logDataUri = "/asset/@aa.asset.tag/logs?filter=!" + escape(logDataLevels.join(';'));
+      var logDataUri = "/asset/@aa.asset.tag/logs";
     </script>
     <h3>Log Data <small>Log data about asset</small></h3>
+    <button id="logRefresh" style="float: right;" class="btn" data-interval-refresh="10;#log_data">Auto Refresh</button>
     <div id="log_data_container">
       <table id="log_data" data-size="25" class="log-data zebra-striped condensed-table" data-cols="logDataCols" data-source="javascript://logDataUri">
         <thead>
