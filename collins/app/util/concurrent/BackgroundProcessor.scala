@@ -16,6 +16,11 @@ private[concurrent] class BackgroundProcessor extends Actor {
   }
 }
 
+case class SexyTimeout(timeout: Duration) extends Exception(message) {
+  override def toString(): String = {
+    "Command timeout after %d seconds".format(timeout.toSeconds.toString)
+  }
+}
 object BackgroundProcessor {
   val ref = loadBalancerActor(
     new CyclicIterator((1 to ActorConfig.ActorCount)
@@ -30,10 +35,7 @@ object BackgroundProcessor {
       case Redeemed(v) => result(Tuple2(None, Some(v)))
       case Thrown(e) => e match {
         case t: FutureTimeoutException =>
-          val ex = new Exception("Command took longer than %d seconds: %s".format(
-            cmd.timeout.toSeconds, t.getMessage
-          ))
-          result(Tuple2(Some(ex), None))
+          result(Tuple2(Some(SexyTimeoutException(cmd.timeout)), None))
         case _ =>
           result(Tuple2(Some(e), None))
       }
