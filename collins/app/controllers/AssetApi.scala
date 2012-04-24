@@ -18,7 +18,7 @@ trait AssetApi {
   // GET /api/asset/:tag
   def getAsset(tag: String) = Authenticated { user => Action { implicit req =>
     val result = Api.withAssetFromTag(tag) { asset =>
-      val exposeCredentials = user.get.isAdmin
+      val exposeCredentials = user.get.canSeePasswords
       val allAttributes = asset.getAllAttributes.exposeCredentials(exposeCredentials)
       Right(ResponseData(Results.Ok, allAttributes.toJsonObject, attachment = Some(allAttributes)))
     }
