@@ -1,8 +1,7 @@
-package controllers
-package actors
+package util
+package concurrent
 
 import akka.util.Duration
-import util.Config
 
 trait BackgroundProcess[T] {
   val timeout: Duration

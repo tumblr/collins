@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Feature, LldpRepresentation, LshwRepresentation}
+import util.{Feature, LldpRepresentation, LshwRepresentation, Stats}
 import util.views.Formatter.dateFormat
 
 import play.api.Logger
@@ -115,7 +115,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] = {
+  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] =
+  Stats.time("Asset.find") {
     if (params._1.nonEmpty) {
       IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
     } else if (params._2.nonEmpty) {

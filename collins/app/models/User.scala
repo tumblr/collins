@@ -1,7 +1,7 @@
 package models
 
 import play.api._
-import util.{AuthenticationAccessor, AuthenticationProvider}
+import util.{AuthenticationAccessor, AuthenticationProvider, Stats}
 
 case class UserException(message: String) extends Exception(message)
 
@@ -42,7 +42,17 @@ object User {
       case None => getProviderFromFramework()
       case Some(p) => p
     }
-    p.authenticate(username, password)
+    p.authenticate(username, password) match {
+      case None =>
+        Stats.count("Authentication","Failure")
+        None
+      case Some(user) =>
+        user.isAuthenticated match {
+          case true => Stats.count("Authentication", "Success")
+          case false => Stats.count("Authentication", "Failure")
+        }
+        Some(user)
+    }
   }
 
   private def getProviderFromFramework(): AuthenticationProvider = {

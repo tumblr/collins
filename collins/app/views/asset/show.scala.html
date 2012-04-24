@@ -231,12 +231,16 @@
   </div> <!-- overview -->
 
   <div class="tab-pane" id="ipmi-info">
-    <h3>IPMI Info</h3>
+    <h3 style="display:inline;">IPMI Info</h3>
     @PowerManagement.pluginEnabled.map { p =>
-    <div class="clearfix" style="float: right; margin-right: 100px;">
+      @form(app.routes.CookieApi.powerManagement(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "identifyError", Symbol("data-success") -> "identifySuccess", Symbol("style") -> "float: right; margin-right: 100px;") {
       <button class="primary btn" data-remote="/asset/@aa.asset.tag/power" data-insert="power-status" data-extract="data.MESSAGE">Power Status</button>
       <span id="power-status"></span>
-    </div>
+      <button type="submit" class="primary btn">Identify</button>
+      <span id="identifyError"></span>
+      <span id="identifySuccess" class="hide">Ok</span>
+      <input type="hidden" name="action" value="Identify">
+      }
     }
     @if(aa.ipmi.nonEmpty) {
     <table class="zebra-striped condensed-table" id="ipmiInfo">
@@ -426,9 +430,10 @@
       var logDataLevels = [
         "NOTE", "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING"
       ];
-      var logDataUri = "/asset/@aa.asset.tag/logs?filter=!" + escape(logDataLevels.join(';'));
+      var logDataUri = "/asset/@aa.asset.tag/logs";
     </script>
     <h3>Log Data <small>Log data about asset</small></h3>
+    <button id="logRefresh" style="float: right;" class="btn" data-interval-refresh="10;#log_data">Auto Refresh</button>
     <div id="log_data_container">
       <table id="log_data" data-size="25" class="log-data zebra-striped condensed-table" data-cols="logDataCols" data-source="javascript://logDataUri">
         <thead>

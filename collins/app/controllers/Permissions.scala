@@ -11,11 +11,20 @@ object Permissions {
     AuthenticationProvider.userIsAuthorized(user, spec)
   }
 
-  object Admin {
-    val Spec = SecuritySpec.fromConfig("controllers.Admin", AdminSpec)
-    val Stats = SecuritySpec.fromConfig("controllers.Admin.stats", Spec)
-    val Logs = SecuritySpec.fromConfig("controllers.Admin.logs", Spec)
-    val ClearCache = SecuritySpec.fromConfig("controllers.Admin.clearCache", Stats)
+  class PermSpec(val klass: String) {
+    def spec(method: String, default: SecuritySpecification): SecuritySpecification = {
+      val fmt = "%s.%s".format(klass, method)
+      SecuritySpec.fromConfig(fmt, default)
+    }
+    def spec(default: SecuritySpecification): SecuritySpecification = {
+      SecuritySpec.fromConfig(klass, default)
+    }
+  }
+
+  object Admin extends PermSpec("controllers.Admin") {
+    val Spec = spec(AdminSpec)
+    val Stats = spec("stats", Spec)
+    val ClearCache = spec("clearCache", Stats)
   }
 
   object AssetApi {
@@ -31,18 +40,32 @@ object Permissions {
       SecuritySpec.fromConfig("controllers.AssetApi.updateAssetForMaintenance", AdminSpec)
   }
 
-  object AssetManagementApi {
-    val p = "controllers.AssetManagementApi"
-    def b(s: String) = { if (s.isEmpty) p else "%s.%s".format(p, s) }
-    val Spec = SecuritySpec.fromConfig(b(""), LoggedIn)
-    val PowerStatus = SecuritySpec.fromConfig(b("powerStatus"), Spec)
-    val PowerManagement = SecuritySpec.fromConfig(b("powerManagement"), AdminSpec)
+  object AssetLogApi {
+    val Spec = SecuritySpec.fromConfig("controllers.AssetLogApi", LoggedIn);
+    val Create = SecuritySpec.fromConfig("controllers.AssetLogApi.submitLogData", AdminSpec);
+    val Get = SecuritySpec.fromConfig("controllers.AssetLogApi.getLogData", Spec);
+    val GetAll = SecuritySpec.fromConfig("controllers.AssetLogApi.getAllLogData", Spec);
   }
 
-  object AssetWebApi {
-    val Spec = SecuritySpec.fromConfig("controllers.AssetWebApi", AdminSpec)
-    val CancelAsset = SecuritySpec.fromConfig("controllers.AssetWebApi.cancelAsset", Spec)
-    val ProvisionAsset = SecuritySpec.fromConfig("controllers.AssetWebApi.provisionAsset", Spec)
+  object AssetManagementApi extends PermSpec("controllers.AssetManagementApi") {
+    val Spec = spec(LoggedIn)
+    val PowerStatus = spec("powerStatus", Spec)
+    val PowerManagement = spec("powerManagement", AdminSpec)
+  }
+
+  object AssetWebApi extends PermSpec("controllers.AssetWebApi") {
+    val Spec = spec(AdminSpec)
+    val CancelAsset = spec("cancelAsset", Spec)
+    val ProvisionAsset = spec("provisionAsset", Spec)
+  }
+
+  object Resources extends PermSpec("controllers.Resources") {
+    val Spec = spec(LoggedIn)
+    val CreateAsset = spec("createAsset", AdminSpec)
+    val CreateForm = spec("displayCreateForm", AdminSpec)
+    val Find = spec("find", Spec)
+    val Index = spec("index", Spec)
+    val Intake = spec("intake", AdminSpec)
   }
 
 }

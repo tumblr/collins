@@ -1,10 +1,14 @@
 package controllers
 
+import actors._
 import models._
-import util.{Feature, IpmiCommandProcessor, IpmiIdentifyCommand, SecuritySpec}
+import util.{Feature, IpmiCommand, PowerManagement, SecuritySpec}
+import util.concurrent.BackgroundProcessor
+import util.plugins.{IpmiPowerCommand, IpmiPowerManagementConfig}
 import views._
 
-import akka.util.duration._
+import com.tumblr.play.{PowerManagement => PowerManagementPlugin}
+
 import play.api._
 import play.api.mvc._
 import play.api.data._
@@ -13,12 +17,10 @@ trait Resources extends Controller {
   this: SecureController =>
 
   import AssetMeta.Enum.ChassisTag
-  implicit val spec = SecuritySpec(true)
-  val infraSpec = SecuritySpec(true, Seq("infra"))
 
   def index = SecureAction { implicit req =>
     Ok(html.resources.index(AssetMeta.getViewable()))
-  }
+  }(Permissions.Resources.Index)
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
     val atype: Option[AssetType.Enum] = try {
@@ -36,7 +38,7 @@ trait Resources extends Controller {
       case None =>
         Redirect(app.routes.Resources.index).flashing("error" -> "Invalid asset type specified")
     }
-  }(infraSpec)
+  }(Permissions.Resources.CreateForm)
 
   def createAsset(atype: String) = SecureAction { implicit req =>
     Form("tag" -> requiredText).bindFromRequest.fold(
@@ -52,7 +54,7 @@ trait Resources extends Controller {
         }
       }
     )
-  }(infraSpec)
+  }(Permissions.Resources.CreateAsset)
 
   /**
    * Find assets by query parameters, special care for ASSET_TAG
@@ -82,6 +84,18 @@ trait Resources extends Controller {
         findByTag(asset_tag, PageParams(page, size, sort))(newReq)
       }
     )
+  }(Permissions.Resources.Find)
+
+  def checkError(a: Asset, p: PowerManagementPlugin, s: String) = {
+    val msg = p.verify(a)() match {
+      case success if success.isSuccess =>
+        s
+      case failure if !failure.isSuccess =>
+        "IPMI command failed, and IPMI interface is unreachable"
+    }
+    Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
+      "message" -> msg
+    )
   }
 
   /**
@@ -97,27 +111,33 @@ trait Resources extends Controller {
     }
     asset match {
       case None =>
-        Redirect(app.routes.Resources.index).flashing("error" -> "Can not intake host that isn't New")
+        Redirect(app.routes.Resources.index).flashing("error" -> "Asset intake not allowed")
       case Some(asset) =>
         val intake = new actions.AssetIntake(stage)
         intake.execute(asset) match {
-          case Stage1Form() => AsyncResult {
-            IpmiCommandProcessor.send(IpmiIdentifyCommand(asset, 30.seconds)) { opt =>
-              opt match {
-                case Some(results) =>
-                  results.isSuccess match {
-                    case true =>
+          case Stage1Form() =>
+            PowerManagement.pluginEnabled match {
+              case None =>
+                Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
+                  "message" -> "PowerManagement plugin not enabled"
+                )
+              case Some(p) => AsyncResult {
+                val cfgKey = IpmiPowerManagementConfig.IdentifyKey
+                val cmd = IpmiPowerCommand(asset, cfgKey)
+                BackgroundProcessor.send(cmd) { result =>
+                  IpmiCommand.fromResult(result) match {
+                    case Left(throwable) =>
+                      checkError(asset, p, throwable.toString)
+                    case Right(None) =>
                       Ok(html.resources.intake(asset, None))
-                    case false =>
-                      Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
-                        "message" -> results.toString
-                      )
+                    case Right(Some(suc)) if suc.isSuccess =>
+                      Ok(html.resources.intake(asset, None))
+                    case Right(Some(fail)) if !fail.isSuccess =>
+                      checkError(asset, p, fail.toString)
                   }
-                case None =>
-                  Ok(html.resources.intake(asset, None))
+                }
               }
             }
-          }
           case Stage2Form(chassisTag, Some(form)) =>
             BadRequest(html.resources.intake2(asset, form))
           case Stage2Form(chassisTag, None) =>
@@ -133,7 +153,7 @@ trait Resources extends Controller {
             }
         }
     }
-  }(infraSpec)
+  }(Permissions.Resources.Intake)
 
   /**
    * Given a asset tag, find the associated asset
@@ -160,7 +180,7 @@ trait Resources extends Controller {
     val isNew = asset.isNew
     val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
     val intakeSupported = Feature("intakeSupported").toBoolean(true)
-    val rightRole = getUser(r).isAdmin
+    val rightRole = Permissions.please(getUser(r), Permissions.Resources.Intake)
     intakeSupported && isNew && rightType && rightRole
   }
 
