@@ -2,6 +2,7 @@ package controllers
 package actors
 
 import akka.util.Duration
+import util.concurrent.BackgroundProcess
 import com.twitter.util.Future
 
 case class TestProcessor(sleepMs: Long, userTimeout: Option[Duration] = None)

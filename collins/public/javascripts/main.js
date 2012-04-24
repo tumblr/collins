@@ -57,10 +57,10 @@ $(document).ready(function() {
       "bPaginate": false,
       "iDisplayLength": rows,
       "fnHeaderCallback": function(nHead, aData, iStart, iEnd, aiDisplay) {
-var els = nHead.getElementsByTagName('th');
-for (var i = 0; i < els.length; i++) {
-  $(els[i]).height('18px');
-}
+        var els = nHead.getElementsByTagName('th');
+        for (var i = 0; i < els.length; i++) {
+          $(els[i]).height('18px');
+        }
       },
     });
   });
@@ -141,7 +141,6 @@ for (var i = 0; i < els.length; i++) {
     });
   });
 
-
   // if this is clicked it should close a modal
   $("[data-closes-modal]").each(function() {
     var e = $(this);
@@ -169,12 +168,6 @@ for (var i = 0; i < els.length; i++) {
     });
   });
 
-  var refresher = function(selector) {
-    if (selector) {
-      $(selector).each(function() { $(this).trigger('refresh') });
-    }
-  }
-
   // handles ajaxy forms, can manage modals, data refreshes, and errors.
   $("form[data-form]").each(function() {
     var e = $(this);
@@ -195,6 +188,7 @@ for (var i = 0; i < els.length; i++) {
       data = $form.serialize(),
       modalEl = $form.attr('data-modal'),
       errorEl = $form.attr('data-error'),
+      successEl = $form.attr('data-success'),
       refreshSelector = $form.attr('data-refresh');
 
       $.post(url, data).success(function(d) {
@@ -205,7 +199,12 @@ for (var i = 0; i < els.length; i++) {
         if (modalEl) {
           $(elId(modalEl)).modal('hide');
         }
-        refresher(refreshSelector);
+        if (refreshSelector) {
+          $(refreshSelector).each(function() { $(this).trigger('refresh'); });
+        }
+        if (successEl) {
+          $(elId(successEl)).show();
+        }
       }).error(function(d) {
         var response = {};
         try {
@@ -216,6 +215,9 @@ for (var i = 0; i < els.length; i++) {
               message: "An internal error occurred. See collins server logs."
             }
           }
+        }
+        if (successEl) {
+          $(elId(successEl)).hide();
         }
         if (errorEl) {
           var classes = $(elId(errorEl)).attr('data-on-error');
@@ -254,7 +256,7 @@ for (var i = 0; i < els.length; i++) {
         url: remoteUrl,
         success: function(o) {
           if (refreshSelector) {
-            refresher(refreshSelector);
+            $(refreshSelector).each(function() { $(this).trigger('refresh'); });
           } else if (insertSelector && extractor) {
             var tmpEx = extractor.split(".")
             var tmp = o;
@@ -420,12 +422,6 @@ for (var i = 0; i < els.length; i++) {
       oTable.fnReloadAjax();
     });
 
-  });
-
-  // hack so data-refresh can be "window"
-  $("body").append("<div class='hide window' id='window'></div>");
-  $('#window,.window').bind('refresh', function() {
-    window.location.reload();
   });
 
 })
