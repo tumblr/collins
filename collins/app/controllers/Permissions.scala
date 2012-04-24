@@ -21,6 +21,10 @@ object Permissions {
     }
   }
 
+  object Feature extends PermSpec("feature") {
+    val CanSeePasswords = SecuritySpec.fromConfig("canSeePasswords", AdminSpec)
+  }
+
   object Admin extends PermSpec("controllers.Admin") {
     val Spec = spec(AdminSpec)
     val Stats = spec("stats", Spec)

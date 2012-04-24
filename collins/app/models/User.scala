@@ -1,6 +1,7 @@
 package models
 
 import play.api._
+import controllers.Permissions
 import util.{AuthenticationAccessor, AuthenticationProvider, Stats}
 
 case class UserException(message: String) extends Exception(message)
@@ -15,6 +16,7 @@ abstract class User(val username: String, val password: String) {
     case true => Some(name)
     case false => None
   }
+  def canSeePasswords(): Boolean = Permissions.please(this, Permissions.Feature.CanSeePasswords)
   def isAdmin(): Boolean = hasRole("infra")
   def toMap(): Map[String,String] = Map(
     User.ID -> id().toString(),
