@@ -5,6 +5,7 @@ import akka.util.Duration
 import models.{Asset, AssetLifecycle, MetaWrapper, Model, Status => AStatus}
 import play.api.mvc.{AnyContent, Request}
 import util.SoftLayer
+import util.concurrent.BackgroundProcess
 
 case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = None)(implicit req: Request[AnyContent])
   extends BackgroundProcess[Either[ResponseData,Long]]

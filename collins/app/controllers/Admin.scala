@@ -15,7 +15,7 @@ object Admin extends SecureWebController {
 
   def logs = SecureAction { implicit req =>
     Ok(html.admin.logs())
-  }(Permissions.Admin.Logs)
+  }(Permissions.AssetLogApi.GetAll)
 
   def clearCache = SecureAction { implicit req =>
     Cache.clear()

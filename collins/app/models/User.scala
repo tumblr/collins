@@ -1,7 +1,8 @@
 package models
 
 import play.api._
-import util.{AuthenticationAccessor, AuthenticationProvider}
+import controllers.Permissions
+import util.{AuthenticationAccessor, AuthenticationProvider, Stats}
 
 case class UserException(message: String) extends Exception(message)
 
@@ -15,6 +16,7 @@ abstract class User(val username: String, val password: String) {
     case true => Some(name)
     case false => None
   }
+  def canSeePasswords(): Boolean = Permissions.please(this, Permissions.Feature.CanSeePasswords)
   def isAdmin(): Boolean = hasRole("infra")
   def toMap(): Map[String,String] = Map(
     User.ID -> id().toString(),
@@ -42,7 +44,17 @@ object User {
       case None => getProviderFromFramework()
       case Some(p) => p
     }
-    p.authenticate(username, password)
+    p.authenticate(username, password) match {
+      case None =>
+        Stats.count("Authentication","Failure")
+        None
+      case Some(user) =>
+        user.isAuthenticated match {
+          case true => Stats.count("Authentication", "Success")
+          case false => Stats.count("Authentication", "Failure")
+        }
+        Some(user)
+    }
   }
 
   private def getProviderFromFramework(): AuthenticationProvider = {
