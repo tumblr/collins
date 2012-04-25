@@ -21,15 +21,15 @@ $(document).ready(function() {
     }
     var refreshElement = $(name);
     function resetInterval(el, i) {
-      if (i) {
+      if (i !== null) {
         clearInterval(i);
       }
       el.attr('running', 'false');
       return null;
     };
     var label = e.html();
+    var interval = null;
     e.click(function() {
-      var interval = null;
       if (e.attr('running') == 'true') {
         interval = resetInterval(e, interval);
         e.html(label + " Not Running");
