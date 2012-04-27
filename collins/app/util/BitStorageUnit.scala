@@ -3,7 +3,7 @@ package util
 import com.twitter.util.StorageUnit
 
 class BitStorageUnit(val bits: Long) extends StorageUnit(bits/8) {
-  require(bits > 0, "bits must be > 0")
+  require(bits >= 0, "bits must be > 0, was %d".format(bits))
 
   def inBits = bits
   def inKilobits = bits / (1000L)
