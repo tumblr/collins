@@ -92,6 +92,13 @@ trait IpAddressApi {
     }
   }(SecuritySpec(true, Nil))
 
+  // GET /api/address/pools
+  def getAddressPools = SecureAction { implicit req =>
+    formatResponseData(
+      ResponseData(Results.Ok, JsObject(Seq("POOLS" -> JsArray(IpAddresses.getPools.map(JsString(_)).toList))))
+    )
+  }
+
   // POST /api/asset/:tag/address
   def updateAddress(tag: String) = Authenticated { user => Action { implicit req =>
     val old_address = getString("old_address", "")

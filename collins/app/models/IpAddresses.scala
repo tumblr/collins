@@ -111,6 +111,12 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     tableDef.lookup(i.id).get
   }
 
+  def getPools(): Seq[String] = getOrElseUpdate("getPools") {
+    from(tableDef)(i =>
+      select(i.pool)
+    ).distinct.toList
+  }
+
   override protected def getConfig()(implicit scope: Option[String]): Option[Configuration] = {
     Config.get("ipAddresses").map { cfg =>
       scope.flatMap(s => cfg.getConfig(s)).getOrElse(cfg)

@@ -37,6 +37,7 @@ GET     /logout                     controllers.Application.logout
 # API
 
 # IP Address API
+GET     /api/address/pools                   app.Api.getAddressPools
 GET     /api/asset/:tag/addresses            app.Api.getForAsset(tag: String)
 GET     /api/asset/with/address/:address     app.Api.assetFromAddress(address: String)
 GET     /api/assets/with/addresses/in/:pool  app.Api.assetsFromPool(pool: String)
