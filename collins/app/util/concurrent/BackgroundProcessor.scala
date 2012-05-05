@@ -1,19 +1,17 @@
 package util
 package concurrent
 
-import akka.actor.Actor._
-import akka.actor.Actor
-import akka.dispatch.FutureTimeoutException
-import akka.routing.Routing.loadBalancerActor
-import akka.routing.CyclicIterator
+import akka.actor._
+import akka.routing.RoundRobinRouter
 import akka.util.Duration
 
-import play.api.libs.akka._
-import play.api.libs.concurrent.{Redeemed, Thrown}
+import play.api.libs.concurrent._
+
+import java.util.concurrent.TimeoutException
 
 private[concurrent] class BackgroundProcessor extends Actor {
   def receive = {
-    case processor: BackgroundProcess[_] => self.reply(processor.run())
+    case processor: BackgroundProcess[_] => sender ! processor.run()
   }
 }
 
@@ -23,19 +21,17 @@ case class SexyTimeoutException(timeout: Duration) extends Exception("Command ti
   }
 }
 object BackgroundProcessor {
-  val ref = loadBalancerActor(
-    new CyclicIterator((1 to ActorConfig.ActorCount)
-      .map(_ => actorOf[BackgroundProcessor].start())
-      .toList
-    )
-  )
+  import play.api.Play.current
+  private val actors = (1 to ActorConfig.ActorCount)
+    .map(_ => Akka.system.actorOf(Props[BackgroundProcessor])).toSeq
+  val ref = Akka.system.actorOf(Props().withRouter(RoundRobinRouter(actors)))
 
   type SendType[T] = Tuple2[Option[Throwable], Option[T]]
   def send[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]) = {
     ref.?(cmd)(timeout = cmd.timeout).mapTo[PROC_RES].asPromise.extend1 {
       case Redeemed(v) => result(Tuple2(None, Some(v)))
       case Thrown(e) => e match {
-        case t: FutureTimeoutException =>
+        case t: TimeoutException =>
           result(Tuple2(Some(SexyTimeoutException(cmd.timeout)), None))
         case _ =>
           result(Tuple2(Some(e), None))

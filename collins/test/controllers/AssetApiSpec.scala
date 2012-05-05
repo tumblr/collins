@@ -75,7 +75,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
       "Update the status after getting rack position and such" in new asset {
         import AssetMeta.Enum.RackPosition
         val rp: String = RackPosition.toString
-        val body = AnyContentAsUrlFormEncoded(Map(
+        val body = AnyContentAsFormUrlEncoded(Map(
           rp -> Seq("rack 1"),
           formatPowerPort("A") -> Seq("power 1"),
           formatPowerPort("B") -> Seq("power 2"),

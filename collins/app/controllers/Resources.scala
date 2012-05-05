@@ -12,6 +12,7 @@ import com.tumblr.play.{PowerManagement => PowerManagementPlugin}
 import play.api._
 import play.api.mvc._
 import play.api.data._
+import play.api.data.Forms._
 
 trait Resources extends Controller {
   this: SecureController =>
@@ -41,7 +42,7 @@ trait Resources extends Controller {
   }(Permissions.Resources.CreateForm)
 
   def createAsset(atype: String) = SecureAction { implicit req =>
-    Form("tag" -> requiredText).bindFromRequest.fold(
+    Form("tag" -> nonEmptyText).bindFromRequest.fold(
       noTag => Redirect(app.routes.Resources.displayCreateForm(atype)).flashing("error" -> "A tag must be specified"),
       withTag => {
         val rd = new actions.CreateAsset()(withTag)
@@ -60,7 +61,7 @@ trait Resources extends Controller {
    * Find assets by query parameters, special care for ASSET_TAG
    */
   def find(page: Int, size: Int, sort: String, operation: String) = SecureAction { implicit req =>
-    Form("ASSET_TAG" -> requiredText).bindFromRequest.fold(
+    Form("ASSET_TAG" -> nonEmptyText).bindFromRequest.fold(
       noTag => {
         val results = new actions.FindAsset()(page, size, sort)(rewriteRequest(req))
         results match {

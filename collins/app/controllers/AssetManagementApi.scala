@@ -10,6 +10,7 @@ import util.plugins.IpmiPowerCommand
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.data._
+import play.api.data.Forms._
 
 import com.tumblr.play.{PowerAction, PowerOff, PowerOn, PowerSoft, PowerState, RebootSoft}
 import com.tumblr.play.{RebootHard, Identify, Verify}
@@ -87,7 +88,7 @@ trait AssetManagementApi {
     } else {
       val asset = assetOption.get
       val plugin = PowerManagement.pluginEnabled.get
-      Form(of(
+      Form(single(
         "action" -> of[PowerAction]
       )).bindFromRequest.fold(
         err => formatResponseData(Api.getErrorMessage(errMsg)),

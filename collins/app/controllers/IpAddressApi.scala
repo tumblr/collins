@@ -6,6 +6,7 @@ import play.api.http.{Status => StatusValues}
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.data._
+import play.api.data.Forms._
 import play.api.data.format.Formats._
 import java.sql.SQLException
 
@@ -35,12 +36,12 @@ trait IpAddressApi {
     }
   }
   val UpdateForm = Form(
-    of(IpAddressForm.apply _, IpAddressForm.unapply _)(
+    mapping(
       "address" -> optional(text(7)),
       "gateway" -> optional(text(7)),
       "netmask" -> optional(text(7)),
       "pool" -> optional(text)
-    )
+    )(IpAddressForm.apply)(IpAddressForm.unapply)
   )
 
   // PUT /api/asset/:tag/address

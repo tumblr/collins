@@ -1,6 +1,7 @@
 @(loginForm: Form[(String,String,Option[String])])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
+@import helper.twitterBootstrap._
 @import util.notice
 
 @main("Login", false) {
@@ -11,8 +12,8 @@
     @notice("security", Some("error"))
 
 @form(routes.Application.authenticate) {
-    @inputText(loginForm("username"), 'label -> "Username")(twitterBootstrapInput)
-    @inputPassword(loginForm("password"), 'label -> "Password")(twitterBootstrapInput)
+    @inputText(loginForm("username"), '_label -> "Username")
+    @inputPassword(loginForm("password"), '_label -> "Password")
     @loginForm.globalError.map { error =>
       <div class="alert-message error">
         <strong>Unable to login</strong> @error.message
