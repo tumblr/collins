@@ -4,6 +4,7 @@ import play.api.Logger
 
 import java.io.File
 import java.util.Date
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Watch a file for changes and get notified when it has.
@@ -20,6 +21,20 @@ object FileWatcher {
       override protected def onError(file: File) = {}
     }
   }
+  def watchWithResults[T]
+    (file: String, default: T, secondsBetweenChecks: Int = 30)
+    (cf: File => T): FileWatcherResults[T] =
+  {
+    fileGuard(file)
+    new FileWatcherResults[T] {
+      override protected val filename = file
+      override protected val millisBetweenFileChecks = secondsBetweenChecks*1000L
+      override protected val init = default
+      override protected def fromFile(file: File) = cf(file)
+      override protected def onError(file: File) = {}
+    }
+  }
+
   def fileGuard(filename: String): File = {
     val file = new File(filename)
     require(isFileReadable(file), "File %s does not exist".format(filename))
@@ -102,4 +117,21 @@ trait FileWatcher {
     seed
   }
   private def now: Long = epoch(0)
+}
+
+trait FileWatcherResults[T] extends FileWatcher {
+  protected val init: T
+  lazy private val data = new AtomicReference[T](init)
+
+  override protected def onChange(f: File) {
+    data.set(fromFile(f))
+  }
+
+  protected def fromFile(f: File): T
+
+  def getFileContents(): T = {
+    tick()
+    data.get()
+  }
+
 }
