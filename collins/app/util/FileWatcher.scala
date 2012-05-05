@@ -48,7 +48,7 @@ trait FileWatcher {
   @volatile private var lastModificationTime = 0L
   // Last time we actually read the mtime from the file
   @volatile private var lastTimeFileChecked = 0L
-  protected val logger = Logger.logger
+  protected val logger = Logger(getClass)
 
   // How many millis to wait between file checks
   protected def millisBetweenFileChecks: Long

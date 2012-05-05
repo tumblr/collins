@@ -59,24 +59,31 @@ trait AssetManagementApi {
     }
   }
 
-  // FIXME should use AsyncResult
   def powerStatus(tag: String) = Authenticated { user => Action { implicit req =>
-    val response = PowerManagement.pluginEnabled { plugin =>
+    PowerManagement.pluginEnabled { plugin =>
       Asset.findByTag(tag).map { asset =>
-        plugin.powerState(asset)() match {
-          case success if success.isSuccess =>
-            val status = success.description.contains("on") match {
-              case true => "on"
-              case false => "off"
+        AsyncResult {
+          val cmd = IpmiPowerCommand.fromPowerAction(asset, PowerState)
+          BackgroundProcessor.send(cmd) { result =>
+            val res = IpmiCommand.fromResult(result) match {
+              case Right(Some(suc)) if suc.isSuccess =>
+                val status = suc.output.contains("on") match {
+                  case true => "on"
+                  case false => "off"
+                }
+                ResponseData(Results.Ok, JsObject(Seq("MESSAGE" -> JsString(status))))
+              case Right(Some(failure)) =>
+                PowerHelper.onFailure(asset, plugin,
+                  "Failed to get power status: %s".format(failure.output), user, PowerState)
+              case _ =>
+                PowerHelper.onFailure(asset, plugin,
+                  "Failed to get power status", user, PowerState)
             }
-            ResponseData(Results.Ok, JsObject(Seq("MESSAGE" -> JsString(status))))
-          case failure =>
-            PowerHelper.onFailure(asset, plugin,
-              "Failed to get power status: %s".format(failure.description), user, PowerState)
+            formatResponseData(res)
+          }
         }
-      }.getOrElse(Api.getErrorMessage("Invalid asset tag specified", Results.NotFound))
-    }.getOrElse(Api.getErrorMessage("PowerManagement plugin not enabled"))
-    formatResponseData(response)
+      }.getOrElse(formatResponseData(Api.getErrorMessage("Invalid asset tag specified", Results.NotFound)))
+    }.getOrElse(formatResponseData(Api.getErrorMessage("PowerManagement plugin not enabled")))
   }}(Permissions.AssetManagementApi.PowerStatus)
 
   def powerManagement(tag: String) = Authenticated { user => Action { implicit req =>
