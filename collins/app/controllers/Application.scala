@@ -2,6 +2,7 @@ package controllers
 
 import play.api._
 import play.api.data._
+import play.api.data.Forms._
 import play.api.mvc._
 
 import models._
@@ -11,9 +12,9 @@ import views._
 object Application extends SecureWebController {
  
   val loginForm = Form(
-    of(
-      "username" -> requiredText(1),
-      "password" -> requiredText(3),
+    tuple(
+      "username" -> nonEmptyText,
+      "password" -> nonEmptyText(3),
       "location" -> optional(text)
       ) verifying ("Invalid username or password", result => result match {
         case(username,password,location) =>

@@ -2,6 +2,7 @@
 
 @import util.notice
 @import helper._
+@import helper.twitterBootstrap._
 @import AssetMeta.Enum.ChassisTag
 
 @main("Intake Step 2 - " + asset.tag) {
@@ -13,7 +14,7 @@
     @notice("error")
     @notice("warning")
     @form(app.routes.Resources.intake(asset.getId, 2), 'class -> "form-stacked") {
-    @inputText(f(ChassisTag.toString), 'label -> "Scan the Asset Tag", 'class -> "focus", 'autocomplete -> "off")(twitterBootstrapInput)
+    @inputText(f(ChassisTag.toString), '_label -> "Scan the Asset Tag", 'class -> "focus", 'autocomplete -> "off")
     <input type="hidden" name="stage" value="2">
     <div class="actions">
       <input type="submit" class="btn primary" value="Next &rarr;">

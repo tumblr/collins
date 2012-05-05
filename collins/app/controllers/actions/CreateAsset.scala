@@ -5,6 +5,7 @@ import forms._
 import models.{Asset, AssetLifecycle, AssetType, IpAddresses, IpmiInfo, Status => AStatus}
 
 import play.api.data._
+import play.api.data.Forms._
 import play.api.http.{Status => StatusValues}
 import play.api.libs.json._
 import play.api.mvc._
@@ -12,7 +13,7 @@ import play.api.data.format.Formats._
 
 private[controllers] object CreateAsset {
   val params = Set("generate_ipmi", "type", "status")
-  val createForm = Form(of(
+  val createForm = Form(tuple(
     "generate_ipmi" -> optional(boolean),
     "type" -> optional(of[AssetType.Enum]),
     "status" -> optional(of[AStatus.Enum])

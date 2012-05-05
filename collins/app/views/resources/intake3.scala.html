@@ -1,6 +1,7 @@
 @(asset: Asset, f: Form[actions.Stage3Form])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
+@import helper.twitterBootstrap._
 @import _root_.util.views.Formatter.formatPowerPort
 @import util.notice
 @import AssetMeta.Enum.{ChassisTag, RackPosition, ServiceTag}
@@ -37,9 +38,9 @@
       </div>
       }
     </div>
-    @inputText(f(RackPosition.toString), 'label -> "Rack Position", 'autocomplete -> "off", Symbol("enter-style") -> "tab", 'class -> "focus")(twitterBootstrapInput)
-    @inputText(f(formatPowerPort("A")), 'label -> "Power Port A", 'autocomplete -> "off", Symbol("enter-style") -> "tab")(twitterBootstrapInput)
-    @inputText(f(formatPowerPort("B")), 'label -> "Power Port B", 'autocomplete -> "off")(twitterBootstrapInput)
+    @inputText(f(RackPosition.toString), '_label -> "Rack Position", 'autocomplete -> "off", Symbol("enter-style") -> "tab", 'class -> "focus")
+    @inputText(f(formatPowerPort("A")), '_label -> "Power Port A", 'autocomplete -> "off", Symbol("enter-style") -> "tab")
+    @inputText(f(formatPowerPort("B")), '_label -> "Power Port B", 'autocomplete -> "off")
     @f.globalError.map { error =>
       <div class="alert-message error">
         <strong>Unable to intake node</strong> @error.message

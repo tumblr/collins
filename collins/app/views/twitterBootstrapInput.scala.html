@@ -5,18 +5,16 @@
 **************************************************@
 
 @infos = @{
-  if(el.showInfo) {
-    if(el.field.hasErrors) {
-      el.field.errors.map(e => Messages(e.message, e.args:_*))
-    } else {
-      el.field.constraints.map(c => Messages(c._1, c._2:_*)) ++
-      el.field.format.map(f => Messages(f._1, f._2:_*))
-    }
-  } else Nil
+  if(el.field.hasErrors) {
+    el.field.errors.map(e => Messages(e.message, e.args:_*))
+  } else {
+    el.field.constraints.map(c => Messages(c._1, c._2:_*)) ++
+    el.field.format.map(f => Messages(f._1, f._2:_*))
+  }
 }
 
 <div class="clearfix @if(el.field.hasErrors) {error}">
-  <label for="@el.id">@el.label.getOrElse(el.field.name)</label>
+  <label for="@el.id">@el.label</label>
   <div class="input">
     @el.input
     <span class="help-inline">@infos.headOption.getOrElse("")</span>

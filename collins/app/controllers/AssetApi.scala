@@ -6,6 +6,7 @@ import models._
 import util._
 
 import play.api.data._
+import play.api.data.Forms._
 import play.api.http.{Status => StatusValues}
 import play.api.mvc._
 import play.api.libs.json._
@@ -88,7 +89,7 @@ trait AssetApi {
         }
       }.getOrElse(Api.getErrorMessage("Asset with specified tag not found"))
     }
-    Form(of(
+    Form(tuple(
       "status" -> text,
       "reason" -> text
     )).bindFromRequest.fold(

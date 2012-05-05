@@ -9,11 +9,12 @@ import util.views.Formatter.formatPowerPort
 
 import play.api.Logger
 import play.api.data._
+import play.api.data.Forms._
 import play.api.mvc._
 
 object UpdateAsset {
   val FORM = Form(
-    of(UpdateAsset.apply _, UpdateAsset.unapply _)(
+    mapping(
       "lshw" -> optional(text(1)),
       "lldp" -> optional(text(1)),
       ChassisTag.toString -> optional(text(1)),
@@ -22,8 +23,8 @@ object UpdateAsset {
       formatPowerPort("A") -> optional(text(1)),
       formatPowerPort("B") -> optional(text(1)),
       "status" -> optional(of[AStatus.Enum]),
-      "groupId" -> optional(number(0))
-    )
+      "groupId" -> optional(longNumber)
+    )(UpdateAsset.apply)(UpdateAsset.unapply)
   )
   def get() = new UpdateAsset(None, None, None, None, None, None, None, None, None)
   def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, None, None, None, None, None)
@@ -101,7 +102,7 @@ private[controllers] case class UpdateAsset(
       }
     }
     val a1 = checkMap(req.queryString)
-    val a2: Option[Boolean] = req.body.asUrlFormEncoded.map(checkMap(_))
+    val a2: Option[Boolean] = req.body.asFormUrlEncoded.map(checkMap(_))
     a2 match {
       case Some(b) => b
       case None => a1
@@ -113,7 +114,7 @@ private[controllers] case class UpdateAsset(
       hasErrors => Left("Error processing form data"),
       form => {
         val om1: Option[Map[String,String]] = req.queryString.get("attribute").map(seq => attributes(seq))
-        val om2: Option[Map[String,String]] = req.body.asUrlFormEncoded.flatMap { m =>
+        val om2: Option[Map[String,String]] = req.body.asFormUrlEncoded.flatMap { m =>
           m.get("attribute").map { seq =>
             attributes(seq)
           }

@@ -15,7 +15,7 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
 
   val timeout = userTimeout.getOrElse(defaultTimeout)
   def run(): Either[ResponseData,Long] = {
-    req.body.asUrlFormEncoded.flatMap(_.get("reason")).flatMap(_.headOption).map(_.trim).filter(_.size > 0).map { _reason =>
+    req.body.asFormUrlEncoded.flatMap(_.get("reason")).flatMap(_.headOption).map(_.trim).filter(_.size > 0).map { _reason =>
       val reason = _reason.trim
       Api.withAssetFromTag(tag) { asset =>
         SoftLayer.pluginEnabled.map { plugin =>

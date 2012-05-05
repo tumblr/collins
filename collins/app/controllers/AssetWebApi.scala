@@ -11,6 +11,7 @@ import util.concurrent.BackgroundProcessor
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.data._
+import play.api.data.Forms._
 
 trait AssetWebApi {
   this: Api with SecureController =>
@@ -167,7 +168,7 @@ trait AssetWebApi {
       }
     }
     Asset.findByTag(tag).map { asset =>
-      Form(of(
+      Form(tuple(
         "profile" -> text,
         "contact" -> text(3),
         "suffix" -> optional(text(3)),
