@@ -7,7 +7,7 @@ import java.io.File
 object ApplicationBuild extends Build {
 
     val appName         = "collins"
-    val appVersion      = "1.0"
+    val appVersion      = "1.1"
 
     val appDependencies = Seq(
       "commons-net" % "commons-net" %"3.1",

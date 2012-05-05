@@ -155,7 +155,7 @@ trait ApiResponse extends Controller {
         case _ => throw new IllegalArgumentException("Unsupported JS type")
       }
     }
-    def formatList(jsvalue: List[JsValue], listPrefix: String = ""): String = {
+    def formatList(jsvalue: Seq[JsValue], listPrefix: String = ""): String = {
       val isObj = jsvalue.find { item => item.isInstanceOf[JsObject] }.map { _ => true }.getOrElse(false)
       val isNonPrim = jsvalue.find { item =>
         item.isInstanceOf[JsObject] || item.isInstanceOf[JsArray]
@@ -194,7 +194,7 @@ trait ApiResponse extends Controller {
         case _ => throw new IllegalArgumentException("Unsupported JS type")
       }
     }
-    def formatList(jsvalue: List[JsValue]): String = {
+    def formatList(jsvalue: Seq[JsValue]): String = {
       jsvalue.map { item =>
         item match {
           case JsArray(list) => formatList(list)

@@ -7,7 +7,7 @@ object DbUtil extends App {
     sys.error("Pass the directory containing your db folder")
   } else {
     val dir = args(0)
-    OfflineEvolutions.applyScript(this.getClass.getClassLoader, "collins")
+    OfflineEvolutions.applyScript(new File(dir), this.getClass.getClassLoader, "collins")
   }
 
 }

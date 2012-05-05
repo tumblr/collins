@@ -2,6 +2,7 @@ package util
 package concurrent
 
 import akka.actor._
+import akka.pattern.ask
 import akka.routing.RoundRobinRouter
 import akka.util.Duration
 
@@ -9,7 +10,7 @@ import play.api.libs.concurrent._
 
 import java.util.concurrent.TimeoutException
 
-private[concurrent] class BackgroundProcessor extends Actor {
+class BackgroundProcessorActor extends Actor {
   def receive = {
     case processor: BackgroundProcess[_] => sender ! processor.run()
   }
@@ -22,13 +23,16 @@ case class SexyTimeoutException(timeout: Duration) extends Exception("Command ti
 }
 object BackgroundProcessor {
   import play.api.Play.current
-  private val actors = (1 to ActorConfig.ActorCount)
-    .map(_ => Akka.system.actorOf(Props[BackgroundProcessor])).toSeq
-  val ref = Akka.system.actorOf(Props().withRouter(RoundRobinRouter(actors)))
+  val routees: List[ActorRef] = (0 until ActorConfig.ActorCount).map { _ =>
+    Akka.system.actorOf(Props[BackgroundProcessorActor])
+  }.toList
+  lazy val ref = Akka.system.actorOf(Props[BackgroundProcessorActor].withRouter(
+    RoundRobinRouter(routees = routees)
+  ))
 
   type SendType[T] = Tuple2[Option[Throwable], Option[T]]
   def send[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]) = {
-    ref.?(cmd)(timeout = cmd.timeout).mapTo[PROC_RES].asPromise.extend1 {
+    ask(ref, cmd)(cmd.timeout).mapTo[PROC_RES].asPromise.extend1 {
       case Redeemed(v) => result(Tuple2(None, Some(v)))
       case Thrown(e) => e match {
         case t: TimeoutException =>
