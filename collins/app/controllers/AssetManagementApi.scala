@@ -59,6 +59,7 @@ trait AssetManagementApi {
     }
   }
 
+  // FIXME should use AsyncResult
   def powerStatus(tag: String) = Authenticated { user => Action { implicit req =>
     val response = PowerManagement.pluginEnabled { plugin =>
       Asset.findByTag(tag).map { asset =>
