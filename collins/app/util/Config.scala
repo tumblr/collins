@@ -72,7 +72,7 @@ trait Config {
   }
 
   def toMap(): Map[String,String] = {
-    get().map(cfg => cfg.keys.map(k => k -> cfg.getString(k).get).toMap)
+    get().map(cfg => cfg.keys.filter(!_.contains("akka")).map(k => k -> cfg.getString(k).get).toMap)
       .getOrElse(Map.empty)
   }
 

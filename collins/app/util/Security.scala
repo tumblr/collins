@@ -53,7 +53,7 @@ object AuthenticationProvider {
   val Types = Set("ldap", "file", "default", "ipa")
   val filename = Config.getString("authentication", "permissionsFile", "errorfile").toString
 
-  private val logger = Logger.logger
+  private val logger = Logger(getClass)
 
   lazy private val watcher = FileWatcher.watchWithResults(filename, Privileges.empty) { f =>
     PermissionsHelper.fromFile(f.getAbsolutePath)
