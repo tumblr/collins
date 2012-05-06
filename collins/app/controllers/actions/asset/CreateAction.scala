@@ -40,12 +40,12 @@ case class CreateAction(
     tuple => {
       val (generate, atype, astatus, tag) = tuple
       val atString = getString(_assetType, atype.map(_.toString).orElse(Some(ServerNode.toString)))
-      val assetType = AssetType.findByName(atString)
+      val assetType = AssetType.fromString(atString)
       val assetTag = getString(_assetTag, tag)
       if (assetTag.isEmpty) {
-        Left(EphemeralDataHolder(Some("Asset tag not specified")).update("assetType", atString))
+        Left(RequestDataHolder.error400("Asset tag not specified").update("assetType", atString))
       } else if (!assetType.isDefined) {
-        Left(EphemeralDataHolder(Some("Invalid asset type specified")))
+        Left(RequestDataHolder.error400("Invalid asset type specified"))
       } else {
         Right(ActionDataHolder(
           assetTag,
