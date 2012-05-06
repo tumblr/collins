@@ -5,7 +5,10 @@ import models.User
 import util.SecuritySpecification
 
 import play.api.Logger
+import play.api.data.Form
+import play.api.data.Forms._
 import play.api.libs.concurrent.Promise
+import play.api.libs.json._
 import play.api.mvc._
 
 import ApiResponse.formatResponseData
@@ -22,16 +25,21 @@ abstract class SecureAction[T](
   protected[this] val logger = Logger.logger
 
   val FeatureMessages = util.Feature.Messages
+  val Status = Results
+  def Redirect(call: Call) = Results.Redirect(call)
 
   // Convert response data to a result
   implicit def rd2res(rd: ResponseData): Result = rd.asResult(request())
-  implicit def prd2pres(rd: Promise[ResponseData]): Promise[Result] = rd.map { r =>
+  implicit def prd2pres(prd: Promise[ResponseData]): Promise[Result] = prd.map { r =>
     r.asResult(request())
   }
+  implicit def jss2jso(jss: Seq[(String, JsValue)]): JsObject = JsObject(jss)
 
   private val _request = new AtomicReference[Request[AnyContent]](DummyRequest)
   private def setRequest(r: Request[AnyContent]): Unit = _request.set(r)
   def request(): Request[AnyContent] = _request.get()
+  def implicitRequest() = implicitly[Request[AnyContent]](request)
+  def implicitFlash() = implicitly[Flash](request.flash)
 
   private val _user = new AtomicReference[User](User.empty)
   private def setUser(u: User): Unit = _user.set(u)
@@ -46,7 +54,7 @@ abstract class SecureAction[T](
   }
 
   def execute(rd: RequestDataHolder): Result
-  def handleError(rd: RequestDataHolder): ResponseData = {
+  def handleError(rd: RequestDataHolder): Result = {
     Api.getErrorMessage(rd.toString, rd.status().getOrElse(Results.InternalServerError))
   }
 
