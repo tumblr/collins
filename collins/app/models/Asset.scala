@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Feature, LldpRepresentation, LshwRepresentation, Stats}
+import util.{Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
 import util.views.Formatter.dateFormat
 
 import play.api.Logger
@@ -98,6 +98,10 @@ object Asset extends Schema with AnormAdapter[Asset] {
     "Asset.findByTag(%s)".format(asset.tag.toLowerCase),
     "Asset.findById(%d)".format(asset.id)
   )
+
+  object Messages extends MessageHelper("asset") {
+    def notFound(t: String) = message("missing", t)
+  }
 
   def isValidTag(tag: String): Boolean = {
     tag != null && tag.nonEmpty && TagR(tag).matches

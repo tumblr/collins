@@ -12,6 +12,8 @@ trait SecuritySpecification {
   val isSecure: Boolean
   val requiredCredentials: Set[String]
   val securityConcern: String
+
+  def requiresAuthorization: Boolean = requiredCredentials.nonEmpty
 }
 
 case class SecuritySpec(
