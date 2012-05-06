@@ -29,6 +29,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     Json.stringify(JsObject(forJsonObject))
   }
 
+  def toJsonObject() = JsObject(forJsonObject)
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "TAG" -> JsString(tag),

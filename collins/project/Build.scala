@@ -10,7 +10,8 @@ object ApplicationBuild extends Build {
     val appVersion      = "1.1"
 
     val appDependencies = Seq(
-      "commons-net" % "commons-net" %"3.1",
+      "commons-net" % "commons-net" % "3.1",
+      "org.apache.commons" % "commons-lang3" % "3.1",
       "org.bouncycastle" % "bcprov-jdk16" % "1.46",
       "com.twitter" %% "util-core" % "1.12.12",
       "com.twitter" %% "finagle-http" % "1.10.0",

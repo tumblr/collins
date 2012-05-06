@@ -30,7 +30,6 @@ abstract class PowerManagementActionHelper(
 
   override def execute(rd: RequestDataHolder): Result = rd match {
     case PowerStatusRd(cmd) => AsyncResult { runCommand(cmd) }
-    case _ => Api.errorResponse("Unexpected RequestDataHolder type")
   }
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
@@ -40,7 +39,7 @@ abstract class PowerManagementActionHelper(
     if (!PowerManagement.isPluginEnabled) {
       Left(RequestDataHolder.error500("PowerManagement plugin not enabled"))
     } else if (!asset.isDefined) {
-      Left(RequestDataHolder.error404(AssetMessages.notFound(assetTag)))
+      Left(assetNotFound(assetTag))
     } else if (!pa.isDefined) {
       Left(RequestDataHolder.error400(PowerActionNotFoundMessage))
     } else if (ignoreAsset(asset.get)) {
