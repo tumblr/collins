@@ -5,7 +5,7 @@ import util._
 import play.api.libs.json._
 import play.api.mvc._
 
-object ApiResponse {
+object ApiResponse extends ApiResponse {
   import Results._
   import OutputType.contentTypeWithCharset
 
@@ -122,7 +122,7 @@ trait ApiResponse extends Controller {
 
   import OutputType.contentTypeWithCharset
 
-  protected def formatResponseData(response: ResponseData)(implicit req: Request[AnyContent]) = {
+  def formatResponseData(response: ResponseData)(implicit req: Request[AnyContent]) = {
     getOutputType(req) match {
       case o: TextOutput =>
         response.status(formatTextResponse(response.data) + "\n").as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)

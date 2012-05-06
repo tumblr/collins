@@ -15,6 +15,8 @@ import java.util.Date
 
 private[controllers] case class ResponseData(status: Results.Status, data: JsObject, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
   def map[T](fn: ResponseData => T) = fn(this)
+  def asResult(implicit req: Request[AnyContent]): Result =
+    ApiResponse.formatResponseData(this)(req)
 }
 
 trait Api extends ApiResponse with AssetApi with AssetManagementApi with AssetWebApi with AssetLogApi with IpmiApi with TagApi with IpAddressApi {
@@ -72,6 +74,9 @@ object Api {
 
   def statusResponse(status: Boolean, code: Results.Status = Results.Ok) =
     ResponseData(code, JsObject(Seq("SUCCESS" -> JsBoolean(status))))
+
+  def errorResponse(m: String, s: Results.Status = Results.BadRequest, e: Option[Throwable] = None) =
+    getErrorMessage(m, s, e)
 
   def getErrorMessage(msg: String, status: Results.Status = Results.BadRequest, exception: Option[Throwable] = None) = {
     val json = ApiResponse.formatJsonError(msg, exception)
