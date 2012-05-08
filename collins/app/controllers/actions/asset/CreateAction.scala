@@ -10,7 +10,7 @@ import models.Status.{Enum => AssetStatusEnum}
 import util.{OutputType, SecuritySpecification}
 import validators.StringUtil
 
-import play.api.data.{Form, FormError}
+import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc.Result
 
