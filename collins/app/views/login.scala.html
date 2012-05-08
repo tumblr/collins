@@ -1,7 +1,7 @@
 @(loginForm: Form[(String,String,Option[String])])(implicit flash: Flash, req: Request[AnyContent])
 
+@import twitterBootstrap._
 @import helper._
-@import helper.twitterBootstrap._
 @import util.notice
 
 @main("Login", false) {
@@ -21,8 +21,8 @@
     }
     <div class="actions">
       <input type="submit" class="btn primary" value="Sign in">
-      @if(loginForm("location").value.isDefined) {
-      <input type="hidden" name="location" value="@loginForm("location").value.get">
+      @loginForm("location").value.map { value =>
+      <input type="hidden" name="location" value="@value">
       }
       <button type="reset" class="btn">Cancel</button>
     </div>
