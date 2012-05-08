@@ -42,7 +42,7 @@ case class Permissions(val assets: Map[String, Set[String]]) {
 }
 
 case class Privileges(users: Users, permissions: Permissions) {
-  private val logger = Logger.logger
+  private val logger = Logger(getClass)
 
   def userHasPermission(username: String, subject: String): Boolean = {
     if (!sm(permissions.users, username).contains(subject.toLowerCase)) {

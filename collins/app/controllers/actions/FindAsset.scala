@@ -7,14 +7,15 @@ import util.AttributeResolver
 import util.views.Formatter.ISO_8601_FORMAT
 
 import play.api.data._
+import play.api.data.Forms._
 import play.api.libs.json._
 import play.api.mvc._
 
 private[controllers] object FindAsset {
   val params = Set("operation", "tag", "attribute", "type", "status", "createdAfter", "createdBefore", "updatedAfter", "updatedBefore")
   val FORM = Form(
-    of(AssetFinderWrapper.apply _, AssetFinderWrapper.unapply _)(
-      "" -> of(AssetFinder.apply _, AssetFinder.unapply _)(
+    mapping(
+      "" -> mapping(
         "tag" -> optional(text(1)),
         "status" -> optional(of[Status.Enum]),
         "type" -> optional(of[AssetType.Enum]),
@@ -22,7 +23,7 @@ private[controllers] object FindAsset {
         "createdBefore" -> optional(date(ISO_8601_FORMAT)),
         "updatedAfter" -> optional(date(ISO_8601_FORMAT)),
         "updatedBefore" -> optional(date(ISO_8601_FORMAT))
-      ),
+      )(AssetFinder.apply)(AssetFinder.unapply),
       "attribute" -> optional(text(3)).verifying("Invalid attribute specified", res => res match {
         case None => true
         case Some(s) => s.split(";", 2).size == 2
@@ -34,7 +35,7 @@ private[controllers] object FindAsset {
           case _ => false
         }
       })
-    ) // of(AssetFinderWrapper
+    )(AssetFinderWrapper.apply)(AssetFinderWrapper.unapply)
   ) // Form
 
   def formatResultAsRd(results: Page[Asset], details: Boolean = false): ResponseData = {

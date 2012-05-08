@@ -7,6 +7,7 @@ import util.views.Formatter.formatPowerPort
 
 import play.api.mvc._
 import play.api.data._
+import play.api.data.Forms._
 
 import scala.util.control.Exception.catching
 
@@ -64,10 +65,10 @@ case class Stage2Form(chassisTag: String, errorForm: Option[Form[Stage2Form]] = 
 }
 object Stage2Form {
   val FORM = Form(
-    of(Stage2Form.apply _, Stage2Form.unapply _)(
+    mapping(
       ChassisTag.toString -> text(1),
-      "form" -> ignored(None)
-    )
+      "form" -> ignored(None.asInstanceOf[Option[Form[Stage2Form]]])
+    )(Stage2Form.apply)(Stage2Form.unapply)
   )
   def get(form: Form[Stage2Form]) = {
     new Stage2Form("", Some(form))
@@ -117,13 +118,13 @@ case class Stage3Form(
 object Stage3Form {
 
   val FORM = Form(
-    of(Stage3Form.apply _, Stage3Form.unapply _)(
+    mapping(
       ChassisTag.toString -> text(1),
       RackPosition.toString -> text(1),
       formatPowerPort("A") -> text(1),
       formatPowerPort("B") -> text(1),
-      "form" -> ignored(None)
-    )
+      "form" -> ignored(None.asInstanceOf[Option[Form[Stage3Form]]])
+    )(Stage3Form.apply)(Stage3Form.unapply)
   )
   val TRANSITION_FORM: String => Form[Stage3Form] = { s =>
     Stage3Form.FORM.bind(Map(ChassisTag.toString -> s)).copy(errors = Nil)
