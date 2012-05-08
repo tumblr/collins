@@ -1,7 +1,7 @@
 package controllers
 import play.api.data.FormError
 import play.api.data.format._
-import models.{AssetType,Status}
+import models.{AssetType,Status,Truthy}
 import util.views.Formatter.camelCase
 
 import com.tumblr.play.{Power, PowerAction}
@@ -39,5 +39,17 @@ package object forms {
     }
     def unbind(key: String, value: PowerAction) = Map(key -> value.toString)
   }
+
+  implicit def truthyFormat = new Formatter[Truthy] {
+    def bind(key: String, data: Map[String, String]) = {
+      Formats.stringFormat.bind(key, data).right.flatMap { s =>
+        scala.util.control.Exception.allCatch[Truthy]
+          .either(Truthy(s, true))
+          .left.map(e => Seq(FormError(key, "error.truthy", Nil)))
+      }
+    }
+    def unbind(key: String, value: Truthy) = Map(key -> value.toString)
+  }
+
 
 }

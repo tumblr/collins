@@ -1,5 +1,11 @@
 package util
 
+object Feature {
+  object Messages extends MessageHelper("feature") {
+    def ignoreDangerousCommands(s: String) = message("ignoreDangerousCommands", s)
+  }
+}
+
 case class Feature(name: String, verified: Boolean = false, override val source: Map[String,String] = Map.empty) extends Config {
   val Key = "features"
 
