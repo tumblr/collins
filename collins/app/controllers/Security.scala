@@ -68,16 +68,16 @@ trait SecureController extends Controller {
   protected val logger = Logger.logger
 
   /** Controllers that extend this trait can override the default authorize behavior */
-  protected def authorize(user: User, spec: SecuritySpecification): Boolean = {
+  def authorize(user: User, spec: SecuritySpecification): Boolean = {
     AuthenticationProvider.userIsAuthorized(user, spec)
   }
   /** Authenticate a request, return a User if the request can be authenticated */
-  protected def authenticate(request: RequestHeader): Option[User]
+  def authenticate(request: RequestHeader): Option[User]
   /** Where to go if a request can't be authenticated */
-  protected def onUnauthorized: Action[AnyContent]
+  def onUnauthorized: Action[AnyContent]
 
-  protected def getUser(request: RequestHeader): User
-  protected def setUser(user: Option[User]): Option[User] = {
+  def getUser(request: RequestHeader): User
+  def setUser(user: Option[User]): Option[User] = {
     AppConfig.setUser(user)
     user
   }
@@ -94,7 +94,7 @@ trait SecureWebController extends SecureController {
   val unauthorizedRoute = routes.Application.login.url
   def securityMessage(req: RequestHeader) = ("security" -> "The specified resource requires additional authorization")
 
-  override protected def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
+  override def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
 
   override def onUnauthorized = Action { implicit request =>
     // If user is not logged in and accesses a page, store the location so they can be redirected
@@ -131,7 +131,7 @@ trait SecureApiController extends SecureController {
     Results.Unauthorized(Txt("Invalid Username/Password specified"))
   }
 
-  override protected def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
+  override def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
 
   /** Do not use session storage for authenticate */
   override def authenticate(request: RequestHeader): Option[User] = {

@@ -5,7 +5,6 @@ import models.{User, UserImpl}
 import play.api._
 import com.tumblr.play.{PermissionsHelper, Privileges}
 import java.io.File
-import java.util.concurrent.atomic.AtomicReference
 import annotation.implicitNotFound
 
 @implicitNotFound(msg = "Didn't find an implicit SecuritySpecification but expected one")
@@ -13,6 +12,8 @@ trait SecuritySpecification {
   val isSecure: Boolean
   val requiredCredentials: Set[String]
   val securityConcern: String
+
+  def requiresAuthorization: Boolean = requiredCredentials.nonEmpty
 }
 
 case class SecuritySpec(
@@ -23,7 +24,7 @@ case class SecuritySpec(
   def this(secure: Boolean, creds: Seq[String]) = this(secure, creds.toSet, SecuritySpec.LegacyMarker)
 }
 
-object SecuritySpec { //extends FileWatcher {
+object SecuritySpec {
   val LegacyMarker = "SecuritySpec Version 1.1"
   def apply(isSecure: Boolean, requiredCredentials: String) =
     new SecuritySpec(isSecure, Set(requiredCredentials))
@@ -54,12 +55,10 @@ object AuthenticationProvider {
   val Types = Set("ldap", "file", "default", "ipa")
   val filename = Config.getString("authentication", "permissionsFile", "errorfile").toString
 
-  private val logger = Logger.logger
+  private val logger = Logger(getClass)
 
-  private val privs = new AtomicReference[Privileges](Privileges.empty)
-  lazy private val watcher = FileWatcher.watch(filename) { f =>
-    val tmp = PermissionsHelper.fromFile(f.getAbsolutePath)
-    privs.set(tmp)
+  lazy private val watcher = FileWatcher.watchWithResults(filename, Privileges.empty) { f =>
+    PermissionsHelper.fromFile(f.getAbsolutePath)
   }
 
   def get(name: String, config: Configuration): AuthenticationProvider = {
@@ -124,8 +123,7 @@ object AuthenticationProvider {
   }
 
   private def privileges: Privileges = {
-    watcher.tick
-    val p = privs.get
+    val p = watcher.getFileContents()
     logger.debug("Privileges - %s".format(p))
     p
   }

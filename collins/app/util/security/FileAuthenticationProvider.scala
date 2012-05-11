@@ -4,15 +4,12 @@ import models.{User, UserImpl}
 
 import play.api.Configuration
 
-import java.util.concurrent.atomic.AtomicReference
 import sun.misc.BASE64Encoder
 import java.io.File
 import java.security.MessageDigest
 import io.Source
 
 class FileAuthenticationProvider(config: Configuration) extends AuthenticationProvider {
-  private val usersMap = new AtomicReference[Map[String, UserImpl]](Map.empty)
-
   config.getString("type").foreach { cfg =>
     require(cfg.toLowerCase == "file", "If specified, authentication type must be file")
   }
@@ -21,9 +18,8 @@ class FileAuthenticationProvider(config: Configuration) extends AuthenticationPr
     throw new IllegalArgumentException("authentication.file not specified")
   }
 
-  private val watcher = FileWatcher.watch(authfile) { file =>
-    val tmp = usersFromFile(file)
-    usersMap.set(tmp)
+  private val watcher = FileWatcher.watchWithResults(authfile, Map.empty[String,UserImpl]) { file =>
+    usersFromFile(file)
   }
 
   override def authenticate(username: String, password: String): Option[User] = {
@@ -39,8 +35,7 @@ class FileAuthenticationProvider(config: Configuration) extends AuthenticationPr
   }
 
   protected def user(username: String): Option[UserImpl] = {
-    watcher.tick
-    usersMap.get().get(username)
+    watcher.getFileContents().get(username)
   }
 
   protected def usersFromFile(file: File): Map[String,UserImpl] = {

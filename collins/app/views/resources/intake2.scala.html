@@ -1,6 +1,7 @@
 @(asset: Asset, f: Form[actions.Stage2Form])(implicit flash: Flash, req: Request[AnyContent])
 
 @import util.notice
+@import twitterBootstrap._
 @import helper._
 @import AssetMeta.Enum.ChassisTag
 
@@ -13,7 +14,7 @@
     @notice("error")
     @notice("warning")
     @form(app.routes.Resources.intake(asset.getId, 2), 'class -> "form-stacked") {
-    @inputText(f(ChassisTag.toString), 'label -> "Scan the Asset Tag", 'class -> "focus", 'autocomplete -> "off")(twitterBootstrapInput)
+    @inputText(f(ChassisTag.toString), '_label -> "Scan the Chassis Tag", 'class -> "focus", 'autocomplete -> "off")
     <input type="hidden" name="stage" value="2">
     <div class="actions">
       <input type="submit" class="btn primary" value="Next &rarr;">

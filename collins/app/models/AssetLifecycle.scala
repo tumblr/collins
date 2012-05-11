@@ -15,12 +15,14 @@ import java.util.Date
 
 object AssetLifecycleConfig {
   // Don't want people trying to set status/tag/etc via attribute
-  val PossibleAssetKeys = Set("STATUS", "TAG", "TYPE", "IP_ADDRESS")
+  private val PossibleAssetKeys = Set("STATUS", "TAG", "TYPE", "IP_ADDRESS")
   // A few keys we generally want changable after intake
-  val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
+  private val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
   // User configured excludes, only applied to non-servers
-  val ConfiguredExcludes = Feature("allowTagUpdates").toSet
-  val RestrictedKeys = AssetMeta.Enum.values.map { _.toString }.toSet ++ PossibleAssetKeys -- ExcludedKeys
+  private val ConfiguredExcludes = Feature("allowTagUpdates").toSet
+  private val RestrictedKeys = AssetMeta.Enum.values.map { _.toString }.toSet ++ PossibleAssetKeys -- ExcludedKeys
+
+  def isRestricted(s: String) = RestrictedKeys.contains(s.toUpperCase)
 
   def withExcludes(includeUser: Boolean = false) = includeUser match {
     case false => RestrictedKeys
@@ -30,8 +32,6 @@ object AssetLifecycleConfig {
 
 // Supports meta operations on assets
 object AssetLifecycle {
-
-  import AssetLifecycleConfig.RestrictedKeys
 
   private[this] val logger = Logger.logger
 
@@ -80,14 +80,14 @@ object AssetLifecycle {
 
   private lazy val lshwConfig = Config.toMap("lshw")
   def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    asset.asset_type == AssetType.Enum.ServerNode.id match {
+    asset.isServerNode match {
       case true => updateServer(asset, options)
       case false => updateOther(asset, options)
     }
   }
 
   protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(true))
+    updateAssetAttributes(asset, options)
   }
 
   protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -101,7 +101,14 @@ object AssetLifecycle {
     }
   }
 
-  def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String] = RestrictedKeys): Status[Boolean] = {
+  def updateAssetAttributes(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+    asset.isServerNode match {
+      case true => updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(false))
+      case false => updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(true))
+    }
+  }
+
+  protected def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String]): Status[Boolean] = {
     allCatch[Boolean].either {
       val groupId = options.get("groupId").map(_.toInt)
       val opts = options - "groupId"
@@ -148,7 +155,7 @@ object AssetLifecycle {
     val power2 = options(formatPowerPort("B"))
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))
-    filtered.find(kv => RestrictedKeys(kv._1)).map(kv =>
+    filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
 
@@ -182,7 +189,7 @@ object AssetLifecycle {
     val chassis_tag = options("CHASSIS_TAG")
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))
-    filtered.find(kv => RestrictedKeys(kv._1)).map(kv =>
+    filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
     val lshwParser = new LshwParser(lshw, lshwConfig)

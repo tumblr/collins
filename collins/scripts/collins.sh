@@ -70,7 +70,7 @@ case "$1" in
       exit 1
     fi
     echo "Running migrations"
-    ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/scripts/
+    ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/conf/evolutions/
     echo "Database initialization attempted" > /var/run/$APP_NAME/install.log
   ;;
 

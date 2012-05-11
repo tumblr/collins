@@ -5,6 +5,7 @@ import models.{LogMessageType, LogFormat, LogSource}
 import util.SecuritySpec
 
 import play.api.data._
+import play.api.data.Forms._
 import play.api.libs.json._
 import play.api.mvc._
 import Results._
@@ -94,8 +95,8 @@ trait AssetLogApi {
     }
 
     def processForm(asset: Asset): Option[String] = {
-      Form(of(
-            "message" -> requiredText(1),
+      Form(tuple(
+            "message" -> nonEmptyText,
             "type" -> optional(text(1)),
             "source" -> optional(text(1))
            )

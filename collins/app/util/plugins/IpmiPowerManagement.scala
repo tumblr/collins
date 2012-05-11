@@ -44,7 +44,6 @@ case class IpmiPowerCommand(
   val verify: Boolean = false,
   val userTimeout: Option[Duration] = None)
 extends IpmiCommand {
-  debug = true
   override val timeout = userTimeout.getOrElse(defaultTimeout)
   override def getConfig(): Map[String, String] = {
     Config.toMap("powermanagement")
