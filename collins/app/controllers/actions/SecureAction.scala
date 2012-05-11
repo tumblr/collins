@@ -2,7 +2,7 @@ package controllers
 package actions
 
 import models.User
-import util.SecuritySpecification
+import util.{OutputType, SecuritySpecification}
 
 import play.api.Logger
 import play.api.data.Form
@@ -15,7 +15,9 @@ import ApiResponse.formatResponseData
 
 import java.util.concurrent.atomic.AtomicReference
 
-abstract class SecureAction[T](
+// Override execute and validate, optionally handleError or handleWebError (if you support HTML
+// views)
+abstract class SecureAction(
   val securitySpecification: SecuritySpecification,
   val securityHandler: SecureController
 ) extends Action[AnyContent] {
@@ -37,9 +39,8 @@ abstract class SecureAction[T](
 
   private val _request = new AtomicReference[Request[AnyContent]](DummyRequest)
   private def setRequest(r: Request[AnyContent]): Unit = _request.set(r)
-  def request(): Request[AnyContent] = _request.get()
-  def implicitRequest() = implicitly[Request[AnyContent]](request)
-  def implicitFlash() = implicitly[Flash](request.flash)
+  protected def request(): Request[AnyContent] = _request.get()
+  protected def flash(): Flash = request.flash
 
   private val _user = new AtomicReference[User](User.empty)
   private def setUser(u: User): Unit = _user.set(u)
@@ -54,9 +55,18 @@ abstract class SecureAction[T](
   }
 
   def execute(rd: RequestDataHolder): Result
+
   def handleError(rd: RequestDataHolder): Result = {
-    Api.getErrorMessage(rd.toString, rd.status().getOrElse(Results.InternalServerError))
+    val htmlOutput = isHtml match {
+      case true => handleWebError(rd)
+      case false => None
+    }
+    htmlOutput.getOrElse(
+      Api.errorResponse(rd.toString, rd.status().getOrElse(Results.InternalServerError))
+    )
   }
+
+  def handleWebError(rd: RequestDataHolder): Option[Result] = None
 
   final override def parser: BodyParser[AnyContent] = BodyParsers.parse.anyContent
   final override def apply(req: Request[AnyContent]): Result = {
@@ -68,6 +78,8 @@ abstract class SecureAction[T](
         run()
     }
   }
+
+  protected def isHtml(): Boolean = OutputType.isHtml(request)
 
   private def checkAuthorization(): Either[Result,User] = {
     val path = request.path

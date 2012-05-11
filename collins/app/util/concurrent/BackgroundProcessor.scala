@@ -17,7 +17,7 @@ class BackgroundProcessorActor extends Actor {
   }
 }
 
-case class SexyTimeoutException(timeout: Duration) extends Exception("Command timeout after %d seconds".format(timeout.toSeconds.toString)) {
+case class SexyTimeoutException(timeout: Duration) extends Exception("Command timeout after %s seconds".format(timeout.toSeconds.toString)) {
   override def toString(): String = {
     this.getMessage()
   }

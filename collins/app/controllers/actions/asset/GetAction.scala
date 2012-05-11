@@ -3,9 +3,9 @@ package actions
 package asset
 
 import models.Asset
-import util.{OutputType, SecuritySpecification}
+import util.SecuritySpecification
 import views.html
-import play.api.mvc.{Result, Results}
+import play.api.mvc.Result
 
 case class GetAction(
   assetTag: String,
@@ -26,24 +26,18 @@ case class GetAction(
     case AssetDataHolder(asset) => handleSuccess(asset)
   }
 
-  override def handleError(rd: RequestDataHolder) = {
-    if (OutputType.isHtml(request)) {
-      val msg = rd.error.getOrElse(AssetMessages.notFound(assetTag))
-      Redirect(app.routes.Resources.index).flashing("message" -> msg)
-    } else {
-      super.handleError(rd)
-    }
+  override def handleWebError(rd: RequestDataHolder) = {
+    val msg = rd.error.getOrElse(AssetMessages.notFound(assetTag))
+    Some(Redirect(app.routes.Resources.index).flashing("message" -> msg))
   }
 
   protected def handleSuccess(asset: Asset): Result = {
-    implicit val r = implicitRequest
-    implicit val f = implicitFlash
     val display = asset.getAllAttributes.exposeCredentials(user.canSeePasswords)
-    OutputType.isHtml(request) match {
+    isHtml match {
       case true =>
-        Results.Ok(html.asset.show(display, user))
+        Status.Ok(html.asset.show(display, user)(flash, request))
       case false =>
-        ResponseData(Results.Ok, display.toJsonObject).asResult
+        ResponseData(Status.Ok, display.toJsonObject)
     }
   }
 
