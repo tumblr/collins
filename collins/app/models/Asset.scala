@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Feature, LldpRepresentation, LshwRepresentation, Stats}
+import util.{Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
 import util.views.Formatter.dateFormat
 
 import play.api.Logger
@@ -9,7 +9,6 @@ import play.api.libs.json._
 
 import org.squeryl.Schema
 import org.squeryl.PrimitiveTypeMode._
-import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import java.sql.Timestamp
 import java.util.Date
@@ -29,6 +28,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     Json.stringify(JsObject(forJsonObject))
   }
 
+  def toJsonObject() = JsObject(forJsonObject)
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "TAG" -> JsString(tag),
@@ -39,6 +39,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   )
 
   def getId(): Long = id
+  def isServerNode(): Boolean = asset_type == AssetType.Enum.ServerNode.id
   def isNew(): Boolean = status == models.Status.Enum.New.id
   def isProvisioning(): Boolean = status == models.Status.Enum.Provisioning.id
   def isProvisioned(): Boolean = status == models.Status.Enum.Provisioned.id
@@ -97,6 +98,11 @@ object Asset extends Schema with AnormAdapter[Asset] {
     "Asset.findByTag(%s)".format(asset.tag.toLowerCase),
     "Asset.findById(%d)".format(asset.id)
   )
+
+  object Messages extends MessageHelper("asset") {
+    def notFound(t: String) = message("missing", t)
+    def noMatch() = message("nomatch")
+  }
 
   def isValidTag(tag: String): Boolean = {
     tag != null && tag.nonEmpty && TagR(tag).matches
@@ -214,28 +220,5 @@ object Asset extends Schema with AnormAdapter[Asset] {
       )
       JsObject(outSeq)
     }
-  }
-}
-
-case class AssetFinder(
-  tag: Option[String],
-  status: Option[Status.Enum],
-  assetType: Option[AssetType.Enum],
-  createdAfter: Option[Date],
-  createdBefore: Option[Date],
-  updatedAfter: Option[Date],
-  updatedBefore: Option[Date])
-{
-  def asLogicalBoolean(a: Asset): LogicalBoolean = {
-    val tagBool = tag.map((a.tag === _))
-    val statusBool = status.map((a.status === _.id))
-    val typeBool = assetType.map((a.asset_type === _.id))
-    val createdAfterTs = createdAfter.map((a.created gte _.asTimestamp))
-    val createdBeforeTs = createdBefore.map((a.created lte _.asTimestamp))
-    val updatedAfterTs = Some((a.updated gte updatedAfter.map(_.asTimestamp).?))
-    val updatedBeforeTs = Some((a.updated lte updatedBefore.map(_.asTimestamp).?))
-    val ops = Seq(tagBool, statusBool, typeBool, createdAfterTs, createdBeforeTs, updatedAfterTs,
-      updatedBeforeTs).filter(_ != None).map(_.get)
-    ops.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }
 }

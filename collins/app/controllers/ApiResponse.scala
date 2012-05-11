@@ -5,7 +5,7 @@ import util._
 import play.api.libs.json._
 import play.api.mvc._
 
-object ApiResponse {
+object ApiResponse extends ApiResponse {
   import Results._
   import OutputType.contentTypeWithCharset
 
@@ -122,7 +122,7 @@ trait ApiResponse extends Controller {
 
   import OutputType.contentTypeWithCharset
 
-  protected def formatResponseData(response: ResponseData)(implicit req: Request[AnyContent]) = {
+  def formatResponseData(response: ResponseData)(implicit req: Request[AnyContent]) = {
     getOutputType(req) match {
       case o: TextOutput =>
         response.status(formatTextResponse(response.data) + "\n").as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
@@ -155,7 +155,7 @@ trait ApiResponse extends Controller {
         case _ => throw new IllegalArgumentException("Unsupported JS type")
       }
     }
-    def formatList(jsvalue: List[JsValue], listPrefix: String = ""): String = {
+    def formatList(jsvalue: Seq[JsValue], listPrefix: String = ""): String = {
       val isObj = jsvalue.find { item => item.isInstanceOf[JsObject] }.map { _ => true }.getOrElse(false)
       val isNonPrim = jsvalue.find { item =>
         item.isInstanceOf[JsObject] || item.isInstanceOf[JsArray]
@@ -194,7 +194,7 @@ trait ApiResponse extends Controller {
         case _ => throw new IllegalArgumentException("Unsupported JS type")
       }
     }
-    def formatList(jsvalue: List[JsValue]): String = {
+    def formatList(jsvalue: Seq[JsValue]): String = {
       jsvalue.map { item =>
         item match {
           case JsArray(list) => formatList(list)

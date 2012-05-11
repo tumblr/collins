@@ -19,6 +19,12 @@ trait PowerManagementConfig extends Config {
       .split(",").clean
       .map(name => AssetType.Enum.withName(name).id)
       .toSet;
+
+  object Messages extends MessageHelper(ConfigKey) {
+    def assetStateAllowed(a: Asset) = message("disallowStatus", a.getStatus().name)
+    def actionAllowed(p: PowerAction) = message("disallowWhenAllocated", p.toString)
+    def assetTypeAllowed(a: Asset) = message("allowAssetTypes", a.getType().name)
+  }
 }
 
 object PowerManagementConfig extends PowerManagementConfig
@@ -52,6 +58,7 @@ object PowerManagement extends PowerManagementConfig {
   def isPluginEnabled = pluginEnabled.isDefined
 
   def assetTypeAllowed(asset: Asset): Boolean = AllowedAssetTypes.contains(asset.asset_type)
+  def assetStateAllowed(asset: Asset): Boolean = !DisallowedAssetStates.contains(asset.status)
   def actionAllowed(asset: Asset, action: PowerAction): Boolean = {
     if (asset.getStatus().name == "Allocated" && DisallowedWhenAllocated.contains(action)) {
       false
@@ -61,15 +68,6 @@ object PowerManagement extends PowerManagementConfig {
   }
 
   def powerAllowed(asset: Asset): Boolean = {
-    val assetStateAllowed = !DisallowedAssetStates.contains(asset.status)
-    val pluginIsEnabled = isPluginEnabled
-    val typeAllowed = assetTypeAllowed(asset)
-    val allowed = assetStateAllowed &&
-                  pluginIsEnabled &&
-                  typeAllowed;
-    logger.debug("AssetState allowed? " + assetStateAllowed)
-    logger.debug("Plugin enabled? " + pluginIsEnabled)
-    logger.debug("AssetType allowed? " + typeAllowed)
-    allowed
+    assetStateAllowed(asset) && isPluginEnabled && assetTypeAllowed(asset)
   }
 }

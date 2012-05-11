@@ -26,7 +26,7 @@ case class FakeRequestHeader(
   headers: FakeHeaders = FakeHeaders()
 ) extends RequestHeader {
   lazy val path = uri.split('?').take(1).mkString
-  lazy val queryString = play.core.parsers.UrlFormEncodedParser.parse(rawQueryString)
+  lazy val queryString = play.core.parsers.FormUrlEncodedParser.parse(rawQueryString)
   def asRequest(body: AnyContent = AnyContentAsEmpty) =
     PlayFakeRequest(
       this.method,

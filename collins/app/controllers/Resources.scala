@@ -1,5 +1,8 @@
 package controllers
 
+import actions.asset.CreateAction
+import actions.resources.FindAction
+
 import actors._
 import models._
 import util.{Feature, IpmiCommand, PowerManagement, SecuritySpec}
@@ -12,6 +15,7 @@ import com.tumblr.play.{PowerManagement => PowerManagementPlugin}
 import play.api._
 import play.api.mvc._
 import play.api.data._
+import play.api.data.Forms._
 
 trait Resources extends Controller {
   this: SecureController =>
@@ -40,63 +44,16 @@ trait Resources extends Controller {
     }
   }(Permissions.Resources.CreateForm)
 
-  def createAsset(atype: String) = SecureAction { implicit req =>
-    Form("tag" -> requiredText).bindFromRequest.fold(
-      noTag => Redirect(app.routes.Resources.displayCreateForm(atype)).flashing("error" -> "A tag must be specified"),
-      withTag => {
-        val rd = new actions.CreateAsset()(withTag)
-        rd.status match {
-          case Results.Created =>
-            Redirect(app.routes.Resources.index).flashing("success" -> "Asset successfully created")
-          case _ =>
-            val errStr = ApiResponse.getJsonErrorMessage(rd.data, "Error processing request")
-            Redirect(app.routes.Resources.displayCreateForm(atype)).flashing("error" -> errStr)
-        }
-      }
-    )
-  }(Permissions.Resources.CreateAsset)
+  def createAsset(atype: String) = CreateAction(
+    None, Some(atype), Permissions.Resources.CreateAsset, this
+  )
 
   /**
    * Find assets by query parameters, special care for ASSET_TAG
    */
-  def find(page: Int, size: Int, sort: String, operation: String) = SecureAction { implicit req =>
-    Form("ASSET_TAG" -> requiredText).bindFromRequest.fold(
-      noTag => {
-        val results = new actions.FindAsset()(page, size, sort)(rewriteRequest(req))
-        results match {
-          case Left(err) =>
-            Redirect(app.routes.Resources.index).flashing("error" -> err)
-          case Right(success) => success.size match {
-            case 0 =>
-              Redirect(app.routes.Resources.index).flashing(
-                "message" -> "Could not find any matching assets"
-              )
-            case 1 =>
-              Redirect(app.routes.CookieApi.getAsset(success.items(0).tag))
-            case n =>
-              Results.Ok(html.asset.list(success))
-          }
-        }
-      },
-      asset_tag => {
-        logger.debug("Got asset tag: " + asset_tag)
-        val newReq = newRequestWithQuery(req, stripQuery(req.queryString))
-        findByTag(asset_tag, PageParams(page, size, sort))(newReq)
-      }
-    )
-  }(Permissions.Resources.Find)
-
-  def checkError(a: Asset, p: PowerManagementPlugin, s: String) = {
-    val msg = p.verify(a)() match {
-      case success if success.isSuccess =>
-        s
-      case failure if !failure.isSuccess =>
-        "IPMI command failed, and IPMI interface is unreachable"
-    }
-    Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
-      "message" -> msg
-    )
-  }
+  def find(page: Int, size: Int, sort: String, operation: String) = FindAction(
+    PageParams(page, size, sort), operation, Permissions.Resources.Find, this
+  )
 
   /**
    * Manage 4 stage asset intake process
@@ -155,25 +112,16 @@ trait Resources extends Controller {
     }
   }(Permissions.Resources.Intake)
 
-  /**
-   * Given a asset tag, find the associated asset
-   */
-  private def findByTag(tag: String, page: PageParams)(implicit r: Request[AnyContent]) = {
-    Asset.findByTag(tag) match {
-      case None => Asset.findLikeTag(tag, page) match {
-        case page if page.size == 0 =>
-          Redirect(app.routes.Resources.index).flashing("message" -> "Could not find asset with specified asset tag")
-        case page =>
-          Ok(html.asset.list(page))
-      }
-      case Some(asset) =>
-        intakeAllowed(asset) match {
-          case true =>
-            Redirect(app.routes.Resources.intake(asset.getId, 1))
-          case false =>
-            Redirect(app.routes.CookieApi.getAsset(asset.tag))
-        }
+  protected def checkError(a: Asset, p: PowerManagementPlugin, s: String) = {
+    val msg = p.verify(a)() match {
+      case success if success.isSuccess =>
+        s
+      case failure if !failure.isSuccess =>
+        "IPMI command failed, and IPMI interface is unreachable"
     }
+    Redirect(app.routes.HelpPage.index(Help.IpmiError().id)).flashing(
+      "message" -> msg
+    )
   }
 
   private def intakeAllowed(asset: Asset)(implicit r: Request[AnyContent]): Boolean = {
@@ -182,59 +130,6 @@ trait Resources extends Controller {
     val intakeSupported = Feature("intakeSupported").toBoolean(true)
     val rightRole = Permissions.please(getUser(r), Permissions.Resources.Intake)
     intakeSupported && isNew && rightType && rightRole
-  }
-
-  /**
-   * Rewrite k/v pairs into an attribute=k;v map
-   */
-  private def rewriteRequest(req: Request[AnyContent]): Request[AnyContent] = {
-    val respectedKeys = actions.FindAsset.params
-    val nonEmpty = stripQuery(req.queryString)
-    val grouped = nonEmpty.groupBy { case(k, v) =>
-      respectedKeys.contains(k)
-    }
-    val respectedParams = grouped.getOrElse(true, Map[String,Seq[String]]())
-    val rewrittenParams = grouped.get(false).map { unknownParams =>
-      unknownParams.map { case(k,v) =>
-        k -> v.map { s => ("%s;%s".format(k,rewriteAttributeValue(s))) }
-      }
-    }.getOrElse(Map[String,Seq[String]]())
-    val mergedParams: Seq[String] = Seq(
-      respectedParams.getOrElse("attribute", Seq[String]()),
-      rewrittenParams.values.flatten
-    ).flatten
-    val finalMap: Map[String,Seq[String]] = mergedParams match {
-      case Nil => respectedParams
-      case list => respectedParams ++ Map("attribute" -> list)
-    }
-    newRequestWithQuery(req, finalMap)
-  }
-
-  private def rewriteAttributeValue(v: String): String = {
-    v match {
-      case none if v.toLowerCase == "(none)" =>
-        ""
-      case _ =>
-        v
-    }
-  }
-
-  private def stripQuery(inputMap: Map[String, Seq[String]]) = {
-    val exclude = Set("page", "sort", "size")
-    inputMap.filter { case(k,v) =>
-      v.forall { _.nonEmpty }
-    }.filter { case(k,v) => !exclude.contains(k) }
-  }
-
-  private def newRequestWithQuery(req: Request[AnyContent], finalMap: Map[String, Seq[String]]) = {
-    new Request[AnyContent] {
-      def uri = req.uri
-      def path = req.path
-      def method = req.method
-      def queryString = finalMap
-      def headers = req.headers
-      def body = req.body
-    }
   }
 
 }

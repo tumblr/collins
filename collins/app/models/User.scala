@@ -16,6 +16,7 @@ abstract class User(val username: String, val password: String) {
     case true => Some(name)
     case false => None
   }
+  def isEmpty(): Boolean = username.isEmpty && password.isEmpty && roles.isEmpty
   def canSeePasswords(): Boolean = Permissions.please(this, Permissions.Feature.CanSeePasswords)
   def isAdmin(): Boolean = hasRole("infra")
   def toMap(): Map[String,String] = Map(
@@ -38,6 +39,8 @@ object User {
   private val IS_AUTHENTICATED = "authenticated"
   private val USERNAME = "username"
   private val ROLES = "roles"
+
+  def empty: User = UserImpl("","",Set(),0,false)
 
   def authenticate(username: String, password: String, provider: Option[AuthenticationProvider] = None) = {
     val p = provider match {

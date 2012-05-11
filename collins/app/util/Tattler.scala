@@ -5,7 +5,7 @@ import models.{LogMessageType, LogFormat, LogSource}
 
 sealed abstract class Tattler(val source: LogSource.LogSource, val pString: Option[String] = None) {
   protected def message(user: Option[User], msg: String) = {
-    val username = user.orElse(AppConfig.getUser()).map(_.username)
+    val username = user.filter(!_.isEmpty).orElse(AppConfig.getUser()).map(_.username)
       .orElse(pString).orElse(Some("Unknown")).get
     "User %s: %s".format(username, msg)
   }

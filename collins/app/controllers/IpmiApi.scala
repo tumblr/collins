@@ -4,6 +4,7 @@ import models.{Asset, IpmiInfo}
 import util.{IpAddress, SecuritySpec}
 
 import play.api.data._
+import play.api.data.Forms._
 import play.api.http.{Status => StatusValues}
 import play.api.libs.json.{JsBoolean, JsObject}
 import play.api.mvc.Results
@@ -29,20 +30,20 @@ trait IpmiApi {
       }
     }
   }
-  val FORM = Form(
-    of(IpmiForm.apply _, IpmiForm.unapply _)(
+  val IPMI_FORM = Form(
+    mapping(
       "username" -> optional(text(1)),
       "password" -> optional(text(8)),
       "address" -> optional(text(7)),
       "gateway" -> optional(text(7)),
       "netmask" -> optional(text(7))
-    )
+    )(IpmiForm.apply)(IpmiForm.unapply)
   )
 
   def updateIpmi(tag: String) = SecureAction { implicit req =>
     Api.withAssetFromTag(tag) { asset =>
       val ipmiInfo = IpmiInfo.findByAsset(asset)
-      FORM.bindFromRequest.fold(
+      IPMI_FORM.bindFromRequest.fold(
         hasErrors => {
           val error = hasErrors.errors.map { _.message }.mkString(", ")
           Left(Api.getErrorMessage("Data submission error: %s".format(error)))
