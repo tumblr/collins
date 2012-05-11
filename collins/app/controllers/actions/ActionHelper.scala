@@ -15,4 +15,14 @@ object ActionHelper {
     }
     val body = AnyContentAsEmpty
   }
+
+  def createRequest(req: Request[AnyContent], finalMap: Map[String, Seq[String]]) =
+    new Request[AnyContent] {
+      def uri = req.uri
+      def path = req.path
+      def method = req.method
+      def queryString = finalMap
+      def headers = req.headers
+      def body = req.body
+    }
 }
