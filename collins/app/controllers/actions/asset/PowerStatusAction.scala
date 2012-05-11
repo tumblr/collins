@@ -6,7 +6,6 @@ import models.Asset
 import util.SecuritySpecification
 
 import play.api.libs.json._
-import play.api.mvc.Results
 
 import com.tumblr.play.{CommandResult, PowerAction, PowerState}
 
@@ -27,6 +26,6 @@ case class PowerStatusAction(
       case true => "on"
       case false => "off"
     }
-    ResponseData(Results.Ok, JsObject(Seq("MESSAGE" -> JsString(status))))
+    ResponseData(Status.Ok, JsObject(Seq("MESSAGE" -> JsString(status))))
   }
 }

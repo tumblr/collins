@@ -1,12 +1,15 @@
 package controllers
 package actions
 
-import models.Asset
+import models.{Asset, AssetType}
+import util.Feature
 
 import java.util.concurrent.atomic.AtomicReference
 
 // Helpers for actions
 trait AssetAction {
+  this: SecureAction =>
+
   type Validation = Either[RequestDataHolder,RequestDataHolder]
   protected val _asset = new AtomicReference[Option[Asset]](None)
 
@@ -30,4 +33,13 @@ trait AssetAction {
         f(asset.get)
     }
   }
+
+  def assetIntakeAllowed(asset: Asset): Boolean = {
+    val isNew = asset.isNew
+    val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
+    val intakeSupported = Feature("intakeSupported").toBoolean(true)
+    val rightRole = Permissions.please(user(), Permissions.Resources.Intake)
+    intakeSupported && isNew && rightType && rightRole
+  }
+
 }
