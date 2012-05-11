@@ -25,7 +25,7 @@
       <label for="@ServiceTag.toString">Service Tag</label>
       <div class="input">
         <span id="@ServiceTag.toString" class="uneditable-input">
-          @asset.getMetaAttribute(ServiceTag).map{a => a.getValue()}.getOrElse{<em>-</em>}
+          @asset.getMetaAttribute(ServiceTag).map{a => @a.getValue()}.getOrElse{<em>-</em>}
         </span>
       </div>
     </div>

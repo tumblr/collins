@@ -1,6 +1,7 @@
 package controllers
 
-import actions.asset.{CreateAction, DeleteAction, DeleteAttributeAction, GetAction, UpdateForMaintenanceAction}
+import actions.asset.{CreateAction, DeleteAction, DeleteAttributeAction, FindAction, GetAction}
+import actions.asset.UpdateForMaintenanceAction
 
 import views.html
 import models.{Status => AStatus}
@@ -22,19 +23,9 @@ trait AssetApi {
   def getAsset(tag: String) = GetAction(tag, Permissions.AssetApi.GetAsset, this)
 
   // GET /api/assets?params
-  private val finder = new actions.FindAsset()
-  def getAssets(page: Int, size: Int, sort: String, details: String) = SecureAction { implicit req =>
-    val detailsBoolean = details.trim.toLowerCase match {
-      case "true" | "1" | "yes" => true
-      case _ => false
-    }
-    val rd = finder(page, size, sort) match {
-      case Left(err) => Api.getErrorMessage(err)
-      case Right(success) =>
-        actions.FindAsset.formatResultAsRd(success, detailsBoolean)
-    }
-    formatResponseData(rd)
-  }(Permissions.AssetApi.GetAssets)
+  def getAssets(page: Int, size: Int, sort: String) = FindAction(
+    PageParams(page, size, sort), Permissions.AssetApi.GetAssets, this
+  )
 
   // PUT /api/asset/:tag
   def createAsset(tag: String) = CreateAction(Some(tag), None, Permissions.AssetApi.CreateAsset, this)
