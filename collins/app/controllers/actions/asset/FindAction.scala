@@ -3,6 +3,7 @@ package actions
 package asset
 
 import forms._
+import util.Config
 
 import models.{Asset, AssetType, AssetFinder, Page, PageParams, Status => AssetStatus, Truthy}
 import models.AssetType.{Enum => AssetTypeEnum}
@@ -32,7 +33,13 @@ class FindAction(
   override def execute(rd: RequestDataHolder) = rd match {
     case afdh: AssetFinderDataHolder =>
       val AssetFinderDataHolder(af, ra, op, _) = afdh
-      val results = Asset.find(pageParams, ra, af, op)
+      val results = Config.getBoolean("multicollins.enabled").getOrElse(false) match {
+        case true => {
+          logger.debug("MULTI")
+          Asset.findMulti(pageParams, ra, af, op)
+        }
+        case false => Asset.find(pageParams, ra, af, op)
+      }
       try handleSuccess(results, afdh) catch {
         case e =>
           e.printStackTrace
