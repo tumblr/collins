@@ -149,21 +149,33 @@ object AssetLifecycle {
     requiredKeys.find(key => !options.contains(key)).map { not_found =>
       return Left(new Exception(not_found + " parameter not specified"))
     }
+    val optionalKeys = Set(formatPowerPort("OUTLET_A"), formatPowerPort("OUTLET_B"))
 
     val rackpos = options(RackPosition.toString)
     val power1 = options(formatPowerPort("A"))
     val power2 = options(formatPowerPort("B"))
 
-    val filtered = options.filter(kv => !requiredKeys(kv._1))
+    val filtered = options.filter(kv => !requiredKeys(kv._1) && !optionalKeys(kv._1))
     filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
+
+    val optionalValues: Seq[AssetMetaValue] = optionalKeys
+      .map { s =>
+        s match {
+          case outletA if outletA == formatPowerPort("OUTLET_A") && options.get(outletA).isDefined =>
+            Some(AssetMetaValue(asset, PowerPort, 2, options(outletA)))
+          case outletB if outletB == formatPowerPort("OUTLET_B") && options.get(outletB).isDefined =>
+            Some(AssetMetaValue(asset, PowerPort, 3, options(outletB)))
+          case _ => None
+        }
+      }.filter(_.isDefined).map(_.get).toSeq
 
     val res = allCatch[Boolean].either {
       val values = Seq(
         AssetMetaValue(asset, RackPosition, rackpos),
         AssetMetaValue(asset, PowerPort, 0, power1),
-        AssetMetaValue(asset, PowerPort, 1, power2))
+        AssetMetaValue(asset, PowerPort, 1, power2)) ++ optionalValues
       Asset.inTransaction {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
