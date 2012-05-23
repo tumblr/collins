@@ -1,7 +1,7 @@
 package models
 
 import conversions._
-import util.{Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.{Config, Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
 import util.views.Formatter.dateFormat
 
 import play.api.Logger
@@ -188,6 +188,27 @@ object Asset extends Schema with AnormAdapter[Asset] {
       compute(count)
     )
     Page(results, params.page, params.offset, totalCount)
+  }
+
+  /**
+   * Finds assets across multiple collins instances.  Data for instances are
+   * stored as assets themselves, though the asset type and attribute for URI
+   * info is user-configured.
+   */
+  def findMulti(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] = {
+    val instanceFinder = AssetFinder(
+      tag = None,
+      status = None,
+      createdAfter = None,
+      createdBefore = None,
+      updatedAfter = None,
+      updatedBefore = None,
+      assetType = Some(AssetType.Enum.withName(Config.getString("multicollins.instanceAssetType","DATA_CENTER").trim.toString))
+    )
+    val findLocations = Asset.find(PageParams(0,50,"ASC"), instanceFinder).items
+    findLocations.foreach{l => logger.debug("found location %s".format(l.tag))}
+    Page(Seq(), page.page, page.offset,0)
+
   }
 
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], mvs: Seq[MetaWrapper]) {
