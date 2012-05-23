@@ -39,8 +39,10 @@
       }
     </div>
     @inputText(f(RackPosition.toString), '_label -> "Rack Position", 'autocomplete -> "off", Symbol("enter-style") -> "tab", 'class -> "focus")
-    @inputText(f(formatPowerPort("A")), '_label -> "Power Port A", 'autocomplete -> "off", Symbol("enter-style") -> "tab")
-    @inputText(f(formatPowerPort("B")), '_label -> "Power Port B", 'autocomplete -> "off")
+    @inputText(f(formatPowerPort("A")), '_label -> "Plug Strip A", 'autocomplete -> "off", Symbol("enter-style") -> "tab")
+    @inputText(f(formatPowerPort("OUTLET_A")), '_label -> "Outlet A", 'autocomplete -> "off", Symbol("enter-style") -> "tab")
+    @inputText(f(formatPowerPort("B")), '_label -> "Plug Strip B", 'autocomplete -> "off")
+    @inputText(f(formatPowerPort("OUTLET_B")), '_label -> "Outlet B", 'autocomplete -> "off", Symbol("enter-style") -> "tab")
     @f.globalError.map { error =>
       <div class="alert-message error">
         <strong>Unable to intake node</strong> @error.message
