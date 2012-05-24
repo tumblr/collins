@@ -80,6 +80,8 @@ case class Stage3Form(
     rackPosition: String,
     powerPort1: String,
     powerPort2: String,
+    powerOutlet1: String,
+    powerOutlet2: String,
     errorForm: Option[Form[Stage3Form]] = None)
   extends AssetIntakeForm
 {
@@ -88,7 +90,9 @@ case class Stage3Form(
       AssetLifecycle.updateAsset(asset, Map(
         RackPosition.toString -> rackPosition,
         formatPowerPort("A") -> powerPort1,
-        formatPowerPort("B") -> powerPort2)
+        formatPowerPort("OUTLET_A") -> powerOutlet1,
+        formatPowerPort("B") -> powerPort2,
+        formatPowerPort("OUTLET_B") -> powerOutlet2)
       ).left.map { e => Some(FormError("", e.getMessage, Nil)) }
        .right.map { success => if (success) None else Some(FormError("", "Failed to save asset")) }
        .fold(l => l, r => r)
@@ -123,6 +127,8 @@ object Stage3Form {
       RackPosition.toString -> text(1),
       formatPowerPort("A") -> text(1),
       formatPowerPort("B") -> text(1),
+      formatPowerPort("OUTLET_A") -> text(1),
+      formatPowerPort("OUTLET_B") -> text(1),
       "form" -> ignored(None.asInstanceOf[Option[Form[Stage3Form]]])
     )(Stage3Form.apply)(Stage3Form.unapply)
   )
@@ -130,7 +136,7 @@ object Stage3Form {
     Stage3Form.FORM.bind(Map(ChassisTag.toString -> s)).copy(errors = Nil)
   }
 
-  def get(form: Form[Stage3Form]) = new Stage3Form("","","","", Some(form))
+  def get(form: Form[Stage3Form]) = new Stage3Form("","","","", "", "", Some(form))
 }
 
 private[actions] object SharedStageValidators {

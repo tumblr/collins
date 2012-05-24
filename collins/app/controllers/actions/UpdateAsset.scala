@@ -23,11 +23,13 @@ object UpdateAsset {
       formatPowerPort("A") -> optional(text(1)),
       formatPowerPort("B") -> optional(text(1)),
       "status" -> optional(of[AStatus.Enum]),
-      "groupId" -> optional(longNumber)
+      "groupId" -> optional(longNumber),
+      formatPowerPort("OUTLET_A") -> optional(text(1)),
+      formatPowerPort("OUTLET_B") -> optional(text(1))
     )(UpdateAsset.apply)(UpdateAsset.unapply)
   )
-  def get() = new UpdateAsset(None, None, None, None, None, None, None, None, None)
-  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, None, None, None, None, None)
+  def get() = new UpdateAsset(None, None, None, None, None, None, None, None, None, None, None)
+  def get(form: Form[UpdateAsset]) = new UpdateAsset(None, None, None, None, None, None, None, None, None, None, None)
   def toMap(form: UpdateAsset): Map[String,String] = Map.empty ++
     form.lshw.map(s => Map("lshw" -> s)).getOrElse(Map.empty) ++
     form.lldp.map(s => Map("lldp" -> s)).getOrElse(Map.empty) ++
@@ -37,7 +39,9 @@ object UpdateAsset {
     form.powerPort2.map(s => Map(formatPowerPort("B") -> s)).getOrElse(Map.empty) ++
     form.attributes ++
     form.status.map(s => Map("status" -> s.toString)).getOrElse(Map.empty) ++
-    form.groupId.map(s => Map("groupId" -> s.toString)).getOrElse(Map.empty)
+    form.groupId.map(s => Map("groupId" -> s.toString)).getOrElse(Map.empty) ++
+    form.powerOutlet1.map(s => Map(formatPowerPort("OUTLET_A") -> s)).getOrElse(Map.empty) ++
+    form.powerOutlet2.map(s => Map(formatPowerPort("OUTLET_B") -> s)).getOrElse(Map.empty)
 }
 
 private[controllers] case class UpdateAsset(
@@ -49,7 +53,9 @@ private[controllers] case class UpdateAsset(
   powerPort1: Option[String],
   powerPort2: Option[String],
   status: Option[AStatus.Enum],
-  groupId: Option[Long])
+  groupId: Option[Long],
+  powerOutlet1: Option[String],
+  powerOutlet2: Option[String])
 {
   private[this] val logger = Logger.logger
 
