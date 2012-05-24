@@ -112,6 +112,7 @@ object AssetLifecycle {
     allCatch[Boolean].either {
       val groupId = options.get("groupId").map(_.toInt)
       val opts = options - "groupId"
+      logger.debug(restricted.toString)
       opts.find(kv => restricted(kv._1)).map(kv =>
         return Left(new Exception("Attribute %s is restricted".format(kv._1)))
       )

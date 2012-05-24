@@ -118,5 +118,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     val NicName = Value(32, "INTERFACE_NAME")
     // DO NOT USE - Deprecated
     val NicAddress = Value(33, "INTERFACE_ADDRESS")
+
+    val Location = Value(34, "LOCATION")
   }
 }
