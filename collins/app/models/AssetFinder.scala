@@ -28,4 +28,22 @@ case class AssetFinder(
       updatedBeforeTs).filter(_ != None).map(_.get)
     ops.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }
+
+  /**
+   * converts the finder into a string map, used as part of forwarding searches
+   * to remote collins instances
+   */
+  def toMap: Map[String, String] = {
+    val items:Seq[Option[(String, String)]] = (
+      tag.map{"tag" -> _} ::
+      status.map{"status" -> _.toString} ::
+      assetType.map{"assetType" -> _.toString} ::
+      createdAfter.map{"createdAfter" -> _.toString} ::
+      createdBefore.map{"createdBefore" -> _.toString} ::
+      updatedAfter.map{"updatedAfter" -> _.toString} ::
+      updatedBefore.map{"updatedBefore" -> _.toString} ::
+      Nil
+    )
+    items.flatten.toMap
+  }
 }

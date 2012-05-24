@@ -6,6 +6,7 @@ import util.views.Formatter.dateFormat
 
 import play.api.Logger
 import play.api.libs.json._
+import play.api.libs.ws.WS
 
 import org.squeryl.Schema
 import org.squeryl.PrimitiveTypeMode._
@@ -206,7 +207,37 @@ object Asset extends Schema with AnormAdapter[Asset] {
       assetType = Some(AssetType.Enum.withName(Config.getString("multicollins.instanceAssetType","DATA_CENTER").trim.toString))
     )
     val findLocations = Asset.find(PageParams(0,50,"ASC"), instanceFinder).items
-    findLocations.foreach{l => logger.debug("found location %s".format(l.tag))}
+    //iterate over the locations, sending requests to each one and aggregate their results
+    findLocations.foreach{ locationAsset => 
+      val location = locationAsset.getMetaAttribute(AssetMeta.Enum.Location).map{_.getValue}.getOrElse("null")
+      val pieces = location.split(";")
+      if (pieces.length < 2) {
+        logger.error("Invalid location %s".format(location))
+      } else {
+        val host = pieces(0)
+        val userpass = pieces(1).split(":")
+        if (userpass.length != 2) {
+          logger.error("Invalid user/pass %s for remote collins asset %s".format(pieces(1), locationAsset.id.toString))
+        } else {
+          val authenticationTuple = (userpass(0), userpass(1), com.ning.http.client.Realm.AuthScheme.BASIC)
+          //we have to rebuild the query
+          val queryString = {
+            val q1: Map[String, String] = (
+              params._1.map{case (enum, value) => (enum.toString, value)} ++ 
+              params._2.map{case (assetMeta,value) => (assetMeta.name, value)} ++ 
+              params._3.map{i => ("ip_address" -> i)}
+            ).toMap ++ afinder.toMap
+            operation.map{op => q1 + ("operation" -> op)}.getOrElse(q1)
+          }
+          val request = WS.url(host).copy(
+            queryString = queryString,
+            auth = Some(authenticationTuple)
+          )
+          logger.debug("Here is our query string: " + queryString.toString)
+          //val result = request.get
+        }
+      }
+    } //end foreach
     Page(Seq(), page.page, page.offset,0)
 
   }
