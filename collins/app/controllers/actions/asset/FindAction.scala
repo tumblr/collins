@@ -32,11 +32,8 @@ class FindAction(
 
   override def execute(rd: RequestDataHolder) = rd match {
     case afdh: AssetFinderDataHolder =>
-      val AssetFinderDataHolder(af, ra, op, _) = afdh
-      //TODO: add a parameter to AFDH to indicate whether to search remote
-      //collins, so we can search from non-html clients without running into
-      //infinite recursion
-      val results = if (Config.getBoolean("multicollins.enabled").getOrElse(false) && isHtml) {
+      val AssetFinderDataHolder(af, ra, op, de, rl) = afdh
+      val results = if (Config.getBoolean("multicollins.enabled").getOrElse(false) && rl.map{_.isTruthy}.getOrElse(false)) {
         logger.debug("MULTI")
         Asset.findMulti(pageParams, ra, af, op)
       } else {
