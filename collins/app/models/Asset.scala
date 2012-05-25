@@ -7,12 +7,17 @@ import util.views.Formatter.dateFormat
 import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.ws.WS
+import play.api._
+import play.api.mvc._
 
 import org.squeryl.Schema
 import org.squeryl.PrimitiveTypeMode._
 
 import java.sql.Timestamp
 import java.util.Date
+
+import akka.dispatch.Await
+import akka.util.duration._
 
 object AssetConfig {
   lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
@@ -214,7 +219,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       if (pieces.length < 2) {
         logger.error("Invalid location %s".format(location))
       } else {
-        val host = pieces(0)
+        val host = pieces(0) + app.routes.Api.getAssets().toString
         val userpass = pieces(1).split(":")
         if (userpass.length != 2) {
           logger.error("Invalid user/pass %s for remote collins asset %s".format(pieces(1), locationAsset.id.toString))
@@ -234,7 +239,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
             auth = Some(authenticationTuple)
           )
           logger.debug("Here is our query string: " + queryString.toString)
-          //val result = request.get
+          val result = request.get.await.get
+          logger.debug("Here is our response: %s".format(result.body))
+
         }
       }
     } //end foreach
