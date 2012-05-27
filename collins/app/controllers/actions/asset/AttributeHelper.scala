@@ -8,6 +8,7 @@ case class AttributeMap(underlying: Map[String,String]) extends DefaultMap[Strin
   override def get(key: String): Option[String] = underlying.get(key)
   override def iterator: Iterator[(String,String)] = underlying.iterator
 }
+
 object AttributeMap {
   def apply(seq: Seq[String]) = new AttributeMap(
     seq.map(_.split(";", 2))

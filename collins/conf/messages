@@ -14,6 +14,7 @@ chassis.none=Asset ''{0}'' does not have an associated chassis tag
 
 asset.missing=Asset with tag ''{0}'' does not exist
 asset.nomatch=Could not find any assets matching your query
+asset.tag.invalid=Specified asset tag ''{0}'' is invalid
 asset.status.invalid=Invalid asset status specified. Valid values are Incomplete, New, Unallocated, Provisioning, Provisioned, Allocated, Cancelled, Decommissioned or Maintenance.
 
 assetfinder.attribute.invalid=Invalid attribute param. No ; was found in string ''{0}'', you may need to URL encode.

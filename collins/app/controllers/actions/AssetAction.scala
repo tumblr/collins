@@ -25,13 +25,16 @@ trait AssetAction {
 
   def assetNotFound(t: String) = RequestDataHolder.error404(AssetMessages.notFound(t))
 
-  def withValidAsset(t: String)(f: Asset => Validation): Validation = {
-    assetFromTag(t) match {
-      case None => Left(assetNotFound(t))
-      case asset =>
-        setAsset(asset)
-        f(asset.get)
-    }
+  def withValidAsset(t: String)(f: Asset => Validation): Validation = Asset.isValidTag(t) match {
+    case true =>
+      assetFromTag(t) match {
+        case None => Left(assetNotFound(t))
+        case asset =>
+          setAsset(asset)
+          f(asset.get)
+      }
+    case false =>
+      Left(RequestDataHolder.error400(AssetMessages.invalidTag(t)))
   }
 
   def assetIntakeAllowed(asset: Asset): Boolean = {
