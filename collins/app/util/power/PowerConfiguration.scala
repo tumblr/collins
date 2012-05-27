@@ -21,9 +21,6 @@ case class PowerConfiguration(
     PowerUnits((0 until unitsRequired).map(id => PowerUnit(this, id)))
 
   def hasComponent(component: Symbol) = components.contains(Symbol(component.name.toUpperCase))
-
-  private def components(id: Int): Set[PowerComponent] =
-    components.map(componentType => PowerComponentValue(componentType, this, id))
 }
 
 object PowerConfiguration extends FeatureConfig("powerconfiguration") {

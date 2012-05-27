@@ -8,6 +8,10 @@ case class PowerUnit(config: PowerConfiguration, id: Int) extends Ordered[PowerU
   val components: PowerComponents =
     config.components.map(componentType => PowerComponentValue(componentType, config, id))
 
+  def component(componentType: Symbol): Option[PowerComponent] = {
+    components.find(_.componentType == componentType)
+  }
+
   override def iterator: Iterator[PowerComponent] = components.iterator
   override def compare(that: PowerUnit) = this.id - that.id
   override def equals(o: Any) = o match {
@@ -28,12 +32,8 @@ object PowerUnits extends Iterable[PowerUnit] {
 
   def iterator: Iterator[PowerUnit] = apply().iterator
 
-  def keys(punits: PowerUnits): Set[String] = map(punits) { case(unit, component) => component.key }
-
-  def map[A](punits: PowerUnits)(f: (PowerUnit, PowerComponent) => A): Set[A] = {
-    for (unit <- punits;
-         component <- unit) yield(f(unit, component))
-  }
+  def keys(punits: PowerUnits): Set[String] =
+    for (unit <- punits; component <- unit) yield(component.key)
 
   def unitMapFromMap(map: Map[String, Seq[String]]): Map[String,String] = unitMapFromMap(map, None)
   def unitMapFromMap(map: Map[String, Seq[String]], cfg: PowerConfiguration): Map[String,String] =
@@ -44,10 +44,9 @@ object PowerUnits extends Iterable[PowerUnit] {
     }.toMap
   }
   def toMetaValues(units: PowerUnits, asset: Asset, values: Map[String,String]): Seq[AssetMetaValue] =
-    map(units) { case(unit, component) =>
+    (for (unit <- units; component <- unit) yield
       values.get(component.key)
         .map(AssetMetaValue(asset, component.meta, unit.id, _))
-        .getOrElse(throw new Exception(component.missingData))
-    }.toSeq
+        .getOrElse(throw new Exception(component.missingData))).toSeq
 
 }
