@@ -6,7 +6,9 @@ import collection.immutable.SortedSet
 
 case class PowerUnit(config: PowerConfiguration, id: Int) extends Ordered[PowerUnit] with Iterable[PowerComponent] {
   val components: PowerComponents =
-    config.components.map(componentType => PowerComponentValue(componentType, config, id))
+    config.components.zipWithIndex.map { case(componentType, position) =>
+      PowerComponentValue(componentType, config, id, position)
+    }
 
   def component(componentType: Symbol): Option[PowerComponent] = {
     components.find(_.componentType == componentType)
@@ -16,11 +18,11 @@ case class PowerUnit(config: PowerConfiguration, id: Int) extends Ordered[PowerU
   override def compare(that: PowerUnit) = this.id - that.id
   override def equals(o: Any) = o match {
     case that: PowerUnit =>
-      this.id == that.id && this.components == that.components
+      this.id == that.id
     case _ =>
       false
   }
-  override def hashCode = components.hashCode
+  override def hashCode = this.id.hashCode
 }
 
 object PowerUnits extends Iterable[PowerUnit] {

@@ -2,8 +2,7 @@
 
 @import twitterBootstrap._
 @import helper._
-@import _root_.util.views.Formatter.formatPowerPort
-@import _root_.util.power.PowerUnits
+@import _root_.util.views.ListHelper.getPowerComponentsInOrder
 @import util.notice
 @import AssetMeta.Enum.{ChassisTag, RackPosition, ServiceTag}
 
@@ -40,7 +39,7 @@
       }
     </div>
     @inputText(f(RackPosition.toString), '_label -> "Rack Position", 'autocomplete -> "off", Symbol("enter-style") -> "tab", 'class -> "focus")
-    @for(unit <- PowerUnits(); component <- unit) {
+    @getPowerComponentsInOrder.map { component =>
       @inputText(f(component.key), '_label -> component.label, 'autocomplete -> "off", Symbol("enter-style") -> "tab")
     }
     @f.globalError.map { error =>

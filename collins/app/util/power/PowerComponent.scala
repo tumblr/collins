@@ -7,13 +7,12 @@ import models.AssetMeta
 sealed trait PowerComponent extends Ordered[PowerComponent] {
   def componentType: Symbol
   def config: PowerConfiguration
-  def id: Int
+  def id: Int // the id of the power unit
+  def position: Int // the position of the component within a unit
 
   def label = PowerConfiguration.Messages.ComponentLabel(name, sid)
-  def meta: AssetMeta = componentType match {
-    case 'STRIP => AssetMeta.findById(AssetMeta.Enum.PowerPort.id).get
-    case o => AssetMeta.findOrCreateFromName(o.name)
-  }
+  def meta: AssetMeta = AssetMeta.findOrCreateFromName(identifier)
+
   def missingData = PowerConfiguration.Messages.MissingData(key, label)
 
   final def identifier: String = "POWER_%s".format(name)
@@ -23,7 +22,10 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
     case false => id.toString
   }
 
-  override def compare(that: PowerComponent) = this.id - that.id
+  override def compare(that: PowerComponent) = (this.id - that.id) match {
+    case 0 => this.position compare that.position
+    case n => n
+  }
   override def equals(o: Any) = o match {
     case that: PowerComponent =>
       this.id == that.id && this.componentType == that.componentType
@@ -32,12 +34,9 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
   }
   override def hashCode = id.hashCode + componentType.hashCode
 
-  protected def name: String = componentType match {
-    case 'STRIP => "PORT"
-    case o => o.name
-  }
+  protected def name: String = componentType.name
 }
 
 case class PowerComponentValue(
-  componentType: Symbol, config: PowerConfiguration, id: Int
+  componentType: Symbol, config: PowerConfiguration, id: Int, position: Int
 ) extends PowerComponent

@@ -38,7 +38,7 @@ powermanagement.disallowStatus=Assets in status {0} can not be power managed. Co
 powermanagement.disallowWhenAllocated=Can not execute {0} when asset is allocated. Configured by ''powermanagement.disallowWhenAllocated''.
 powermanagement.allowAssetTypes=Asset of type ''{0}'' does not support power management. Configured by ''powermanagement.allowAssetTypes''.
 
-powerconfiguration.unit.strip.label=Plug Strip {0}
+powerconfiguration.unit.port.label=Plug Strip {0}
 powerconfiguration.unit.outlet.label=Outlet {0}
 powerconfiguration.missingData=Did not find value for ''{0}'', required for ''{1}''
 powerconfiguration.unitsRequired.range=unitsRequired must be between 0 and 18
