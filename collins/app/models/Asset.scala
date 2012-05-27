@@ -100,6 +100,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
   )
 
   object Messages extends MessageHelper("asset") {
+    def invalidTag(t: String) =
+      messageWithDefault("tag.invalid", "Specified asset tag is invalid", t)
     def notFound(t: String) = message("missing", t)
     def noMatch() = message("nomatch")
   }

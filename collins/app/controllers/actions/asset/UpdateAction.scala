@@ -5,6 +5,7 @@ package asset
 import models.{AssetLifecycle, Status => AStatus}
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
 import util.{MessageHelperI, SecuritySpecification}
+import util.power.PowerUnits
 import validators.StringUtil
 
 import forms._
@@ -13,9 +14,8 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
 
-trait PowerUnitRequestHelper {
-  def powerUnits: Map[String, String]
-}
+import collection.immutable.DefaultMap
+import collection.mutable.HashMap
 
 case class UpdateAction(
   assetTag: String,
@@ -25,16 +25,27 @@ case class UpdateAction(
 
   override val parentKey: String = "assetupdate"
 
-  case class ActionDataHolder(
-    lshw: Option[String],
-    lldp: Option[String],
-    chassisTag: Option[String],
-    attributes: AttributeMap,
-    rackPosition: Option[String],
-    assetStatus: Option[AStatus.Enum],
-    groupId: Option[Long],
-    override val powerUnits: Map[String,String]
-  ) extends RequestDataHolder with PowerUnitRequestHelper {
+  case class ActionDataHolder(underlying: Map[String,String])
+    extends RequestDataHolder
+      with DefaultMap[String,String]
+  {
+    override def get(key: String) = underlying.get(key)
+    override def iterator = underlying.iterator
+
+    def onlyStatus: Boolean = contains("status") match {
+      case true =>
+        size == 1 || (size == 2 && contains("reason"))
+      case false => false
+    }
+  }
+
+  protected def onlyAttributes: Boolean = {
+    val keySet = getInputMap.keySet
+    keySet.size match {
+      case 1 => keySet("attribute")
+      case 2 => keySet("attribute") && keySet("groupId")
+      case n => false
+    }
   }
 
   def optionalText(len: Int) = optional(
@@ -63,18 +74,45 @@ case class UpdateAction(
       form.fold(
         error => Left(RequestDataHolder.error400(fieldError(error))),
         success => {
+          // drop in attributes first, these have the lowest priority
+          val results = new HashMap[String,String]() ++ getAttributeMap
           val (lshw, lldp, chassisTag, rackPosition, status, groupId) = success
-          val attributes = getAttributeMap
-          val dh = ActionDataHolder(
-            lshw, lldp, chassisTag, attributes, rackPosition, status, groupId, Map.empty
-          )
+          // all 'known' parameters now, overwrite attributes possibly
+          if (lshw.isDefined) results("lshw") = lshw.get
+          if (lldp.isDefined) results("lldp") = lldp.get
+          if (chassisTag.isDefined) results(ChassisTag.toString) = chassisTag.get
+          if (rackPosition.isDefined) results(RackPosition.toString) = rackPosition.get
+          if (status.isDefined) results("status") = status.get.toString
+          if (groupId.isDefined) results("groupId") = groupId.get.toString
+          // powerMap has dynamic keys based on configuration
+          val powerMap = PowerUnits.unitMapFromMap(getInputMap)
+          val dh = ActionDataHolder((results ++ powerMap).toMap)
           Right(dh)
         }
       )
     }
   }
 
-  override def execute(rd: RequestDataHolder) = null
+  override def execute(rd: RequestDataHolder) = rd match {
+    case adh@ActionDataHolder(map) =>
+      val results: models.AssetLifecycle.Status[Boolean] =
+        if (onlyAttributes)
+          AssetLifecycle.updateAssetAttributes(definedAsset, map)
+        else if (adh.onlyStatus)
+          AssetLifecycle.updateAssetStatus(definedAsset, map)
+        else
+          AssetLifecycle.updateAsset(definedAsset, map)
+      results match {
+        case Left(exception) =>
+          handleError(
+            RequestDataHolder.error500("Error updating asset: %s".format(exception.getMessage))
+          )
+        case Right(false) =>
+          handleError(RequestDataHolder.error400("Error updating asset"))
+        case Right(true) =>
+          Api.statusResponse(true)
+      }
+  }
 
   protected def fieldError(f: Form[_]) = f match {
     case e if e.error("lshw").isDefined => message("lshw.invalid")

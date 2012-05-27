@@ -32,7 +32,10 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
   }
   override def hashCode = id.hashCode + componentType.hashCode
 
-  protected def name: String = componentType.name
+  protected def name: String = componentType match {
+    case 'STRIP => "PORT"
+    case o => o.name
+  }
 }
 
 case class PowerComponentValue(
