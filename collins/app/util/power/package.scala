@@ -1,6 +1,8 @@
 package util
 
+import collection.immutable.SortedSet
+
 package object power {
   type PowerComponents = Set[PowerComponent]
-  type PowerUnits = Set[PowerUnit]
+  type PowerUnits = SortedSet[PowerUnit]
 }
