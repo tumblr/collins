@@ -4,9 +4,9 @@ import power._
 
 import org.specs2.specification.Scope
 import org.specs2.mutable._
-import org.specs2.mock._
+import org.specs2.matcher.DataTables
 
-class PowerUnitSpec extends test.ApplicationSpecification with Mockito {
+class PowerUnitSpec extends test.ApplicationSpecification with DataTables {
 
   val DefaultUnitsRequired = 2
   val Strip = 'STRIP
@@ -31,58 +31,80 @@ class PowerUnitSpec extends test.ApplicationSpecification with Mockito {
     def pdus() = units.map(pdu(_))
   }
 
-  "Power Units" should {
-    "provide configurable" in {
-      "unit counts" in {
-        "-1" in new PowerUnitScope(count = -1) {
-          config must throwA[IllegalArgumentException]
-        }
-        "0" in new PowerUnitScope(count = 0) {
-          config.unitsRequired mustEqual 0
-        }
-        "1" in new PowerUnitScope(count = 1) {
-          config.unitsRequired mustEqual 1
-        }
-        "20" in new PowerUnitScope(count = 20) {
-          config must throwA[IllegalArgumentException]
-        }
-      }
-      "strips" in {
-        "enabled" in new PowerUnitScope() {
-          size(Strip) mustEqual DefaultUnitsRequired
-        }
-        "disabled" in new PowerUnitScope(components = DefaultComponents - Strip.name) {
-          size(Strip) mustEqual 0
-        }
-      }
-      "outlets" in {
-        "enabled" in new PowerUnitScope() {
-          size(Outlet) mustEqual DefaultUnitsRequired
-        }
-        "disabled" in new PowerUnitScope(components = DefaultComponents - Outlet.name) {
-          size(Outlet) mustEqual 0
-        }
-      }
-      "pdus" in {
-        "enabled" in new PowerUnitScope() {
-          size(Pdu) mustEqual DefaultUnitsRequired
-        }
-        "disabled" in new PowerUnitScope(components = DefaultComponents - Pdu.name) {
-          size(Pdu) mustEqual 0
-        }
-      }
-      "naming" in {
-        "that has ids to use" in new PowerUnitScope() {
-          ids.size must beGreaterThan(0)
-        }
-        "alphabetic" in new PowerUnitScope(alphabetic = true) {
-          ids must beMatching("^[A-Za-z]+$").forall
-        }
-        "numeric" in new PowerUnitScope(alphabetic = false) {
-          ids must beMatching("^[^A-Za-z]+$").forall
+  "Power Configuration" should {
+    "handle unit counts" >> {
+      "count" || "throwsException" |
+      -1      !! true              |
+      0       !! false             |
+      1       !! false             |
+      20      !! true              |> {
+      (count, throwsException) =>
+        val config = new PowerUnitScope(count = count)
+        if (throwsException) {
+          config.config must throwA[IllegalArgumentException]
+        } else {
+          config.config.unitsRequired mustEqual count
         }
       }
     }
+    "handle multiple component types" >> {
+      "name"    || "symbol"    |
+      "strips"  !! Strip.name  |
+      "outlets" !! Outlet.name |
+      "pdus"    !! Pdu.name    |> {
+      (name, symbolName) =>
+        val symbol = Symbol(symbolName)
+        val enabled = new PowerUnitScope()
+        enabled.size(symbol) mustEqual DefaultUnitsRequired
+        val disabled = new PowerUnitScope(components = DefaultComponents - symbolName)
+        disabled.size(symbol) mustEqual 0
+      }
+    }
+    "fail if components are badly specified" >> {
+      "input set"                           |
+      Set.empty[String]                     |
+      Set(Strip.name, "", Outlet.name)      |
+      Set(Strip.name, " ", Outlet.name)     |> {
+      (inputSet) =>
+        val config = new PowerUnitScope(components = inputSet)
+        config.config must throwA[IllegalArgumentException].like {
+          case e => e.getMessage must contain(PowerConfiguration.Messages.ComponentsUnspecified)
+        }
+      }
+    }
+  }
+
+  "Power Components" should {
+    "have predictable alphabetic names" in new PowerUnitScope(count = 2, alphabetic = true) {
+      var found = 0
+      units.zipWithIndex.foreach { case(unit, id) =>
+        val sid = id match {
+          case 0 => "A"
+          case 1 => "B"
+        }
+        strip(unit).sid mustEqual sid
+        outlet(unit).sid mustEqual sid
+        pdu(unit).sid mustEqual sid
+        found += 1
+      }
+      found mustEqual 2
+    }
+    "have predictable numeric names" in new PowerUnitScope(count = 2, alphabetic = false) {
+      strip(units.head).sid.toInt mustEqual 0
+      outlet(units.head).sid.toInt mustEqual 0
+      pdu(units.head).sid.toInt mustEqual 0
+      strip(units.last).sid.toInt mustEqual 1
+      outlet(units.last).sid.toInt mustEqual 1
+      pdu(units.last).sid.toInt mustEqual 1
+    }
+    "support labels via messages" in new PowerUnitScope() {
+      strips must have(!_.label.startsWith(config.parentKey))
+      outlets must have(!_.label.startsWith(config.parentKey))
+      pdus must have(!_.label.startsWith(config.parentKey))
+    }
+  }
+
+  "Power Units" should {
     "convert from a request map" in new PowerUnitScope() {
       val unit1 = PowerUnit(config, 0)
       val unit2 = PowerUnit(config, 1)
@@ -112,39 +134,12 @@ class PowerUnitSpec extends test.ApplicationSpecification with Mockito {
         u2pk -> "pdu 2"
       )
     }
-  }
-
-  "Power Unit" should {
     "support equality properly" in new PowerUnitScope() {
       val unit1 = PowerUnit(config, 0)
       val unit2 = PowerUnit(config, 1)
-      val unit3 = PowerUnit(PowerUnitScope(count = 10).config, 0)
+      val unit3 = PowerUnit(new PowerUnitScope(count = 10).config, 0)
       Set(unit1, unit3).size mustEqual 1
       unit1 mustNotEqual unit2
-    }
-    "support naming properly" in {
-      "alphabetic" in new PowerUnitScope(count = 2, alphabetic = true) {
-        var found = 0
-        units.zipWithIndex.foreach { case(unit, id) =>
-          val sid = id match {
-            case 0 => "A"
-            case 1 => "B"
-          }
-          strip(unit).sid mustEqual sid
-          outlet(unit).sid mustEqual sid
-          pdu(unit).sid mustEqual sid
-          found += 1
-        }
-        found mustEqual 2
-      }
-      "numeric" in new PowerUnitScope(count = 2, alphabetic = false) {
-        strip(units.head).sid.toInt mustEqual 0
-        outlet(units.head).sid.toInt mustEqual 0
-        pdu(units.head).sid.toInt mustEqual 0
-        strip(units.last).sid.toInt mustEqual 1
-        outlet(units.last).sid.toInt mustEqual 1
-        pdu(units.last).sid.toInt mustEqual 1
-      }
     }
     "support ordering correctly" in new PowerUnitScope(count = 10) {
       val punits = (0 until config.unitsRequired).map(PowerUnit(config, _))
@@ -154,11 +149,6 @@ class PowerUnitSpec extends test.ApplicationSpecification with Mockito {
       val unshuffled = PowerUnits(shuffled)
       val powerIds = for (unit <- unshuffled; component <- unit) yield(unit.id)
       powerIds must contain(0, 1, 2, 3, 4, 5, 6, 7, 8, 9).only.inOrder
-    }
-    "support labels via messages" in new PowerUnitScope() {
-      units must have(!strip(_).label.startsWith(config.parentKey))
-      units must have(!outlet(_).label.startsWith(config.parentKey))
-      units must have(!pdu(_).label.startsWith(config.parentKey))
     }
   }
 
