@@ -3,48 +3,44 @@ package util
 import models.Status
 import play.api.{Configuration, Play}
 
-trait ConfigType[T <: AnyRef] {
-  def toUpperCase: ConfigType[T]
-  def trim: ConfigType[T]
-}
-
-case class ListConfig(source: List[String]) extends ConfigType[List[String]] {
-  def toUpperCase: ListConfig = ListConfig(source.map(_.toUpperCase))
-  def trim: ListConfig = ListConfig(source.map(_.trim))
-  def clean: ListConfig = clean()
-  def clean(upcase: Boolean = true): ListConfig = {
-    Option(upcase).filter(_ == true).map(_ => toUpperCase)
-      .getOrElse(this)
-      .trim
-      .nonEmpty
+class ConfigFormatException(
+  rootKey: String,
+  name: String,
+  message: String,
+  vtype: String
+) extends IllegalArgumentException {
+  def path: String = (rootKey, name) match {
+    case (p, n) if !p.isEmpty && n.isEmpty => p
+    case (p, n) if p.isEmpty && !n.isEmpty => n
+    case (p, n) if !p.isEmpty && !n.isEmpty => "%s.%s".format(p, n)
+    case _ => "unknown"
   }
-  def filter(f: String => Boolean): ListConfig = ListConfig(
-    source.filter(f(_))
-  )
-  def nonEmpty: ListConfig = filter(_.nonEmpty)
-  def map[T](f: String => T): List[T] = {
-    source.map(f(_))
+  override def getMessage(): String =
+    "%s is of the wrong format and could not be converted to a %s value: %s".format(path, vtype, message)
+}
+case class CompoundFormatException(previous: ConfigFormatException, next: ConfigFormatException)
+  extends ConfigFormatException("", "", "", "")
+{
+  protected val underlying: Seq[ConfigFormatException] = previous match {
+    case cfe@CompoundFormatException(_, _) => cfe.underlying ++ Seq(next)
+    case _ => Seq(previous, next)
   }
-  def toSet = source.toSet
+  override def getMessage(): String =
+    "Multiple conversion errors caught: %s".format(underlying.map(_.getMessage).mkString(", "))
 }
-
-case class StringConfig(source: String) extends ConfigType[String] {
-  def split(token: String) = ListConfig(source.split(token).toList)
-  def toUpperCase = StringConfig(source.toUpperCase)
-  def trim = StringConfig(source.trim)
-  override def toString: String = source
-}
+case class BooleanFormatException(rootKey: String, name: String, message: String)
+  extends ConfigFormatException(rootKey, name, message, "boolean")
+case class IntegerFormatException(rootKey: String, name: String, message: String)
+  extends ConfigFormatException(rootKey, name, message, "integer")
+case class SetFormatException(rootKey: String, name: String, message: String)
+  extends ConfigFormatException(rootKey, name, message, "set")
+case class StringFormatException(rootKey: String, name: String, message: String)
+  extends ConfigFormatException(rootKey, name, message, "string")
 
 trait Config {
   def source: Map[String,String] = Map.empty
-  def get(name: String): Option[Configuration] = source match {
-    case usePlay if usePlay.isEmpty =>
-      Play.maybeApplication.map { app =>
-        app.configuration.getConfig(name)
-      }.getOrElse(None)
-    case useSource =>
-      Configuration.from(useSource).getConfig(name)
-  }
+
+  def get(name: String): Option[Configuration] = get().flatMap(_.getConfig(name))
   def get(): Option[Configuration] = source match {
     case usePlay if usePlay.isEmpty =>
       Play.maybeApplication.map(_.configuration)
@@ -52,23 +48,49 @@ trait Config {
       Some(Configuration.from(useSource))
   }
 
-  def getString(key: String, default: String): StringConfig = {
-    StringConfig(get().flatMap(_.getString(key)).getOrElse(default))
+  @throws(classOf[ConfigFormatException])
+  def getString(name: String, default: String): String = expectString(name = name) {
+    get().flatMap(_.getString(name)).getOrElse(default)
   }
-  def getString(name: String, key: String, default: String): StringConfig = {
-    StringConfig(get(name).flatMap(_.getString(key)).getOrElse(default))
-  }
-
-  def getBoolean(key: String): Option[Boolean] = {
-    get().flatMap(_.getBoolean(key))
-  }
-  def getBoolean(name: String, key: String): Option[Boolean] = {
-    get(name).flatMap(_.getBoolean(key))
+  @throws(classOf[ConfigFormatException])
+  def getString(rootKey: String, name: String, default: String): String = expectString(rootKey, name) {
+    get(rootKey).flatMap(_.getString(name)).getOrElse(default)
   }
 
-  def getStringSet(name: String, key: String, default: Option[String] = None, upcase: Boolean = true): Set[String] = {
+  @throws(classOf[ConfigFormatException])
+  def getBoolean(name: String): Option[Boolean] = expectBool(name = name) {
+    get().flatMap(_.getBoolean(name))
+  }
+  @throws(classOf[ConfigFormatException])
+  def getBoolean(rootKey: String, name: String): Option[Boolean] = expectBool(rootKey, name) {
+    get(rootKey).flatMap(_.getBoolean(name))
+  }
+
+  @throws(classOf[ConfigFormatException])
+  def getInt(name: String): Option[Int] = expectInt(name = name) {
+    get().flatMap(_.getInt(name))
+  }
+  @throws(classOf[ConfigFormatException])
+  def getInt(rootKey: String, name: String): Option[Int] = expectInt(rootKey, name) {
+    get(rootKey).flatMap(_.getInt(name))
+  }
+
+  @throws(classOf[ConfigFormatException])
+  def getStringSet(
+    rootKey: String,
+    name: String,
+    default: Option[String] = None,
+    upcase: Boolean = true
+  ): Set[String] = expectSet(rootKey, name) {
     val ds = default.getOrElse("")
-    getString(name, key, ds).split(",").clean(upcase).toSet
+    val cleaned = cleanStrings(getString(rootKey, name, ds).split(","))
+    upcaseStrings(cleaned, upcase).toSet
+  }
+
+  protected def cleanStrings(seq: Seq[String]): Seq[String] = seq.map(_.trim).filter(_.nonEmpty)
+  protected def upcaseStrings(seq: Seq[String], upcase: Boolean) = upcase match {
+    case true => seq.map(_.toUpperCase)
+    case false => seq
   }
 
   def toMap(): Map[String,String] = {
@@ -80,18 +102,36 @@ trait Config {
     get(name).map(cfg => cfg.keys.map(k => k -> cfg.getString(k).get).toMap)
       .getOrElse(Map.empty)
   }
+
+  protected def expectBool[A](rootKey: String = "", name: String = "")(f: => A): A =
+    handleFormatException(rootKey, name, BooleanFormatException(rootKey, name, _), f)
+  protected def expectInt[A](rootKey: String = "", name: String = "")(f: => A): A =
+    handleFormatException(rootKey, name, IntegerFormatException(rootKey, name, _), f)
+  protected def expectSet[A](rootKey: String = "", name: String = "")(f: => A): A =
+    handleFormatException(rootKey, name, SetFormatException(rootKey, name, _), f)
+  protected def expectString[A](rootKey: String = "", name: String = "")(f: => A): A =
+    handleFormatException(rootKey, name, StringFormatException(rootKey, name, _), f)
+  protected def handleFormatException[A](
+    rootKey: String, name: String, ex: String => ConfigFormatException, f: => A
+  ): A = try {
+    f
+  } catch {
+    case currentException: ConfigFormatException =>
+      throw CompoundFormatException(currentException, ex("exception already thrown"))
+    case e => throw ex(e.getMessage)
+  }
+}
+
+case class ConfigImpl(src: Map[String,String]) extends Config {
+  override def source = src
 }
 
 object Config extends Config {
 
-  def apply(src: Map[String,String]) = {
-    new Config {
-      override def source = src
-    }
-  }
+  def apply(src: Map[String,String]): Config = ConfigImpl(src)
 
-  def statusAsSet(name: String, key: String, default: String = ""): Set[Int] = {
-    getString(name, key, default).split(",").clean.map { name =>
+  def statusAsSet(rootKey: String, name: String, default: String = ""): Set[Int] = {
+    cleanStrings(getString(rootKey, name, default).split(",")).map { name =>
       Status.findByName(name).map(_.id).getOrElse(-1)
     }.toSet[Int]
   }

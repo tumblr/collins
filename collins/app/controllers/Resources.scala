@@ -55,6 +55,10 @@ trait Resources extends Controller {
     PageParams(page, size, sort), operation, Permissions.Resources.Find, this
   )
 
+  /* def intake2(id: Long, stage: Int = 1) = IntakeAction(
+    id, stage, Permissions.Resources.Intake, this
+  ) */
+
   /**
    * Manage 4 stage asset intake process
    */

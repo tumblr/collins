@@ -4,23 +4,25 @@ import play.api.{Play, Plugin, Logger}
 import com.tumblr.play.{Power, PowerAction, PowerManagement => PowerMgmt}
 import models.{Asset, AssetType, Status}
 
-trait PowerManagementConfig extends Config {
-  val ConfigKey = "powermanagement"
+trait PowerManagementConfig extends FeatureConfigSkinny {
+  override val rootKey: String = "powermanagement"
+
   lazy val DisallowedAssetStates: Set[Int] = Config.statusAsSet(
-    ConfigKey, "disallowStatus", Status.statusNames.mkString(",")
+    rootKey, "disallowStatus", Status.statusNames.mkString(",")
   )
 
   lazy val DisallowedWhenAllocated: Set[PowerAction] =
-    getString(ConfigKey, "disallowWhenAllocated", "")
-      .split(",").clean.toSet.map { a => Power(a) }
+    feature("disallowWhenAllocated").toSet.map(a => Power(a))
 
   lazy val AllowedAssetTypes: Set[Int] =
-    getString(ConfigKey,"allowAssetTypes","SERVER_NODE")
-      .split(",").clean
-      .map(name => AssetType.Enum.withName(name).id)
-      .toSet;
+    feature("allowAssetTypes").ifSet { f =>
+      f.toSet
+    }.getOrElse(Set("SERVER_NODE"))
+      .map(name => AssetType.findByName(name))
+      .filter(_.isDefined)
+      .map(_.get.id)
 
-  object Messages extends MessageHelper(ConfigKey) {
+  object Messages extends MessageHelper(rootKey) {
     def assetStateAllowed(a: Asset) = message("disallowStatus", a.getStatus().name)
     def actionAllowed(p: PowerAction) = message("disallowWhenAllocated", p.toString)
     def assetTypeAllowed(a: Asset) = message("allowAssetTypes", a.getType().name)

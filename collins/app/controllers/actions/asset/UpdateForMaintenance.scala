@@ -39,17 +39,14 @@ case class UpdateForMaintenanceAction(
   )
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
-    val asset = assetFromTag(assetTag)
-
-    if (!asset.isDefined) {
-      Left(assetNotFound(assetTag))
-    } else if (!params.isDefined) {
-      Left(RequestDataHolder.error400("status and reason parameters must be specified"))
-    } else if (params.get.isError) {
-      Left(RequestDataHolder.error400("invalid status specified"))
-    } else {
-      setAsset(asset)
-      Right(params.get)
+    withValidAsset(assetTag) { asset =>
+      if (!params.isDefined) {
+        Left(RequestDataHolder.error400("status and reason parameters must be specified"))
+      } else if (params.get.isError) {
+        Left(RequestDataHolder.error400("invalid status specified"))
+      } else {
+        Right(params.get)
+      }
     }
   }
 
