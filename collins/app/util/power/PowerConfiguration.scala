@@ -12,6 +12,7 @@ case class PowerConfiguration(
   if (unitsRequired > 0) {
     val (empty, nonEmpty) = _components.partition(_.trim.isEmpty)
     require(empty.size == 0, ComponentsUnspecified)
+    require(nonEmpty.size != 0, ComponentsUnspecified)
     val (trimmed, ok) = _components.partition(s => s.trim != s)
     require(trimmed.size == 0, ComponentInvalid(trimmed.head))
   }
