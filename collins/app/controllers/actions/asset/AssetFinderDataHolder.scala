@@ -29,7 +29,7 @@ case class AssetFinderDataHolder(
   details: Option[Truthy]
 ) extends RequestDataHolder
 
-object AssetFinderDataHolder extends MessageHelper("assetfinder") {
+object AssetFinderDataHolder extends MessageHelper("assetfinder") with AttributeHelper {
   protected[this] val logger = Logger.logger
 
   val Operations = Set("and","or")
@@ -89,32 +89,24 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") {
     val (
       tag, attributes, operation, astatus, atype, details, cafter, cbefore, uafter, ubefore
     ) = form
-    val attribs = attributes.filter(_.nonEmpty).orElse(data.get("attribute").map(_.toList))
+    val attribs = AttributeResolver(mapAttributes(attributes, AttributeMap.fromMap(data)))
     val afinder = AssetFinder(tag, astatus, atype, cafter, cbefore, uafter, ubefore)
     AssetFinderDataHolder(
       afinder,
-      resolveAttributes(attribs),
+      attribs,
       cleanedOperation(operation),
       details
     )
   }
 
-  protected def resolveAttributes(attributes: Option[List[String]]): ResolvedAttributes = {
-    attributes.foreach { list =>
-      list.find(!_.contains(";")).headOption.foreach { s =>
-        throw new Exception(message("attribute.invalid", s))
-      }
-    }
-    val attributeMap = AttributeResolver.listToMap(attributes.getOrElse(List()))
-    AttributeResolver(attributeMap)
-  }
+  override def invalidAttributeMessage(s: String) = message("attribute.invalid", s)
 
   protected def isValidOperation(s: String) = Operations.contains(s.toLowerCase)
 
   protected def fieldError(f: Form[_]) = f match {
     case e if e.error("tag").isDefined => message("tag.invalid")
     case e if e.error("type").isDefined => message("type.invalid")
-    case e if e.error("status").isDefined => message("status.invalid")
+    case e if e.error("status").isDefined => rootMessage("asset.status.invalid")
     case e if e.error("createdAfter").isDefined => dateError("createdAfter")
     case e if e.error("createdBefore").isDefined => dateError("createdBefore")
     case e if e.error("updatedAfter").isDefined => dateError("updatedAfter")

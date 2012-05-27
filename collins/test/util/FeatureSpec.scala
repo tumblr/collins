@@ -13,12 +13,12 @@ class FeatureSpec extends Specification with Mockito {
   "Feature Configurations" should {
     "Implement" in {
       "isSet" in {
-        Feature("foo", source = Map("features.foo" -> "true")).isSet must beTrue
-        Feature("bar", source = Map("features.foo" -> "true")).isSet must beFalse
+        Feature("foo", source = Map("features.foo" -> "stuff")).isSet must beTrue
+        Feature("bar", source = Map("features.foo" -> "stuff")).isSet must beFalse
       }
       "isUnset" in {
-        Feature("foo", source = Map("features.foo" -> "true")).isUnset must beFalse
-        Feature("bar", source = Map("features.foo" -> "true")).isUnset must beTrue
+        Feature("foo", source = Map("features.foo" -> "stuff")).isUnset must beFalse
+        Feature("bar", source = Map("features.foo" -> "stuff")).isUnset must beTrue
       }
       "enabled" in {
         Feature("foo", source = Map("features.foo" -> "true")).enabled must beTrue
@@ -66,13 +66,33 @@ class FeatureSpec extends Specification with Mockito {
         Feature("foo", source = Map("features.stuff" -> "thing")).toSet must be empty
       }
     } // Convert
-    "Handle" in {
-      "Bad data" in {
-        Feature("foo", source = Map("features.foo" -> "lkajsd")).isSet must throwA[Exception]
-        Feature("foo", source = Map("features.foo" -> "lkajsd")).enabled must throwA[Exception]
+    "Handle Bad Data" in {
+      "BooleanFormat" in {
+        Feature("foo", source = Map("features.foo" -> "lkajsd")).enabled must throwA[BooleanFormatException]
+      }
+      "IntegerFormat" in {
+        Feature("foo", source = Map("features.foo" -> "lkasjd")).toInt(23) must throwA[IntegerFormatException]
+      }
+      "SetFormat" in {
+        Feature("foo", source = Map("features=foo" -> "s")).toSet must throwA[CompoundFormatException]
+      }
+      "StringFormat" in {
+        Feature("foo", source = Map("features=foo" -> "s")).getString("") must throwA[StringFormatException]
       }
     } // Handle in
     "Provide a fluid interface" in {
+      "ifSet" in {
+        "is true" in {
+          Feature("foo", source = Map("features.foo" -> "23")).ifSet { f =>
+            f.toInt(-1)
+          }.getOrElse(17) mustEqual 23
+        }
+        "is false" in {
+          Feature("foo", source = Map("features.bar" -> "19")).ifSet { f =>
+            f.toInt(-1)
+          }.getOrElse(17) mustEqual 17
+        }
+      }
       "whenEnabled is true" in new mockfeature {
         Feature("foo", source = Map("features.foo" -> "true")).whenEnabled {
           featureMock.verified

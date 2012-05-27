@@ -12,6 +12,7 @@ import scala.transient
 trait ValidatedEntity[T] extends KeyedEntity[T] {
   def validate(): Unit
   def asJson: String
+  // I wish I had created a note as to why this is needed
   @transient private var persisted: Option[Boolean] = None
   def forComparision {
     persisted = Some(false)
