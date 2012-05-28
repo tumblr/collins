@@ -40,18 +40,16 @@
     </div>
     @inputText(f(RackPosition.toString), '_label -> "Rack Position", 'autocomplete -> "off", Symbol("enter-style") -> "tab", 'class -> "focus")
     @getPowerComponentsInOrder.map { component =>
-      @inputText(f(component.key), '_label -> component.label, 'autocomplete -> "off", Symbol("enter-style") -> "tab")
+    @inputText(f(component.key), '_help -> "Value Required", '_label -> component.label, 'autocomplete -> "off", Symbol("enter-style") -> "tab")
     }
     @f.globalError.map { error =>
       <div class="alert-message error">
         <strong>Unable to intake node</strong> @error.message
       </div>
     }
-    <div class="clearfix">
-      <input type="hidden" name="stage" value="3">
-    </div>
     <div class="actions">
       <input type="submit" class="btn primary" value="Done &rarr;">
+      <input type="hidden" name="stage" value="3">
       <a class="btn" href="@app.routes.Resources.intake(asset.getId, 1)">Cancel</a>
     </div>
     }

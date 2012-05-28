@@ -1,7 +1,7 @@
 package util
 package power
 
-case class InvalidPowerConfigurationException(message: String) extends RuntimeException(message)
+case class InvalidPowerConfigurationException(message: String, key: Option[String] = None) extends RuntimeException(message)
 
 case class PowerConfiguration(
   unitsRequired: Int,

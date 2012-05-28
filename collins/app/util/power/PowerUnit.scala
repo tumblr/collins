@@ -57,7 +57,10 @@ object PowerUnits extends Iterable[PowerUnit] {
     (for (unit <- units; component <- unit if (component.isRequired || values.get(component.key).isDefined)) yield
       values.get(component.key)
         .map(AssetMetaValue(asset, component.meta, unit.id, _))
-        .getOrElse(throw InvalidPowerConfigurationException(component.missingData))).toSeq
+        .getOrElse(
+          throw InvalidPowerConfigurationException(component.missingData, Some(component.key))
+        )
+    ).toSeq
 
   // Given a map of power components and values, ensure the specified configuration is valid
   // An exception is thrown if the specified configuration is invalid
@@ -85,11 +88,15 @@ object PowerUnits extends Iterable[PowerUnit] {
       if (pcRequired && !pcValue.isDefined)
         throw InvalidPowerConfigurationException(ValidationMissingRequired(
           pcName, pcKey
-        ))
+        ), Some(pcKey))
       else if (pcRequired && pcUnique && seen(pcName, pcValue.get))
         throw InvalidPowerConfigurationException(ValidationNonUnique(
           pcName, pcValue.get
-        ))
+        ), Some(pcKey))
+      else if (pcRequired && pcValue.get.trim.isEmpty)
+        throw InvalidPowerConfigurationException(ValidationMissingRequired(
+          pcName, pcKey
+        ), Some(pcKey))
     }}
   }
 

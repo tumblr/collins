@@ -38,8 +38,9 @@ case class IntakeStage2Action(
 
   override def execute(rd: RequestDataHolder) = rd match {
     case ActionDataHolder(chassisTag) =>
+      val form = IntakeStage3Action.formFromChassisTag(chassisTag)
       Status.Ok(
-        Stage3Template(definedAsset, IntakeStage3Action.dataForm)(flash, request)
+        Stage3Template(definedAsset, form)(flash, request)
       )
   }
 

@@ -6,11 +6,13 @@ import asset.ActionAttributeHelper
 import models.AssetLifecycle
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
 import util.{MessageHelperI, SecuritySpecification}
-import util.power.PowerUnits
+import util.power.{InvalidPowerConfigurationException, PowerUnits}
 import validators.ParamValidation
 
-import play.api.data.Form
+import play.api.data.{Form, FormError}
 import play.api.data.Forms._
+
+import java.util.concurrent.atomic.AtomicReference
 import scala.util.control.Exception.allCatch
 
 trait IntakeStage3Form extends ParamValidation {
@@ -22,6 +24,9 @@ trait IntakeStage3Form extends ParamValidation {
     ChassisTag.toString -> validatedText(1),
     RackPosition.toString -> validatedText(1)
   ))
+  def formFromChassisTag(tag: String) = dataForm.bind(Map(
+    ChassisTag.toString -> tag
+  )).copy(errors = Nil)
 }
 object IntakeStage3Action extends IntakeStage3Form
 
@@ -35,6 +40,9 @@ case class IntakeStage3Action(
     with ActionAttributeHelper
 {
 
+  protected val form = new AtomicReference[Form[DataForm]](dataForm)
+
+  case object ActionError extends RequestDataHolder
   case class ActionDataHolder(
     chassisTag: String,
     rackPosition: String,
@@ -45,25 +53,27 @@ case class IntakeStage3Action(
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = super.validate() match {
     case Right(_) =>
-      dataForm.bindFromRequest()(request).fold(
-        error => Left(RequestDataHolder.error400(fieldError(error))),
-        success => {
-          val (chassisTag, rackPosition) = success
-          verifyChassisTag(chassisTag) match {
-            case Right(ctag) => validate(ctag, rackPosition)
-            case Left(rdh) => Left(rdh)
-          }
+      val boundForm = dataForm.bindFromRequest()(request)
+      form.set(boundForm)
+      if (boundForm.hasErrors)
+        Left(ActionError)
+      else {
+        val (chassisTag, rackPosition) = boundForm.get
+        verifyChassisTag(chassisTag) match {
+          case Right(ctag) => validate(ctag, rackPosition)
+          case Left(rdh) => updateFormErrors(rdh.toString)
         }
-      )
+      }
     case left => left
   }
 
   override def execute(rd: RequestDataHolder) = rd match {
     case ActionDataHolder(chassisTag, rackPosition, powerMap) =>
-      val updateMap = Map(
+      val basicMap = Map(
         ChassisTag.toString -> chassisTag,
         RackPosition.toString -> rackPosition
-      ) ++ powerMap
+      )
+      val updateMap = basicMap ++ powerMap
       AssetLifecycle.updateAsset(definedAsset, updateMap) match {
         case Left(error) =>
           handleError(RequestDataHolder.error400(error.getMessage))
@@ -78,21 +88,34 @@ case class IntakeStage3Action(
       }
   }
 
-  override def handleWebError(rd: RequestDataHolder) = Some(Status.Ok(
-    Stage3Template(definedAsset, dataForm)(flash + ("error", rd.toString), request)
-  ))
+  override def handleWebError(rd: RequestDataHolder) = rd match {
+    case ActionError =>
+      Some(Status.Ok(Stage3Template(definedAsset, form.get)(flash, request)))
+    case _ => // if parent validation fails or execution (after validation)
+      updateFormErrors(rd.toString)
+      Some(Status.Ok(Stage3Template(definedAsset, form.get)(flash, request)))
+  }
 
   protected def validate(chassisTag: String, rackPosition: String): Validation = try {
     val pmap = PowerUnits.unitMapFromMap(getInputMap)
     PowerUnits.validateMap(pmap)
     Right(ActionDataHolder(chassisTag, cleanString(rackPosition).get, pmap))
   } catch {
-    case error => Left(RequestDataHolder.error400(error.getMessage))
+    case InvalidPowerConfigurationException(message, Some(key)) =>
+      updateFormErrors(message, key)
+    case error =>
+      updateFormErrors(error.getMessage)
   }
 
-  protected def fieldError(f: Form[_]) = f match {
-    case e if e.error(ChassisTag.toString).isDefined => rootMessage("asset.update.chassisTag.invalid")
-    case e if e.error(RackPosition.toString).isDefined => rootMessage("asset.update.rackPosition.invalid")
-    case other => "Unexpected error occurred"
+  private def updateFormErrors(message: String, key: String = "") = {
+    val f = form.get
+    val fErrors = f.errors ++ Seq(FormError(key, message, Nil))
+    val fData =
+      if (key.nonEmpty)
+        f.data - key
+      else
+        f.data
+    form.set(f.copy(errors = fErrors, data = fData))
+    Left(ActionError)
   }
 }
