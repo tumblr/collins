@@ -10,6 +10,7 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
   def id: Int // the id of the power unit
   // the position of the component within a unit, not physical position, this has to do with ordering during display
   def position: Int 
+  def value: Option[String] // value of the power component
 
   def label = PowerConfiguration.Messages.ComponentLabel(typeName, sid)
   def meta: AssetMeta = AssetMeta.findOrCreateFromName(identifier)
@@ -41,5 +42,5 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
 }
 
 case class PowerComponentValue(
-  componentType: Symbol, config: PowerConfiguration, id: Int, position: Int
+  componentType: Symbol, config: PowerConfiguration, id: Int, position: Int, value: Option[String] = None
 ) extends PowerComponent

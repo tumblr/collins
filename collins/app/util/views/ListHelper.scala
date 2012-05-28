@@ -14,10 +14,13 @@ object ListHelper {
       assets.items.find(asset => plugin.isSoftLayerAsset(asset)).map(_ => true).getOrElse(false)
     }.getOrElse(false)
   }
-  def getPowerComponentsInOrder(): Seq[PowerComponent] = {
-    val components = PowerUnits().flatMap { unit =>
+  def getPowerComponentsInOrder(units: PowerUnits): Seq[PowerComponent] = {
+    val components = units.flatMap { unit =>
       unit.components
     }
     components.toSeq.sorted
+  }
+  def getPowerComponentsInOrder(): Seq[PowerComponent] = {
+    getPowerComponentsInOrder(PowerUnits())
   }
 }
