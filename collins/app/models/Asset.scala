@@ -226,16 +226,16 @@ object Asset extends Schema with AnormAdapter[Asset] {
       power.toList.map { unit =>
         JsObject(
           Seq(
-            "unitId" -> JsNumber(unit.id),
-            "units" -> JsArray(unit.toList.map { component =>
+            "UNIT_ID" -> JsNumber(unit.id),
+            "UNITS" -> JsArray(unit.toList.map { component =>
               JsObject(Seq(
-                "key" -> JsString(component.key),
-                "value" -> JsString(component.value.getOrElse("Unspecified")),
-                "type" -> JsString(component.identifier),
-                "label" -> JsString(component.label),
-                "position" -> JsNumber(component.position),
-                "isRequired" -> JsBoolean(component.isRequired),
-                "isUnique" -> JsBoolean(component.isUnique)
+                "KEY" -> JsString(component.key),
+                "VALUE" -> JsString(component.value.getOrElse("Unspecified")),
+                "TYPE" -> JsString(component.identifier),
+                "LABEL" -> JsString(component.label),
+                "POSITION" -> JsNumber(component.position),
+                "IS_REQUIRED" -> JsBoolean(component.isRequired),
+                "UNIQUE" -> JsBoolean(component.isUnique)
               ))
             })
           )

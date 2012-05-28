@@ -93,11 +93,11 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         val amf = AssetMeta.findByName("FOO")
         getAsset() must haveJsonData.which { txt =>
           txt must /("data") */("ASSET")/("STATUS" -> "Unallocated")
+          txt must /("data") */("POWER") */("UNITS") */("TYPE" -> "POWER_PORT")
+          txt must /("data") */("POWER") */("UNITS") */("VALUE" -> "PORT 0")
+          txt must /("data") */("POWER") */("UNITS") */("TYPE" -> "POWER_OUTLET")
+          txt must /("data") */("POWER") */("UNITS") */("VALUE" -> "OUTLET 0")
           txt must /("data") */("ATTRIBS") */("0") */("RACK_POSITION" -> "rack 1")
-          txt must /("data") */("ATTRIBS") */("0") */("POWER_PORT" -> "PORT 0")
-          txt must /("data") */("ATTRIBS") */("1") */("POWER_PORT" -> "PORT 1")
-          txt must /("data") */("ATTRIBS") */("0") */("POWER_OUTLET" -> "OUTLET 0")
-          txt must /("data") */("ATTRIBS") */("1") */("POWER_OUTLET" -> "OUTLET 1")
           txt must /("data") */("ATTRIBS") */("0") */("FOO" -> "bar")
           txt must /("data") */("ATTRIBS") */("0") */("FIZZ" -> "buzz")
         }
