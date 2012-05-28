@@ -18,7 +18,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   override def onStart(app: Application) {
     verifyConfiguration(app.configuration)
     setupLogging(app)
-    // FIXME Run evolutions if needed
     val auth = app.configuration.getConfig("authentication") match {
       case None => AuthenticationProvider.Default
       case Some(config) => config.getString("type", Some(AuthenticationProvider.Types)) match {
