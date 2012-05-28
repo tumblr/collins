@@ -13,13 +13,15 @@ class PowerUnitSpec extends test.ApplicationSpecification with DataTables {
   val Outlet = 'OUTLET
   val Pdu = 'PDU
   val DefaultComponents = Set(Strip.name, Outlet.name, Pdu.name)
+  val DefaultRequires = Set(Strip.name)
 
   case class PowerUnitScope(
     components: Set[String] = DefaultComponents,
     count: Int = DefaultUnitsRequired,
-    alphabetic: Boolean = true
+    alphabetic: Boolean = true,
+    requires: Set[String] = DefaultRequires
   ) extends Scope {
-    lazy val config = PowerConfiguration(count, alphabetic, components)
+    lazy val config = PowerConfiguration(count, alphabetic, components, requires)
     def units(): PowerUnits = PowerUnits(config)
     def ids() = units.flatMap(_.components.map(_.sid))
     def strip(s: PowerUnit) = s.component(Strip).get
@@ -41,7 +43,7 @@ class PowerUnitSpec extends test.ApplicationSpecification with DataTables {
       (count, throwsException) =>
         val config = new PowerUnitScope(count = count)
         if (throwsException) {
-          config.config must throwA[IllegalArgumentException]
+          config.config must throwA[InvalidPowerConfigurationException]
         } else {
           config.config.unitsRequired mustEqual count
         }
@@ -54,9 +56,9 @@ class PowerUnitSpec extends test.ApplicationSpecification with DataTables {
       "pdus"    !! Pdu.name    |> {
       (name, symbolName) =>
         val symbol = Symbol(symbolName)
-        val enabled = new PowerUnitScope()
+        val enabled = new PowerUnitScope(requires = Set())
         enabled.size(symbol) mustEqual DefaultUnitsRequired
-        val disabled = new PowerUnitScope(components = DefaultComponents - symbolName)
+        val disabled = new PowerUnitScope(components = DefaultComponents - symbolName, requires = Set())
         disabled.size(symbol) mustEqual 0
       }
     }
@@ -67,7 +69,7 @@ class PowerUnitSpec extends test.ApplicationSpecification with DataTables {
       Set(Strip.name, " ", Outlet.name)     |> {
       (inputSet) =>
         val config = new PowerUnitScope(components = inputSet)
-        config.config must throwA[IllegalArgumentException].like {
+        config.config must throwA[InvalidPowerConfigurationException].like {
           case e => e.getMessage must contain(PowerConfiguration.Messages.ComponentsUnspecified)
         }
       }
@@ -149,6 +151,49 @@ class PowerUnitSpec extends test.ApplicationSpecification with DataTables {
       val unshuffled = PowerUnits(shuffled)
       val powerIds = for (unit <- unshuffled; component <- unit) yield(unit.id)
       powerIds must contain(0, 1, 2, 3, 4, 5, 6, 7, 8, 9).only.inOrder
+    }
+  }
+
+  "Power Unit Validation" should {
+    type ComponentKeys = Tuple6[String,String,String,String,String,String]
+    def componentKeys(cfg: PowerUnitScope, unit1: PowerUnit, unit2: PowerUnit): ComponentKeys = {
+      (
+        cfg.strip(unit1).key, cfg.outlet(unit1).key, cfg.pdu(unit1).key,
+        cfg.strip(unit2).key, cfg.outlet(unit2).key, cfg.pdu(unit2).key
+      )
+    }
+    def mapFromKeys(keys: ComponentKeys): Map[String,String] = {
+      val (u1sk, u1ok, u1pk, u2sk, u2ok, u2pk) = keys
+      Map(
+        u1sk -> "strip 1",
+        u1ok -> "outlet 1",
+        u1pk -> "pdu 1",
+        u2sk -> "strip 2",
+        u2ok -> "outlet 2",
+        u2pk -> "pdu 2"
+      )
+    }
+    "fail if required components are missing" in new PowerUnitScope() {
+      val ck = componentKeys(this, PowerUnit(config, 0), PowerUnit(config, 1))
+      val (u1sk, u1ok, u1pk, u2sk, u2ok, u2pk) = ck
+      val map = mapFromKeys(ck) - u2ok
+      PowerUnits.validateMap(map, config) must throwA[InvalidPowerConfigurationException].like {
+        case InvalidPowerConfigurationException(msg) => msg must contain("OUTLET")
+      }
+    }
+    "fail if duplicate values on a unique component are found" in new PowerUnitScope() {
+      val ck = componentKeys(this, PowerUnit(config, 0), PowerUnit(config, 1))
+      val (u1sk, u1ok, u1pk, u2sk, u2ok, u2pk) = ck
+      val map = mapFromKeys(ck) + (u2sk -> "strip 1")
+      PowerUnits.validateMap(map, config) must throwA[InvalidPowerConfigurationException].like {
+        case InvalidPowerConfigurationException(msg) => msg must contain("STRIP")
+      }
+    }
+    "succeed when all is cool" in new PowerUnitScope() {
+      val ck = componentKeys(this, PowerUnit(config, 0), PowerUnit(config, 1))
+      val (u1sk, u1ok, u1pk, u2sk, u2ok, u2pk) = ck
+      val map = mapFromKeys(ck)
+      PowerUnits.validateMap(map, config) must not throwA
     }
   }
 
