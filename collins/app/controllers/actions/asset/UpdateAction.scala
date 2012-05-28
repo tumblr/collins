@@ -82,6 +82,7 @@ case class UpdateAction(
           if (groupId.isDefined) results("groupId") = groupId.get.toString
           // powerMap has dynamic keys based on configuration
           val powerMap = PowerUnits.unitMapFromMap(getInputMap)
+          // FIXME we should merge the power map with existing power values and rerun power validation
           val dh = ActionDataHolder((results ++ powerMap).toMap)
           Right(dh)
         }
