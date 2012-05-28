@@ -2,6 +2,7 @@ package models
 
 import conversions._
 import util.{Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.power.PowerUnits
 import util.views.Formatter.dateFormat
 
 import play.api.Logger
@@ -73,8 +74,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
     val ipmi = IpmiInfo.findByAsset(this)
     val addresses = IpAddresses.findAllByAsset(this)
-    val filtered: Seq[MetaWrapper] = mvs2.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
-    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, filtered)
+    val (powerRep, mvs3) = PowerHelper.reconstruct(this, mvs2)
+    val filtered: Seq[MetaWrapper] = mvs3.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
+    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
   }
 }
 
@@ -206,7 +208,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     Page(results, params.page, params.offset, totalCount)
   }
 
-  case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], mvs: Seq[MetaWrapper]) {
+  case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], power: PowerUnits, mvs: Seq[MetaWrapper]) {
     def exposeCredentials(showCreds: Boolean = false) = {
       this.copy(ipmi = this.ipmi.map { _.withExposedCredentials(showCreds) })
           .copy(mvs = this.metaValuesWithExposedCredentials(showCreds))
@@ -220,6 +222,27 @@ object Asset extends Schema with AnormAdapter[Asset] {
       }
     }
 
+    def formatPowerUnits = JsArray(
+      power.toList.map { unit =>
+        JsObject(
+          Seq(
+            "unitId" -> JsNumber(unit.id),
+            "units" -> JsArray(unit.toList.map { component =>
+              JsObject(Seq(
+                "key" -> JsString(component.key),
+                "value" -> JsString(component.value.getOrElse("Unspecified")),
+                "type" -> JsString(component.identifier),
+                "label" -> JsString(component.label),
+                "position" -> JsNumber(component.position),
+                "isRequired" -> JsBoolean(component.isRequired),
+                "isUnique" -> JsBoolean(component.isUnique)
+              ))
+            })
+          )
+        )
+      }
+    )
+
     def toJsonObject(): JsObject = {
       val ipmiMap = ipmi.map { info =>
         info.forJsonObject
@@ -230,6 +253,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         "LLDP" -> JsObject(lldp.forJsonObject),
         "IPMI" -> JsObject(ipmiMap),
         "ADDRESSES" -> JsArray(addresses.toList.map(j => JsObject(j.forJsonObject()))),
+        "POWER" -> formatPowerUnits,
         "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map { case(groupId, mv) =>
           groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) })
         }.toSeq)

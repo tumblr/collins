@@ -7,11 +7,17 @@ import models.{Asset, AssetMetaValue}
 import collection.immutable.SortedSet
 import collection.mutable.HashSet
 
-case class PowerUnit(config: PowerConfiguration, id: Int) extends Ordered[PowerUnit] with Iterable[PowerComponent] {
-  val components: PowerComponents =
-    config.components.zipWithIndex.map { case(componentType, position) =>
-      PowerComponentValue(componentType, config, id, position)
-    }
+object PowerUnit {
+  def apply(config: PowerConfiguration, id: Int): PowerUnit = {
+    val components: PowerComponents =
+      config.components.zipWithIndex.map { case(componentType, position) =>
+        PowerComponentValue(componentType, config, id, position)
+      }
+    new PowerUnit(config, id, components)
+  }
+}
+
+case class PowerUnit(config: PowerConfiguration, id: Int, components: PowerComponents) extends Ordered[PowerUnit] with Iterable[PowerComponent] {
 
   def component(componentType: Symbol): Option[PowerComponent] = {
     components.find(_.componentType == componentType)
