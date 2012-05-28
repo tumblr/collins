@@ -20,6 +20,7 @@ The requirements of the PowerConfiguration are specified by:
    * `powerconfiguration.unitsRequired=INT` - e.g. 2
    * `powerconfiguration.unitComponents=LIST` - e.g. "STRIP,OUTLET"
    * `powerconfiguration.useAlphabeticNames=BOOL` - e.g. true
+   * `powerconfiguration.uniqueComponents=LIST` - e.g. "STRIP"
  * `conf/messages`
    * `powerconfiguration.unit.strip.label` - e.g. Plug Strip {0}
    * `powerconfiguration.unit.outlet.label` - e.g. Outlet {0}
@@ -27,10 +28,12 @@ The requirements of the PowerConfiguration are specified by:
    * `powerconfiguration.unitsRequired.range` - e.g. unitsRequired must be between 0 and 18
    * `powerconfiguration.unitComponents.unspecified` - e.g. unitComponents must be specified when unitsRequired is specified
    * `powerconfiguration.unitComponents.invalid` - e.g. Specified unitComponent ''{0}'' is invalid.
+   * `powerconfiguration.uniqueComponents.invalid` - e.g. Specified uniqueComponent ''{0}'' not found in unitComponents
  
 The above `application.conf` specifies that upon intake 2 power units with two power components are
-required for successful intake. That config will cause the following text fields to show up in the
-UI
+required for successful intake. It also specifies that a unit must consist of unique power strips.
+That is, during intake/etc all of the specified power strips must be different. That config will
+cause the following text fields to show up in the UI
 
     Plug Strip A
     Outlet A

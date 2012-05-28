@@ -1,4 +1,4 @@
-@(htype: Help)(implicit flash: Flash, req: Request[AnyContent])
+@(htype: String, args: String*)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util.notice
@@ -13,7 +13,7 @@
     @notice("success")
     @notice("error")
 
-    You're here because something is broken, it's a @htype
+    You're here because something is broken, it's a @Help.getMessage(htype, args:_*).getOrElse("Unknown message")
 
     Until we have real content here, you might check out the
     <a href="http://tumblr.github.com/platform/collinsTutorial/out/index.html">Collins Tutorial</a>

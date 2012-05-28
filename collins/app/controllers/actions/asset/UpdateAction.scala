@@ -6,7 +6,7 @@ import models.{AssetLifecycle, Status => AStatus}
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
 import util.{MessageHelperI, SecuritySpecification}
 import util.power.PowerUnits
-import validators.StringUtil
+import validators.ParamValidation
 
 import forms._
 
@@ -21,9 +21,14 @@ case class UpdateAction(
   assetTag: String,
   spec: SecuritySpecification,
   handler: SecureController
-) extends SecureAction(spec, handler) with AssetAction with ActionAttributeHelper with MessageHelperI {
+) extends SecureAction(spec, handler)
+    with AssetAction
+    with ActionAttributeHelper
+    with MessageHelperI
+    with ParamValidation
+{
 
-  override val parentKey: String = "assetupdate"
+  override val parentKey: String = "asset.update"
 
   case class ActionDataHolder(underlying: Map[String,String])
     extends RequestDataHolder
@@ -48,22 +53,13 @@ case class UpdateAction(
     }
   }
 
-  def optionalText(len: Int) = optional(
-    text(len).verifying { txt =>
-      StringUtil.trim(txt) match {
-        case None => false
-        case Some(v) => v.length >= len
-      }
-    }
-  )
-
   override def invalidAttributeMessage(s: String) = message("attribute.invalid")
 
   lazy val dataForm = Form(tuple(
-    "lshw" -> optionalText(1),
-    "lldp" -> optionalText(1),
-    ChassisTag.toString -> optionalText(1),
-    RackPosition.toString -> optionalText(1),
+    "lshw" -> validatedOptionalText(1),
+    "lldp" -> validatedOptionalText(1),
+    ChassisTag.toString -> validatedOptionalText(1),
+    RackPosition.toString -> validatedOptionalText(1),
     "status" -> optional(of[AStatus.Enum]),
     "groupId" -> optional(longNumber)
   ))

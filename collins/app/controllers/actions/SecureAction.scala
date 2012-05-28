@@ -24,6 +24,8 @@ abstract class SecureAction(
 
   import ActionHelper.DummyRequest
 
+  type Validation = Either[RequestDataHolder,RequestDataHolder]
+
   protected[this] val logger = Logger.logger
 
   val FeatureMessages = util.Feature.Messages
@@ -50,10 +52,16 @@ abstract class SecureAction(
     case u => Some(u)
   }
 
-  def validate(): Either[RequestDataHolder,RequestDataHolder] = {
-    Left(NotImplementedError)
-  }
+  def validateRead(): Option[Validation] = None
+  def validateWrite(): Option[Validation] = None
+  def validateCreate(): Option[Validation] = None
+  def validateDelete(): Option[Validation] = None
+  def validate(): Validation
 
+  def executeRead(rd: RequestDataHolder): Option[Result] = None
+  def executeWrite(rd: RequestDataHolder): Option[Result] = None
+  def executeCreate(rd: RequestDataHolder): Option[Result] = None
+  def executeDelete(rd: RequestDataHolder): Option[Result] = None
   def execute(rd: RequestDataHolder): Result
 
   def handleError(rd: RequestDataHolder): Result = {
@@ -80,6 +88,10 @@ abstract class SecureAction(
   }
 
   protected def isHtml(): Boolean = OutputType.isHtml(request)
+  protected def isReadRequest(): Boolean = request.method == "GET" || request.method == "HEAD"
+  protected def isWriteRequest(): Boolean = request.method == "POST"
+  protected def isCreateRequest(): Boolean = request.method == "PUT"
+  protected def isDeleteRequest(): Boolean = request.method == "DELETE"
 
   private def checkAuthorization(): Either[Result,User] = {
     val path = request.path
@@ -111,9 +123,37 @@ abstract class SecureAction(
     }
   }
 
-  private def run(): Result = validate() match {
-    case Left(error) => handleError(error)
-    case Right(response) => execute(response)
+  private def handleValidation(): Validation = {
+    val validationResults =
+      if (isReadRequest)
+        validateRead()
+      else if (isWriteRequest)
+        validateWrite()
+      else if (isCreateRequest)
+        validateCreate()
+      else if (isDeleteRequest)
+        validateDelete()
+      else
+        None
+    validationResults.getOrElse(validate())
+  }
+  private def handleExecution(rd: RequestDataHolder): Result = {
+    val executionResults =
+      if (isReadRequest)
+        executeRead(rd)
+      else if (isWriteRequest)
+        executeWrite(rd)
+      else if (isCreateRequest)
+        executeCreate(rd)
+      else if (isDeleteRequest)
+        executeDelete(rd)
+      else
+        None
+    executionResults.getOrElse(execute(rd))
+  }
+  private def run(): Result = handleValidation() match {
+    case Left(rd) => handleError(rd)
+    case Right(rd) => handleExecution(rd)
   }
 
 }

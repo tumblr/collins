@@ -8,14 +8,17 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
   def componentType: Symbol
   def config: PowerConfiguration
   def id: Int // the id of the power unit
-  def position: Int // the position of the component within a unit
+  // the position of the component within a unit, not physical position, this has to do with ordering during display
+  def position: Int 
 
-  def label = PowerConfiguration.Messages.ComponentLabel(name, sid)
+  def label = PowerConfiguration.Messages.ComponentLabel(typeName, sid)
   def meta: AssetMeta = AssetMeta.findOrCreateFromName(identifier)
 
   def missingData = PowerConfiguration.Messages.MissingData(key, label)
 
-  final def identifier: String = "POWER_%s".format(name)
+  final def identifier: String = "POWER_%s".format(typeName)
+  final def isRequired: Boolean = true
+  final def isUnique: Boolean = config.uniqueComponents.contains(componentType)
   final def key: String = "%s_%s".format(identifier, sid)
   final def sid: String = config.useAlphabeticNames match {
     case true => (65 + id).toChar.toString
@@ -34,7 +37,7 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
   }
   override def hashCode = id.hashCode + componentType.hashCode
 
-  protected def name: String = componentType.name
+  protected[power] def typeName: String = componentType.name
 }
 
 case class PowerComponentValue(

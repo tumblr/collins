@@ -100,6 +100,20 @@ object Asset extends Schema with AnormAdapter[Asset] {
   )
 
   object Messages extends MessageHelper("asset") {
+    def intakeError(t: String, a: Asset) = "intake.error.%s".format(t.toLowerCase) match {
+      case msg if msg == "intake.error.new" =>
+        messageWithDefault(msg, "Invalid asset status", a.getStatus.name)
+      case msg if msg == "intake.error.type" =>
+        messageWithDefault(msg, "Invalid asset type", a.getType.name)
+      case msg if msg == "intake.error.disabled" =>
+        messageWithDefault(msg, "Intake is disabled")
+      case msg if msg == "intake.error.permissions" =>
+        messageWithDefault(msg, "User does not have permission for intake")
+      case other =>
+        messageWithDefault(other, other)
+    }
+    def invalidId(id: Long) =
+      messageWithDefault("id.notfound", "Asset not found", id.toString)
     def invalidTag(t: String) =
       messageWithDefault("tag.invalid", "Specified asset tag is invalid", t)
     def notFound(t: String) = message("missing", t)
