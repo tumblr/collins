@@ -67,7 +67,14 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   )
 
   def shouldEncrypt(v: AssetMetaValue): Boolean = {
-    AssetMetaValueConfig.EncryptedMeta.contains(v.getMeta().name)
+    try {
+      AssetMetaValueConfig.EncryptedMeta.contains(v.getMeta().name)
+    } catch {
+      case e =>
+        println("Caught exception trying to determine whether to encrypt")
+        println(v)
+        throw e
+    }
   }
   def getEncrypted(v: AssetMetaValue): AssetMetaValue = {
     v.copy(value = CryptoCodec.withKeyFromFramework.Encode(v.value))

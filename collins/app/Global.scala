@@ -5,6 +5,7 @@ import controllers.ApiResponse
 import models.Model
 import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
+import util.power.PowerConfiguration
 import java.io.File
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
@@ -35,6 +36,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     setAuthentication(auth)
     setCryptoKey(key)
     Model.initialize()
+    checkRuntime(app.configuration)
   }
 
   override def onRouteRequest(request: RequestHeader): Option[Handler] = {
@@ -100,6 +102,12 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
       case t =>
         super.onBadRequest(request, error)
     }
+  }
+
+  protected def checkRuntime(config: Configuration) {
+    PowerConfiguration.validate()
+    AuthenticationProvider.validate()
+    getAuthentication().validate()
   }
 
   // Make sure we have a valid configuration before we start

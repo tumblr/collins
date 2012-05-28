@@ -84,6 +84,14 @@ object PowerConfiguration extends FeatureConfig("powerconfiguration") {
     )
   }
 
+  def validate() {
+    // validates config on initialization
+    val config = apply()
+    PowerUnits().foreach { unit => unit.foreach { component =>
+      component.meta
+    }}
+  }
+
   def apply(cfg: Option[PowerConfiguration]): PowerConfiguration = {
     cfg.getOrElse(apply())
   }
