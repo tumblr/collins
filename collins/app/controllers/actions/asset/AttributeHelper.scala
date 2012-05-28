@@ -47,10 +47,10 @@ trait ActionAttributeHelper extends AttributeHelper {
     AttributeMap(map)
   }
 
-  protected def getInputMap: Map[String,Seq[String]] = request.body match {
+  protected def getInputMap: Map[String,Seq[String]] = request.queryString ++ (request.body match {
     case b: play.api.mvc.AnyContent if b.asFormUrlEncoded.isDefined => b.asFormUrlEncoded.get
     case b: play.api.mvc.AnyContent if b.asMultipartFormData.isDefined => b.asMultipartFormData.get.asFormUrlEncoded
     case b: Map[_, _] => b.asInstanceOf[Map[String, Seq[String]]]
     case _ => Map.empty[String, Seq[String]]
-  }
+  })
 }
