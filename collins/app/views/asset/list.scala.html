@@ -36,7 +36,7 @@
       <tbody>
         @assets.items.map { asset =>
         <tr>
-          <td><a href="@app.routes.CookieApi.getAsset(asset.tag)">@asset.tag</a></td>
+          <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
           @if(ListHelper.showHostname(assets)) {
           <td>@asset.getHostnameMetaValue.map(v => Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>
           }

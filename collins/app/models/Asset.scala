@@ -45,7 +45,7 @@ trait AssetView {
   def getPrimaryRoleMetaValue(): Option[String]
   def getStatusName(): String
 
-  def host: Option[String] //none if local
+  def remoteHost: Option[String] //none if local
   
 
 }
@@ -59,21 +59,21 @@ case class RemoteAsset(_host: String, json: JsObject) extends AssetView {
   
   private[this] def jsonDateToTimestamp(j: JsValue): Option[Timestamp] = {
     val formatter = new SimpleDateFormat(util.views.Formatter.ISO_8601_FORMAT)
-    j.asOpt[String].map{s => new Timestamp(formatter.parse(s).getTime)}
+    j.asOpt[String].filter{_ != ""}.map{s => new Timestamp(formatter.parse(s).getTime)}
   }
 
   def toJsonObject = json
   def forJsonObject = json.fields
 
   def tag = (json \ "TAG").as[String]
-  def created = jsonDateToTimestamp(json \ "ASSET" \ "CREATED").getOrElse(new Timestamp(0))
-  def updated = jsonDateToTimestamp(json \ "ASSET" \ "UPDATED")
+  def created = jsonDateToTimestamp(json \ "CREATED").getOrElse(new Timestamp(0))
+  def updated = jsonDateToTimestamp(json \ "UPDATED")
 
   def getHostnameMetaValue() = (json \ "ATTRIBS" \ "0" \ "HOSTNAME").asOpt[String]
   def getPrimaryRoleMetaValue() = (json \ "ATTRIBS" \ "0" \ "PRINARY_ROLE").asOpt[String]
-  def getStatusName() = (json \ "ASSET" \ "STATUS" ).asOpt[String].getOrElse("Unknown")
+  def getStatusName() = (json \ "STATUS" ).asOpt[String].getOrElse("Unknown")
 
-  def host = Some(_host)
+  def remoteHost = Some(_host)
 
 }
 
@@ -144,7 +144,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, filtered)
   }
 
-  def host = None
+  def remoteHost = None
 }
 
 object Asset extends Schema with AnormAdapter[Asset] {
@@ -283,7 +283,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         logger.error("Invalid location %s".format(location))
         Nil
       } else {
-        val host = pieces(0) + app.routes.Api.getAssets().toString
+        val host = pieces(0) 
         val queryUrl = host + app.routes.Api.getAssets().toString
         val userpass = pieces(1).split(":")
         if (userpass.length != 2) {
@@ -306,8 +306,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
           )
           logger.debug("Here is our query string: " + queryString.toString)
           val result = request.get.await.get
+          logger.debug(result.body)
           val json = Json.parse(result.body)
-          (json \ "Data") match {
+          (json \ "data" \ "Data") match {
             case JsArray(items) => items.map{
               case obj: JsObject => Some(new RemoteAsset(host, obj))
               case _ => {
@@ -323,7 +324,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         }
       }
     }.flatten
-    Page(Seq(), page.page, page.offset,0)
+    Page(find(page,params,afinder,operation).items ++ remoteAssets, page.page, page.offset,0)
 
   }
 
