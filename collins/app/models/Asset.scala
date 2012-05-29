@@ -64,7 +64,7 @@ case class RemoteAsset(_host: String, json: JsObject) extends AssetView {
   }
 
   def toJsonObject = JsObject(forJsonObject)
-  def forJsonObject = json.fields + ("LOCATION" -> JsString(_host))
+  def forJsonObject = json.fields :+ ("LOCATION" -> JsString(_host))
 
   def tag = (json \ "TAG").as[String]
   def created = jsonDateToTimestamp(json \ "CREATED").getOrElse(new Timestamp(0))
