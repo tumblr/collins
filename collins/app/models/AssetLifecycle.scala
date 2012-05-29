@@ -1,12 +1,12 @@
 package models
 
 import conversions._
-import AssetMeta.Enum.{PowerPort, RackPosition}
+import AssetMeta.Enum.RackPosition
 import models.{Status => AStatus}
 
 import util.{ApiTattler, AssetStateMachine, Config, Feature, InternalTattler, LldpRepresentation, LshwRepresentation}
 import util.parsers.{LldpParser, LshwParser}
-import util.views.Formatter.formatPowerPort
+import util.power.PowerUnits
 
 import play.api.Logger
 
@@ -146,14 +146,13 @@ object AssetLifecycle {
   }
 
   protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    val requiredKeys = Set(RackPosition.toString, formatPowerPort("A"), formatPowerPort("B"))
+    val units = PowerUnits()
+    val requiredKeys = Set(RackPosition.toString) ++ PowerUnits.keys(units)
     requiredKeys.find(key => !options.contains(key)).map { not_found =>
       return Left(new Exception(not_found + " parameter not specified"))
     }
 
     val rackpos = options(RackPosition.toString)
-    val power1 = options(formatPowerPort("A"))
-    val power2 = options(formatPowerPort("B"))
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))
     filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
@@ -161,10 +160,8 @@ object AssetLifecycle {
     )
 
     val res = allCatch[Boolean].either {
-      val values = Seq(
-        AssetMetaValue(asset, RackPosition, rackpos),
-        AssetMetaValue(asset, PowerPort, 0, power1),
-        AssetMetaValue(asset, PowerPort, 1, power2))
+      val values = Seq(AssetMetaValue(asset, RackPosition, rackpos)) ++
+                   PowerUnits.toMetaValues(units, asset, options)
       Asset.inTransaction {
         val created = AssetMetaValue.create(values)
         require(created == values.length,

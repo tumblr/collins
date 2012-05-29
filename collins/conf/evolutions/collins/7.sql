@@ -1,9 +1,10 @@
-# --- New LOCATION asset meta
+# -- Deprecate old address related meta fields
 
 # --- !Ups
 
-INSERT INTO asset_meta VALUES (34, 'LOCATION', -1, 'Location', 'URL for data-center remote access');
+UPDATE asset_meta SET priority = -1 WHERE id=33;
 
 # --- !Downs
 
-DELETE FROM asset_meta WHERE id=34;
+UPDATE asset_meta SET priority = 0 WHERE id=33;
+

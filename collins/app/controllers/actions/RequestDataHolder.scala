@@ -13,10 +13,6 @@ trait RequestDataHolder {
   type This = RequestDataHolder
 
   val ErrorKey = "error.message"
-  /*
-  protected val iMap = new ConcurrentHashMap[String,Int]()
-  protected val bMap = new ConcurrentHashMap[String,Boolean]()
-  */
   protected val sMap = new ConcurrentHashMap[String,String]()
   protected val _status = new AtomicReference[Option[HttpStatus]](None)
 
@@ -30,17 +26,9 @@ trait RequestDataHolder {
     sMap.put(k,v)
     this
   }
-
-  /*
-  def int(k: String): Option[Int] = Option(iMap.get(k))
-  def int(k: String, default: Int): Int = int(k).getOrElse(default)
-  def update(k: String, v: Int): Unit = iMap.put(k,v)
-  def is(k: String): Option[Boolean] = Option(bMap.get(k))
-  def is(k: String, default: Boolean): Boolean = is(k).getOrElse(default)
-  def update(k: String, v: Boolean): Unit = bMap.put(k, v)
-  */
 }
 
+// This exists for staged validation, which may or may not have data to pass between stages
 case class EphemeralDataHolder(message: Option[String] = None) extends RequestDataHolder {
   if (message.isDefined) {
     update(ErrorKey, message.get)

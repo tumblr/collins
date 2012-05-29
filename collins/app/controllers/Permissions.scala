@@ -63,6 +63,11 @@ object Permissions {
     val ProvisionAsset = spec("provisionAsset", Spec)
   }
 
+  object Help extends PermSpec("controllers.Help") {
+    val Spec = spec(LoggedIn)
+    val Index = spec("index", Spec)
+  }
+
   object Resources extends PermSpec("controllers.Resources") {
     val Spec = spec(LoggedIn)
     val CreateAsset = spec("createAsset", AdminSpec)
