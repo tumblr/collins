@@ -45,6 +45,8 @@ object SecuritySpec {
 trait AuthenticationProvider {
   protected val logger = Logger.logger
   def authenticate(username: String, password: String): Option[User]
+  def validate() {
+  }
 }
 trait AuthenticationAccessor {
   def getAuthentication(): AuthenticationProvider
@@ -59,6 +61,10 @@ object AuthenticationProvider {
 
   lazy private val watcher = FileWatcher.watchWithResults(filename, Privileges.empty) { f =>
     PermissionsHelper.fromFile(f.getAbsolutePath)
+  }
+
+  def validate() {
+    FileWatcher.fileGuard(filename)
   }
 
   def get(name: String, config: Configuration): AuthenticationProvider = {
