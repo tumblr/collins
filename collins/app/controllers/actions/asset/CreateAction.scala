@@ -129,13 +129,12 @@ case class CreateAction(
   protected def getString(pri: Option[String], sec: Option[String]): String = {
     val pris = pri.flatMap(StringUtil.strip(_))
     val secs = sec.flatMap(StringUtil.strip(_))
-    if (pris.isDefined) {
+    if (pris.isDefined)
       pris.get
-    } else if (secs.isDefined) {
+    else if (secs.isDefined)
       secs.get
-    } else {
+    else
       ""
-    }
   }
 }
 

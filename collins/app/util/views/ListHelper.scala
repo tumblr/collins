@@ -2,8 +2,9 @@ package util
 package views
 
 import models.{Asset, AssetView, Page}
+import util.power.{PowerComponent, PowerUnits}
 
-// Used with views/asset/list
+// Mostly used with views/asset/list, also for comprehensions
 object ListHelper {
   def showHostname(assets: Page[AssetView]): Boolean = {
     assets.items.find(_.getHostnameMetaValue.isDefined).map(_ => true).getOrElse(false)
@@ -12,5 +13,14 @@ object ListHelper {
     SoftLayer.pluginEnabled { plugin =>
       assets.items.collectFirst{ case asset: Asset if(plugin.isSoftLayerAsset(asset)) => true }.getOrElse(false)
     }.getOrElse(false)
+  }
+  def getPowerComponentsInOrder(units: PowerUnits): Seq[PowerComponent] = {
+    val components = units.flatMap { unit =>
+      unit.components
+    }
+    components.toSeq.sorted
+  }
+  def getPowerComponentsInOrder(): Seq[PowerComponent] = {
+    getPowerComponentsInOrder(PowerUnits())
   }
 }

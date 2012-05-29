@@ -30,11 +30,7 @@ object MetaWrapper {
   def apply(amv: AssetMetaValue): MetaWrapper = MetaWrapper(amv.getMeta, amv)
   def createMeta(asset: Asset, metas: Map[String,String], groupId: Option[Int] = None) = {
     val metaValues = metas.map { case(k,v) =>
-      val metaName = k.toUpperCase
-      val meta: AssetMeta = AssetMeta.findByName(metaName).getOrElse {
-        AssetMeta.create(AssetMeta(metaName, -1, metaName.toLowerCase.capitalize, metaName))
-        AssetMeta.findByName(metaName).get
-      }
+      val meta = AssetMeta.findOrCreateFromName(k)
       groupId.map(AssetMetaValue(asset, meta.id, _, v))
         .getOrElse(AssetMetaValue(asset, meta.id, v))
     }.toSeq

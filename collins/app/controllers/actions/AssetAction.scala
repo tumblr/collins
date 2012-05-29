@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicReference
 trait AssetAction {
   this: SecureAction =>
 
-  type Validation = Either[RequestDataHolder,RequestDataHolder]
   protected val _asset = new AtomicReference[Option[Asset]](None)
 
   val AssetMessages = Asset.Messages
@@ -25,21 +24,34 @@ trait AssetAction {
 
   def assetNotFound(t: String) = RequestDataHolder.error404(AssetMessages.notFound(t))
 
-  def withValidAsset(t: String)(f: Asset => Validation): Validation = {
-    assetFromTag(t) match {
-      case None => Left(assetNotFound(t))
-      case asset =>
-        setAsset(asset)
-        f(asset.get)
-    }
+  def withValidAsset(id: Long)(f: Asset => Validation): Validation = Asset.findById(id) match {
+    case None => Left(RequestDataHolder.error404(AssetMessages.invalidId(id)))
+    case Some(asset) => withValidAsset(asset.tag)(f)
   }
 
-  def assetIntakeAllowed(asset: Asset): Boolean = {
-    val isNew = asset.isNew
-    val rightType = asset.asset_type == AssetType.Enum.ServerNode.id
-    val intakeSupported = Feature("intakeSupported").toBoolean(true)
-    val rightRole = Permissions.please(user(), Permissions.Resources.Intake)
-    intakeSupported && isNew && rightType && rightRole
+  def withValidAsset(t: String)(f: Asset => Validation): Validation = Asset.isValidTag(t) match {
+    case true =>
+      assetFromTag(t) match {
+        case None => Left(assetNotFound(t))
+        case asset =>
+          setAsset(asset)
+          f(asset.get)
+      }
+    case false =>
+      Left(RequestDataHolder.error400(AssetMessages.invalidTag(t)))
+  }
+
+  def assetIntakeAllowed(asset: Asset): Option[String] = {
+    if (!asset.isNew)
+      Some(AssetMessages.intakeError("new", asset))
+    else if (asset.asset_type != AssetType.Enum.ServerNode.id)
+      Some(AssetMessages.intakeError("type", asset))
+    else if (!Feature("intakeSupported").toBoolean(true))
+      Some(AssetMessages.intakeError("disabled", asset))
+    else if (!Permissions.please(user(), Permissions.Resources.Intake))
+      Some(AssetMessages.intakeError("permissions", asset))
+    else
+      None
   }
 
 }

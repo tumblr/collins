@@ -64,8 +64,8 @@ case class FindAction(
     }
     case Some(asset) =>
       assetIntakeAllowed(asset) match {
-        case true => Redirect(app.routes.Resources.intake(asset.getId, 1))
-        case false => Redirect(app.routes.CookieApi.getAsset(asset.tag))
+        case None => Redirect(app.routes.Resources.intake(asset.getId, 1))
+        case Some(err) => Redirect(app.routes.CookieApi.getAsset(asset.tag))
       }
   }
 

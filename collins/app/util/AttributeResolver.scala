@@ -31,13 +31,6 @@ object AttributeResolver extends MessageHelper("attributeresolver") {
     }
   }
 
-  def listToMap(list: List[String]): Map[String,String] = {
-    list.map(_.split(";", 2))
-      .filter(a => a.length > 1)
-      .map(s => s(0) -> s(1))
-      .toMap
-  }
-
   private def asIpmi(key: String): Option[IpmiInfo.Enum] = try {
     Some(IpmiInfo.Enum.withName(key))
   } catch {

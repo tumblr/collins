@@ -57,6 +57,11 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     tableDef.lookup(id)
   }
 
+  def findOrCreateFromName(name: String): AssetMeta = findByName(name).getOrElse {
+    create(AssetMeta(name.toUpperCase, -1, name.toLowerCase.capitalize, name))
+    findByName(name).get
+  }
+
   override def get(a: AssetMeta) = findById(a.id).get
 
   def findByName(name: String): Option[AssetMeta] = {
