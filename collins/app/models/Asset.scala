@@ -2,6 +2,7 @@ package models
 
 import conversions._
 import util.{Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.power.PowerUnits
 import util.views.Formatter.dateFormat
 
 import play.api.Logger
@@ -73,8 +74,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
     val ipmi = IpmiInfo.findByAsset(this)
     val addresses = IpAddresses.findAllByAsset(this)
-    val filtered: Seq[MetaWrapper] = mvs2.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
-    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, filtered)
+    val (powerRep, mvs3) = PowerHelper.reconstruct(this, mvs2)
+    val filtered: Seq[MetaWrapper] = mvs3.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
+    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
   }
 }
 
@@ -100,6 +102,22 @@ object Asset extends Schema with AnormAdapter[Asset] {
   )
 
   object Messages extends MessageHelper("asset") {
+    def intakeError(t: String, a: Asset) = "intake.error.%s".format(t.toLowerCase) match {
+      case msg if msg == "intake.error.new" =>
+        messageWithDefault(msg, "Invalid asset status", a.getStatus.name)
+      case msg if msg == "intake.error.type" =>
+        messageWithDefault(msg, "Invalid asset type", a.getType.name)
+      case msg if msg == "intake.error.disabled" =>
+        messageWithDefault(msg, "Intake is disabled")
+      case msg if msg == "intake.error.permissions" =>
+        messageWithDefault(msg, "User does not have permission for intake")
+      case other =>
+        messageWithDefault(other, other)
+    }
+    def invalidId(id: Long) =
+      messageWithDefault("id.notfound", "Asset not found", id.toString)
+    def invalidTag(t: String) =
+      messageWithDefault("tag.invalid", "Specified asset tag is invalid", t)
     def notFound(t: String) = message("missing", t)
     def noMatch() = message("nomatch")
   }
@@ -190,7 +208,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     Page(results, params.page, params.offset, totalCount)
   }
 
-  case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], mvs: Seq[MetaWrapper]) {
+  case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], power: PowerUnits, mvs: Seq[MetaWrapper]) {
     def exposeCredentials(showCreds: Boolean = false) = {
       this.copy(ipmi = this.ipmi.map { _.withExposedCredentials(showCreds) })
           .copy(mvs = this.metaValuesWithExposedCredentials(showCreds))
@@ -204,6 +222,27 @@ object Asset extends Schema with AnormAdapter[Asset] {
       }
     }
 
+    def formatPowerUnits = JsArray(
+      power.toList.map { unit =>
+        JsObject(
+          Seq(
+            "UNIT_ID" -> JsNumber(unit.id),
+            "UNITS" -> JsArray(unit.toList.map { component =>
+              JsObject(Seq(
+                "KEY" -> JsString(component.key),
+                "VALUE" -> JsString(component.value.getOrElse("Unspecified")),
+                "TYPE" -> JsString(component.identifier),
+                "LABEL" -> JsString(component.label),
+                "POSITION" -> JsNumber(component.position),
+                "IS_REQUIRED" -> JsBoolean(component.isRequired),
+                "UNIQUE" -> JsBoolean(component.isUnique)
+              ))
+            })
+          )
+        )
+      }
+    )
+
     def toJsonObject(): JsObject = {
       val ipmiMap = ipmi.map { info =>
         info.forJsonObject
@@ -214,6 +253,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         "LLDP" -> JsObject(lldp.forJsonObject),
         "IPMI" -> JsObject(ipmiMap),
         "ADDRESSES" -> JsArray(addresses.toList.map(j => JsObject(j.forJsonObject()))),
+        "POWER" -> formatPowerUnits,
         "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map { case(groupId, mv) =>
           groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) })
         }.toSeq)

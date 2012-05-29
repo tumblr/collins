@@ -1,7 +1,9 @@
 package controllers
 
+import util.power.PowerUnits
+import models.AssetMeta.Enum.RackPosition
+
 import models._
-import util.views.Formatter.formatPowerPort
 import test._
 
 import play.api.libs.json._
@@ -73,14 +75,15 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         }
       }
       "Update the status after getting rack position and such" in new asset {
-        import AssetMeta.Enum.RackPosition
         val rp: String = RackPosition.toString
+        val units = PowerUnits()
+        val unitSeq = (for(unit <- units; component <- unit) yield
+          (component.key, Seq("%s %d".format(component.componentType.name, component.id)))).toSeq
+        val powerMap = Map(unitSeq:_*)
         val body = AnyContentAsFormUrlEncoded(Map(
           rp -> Seq("rack 1"),
-          formatPowerPort("A") -> Seq("power 1"),
-          formatPowerPort("B") -> Seq("power 2"),
           "attribute" -> Seq("foo;bar","fizz;buzz")
-        ))
+        ) ++ powerMap)
         val req = FakeRequest("POST", assetUrl).copy(body = body)
         val result = Extract.from(api.updateAsset(assetTag).apply(req))
         result must haveStatus(200)
@@ -90,9 +93,11 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         val amf = AssetMeta.findByName("FOO")
         getAsset() must haveJsonData.which { txt =>
           txt must /("data") */("ASSET")/("STATUS" -> "Unallocated")
+          txt must /("data") */("POWER") */("UNITS") */("TYPE" -> "POWER_PORT")
+          txt must /("data") */("POWER") */("UNITS") */("VALUE" -> "PORT 0")
+          txt must /("data") */("POWER") */("UNITS") */("TYPE" -> "POWER_OUTLET")
+          txt must /("data") */("POWER") */("UNITS") */("VALUE" -> "OUTLET 0")
           txt must /("data") */("ATTRIBS") */("0") */("RACK_POSITION" -> "rack 1")
-          txt must /("data") */("ATTRIBS") */("0") */("POWER_PORT" -> "power 1")
-          txt must /("data") */("ATTRIBS") */("1") */("POWER_PORT" -> "power 2")
           txt must /("data") */("ATTRIBS") */("0") */("FOO" -> "bar")
           txt must /("data") */("ATTRIBS") */("0") */("FIZZ" -> "buzz")
         }
