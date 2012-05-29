@@ -1,16 +1,16 @@
 package util
 package views
 
-import models.{Asset, Page}
+import models.{Asset, AssetView, Page}
 
 // Used with views/asset/list
 object ListHelper {
-  def showHostname(assets: Page[Asset]): Boolean = {
-    assets.items.find(_.getMetaAttribute("HOSTNAME").isDefined).map(_ => true).getOrElse(false)
+  def showHostname(assets: Page[AssetView]): Boolean = {
+    assets.items.find(_.getHostnameMetaValue.isDefined).map(_ => true).getOrElse(false)
   }
-  def showSoftLayerLink(assets: Page[Asset]): Boolean = {
+  def showSoftLayerLink(assets: Page[AssetView]): Boolean = {
     SoftLayer.pluginEnabled { plugin =>
-      assets.items.find(asset => plugin.isSoftLayerAsset(asset)).map(_ => true).getOrElse(false)
+      assets.items.collectFirst{ case asset: Asset if(plugin.isSoftLayerAsset(asset)) => true }.getOrElse(false)
     }.getOrElse(false)
   }
 }

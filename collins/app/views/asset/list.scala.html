@@ -1,4 +1,4 @@
-@(assets: Page[Asset])(implicit flash: Flash, req: Request[AnyContent])
+@(assets: Page[AssetView])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import _root_.util.SoftLayer
@@ -38,10 +38,10 @@
         <tr>
           <td><a href="@app.routes.CookieApi.getAsset(asset.tag)">@asset.tag</a></td>
           @if(ListHelper.showHostname(assets)) {
-          <td>@asset.getMetaAttribute("HOSTNAME").map(v => Formatter.elipse(v.getValue)).getOrElse { <em>Unknown</em> }</td>
+          <td>@asset.getHostnameMetaValue.map(v => Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>
           }
-	  <td>@asset.getMetaAttribute("PRIMARY_ROLE").map(_.getValue).getOrElse { <em>Unknown</em> }</td>
-	  <td>@Formatter.elipse(asset.getStatus().name, 12)</td>
+	  <td>@asset.getPrimaryRoleMetaValue().getOrElse { <em>Unknown</em> }</td>
+	  <td>@Formatter.elipse(asset.getStatusName(), 12)</td>
           <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
           <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
           @if(ListHelper.showSoftLayerLink(assets)) {

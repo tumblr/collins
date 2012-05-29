@@ -115,7 +115,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   }
 
   def findAssetsByMeta(page: PageParams, toFind: AssetMetaFinder, afinder: AssetFinder,
-                       op: Option[String]): Page[Asset] = {
+                       op: Option[String]): Page[AssetView] = {
     val whereClause = {asset: Asset =>
       val e = excludes(asset, toFind, op)
       val i = includes(asset, toFind, op)

@@ -15,6 +15,7 @@ import org.squeryl.PrimitiveTypeMode._
 
 import java.sql.Timestamp
 import java.util.Date
+import java.text.SimpleDateFormat
 
 import akka.dispatch.Await
 import akka.util.duration._
@@ -34,9 +35,15 @@ trait AssetView {
   def tag: String
   //def status: Int
   //def asset_type: Int
+  def created: Timestamp
+  def updated: Option[Timestamp]
 
   def toJsonObject(): JsObject
   def forJsonObject: Seq[(String, JsValue)]
+
+  def getHostnameMetaValue(): Option[String]
+  def getPrimaryRoleMetaValue(): Option[String]
+  def getStatusName(): String
 
   def host: Option[String] //none if local
   
@@ -49,10 +56,22 @@ trait AssetView {
  */
 case class RemoteAsset(_host: String, json: JsObject) extends AssetView {
 
+  
+  private[this] def jsonDateToTimestamp(j: JsValue): Option[Timestamp] = {
+    val formatter = new SimpleDateFormat(util.views.Formatter.ISO_8601_FORMAT)
+    j.asOpt[String].map{s => new Timestamp(formatter.parse(s).getTime)}
+  }
+
   def toJsonObject = json
   def forJsonObject = json.fields
 
-  def tag = (json \ "tag").as[String]
+  def tag = (json \ "TAG").as[String]
+  def created = jsonDateToTimestamp(json \ "ASSET" \ "CREATED").getOrElse(new Timestamp(0))
+  def updated = jsonDateToTimestamp(json \ "ASSET" \ "UPDATED")
+
+  def getHostnameMetaValue() = (json \ "ATTRIBS" \ "0" \ "HOSTNAME").asOpt[String]
+  def getPrimaryRoleMetaValue() = (json \ "ATTRIBS" \ "0" \ "PRINARY_ROLE").asOpt[String]
+  def getStatusName() = (json \ "ASSET" \ "STATUS" ).asOpt[String].getOrElse("Unknown")
 
   def host = Some(_host)
 
@@ -69,6 +88,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   override def asJson: String = {
     Json.stringify(JsObject(forJsonObject))
   }
+
+  def getHostnameMetaValue = getMetaAttribute("HOSTNAME").map{_.getValue}
+  def getPrimaryRoleMetaValue = getMetaAttribute("PRIMARY_ROLE").map{_.getValue}
 
   def toJsonObject() = JsObject(forJsonObject)
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
@@ -90,6 +112,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   def getStatus(): Status = {
     Status.findById(status).get
   }
+
+  def getStatusName(): String = getStatus().name
+
   def getType(): AssetType = {
     AssetType.findById(asset_type).get
   }
@@ -165,7 +190,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] =
+  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] =
   Stats.time("Asset.find") {
     if (params._1.nonEmpty) {
       IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
@@ -178,7 +203,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, afinder: AssetFinder): Page[Asset] = inTransaction {
+  def find(page: PageParams, afinder: AssetFinder): Page[AssetView] = inTransaction {
     val results = from(tableDef)(a =>
       where(afinder.asLogicalBoolean(a))
       select(a)
@@ -190,7 +215,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     Page(results, page.page, page.offset, totalCount)
   }
 
-  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[Asset] = inTransaction {
+  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[AssetView] = inTransaction {
     assets.size match {
       case 0 => Page(Seq(), page.page, page.offset, 0)
       case n =>
@@ -221,7 +246,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def findLikeTag(tag: String, params: PageParams): Page[Asset] = inTransaction {
+  def findLikeTag(tag: String, params: PageParams): Page[AssetView] = inTransaction {
     val results = from(tableDef)(a =>
       where(a.tag.withPossibleRegex(tag))
       select(a)
@@ -239,7 +264,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
    * stored as assets themselves, though the asset type and attribute for URI
    * info is user-configured.
    */
-  def findMulti(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] = {
+  def findMulti(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] = {
     val instanceFinder = AssetFinder(
       tag = None,
       status = None,
@@ -249,18 +274,21 @@ object Asset extends Schema with AnormAdapter[Asset] {
       updatedBefore = None,
       assetType = Some(AssetType.Enum.withName(Config.getString("multicollins.instanceAssetType","DATA_CENTER").trim.toString))
     )
-    val findLocations = Asset.find(PageParams(0,50,"ASC"), instanceFinder).items
+    val findLocations = Asset.find(PageParams(0,50,"ASC"), instanceFinder).items.collect{case a: Asset => a}
     //iterate over the locations, sending requests to each one and aggregate their results
-    findLocations.foreach{ locationAsset => 
+    val remoteAssets = findLocations.map{ locationAsset => 
       val location = locationAsset.getMetaAttribute(AssetMeta.Enum.Location).map{_.getValue}.getOrElse("null")
       val pieces = location.split(";")
       if (pieces.length < 2) {
         logger.error("Invalid location %s".format(location))
+        Nil
       } else {
         val host = pieces(0) + app.routes.Api.getAssets().toString
+        val queryUrl = host + app.routes.Api.getAssets().toString
         val userpass = pieces(1).split(":")
         if (userpass.length != 2) {
           logger.error("Invalid user/pass %s for remote collins asset %s".format(pieces(1), locationAsset.id.toString))
+          Nil
         } else {
           val authenticationTuple = (userpass(0), userpass(1), com.ning.http.client.Realm.AuthScheme.BASIC)
           //we have to rebuild the query
@@ -272,17 +300,29 @@ object Asset extends Schema with AnormAdapter[Asset] {
             ).toMap ++ afinder.toMap
             operation.map{op => q1 + ("operation" -> op)}.getOrElse(q1)
           }
-          val request = WS.url(host).copy(
+          val request = WS.url(queryUrl).copy(
             queryString = queryString,
             auth = Some(authenticationTuple)
           )
           logger.debug("Here is our query string: " + queryString.toString)
           val result = request.get.await.get
-          logger.debug("Here is our response: %s".format(result.body))
-
+          val json = Json.parse(result.body)
+          (json \ "Data") match {
+            case JsArray(items) => items.map{
+              case obj: JsObject => Some(new RemoteAsset(host, obj))
+              case _ => {
+                logger.warn("Invalid asset in response data")
+                None
+              }
+            }.flatten
+            case _ => {
+              logger.warn("Invalid response from %s".format(host))
+              Nil
+            }
+          }
         }
       }
-    } //end foreach
+    }.flatten
     Page(Seq(), page.page, page.offset,0)
 
   }
