@@ -6,10 +6,10 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
   import AssetMeta.Enum._
 
   def construct(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
-    collectCpus(asset.getId, lshw) ++
-      collectMemory(asset.getId, lshw) ++
-      collectNics(asset.getId, lshw) ++
-      collectDisks(asset.getId, lshw)
+    collectCpus(asset, lshw) ++
+      collectMemory(asset, lshw) ++
+      collectNics(asset, lshw) ++
+      collectDisks(asset, lshw)
   }
 
   def reconstruct(asset: Asset, assetMeta: Seq[MetaWrapper]): Reconstruction = {
@@ -41,17 +41,17 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     }
     (cpuSeq, filteredMeta)
   }
-  protected def collectCpus(asset_id: Long, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
+  protected def collectCpus(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     if (lshw.cpuCount < 1) {
       return Seq()
     }
     val cpu = lshw.cpus.find(cpu => cpu.description.nonEmpty).getOrElse(lshw.cpus.head)
     Seq(
-      AssetMetaValue(asset_id, CpuCount.id, lshw.cpuCount.toString),
-      AssetMetaValue(asset_id, CpuCores.id, cpu.cores.toString),
-      AssetMetaValue(asset_id, CpuThreads.id, cpu.threads.toString),
-      AssetMetaValue(asset_id, CpuSpeedGhz.id, cpu.speedGhz.toString),
-      AssetMetaValue(asset_id, CpuDescription.id, "%s %s".format(cpu.product, cpu.vendor))
+      AssetMetaValue(asset, CpuCount.id, lshw.cpuCount.toString),
+      AssetMetaValue(asset, CpuCores.id, cpu.cores.toString),
+      AssetMetaValue(asset, CpuThreads.id, cpu.threads.toString),
+      AssetMetaValue(asset, CpuSpeedGhz.id, cpu.speedGhz.toString),
+      AssetMetaValue(asset, CpuDescription.id, "%s %s".format(cpu.product, cpu.vendor))
     )
   }
 
@@ -80,7 +80,7 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     }
     (memSeq, filteredMeta)
   }
-  protected def collectMemory(asset_id: Long, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
+  protected def collectMemory(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     if (lshw.memoryBanksTotal < 1) {
       return Seq()
     }
@@ -88,14 +88,14 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       val memory = current
       val groupId = memory.bank
       total ++ Seq(
-        AssetMetaValue(asset_id, MemorySizeBytes.id, groupId, memory.size.bytes.toString),
-        AssetMetaValue(asset_id, MemoryDescription.id, groupId, "%s - %s %s".format(
+        AssetMetaValue(asset, MemorySizeBytes.id, groupId, memory.size.bytes.toString),
+        AssetMetaValue(asset, MemoryDescription.id, groupId, "%s - %s %s".format(
           memory.description, memory.vendor, memory.product
         ))
       )
     } ++ Seq(
-      AssetMetaValue(asset_id, MemorySizeTotal.id, lshw.totalMemory.bytes.toString),
-      AssetMetaValue(asset_id, MemoryBanksTotal.id, lshw.memoryBanksTotal.toString)
+      AssetMetaValue(asset, MemorySizeTotal.id, lshw.totalMemory.bytes.toString),
+      AssetMetaValue(asset, MemoryBanksTotal.id, lshw.memoryBanksTotal.toString)
     )
   }
 
@@ -121,7 +121,7 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     }
     (nicSeq, filteredMeta)
   }
-  protected def collectNics(asset_id: Long, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
+  protected def collectNics(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     if (lshw.nicCount < 1) {
       return Seq()
     }
@@ -129,9 +129,9 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       val groupId = run._1
       val total = run._2
       val res: Seq[AssetMetaValue] = Seq(
-        AssetMetaValue(asset_id, NicSpeed.id, groupId, nic.speed.inBits.toString),
-        AssetMetaValue(asset_id, MacAddress.id, groupId, nic.macAddress),
-        AssetMetaValue(asset_id, NicDescription.id, groupId, "%s - %s".format(nic.product, nic.vendor))
+        AssetMetaValue(asset, NicSpeed.id, groupId, nic.speed.inBits.toString),
+        AssetMetaValue(asset, MacAddress.id, groupId, nic.macAddress),
+        AssetMetaValue(asset, NicDescription.id, groupId, "%s - %s".format(nic.product, nic.vendor))
       )
       (groupId + 1, total ++ res)
     }._2
@@ -160,7 +160,7 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     }
     (diskSeq, filteredMeta)
   }
-  protected def collectDisks(asset_id: Long, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
+  protected def collectDisks(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     if (lshw.diskCount < 1) {
       return Seq()
     }
@@ -168,12 +168,12 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       val groupId = run._1
       val total = run._2
       (groupId + 1, total ++ Seq(
-        AssetMetaValue(asset_id, DiskSizeBytes.id, groupId, disk.size.inBytes.toString),
-        AssetMetaValue(asset_id, DiskType.id, groupId, disk.diskType.toString),
-        AssetMetaValue(asset_id, DiskDescription.id, groupId, "%s %s".format(disk.vendor, disk.product))
+        AssetMetaValue(asset, DiskSizeBytes.id, groupId, disk.size.inBytes.toString),
+        AssetMetaValue(asset, DiskType.id, groupId, disk.diskType.toString),
+        AssetMetaValue(asset, DiskDescription.id, groupId, "%s %s".format(disk.vendor, disk.product))
       ))
     }._2
-    val diskSummary = AssetMetaValue(asset_id, DiskStorageTotal.id, lshw.totalUsableStorage.inBytes.toString)
+    val diskSummary = AssetMetaValue(asset, DiskStorageTotal.id, lshw.totalUsableStorage.inBytes.toString)
     Seq(diskSummary) ++ physicalDisks
   }
 

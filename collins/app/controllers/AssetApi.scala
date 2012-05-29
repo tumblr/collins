@@ -1,7 +1,7 @@
 package controllers
 
 import actions.asset.{CreateAction, DeleteAction, DeleteAttributeAction, FindAction, GetAction}
-import actions.asset.UpdateForMaintenanceAction
+import actions.asset.{UpdateAction, UpdateForMaintenanceAction}
 
 import views.html
 import models.{Status => AStatus}
@@ -31,12 +31,7 @@ trait AssetApi {
   def createAsset(tag: String) = CreateAction(Some(tag), None, Permissions.AssetApi.CreateAsset, this)
 
   // POST /api/asset/:tag
-  def updateAsset(tag: String) = SecureAction { implicit req =>
-    actions.UpdateAsset.get().execute(tag) match {
-      case Left(l) => formatResponseData(l)
-      case Right(s) => formatResponseData(Api.statusResponse(s))
-    }
-  }(Permissions.AssetApi.UpdateAsset)
+  def updateAsset(tag: String) = UpdateAction(tag, Permissions.AssetApi.UpdateAsset, this)
 
   def updateAssetForMaintenance(tag: String) = UpdateForMaintenanceAction(
     tag, Permissions.AssetApi.UpdateAssetForMaintenance, this

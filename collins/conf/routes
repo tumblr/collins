@@ -27,7 +27,7 @@ GET     /admin/logs                 controllers.Admin.logs
 POST    /admin/cache/clear          controllers.Admin.clearCache
 
 # Help
-GET     /help                       app.HelpPage.index(t: Int ?= controllers.Help.Default)
+GET     /help                       app.HelpPage.index(t: String ?= controllers.Help.Default)
 
 # Authentication
 GET     /login                      controllers.Application.login

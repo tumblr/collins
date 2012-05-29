@@ -26,7 +26,13 @@ class FindAction(
 ) extends SecureAction(spec, handler) with AssetAction {
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
-    AssetFinderDataHolder.processRequest(request())
+    try {
+      pageParams.validate()
+      AssetFinderDataHolder.processRequest(request())
+    } catch {
+      case e =>
+        Left(RequestDataHolder.error400(e.getMessage))
+    }
   }
 
   override def execute(rd: RequestDataHolder) = rd match {
