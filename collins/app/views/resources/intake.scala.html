@@ -1,7 +1,8 @@
-@(asset: Asset, status: Option[String])(implicit flash: Flash, req: Request[AnyContent])
+@(asset: Asset)(implicit flash: Flash, req: Request[AnyContent])
 
-@import helper._
 @import controllers.conversions._
+@import helper._
+@import util.notice
 
 @main("Intake Step 1 - " + asset.tag) {
 <div class="page-header">
@@ -9,14 +10,14 @@
 </div>
 <div class="row">
   <div class="span14">
+    @notice("message", Some("notice"))
+    @notice("error")
+    @notice("warning")
     <div class="alert-message block-message warning">
-      @status.map { err =>
-        <p><strong>Error: @err</strong></p>
-      }
       <p><strong>Did the correct light come on?</strong></p>
       <div class="alert-actions">
-        <a class="btn primary" data-altkey="yes" href="@app.routes.Resources.intake(asset.getId, 2)">Yes</a>
-        <a class="btn" data-altkey="no" href="@app.routes.HelpPage.index(Help.IpmiLight())">No</a>
+        <a class="btn primary" data-altkey="yes" href="@app.routes.Resources.intake(asset.getId, 1)?light=yes">Yes</a>
+        <a class="btn" data-altkey="no" href="@app.routes.HelpPage.index(Help.IpmiNoLight)">No</a>
       </div>
     </div>
   </div>

@@ -22,6 +22,10 @@ class FileAuthenticationProvider(config: Configuration) extends AuthenticationPr
     usersFromFile(file)
   }
 
+  override def validate() {
+    FileWatcher.fileGuard(authfile)
+  }
+
   override def authenticate(username: String, password: String): Option[User] = {
     user(username) match {
       case None => None

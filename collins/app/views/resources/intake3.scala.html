@@ -1,8 +1,8 @@
-@(asset: Asset, f: Form[actions.Stage3Form])(implicit flash: Flash, req: Request[AnyContent])
+@(asset: Asset, f: Form[actions.resources.IntakeStage3Action.DataForm])(implicit flash: Flash, req: Request[AnyContent])
 
 @import twitterBootstrap._
 @import helper._
-@import _root_.util.views.Formatter.formatPowerPort
+@import _root_.util.views.ListHelper.getPowerComponentsInOrder
 @import util.notice
 @import AssetMeta.Enum.{ChassisTag, RackPosition, ServiceTag}
 
@@ -39,18 +39,17 @@
       }
     </div>
     @inputText(f(RackPosition.toString), '_label -> "Rack Position", 'autocomplete -> "off", Symbol("enter-style") -> "tab", 'class -> "focus")
-    @inputText(f(formatPowerPort("A")), '_label -> "Power Port A", 'autocomplete -> "off", Symbol("enter-style") -> "tab")
-    @inputText(f(formatPowerPort("B")), '_label -> "Power Port B", 'autocomplete -> "off")
+    @getPowerComponentsInOrder.map { component =>
+    @inputText(f(component.key), '_help -> "Value Required", '_label -> component.label, 'autocomplete -> "off", Symbol("enter-style") -> "tab")
+    }
     @f.globalError.map { error =>
       <div class="alert-message error">
         <strong>Unable to intake node</strong> @error.message
       </div>
     }
-    <div class="clearfix">
-      <input type="hidden" name="stage" value="3">
-    </div>
     <div class="actions">
       <input type="submit" class="btn primary" value="Done &rarr;">
+      <input type="hidden" name="stage" value="3">
       <a class="btn" href="@app.routes.Resources.intake(asset.getId, 1)">Cancel</a>
     </div>
     }
