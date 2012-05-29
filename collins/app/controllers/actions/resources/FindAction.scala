@@ -4,7 +4,7 @@ package resources
 
 import asset.{AssetFinderDataHolder, FindAction => AssetFindAction}
 
-import models.{Asset, Page, PageParams}
+import models.{Asset, AssetView, Page, PageParams}
 import util.SecuritySpecification
 
 import play.api.data.Form
@@ -40,7 +40,7 @@ case class FindAction(
       super.execute(rd)
   }
 
-  override protected def handleWebSuccess(p: Page[Asset], rd: AssetFinderDataHolder): Result = {
+  override protected def handleWebSuccess(p: Page[AssetView], rd: AssetFinderDataHolder): Result = {
     p.size match {
       case 0 =>
         Redirect(app.routes.Resources.index).flashing("message" -> AssetMessages.noMatch)
