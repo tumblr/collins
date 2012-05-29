@@ -23,9 +23,45 @@ object AssetConfig {
   lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
 }
 
+/**
+ * An AssetView can be either a regular Asset or a RemoteAsset from another
+ * collins instance.  This interface should only expose methods needed by the
+ * list view, since from there the client is directed to whichever instnace
+ * actually owns the asset.
+ */
+trait AssetView {
+
+  def tag: String
+  //def status: Int
+  //def asset_type: Int
+
+  def toJsonObject(): JsObject
+  def forJsonObject: Seq[(String, JsValue)]
+
+  def host: Option[String] //none if local
+  
+
+}
+
+/**
+ * An asset controlled by another collins instance, used during multi-collins
+ * searching
+ */
+case class RemoteAsset(_host: String, json: JsObject) extends AssetView {
+
+  def toJsonObject = json
+  def forJsonObject = json.fields
+
+  def tag = (json \ "tag").as[String]
+
+  def host = Some(_host)
+
+}
+
+
 case class Asset(tag: String, status: Int, asset_type: Int,
     created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp],
-    id: Long = 0) extends ValidatedEntity[Long]
+    id: Long = 0) extends ValidatedEntity[Long] with AssetView
 {
   override def validate() {
     require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
@@ -82,6 +118,8 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     val filtered: Seq[MetaWrapper] = mvs2.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
     Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, filtered)
   }
+
+  def host = None
 }
 
 object Asset extends Schema with AnormAdapter[Asset] {
