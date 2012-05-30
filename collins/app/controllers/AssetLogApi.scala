@@ -2,23 +2,10 @@ package controllers
 
 import actions.logs.{CreateAction, FindAction}
 
-import models.{Asset, AssetLog, Model, PageParams}
-import models.{LogMessageType, LogFormat, LogSource}
-import util.SecuritySpec
-
-import play.api.data._
-import play.api.data.Forms._
-import play.api.libs.json._
-import play.api.mvc._
-import Results._
-
-import org.jsoup.Jsoup
-import org.jsoup.safety.Whitelist
+import models.PageParams
 
 trait AssetLogApi {
   this: Api with SecureController =>
-
-  val DefaultMessageType = LogMessageType.Informational
 
   // GET /assets/:tag/logs
   def getLogData(tag: String, page: Int, size: Int, sort: String, filter: String) =
