@@ -43,6 +43,7 @@ class FindAction(
         logger.debug("MULTI")
         Asset.findMulti(pageParams, ra, af, op)
       } else {
+        logger.debug("NO-MULTI")
         Asset.find(pageParams, ra, af, op)
       }
       try handleSuccess(results, afdh) catch {

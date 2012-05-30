@@ -45,7 +45,7 @@ case class FindAction(
       case 0 =>
         Redirect(app.routes.Resources.index).flashing("message" -> AssetMessages.noMatch)
       case 1 =>
-        Redirect(app.routes.CookieApi.getAsset(p.items(0).tag))
+        Status.Redirect(p.items(0).remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(p.items(0).tag))
       case n =>
         Status.Ok(views.html.asset.list(p)(flash, request))
     }
