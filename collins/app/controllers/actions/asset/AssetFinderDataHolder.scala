@@ -92,7 +92,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     val (
       tag, attributes, operation, astatus, atype, details, cafter, cbefore, uafter, ubefore, remoteLookup
     ) = form
-    val attribs = AttributeResolver(mapAttributes(attributes, AttributeMap.fromMap(data)))
+    val attribs = AttributeResolver(mapAttributes(attributes.filter(_.nonEmpty), AttributeMap.fromMap(data)))
     val afinder = AssetFinder(tag, astatus, atype, cafter, cbefore, uafter, ubefore)
     AssetFinderDataHolder(
       afinder,
