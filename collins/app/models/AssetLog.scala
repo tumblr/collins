@@ -58,6 +58,7 @@ case class AssetLog(
     Json.stringify(JsObject(forJsonObject))
   }
 
+  def toJsonObject(): JsObject = JsObject(forJsonObject)
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "ASSET_TAG" -> JsString(Asset.findById(getAssetId()).get.tag),

@@ -1,6 +1,8 @@
 package controllers
 
-import models.{Asset, AssetLog, Model}
+import actions.logs.FindAction
+
+import models.{Asset, AssetLog, Model, PageParams}
 import models.{LogMessageType, LogFormat, LogSource}
 import util.SecuritySpec
 
@@ -18,53 +20,13 @@ trait AssetLogApi {
 
   val DefaultMessageType = LogMessageType.Informational
 
-  // GET /api/asset/:tag/log
-  def getLogData(tag: String, page: Int, size: Int, sort: String, filter: String) = SecureAction { implicit req =>
-    val result = Api.withAssetFromTag(tag) { asset =>
-      val logs = AssetLog.list(Some(asset), page, size, sort, filter)
-      val prevPage = logs.prev match {
-        case None => 0
-        case Some(n) => n
-      }
-      val nextPage = logs.next match {
-        case None => page
-        case Some(n) => n
-      }
-      val totalResults = logs.total
-      val headers = logs.getPaginationHeaders()
-      val paginationMap = logs.getPaginationJsObject
-      Right(ResponseData(Results.Ok, JsObject(paginationMap ++ Seq(
-        "Data" -> JsArray(logs.items.map { log =>
-          JsObject(log.forJsonObject)
-        }.toList)
-      )), headers))
-    }
-    formatResponseData(result.fold(l => l, r => r))
-  }(Permissions.AssetLogApi.Get)
+  // GET /assets/:tag/logs
+  def getLogData(tag: String, page: Int, size: Int, sort: String, filter: String) =
+    FindAction(Some(tag), PageParams(page, size, sort), filter, Permissions.AssetLogApi.Get, this)
 
   // GET /assets/logs
-  def getAllLogData(page: Int, size: Int, sort: String, filter: String) = SecureAction { implicit req =>
-    val result = {
-      val logs = AssetLog.list(None, page, size, sort, filter)
-      val prevPage = logs.prev match {
-        case None => 0
-        case Some(n) => n
-      }
-      val nextPage = logs.next match {
-        case None => page
-        case Some(n) => n
-      }
-      val totalResults = logs.total
-      val headers = logs.getPaginationHeaders()
-      val paginationMap = logs.getPaginationJsObject
-      ResponseData(Results.Ok, JsObject(paginationMap ++ Seq(
-        "Data" -> JsArray(logs.items.map { log =>
-          JsObject(log.forJsonObject)
-        }.toList)
-      )), headers)
-    }
-    formatResponseData(result)
-  }(Permissions.AssetLogApi.GetAll)
+  def getAllLogData(page: Int, size: Int, sort: String, filter: String) =
+    FindAction(None, PageParams(page, size, sort), filter, Permissions.AssetLogApi.GetAll, this)
 
   // PUT /api/asset/:tag/log
   def submitLogData(tag: String) = Authenticated { user => Action { implicit req =>
