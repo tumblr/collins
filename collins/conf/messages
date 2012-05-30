@@ -37,8 +37,8 @@ assetfinder.date.invalid={0} must be an ISO 8601 date format like ''{1}''.
 assetfinder.operation.invalid=Invalid operation specified. Valid operations are ''and'' or ''or''.
 
 assetlog.create.error.messageInvalid=message parameter must not be empty
-assetlog.create.error.messageTypeInvalid=specified log type is invalid
-assetlog.create.error.messageSourceInvalid=specified source is invalid
+assetlog.create.error.messageTypeInvalid=specified log type is invalid, valid types are: {0}
+assetlog.create.error.messageSourceInvalid=specified source is invalid, valid sources are: {0}
 
 attributeresolver.notfound=Invalid search field ''{0}''. Not found as asset tag, IPMI field or IP Address field.
 
