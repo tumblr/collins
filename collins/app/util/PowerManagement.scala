@@ -4,6 +4,8 @@ import play.api.{Play, Plugin, Logger}
 import com.tumblr.play.{Power, PowerAction, PowerManagement => PowerMgmt}
 import models.{Asset, AssetType, Status}
 
+import scala.util.control.Exception.allCatch
+
 trait PowerManagementConfig extends FeatureConfigSkinny {
   override val rootKey: String = "powermanagement"
 
@@ -17,8 +19,8 @@ trait PowerManagementConfig extends FeatureConfigSkinny {
   lazy val AllowedAssetTypes: Set[Int] =
     feature("allowAssetTypes").ifSet { f =>
       f.toSet
-    }.getOrElse(Set("SERVER_NODE"))
-      .map(name => AssetType.findByName(name))
+    }.filter(_.nonEmpty).getOrElse(Set("SERVER_NODE"))
+      .map(name => allCatch.opt(AssetType.Enum.withName(name)))
       .filter(_.isDefined)
       .map(_.get.id)
 
@@ -59,8 +61,16 @@ object PowerManagement extends PowerManagementConfig {
 
   def isPluginEnabled = pluginEnabled.isDefined
 
-  def assetTypeAllowed(asset: Asset): Boolean = AllowedAssetTypes.contains(asset.asset_type)
-  def assetStateAllowed(asset: Asset): Boolean = !DisallowedAssetStates.contains(asset.status)
+  def assetTypeAllowed(asset: Asset): Boolean = {
+    val isTrue = AllowedAssetTypes.contains(asset.asset_type)
+    logger.debug("assetTypeAllowed: %s".format(isTrue.toString))
+    isTrue
+  }
+  def assetStateAllowed(asset: Asset): Boolean = {
+    val isFalse = !DisallowedAssetStates.contains(asset.status)
+    logger.debug("assetStateAllowed: %s".format(isFalse.toString))
+    isFalse
+  }
   def actionAllowed(asset: Asset, action: PowerAction): Boolean = {
     if (asset.getStatus().name == "Allocated" && DisallowedWhenAllocated.contains(action)) {
       false
