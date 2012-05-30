@@ -67,7 +67,11 @@ case class AssetLog(
     "SOURCE" -> JsString(getSource().toString()),
     "TYPE" -> JsString(getMessageType().toString()),
     "MESSAGE" -> (isJson() match {
-      case true => Json.parse(message)
+      case true => try {
+        Json.parse(message)
+      } catch {
+        case e => JsString("Error parsing JSON: " + e.getMessage)
+      }
       case false => JsString(message)
     })
   )
