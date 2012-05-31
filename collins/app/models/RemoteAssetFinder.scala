@@ -26,7 +26,7 @@ case class AssetSearchParameters(
       params._1.map{case (enum, value) => (enum.toString, value)} ++ 
       params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, value))} ++ 
       params._3.map{i => ("ip_address" -> i)}
-    ).toMap ++ afinder.toMap
+    ).toMap ++ afinder.toMap + ("details" -> "true")
     operation.map{op => q1 + ("operation" -> op)}.getOrElse(q1)
   }
 
@@ -41,6 +41,7 @@ case class AssetSearchParameters(
 trait RemoteAssetClient {
   val tag: String //identifier to match up with cached paginations
   def getRemoteAssets(params: AssetSearchParameters, page: PageParams): Seq[AssetView]
+  def getTotal: Int
 }
 
 class HttpRemoteAssetClient(val host: String, val user: String, val pass: String) extends RemoteAssetClient {
@@ -49,13 +50,19 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
   val queryUrl = host + app.routes.Api.getAssets().toString
   val authenticationTuple = (user, pass, com.ning.http.client.Realm.AuthScheme.BASIC)
 
+  var total: Option[Int] = None
+
+  def getTotal = total.getOrElse(0)
+
   def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = {
+    Logger.logger.debug("retrieving assets from %s: %s".format(host, page.toString))
     val request = WS.url(queryUrl).copy(
       queryString = params.toQueryString ++ page.toQueryString,
       auth = Some(authenticationTuple)
     )
     val result = request.get.await.get
     val json = Json.parse(result.body)
+    total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Int]
     (json \ "data" \ "Data") match {
       case JsArray(items) => items.map{
         case obj: JsObject => Some(new RemoteAsset(host, obj))
@@ -79,6 +86,8 @@ object LocalAssetClient extends RemoteAssetClient {
   val tag = "local"
 
   def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = Asset.find(page, params.params, params.afinder, params.operation).items
+
+  def getTotal = 0
 }
 
 
@@ -101,7 +110,7 @@ case class RemoteAssetFinderOffset(page: Int, pageOffset: Int)
  */
 class RemoteAssetStream(val client: RemoteAssetClient, val params: AssetSearchParameters, val initialOffset: Option[RemoteAssetFinderOffset] = None) {
 
-  val PAGE_SIZE = 10
+  val PAGE_SIZE = 20
   val SORT = "ASC"
 
   val cachedAssets = new collection.mutable.Queue[AssetView]
@@ -109,7 +118,7 @@ class RemoteAssetStream(val client: RemoteAssetClient, val params: AssetSearchPa
   var eof = false
   
   private[this] def retrieveHead: Option[AssetView] = cachedAssets.headOption match {
-    case None if (!eof)=> {
+    case None if (!eof) => {
       val page = nextRetrievedPage match {
         case Some(p) => p
         case None => initialOffset.map{_.page}.getOrElse(0)
@@ -132,7 +141,7 @@ class RemoteAssetStream(val client: RemoteAssetClient, val params: AssetSearchPa
         None
       }
     }
-    case some => some
+    case someOrNone => someOrNone
   }
 
   /**
@@ -176,7 +185,10 @@ object RemoteAssetFinder {
    * order
    */
   def getOrdering: Ordering[AssetView] = new Ordering[AssetView] {
-    def compare(a: AssetView, b: AssetView) = a.tag compareToIgnoreCase b.tag
+    def compare(a: AssetView, b: AssetView) = {
+      Logger.logger.debug("comparing %s to %s".format(a.tag, b.tag))
+      a.tag compareToIgnoreCase b.tag
+    }
   }
 
   implicit val ordering = getOrdering
@@ -192,12 +204,12 @@ object RemoteAssetFinder {
     .flatMap{_._1.get}
 
   /**
-   * returns the set of assets for the page
+   * returns the set of assets for the page and the total number of results across all instances
    *
    * Known Issue - If a new data center (with > 0 assets) is added, all cached
    * paginations will be screwed up.
    */
-  def get(clients: Seq[RemoteAssetClient], pageParams: PageParams, searchParams: AssetSearchParameters): Seq[AssetView] = {
+  def get(clients: Seq[RemoteAssetClient], pageParams: PageParams, searchParams: AssetSearchParameters): (Seq[AssetView], Int) = {
     val key = searchParams.paginationKey
     val streams = Cache.getAs[PaginationMap](key).filter(_.size == clients.size) match {
       case Some(offsets) => clients.map{client => new RemoteAssetStream(client, searchParams, Some(offsets(client.tag)))}
@@ -210,7 +222,7 @@ object RemoteAssetFinder {
     }
     val results = (0 to pageParams.size - 1).map{i => getNextAsset(streams)}.flatten
     Cache.set(key, streams.map{s => (s.client.tag, s.getCurrentOffset)}.toMap, 30)
-    results
+    (results, streams.foldLeft(0){(total, stream) => total + stream.client.getTotal})
   }
     
 }
