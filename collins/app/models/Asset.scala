@@ -66,13 +66,13 @@ case class RemoteAsset(_host: String, json: JsObject) extends AssetView {
   def toJsonObject = JsObject(forJsonObject)
   def forJsonObject = json.fields :+ ("LOCATION" -> JsString(_host))
 
-  def tag = (json \ "TAG").as[String]
-  def created = jsonDateToTimestamp(json \ "CREATED").getOrElse(new Timestamp(0))
-  def updated = jsonDateToTimestamp(json \ "UPDATED")
+  def tag = (json \ "ASSET" \ "TAG").as[String]
+  def created = jsonDateToTimestamp(json \ "ASSET" \ "CREATED").getOrElse(new Timestamp(0))
+  def updated = jsonDateToTimestamp(json \ "ASSET" \ "UPDATED")
 
   def getHostnameMetaValue() = (json \ "ATTRIBS" \ "0" \ "HOSTNAME").asOpt[String]
   def getPrimaryRoleMetaValue() = (json \ "ATTRIBS" \ "0" \ "PRINARY_ROLE").asOpt[String]
-  def getStatusName() = (json \ "STATUS" ).asOpt[String].getOrElse("Unknown")
+  def getStatusName() = (json \ "ASSET" \ "STATUS" ).asOpt[String].getOrElse("Unknown")
 
   def remoteHost = Some(_host)
 
@@ -294,63 +294,32 @@ object Asset extends Schema with AnormAdapter[Asset] {
     )
     val findLocations = Asset.find(PageParams(0,50,"ASC"), instanceFinder).items.collect{case a: Asset => a}
     //iterate over the locations, sending requests to each one and aggregate their results
-    val remoteAssets = findLocations.map{ locationAsset => 
+    val remoteClients = findLocations.map{ locationAsset => 
       locationAsset.getMetaAttribute("LOCATION").map{_.getValue} match {
         case None => {
           logger.warn("No location attribute for remote location asset %s".format(locationAsset.tag))
-          Nil
+          None
         }
         case Some(location) => {
           val pieces = location.split(";")
           if (pieces.length < 2) {
             logger.error("Invalid location %s".format(location))
-            Nil
+            None
           } else {
             val host = pieces(0) 
-            val queryUrl = host + app.routes.Api.getAssets().toString
             val userpass = pieces(1).split(":")
             if (userpass.length != 2) {
               logger.error("Invalid user/pass %s for remote collins asset %s".format(pieces(1), locationAsset.id.toString))
-              Nil
+              None
             } else {
-              val authenticationTuple = (userpass(0), userpass(1), com.ning.http.client.Realm.AuthScheme.BASIC)
-              //we have to rebuild the query
-              logger.debug(params.toString)
-              val queryString = {
-                val q1: Map[String, String] = (
-                  params._1.map{case (enum, value) => (enum.toString, value)} ++ 
-                  params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, value))} ++ 
-                  params._3.map{i => ("ip_address" -> i)}
-                ).toMap ++ afinder.toMap
-                operation.map{op => q1 + ("operation" -> op)}.getOrElse(q1)
-              }
-              val request = WS.url(queryUrl).copy(
-                queryString = queryString,
-                auth = Some(authenticationTuple)
-              )
-              logger.debug("Here is our query string: " + queryString.toString)
-              val result = request.get.await.get
-              logger.debug(result.body)
-              val json = Json.parse(result.body)
-              (json \ "data" \ "Data") match {
-                case JsArray(items) => items.map{
-                  case obj: JsObject => Some(new RemoteAsset(host, obj))
-                  case _ => {
-                    logger.warn("Invalid asset in response data")
-                    None
-                  }
-                }.flatten
-                case _ => {
-                  logger.warn("Invalid response from %s".format(host))
-                  Nil
-                }
-              }
+              Some(new HttpRemoteAssetClient(host, userpass(0), userpass(1)))
             }
           }
         }
       }
     }.flatten
-    Page(find(page,params,afinder,operation).items ++ remoteAssets, page.page, page.offset,0)
+    val (items, total) = RemoteAssetFinder.get(remoteClients :+ LocalAssetClient, page, AssetSearchParameters(params, afinder, operation))
+    Page(items, page.page, page.offset,total)
 
   }
 
