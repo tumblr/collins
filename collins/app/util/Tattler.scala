@@ -3,12 +3,17 @@ package util
 import models._
 import models.{LogMessageType, LogFormat, LogSource}
 
-sealed abstract class Tattler(val source: LogSource.LogSource, val pString: Option[String] = None) {
-  protected def message(user: Option[User], msg: String) = {
+trait TattlerHelper {
+  val pString: Option[String] = None
+  def message(user: Option[User], msg: String) = {
     val username = user.filter(!_.isEmpty).orElse(AppConfig.getUser()).map(_.username)
       .orElse(pString).orElse(Some("Unknown")).get
     "User %s: %s".format(username, msg)
   }
+}
+object TattlerHelper extends TattlerHelper
+
+sealed abstract class Tattler(val source: LogSource.LogSource, override val pString: Option[String] = None) extends TattlerHelper {
   def critical(asset: Asset, user: Option[User], msg: String): AssetLog = {
     AssetLog.critical(
       asset, message(user, msg), LogFormat.PlainText, source

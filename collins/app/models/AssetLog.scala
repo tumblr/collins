@@ -58,6 +58,7 @@ case class AssetLog(
     Json.stringify(JsObject(forJsonObject))
   }
 
+  def toJsonObject(): JsObject = JsObject(forJsonObject)
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "ASSET_TAG" -> JsString(Asset.findById(getAssetId()).get.tag),
@@ -66,7 +67,11 @@ case class AssetLog(
     "SOURCE" -> JsString(getSource().toString()),
     "TYPE" -> JsString(getMessageType().toString()),
     "MESSAGE" -> (isJson() match {
-      case true => Json.parse(message)
+      case true => try {
+        Json.parse(message)
+      } catch {
+        case e => JsString("Error parsing JSON: " + e.getMessage)
+      }
       case false => JsString(message)
     })
   )
