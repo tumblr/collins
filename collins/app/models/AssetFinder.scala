@@ -37,7 +37,7 @@ case class AssetFinder(
     val items:Seq[Option[(String, String)]] = (
       tag.map{"tag" -> _} ::
       status.map{"status" -> _.toString} ::
-      assetType.map{"assetType" -> _.toString} ::
+      assetType.map{"type" -> _.toString} ::
       createdAfter.map{"createdAfter" -> _.toString} ::
       createdBefore.map{"createdBefore" -> _.toString} ::
       updatedAfter.map{"updatedAfter" -> _.toString} ::
