@@ -315,10 +315,11 @@ object Asset extends Schema with AnormAdapter[Asset] {
             } else {
               val authenticationTuple = (userpass(0), userpass(1), com.ning.http.client.Realm.AuthScheme.BASIC)
               //we have to rebuild the query
+              logger.debug(params.toString)
               val queryString = {
                 val q1: Map[String, String] = (
                   params._1.map{case (enum, value) => (enum.toString, value)} ++ 
-                  params._2.map{case (assetMeta,value) => (assetMeta.name, value)} ++ 
+                  params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, value))} ++ 
                   params._3.map{i => ("ip_address" -> i)}
                 ).toMap ++ afinder.toMap
                 operation.map{op => q1 + ("operation" -> op)}.getOrElse(q1)
