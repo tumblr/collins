@@ -318,7 +318,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         }
       }
     }.flatten
-    val (items, total) = RemoteAssetFinder.get(remoteClients :+ LocalAssetClient, page, AssetSearchParameters(params, afinder, operation))
+    val (items, total) = RemoteAssetFinder(remoteClients :+ LocalAssetClient, page, AssetSearchParameters(params, afinder, operation))
     Page(items, page.page, page.offset,total)
 
   }

@@ -87,28 +87,24 @@ object LocalAssetClient extends RemoteAssetClient {
 
   def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = Asset.find(page, params.params, params.afinder, params.operation).items
 
-  def getTotal = 0
+  def getTotal = 0 //fix
 }
 
 
 /** 
- * An offset representing the NEXT asset to be used from a RemoteAssetStream,
+ * An offset representing the NEXT asset to be used from a RemoteAssetQueue,
  * designed to be stored in the cache
  */
 case class RemoteAssetFinderOffset(page: Int, pageOffset: Int)
 
 
 /**
- * A peek-able stream of assets from a remote location.  Assets are read from
- * the stream one at a time, but the stream will fetch remote assets in pages
+ * A peek-able queue of assets from a remote location.  Assets are read from
+ * the queue one at a time, but the stream will fetch remote assets in pages
  * from the remote collins instance as needed
  *
- * NOTE - this class is mutable, probably there's a way to turn this into a
- * real Scala Stream
- *
- * NOTE - this class is also currently NOT thread safe
  */
-class RemoteAssetStream(val client: RemoteAssetClient, val params: AssetSearchParameters, val initialOffset: Option[RemoteAssetFinderOffset] = None) {
+class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchParameters) {
 
   val PAGE_SIZE = 20
   val SORT = "ASC"
@@ -119,21 +115,11 @@ class RemoteAssetStream(val client: RemoteAssetClient, val params: AssetSearchPa
   
   private[this] def retrieveHead: Option[AssetView] = cachedAssets.headOption match {
     case None if (!eof) => {
-      val page = nextRetrievedPage match {
-        case Some(p) => p
-        case None => initialOffset.map{_.page}.getOrElse(0)
-      }
+      val page = nextRetrievedPage.getOrElse(0)
       val pageParams = PageParams(page, PAGE_SIZE, SORT)
       val results = client.getRemoteAssets(params, pageParams)
       if (results.size > 0) {
         cachedAssets ++= results
-        //if we're retrieving results for the first time and there is an
-        //initial offset, we have to remove the first pageOffset number of
-        //items from the queue
-        (nextRetrievedPage, initialOffset) match {
-          case (Some(p), Some(init)) => (0 to init.pageOffset - 1).foreach{i => cachedAssets.headOption.foreach{h => cachedAssets.dequeue}}
-          case _ => {}
-        }
         nextRetrievedPage = Some(page + 1)
         cachedAssets.headOption
       } else {
@@ -142,20 +128,6 @@ class RemoteAssetStream(val client: RemoteAssetClient, val params: AssetSearchPa
       }
     }
     case someOrNone => someOrNone
-  }
-
-  /**
-   *
-   * Returns an offset representing the next item to be dequeued 
-   *
-   */
-  def getCurrentOffset = nextRetrievedPage match {
-    case Some(page) => if (cachedAssets.size == 0) {
-      RemoteAssetFinderOffset(page + 1, 0)
-    } else {
-      RemoteAssetFinderOffset(page, PAGE_SIZE - cachedAssets.size)
-    }
-    case _ => initialOffset.getOrElse(RemoteAssetFinderOffset(0,0))
   }
 
   /**
@@ -169,15 +141,9 @@ class RemoteAssetStream(val client: RemoteAssetClient, val params: AssetSearchPa
   def get: Option[AssetView] = retrieveHead.map{h => cachedAssets.dequeue}
 }
 
-/**
- * Performs searches on remote collins instances, merging the results with
- * proper sorting and pagination.  The Finder uses the Play Flash scope to
- * store pagination information about each remote instance in order to avoid
- * unnecessary cycling through results with each page load.
- */
-object RemoteAssetFinder {
-
-  type PaginationMap = Map[String, RemoteAssetFinderOffset]
+class RemoteAssetStream(clients: Seq[RemoteAssetClient], searchParams: AssetSearchParameters) {
+  
+  val queues = clients.map{client => new RemoteAssetQueue(client, searchParams)}
 
   /**
    * Returns the ordering to merge-sort assets.  currently you cannot specify a
@@ -196,7 +162,7 @@ object RemoteAssetFinder {
   /**
    * uses merge-sort to grab the next item
    */
-  private[this] def getNextAsset(streams: Seq[RemoteAssetStream]): Option[AssetView] = streams
+  private[this] def getNextAsset: Option[AssetView] = queues
     .map{ s => s.peek.map{p => (s,p)}}
     .flatten
     .sortBy(_._2)
@@ -204,25 +170,37 @@ object RemoteAssetFinder {
     .flatMap{_._1.get}
 
   /**
-   * returns the set of assets for the page and the total number of results across all instances
-   *
-   * Known Issue - If a new data center (with > 0 assets) is added, all cached
-   * paginations will be screwed up.
+   * Create an infinite stream of assets
+   * (see http://www.scala-lang.org/api/current/scala/collection/immutable/Stream.html)
    */
-  def get(clients: Seq[RemoteAssetClient], pageParams: PageParams, searchParams: AssetSearchParameters): (Seq[AssetView], Int) = {
-    val key = searchParams.paginationKey
-    val streams = Cache.getAs[PaginationMap](key).filter(_.size == clients.size) match {
-      case Some(offsets) => clients.map{client => new RemoteAssetStream(client, searchParams, Some(offsets(client.tag)))}
-      case None => {
-        //we have to manually cycle through the previous pages
-        val s = clients.map{client => new RemoteAssetStream(client, searchParams, None)}
-        (0 to (pageParams.page * pageParams.size) - 1).foreach{i => getNextAsset(s)}
-        s
-      }
-    }
-    val results = (0 to pageParams.size - 1).map{i => getNextAsset(streams)}.flatten
-    Cache.set(key, streams.map{s => (s.client.tag, s.getCurrentOffset)}.toMap, 30)
-    (results, streams.foldLeft(0){(total, stream) => total + stream.client.getTotal})
+  val assets: Stream[Option[AssetView]] = {
+    def n(asset: Option[AssetView]): Stream[Option[AssetView]] = asset #:: n(getNextAsset)
+    n(getNextAsset)
+  }
+
+  def aggregateTotal: Int = clients.map{_.getTotal}.sum
+
+  /** 
+   * NOTE - this will not scale past a few thousand total assets when doing
+   * searches that return large numbers of assets and requests are made for
+   * high offsets in the result set, after that we'll need some kind of search
+   * index
+   */
+  def slice(from: Int, to: Int): Seq[AssetView] = assets.slice(from, to).flatten
+
+}
+
+object RemoteAssetFinder {
+
+
+  /**
+   */
+  def apply(clients: Seq[RemoteAssetClient], pageParams: PageParams, searchParams: AssetSearchParameters): (Seq[AssetView], Int) = {
+    val key = searchParams.paginationKey + clients.map{_.tag}.mkString("_")
+    val stream = Cache.getAs[RemoteAssetStream](key).getOrElse(new RemoteAssetStream(clients, searchParams))
+    val results = stream.slice(pageParams.page * pageParams.size, (pageParams.page +1) * (pageParams.size))
+    Cache.set(key, stream, 30)
+    (results, stream.aggregateTotal)
   }
     
 }
