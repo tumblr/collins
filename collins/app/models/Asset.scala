@@ -71,7 +71,7 @@ case class RemoteAsset(_host: String, json: JsObject) extends AssetView {
   def updated = jsonDateToTimestamp(json \ "ASSET" \ "UPDATED")
 
   def getHostnameMetaValue() = (json \ "ATTRIBS" \ "0" \ "HOSTNAME").asOpt[String]
-  def getPrimaryRoleMetaValue() = (json \ "ATTRIBS" \ "0" \ "PRINARY_ROLE").asOpt[String]
+  def getPrimaryRoleMetaValue() = (json \ "ATTRIBS" \ "0" \ "PRIMARY_ROLE").asOpt[String]
   def getStatusName() = (json \ "ASSET" \ "STATUS" ).asOpt[String].getOrElse("Unknown")
 
   def remoteHost = Some(_host)
