@@ -105,7 +105,7 @@ object LocalAssetClient extends RemoteAssetClient {
  */
 class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchParameters) {
 
-  val PAGE_SIZE = 20
+  val PAGE_SIZE = 50
   val SORT = "ASC"
 
   val cachedAssets = new collection.mutable.Queue[AssetView]
