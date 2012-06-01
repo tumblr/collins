@@ -41,7 +41,7 @@ case class AssetSearchParameters(
 trait RemoteAssetClient {
   val tag: String //identifier to match up with cached paginations
   def getRemoteAssets(params: AssetSearchParameters, page: PageParams): Seq[AssetView]
-  def getTotal: Int
+  def getTotal: Long
 }
 
 class HttpRemoteAssetClient(val host: String, val user: String, val pass: String) extends RemoteAssetClient {
@@ -50,7 +50,7 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
   val queryUrl = host + app.routes.Api.getAssets().toString
   val authenticationTuple = (user, pass, com.ning.http.client.Realm.AuthScheme.BASIC)
 
-  var total: Option[Int] = None
+  var total: Option[Long] = None
 
   def getTotal = total.getOrElse(0)
 
@@ -62,7 +62,7 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
     )
     val result = request.get.await.get
     val json = Json.parse(result.body)
-    total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Int]
+    total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
     (json \ "data" \ "Data") match {
       case JsArray(items) => items.map{
         case obj: JsObject => Some(new RemoteAsset(host, obj))
@@ -85,22 +85,21 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
 object LocalAssetClient extends RemoteAssetClient {
   val tag = "local"
 
-  def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = Asset.find(page, params.params, params.afinder, params.operation).items
+  var total = 0L
 
-  def getTotal = 0 //fix
+  def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = {
+    val localPage = Asset.find(page, params.params, params.afinder, params.operation)
+    total = localPage.total
+    localPage.items
+  }
+
+  def getTotal = total
 }
-
-
-/** 
- * An offset representing the NEXT asset to be used from a RemoteAssetQueue,
- * designed to be stored in the cache
- */
-case class RemoteAssetFinderOffset(page: Int, pageOffset: Int)
 
 
 /**
  * A peek-able queue of assets from a remote location.  Assets are read from
- * the queue one at a time, but the stream will fetch remote assets in pages
+ * the queue one at a time, but it will fetch remote assets in pages
  * from the remote collins instance as needed
  *
  */
@@ -141,6 +140,11 @@ class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchPar
   def get: Option[AssetView] = retrieveHead.map{h => cachedAssets.dequeue}
 }
 
+
+/**
+ * A stream of assets pulled from multiple collins instances and combined using
+ * merge-sort.  Backed using a Scala Stream for memoization
+ */
 class RemoteAssetStream(clients: Seq[RemoteAssetClient], searchParams: AssetSearchParameters) {
   
   val queues = clients.map{client => new RemoteAssetQueue(client, searchParams)}
@@ -178,7 +182,7 @@ class RemoteAssetStream(clients: Seq[RemoteAssetClient], searchParams: AssetSear
     n(getNextAsset)
   }
 
-  def aggregateTotal: Int = clients.map{_.getTotal}.sum
+  def aggregateTotal: Long = clients.map{_.getTotal}.sum
 
   /** 
    * NOTE - this will not scale past a few thousand total assets when doing
@@ -195,7 +199,7 @@ object RemoteAssetFinder {
 
   /**
    */
-  def apply(clients: Seq[RemoteAssetClient], pageParams: PageParams, searchParams: AssetSearchParameters): (Seq[AssetView], Int) = {
+  def apply(clients: Seq[RemoteAssetClient], pageParams: PageParams, searchParams: AssetSearchParameters): (Seq[AssetView], Long) = {
     val key = searchParams.paginationKey + clients.map{_.tag}.mkString("_")
     val stream = Cache.getAs[RemoteAssetStream](key).getOrElse(new RemoteAssetStream(clients, searchParams))
     val results = stream.slice(pageParams.page * pageParams.size, (pageParams.page +1) * (pageParams.size))
