@@ -18,7 +18,8 @@ import play.api.Play.current
 case class AssetSearchParameters(
   params: util.AttributeResolver.ResultTuple, 
   afinder: AssetFinder, 
-  operation: Option[String] = None //"and" or "or"
+  operation: Option[String] = None, //"and" or "or"
+  details: Boolean = false
 
 ) {
 
@@ -32,7 +33,7 @@ case class AssetSearchParameters(
       params._1.map{case (enum, value) => (enum.toString, value)} ++ 
       params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, value))} ++ 
       params._3.map{i => ("ip_address" -> i)}
-    ) ++ afinder.toSeq :+ ("details" -> "true")
+    ) ++ afinder.toSeq :+ ("details" -> (if (details) "true" else "false"))
     operation.map{op => q1 :+ ("operation" -> op)}.getOrElse(q1)
   }
 
@@ -87,7 +88,10 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
       total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
       (json \ "data" \ "Data") match {
         case JsArray(items) => items.map{
-          case obj: JsObject => Some(new RemoteAsset(host, obj))
+          case obj: JsObject => Some(params.details match {
+            case true => new DetailedRemoteAsset(host, obj)
+            case false => new BasicRemoteAsset(host, obj)
+          })
           case _ => {
             Logger.logger.warn("Invalid asset in response data")
             None
@@ -152,6 +156,11 @@ class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchPar
   var nextRetrievedPage: Option[Int] = None
   var eof = false
   
+  /**
+   * Retrieve the next item in the cached queue.  If there are no items, get
+   * some more from the remote client, and if the client returns None, set eof
+   * to true to avoid extra lookups for more items
+   */
   private[this] def retrieveHead: Option[AssetView] = cachedAssets.headOption match {
     case None if (!eof) => {
       val page = nextRetrievedPage.getOrElse(0)

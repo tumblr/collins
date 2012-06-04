@@ -48,20 +48,55 @@ trait AssetView {
 
   def remoteHost: Option[String] //none if local
   
+  protected def jsonDateToTimestamp(j: JsValue): Option[Timestamp] = {
+    val formatter = new SimpleDateFormat(util.views.Formatter.ISO_8601_FORMAT)
+    j.asOpt[String].filter{_ != ""}.map{s => new Timestamp(formatter.parse(s).getTime)}
+  }
 
 }
+
+trait RemoteAsset extends AssetView {
+  val json: JsObject
+}
+
+/**
+ * A remote asset that extracts from json returned by collins when details is false
+ */
+case class BasicRemoteAsset(_host: String, json: JsObject) extends RemoteAsset {
+  def toJsonObject = JsObject(forJsonObject)
+  def forJsonObject = json.fields :+ ("LOCATION" -> JsString(_host))
+
+  def tag = (json \ "TAG").as[String]
+  def created = jsonDateToTimestamp(json \ "ASSET" \ "CREATED").getOrElse(new Timestamp(0))
+  def updated = jsonDateToTimestamp(json \ "ASSET" \ "UPDATED")
+
+  private[this] def warnAboutData(){
+    Logger.logger.warn("Attempting to retrieve details data on basic remote asset")
+
+  }
+
+  def getHostnameMetaValue() = {
+    warnAboutData()
+    None
+  }
+  def getPrimaryRoleMetaValue() = {
+    warnAboutData()
+    None
+  }
+
+  def getStatusName() = (json \ "STATUS" ).asOpt[String].getOrElse("Unknown")
+
+  def remoteHost = Some(_host)
+}
+  
 
 /**
  * An asset controlled by another collins instance, used during multi-collins
  * searching
  */
-case class RemoteAsset(_host: String, json: JsObject) extends AssetView {
+case class DetailedRemoteAsset(_host: String, json: JsObject) extends RemoteAsset {
 
   
-  private[this] def jsonDateToTimestamp(j: JsValue): Option[Timestamp] = {
-    val formatter = new SimpleDateFormat(util.views.Formatter.ISO_8601_FORMAT)
-    j.asOpt[String].filter{_ != ""}.map{s => new Timestamp(formatter.parse(s).getTime)}
-  }
 
   def toJsonObject = JsObject(forJsonObject)
   def forJsonObject = json.fields :+ ("LOCATION" -> JsString(_host))
@@ -282,7 +317,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
    * stored as assets themselves, though the asset type and attribute for URI
    * info is user-configured.
    */
-  def findMulti(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] = {
+  def findMulti(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String], details: Boolean): Page[AssetView] = {
     val instanceFinder = AssetFinder(
       tag = None,
       status = None,
@@ -318,7 +353,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         }
       }
     }.flatten
-    val (items, total) = RemoteAssetFinder(remoteClients :+ LocalAssetClient, page, AssetSearchParameters(params, afinder, operation))
+    val (items, total) = RemoteAssetFinder(remoteClients :+ LocalAssetClient, page, AssetSearchParameters(params, afinder, operation, details))
     Page(items, page.page, page.offset,total)
 
   }
