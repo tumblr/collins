@@ -55,7 +55,8 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty)
   val cpuMatcher: PartialFunction[NodeSeq,Cpu] = {
     case n if (n \ "@class" text) == "processor" =>
       val asset = getAsset(n)
-      val speed = SpeedConversions.hzToGhz((n \ "size" text).toLong)
+      val speedString = Option(n \ "size" text).filter(_.nonEmpty).getOrElse("0")
+      val speed = SpeedConversions.hzToGhz(speedString.toLong)
       val map = {
         val settings = (n \ "configuration" \ "setting")
         settings.size match {
