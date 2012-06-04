@@ -85,7 +85,7 @@ case class LshwRepresentation(
   def cpuThreadCount: Int = cpus.foldLeft(0) { case(total,cpu) =>
     total + cpu.threads
   }
-  def cpuSpeed: Double = cpus.headOption.map { _.speedGhz }.getOrElse(0.0)
+  def cpuSpeed: Double = cpus.sortBy(_.speedGhz).lastOption.map(_.speedGhz).getOrElse(0.0)
 
   def totalMemory: ByteStorageUnit = memory.foldLeft(new ByteStorageUnit(0)) { case(total,mem) =>
     new ByteStorageUnit(total.bytes + mem.size.bytes)

@@ -146,6 +146,7 @@ case "$1" in
       echo "$APP_NAME is running."
     else
       echo "$APP_NAME is NOT running."
+      exit 3
     fi
   ;;
 
