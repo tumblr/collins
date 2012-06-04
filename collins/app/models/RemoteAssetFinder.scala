@@ -60,8 +60,7 @@ trait RemoteAssetClient {
   def getTotal: Long
 }
 
-class HttpRemoteAssetClient(val host: String, val user: String, val pass: String) extends RemoteAssetClient {
-  val tag = host
+class HttpRemoteAssetClient(val tag: String, val host: String, val user: String, val pass: String) extends RemoteAssetClient {
 
   val queryUrl = host + app.routes.Api.getAssets().toString
   val authenticationTuple = (user, pass, com.ning.http.client.Realm.AuthScheme.BASIC)
@@ -89,8 +88,8 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
       (json \ "data" \ "Data") match {
         case JsArray(items) => items.map{
           case obj: JsObject => Some(params.details match {
-            case true => new DetailedRemoteAsset(host, obj)
-            case false => new BasicRemoteAsset(host, obj)
+            case true => new DetailedRemoteAsset(tag, host, obj)
+            case false => new BasicRemoteAsset(tag, host, obj)
           })
           case _ => {
             Logger.logger.warn("Invalid asset in response data")

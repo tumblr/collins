@@ -57,18 +57,23 @@ trait AssetView {
 
 trait RemoteAsset extends AssetView {
   val json: JsObject
+  val hostTag: String //the asset representing the data center this asset belongs to
+  val remoteUrl: String
+
+  def remoteHost = Some(remoteUrl)
+
+  def toJsonObject = JsObject(forJsonObject)
+  def forJsonObject = json.fields :+ ("LOCATION" -> JsString(hostTag))
 }
 
 /**
  * A remote asset that extracts from json returned by collins when details is false
  */
-case class BasicRemoteAsset(_host: String, json: JsObject) extends RemoteAsset {
-  def toJsonObject = JsObject(forJsonObject)
-  def forJsonObject = json.fields :+ ("LOCATION" -> JsString(_host))
+case class BasicRemoteAsset(hostTag: String, remoteUrl: String, json: JsObject) extends RemoteAsset {
 
   def tag = (json \ "TAG").as[String]
-  def created = jsonDateToTimestamp(json \ "ASSET" \ "CREATED").getOrElse(new Timestamp(0))
-  def updated = jsonDateToTimestamp(json \ "ASSET" \ "UPDATED")
+  def created = jsonDateToTimestamp(json \ "CREATED").getOrElse(new Timestamp(0))
+  def updated = jsonDateToTimestamp(json \ "UPDATED")
 
   private[this] def warnAboutData(){
     Logger.logger.warn("Attempting to retrieve details data on basic remote asset")
@@ -85,8 +90,6 @@ case class BasicRemoteAsset(_host: String, json: JsObject) extends RemoteAsset {
   }
 
   def getStatusName() = (json \ "STATUS" ).asOpt[String].getOrElse("Unknown")
-
-  def remoteHost = Some(_host)
 }
   
 
@@ -94,23 +97,13 @@ case class BasicRemoteAsset(_host: String, json: JsObject) extends RemoteAsset {
  * An asset controlled by another collins instance, used during multi-collins
  * searching
  */
-case class DetailedRemoteAsset(_host: String, json: JsObject) extends RemoteAsset {
-
-  
-
-  def toJsonObject = JsObject(forJsonObject)
-  def forJsonObject = json.fields :+ ("LOCATION" -> JsString(_host))
-
+case class DetailedRemoteAsset(hostTag: String, remoteUrl: String, json: JsObject) extends RemoteAsset {
   def tag = (json \ "ASSET" \ "TAG").as[String]
   def created = jsonDateToTimestamp(json \ "ASSET" \ "CREATED").getOrElse(new Timestamp(0))
   def updated = jsonDateToTimestamp(json \ "ASSET" \ "UPDATED")
-
   def getHostnameMetaValue() = (json \ "ATTRIBS" \ "0" \ "HOSTNAME").asOpt[String]
   def getPrimaryRoleMetaValue() = (json \ "ATTRIBS" \ "0" \ "PRIMARY_ROLE").asOpt[String]
   def getStatusName() = (json \ "ASSET" \ "STATUS" ).asOpt[String].getOrElse("Unknown")
-
-  def remoteHost = Some(_host)
-
 }
 
 
@@ -347,7 +340,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
               logger.error("Invalid user/pass %s for remote collins asset %s".format(pieces(1), locationAsset.id.toString))
               None
             } else {
-              Some(new HttpRemoteAssetClient(host, userpass(0), userpass(1)))
+              Some(new HttpRemoteAssetClient(locationAsset.tag, host, userpass(0), userpass(1)))
             }
           }
         }

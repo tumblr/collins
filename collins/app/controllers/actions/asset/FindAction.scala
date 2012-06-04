@@ -75,7 +75,7 @@ class FindAction(
           a.toJsonObject
         }
       }
-      case v: RemoteAsset => v.json 
+      case v: RemoteAsset => v.toJsonObject 
     }.toList
     ResponseData(Status.Ok, JsObject(p.getPaginationJsObject() ++ Seq(
       "Data" -> JsArray(items)
