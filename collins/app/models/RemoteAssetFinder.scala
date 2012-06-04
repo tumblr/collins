@@ -80,22 +80,27 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
     val request = WS.url(queryUrl + queryString).copy(
       auth = Some(authenticationTuple)
     )
-    //TODO: do in parallel
+
     val result = request.get.await.get
-    val json = Json.parse(result.body)
-    total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
-    (json \ "data" \ "Data") match {
-      case JsArray(items) => items.map{
-        case obj: JsObject => Some(new RemoteAsset(host, obj))
+    if (result.status == 200) {
+      val json = Json.parse(result.body)
+      total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
+      (json \ "data" \ "Data") match {
+        case JsArray(items) => items.map{
+          case obj: JsObject => Some(new RemoteAsset(host, obj))
+          case _ => {
+            Logger.logger.warn("Invalid asset in response data")
+            None
+          }
+        }.flatten
         case _ => {
-          Logger.logger.warn("Invalid asset in response data")
-          None
+          Logger.logger.warn("Invalid response from %s".format(host))
+          Nil
         }
-      }.flatten
-      case _ => {
-        Logger.logger.warn("Invalid response from %s".format(host))
-        Nil
       }
+    } else {
+      Logger.logger.warn("Error from host %s: %s".format(host, result.body))
+      Nil
     }
   }
 

@@ -9,8 +9,6 @@ import play.api.libs.json._
 
 class AssetSearchParametersSpec extends mutable.Specification {
 
-  //def <<(s: String) = Json.parse
-
   val EMPTY_RESULT_TUPLE = (Nil, Nil, Nil)
   val EMPTY_FINDER = AssetFinder(None, None, None, None, None, None, None)
 
