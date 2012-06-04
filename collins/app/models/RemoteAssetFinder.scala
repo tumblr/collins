@@ -21,16 +21,31 @@ case class AssetSearchParameters(
   operation: Option[String] = None //"and" or "or"
 
 ) {
-  def toQueryString: Map[String, String] = {
-    val q1: Map[String, String] = (
+
+  /**
+   * serializes the search parameters to send as a query string.
+   *
+   * NOTE - cannot use a map becuase we have to support multiple attributes
+   */
+  def toSeq: Seq[(String, String)] = {
+    val q1: Seq[(String, String)] = (
       params._1.map{case (enum, value) => (enum.toString, value)} ++ 
       params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, value))} ++ 
       params._3.map{i => ("ip_address" -> i)}
-    ).toMap ++ afinder.toMap + ("details" -> "true")
-    operation.map{op => q1 + ("operation" -> op)}.getOrElse(q1)
+    ) ++ afinder.toSeq :+ ("details" -> "true")
+    operation.map{op => q1 :+ ("operation" -> op)}.getOrElse(q1)
   }
 
-  def paginationKey = toQueryString.map{case (k,v) => k + "_" + v}.mkString("&")
+  def toQueryString: Option[String] = {
+    val seq = toSeq
+    if (seq.size > 0) {
+      Some(seq.map{case (k,v) => "%s=%s".format(k,v)}.mkString("&"))
+    } else {
+      None
+    }
+  }
+
+  def paginationKey = toQueryString
 
 }
 
@@ -56,10 +71,16 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
 
   def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = {
     Logger.logger.debug("retrieving assets from %s: %s".format(host, page.toString))
-    val request = WS.url(queryUrl).copy(
-      queryString = params.toQueryString ++ page.toQueryString,
+
+    //manually build the query string becuase the Play(Ning) queryString is a
+    //Map[String, String] and obviously cannot have two values with the same
+    //key name, which is required for attributes
+    val queryString = RemoteAssetClient.createQueryString(params.toSeq ++ page.toSeq)
+
+    val request = WS.url(queryUrl + queryString).copy(
       auth = Some(authenticationTuple)
     )
+    //TODO: do in parallel
     val result = request.get.await.get
     val json = Json.parse(result.body)
     total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
@@ -76,6 +97,20 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
         Nil
       }
     }
+  }
+
+}
+
+object RemoteAssetClient{
+
+  /**
+   * Takes a sequence of string -> string tuples and builds them into a valid
+   * URL query string
+   */
+  def createQueryString(items: Seq[(String, String)]): String = if (items.size > 0) {
+    "?" + items.map{case (k,v) => "%s=%s".format(k,v)}.mkString("&")
+  } else {
+    ""
   }
 
 }
