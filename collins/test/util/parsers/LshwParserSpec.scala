@@ -217,6 +217,34 @@ class LshwParserSpec extends mutable.Specification {
         }
       } // B.02.12 format
 
+      "A New Production SL Web LSHW Output" in new LshwParserHelper("lshw-new-web-old-lshw.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 15
+          rep.cpuCoreCount mustEqual 15
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(2.0, 0.1)
+
+          rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
+          rep.memoryBanksUsed mustEqual 8
+          rep.memoryBanksUnused mustEqual 16
+          rep.memoryBanksTotal mustEqual 24
+
+          rep.totalStorage.toHuman mustEqual "465.76 GB"
+          rep.hasFlashStorage must beFalse
+          rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
+          rep.diskCount mustEqual 2
+          rep.hasCdRom must beTrue
+    
+          rep.nicCount mustEqual 4
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 4
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      } // B.02.12 format
+
     } // Parse softlayer supermicro (Intel) lshw output"
 
   } // The LSHW parser should
