@@ -263,7 +263,8 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
       yaml.load(fis)
     } catch {
       case e =>
-        throw InvalidConfig(Some("Error reading %s".format(s)))
+        e.printStackTrace
+        throw InvalidConfig(Some("Error reading %s: %s".format(s, e.getMessage)))
     } finally {
       fis.close()
     }
