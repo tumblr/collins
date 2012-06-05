@@ -14,6 +14,7 @@ object AssetMetaValueConfig {
   lazy val ExcludedAttributes: Set[Long] = Feature("noLogPurges").toSet.map { name =>
     AssetMeta.findByName(name).map(_.getId).getOrElse(-1L)
   }
+  lazy val ExcludedAssets: Set[String] = Feature("noLogAssets").toSet.map(_.toLowerCase)
   lazy val EncryptedMeta: Set[String] = Feature("encryptedTags").toSet
 }
 
@@ -251,8 +252,11 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   }
 
   protected def shouldLogChange(oldValue: Option[AssetMetaValue], newValue: AssetMetaValue): Boolean = {
+    val newAsset = Asset.findById(newValue.asset_id)
+    val excludeAsset = newAsset.isDefined && AssetMetaValueConfig.ExcludedAssets.contains(newAsset.get.tag.toLowerCase)
     oldValue.isDefined &&
     !AssetMetaValueConfig.ExcludedAttributes.contains(newValue.asset_meta_id) &&
+    !excludeAsset &&
     oldValue.get.value != newValue.value
   }
 
