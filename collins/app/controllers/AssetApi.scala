@@ -20,7 +20,24 @@ trait AssetApi {
   this: Api with SecureController =>
 
   // GET /api/asset/:tag
-  def getAsset(tag: String) = GetAction(tag, Permissions.AssetApi.GetAsset, this)
+  def getAsset(tag: String, location: Option[String] = None) = {
+  logger.debug(location.toString)
+  location match {
+    case Some(locationTag) if (
+      Config.getBoolean("multicollins.enabled").getOrElse(false) &&
+      Config.getString("multicollins.thisInstance","NONE") != locationTag
+    ) => Action { request => 
+      implicit val req = request
+      Asset.findByTag(locationTag) match {
+        case Some(asset) => asset.getMetaAttribute("LOCATION").map{_.getValue} match {
+          case Some(location) => MovedPermanently(location.split(";")(0) + app.routes.Api.getAsset(tag, None))
+          case None => Api.errorResponse("No Location attribute for remote instance %s".format(locationTag), Results.InternalServerError).asResult
+        }
+        case None => Api.errorResponse("Unknown location %s".format(locationTag), Results.NotFound).asResult
+      }
+    } 
+    case _ => GetAction(tag, Permissions.AssetApi.GetAsset, this)
+  }}
 
   // GET /api/assets?params
   def getAssets(page: Int, size: Int, sort: String) = FindAction(
