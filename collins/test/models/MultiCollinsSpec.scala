@@ -35,20 +35,16 @@ class MultiCollinsSpec extends mutable.Specification {
         (0 to 20000).map{i => queue.get}.flatten must_== AssetGenerator(20000) 
     }
 
-    // note to self - since the previous three tests are syntactically similar,
-    // maybe i should make them one test?
-
-
     "peek correctly - small" in {
         val mock = new MockRemoteAssetClient(AssetGenerator(10))
         val queue = new RemoteAssetQueue(mock, params)
-        (0 to 10).map{i => queue.peek}.flatten must_== (0 to 10).map{i => AssetGenerator(0)}.flatten 
+        (0 to 9).map{i => queue.peek}.flatten must_== List.fill(10)((AssetGenerator(1)).apply(0)) 
     }
 
     "peek correctly - more than full page" in {
         val mock = new MockRemoteAssetClient(AssetGenerator(100))
         val queue = new RemoteAssetQueue(mock, params)
-        (0 to 100).map{i => queue.peek}.flatten must_== (0 to 100).map{i => AssetGenerator(0)}.flatten 
+        (0 to 99).map{i => queue.peek}.flatten must_== List.fill(100)((AssetGenerator(1)).apply(0)) 
     }
 
     "not repeatedly make requests on EOF" in {
