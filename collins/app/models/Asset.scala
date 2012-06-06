@@ -66,18 +66,19 @@ trait RemoteAsset extends AssetView {
   def forJsonObject = json.fields :+ ("LOCATION" -> JsString(hostTag))
 }
 
-case class MockRemoteAsset(val tag: String) extends AssetView {
-  def created: Timestamp = Timestamp()
-  def updated: Option[Timestamp] =  None
+case class MockRemoteAsset(
+  tag: String,
+  hostTag: String = "localhost",
+  json: JsObject = JsObject(Seq.empty), 
+  remoteUrl: String = "http://localhost"
+) extends RemoteAsset {
 
-  def toJsonObject(): JsObject = JSObject(Seq.empty) 
-  def forJsonObject: Seq[(String, JsValue)] = Seq.empty
+  def created: Timestamp = new Timestamp(System.currentTimeMillis)
+  def updated: Option[Timestamp] =  None
 
   def getHostnameMetaValue(): Option[String] = None
   def getPrimaryRoleMetaValue(): Option[String] = None
   def getStatusName(): String = ""
-
-  def remoteHost: Option[String] //none if local
 }
 
 /**
