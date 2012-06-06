@@ -66,21 +66,6 @@ trait RemoteAsset extends AssetView {
   def forJsonObject = json.fields :+ ("LOCATION" -> JsString(hostTag))
 }
 
-case class MockRemoteAsset(
-  tag: String,
-  hostTag: String = "localhost",
-  json: JsObject = JsObject(Seq.empty), 
-  remoteUrl: String = "http://localhost"
-) extends RemoteAsset {
-
-  def created: Timestamp = new Timestamp(System.currentTimeMillis)
-  def updated: Option[Timestamp] =  None
-
-  def getHostnameMetaValue(): Option[String] = None
-  def getPrimaryRoleMetaValue(): Option[String] = None
-  def getStatusName(): String = ""
-}
-
 /**
  * A remote asset that extracts from json returned by collins when details is false
  */
