@@ -41,7 +41,7 @@ class FindAction(
       val AssetFinderDataHolder(af, ra, op, de, rl) = afdh
       val results = if (Config.getBoolean("multicollins.enabled").getOrElse(false) && rl.map{_.isTruthy}.getOrElse(false)) {
         logger.debug("MULTI")
-        Asset.findMulti(pageParams, ra, af, op)
+        Asset.findMulti(pageParams, ra, af, op, de.map{_.isTruthy}.getOrElse(false) || isHtml)
       } else {
         logger.debug("NO-MULTI")
         Asset.find(pageParams, ra, af, op)
@@ -75,7 +75,7 @@ class FindAction(
           a.toJsonObject
         }
       }
-      case v: RemoteAsset => v.json 
+      case v: RemoteAsset => v.toJsonObject 
     }.toList
     ResponseData(Status.Ok, JsObject(p.getPaginationJsObject() ++ Seq(
       "Data" -> JsArray(items)

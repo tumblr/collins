@@ -13,7 +13,7 @@ class MultiCollinsSpec extends Specification {
     // one page
     "return 50 assets" in {
         val mock = new MockRemoteAssetClient(AssetGenerator(50))
-        afs0ad to 50).map{i => queue.get}.flatten == AssetGenerator(50) 
+        (0 to 50).map{i => queue.get}.flatten == AssetGenerator(50) 
     }
 
     // two pages
