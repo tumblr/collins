@@ -123,8 +123,6 @@ object RemoteAssetClient{
 
 }
 
-//class MockRemoteAssetClient
-
 object LocalAssetClient extends RemoteAssetClient {
   val tag = "local"
 
