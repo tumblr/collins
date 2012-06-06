@@ -109,15 +109,17 @@ class HttpRemoteAssetClient(val tag: String, val host: String, val user: String,
 
 }
 
-class MockRemoteAssetClient(assets: Seq[AssetView]) extends RemoteAssetClient {
+class MockRemoteAssetClient(val assets: Seq[AssetView], val tag: String = "mock") extends RemoteAssetClient {
+  def getTotal = assets.size
 
-    def getTotal = assets.size
+  var numRequests: Int = 0
 
-    def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = {
-        val firstAssetIndex = page.page * page.size
-        val lastAssetIndex = firstAssetIndex + page.size
-        assets.slice(firstAssetIndex, lastAssetIndex)
-    }
+  def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = {
+    numRequests += 1
+    val firstAssetIndex = page.page * page.size
+    val lastAssetIndex = firstAssetIndex + page.size
+    assets.slice(firstAssetIndex, lastAssetIndex)
+  }
 }
 
 object AssetGenerator {
