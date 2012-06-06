@@ -18,19 +18,35 @@ import play.api.Play.current
 case class AssetSearchParameters(
   params: util.AttributeResolver.ResultTuple, 
   afinder: AssetFinder, 
-  operation: Option[String] = None //"and" or "or"
+  operation: Option[String] = None, //"and" or "or"
+  details: Boolean = false
 
 ) {
-  def toQueryString: Map[String, String] = {
-    val q1: Map[String, String] = (
+
+  /**
+   * serializes the search parameters to send as a query string.
+   *
+   * NOTE - cannot use a map becuase we have to support multiple attributes
+   */
+  def toSeq: Seq[(String, String)] = {
+    val q1: Seq[(String, String)] = (
       params._1.map{case (enum, value) => (enum.toString, value)} ++ 
       params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, value))} ++ 
       params._3.map{i => ("ip_address" -> i)}
-    ).toMap ++ afinder.toMap + ("details" -> "true")
-    operation.map{op => q1 + ("operation" -> op)}.getOrElse(q1)
+    ) ++ afinder.toSeq :+ ("details" -> (if (details) "true" else "false"))
+    operation.map{op => q1 :+ ("operation" -> op)}.getOrElse(q1)
   }
 
-  def paginationKey = toQueryString.map{case (k,v) => k + "_" + v}.mkString("&")
+  def toQueryString: Option[String] = {
+    val seq = toSeq
+    if (seq.size > 0) {
+      Some(seq.map{case (k,v) => "%s=%s".format(k,v)}.mkString("&"))
+    } else {
+      None
+    }
+  }
+
+  def paginationKey = toQueryString
 
 }
 
@@ -44,8 +60,7 @@ trait RemoteAssetClient {
   def getTotal: Long
 }
 
-class HttpRemoteAssetClient(val host: String, val user: String, val pass: String) extends RemoteAssetClient {
-  val tag = host
+class HttpRemoteAssetClient(val tag: String, val host: String, val user: String, val pass: String) extends RemoteAssetClient {
 
   val queryUrl = host + app.routes.Api.getAssets().toString
   val authenticationTuple = (user, pass, com.ning.http.client.Realm.AuthScheme.BASIC)
@@ -56,25 +71,39 @@ class HttpRemoteAssetClient(val host: String, val user: String, val pass: String
 
   def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = {
     Logger.logger.debug("retrieving assets from %s: %s".format(host, page.toString))
-    val request = WS.url(queryUrl).copy(
-      queryString = params.toQueryString ++ page.toQueryString,
+
+    //manually build the query string becuase the Play(Ning) queryString is a
+    //Map[String, String] and obviously cannot have two values with the same
+    //key name, which is required for attributes
+    val queryString = RemoteAssetClient.createQueryString(params.toSeq ++ page.toSeq)
+
+    val request = WS.url(queryUrl + queryString).copy(
       auth = Some(authenticationTuple)
     )
+
     val result = request.get.await.get
-    val json = Json.parse(result.body)
-    total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
-    (json \ "data" \ "Data") match {
-      case JsArray(items) => items.map{
-        case obj: JsObject => Some(new RemoteAsset(host, obj))
+    if (result.status == 200) {
+      val json = Json.parse(result.body)
+      total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
+      (json \ "data" \ "Data") match {
+        case JsArray(items) => items.map{
+          case obj: JsObject => Some(params.details match {
+            case true => new DetailedRemoteAsset(tag, host, obj)
+            case false => new BasicRemoteAsset(tag, host, obj)
+          })
+          case _ => {
+            Logger.logger.warn("Invalid asset in response data")
+            None
+          }
+        }.flatten
         case _ => {
-          Logger.logger.warn("Invalid asset in response data")
-          None
+          Logger.logger.warn("Invalid response from %s".format(host))
+          Nil
         }
-      }.flatten
-      case _ => {
-        Logger.logger.warn("Invalid response from %s".format(host))
-        Nil
       }
+    } else {
+      Logger.logger.warn("Error from host %s: %s".format(host, result.body))
+      Nil
     }
   }
 
@@ -92,14 +121,22 @@ class MockRemoteAssetClient(assets: Seq[AssetView]) extends RemoteAssetClient {
 }
 
 object AssetGenerator {
-    def apply(num: Int) = (0 to num - 1).map{i => new MockAsset(i.toString)}
+    def apply(num: Int) = (0 to num - 1).map{i => new MockRemoteAsset(i.toString)}
 }
 
-val mock = new MockRemoteAssetClient(AssetGenerator(50))
-val queue = new RemoteAssetQueue(mock, params, offset)
-(0 to 50).map{i => queue.get}.flatten == AssetGenerator(50)
+object RemoteAssetClient{
 
+  /**
+   * Takes a sequence of string -> string tuples and builds them into a valid
+   * URL query string
+   */
+  def createQueryString(items: Seq[(String, String)]): String = if (items.size > 0) {
+    "?" + items.map{case (k,v) => "%s=%s".format(k,v)}.mkString("&")
+  } else {
+    ""
+  }
 
+}
 
 object LocalAssetClient extends RemoteAssetClient {
   val tag = "local"
@@ -124,13 +161,18 @@ object LocalAssetClient extends RemoteAssetClient {
  */
 class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchParameters) {
 
-  val PAGE_SIZE = 20
+  val PAGE_SIZE = 50
   val SORT = "ASC"
 
   val cachedAssets = new collection.mutable.Queue[AssetView]
   var nextRetrievedPage: Option[Int] = None
   var eof = false
   
+  /**
+   * Retrieve the next item in the cached queue.  If there are no items, get
+   * some more from the remote client, and if the client returns None, set eof
+   * to true to avoid extra lookups for more items
+   */
   private[this] def retrieveHead: Option[AssetView] = cachedAssets.headOption match {
     case None if (!eof) => {
       val page = nextRetrievedPage.getOrElse(0)

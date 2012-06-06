@@ -9,7 +9,7 @@ case class PageParams(page: Int, size: Int, sort: String) {
     require(size >= 0, "size must be >= 0")
   }
 
-  def toQueryString = Map("page" -> page.toString, "size" -> size.toString, "sort" -> sort)
+  def toSeq = List("page" -> page.toString, "size" -> size.toString, "sort" -> sort)
 }
 
 case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
