@@ -30,10 +30,10 @@ case class AssetFinder(
   }
 
   /**
-   * converts the finder into a string map, used as part of forwarding searches
-   * to remote collins instances
+   * converts the finder into a sequence of key/value tuples, used as part of forwarding searches
+   * to remote collins instances (see RemoteAssetFinder for why it's not a map)
    */
-  def toMap: Map[String, String] = {
+  def toSeq: Seq[(String, String)] = {
     val items:Seq[Option[(String, String)]] = (
       tag.map{"tag" -> _} ::
       status.map{"status" -> _.toString} ::
@@ -44,6 +44,6 @@ case class AssetFinder(
       updatedBefore.map{"updatedBefore" -> _.toString} ::
       Nil
     )
-    items.flatten.toMap
+    items.flatten
   }
 }
