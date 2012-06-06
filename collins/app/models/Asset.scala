@@ -51,6 +51,20 @@ trait AssetView {
 
 }
 
+case class RemoteAsset(val tag: String) extends AssetView {
+  def created: Timestamp = Timestamp()
+  def updated: Option[Timestamp] =  None
+
+  def toJsonObject(): JsObject = JSObject(Seq.empty) 
+  def forJsonObject: Seq[(String, JsValue)] = Seq.empty
+
+  def getHostnameMetaValue(): Option[String] = None
+  def getPrimaryRoleMetaValue(): Option[String] = None
+  def getStatusName(): String = ""
+
+  def remoteHost: Option[String] //none if local
+}
+
 /**
  * An asset controlled by another collins instance, used during multi-collins
  * searching
