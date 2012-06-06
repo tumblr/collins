@@ -59,13 +59,16 @@ class MultiCollinsSpec extends mutable.Specification {
   }
 
   "RemoteAssetStream" should {
-    "return 50 merged assets" in {
-        val mock_start = new MockRemoteAssetClient(AssetGenerator(20))
-        val mock_mid = new MockRemoteAssetClient(AssetGenerator(40).slice(20,40))
-        val mock_end = new MockRemoteAssetClient(AssetGenerator(60).slice(40,60))
-        val asset_seq = List(mock_start, mock_mid, mock_end)
-        val stream = new RemoteAssetStream(asset_seq, params)
-        0 must_== 1
+    "return 50 merged assets in correct order" in {
+      val numClients = 4
+      val assets = AssetGenerator(50)
+      val clients = assets
+        .zipWithIndex
+        .groupBy{case(a, i) => i % numClients}
+        .toSeq
+        .map{case(index, assets) => new MockRemoteAssetClient(assets.map{_._1})}
+      val stream = new RemoteAssetStream(clients, params)
+      stream.slice(0, 50) must_== assets
     }
   }
 

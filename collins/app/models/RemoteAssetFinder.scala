@@ -123,7 +123,7 @@ class MockRemoteAssetClient(val assets: Seq[AssetView], val tag: String = "mock"
 }
 
 object AssetGenerator {
-    def apply(num: Int) = (0 to num - 1).map{i => new MockRemoteAsset(i.toString)}
+    def apply(num: Int) = (0 to num - 1).map{i => new MockRemoteAsset("%09d".format(i))}
 }
 
 object RemoteAssetClient{
