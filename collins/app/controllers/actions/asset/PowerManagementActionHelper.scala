@@ -123,10 +123,8 @@ abstract class PowerManagementActionHelper(
   protected def logPowerEvent(msg: String) {
     val pa = powerAction.get
     pa match {
-      case PowerState | Identify =>
-        UserTattler.notice(definedAsset, userOption, msg)
-      case Verify =>
-        // don't log verify
+      case Verify | PowerState | Identify =>
+        // don't log verify, state, identify (normal lifecycle)
       case o =>
         UserTattler.warning(definedAsset, userOption, msg)
     }
