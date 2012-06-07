@@ -3,6 +3,7 @@
 # collins - groovy kind of love
 #
 # chkconfig:   35 95 5
+# description: groovy kind of love
 
 APP_NAME="collins"
 APP_HOME="/usr/local/$APP_NAME/current"
@@ -70,7 +71,7 @@ case "$1" in
       exit 1
     fi
     echo "Running migrations"
-    ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/scripts/
+    ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/conf/evolutions/
     echo "Database initialization attempted" > /var/run/$APP_NAME/install.log
   ;;
 
@@ -146,6 +147,7 @@ case "$1" in
       echo "$APP_NAME is running."
     else
       echo "$APP_NAME is NOT running."
+      exit 3
     fi
   ;;
 

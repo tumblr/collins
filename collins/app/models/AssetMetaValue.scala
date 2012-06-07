@@ -14,6 +14,7 @@ object AssetMetaValueConfig {
   lazy val ExcludedAttributes: Set[Long] = Feature("noLogPurges").toSet.map { name =>
     AssetMeta.findByName(name).map(_.getId).getOrElse(-1L)
   }
+  lazy val ExcludedAssets: Set[String] = Feature("noLogAssets").toSet.map(_.toLowerCase)
   lazy val EncryptedMeta: Set[String] = Feature("encryptedTags").toSet
 }
 
@@ -39,8 +40,6 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     columns(a.asset_id, a.asset_meta_id) are(indexed)
   ))
 
-  def apply(asset_id: Long, asset_meta_id: Long, value: String) =
-    new AssetMetaValue(asset_id, asset_meta_id, 0, value)
   def apply(asset: Asset, asset_meta_id: Long, value: String) =
     new AssetMetaValue(asset.getId, asset_meta_id, 0, value)
   def apply(asset: Asset, asset_meta: AssetMeta.Enum, value: String) =
@@ -49,6 +48,10 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     new AssetMetaValue(asset.getId, asset_meta_id, group_id, value)
   def apply(asset: Asset, asset_meta: AssetMeta.Enum, group_id: Int, value: String) =
     new AssetMetaValue(asset.getId, asset_meta.id, group_id, value)
+  def apply(asset: Asset, assetMeta: AssetMeta, value: String) =
+    new AssetMetaValue(asset.getId, assetMeta.getId, 0, value)
+  def apply(asset: Asset, assetMeta: AssetMeta, groupId: Int, value: String) =
+    new AssetMetaValue(asset.getId, assetMeta.getId, groupId, value)
 
   override def cacheKeys(a: AssetMetaValue) = Seq(
     "AssetMetaValue.findByMeta(%d)".format(a.asset_meta_id),
@@ -65,7 +68,14 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   )
 
   def shouldEncrypt(v: AssetMetaValue): Boolean = {
-    AssetMetaValueConfig.EncryptedMeta.contains(v.getMeta().name)
+    try {
+      AssetMetaValueConfig.EncryptedMeta.contains(v.getMeta().name)
+    } catch {
+      case e =>
+        println("Caught exception trying to determine whether to encrypt")
+        println(v)
+        throw e
+    }
   }
   def getEncrypted(v: AssetMetaValue): AssetMetaValue = {
     v.copy(value = CryptoCodec.withKeyFromFramework.Encode(v.value))
@@ -185,7 +195,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
         (p.asset_meta_id in meta_id)
       }
       meta_id.foreach { id =>
-        val meta = AssetMetaValue(asset_id, id, "")
+        val meta = new AssetMetaValue(asset_id, id, 0, "")
         afterDeleteCallback(meta) {
           // no op
         }
@@ -242,8 +252,11 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   }
 
   protected def shouldLogChange(oldValue: Option[AssetMetaValue], newValue: AssetMetaValue): Boolean = {
+    val newAsset = Asset.findById(newValue.asset_id)
+    val excludeAsset = newAsset.isDefined && AssetMetaValueConfig.ExcludedAssets.contains(newAsset.get.tag.toLowerCase)
     oldValue.isDefined &&
     !AssetMetaValueConfig.ExcludedAttributes.contains(newValue.asset_meta_id) &&
+    !excludeAsset &&
     oldValue.get.value != newValue.value
   }
 

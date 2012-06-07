@@ -6,6 +6,7 @@ import play.api.http.{Status => StatusValues}
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.data._
+import play.api.data.Forms._
 import play.api.data.format.Formats._
 import java.sql.SQLException
 
@@ -35,12 +36,12 @@ trait IpAddressApi {
     }
   }
   val UpdateForm = Form(
-    of(IpAddressForm.apply _, IpAddressForm.unapply _)(
+    mapping(
       "address" -> optional(text(7)),
       "gateway" -> optional(text(7)),
       "netmask" -> optional(text(7)),
       "pool" -> optional(text)
-    )
+    )(IpAddressForm.apply)(IpAddressForm.unapply)
   )
 
   // PUT /api/asset/:tag/address
@@ -59,7 +60,7 @@ trait IpAddressApi {
         case e => Api.getErrorMessage("Invalid pool specified")
       }
     }
-  }}(SecuritySpec(true, Seq("infra")))
+  }}(Permissions.IpAddressApi.AllocateAddress)
 
   // GET /api/asset/with/address/:address
   def assetFromAddress(address: String) = SecureAction { implicit req =>
@@ -68,7 +69,7 @@ trait IpAddressApi {
         ResponseData(Results.Ok, JsObject(s.forJsonObject()))
       ).getOrElse(Api.getErrorMessage("No assets found with specified address", Results.NotFound))
     )
-  }(SecuritySpec(true, Nil))
+  }(Permissions.IpAddressApi.AssetFromAddress)
 
   // GET /api/assets/with/addresses/in/:pool
   def assetsFromPool(pool: String) = SecureAction { implicit req =>
@@ -83,21 +84,21 @@ trait IpAddressApi {
           ResponseData(Results.Ok, JsObject(Seq("ASSETS" -> JsArray(jsList))))
       }
     )
-  }(SecuritySpec(true, Nil))
+  }(Permissions.IpAddressApi.AssetsFromPool)
 
   // GET /api/asset/:tag/addresses
   def getForAsset(tag: String) = SecureAction { implicit req =>
     withTag(tag) { asset =>
       addressesToJson(IpAddresses.findAllByAsset(asset))
     }
-  }(SecuritySpec(true, Nil))
+  }(Permissions.IpAddressApi.GetForAsset)
 
   // GET /api/address/pools
   def getAddressPools = SecureAction { implicit req =>
     formatResponseData(
       ResponseData(Results.Ok, JsObject(Seq("POOLS" -> JsArray(IpAddresses.getPools.map(JsString(_)).toList))))
     )
-  }
+  }(Permissions.IpAddressApi.GetAddressPools)
 
   // POST /api/asset/:tag/address
   def updateAddress(tag: String) = Authenticated { user => Action { implicit req =>
@@ -127,7 +128,7 @@ trait IpAddressApi {
         }
       )
     }
-  }}(SecuritySpec(true, Seq("infra")))
+  }}(Permissions.IpAddressApi.UpdateAddress)
 
   // DELETE /api/asset/:tag/addresses
   def purgeAddresses(tag: String) = Authenticated { user => Action { implicit req =>
@@ -137,7 +138,7 @@ trait IpAddressApi {
       UserTattler.notice(asset, user, "Deleted %d IP addresses".format(deleted))
       ResponseData(Results.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
     }
-  }}(SecuritySpec(true, Seq("infra")))
+  }}(Permissions.IpAddressApi.PurgeAddresses)
 
   protected def addressesToJson(addresses: Seq[IpAddresses], status: Results.Status = Results.Ok) =
     ResponseData(status, JsObject(Seq("ADDRESSES" -> JsArray(

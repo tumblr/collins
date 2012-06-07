@@ -36,6 +36,9 @@ case class IpmiInfo(
       this.copy(username = "********", password = "********")
     }
   }
+  def toJsonObject(): JsObject = {
+    JsObject(forJsonObject)
+  }
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "ASSET_ID" -> JsNumber(getAssetId()),

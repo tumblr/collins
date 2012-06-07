@@ -4,16 +4,8 @@ import models.{Asset, IpmiInfo}
 import concurrent.BackgroundProcess
 import com.tumblr.play.CommandResult
 
-import akka.actor.Actor
-import akka.actor.Actor._
-import akka.dispatch.FutureTimeoutException
-import akka.routing.Routing.loadBalancerActor
-import akka.routing.CyclicIterator
 import akka.util.Duration
-import akka.util.duration._
 import play.api.{Logger, Mode}
-import play.api.libs.akka._
-import play.api.libs.concurrent.{Redeemed, Thrown}
 
 import scala.collection.mutable.StringBuilder
 import scala.sys.process._

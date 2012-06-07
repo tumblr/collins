@@ -4,21 +4,31 @@ import play.api.{Play, Plugin, Logger}
 import com.tumblr.play.{Power, PowerAction, PowerManagement => PowerMgmt}
 import models.{Asset, AssetType, Status}
 
-trait PowerManagementConfig extends Config {
-  val ConfigKey = "powermanagement"
+import scala.util.control.Exception.allCatch
+
+trait PowerManagementConfig extends FeatureConfigSkinny {
+  override val rootKey: String = "powermanagement"
+
   lazy val DisallowedAssetStates: Set[Int] = Config.statusAsSet(
-    ConfigKey, "disallowStatus", Status.statusNames.mkString(",")
+    rootKey, "disallowStatus", Status.statusNames.mkString(",")
   )
 
   lazy val DisallowedWhenAllocated: Set[PowerAction] =
-    getString(ConfigKey, "disallowWhenAllocated", "")
-      .split(",").clean.toSet.map { a => Power(a) }
+    feature("disallowWhenAllocated").toSet.map(a => Power(a))
 
   lazy val AllowedAssetTypes: Set[Int] =
-    getString(ConfigKey,"allowAssetTypes","SERVER_NODE")
-      .split(",").clean
-      .map(name => AssetType.Enum.withName(name).id)
-      .toSet;
+    feature("allowAssetTypes").ifSet { f =>
+      f.toSet
+    }.filter(_.nonEmpty).getOrElse(Set("SERVER_NODE"))
+      .map(name => allCatch.opt(AssetType.Enum.withName(name)))
+      .filter(_.isDefined)
+      .map(_.get.id)
+
+  object Messages extends MessageHelper(rootKey) {
+    def assetStateAllowed(a: Asset) = message("disallowStatus", a.getStatus().name)
+    def actionAllowed(p: PowerAction) = message("disallowWhenAllocated", p.toString)
+    def assetTypeAllowed(a: Asset) = message("allowAssetTypes", a.getType().name)
+  }
 }
 
 object PowerManagementConfig extends PowerManagementConfig
@@ -51,7 +61,16 @@ object PowerManagement extends PowerManagementConfig {
 
   def isPluginEnabled = pluginEnabled.isDefined
 
-  def assetTypeAllowed(asset: Asset): Boolean = AllowedAssetTypes.contains(asset.asset_type)
+  def assetTypeAllowed(asset: Asset): Boolean = {
+    val isTrue = AllowedAssetTypes.contains(asset.asset_type)
+    logger.debug("assetTypeAllowed: %s".format(isTrue.toString))
+    isTrue
+  }
+  def assetStateAllowed(asset: Asset): Boolean = {
+    val isFalse = !DisallowedAssetStates.contains(asset.status)
+    logger.debug("assetStateAllowed: %s".format(isFalse.toString))
+    isFalse
+  }
   def actionAllowed(asset: Asset, action: PowerAction): Boolean = {
     if (asset.getStatus().name == "Allocated" && DisallowedWhenAllocated.contains(action)) {
       false
@@ -61,15 +80,6 @@ object PowerManagement extends PowerManagementConfig {
   }
 
   def powerAllowed(asset: Asset): Boolean = {
-    val assetStateAllowed = !DisallowedAssetStates.contains(asset.status)
-    val pluginIsEnabled = isPluginEnabled
-    val typeAllowed = assetTypeAllowed(asset)
-    val allowed = assetStateAllowed &&
-                  pluginIsEnabled &&
-                  typeAllowed;
-    logger.debug("AssetState allowed? " + assetStateAllowed)
-    logger.debug("Plugin enabled? " + pluginIsEnabled)
-    logger.debug("AssetType allowed? " + typeAllowed)
-    allowed
+    assetStateAllowed(asset) && isPluginEnabled && assetTypeAllowed(asset)
   }
 }
