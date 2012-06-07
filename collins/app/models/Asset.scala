@@ -320,7 +320,11 @@ object Asset extends Schema with AnormAdapter[Asset] {
       updatedBefore = None,
       assetType = Some(AssetType.Enum.withName(Config.getString("multicollins.instanceAssetType","DATA_CENTER").trim.toString))
     )
-    val findLocations = Asset.find(PageParams(0,50,"ASC"), instanceFinder).items.collect{case a: Asset => a}
+    val findLocations = Asset
+      .find(PageParams(0,50,"ASC"), instanceFinder)
+      .items
+      .collect{case a: Asset => a}
+      .filter{_.tag != Config.getString("multicollins.thisInstance","NONE")}
     //iterate over the locations, sending requests to each one and aggregate their results
     val remoteClients = findLocations.map{ locationAsset => 
       locationAsset.getMetaAttribute("LOCATION").map{_.getValue} match {
