@@ -1,26 +1,115 @@
 package models
 
 import conversions._
-import util.{Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.{Config, Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
 import util.power.PowerUnits
 import util.views.Formatter.dateFormat
 
 import play.api.Logger
 import play.api.libs.json._
+import play.api.libs.ws.WS
+import play.api._
+import play.api.mvc._
 
 import org.squeryl.Schema
 import org.squeryl.PrimitiveTypeMode._
 
 import java.sql.Timestamp
 import java.util.Date
+import java.text.SimpleDateFormat
+
+import akka.dispatch.Await
+import akka.util.duration._
 
 object AssetConfig {
   lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
 }
 
+/**
+ * An AssetView can be either a regular Asset or a RemoteAsset from another
+ * collins instance.  This interface should only expose methods needed by the
+ * list view, since from there the client is directed to whichever instnace
+ * actually owns the asset.
+ */
+trait AssetView {
+
+  def tag: String
+  //def status: Int
+  //def asset_type: Int
+  def created: Timestamp
+  def updated: Option[Timestamp]
+
+  def toJsonObject(): JsObject
+  def forJsonObject: Seq[(String, JsValue)]
+
+  def getHostnameMetaValue(): Option[String]
+  def getPrimaryRoleMetaValue(): Option[String]
+  def getStatusName(): String
+
+  def remoteHost: Option[String] //none if local
+  
+  protected def jsonDateToTimestamp(j: JsValue): Option[Timestamp] = {
+    val formatter = new SimpleDateFormat(util.views.Formatter.ISO_8601_FORMAT)
+    j.asOpt[String].filter{_ != ""}.map{s => new Timestamp(formatter.parse(s).getTime)}
+  }
+
+}
+
+trait RemoteAsset extends AssetView {
+  val json: JsObject
+  val hostTag: String //the asset representing the data center this asset belongs to
+  val remoteUrl: String
+
+  def remoteHost = Some(remoteUrl)
+
+  def toJsonObject = JsObject(forJsonObject)
+  def forJsonObject = json.fields :+ ("LOCATION" -> JsString(hostTag))
+}
+
+/**
+ * A remote asset that extracts from json returned by collins when details is false
+ */
+case class BasicRemoteAsset(hostTag: String, remoteUrl: String, json: JsObject) extends RemoteAsset {
+
+  def tag = (json \ "TAG").as[String]
+  def created = jsonDateToTimestamp(json \ "CREATED").getOrElse(new Timestamp(0))
+  def updated = jsonDateToTimestamp(json \ "UPDATED")
+
+  private[this] def warnAboutData(){
+    Logger.logger.warn("Attempting to retrieve details data on basic remote asset")
+
+  }
+
+  def getHostnameMetaValue() = {
+    warnAboutData()
+    None
+  }
+  def getPrimaryRoleMetaValue() = {
+    warnAboutData()
+    None
+  }
+
+  def getStatusName() = (json \ "STATUS" ).asOpt[String].getOrElse("Unknown")
+}
+  
+
+/**
+ * An asset controlled by another collins instance, used during multi-collins
+ * searching
+ */
+case class DetailedRemoteAsset(hostTag: String, remoteUrl: String, json: JsObject) extends RemoteAsset {
+  def tag = (json \ "ASSET" \ "TAG").as[String]
+  def created = jsonDateToTimestamp(json \ "ASSET" \ "CREATED").getOrElse(new Timestamp(0))
+  def updated = jsonDateToTimestamp(json \ "ASSET" \ "UPDATED")
+  def getHostnameMetaValue() = (json \ "ATTRIBS" \ "0" \ "HOSTNAME").asOpt[String]
+  def getPrimaryRoleMetaValue() = (json \ "ATTRIBS" \ "0" \ "PRIMARY_ROLE").asOpt[String]
+  def getStatusName() = (json \ "ASSET" \ "STATUS" ).asOpt[String].getOrElse("Unknown")
+}
+
+
 case class Asset(tag: String, status: Int, asset_type: Int,
     created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp],
-    id: Long = 0) extends ValidatedEntity[Long]
+    id: Long = 0) extends ValidatedEntity[Long] with AssetView
 {
   override def validate() {
     require(Asset.isValidTag(tag), "Tag must be non-empty alpha numeric")
@@ -28,6 +117,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   override def asJson: String = {
     Json.stringify(JsObject(forJsonObject))
   }
+
+  def getHostnameMetaValue = getMetaAttribute("HOSTNAME").map{_.getValue}
+  def getPrimaryRoleMetaValue = getMetaAttribute("PRIMARY_ROLE").map{_.getValue}
 
   def toJsonObject() = JsObject(forJsonObject)
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
@@ -49,6 +141,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   def getStatus(): Status = {
     Status.findById(status).get
   }
+
+  def getStatusName(): String = getStatus().name
+
   def getType(): AssetType = {
     AssetType.findById(asset_type).get
   }
@@ -78,6 +173,8 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     val filtered: Seq[MetaWrapper] = mvs3.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
     Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
   }
+
+  def remoteHost = None
 }
 
 object Asset extends Schema with AnormAdapter[Asset] {
@@ -139,7 +236,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[Asset] =
+  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] =
   Stats.time("Asset.find") {
     if (params._1.nonEmpty) {
       IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
@@ -152,7 +249,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, afinder: AssetFinder): Page[Asset] = inTransaction {
+  def find(page: PageParams, afinder: AssetFinder): Page[AssetView] = inTransaction {
     val results = from(tableDef)(a =>
       where(afinder.asLogicalBoolean(a))
       select(a)
@@ -164,7 +261,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     Page(results, page.page, page.offset, totalCount)
   }
 
-  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[Asset] = inTransaction {
+  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[AssetView] = inTransaction {
     assets.size match {
       case 0 => Page(Seq(), page.page, page.offset, 0)
       case n =>
@@ -195,7 +292,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def findLikeTag(tag: String, params: PageParams): Page[Asset] = inTransaction {
+  def findLikeTag(tag: String, params: PageParams): Page[AssetView] = inTransaction {
     val results = from(tableDef)(a =>
       where(a.tag.withPossibleRegex(tag))
       select(a)
@@ -206,6 +303,52 @@ object Asset extends Schema with AnormAdapter[Asset] {
       compute(count)
     )
     Page(results, params.page, params.offset, totalCount)
+  }
+
+  /**
+   * Finds assets across multiple collins instances.  Data for instances are
+   * stored as assets themselves, though the asset type and attribute for URI
+   * info is user-configured.
+   */
+  def findMulti(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String], details: Boolean): Page[AssetView] = {
+    val instanceFinder = AssetFinder(
+      tag = None,
+      status = None,
+      createdAfter = None,
+      createdBefore = None,
+      updatedAfter = None,
+      updatedBefore = None,
+      assetType = Some(AssetType.Enum.withName(Config.getString("multicollins.instanceAssetType","DATA_CENTER").trim.toString))
+    )
+    val findLocations = Asset.find(PageParams(0,50,"ASC"), instanceFinder).items.collect{case a: Asset => a}
+    //iterate over the locations, sending requests to each one and aggregate their results
+    val remoteClients = findLocations.map{ locationAsset => 
+      locationAsset.getMetaAttribute("LOCATION").map{_.getValue} match {
+        case None => {
+          logger.warn("No location attribute for remote location asset %s".format(locationAsset.tag))
+          None
+        }
+        case Some(location) => {
+          val pieces = location.split(";")
+          if (pieces.length < 2) {
+            logger.error("Invalid location %s".format(location))
+            None
+          } else {
+            val host = pieces(0) 
+            val userpass = pieces(1).split(":")
+            if (userpass.length != 2) {
+              logger.error("Invalid user/pass %s for remote collins asset %s".format(pieces(1), locationAsset.id.toString))
+              None
+            } else {
+              Some(new HttpRemoteAssetClient(locationAsset.tag, host, userpass(0), userpass(1)))
+            }
+          }
+        }
+      }
+    }.flatten
+    val (items, total) = RemoteAssetFinder(remoteClients :+ LocalAssetClient, page, AssetSearchParameters(params, afinder, operation, details))
+    Page(items, page.page, page.offset,total)
+
   }
 
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], power: PowerUnits, mvs: Seq[MetaWrapper]) {

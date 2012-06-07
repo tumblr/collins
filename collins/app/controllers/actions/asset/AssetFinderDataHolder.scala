@@ -26,7 +26,8 @@ case class AssetFinderDataHolder(
   assetFinder: AssetFinder,
   attributes: ResolvedAttributes,
   operation: Option[String],
-  details: Option[Truthy]
+  details: Option[Truthy],
+  remoteLookup: Option[Truthy]
 ) extends RequestDataHolder
 
 object AssetFinderDataHolder extends MessageHelper("assetfinder") with AttributeHelper {
@@ -34,7 +35,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
 
   val Operations = Set("and","or")
 
-  type DataForm = Tuple10[
+  type DataForm = Tuple11[
     Option[String],           // tag
     Option[List[String]],     // attribute
     Option[String],           // operation
@@ -44,7 +45,8 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     Option[Date],             // createdAfter
     Option[Date],             // createdBefore
     Option[Date],             // updatedAfter
-    Option[Date]              // updatedBefore
+    Option[Date],             // updatedBefore
+    Option[Truthy]            // remoteLookup
   ]
 
   def finderForm = Form(tuple(
@@ -65,7 +67,8 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     "createdAfter" -> optional(date(ISO_8601_FORMAT)),
     "createdBefore" -> optional(date(ISO_8601_FORMAT)),
     "updatedAfter" -> optional(date(ISO_8601_FORMAT)),
-    "updatedBefore" -> optional(date(ISO_8601_FORMAT))
+    "updatedBefore" -> optional(date(ISO_8601_FORMAT)),
+    "remoteLookup" -> optional(of[Truthy])
   ))
 
   def processRequest(req: Request[AnyContent]): Either[RequestDataHolder,AssetFinderDataHolder] = {
@@ -87,7 +90,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
 
   protected def fromForm(form: DataForm, data: Map[String,Seq[String]]): AssetFinderDataHolder = {
     val (
-      tag, attributes, operation, astatus, atype, details, cafter, cbefore, uafter, ubefore
+      tag, attributes, operation, astatus, atype, details, cafter, cbefore, uafter, ubefore, remoteLookup
     ) = form
     val attribs = AttributeResolver(mapAttributes(attributes.filter(_.nonEmpty), AttributeMap.fromMap(data)))
     val afinder = AssetFinder(tag, astatus, atype, cafter, cbefore, uafter, ubefore)
@@ -95,7 +98,8 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
       afinder,
       attribs,
       cleanedOperation(operation),
-      details
+      details,
+      remoteLookup
     )
   }
 
@@ -114,6 +118,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     case e if e.error("attribute").isDefined => "attribute parameter must be at least 3 characters"
     case e if e.error("operation").isDefined => message("operation.invalid")
     case e if e.error("details").isDefined => rootMessage("error.truthy", "details")
+    case e if e.error("remoteLookup").isDefined => rootMessage("error.truthy", "remoteLookup")
     case n => "Unexpected error occurred"
   }
 

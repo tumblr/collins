@@ -64,7 +64,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     }
   }
 
-  def findAssetsByAddress(page: PageParams, addys: Seq[String], finder: AssetFinder): Page[Asset] = {
+  def findAssetsByAddress(page: PageParams, addys: Seq[String], finder: AssetFinder): Page[AssetView] = {
     def whereClause(assetRow: Asset, addressRow: IpAddresses) = {
       where(
         (assetRow.id === addressRow.asset_id) and
