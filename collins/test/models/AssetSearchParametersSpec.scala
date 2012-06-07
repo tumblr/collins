@@ -51,7 +51,7 @@ class AssetSearchParametersSpec extends mutable.Specification {
     "generate correct query string sequence" in {
 
       "asks for details" in {
-        AssetSearchParameters(EMPTY_RESULT_TUPLE, EMPTY_FINDER, None).toSeq.findOne("details") must_== Some("true")
+        AssetSearchParameters(EMPTY_RESULT_TUPLE, EMPTY_FINDER, None, true).toSeq.findOne("details") must_== Some("true")
       }
       
       "include operation with empty params" in {
