@@ -82,7 +82,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   }
 
   type IpmiQuerySeq = Seq[Tuple2[IpmiInfo.Enum, String]]
-  def findAssetsByIpmi(page: PageParams, ipmi: IpmiQuerySeq, finder: AssetFinder): Page[Asset] = {
+  def findAssetsByIpmi(page: PageParams, ipmi: IpmiQuerySeq, finder: AssetFinder): Page[AssetView] = {
     def whereClause(assetRow: Asset, ipmiRow: IpmiInfo) = {
       where(
         assetRow.id === ipmiRow.asset_id and
