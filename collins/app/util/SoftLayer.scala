@@ -37,10 +37,13 @@ object SoftLayer {
     }
   }
 
-  def assetLink(asset: models.Asset): Option[String] = {
-    pluginEnabled.flatMap { p =>
-      p.softLayerUrl(asset)
+  def assetLink(asset: models.AssetView): Option[String] = asset match {
+    case a: models.Asset => {
+      pluginEnabled.flatMap { p =>
+        p.softLayerUrl(asset)
+      }
     }
+    case _ => None
   }
 
   def cancelAllowed(asset: models.Asset): Boolean = {
