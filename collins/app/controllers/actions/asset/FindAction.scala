@@ -40,10 +40,10 @@ class FindAction(
     case afdh: AssetFinderDataHolder =>
       val AssetFinderDataHolder(af, ra, op, de, rl) = afdh
       val results = if (Config.getBoolean("multicollins.enabled").getOrElse(false) && rl.map{_.isTruthy}.getOrElse(false)) {
-        logger.debug("MULTI")
+        logger.debug("Performing remote asset find")
         Asset.findMulti(pageParams, ra, af, op, de.map{_.isTruthy}.getOrElse(false) || isHtml)
       } else {
-        logger.debug("NO-MULTI")
+        logger.debug("Performing local asset find")
         Asset.find(pageParams, ra, af, op)
       }
       try handleSuccess(results, afdh) catch {

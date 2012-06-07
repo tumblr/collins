@@ -20,9 +20,7 @@ trait AssetApi {
   this: Api with SecureController =>
 
   // GET /api/asset/:tag
-  def getAsset(tag: String, location: Option[String] = None) = {
-  logger.debug(location.toString)
-  location match {
+  def getAsset(tag: String, location: Option[String] = None) = location match {
     case Some(locationTag) if (
       Config.getBoolean("multicollins.enabled").getOrElse(false) &&
       Config.getString("multicollins.thisInstance","NONE") != locationTag
@@ -37,7 +35,7 @@ trait AssetApi {
       }
     } 
     case _ => GetAction(tag, Permissions.AssetApi.GetAsset, this)
-  }}
+  }
 
   // GET /api/assets?params
   def getAssets(page: Int, size: Int, sort: String) = FindAction(

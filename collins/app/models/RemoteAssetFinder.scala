@@ -70,7 +70,7 @@ class HttpRemoteAssetClient(val tag: String, val host: String, val user: String,
   def getTotal = total.getOrElse(0)
 
   def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = {
-    Logger.logger.debug("retrieving assets from %s: %s".format(host, page.toString))
+    Logger.logger.debug("retrieving assets from %s: Pagination %s".format(host, page.toString))
 
     //manually build the query string becuase the Play(Ning) queryString is a
     //Map[String, String] and obviously cannot have two values with the same
@@ -92,7 +92,7 @@ class HttpRemoteAssetClient(val tag: String, val host: String, val user: String,
             case false => new BasicRemoteAsset(tag, host, obj)
           })
           case _ => {
-            Logger.logger.warn("Invalid asset in response data")
+            Logger.logger.warn("Invalid asset in response data from %s".format(host))
             None
           }
         }.flatten
@@ -102,7 +102,7 @@ class HttpRemoteAssetClient(val tag: String, val host: String, val user: String,
         }
       }
     } else {
-      Logger.logger.warn("Error from host %s: %s".format(host, result.body))
+      Logger.logger.warn("Error (%d) from host %s: %s".format(result.status, host, result.body))
       Nil
     }
   }
@@ -202,7 +202,6 @@ class RemoteAssetStream(clients: Seq[RemoteAssetClient], searchParams: AssetSear
    */
   def getOrdering: Ordering[AssetView] = new Ordering[AssetView] {
     def compare(a: AssetView, b: AssetView) = {
-      Logger.logger.debug("comparing %s to %s".format(a.tag, b.tag))
       a.tag compareToIgnoreCase b.tag
     }
   }
