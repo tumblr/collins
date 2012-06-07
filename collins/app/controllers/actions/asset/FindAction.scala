@@ -3,8 +3,9 @@ package actions
 package asset
 
 import forms._
+import util.Config
 
-import models.{Asset, AssetType, AssetFinder, Page, PageParams, Status => AssetStatus, Truthy}
+import models.{Asset, AssetType, AssetView, AssetFinder, Page, PageParams, RemoteAsset, Status => AssetStatus, Truthy}
 import models.AssetType.{Enum => AssetTypeEnum}
 import models.Status.{Enum => AssetStatusEnum}
 
@@ -37,8 +38,14 @@ class FindAction(
 
   override def execute(rd: RequestDataHolder) = rd match {
     case afdh: AssetFinderDataHolder =>
-      val AssetFinderDataHolder(af, ra, op, _) = afdh
-      val results = Asset.find(pageParams, ra, af, op)
+      val AssetFinderDataHolder(af, ra, op, de, rl) = afdh
+      val results = if (Config.getBoolean("multicollins.enabled").getOrElse(false) && rl.map{_.isTruthy}.getOrElse(false)) {
+        logger.debug("Performing remote asset find")
+        Asset.findMulti(pageParams, ra, af, op, de.map{_.isTruthy}.getOrElse(false) || isHtml)
+      } else {
+        logger.debug("Performing local asset find")
+        Asset.find(pageParams, ra, af, op)
+      }
       try handleSuccess(results, afdh) catch {
         case e =>
           e.printStackTrace
@@ -48,24 +55,27 @@ class FindAction(
       }
   }
 
-  protected def handleSuccess(p: Page[Asset], afdh: AssetFinderDataHolder) = isHtml match {
+  protected def handleSuccess(p: Page[AssetView], afdh: AssetFinderDataHolder) = isHtml match {
     case true =>
       handleWebSuccess(p, afdh)
     case false =>
       handleApiSuccess(p, afdh)
   }
 
-  protected def handleWebSuccess(p: Page[Asset], afdh: AssetFinderDataHolder): Result = {
+  protected def handleWebSuccess(p: Page[AssetView], afdh: AssetFinderDataHolder): Result = {
     Api.errorResponse(NotImplementedError.toString, NotImplementedError.status().get)
   }
 
-  protected def handleApiSuccess(p: Page[Asset], afdh: AssetFinderDataHolder): Result = {
-    val items = p.items.map { a =>
-      afdh.details.filter(_.isTruthy).map { _ =>
-        a.getAllAttributes.exposeCredentials(user.canSeePasswords).toJsonObject
-      }.getOrElse {
-        a.toJsonObject
+  protected def handleApiSuccess(p: Page[AssetView], afdh: AssetFinderDataHolder): Result = {
+    val items = p.items.map { 
+      case a: Asset => {
+        afdh.details.filter(_.isTruthy).map { _ =>
+          a.getAllAttributes.exposeCredentials(user.canSeePasswords).toJsonObject
+        }.getOrElse {
+          a.toJsonObject
+        }
       }
+      case v: RemoteAsset => v.toJsonObject 
     }.toList
     ResponseData(Status.Ok, JsObject(p.getPaginationJsObject() ++ Seq(
       "Data" -> JsArray(items)

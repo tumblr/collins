@@ -3,6 +3,7 @@
 # collins - groovy kind of love
 #
 # chkconfig:   35 95 5
+# description: groovy kind of love
 
 APP_NAME="collins"
 APP_HOME="/usr/local/$APP_NAME/current"
