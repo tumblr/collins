@@ -1,0 +1,6 @@
+There's a minor regression that has to do with the findOrCreate method in
+asset meta that needs to be fixed.
+
+Need to refactor the ruby client before we opensource
+
+Need to refactor controllers: AssetWebApi, IpAddressApi, IpmiApi, TagApi

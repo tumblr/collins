@@ -1,0 +1,25 @@
+@(el: helper.FieldElements)
+
+@**************************************************
+* Generate input according twitter bootsrap rules *
+**************************************************@
+
+@infos = @{
+  if(el.field.hasErrors) {
+    el.errors(el.lang).mkString(", ")
+  } else {
+    el.infos(el.lang).mkString(", ")
+  }
+}
+
+<div class="clearfix @el.args.get('_class) @if(el.hasErrors) {error}" id="@el.args.get('_id).getOrElse(el.id + "_field")">
+  <label for="@el.id">@el.label(el.lang)</label>
+  <div class="input">
+    @el.input
+    @if(el.hasErrors) {
+    <span class="help-block">@infos</span>
+    } else {
+    <span class="help-inline">@infos</span>
+    }
+  </div>
+</div>

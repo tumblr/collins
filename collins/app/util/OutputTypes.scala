@@ -17,7 +17,7 @@ sealed trait OutputType {
   }
   def inBody(request: Request[AnyContent]) = {
     request.body match {
-      case AnyContentAsUrlFormEncoded(data) =>
+      case AnyContentAsFormUrlEncoded(data) =>
         checkQueryString(data)
       case _ => false
     }

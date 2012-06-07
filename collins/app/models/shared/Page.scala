@@ -4,6 +4,10 @@ import play.api.libs.json._
 
 case class PageParams(page: Int, size: Int, sort: String) {
   def offset: Int = page * size
+  def validate() {
+    require(page >= 0, "page must be >= 0")
+    require(size >= 0, "size must be >= 0")
+  }
 }
 
 case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {

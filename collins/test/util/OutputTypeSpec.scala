@@ -32,7 +32,7 @@ class OutputTypeSpec extends mutable.Specification {
           OutputType(req1) must beSome.which(isJson)
         }
         "Based on Request Body" >> {
-          val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("json")))
+          val body = AnyContentAsFormUrlEncoded(Map("outputType" -> Seq("json")))
           val req1 = FakeRequest(body)
           OutputType(req1) must beSome.which(isJson)
         }
@@ -52,7 +52,7 @@ class OutputTypeSpec extends mutable.Specification {
           OutputType(req1) must beSome.which(isBash)
         }
         "Based on Request Body" >> {
-          val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("sh")))
+          val body = AnyContentAsFormUrlEncoded(Map("outputType" -> Seq("sh")))
           val req1 = FakeRequest(body)
           OutputType(req1) must beSome.which(isBash)
         }
@@ -72,7 +72,7 @@ class OutputTypeSpec extends mutable.Specification {
           OutputType(req1) must beSome.which(isText)
         }
         "Based on Request Body" >> {
-          val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("text")))
+          val body = AnyContentAsFormUrlEncoded(Map("outputType" -> Seq("text")))
           val req1 = FakeRequest(body)
           OutputType(req1) must beSome.which(isText)
         }
@@ -92,7 +92,7 @@ class OutputTypeSpec extends mutable.Specification {
           OutputType(req1) must beSome.which(isHtml)
         }
         "Based on Request Body" >> {
-          val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("html")))
+          val body = AnyContentAsFormUrlEncoded(Map("outputType" -> Seq("html")))
           val req1 = FakeRequest(body)
           OutputType(req1) must beSome.which(isHtml)
         }
@@ -115,7 +115,7 @@ class OutputTypeSpec extends mutable.Specification {
           OutputType(req1) must beNone
         }
         "Based on Request Body" >> {
-          val body = AnyContentAsUrlFormEncoded(Map("outputType" -> Seq("xml")))
+          val body = AnyContentAsFormUrlEncoded(Map("outputType" -> Seq("xml")))
           val req1 = FakeRequest(body)
           OutputType(req1) must beNone
         }

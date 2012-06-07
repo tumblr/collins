@@ -63,6 +63,22 @@ object Permissions {
     val ProvisionAsset = spec("provisionAsset", Spec)
   }
 
+  object Help extends PermSpec("controllers.Help") {
+    val Spec = spec(LoggedIn)
+    val Index = spec("index", Spec)
+  }
+
+  object IpAddressApi extends PermSpec("controllers.IpAddressApi") {
+    val Spec = spec(AdminSpec)
+    val AllocateAddress = spec("allocateAddress", Spec)
+    val AssetFromAddress = spec("assetFromAddress", LoggedIn)
+    val AssetsFromPool = spec("assetsFromPool", LoggedIn)
+    val GetForAsset = spec("getForAsset", LoggedIn)
+    val GetAddressPools = spec("getAddressPools", LoggedIn)
+    val UpdateAddress = spec("updateAddress", Spec)
+    val PurgeAddresses = spec("purgeAddresses", Spec)
+  }
+
   object Resources extends PermSpec("controllers.Resources") {
     val Spec = spec(LoggedIn)
     val CreateAsset = spec("createAsset", AdminSpec)
