@@ -35,5 +35,7 @@ case class AssetStateMachine(asset: Asset) {
         AssetMetaValue.deleteByAssetAndMetaId(asset, AssetStateMachine.DeleteAttributes)
       }
       res
+    case _ =>
+      throw new Exception("Asset must be Unallocated, Cancelled or Decommissioned")
   }
 }
