@@ -60,10 +60,11 @@ trait RemoteAssetClient {
   def getTotal: Long
 }
 
-class HttpRemoteAssetClient(val tag: String, val host: String, val user: String, val pass: String) extends RemoteAssetClient {
+class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) extends RemoteAssetClient {
 
+  val host = remoteHost.host
   val queryUrl = host + app.routes.Api.getAssets().toString
-  val authenticationTuple = (user, pass, com.ning.http.client.Realm.AuthScheme.BASIC)
+  val authenticationTuple = (remoteHost.username, remoteHost.password, com.ning.http.client.Realm.AuthScheme.BASIC)
 
   var total: Option[Long] = None
 
@@ -86,16 +87,15 @@ class HttpRemoteAssetClient(val tag: String, val host: String, val user: String,
       val json = Json.parse(result.body)
       total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
       (json \ "data" \ "Data") match {
-        case JsArray(items) => items.map{
+        case JsArray(items) => items.flatMap {
           case obj: JsObject => Some(params.details match {
             case true => new DetailedRemoteAsset(tag, host, obj)
             case false => new BasicRemoteAsset(tag, host, obj)
           })
-          case _ => {
+          case _ =>
             Logger.logger.warn("Invalid asset in response data from %s".format(host))
             None
-          }
-        }.flatten
+        }
         case _ => {
           Logger.logger.warn("Invalid response from %s".format(host))
           Nil
