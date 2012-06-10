@@ -14,6 +14,7 @@ case class AssetMeta(
 {
   override def validate() {
     require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
+    require(AssetMeta.isValidName(name), "Name must be all upper case, alpha numeric (and hyphens)")
     require(description != null && description.length > 0, "Need a description")
   }
   override def asJson: String = {
@@ -29,6 +30,7 @@ case class AssetMeta(
 }
 
 object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
+  private[this] val NameR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
 
   override val tableDef = table[AssetMeta]("asset_meta")
   on(tableDef)(a => declare(
@@ -47,6 +49,10 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     afterDeleteCallback(a) {
       tableDef.deleteWhere(p => p.id === a.id)
     }
+  }
+
+  def isValidName(name: String): Boolean = {
+    name != null && name.nonEmpty && NameR(name).matches
   }
 
   def findAll(): Seq[AssetMeta] = getOrElseUpdate("AssetMeta.findAll") {
