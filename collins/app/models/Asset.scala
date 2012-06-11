@@ -14,9 +14,10 @@ import play.api.mvc._
 import org.squeryl.Schema
 import org.squeryl.PrimitiveTypeMode._
 
+import java.net.URL
 import java.sql.Timestamp
-import java.util.Date
 import java.text.SimpleDateFormat
+import java.util.Date
 
 import akka.dispatch.Await
 import akka.util.duration._
@@ -55,6 +56,24 @@ trait AssetView {
 
 }
 
+case class RemoteCollinsHost(url: URL) {
+  val credentials = url.getUserInfo().split(":", 2)
+  require(credentials.size == 2, "Must have username and password")
+  val username = credentials(0)
+  val password = credentials(1)
+  val path = Option(url.getPath).filter(_.nonEmpty).getOrElse("/").replaceAll("/+$", "")
+  def host: String = url.getPort match {
+    case none if none < 0 =>
+      "%s://%s%s".format(url.getProtocol, url.getHost, path)
+    case port =>
+      "%s://%s:%d%s".format(url.getProtocol, url.getHost, port, path)
+  }
+  def hostWithCredentials: String = url.toString.replaceAll("/+$", "")
+}
+object RemoteCollinsHost {
+  def apply(url: String) = new RemoteCollinsHost(new URL(url))
+}
+
 trait RemoteAsset extends AssetView {
   val json: JsObject
   val hostTag: String //the asset representing the data center this asset belongs to
@@ -63,7 +82,7 @@ trait RemoteAsset extends AssetView {
   def remoteHost = Some(remoteUrl)
 
   def toJsonObject = JsObject(forJsonObject)
-  def forJsonObject = json.fields :+ ("LOCATION" -> JsString(hostTag))
+  def forJsonObject = json.fields :+ ("LOCATION" -> JsString(hostTag)) //remoteUrl))
 }
 
 /**
@@ -326,30 +345,22 @@ object Asset extends Schema with AnormAdapter[Asset] {
       .collect{case a: Asset => a}
       .filter{_.tag != Config.getString("multicollins.thisInstance","NONE")}
     //iterate over the locations, sending requests to each one and aggregate their results
-    val remoteClients = findLocations.map{ locationAsset => 
+    val remoteClients = findLocations.flatMap { locationAsset => 
       locationAsset.getMetaAttribute("LOCATION").map{_.getValue} match {
-        case None => {
+        case None =>
           logger.warn("No location attribute for remote location asset %s".format(locationAsset.tag))
           None
-        }
-        case Some(location) => {
-          val pieces = location.split(";")
-          if (pieces.length < 2) {
-            logger.error("Invalid location %s".format(location))
-            None
-          } else {
-            val host = pieces(0) 
-            val userpass = pieces(1).split(":")
-            if (userpass.length != 2) {
-              logger.error("Invalid user/pass %s for remote collins asset %s".format(pieces(1), locationAsset.id.toString))
+        case Some(location) =>
+          try {
+            val remoteHost = RemoteCollinsHost(location)
+            Some(new HttpRemoteAssetClient(locationAsset.tag, remoteHost))
+          } catch {
+            case e =>
+              logger.error("Invalid location %s".format(e.getMessage))
               None
-            } else {
-              Some(new HttpRemoteAssetClient(locationAsset.tag, host, userpass(0), userpass(1)))
-            }
           }
-        }
       }
-    }.flatten
+    }
     val (items, total) = RemoteAssetFinder(remoteClients :+ LocalAssetClient, page, AssetSearchParameters(params, afinder, operation, details))
     Page(items, page.page, page.offset,total)
 

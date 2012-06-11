@@ -83,7 +83,7 @@
             mv.getName match {
               case "CANCEL_TICKET" => optionDisplay(0, SoftLayer.ticketLink(mv.getValue), mv.getValue)
               case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
-              case "SYSTEM_PASSWORD" => if(user.canSeePasswords) { TagDecorator.decorate(mv) } else { "********" }
+              case encrypted if AssetMetaValueConfig.EncryptedMeta.contains(encrypted) => if(user.canSeePasswords) { TagDecorator.decorate(mv) } else { "********" }
               case _ => TagDecorator.decorate(mv)
             }
           }
