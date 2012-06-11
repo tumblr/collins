@@ -17,7 +17,8 @@ class AssetMetaSpec extends ApplicationSpecification {
       "Disallow empty or bad names" in {
         val ams = Seq(
           AssetMeta("", -1, "Foo", "Description"),
-          AssetMeta("Foo", -1, "Foo", "Description")
+          AssetMeta("Foo", -1, "Foo", "Description"),
+          AssetMeta("Foo Bar", -1, "Foo", "Description")
         )
         ams.foreach { am =>
           am.validate() must throwA[IllegalArgumentException]

@@ -12,3 +12,5 @@ boot/
 # gem detritus
 *.lock
 *.swp
+
+.DS_Store
