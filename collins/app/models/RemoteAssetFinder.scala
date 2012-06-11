@@ -32,7 +32,7 @@ case class AssetSearchParameters(
     val q1: Seq[(String, String)] = (
       params._1.map{case (enum, value) => (enum.toString, value)} ++ 
       params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, value))} ++ 
-      params._3.map{i => ("ip_address" -> i)}
+      params._3.map{i => ("attribute" -> ("ip_address;" + i))}
     ) ++ afinder.toSeq :+ ("details" -> (if (details) "true" else "false"))
     operation.map{op => q1 :+ ("operation" -> op)}.getOrElse(q1)
   }
