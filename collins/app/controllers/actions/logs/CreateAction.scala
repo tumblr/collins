@@ -107,9 +107,9 @@ case class CreateAction(
     extractLogData(data) match {
       case (messageBody, Some(messageSource), Some(messageType)) =>
         Right(ActionDataHolder(f(messageBody, messageSource, messageType)))
-      case (_, None, _) =>
-        Left(RequestDataHolder.error400(MessageTypeError))
       case (_, _, None) =>
+        Left(RequestDataHolder.error400(MessageTypeError))
+      case (_, None, _) =>
         Left(RequestDataHolder.error400(MessageSourceError))
     }
   }
