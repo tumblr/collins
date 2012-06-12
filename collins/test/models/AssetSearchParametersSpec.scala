@@ -95,9 +95,17 @@ class AssetSearchParametersSpec extends mutable.Specification {
           EMPTY_RESULT_TUPLE.copy(_3 = List("1.3.5.7")),
           EMPTY_FINDER,
           None
-        ).toSeq.findOne("ip_address") must_== Some("1.3.5.7")
+        ).toSeq.findOne("attribute") must_== Some("ip_address;1.3.5.7")
       }
 
+    }
+
+    "properly url-encode values" in {
+      AssetSearchParameters(
+        EMPTY_RESULT_TUPLE.copy(_2 = List((AssetMeta("TEST", -1, "","", 0L), "foo;|bar"))),
+        EMPTY_FINDER,
+        None
+      ).toSeq.findOne("attribute") must_== Some("TEST;foo%3B%7Cbar")
     }
   }
 }
