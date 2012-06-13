@@ -61,6 +61,9 @@ object RequestDataHolder extends RequestDataHolder {
   def error500(message: String): RequestDataHolder = ErrorRequestDataHolder(
     message, Results.InternalServerError
   )
+  def error504(message: String): RequestDataHolder = ErrorRequestDataHolder(
+    message, Results.Status(play.api.http.Status.GATEWAY_TIMEOUT)
+  )
 }
 
 object NotImplementedError extends RequestDataHolder {
