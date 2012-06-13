@@ -47,3 +47,8 @@ case class AssetFinder(
     items.flatten
   }
 }
+
+object AssetFinder {
+
+  val Empty = AssetFinder(None,None,None,None,None,None,None)
+}

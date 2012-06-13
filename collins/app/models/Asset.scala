@@ -193,6 +193,29 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
   }
 
+  /**
+   * Returns the nodeclass of this asset.  Nodeclass is found by getting all
+   * nodeclass assets and finding the first one whose meta values match the values
+   * of this asset
+   */
+  lazy val nodeClass: Option[Asset] = {
+    import util.AttributeResolver._
+    val instanceFinder = AssetFinder
+      .Empty
+      .copy ( 
+        assetType = Some(AssetType.Enum.withName(Config.getString("nodeclass.assetType","CONFIGURATION").trim.toString))
+      )
+    val nodeclassParams: ResolvedAttributes = EmptyResolvedAttributes
+      .withMeta(Config.getString("nodeclass.identifyingAttribute", "IS_NODECLASS"), "true")
+    val nodeclasses = AssetMetaValue
+      .findAssetsByMeta(PageParams(0,50,"ASC"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
+      .items
+      .collect{case a: Asset => a}
+    nodeclasses.find{_.metaSet subsetOf this.metaSet}
+  }
+
+  private def metaSet = AssetMetaValue.findByAsset(this).toSet
+
   def remoteHost = None
 }
 
@@ -365,6 +388,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     Page(items, page.page, page.offset,total)
 
   }
+
 
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], power: PowerUnits, mvs: Seq[MetaWrapper]) {
     def exposeCredentials(showCreds: Boolean = false) = {
