@@ -1,10 +1,14 @@
 package controllers
 package actions
 
-import models.{Asset, AssetType}
+import asset.AssetFinderDataHolder
+import models.{Asset, AssetType, AssetView, Page, RemoteAsset}
 import util.Feature
 
 import java.util.concurrent.atomic.AtomicReference
+
+import play.api.libs.json._
+import play.api.mvc.Result
 
 // Helpers for actions
 trait AssetAction {
@@ -54,4 +58,36 @@ trait AssetAction {
       None
   }
 
+}
+
+/**
+ * Common functionality between find and similar actions, might be able to merge with above
+ */
+trait AssetResultsAction {
+  this: SecureAction =>
+
+  protected def handleSuccess(p: Page[AssetView], details: Boolean) = isHtml match {
+    case true =>
+      handleWebSuccess(p, details)
+    case false =>
+      handleApiSuccess(p, details)
+  }
+
+  protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
+    Api.errorResponse(NotImplementedError.toString, NotImplementedError.status().get)
+  }
+
+  protected def handleApiSuccess(p: Page[AssetView], details: Boolean): Result = {
+    val items = p.items.map { 
+      case a: Asset => if (details){
+        a.getAllAttributes.exposeCredentials(user.canSeePasswords).toJsonObject
+      } else {
+        a.toJsonObject
+      }
+      case v: RemoteAsset => v.toJsonObject 
+    }.toList
+    ResponseData(Status.Ok, JsObject(p.getPaginationJsObject() ++ Seq(
+      "Data" -> JsArray(items)
+    )), p.getPaginationHeaders)
+  }
 }

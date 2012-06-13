@@ -389,6 +389,23 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   }
 
+  /**
+   * Finds assets in the same nodeclass as the given asset
+   */
+  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder): Page[AssetView] = asset.nodeClass.map{nodeclass => 
+    find(
+      page,
+      (Nil, AssetMetaValue.findByAsset(nodeclass).map{m => (m._meta, m._value.toString)}, Nil),
+      afinder,
+      Some("and")
+    )
+  }.getOrElse{
+    logger.warn("No Nodeclass for Asset " + asset.tag)
+    Page.EmptyPage
+  }
+
+  
+
 
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], power: PowerUnits, mvs: Seq[MetaWrapper]) {
     def exposeCredentials(showCreds: Boolean = false) = {

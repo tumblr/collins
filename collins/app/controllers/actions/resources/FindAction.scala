@@ -40,7 +40,7 @@ case class FindAction(
       super.execute(rd)
   }
 
-  override protected def handleWebSuccess(p: Page[AssetView], rd: AssetFinderDataHolder): Result = {
+  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
     p.size match {
       case 0 =>
         Redirect(app.routes.Resources.index).flashing("message" -> AssetMessages.noMatch)

@@ -26,7 +26,7 @@ class FindAction(
   pageParams: PageParams,
   spec: SecuritySpecification,
   handler: SecureController
-) extends SecureAction(spec, handler) with AssetAction {
+) extends SecureAction(spec, handler) with AssetAction with AssetResultsAction{
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
     try {
@@ -49,7 +49,7 @@ class FindAction(
           logger.debug("Performing local asset find")
           Asset.find(pageParams, ra, af, op)
         }
-        handleSuccess(results, afdh) 
+        handleSuccess(results, afdh.details.map{_.isTruthy}.getOrElse(false)) 
       } catch {
         case timeout: TimeoutException => {
           handleError(RequestDataHolder.error504(
@@ -64,32 +64,6 @@ class FindAction(
       }
   }
 
-  protected def handleSuccess(p: Page[AssetView], afdh: AssetFinderDataHolder) = isHtml match {
-    case true =>
-      handleWebSuccess(p, afdh)
-    case false =>
-      handleApiSuccess(p, afdh)
-  }
-
-  protected def handleWebSuccess(p: Page[AssetView], afdh: AssetFinderDataHolder): Result = {
-    Api.errorResponse(NotImplementedError.toString, NotImplementedError.status().get)
-  }
-
-  protected def handleApiSuccess(p: Page[AssetView], afdh: AssetFinderDataHolder): Result = {
-    val items = p.items.map { 
-      case a: Asset => {
-        afdh.details.filter(_.isTruthy).map { _ =>
-          a.getAllAttributes.exposeCredentials(user.canSeePasswords).toJsonObject
-        }.getOrElse {
-          a.toJsonObject
-        }
-      }
-      case v: RemoteAsset => v.toJsonObject 
-    }.toList
-    ResponseData(Status.Ok, JsObject(p.getPaginationJsObject() ++ Seq(
-      "Data" -> JsArray(items)
-    )), p.getPaginationHeaders)
-  }
 
 }
 
