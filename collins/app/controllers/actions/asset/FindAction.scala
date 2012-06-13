@@ -14,6 +14,8 @@ import util.{AttributeResolver, SecuritySpecification}
 import play.api.libs.json._
 import play.api.mvc.Result
 
+import java.util.concurrent.TimeoutException
+
 object FindAction {
   def apply(pageParams: PageParams, spec: SecuritySpecification, handler: SecureController) = {
     new FindAction(pageParams, spec, handler)
@@ -39,14 +41,21 @@ class FindAction(
   override def execute(rd: RequestDataHolder) = rd match {
     case afdh: AssetFinderDataHolder =>
       val AssetFinderDataHolder(af, ra, op, de, rl) = afdh
-      val results = if (Config.getBoolean("multicollins.enabled").getOrElse(false) && rl.map{_.isTruthy}.getOrElse(false)) {
-        logger.debug("Performing remote asset find")
-        Asset.findMulti(pageParams, ra, af, op, de.map{_.isTruthy}.getOrElse(false) || isHtml)
-      } else {
-        logger.debug("Performing local asset find")
-        Asset.find(pageParams, ra, af, op)
-      }
-      try handleSuccess(results, afdh) catch {
+      try {
+        val results = if (Config.getBoolean("multicollins.enabled").getOrElse(false) && rl.map{_.isTruthy}.getOrElse(false)) {
+          logger.debug("Performing remote asset find")
+          Asset.findMulti(pageParams, ra, af, op, de.map{_.isTruthy}.getOrElse(false) || isHtml)
+        } else {
+          logger.debug("Performing local asset find")
+          Asset.find(pageParams, ra, af, op)
+        }
+        handleSuccess(results, afdh) 
+      } catch {
+        case timeout: TimeoutException => {
+          handleError(RequestDataHolder.error504(
+            "Error executing search: " + timeout.getMessage
+          ))
+        }
         case e =>
           e.printStackTrace
           handleError(RequestDataHolder.error500(

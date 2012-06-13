@@ -9,6 +9,7 @@ import play.api.mvc._
 import play.api.Play.current
 
 import java.net.URLEncoder
+import java.util.concurrent.TimeoutException
 
 /**
  * Just a combination of everything needed to do a search.  Probably should
@@ -84,7 +85,9 @@ class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) 
       auth = Some(authenticationTuple)
     )
 
-    val result = request.get.await.get
+    val result = try request.get.await.get catch {
+      case t: TimeoutException => throw new TimeoutException("Timed out in remote query to %s".format(queryUrl))
+    }
     if (result.status == 200) {
       val json = Json.parse(result.body)
       total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
