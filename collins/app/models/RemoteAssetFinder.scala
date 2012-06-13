@@ -8,6 +8,9 @@ import play.api.cache.Cache
 import play.api.mvc._
 import play.api.Play.current
 
+import java.net.URLEncoder
+import java.util.concurrent.TimeoutException
+
 /**
  * Just a combination of everything needed to do a search.  Probably should
  * combine all this in the future somehow
@@ -31,8 +34,8 @@ case class AssetSearchParameters(
   def toSeq: Seq[(String, String)] = {
     val q1: Seq[(String, String)] = (
       params._1.map{case (enum, value) => (enum.toString, value)} ++ 
-      params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, value))} ++ 
-      params._3.map{i => ("ip_address" -> i)}
+      params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, URLEncoder.encode(value, "UTF-8")))} ++ 
+      params._3.map{i => ("attribute" -> ("ip_address;" + i))}
     ) ++ afinder.toSeq :+ ("details" -> (if (details) "true" else "false"))
     operation.map{op => q1 :+ ("operation" -> op)}.getOrElse(q1)
   }
@@ -82,7 +85,9 @@ class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) 
       auth = Some(authenticationTuple)
     )
 
-    val result = request.get.await.get
+    val result = try request.get.await.get catch {
+      case t: TimeoutException => throw new TimeoutException("Timed out in remote query to %s".format(queryUrl))
+    }
     if (result.status == 200) {
       val json = Json.parse(result.body)
       total = (json \ "data" \ "Pagination" \ "TotalResults").asOpt[Long]
