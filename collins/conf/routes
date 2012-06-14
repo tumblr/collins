@@ -20,6 +20,7 @@ POST    /asset/:tag/cancel          app.CookieApi.cancelAsset(tag: String)
 POST    /asset/:tag/provision       app.CookieApi.provisionAsset(tag: String)
 POST    /asset/:tag/power           app.CookieApi.powerManagement(tag: String)
 GET     /asset/:tag/power           app.CookieApi.powerStatus(tag: String)
+GET     /asset/:tag/similar         app.Resources.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sortType: String ?= "default", sort: String  ?= "ASC")
 
 # Admin pages
 GET     /admin/stats                controllers.Admin.stats

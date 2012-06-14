@@ -1,7 +1,7 @@
 package controllers
 
 import actions.asset.CreateAction
-import actions.resources.{FindAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action}
+import actions.resources.{FindAction, FindSimilarAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action}
 
 import models._
 import views._
@@ -46,6 +46,9 @@ trait Resources extends Controller {
   def find(page: Int, size: Int, sort: String, operation: String) = FindAction(
     PageParams(page, size, sort), operation, Permissions.Resources.Find, this
   )
+
+  def similar(tag: String, page: Int, size: Int, sortType: String, sort: String) = 
+    FindSimilarAction(tag, PageParams(page, size, sort), Permissions.Resources.Find, this)
 
   def intake(id: Long, stage: Int = 1) = stage match {
     case 2 => IntakeStage2Action(id, Permissions.Resources.Intake, this)
