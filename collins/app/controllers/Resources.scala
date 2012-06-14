@@ -1,7 +1,7 @@
 package controllers
 
-import actions.asset.CreateAction
-import actions.resources.{FindAction, FindSimilarAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action}
+import actions.asset.{CreateAction, FindSimilarAction}
+import actions.resources.{FindAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action}
 
 import models._
 import views._
