@@ -1,5 +1,8 @@
 package models
 
+import scala.math
+import util.Config
+
 trait AssetDistanceSorter{
 
   /*
@@ -73,7 +76,11 @@ class BasicPhysicalDistanceSorter extends AssetDistanceSorter {
    * - let distance(a,b) = SUM(i: 0 to n-1) (2 * f(i))^i
    */
   def distance(a: Asset, b: Asset): Int = {
-    0 
+      Config.getString("nodeclass.sortkeys", "") 
+      .split(",")
+      .zipWithIndex
+      .map{ key => if (a.getMetaAttribute(key._1) == b.getMetaAttribute(key._1)) math.pow(2, key._2).toInt else 0}
+      .sum
   }
 }
 
