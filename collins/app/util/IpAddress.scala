@@ -23,6 +23,12 @@ object IpAddress {
     InetAddress.getByAddress(tmp).getHostAddress()
   }
 
+  def toOptLong(_address: String): Option[Long] = try {
+    Some(IpAddress.toLong(_address))
+  } catch {
+    case e => None
+  }
+
   def toLong(_address: String): Long = {
     val address = try {
       InetAddress.getByName(_address)
@@ -83,6 +89,11 @@ object IpAddressCalc {
 
 case class IpAddressCalc(network: String, startAt: Option[String] = None) {
   val subnetInfo = new SubnetUtils(network).getInfo
+  if (startAt.isDefined)
+    require(
+      subnetInfo.isInRange(startAt.get),
+      "%s is not in network %s".format(startAt.get, network)
+    )
   def broadcastAddress: String = subnetInfo.getBroadcastAddress
   def broadcastAddressAsLong = IpAddress.toLong(broadcastAddress)
   def lastOctetInRange: Long = IpAddress.lastOctet(maxAddressAsLong)
