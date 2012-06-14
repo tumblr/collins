@@ -3,6 +3,7 @@ package actions
 package ipaddress
 
 import models.{Asset, IpAddresses}
+import models.shared.IpAddressConfiguration
 import util.{ApiTattler, SecuritySpecification}
 
 import play.api.data.Form
@@ -45,7 +46,15 @@ case class CreateAction(
 
   override def execute(rd: RequestDataHolder) = rd match {
     case ActionDataHolder(asset, pool, count) => try {
-      val created = IpAddresses.createForAsset(asset, count, Some(pool))
+      val poolName = pool.isEmpty match {
+        case true =>
+          val addressConfig = IpAddresses.AddressConfig.get
+          // if default pool being used, store that pool name if the pool name isn't DEFAULT
+          addressConfig.defaultPoolName.filter(_ != IpAddressConfiguration.DefaultPoolName)
+                                        .getOrElse("")
+        case false => pool
+      }
+      val created = IpAddresses.createForAsset(asset, count, Some(poolName))
       ApiTattler.notice(asset, userOption, "Created %d IP addresses".format(created.size))
       ResponseData(Status.Created, created.toJson)
     } catch {

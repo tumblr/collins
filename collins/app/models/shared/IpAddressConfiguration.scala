@@ -28,10 +28,14 @@ case class IpAddressConfiguration(source: Configuration) extends MessageHelper("
   private val _defaultPoolName: Option[String] =
     source.getString("defaultPool").map(poolName(_))
 
+  // Whether or not to be strict about address creation, names, etc
+  val strict = source.getBoolean("strict").getOrElse(true)
+
   // PoolName -> AddressPool map, if pools are specified
   val pools: Map[String,AddressPool] = source.getConfig("pools").map { cfg =>
     cfg.subKeys.map { key =>
-      val addressPool = AddressPool.fromConfiguration(cfg.getConfig(key), key, true).get
+      val keyCfg = cfg.getConfig(key)
+      val addressPool = AddressPool.fromConfiguration(keyCfg, key, true, strict).get
       poolName(addressPool.name) -> addressPool
     }.toMap
   }.getOrElse(Map.empty)
@@ -42,7 +46,9 @@ case class IpAddressConfiguration(source: Configuration) extends MessageHelper("
     pools.get(poolName(pool)).getOrElse(
       throw source.globalError(message("invalidDefaultPool", pool))
     )
-  }.orElse(AddressPool.fromConfiguration(source,IpAddressConfiguration.DefaultPoolName,false))
+  }.orElse(
+    AddressPool.fromConfiguration(source, IpAddressConfiguration.DefaultPoolName, false, false)
+  )
 
   def hasDefault: Boolean = defaultPool.isDefined
   def hasPool(pool: String): Boolean = pools.contains(poolName(pool))
@@ -62,8 +68,10 @@ object IpAddressConfiguration {
 case class AddressPool(
   name: String, network: String, startAddress: Option[String], gateway: Option[String]
 ) {
+
   require(name.toUpperCase == name, "pool name must be all caps")
   require(network.nonEmpty, "network must be nonEmpty")
+
   if (startAddress.isDefined)
     try {
       IpAddress.toLong(startAddress.get)
@@ -72,8 +80,9 @@ case class AddressPool(
         startAddress.get
       ))
     }
-  try {
-    IpAddressCalc(network, startAddress).nextAvailableAsLong()
+
+  val ipCalc = try {
+    IpAddressCalc(network, startAddress)
   } catch {
     case e => throw new IllegalArgumentException("%s%s is not a valid network%s".format(
       network,
@@ -108,7 +117,7 @@ object AddressPool extends MessageHelper("ip_address") {
   def poolName(pool: String) = pool.toUpperCase
 
   def fromConfiguration(
-    cfg: Configuration, uname: String, required: Boolean
+    cfg: Configuration, uname: String, required: Boolean, strict: Boolean
   ): Option[AddressPool] = {
     val startAddress = cfg.getString("startAddress")
     val network = cfg.getString("network")
@@ -116,6 +125,8 @@ object AddressPool extends MessageHelper("ip_address") {
     val gw = cfg.getString("gateway")
     (startAddress.isDefined || network.isDefined || name.isDefined || gw.isDefined) match {
       case true =>
+        if (strict && !name.isDefined)
+          throw cfg.globalError(message("strictConfig"))
         if (!network.isDefined)
           throw cfg.globalError(message("invalidConfig", uname))
         val normName = name.getOrElse(uname).toUpperCase
@@ -129,7 +140,7 @@ object AddressPool extends MessageHelper("ip_address") {
   }
 
   def fromConfiguration(
-    cfg: Option[Configuration], uname: String, required: Boolean
+    cfg: Option[Configuration], uname: String, required: Boolean, strict: Boolean
   ): Option[AddressPool] = cfg match {
     case None =>
       if (required)
@@ -138,6 +149,6 @@ object AddressPool extends MessageHelper("ip_address") {
         ))
       else
         None
-    case Some(config) => fromConfiguration(config, uname, required)
+    case Some(config) => fromConfiguration(config, uname, required, strict)
   }
 }

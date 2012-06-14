@@ -94,6 +94,7 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
       subnetInfo.isInRange(startAt.get),
       "%s is not in network %s".format(startAt.get, network)
     )
+  def addressCount: Int = subnetInfo.getAddressCount
   def broadcastAddress: String = subnetInfo.getBroadcastAddress
   def broadcastAddressAsLong = IpAddress.toLong(broadcastAddress)
   def lastOctetInRange: Long = IpAddress.lastOctet(maxAddressAsLong)
