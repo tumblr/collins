@@ -1,5 +1,7 @@
 package models
 
+import shared.{AddressPool, IpAddressConfiguration}
+
 import util.{IpAddress, IpAddressCalc}
 import org.squeryl.Schema
 import play.api.{Configuration, Logger}
@@ -35,7 +37,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   lazy val getKey: String = "%s.get(".format(className) + "%d)"
 
   // abstract
-  protected def getConfig()(implicit scope: Option[String]): Option[Configuration]
+  protected def getConfig()(implicit scope: Option[String]): Option[AddressPool]
 
   override def cacheKeys(a: T) = Seq(
     findByAssetKey.format(a.asset_id),
@@ -110,21 +112,18 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
 
   protected def getGateway()(implicit scope: Option[String]): Option[Long] = getConfig() match {
     case None => None
-    case Some(config) => config.getString("gateway") match {
+    case Some(config) => config.gateway match {
       case Some(value) => Option(IpAddress.toLong(value))
       case None => None
     }
   }
   protected def getNetwork()(implicit scope: Option[String]): String = getConfig() match {
     case None => throw new RuntimeException("no %s configuration found".format(className))
-    case Some(config) => config.getString("network") match {
-      case Some(value) => value
-      case None => throw new RuntimeException("%s.network not specified".format(className))
-    }
+    case Some(config) => config.network
   }
   protected def getStartAddress()(implicit scope: Option[String]): Option[String] = getConfig() match {
     case None => None
-    case Some(c) => c.getString("startAddress")
+    case Some(c) => c.startAddress
   }
 
 }
