@@ -22,6 +22,8 @@ import java.util.Date
 import akka.dispatch.Await
 import akka.util.duration._
 
+import SortDirection._
+
 object AssetConfig {
   lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
 }
@@ -402,12 +404,16 @@ object Asset extends Schema with AnormAdapter[Asset] {
    */
   def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder): Page[AssetView] = asset.nodeClass.map{nodeclass => 
     logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
-    find(
+    val unsortedItems:Page[AssetView] = find(
       page,
       (Nil, nodeclass.filteredMetaSet.map{wrapper => (wrapper._meta, wrapper._value.toString)}.toSeq, Nil),
       afinder,
       Some("and")
     )
+    //note, the type inference here is important
+    val sortedItems: Page[AssetView] = unsortedItems
+      .copy(items = AssetDistanceSorter.sort(asset, unsortedItems.items.collect{case a: Asset => a}, new BasicPhysicalDistanceSorter, SortDirection.Asc))
+    sortedItems
   }.getOrElse{
     logger.warn("No Nodeclass for Asset " + asset.tag)
     Page.EmptyPage
