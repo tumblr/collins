@@ -58,6 +58,7 @@ class MockAssetNameSorter extends AssetDistanceSorter {
     
 }
 
+
 class BasicPhysicalDistanceSorter extends AssetDistanceSorter {
 
   val name = "distance"
