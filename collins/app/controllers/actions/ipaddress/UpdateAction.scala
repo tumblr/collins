@@ -109,11 +109,17 @@ case class UpdateAction(
   protected def normalizeForm(asset: Asset, form: DataForm): NormalizedForm = {
     val (old,add,gate,net,pool) = form
     val seq = Seq(old,add,gate,net,pool)
+    if (!IpAddresses.AddressConfig.isDefined)
+      return Left(RequestDataHolder.error500("No address pools have been setup to allocate from"))
+    val addressConfig = IpAddresses.AddressConfig.get
+    if (addressConfig.strict && pool.isDefined && !addressConfig.hasPool(pool.get))
+      return Left(RequestDataHolder.error400("Specified pool is invalid"))
     seq.filter(_.isDefined).map(_.get).foreach { opt =>
-      if (!StringUtil.trim(opt).isDefined)
-        return Left(RequestDataHolder.error400("Invalid value '%s'".format(opt)))
-      if (StringUtil.trim(opt) != opt)
-        return Left(RequestDataHolder.error400("Invalid value '%s'".format(opt)))
+      val trimmed = StringUtil.trim(opt)
+      if (!trimmed.isDefined)
+        return Left(RequestDataHolder.error400("Invalid (empty) value '%s'".format(opt)))
+      if (trimmed.get != opt)
+        return Left(RequestDataHolder.error400("Invalid (padded) value '%s'".format(opt)))
     }
     Seq(old,add,gate,net).filter(_.isDefined).map(_.get).foreach { opt =>
       if (!IpAddress.toOptLong(opt).isDefined)

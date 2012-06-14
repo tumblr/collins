@@ -97,7 +97,7 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
         "pools.foo.network" -> "172.16.16.0/24"
       ))
       IpAddressConfiguration(cfg) must throwA[Exception].like {
-        case e => e.getMessage must contain("ip_address.invalidDefaultPool")
+        case e => e.getMessage must contain("ip_address.strictConfig")
       }
     }
   }

@@ -23,7 +23,8 @@ case class GetPoolsAction(
     case ActionDataHolder(all) => 
       val pools: Set[String] =
         if (all) {
-          IpAddresses.AddressConfig.map(_.poolNames).getOrElse(Set())
+          val set = IpAddresses.AddressConfig.map(_.poolNames).getOrElse(Set())
+          set | IpAddresses.getPoolsInUse()
         } else {
           IpAddresses.getPoolsInUse()
         }
@@ -44,7 +45,10 @@ case class GetPoolsAction(
         "NAME" -> JsString(convertPoolName(pool.name, true)),
         "NETWORK" -> JsString(formatNetworkAddress(pool.network)),
         "START_ADDRESS" -> JsString(pool.startAddress.getOrElse("Unspecified")),
-        "GATEWAY" -> JsString(pool.gateway.getOrElse("Unspecified"))
+        "SPECIFIED_GATEWAY" -> JsString(pool.gateway.getOrElse("Unspecified")),
+        "GATEWAY" -> JsString(pool.ipCalc.minAddress),
+        "BROADCAST" -> JsString(pool.ipCalc.broadcastAddress),
+        "POSSIBLE_ADDRESSES" -> JsNumber(pool.ipCalc.addressCount)
       )
       JsObject(seq)
     }
