@@ -198,7 +198,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
    * nodeclass assets and finding the first one whose meta values match the values
    * of this asset
    */
-  lazy val nodeClass: Option[Asset] = {
+  def nodeClass: Option[Asset] = {
     import util.AttributeResolver._
     val instanceFinder = AssetFinder
       .Empty
@@ -206,15 +206,23 @@ case class Asset(tag: String, status: Int, asset_type: Int,
         assetType = Some(AssetType.Enum.withName(Config.getString("nodeclass.assetType","CONFIGURATION").trim.toString))
       )
     val nodeclassParams: ResolvedAttributes = EmptyResolvedAttributes
-      .withMeta(Config.getString("nodeclass.identifyingAttribute", "IS_NODECLASS"), "true")
+      .withMeta(Config.getString("nodeclass.identifyingMetaTag", "IS_NODECLASS"), "true")
     val nodeclasses = AssetMetaValue
       .findAssetsByMeta(PageParams(0,50,"ASC"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
       .items
       .collect{case a: Asset => a}
-    nodeclasses.find{_.metaSet subsetOf this.metaSet}
+    nodeclasses.find{_.filteredMetaSet subsetOf this.metaSet}
   }
 
   private def metaSet = AssetMetaValue.findByAsset(this).toSet
+
+  /**
+   * Filters out nodeclass exluded tags from the meta set
+   */
+  private def filteredMetaSet = {
+    val excludeMetaTags = Config.getString("nodeclass.excludeMetaTags","").split(",")
+    metaSet.filter{wrapper => !(excludeMetaTags contains wrapper._meta.name)}
+  }
 
   def remoteHost = None
 }
@@ -393,9 +401,10 @@ object Asset extends Schema with AnormAdapter[Asset] {
    * Finds assets in the same nodeclass as the given asset
    */
   def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder): Page[AssetView] = asset.nodeClass.map{nodeclass => 
+    logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
     find(
       page,
-      (Nil, AssetMetaValue.findByAsset(nodeclass).map{m => (m._meta, m._value.toString)}, Nil),
+      (Nil, nodeclass.filteredMetaSet.map{wrapper => (wrapper._meta, wrapper._value.toString)}.toSeq, Nil),
       afinder,
       Some("and")
     )
