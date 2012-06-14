@@ -2,7 +2,7 @@ package controllers
 package actions
 package resources
 
-import models.{Asset, AssetFinder, PageParams, RemoteCollinsHost}
+import models.{Asset, AssetFinder, AssetView, Page, PageParams, RemoteCollinsHost}
 import util.SecuritySpecification
 import views.html
 import play.api.mvc.Result
@@ -31,6 +31,18 @@ case class FindSimilarAction(
       )
       //TODO: Fix details to pull from query string
       handleSuccess(Asset.findSimilar(asset, page, finder), true)
+    }
+  }
+
+
+  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
+    p.size match {
+      case 0 =>
+        Status.Redirect(app.routes.CookieApi.getAsset(assetTag)).flashing("message" -> AssetMessages.noMatch)
+      case 1 =>
+        Status.Redirect(p.items(0).remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(p.items(0).tag))
+      case n =>
+        Status.Ok(views.html.asset.list(p)(flash, request))
     }
   }
 
