@@ -1,6 +1,6 @@
 package controllers
 package actions
-package asset
+package resources
 
 import models.{Asset, AssetFinder, PageParams, RemoteCollinsHost}
 import util.SecuritySpecification
