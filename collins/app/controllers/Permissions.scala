@@ -55,12 +55,12 @@ object Permissions {
     val Spec = spec(LoggedIn)
     val PowerStatus = spec("powerStatus", Spec)
     val PowerManagement = spec("powerManagement", AdminSpec)
+    val ProvisionAsset = spec("provisionAsset", AdminSpec)
   }
 
   object AssetWebApi extends PermSpec("controllers.AssetWebApi") {
     val Spec = spec(AdminSpec)
     val CancelAsset = spec("cancelAsset", Spec)
-    val ProvisionAsset = spec("provisionAsset", Spec)
   }
 
   object Help extends PermSpec("controllers.Help") {

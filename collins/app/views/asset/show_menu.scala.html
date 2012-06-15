@@ -51,7 +51,7 @@
               }
             }
           }
-	  @if(Permissions.please(user, Permissions.AssetWebApi.ProvisionAsset)) {
+	  @if(Permissions.please(user, Permissions.AssetManagementApi.ProvisionAsset)) {
 	    @Provisioner.pluginEnabled.map { p =>
               @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete && aa.asset.getType().name == "Server Node") {
                 <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
