@@ -61,9 +61,7 @@ class MockAssetNameSorter extends AssetDistanceSorter {
     
 }
 
-
-class BasicPhysicalDistanceSorter extends AssetDistanceSorter {
-
+class AbstractPhysicalDistanceSorter(sortkeys: String) extends AssetDistanceSorter{
   val name = "distance"
 
   /**
@@ -76,7 +74,7 @@ class BasicPhysicalDistanceSorter extends AssetDistanceSorter {
    * - let distance(a,b) = SUM(i: 0 to n-1) (2 * f(i))^i
    */
   def distance(a: Asset, b: Asset): Int = {
-      Config.getString("nodeclass.sortkeys", "") 
+      sortkeys
       .split(",")
       .zipWithIndex
       .map{ key => if (a.getMetaAttribute(key._1) == b.getMetaAttribute(key._1)) math.pow(2, key._2).toInt else 0}
