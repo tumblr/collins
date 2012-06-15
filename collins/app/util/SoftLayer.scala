@@ -15,6 +15,8 @@ object SoftLayer {
 
   import SoftLayerConfig._
 
+  def plugin: Option[SoftLayerPlugin] = pluginEnabled
+
   def pluginEnabled: Option[SoftLayerPlugin] = {
     Play.maybeApplication.flatMap { app =>
       app.plugin[SoftLayerPlugin].filter(_.enabled)
