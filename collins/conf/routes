@@ -37,7 +37,7 @@ GET     /logout                     controllers.Application.logout
 # API
 
 # IP Address API
-GET     /api/address/pools                   app.Api.getAddressPools
+GET     /api/address/pools                   app.Api.getAddressPools(all: String ?= "true")
 GET     /api/asset/:tag/addresses            app.Api.getForAsset(tag: String)
 GET     /api/asset/with/address/:address     app.Api.assetFromAddress(address: String)
 GET     /api/assets/with/addresses/in/:pool  app.Api.assetsFromPool(pool: String)
@@ -50,9 +50,12 @@ PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 
 DELETE  /api/asset/:tag/attribute/:attribute   app.Api.deleteAssetAttribute(tag: String, attribute: String)
+
+# Asset management API
 POST    /api/asset/:tag/ipmi        app.Api.updateIpmi(tag: String)
 POST    /api/asset/:tag/power       app.Api.powerManagement(tag: String)
 GET     /api/asset/:tag/power       app.Api.powerStatus(tag: String)
+POST    /api/asset/:tag/provision   app.Api.provisionAsset(tag: String)
 
 PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)

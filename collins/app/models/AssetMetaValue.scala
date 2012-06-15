@@ -72,9 +72,8 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       AssetMetaValueConfig.EncryptedMeta.contains(v.getMeta().name)
     } catch {
       case e =>
-        println("Caught exception trying to determine whether to encrypt")
-        println(v)
-        throw e
+        logger.error("Caught exception trying to determine whether to encrypt", v)
+        false
     }
   }
   def getEncrypted(v: AssetMetaValue): AssetMetaValue = {

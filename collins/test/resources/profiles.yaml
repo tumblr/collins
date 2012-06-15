@@ -1,0 +1,287 @@
+---
+:profiles:
+    searchnode:
+        cobbler_profile: "centos-5.6-x86_64-db-v2"
+        operating_system: "centos_5"
+        vlans: ["search"]
+        label: "Search Server"
+        prefix: "search"
+        primary_role: "SEARCH"
+        requires_pool: false
+    databasenode:
+        cobbler_profile: "centos-5.6-x86_64-db-v2"
+        operating_system: "centos_5"
+        vlans: ["database"]
+        label: "Database Server"
+        prefix: "db"
+        primary_role: "DATABASE"
+        requires_pool: false
+    devnode:
+        cobbler_profile: "centos-5.6-x86_64-web"
+        label: "Dev Machine"
+        vlans: ["service"]
+        prefix: "dev"
+        allow_suffix: true
+        primary_role: "DEVEL"
+        pool: "DEVEL"
+    webnode:
+        cobbler_profile: "centos-5.6-x86_64-web"
+        label: "Web Server"
+        prefix: "web"
+        requires_secondary_role: true
+    funcnode:
+        cobbler_profile: "centos-5.6-x86_64-queue-v2"
+        operating_system: "centos_5"
+        vlans: ["search"]
+        label: "Func Overlord"
+        prefix: "func"
+        primary_role: "WEBOPS"
+        pool: "UTIL"
+    puppetnode:
+        cobbler_profile: "centos-5.6-x86_64-queue-v2"
+        operating_system: "centos_5"
+        vlans: ["search"]
+        label: "Puppet Master"
+        prefix: "puppet"
+        primary_role: "WEBOPS"
+        pool: "PUPPETEERS"
+    webappnode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        operating_system: "centos_5"
+        vlans: ["search"]
+        label: "Web Server v2"
+        prefix: "web-v2"
+        requires_secondary_role: true
+        primary_role: "TUMBLR_APP"
+        secondary_role: "ALL"
+    adminwebnode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        label: "Admin Web Server"
+        prefix: "adminweb"
+        primary_role: "TUMBLR_APP"
+        pool: "ADMIN_POOL"
+        secondary_role: "ALL"
+    assetnode:
+        cobbler_profile: "centos-5.6-x86_64-web"
+        label: "Asset Server"
+        prefix: "assets"
+        requires_secondary_role: false
+    regionservernode:
+        cobbler_profile: "centos-5.6-x86_64-hadoop-v2"
+        label: "Hbase Region Server"
+        prefix: "hbrs"
+        vlans: ["hadoop"]
+        allow_suffix: true
+        primary_role: "HADOOP"
+        secondary_role: "REGION_SERVER"
+    hbasemasternode:
+        cobbler_profile: "centos-5.6-x86_64-queue-v2"
+        label: "Hbase Master Server"
+        vlans: ["hadoop"]
+        prefix: "hbm"
+        allow_suffix: true
+        primary_role: "HADOOP"
+        secondary_role: "HBASE_MASTER"
+    namenode:
+        cobbler_profile: "centos-5.6-x86_64-queue-v2"
+        label: "Hadoop NameNode"
+        vlans: ["hadoop"]
+        prefix: "nn"
+        allow_suffix: true
+        primary_role: "HADOOP"
+        secondary_role: "NAMENODE"
+    appcronnode:
+        cobbler_profile: "centos-5.6-x86_64-web"
+        label: "App Cron Server"
+        prefix: "app-cron"
+        primary_role: "TUMBLR_APP"
+        pool: "UTIL"
+    servicenode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        label: "Platform Service Server"
+        prefix: "service"
+        allow_suffix: true
+        primary_role: "SERVICE"
+    bastionnode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        label: "Bastion Server"
+        prefix: "bastion"
+        primary_role: "BASTION"
+        vlans: ["bastion"]
+        operating_system: "centos_5"
+    reponode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        operating_system: "centos_5"
+        vlans: ["search"]
+        label: "Repo Server"
+        prefix: "repo"
+        primary_role: "INFRA"
+    sreutilnode:
+        cobbler_profile: "centos-5.6-x86_64-web"
+        label: "Utility Server"
+        prefix: "util"
+        allow_suffix: true
+        primary_role: "UTILITY"
+        pool: "UTIL"
+    perimeternode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        operating_system: ["centos_5"]
+        label: "Perimeter Server"
+        vlans: ["search"]
+        prefix: "p"
+        allow_suffix: true
+    varnishnode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        operating_system: ["centos_5"]
+        label: "Varnish Server"
+        vlans: ["search"]
+        prefix: "v"
+        allow_suffix: true
+        primary_role: "SERVICE"
+    memcachenode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        label: "Memcached Server"
+        operating_system: "centos_5"
+        vlans: ["service"]
+        prefix: "memcache"
+        allow_suffix: true
+        primary_role: "CACHE"
+    gearmannode:
+        cobbler_profile: "centos-5.6-x86_64-queue-v2"
+        label: "Gearmand Server"
+        operating_system: "centos_5"
+        vlans: ["service"]
+        prefix: "gm"
+        primary_role: "TUMBLR_APP"
+        pool: "GEARMAN_POOL"
+    gobnode:
+        cobbler_profile: "centos-5.6-x86_64-web"
+        label: "Gob Server"
+        prefix: "tinyurl"
+        primary_role: "SERVICE"
+        secondary_role: "Gob"
+    aaacanode:
+        cobbler_profile: "sl-6.2-x86_64-web-v2"
+        label: "AAA/CA Server"
+        prefix: "aaa"
+        vlans: ["aaa"]
+        primary_role: "INFRA"
+        allow_suffix: true
+    dhcpnode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        label: "DHCP/iPXE Server"
+        prefix: "dhcp"
+        vlans: ["provisioning"]
+        primary_role: "INFRA"
+        allow_suffix: false
+    mailrelaynode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        label: "Mail Relay Server"
+        prefix: "mx"
+        vlans: ["mail"]
+        primary_role: "MAIL"
+        pool: "MAILRELAY_POOL"
+        allow_suffix: false
+    mrepotestnode:
+        cobbler_profile: "CentOS-5.6-x86_64-web-mrepo-v2"
+        operating_system: "centos_5"
+        vlans: ["search"]
+        label: "Mrepo Test Client"
+        prefix: "testmrepo"
+        primary_role: "DEVEL"
+    scribecentralnode:
+        cobbler_profile: "centos-5.6-x86_64-scribe"
+        operating_system: "centos_5"
+        vlans: ["search"]
+        label: "Scribe Central Server"
+        prefix: "scribe"
+        primary_role: "TUMBLR_APP"
+        pool: "SCRIBE_POOL"
+        secondary_role: "ALL"
+    monitornode:
+        cobbler_profile: "sl-6.2-x86_64-web-v2"
+        operating_system: "sl_6"
+        vlans: ["monitoring"]
+        label: "Monitor Node"
+        prefix: "monitor"
+        primary_role: "MONITOR"
+        allow_suffix: true
+    icinganode:
+        cobbler_profile: "sl-6.2-x86_64-web-v2"
+        operating_system: "sl_6"
+        vlans: ["monitoring"]
+        label: "Icinga Node"
+        prefix: "icinga"
+        primary_role: "ICINGA"
+        allow_suffix: true
+    lognode:
+        cobbler_profile: "sl-6.2-x86_64-web-v2"
+        operating_system: "sl_6"
+        vlans: ["logging"]
+        label: "Log Node"
+        prefix: "rsyslog"
+        primary_role: "RSYSLOG"
+        allow_suffix: true
+    scribeserver:
+        cobbler_profile: "sl-6.2-x86_64-web-v2"
+        operating_system: "sl_6"
+        vlans: ["service"]
+        label: "Scribe Server"
+        prefix: "scribe"
+        primary_role: "SCRIBE"
+        allow_suffix: true
+        allow_suffix: false
+    collinsnode:
+        cobbler_profile: "centos-5.6-x86_64-web"
+        operating_system: "centos_5"
+        vlans: ["provisioning"]
+        label: "Collins Server"
+        prefix: "collins"
+        primary_role: "UTIL"
+        allow_suffix: false
+    gitcachenode:
+        cobbler_profile: "centos-5.6-x86_64-web"
+        operating_system: "centos_5"
+        vlans: ["service"]
+        label: "Git Cache"
+        prefix: "gitcache"
+        primary_role: "GIT_CACHE"
+        allow_suffix: false
+    redisnode:                                                  
+        cobbler_profile: "centos-5.6-x86_64-queue-v2"           
+        operating_system: "centos_5"                            
+        vlans: ["service"]                                       
+        label: "Redis Server"                                          
+        prefix: "redis"                                         
+        primary_role: "CACHE"                                   
+        secondary_role: "REDIS"                                 
+        allow_suffix: true
+    datanode:
+        cobbler_profile: "centos-5.6-hadoop-v2"
+        operating_system: "centos_5"
+        vlans: ["hadoop"]
+        label: "Hadoop Datanode"
+        prefix: "dn"
+        primary_role: "HADOOP"
+        secondary_role: "DATANODE"
+        allow_suffix: true
+    mrepobuildernode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        operating_system: "centos_5"                            
+        vlans: ["search"]                                       
+        label: "Mrepo Build Server"
+        prefix: "mrepo"
+        primary_role: "REPO"
+        pool: "MREPO_POOL"
+        secondary_role: "MREPO_BUILDER"
+        allow_suffix: false
+    mrepomirrornode:
+        cobbler_profile: "centos-5.6-x86_64-web-v2"
+        operating_system: "centos_5"                            
+        vlans: ["search"]                                       
+        label: "Mrepo Mirror Server"
+        prefix: "mrepo"
+        primary_role: "REPO"
+        pool: "MREPO_POOL"
+        secondary_role: "MREPO_MIRROR"
+        allow_suffix: false
