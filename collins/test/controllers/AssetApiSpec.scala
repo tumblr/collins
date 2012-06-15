@@ -24,6 +24,12 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
   val user = getLoggedInUser("infra")
   val api = getApi(user)
 
+  "Create a meta" should {
+    "for outlets" in {
+      AssetMeta.findOrCreateFromName("OUTLET").name === "OUTLET"
+    }
+  }
+
   "Asset Validation" should {
     "Reject empty asset tags" in new ResponseScope {
       val request = FakeRequest("GET", "/api/asset/")
