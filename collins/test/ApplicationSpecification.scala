@@ -15,13 +15,12 @@ trait ApplicationSpecification extends mutable.Specification with ResourceFinder
   )
 
   def applicationSetup = {
-    Play.start(
-      //FakeApplication(additionalPlugins = Seq("play.api.db.evolutions.EvolutionsPlugin", "play.api.db.DBPlugin"))
-      FakeApplication(
+    val app = FakeApplication(
         additionalConfiguration = collinsDatabase,
         additionalPlugins = Seq("play.api.db.evolutions.EvolutionsPlugin")
       )
-    )
+
+    Play.start(app)
     evolutionFor("collins")
   }
 

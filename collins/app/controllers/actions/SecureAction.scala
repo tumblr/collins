@@ -70,7 +70,11 @@ abstract class SecureAction(
       case false => None
     }
     htmlOutput.getOrElse(
-      Api.errorResponse(rd.toString, rd.status().getOrElse(Results.InternalServerError))
+      Api.errorResponse(
+        rd.toString,
+        rd.status().getOrElse(Results.InternalServerError),
+        rd.exception()
+      )
     )
   }
 

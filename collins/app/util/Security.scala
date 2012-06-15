@@ -55,7 +55,7 @@ trait AuthenticationAccessor {
 object AuthenticationProvider {
   val Default = new MockAuthenticationProvider
   val Types = Set("ldap", "file", "default", "ipa")
-  val filename = Config.getString("authentication", "permissionsFile", "errorfile").toString
+  val filename = Config.getString("authentication", "permissionsFile", "conf/permissions.yaml").toString
 
   private val logger = Logger(getClass)
 
