@@ -2,7 +2,7 @@ package controllers
 package actions
 package asset
 
-import models.{Asset, AssetFinder, AssetView, Page, PageParams, RemoteCollinsHost}
+import models.{Asset, AssetFinder, AssetView, Page, PageParams, RemoteCollinsHost, SortDirection}
 import util.SecuritySpecification
 import views.html
 import play.api.mvc.Result
@@ -30,7 +30,7 @@ case class FindSimilarAction(
         status = Some(AssetStatusEnum.Unallocated)
       )
       //TODO: Fix details to pull from query string
-      handleSuccess(Asset.findSimilar(asset, page, finder), true)
+      handleSuccess(Asset.findSimilar(asset, page, finder, SortDirection.Asc), true)
     }
   }
 
