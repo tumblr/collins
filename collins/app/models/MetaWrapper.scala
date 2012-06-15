@@ -24,6 +24,7 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
     case false => _value.value
   }
   override def toString(): String = getValue()
+  def valueEquals(m: MetaWrapper) = getValue() == m.getValue()
 }
 
 object MetaWrapper {
