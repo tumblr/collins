@@ -44,6 +44,11 @@ attributeresolver.notfound=Invalid search field ''{0}''. Not found as asset tag,
 
 feature.ignoreDangerousCommands=Ignoring dangerous command for asset with tag ''{0}''. Configured by ''features.ignoreDangerousCommands''.
 
+ip_address.missingConfig=IP address config for ''{0}'' is missing (naked).
+ip_address.invalidConfig=IP address config for ''{0}'' has no IP address configuration attributes or is missing a required network attribute.
+ip_address.strictConfig=Strict address management is enabled which requires that all pools have a name, and does not allow the use of pool names that are not configured.
+ip_address.invalidDefaultPool=The specified default address pool ''{0}'' does not exist.
+
 powermanagement.disallowStatus=Assets in status {0} can not be power managed. Configured by ''powermanagement.disallowStatus''.
 powermanagement.disallowWhenAllocated=Can not execute {0} when asset is allocated. Configured by ''powermanagement.disallowWhenAllocated''.
 powermanagement.allowAssetTypes=Asset of type ''{0}'' does not support power management. Configured by ''powermanagement.allowAssetTypes''.

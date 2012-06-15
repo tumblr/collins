@@ -658,7 +658,7 @@
   @form(app.routes.CookieApi.provisionAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "provisionError", Symbol("data-modal") -> "provision-server", Symbol("data-refresh") -> ".window") {
   <div class="modal-body">
     <p><span class="label important">Warning</span>
-    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    @if(aa.asset.isIncomplete) {
     Activating a server takes a couple of days. When the server has been activated out of the
     softlayer spare pool, it will be allocated during the reconciler run automatically. Once
     allocated, we will begin getting billed.
@@ -735,7 +735,7 @@
     </div>
   </div>
   <div class="modal-footer">
-    @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
+    @if(aa.asset.isIncomplete) {
     <button type="submit" class="btn">Activate Server</button>
     } else {
     <button type="submit" class="btn">Provision Server</button>
