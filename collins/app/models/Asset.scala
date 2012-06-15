@@ -10,6 +10,8 @@ import play.api.libs.json._
 import play.api.libs.ws.WS
 import play.api._
 import play.api.mvc._
+import play.api.cache.Cache
+import play.api.Play.current
 
 import org.squeryl.Schema
 import org.squeryl.PrimitiveTypeMode._
@@ -402,21 +404,28 @@ object Asset extends Schema with AnormAdapter[Asset] {
   /**
    * Finds assets in the same nodeclass as the given asset
    */
-  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder): Page[AssetView] = asset.nodeClass.map{nodeclass => 
-    logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
-    val unsortedItems:Page[AssetView] = find(
-      page,
-      (Nil, nodeclass.filteredMetaSet.map{wrapper => (wrapper._meta, wrapper._value.toString)}.toSeq, Nil),
-      afinder,
-      Some("and")
-    )
-    //note, the type inference here is important
-    val sortedItems: Page[AssetView] = unsortedItems
-      .copy(items = AssetDistanceSorter.sort(asset, unsortedItems.items.collect{case a: Asset => a}, new BasicPhysicalDistanceSorter, SortDirection.Asc))
-    sortedItems
-  }.getOrElse{
-    logger.warn("No Nodeclass for Asset " + asset.tag)
-    Page.EmptyPage
+  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder): Page[AssetView] = {
+    val cacheKey = "asset.findSimilar(%s)".format(asset.tag)
+    Cache
+      .getAs[Seq[Asset]](cacheKey)
+      .map{assets => Page[AssetView](assets.slice(page.offset, page.offset + page.size), page.page, page.offset, assets.size)}
+      .getOrElse{asset.nodeClass.map{ nodeclass => 
+        logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
+        val unsortedItems:Page[AssetView] = find(
+          PageParams(0,1000, "asc"), //TODO: unbounded search
+          (Nil, nodeclass.filteredMetaSet.map{wrapper => (wrapper._meta, wrapper._value.toString)}.toSeq, Nil),
+          afinder,
+          Some("and")
+        )
+        //note, the type inference here is important
+        val sortedItems: Page[AssetView] = unsortedItems
+          .copy(items = AssetDistanceSorter.sort(asset, unsortedItems.items.collect{case a: Asset => a}, new BasicPhysicalDistanceSorter, SortDirection.Asc))
+        Cache.set(cacheKey, sortedItems.items, 30)
+        sortedItems
+      }.getOrElse{
+        logger.warn("No Nodeclass for Asset " + asset.tag)
+        Page.EmptyPage
+      }}
   }
 
   
