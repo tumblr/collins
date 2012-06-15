@@ -218,14 +218,17 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     nodeclasses.find{_.filteredMetaSet subsetOf this.metaSet}
   }
 
-  private def metaSet = AssetMetaValue.findByAsset(this).toSet
+  private[models] def metaSet: Set[(AssetMeta,String)] = AssetMetaValue
+    .findByAsset(this)
+    .map{wrapper => (wrapper._meta -> wrapper._value.value)}
+    .toSet
 
   /**
    * Filters out nodeclass exluded tags from the meta set
    */
-  private def filteredMetaSet = {
+  private[models] def filteredMetaSet = {
     val excludeMetaTags = Config.getString("nodeclass.excludeMetaTags","").split(",")
-    metaSet.filter{wrapper => !(excludeMetaTags contains wrapper._meta.name)}
+    metaSet.filter{case(meta, value) => !(excludeMetaTags contains meta.name)}
   }
 
   def remoteHost = None
@@ -413,7 +416,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
         val unsortedItems:Page[AssetView] = find(
           PageParams(0,1000, "asc"), //TODO: unbounded search
-          (Nil, nodeclass.filteredMetaSet.map{wrapper => (wrapper._meta, wrapper._value.toString)}.toSeq, Nil),
+          (Nil, nodeclass.filteredMetaSet.toSeq, Nil),
           afinder,
           Some("and")
         )
