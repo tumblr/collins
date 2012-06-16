@@ -56,6 +56,7 @@ object Permissions {
     val PowerStatus = spec("powerStatus", Spec)
     val PowerManagement = spec("powerManagement", AdminSpec)
     val ProvisionAsset = spec("provisionAsset", AdminSpec)
+    val GetProvisioningProfiles = spec("getProvisioningProfiles", AdminSpec)
   }
 
   object AssetWebApi extends PermSpec("controllers.AssetWebApi") {

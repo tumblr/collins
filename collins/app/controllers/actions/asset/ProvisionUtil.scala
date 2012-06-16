@@ -51,6 +51,12 @@ trait ProvisionUtil { self: SecureAction =>
           return Left(error)
         case _ =>
       }
+    else if (!plugin.canProvision(asset))
+      return Left(
+        RequestDataHolder.error409(
+          "Provisioning prevented by configuration. Asset does not have the correct status"
+        )
+      )
     validateProvision(plugin, asset, form)
   }
 
@@ -126,8 +132,10 @@ trait ProvisionUtil { self: SecureAction =>
       Right(role)
     else if (prole.isDefined)
       Right(role.copy(primary_role = prole.map(_.toUpperCase)))
-    else
+    else if (role.requires_primary_role)
       Left(RequestDataHolder.error400("A primary_role is required but none was specified"))
+    else
+      Right(role)
   }
 
   protected def validateSecondaryRole(role: ProvisionerRole, srole: Option[String]): ValidOption = {
@@ -135,8 +143,10 @@ trait ProvisionUtil { self: SecureAction =>
       Right(role)
     else if (srole.isDefined)
       Right(role.copy(secondary_role = srole.map(_.toUpperCase)))
-    else
+    else if (role.requires_secondary_role)
       Left(RequestDataHolder.error400("A secondary_role is required but none was specified"))
+    else
+      Right(role)
   }
 
   protected def validatePool(role: ProvisionerRole, pool: Option[String]): ValidOption = {
@@ -144,8 +154,10 @@ trait ProvisionUtil { self: SecureAction =>
       Right(role)
     else if (pool.isDefined)
       Right(role.copy(pool = pool.map(_.toUpperCase)))
-    else
+    else if (role.requires_pool)
       Left(RequestDataHolder.error400("A pool is required but none was specified"))
+    else
+      Right(role)
   }
 }
 
@@ -243,9 +255,9 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
       None
     case failure if failure.commandResult.exitCode != 0 =>
       Some(handleError(RequestDataHolder.error500(
-        "There was an error processing your request. Exit Code %d\n%s".format(
-          failure.commandResult.exitCode, failure.commandResult.toString
-        )
+        "There was an error processing your request. Exit Code %d".format(
+          failure.commandResult.exitCode
+        ), new Exception(failure.commandResult.toString)
       )))
   }
 
