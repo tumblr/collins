@@ -19,6 +19,7 @@ case class PowerStatusAction(
 
   override protected def ignoreAsset(asset: Asset): Boolean = false
   override protected def actionAllowed(asset: Asset, pa: PowerAction): Boolean = true
+  override protected def assetStateAllowed(asset: Asset): Boolean = true
 
   override protected def onSuccess(s: CommandResult): ResponseData = {
     logSuccessfulPowerEvent()

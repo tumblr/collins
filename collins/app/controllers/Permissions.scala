@@ -23,6 +23,7 @@ object Permissions {
 
   object Feature extends PermSpec("feature") {
     val CanSeePasswords = SecuritySpec.fromConfig("canSeePasswords", AdminSpec)
+    val NoRateLimit = SecuritySpec.fromConfig("noRateLimit", AdminSpec)
   }
 
   object Admin extends PermSpec("controllers.Admin") {
