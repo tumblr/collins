@@ -36,7 +36,7 @@ case class CreateAction(
           )
         poolName.filter(_.nonEmpty).foreach { p =>
           if (!IpAddresses.AddressConfig.get.hasPool(p)) {
-            return Left(RequestDataHolder.error404("Pool %s does not exist".format(p)))
+            return Left(RequestDataHolder.error400("Pool %s does not exist".format(p)))
           }
         }
         Right(ActionDataHolder(asset, poolName.getOrElse(""), count.getOrElse(1)))

@@ -61,15 +61,27 @@ object RequestDataHolder extends RequestDataHolder {
     def apply(msg: String) = new ErrorRequestDataHolder(msg, Some(Results.BadRequest))
   }
 
-  def error400(message: String): RequestDataHolder = ErrorRequestDataHolder(
-    message, Results.BadRequest
-  )
-  def error404(message: String): RequestDataHolder = ErrorRequestDataHolder(
-    message, Results.NotFound
-  )
-  def error409(message: String): RequestDataHolder = ErrorRequestDataHolder(
-    message, Results.Conflict
-  )
+  def error4xx(message: String, status: HttpStatus, exception: Option[Throwable]) =
+    new ErrorRequestDataHolder(message, Some(status)).withException(exception)
+
+  def error400(message: String): RequestDataHolder =
+    error4xx(message, Results.BadRequest, None)
+  def error400(message: String, e: Throwable): RequestDataHolder =
+    error4xx(message, Results.BadRequest, Some(e))
+
+  def error403(message: String): RequestDataHolder =
+    error4xx(message, Results.Forbidden, None)
+  def error403(message: String, e: Throwable): RequestDataHolder =
+    error4xx(message, Results.Forbidden, Some(e))
+
+  def error404(message: String): RequestDataHolder =
+    error4xx(message, Results.NotFound, None)
+
+  def error409(message: String): RequestDataHolder =
+    error4xx(message, Results.Conflict, None)
+
+  def error429(message: String): RequestDataHolder =
+    error4xx(message, Results.TooManyRequest, None)
 
   def error5xx(message: String, status: HttpStatus, exception: Option[Throwable]) =
     new ErrorRequestDataHolder(message, Some(status)).withException(exception)
@@ -78,6 +90,8 @@ object RequestDataHolder extends RequestDataHolder {
     error5xx(message, Results.InternalServerError, t)
   def error500(message: String, t: Throwable): RequestDataHolder =
     error5xx(message, Results.InternalServerError, Some(t))
+  def error501(message: String): RequestDataHolder =
+    error5xx(message, Results.NotImplemented, None)
 
   def error504(message: String): RequestDataHolder = ErrorRequestDataHolder(
     message, Results.Status(play.api.http.Status.GATEWAY_TIMEOUT)

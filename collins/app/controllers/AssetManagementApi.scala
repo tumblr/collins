@@ -1,6 +1,8 @@
 package controllers
 
-import actions.asset.{PowerManagementAction, PowerStatusAction, ProvisionAction}
+import actions.asset.{
+  PowerManagementAction, PowerStatusAction, ProvisionAction, GetProvisioningProfilesAction
+}
 
 trait AssetManagementApi {
   this: Api with SecureController =>
@@ -14,5 +16,8 @@ trait AssetManagementApi {
   // POST /asset/:tag/provision
   def provisionAsset(tag: String) =
     ProvisionAction(tag, Permissions.AssetManagementApi.ProvisionAsset, this)
+
+  def getProvisioningProfiles =
+    GetProvisioningProfilesAction(Permissions.AssetManagementApi.GetProvisioningProfiles, this)
 
 }
