@@ -15,7 +15,7 @@ case class GetProvisioningProfilesAction(
 
   override def validate(): Validation = Provisioner.plugin match {
     case None =>
-      Left(RequestDataHolder.error500("Provisioner plugin not enabled"))
+      Left(RequestDataHolder.error501("Provisioner plugin not enabled"))
     case Some(plugin) =>
       Right(ActionDataHolder(plugin.profiles))
   }

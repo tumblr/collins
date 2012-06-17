@@ -53,8 +53,8 @@ trait ProvisionUtil { self: SecureAction =>
       }
     else if (!plugin.canProvision(asset))
       return Left(
-        RequestDataHolder.error409(
-          "Provisioning prevented by configuration. Asset does not have the correct status"
+        RequestDataHolder.error403(
+          "Provisioning prevented by configuration. Asset does not have allowed status"
         )
       )
     validateProvision(plugin, asset, form)
@@ -86,7 +86,7 @@ trait ProvisionUtil { self: SecureAction =>
     if (!asset.isIncomplete)
       Some(RequestDataHolder.error409("Asset status must be 'Incomplete'"))
     else if (!SoftLayer.plugin.isDefined)
-      Some(RequestDataHolder.error500("SoftLayer plugin not enabled"))
+      Some(RequestDataHolder.error501("SoftLayer plugin not enabled"))
     else if (!SoftLayer.plugin.get.isSoftLayerAsset(asset))
       Some(RequestDataHolder.error400("Asset not a SoftLayer asset"))
     else if (!SoftLayer.plugin.get.softLayerId(asset).isDefined)
@@ -163,6 +163,13 @@ trait ProvisionUtil { self: SecureAction =>
 
 trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
 
+  protected def onSuccess() {
+    // Hook for rate limiting if needed
+  }
+  protected def onFailure() {
+    // additional hook
+  }
+
   protected def tattle(message: String, error: Boolean) {
     val tattler = isHtml match {
       case true => UserTattler
@@ -192,8 +199,12 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
           None
         case false =>
           tattle("Asset activation failed", true)
+          onFailure()
           Some(handleError(RequestDataHolder.error400("Asset activation failed")))
-      }.getOrElse(Api.statusResponse(true))
+      }.getOrElse {
+        onSuccess()
+        Api.statusResponse(true)
+      }
     }
   }
 
@@ -207,6 +218,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
       }
     }.flatMap {
       case Some(err) =>
+        onFailure()
         Akka.future(err)
       case None =>
         if (attribs.nonEmpty) {
@@ -221,12 +233,18 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
               tattle("Provisioning failed. Exit code %d\n%s".format(result.commandResult.exitCode,
                 result.commandResult.toString
               ), true)
+              onFailure()
               err
             }.orElse {
-              tattle("Successfully provisioned server as %s".format(pRequest.profile.identifier), false)
+              tattle(
+                "Successfully provisioned server as %s".format(pRequest.profile.identifier), false
+              )
               None
             }
-          }.getOrElse(Api.statusResponse(true))
+          }.getOrElse {
+            onSuccess()
+            Api.statusResponse(true)
+          }
         }
     }
   }
