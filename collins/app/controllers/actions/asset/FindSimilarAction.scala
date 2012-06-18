@@ -2,7 +2,7 @@ package controllers
 package actions
 package asset
 
-import models.{Asset, AssetFinder, AssetView, Page, PageParams, RemoteCollinsHost, SortDirection}
+import models.{Asset, AssetFinder, AssetType, AssetView, Page, PageParams, RemoteCollinsHost, SortDirection}
 import util.SecuritySpecification
 import views.html
 import play.api.mvc.Result
@@ -27,7 +27,8 @@ case class FindSimilarAction(
   override def execute(rd: RequestDataHolder) = rd match {
     case AssetDataHolder(asset) => {
       val finder = AssetFinder.Empty.copy(
-        status = Some(AssetStatusEnum.Unallocated)
+        status = Some(AssetStatusEnum.Unallocated),
+        assetType = Some(AssetType.Enum.ServerNode)
       )
       //TODO: Fix details to pull from query string
       handleSuccess(Asset.findSimilar(asset, page, finder, SortDirection.Asc), true)

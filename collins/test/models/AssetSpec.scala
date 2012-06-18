@@ -39,11 +39,8 @@ class AssetSpec extends ApplicationSpecification {
     }
 
     "Support nodeclass" in {
+      
       "nodeClass" in new mocknodeclass {
-        def createAssetMetas(asset: Asset, metamap: Map[String, String]) = metamap
-          .map{ case (k,v) => 
-            AssetMetaValue.create(AssetMetaValue(asset.id, AssetMeta.findOrCreateFromName(k).id, 0, v))
-          }
         val nodeclass = Asset.create(Asset(nodeclassTag, nodeclassStatus,nodeclassType))
         val testAsset = Asset.create(Asset(assetTag, assetStatus, assetType))
         val nodeclassMetas = createAssetMetas(nodeclass, (nodeclassMetaTags + nodeclassIdentifierTag))
@@ -51,7 +48,25 @@ class AssetSpec extends ApplicationSpecification {
         testAsset.nodeClass must_== Some(nodeclass)
       }
 
-    }
+      "findSimilar" in new mocknodeclass {
+        val assets = similarAssetData.map{case (tag, status, metatags) => {
+          val asset = Asset.create(Asset(tag, status, AssetType.Enum.ServerNode))
+          createAssetMetas(asset, metatags)
+          asset
+        }}
+        val finder = AssetFinder.Empty.copy(
+          status = Some(Status.Enum.Unallocated),
+          assetType = Some(AssetType.Enum.ServerNode)
+        )
+        val expected = assets.filter{_.tag == similarAssetTag}
+        val page = PageParams(0,10, "")
+        Asset.findByTag(assetTag).map{asset =>
+          Asset.findSimilar(asset, page, finder, SortDirection.Asc).items must_== expected
+        }.getOrElse(failure("Couldn't find asset but expected to"))
+
+      }
+
+    } //support nodeclass
         
 
     "Support getters/finders" in {
@@ -99,6 +114,11 @@ class AssetSpec extends ApplicationSpecification {
   }
 
   trait mocknodeclass extends Scope {
+    def createAssetMetas(asset: Asset, metamap: Map[String, String]) = metamap
+
+      .map{ case (k,v) => 
+        AssetMetaValue.create(AssetMetaValue(asset.id, AssetMeta.findOrCreateFromName(k).id, 0, v))
+      }
     val nodeclassTag = "test_nodeclass"
     val nodeclassStatus = Status.Enum.Allocated
     val nodeclassType = AssetType.Enum.Config
@@ -107,7 +127,14 @@ class AssetSpec extends ApplicationSpecification {
     val assetTag = "nodeclasstest"
     val assetStatus = Status.Enum.Allocated
     val assetType = AssetType.Enum.ServerNode
+    val similarAssetTag = "similar_asset"
+    val similarAssetData = List[(String, Status.Enum, Map[String,String])](
+      (similarAssetTag,Status.Enum.Unallocated,nodeclassMetaTags),
+      ("not_similar",Status.Enum.Unallocated,Map[String,String]()),
+      ("similar_not_unallocated", Status.Enum.Provisioned,nodeclassMetaTags)
+    )
   }
+
 
 
 }
