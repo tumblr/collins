@@ -2,8 +2,8 @@ import play.api._
 import play.api.mvc._
 
 import controllers.ApiResponse
-import models.Model
-import util.{AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
+import models.{IpAddresses, Model}
+import util.{AppConfig, AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 import util.power.PowerConfiguration
 import java.io.File
@@ -32,9 +32,9 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
         case Some(k) => k
       }
     }
+    Model.initialize()
     setAuthentication(auth)
     setCryptoKey(key)
-    Model.initialize()
     checkRuntime(app.configuration)
   }
 
@@ -107,6 +107,8 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     PowerConfiguration.validate()
     AuthenticationProvider.validate()
     getAuthentication().validate()
+    IpAddresses.AddressConfig
+    AppConfig.ipmi
   }
 
   // Make sure we have a valid configuration before we start

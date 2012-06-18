@@ -37,35 +37,41 @@ abstract class PowerManagementActionHelper(
     val pa = powerAction
 
     if (!PowerManagement.isPluginEnabled) {
-      Left(RequestDataHolder.error500("PowerManagement plugin not enabled"))
+      Left(RequestDataHolder.error501("PowerManagement plugin not enabled"))
     } else if (!asset.isDefined) {
       Left(assetNotFound(assetTag))
     } else if (!pa.isDefined) {
       Left(RequestDataHolder.error400(PowerActionNotFoundMessage))
     } else if (ignoreAsset(asset.get)) {
-      Left(RequestDataHolder.error400(FeatureMessages.ignoreDangerousCommands(assetTag)))
+      Left(RequestDataHolder.error403(FeatureMessages.ignoreDangerousCommands(assetTag)))
     } else if (!assetTypeAllowed(asset.get)) {
-      Left(RequestDataHolder.error400(PowerMessages.assetTypeAllowed(asset.get)))
+      Left(RequestDataHolder.error403(PowerMessages.assetTypeAllowed(asset.get)))
     } else if (!actionAllowed(asset.get, pa.get)) {
-      Left(RequestDataHolder.error400(PowerMessages.actionAllowed(pa.get)))
+      Left(RequestDataHolder.error403(PowerMessages.actionAllowed(pa.get)))
     } else if (!assetStateAllowed(asset.get)) {
-      Left(RequestDataHolder.error400(PowerMessages.assetStateAllowed(asset.get)))
+      Left(RequestDataHolder.error403(PowerMessages.assetStateAllowed(asset.get)))
     } else {
       setAsset(asset)
       try {
         Right(PowerStatusRd(IpmiPowerCommand.fromPowerAction(asset.get, pa.get)))
       } catch {
         case ex: IllegalStateException =>
-          Left(RequestDataHolder.error400(ex.getMessage))
+          Left(RequestDataHolder.error400(ex.getMessage, ex))
         case ex =>
-          Left(RequestDataHolder.error500("Unexpected error: " + ex.getMessage))
+          Left(RequestDataHolder.error500(
+            "Unexpected error: %s".format(ex.getMessage), ex
+          ))
       }
     }
   }
 
+  // features.ignoreDangerousCommands
   protected def ignoreAsset(asset: Asset): Boolean = AppConfig.ignoreAsset(asset)
+  // powermanagement.allowAssetTypes
   protected def assetTypeAllowed(asset: Asset): Boolean = PowerManagement.assetTypeAllowed(asset)
+  // !powermanagement.disallowStatus
   protected def assetStateAllowed(asset: Asset): Boolean = PowerManagement.assetStateAllowed(asset)
+  // !powermanagement.disallowWhenAllocated
   protected def actionAllowed(asset: Asset, pa: PowerAction): Boolean = {
     PowerManagement.actionAllowed(asset, pa)
   }
@@ -73,7 +79,7 @@ abstract class PowerManagementActionHelper(
   protected def onError(t: Throwable): ResponseData = {
     val msg = "Power event (%s) error: %s%s".format(powerAction.get, t.toString, verifyToString)
     logPowerEvent(msg)
-    Api.errorResponse(msg)
+    Api.errorResponse(msg, Results.InternalServerError, Some(t))
   }
 
   protected def onNoResult(): ResponseData = Api.statusResponse(false)
