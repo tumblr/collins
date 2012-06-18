@@ -60,7 +60,7 @@ POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
 DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
 GET     /api/asset/:tag             app.Api.getAsset(tag: String, location: Option[String])
 GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC")
-GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sortType: String ?= "default", sort: String  ?= "ASC")
+GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sortType: String ?= "default", sort: String  ?= "ASC", details: String ?= "false")
 
 GET     /api/tags                   app.Api.getTags
 GET     /api/tag/:tag               app.Api.getTagValues(tag: String)

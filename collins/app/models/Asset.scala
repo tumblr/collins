@@ -407,7 +407,13 @@ object Asset extends Schema with AnormAdapter[Asset] {
   /**
    * Finds assets in the same nodeclass as the given asset
    */
-  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sorter: SortDirection): Page[AssetView] = {
+  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder): Page[AssetView] = {
+    val sorter = try SortDirection.withName(page.sort) catch {
+      case _ => {
+        logger.warn("Invalid sort " + page.sort)
+        SortDirection.Desc
+      }
+    }
     val cacheKey = "asset.findSimilar(%s)".format(asset.tag) + sorter.toString
     Cache
       .getAs[Seq[Asset]](cacheKey)
