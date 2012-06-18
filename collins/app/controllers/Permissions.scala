@@ -23,6 +23,7 @@ object Permissions {
 
   object Feature extends PermSpec("feature") {
     val CanSeePasswords = SecuritySpec.fromConfig("canSeePasswords", AdminSpec)
+    val NoRateLimit = SecuritySpec.fromConfig("noRateLimit", AdminSpec)
   }
 
   object Admin extends PermSpec("controllers.Admin") {
@@ -55,12 +56,13 @@ object Permissions {
     val Spec = spec(LoggedIn)
     val PowerStatus = spec("powerStatus", Spec)
     val PowerManagement = spec("powerManagement", AdminSpec)
+    val ProvisionAsset = spec("provisionAsset", AdminSpec)
+    val GetProvisioningProfiles = spec("getProvisioningProfiles", AdminSpec)
   }
 
   object AssetWebApi extends PermSpec("controllers.AssetWebApi") {
     val Spec = spec(AdminSpec)
     val CancelAsset = spec("cancelAsset", Spec)
-    val ProvisionAsset = spec("provisionAsset", Spec)
   }
 
   object Help extends PermSpec("controllers.Help") {

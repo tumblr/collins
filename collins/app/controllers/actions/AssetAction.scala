@@ -23,6 +23,7 @@ trait AssetAction {
   def assetFromTag(t: String): Option[Asset] = Asset.findByTag(t)
 
   def setAsset(a: Option[Asset]): Unit = _asset.set(a)
+  def setAsset(a: Asset): Unit = _asset.set(Some(a))
   def getAsset(): Option[Asset] = _asset.get
   def definedAsset(): Asset = getAsset().get
 
