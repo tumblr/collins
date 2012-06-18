@@ -408,7 +408,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
    * Finds assets in the same nodeclass as the given asset
    */
   def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sorter: SortDirection): Page[AssetView] = {
-    val cacheKey = "asset.findSimilar(%s)".format(asset.tag)
+    val cacheKey = "asset.findSimilar(%s)".format(asset.tag) + sorter.toString
     Cache
       .getAs[Seq[Asset]](cacheKey)
       .map{assets => Page[AssetView](assets.slice(page.offset, page.offset + page.size), page.page, page.offset, assets.size)}
@@ -422,8 +422,11 @@ object Asset extends Schema with AnormAdapter[Asset] {
         )
         //note, the type inference here is important
         val sortedItems: Page[AssetView] = unsortedItems
-          .copy(items = AssetDistanceSorter.sort(asset, unsortedItems.items.collect{case a: Asset => a}, 
-                                                 new AbstractPhysicalDistanceSorter(Config.getString("nodeclass.sortkeys","")), sorter))
+          .copy(items = AssetDistanceSorter.sort(
+            asset, 
+            unsortedItems.items.collect{case a: Asset => a}.filter{_.tag != asset.tag}, 
+            new AbstractPhysicalDistanceSorter(Config.getString("nodeclass.sortkeys","")), sorter
+          ))
         Cache.set(cacheKey, sortedItems.items, 30)
         sortedItems
       }.getOrElse{
@@ -431,6 +434,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         Page.EmptyPage
       }}
   }
+
 
   
 
