@@ -100,7 +100,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     throw new Exception("Unable to create address after %d tries".format(retryCount))
   }
 
-  protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long): Option[Long] = inTransaction {
+  protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long)(implicit scope: Option[String]): Option[Long] = inTransaction {
     from(tableDef)(t =>
       where(
         (t.address gte minAddress) and
