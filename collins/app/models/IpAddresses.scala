@@ -5,6 +5,7 @@ import shared.{AddressPool, IpAddressConfiguration}
 import play.api.Configuration
 import play.api.libs.json._
 import util.{Config, IpAddress, IpAddressCalc}
+import util.plugins.Callback
 import org.squeryl.dsl.ast.LogicalBoolean
 
 case class IpAddresses(
@@ -29,8 +30,13 @@ case class IpAddresses(
   )
 }
 
+import org.squeryl.internals.PosoLifecycleEvent
 object IpAddresses extends IpAddressStorage[IpAddresses] {
   import org.squeryl.PrimitiveTypeMode._
+
+  override protected def createEventName: Option[String] = Some("ipAddresses_create")
+  override protected def updateEventName: Option[String] = Some("ipAddresses_update")
+  override protected def deleteEventName: Option[String] = Some("ipAddresses_delete")
 
   lazy val AddressConfig = IpAddressConfiguration(Config.get("ipAddresses"))
 
@@ -44,18 +50,53 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     columns(i.asset_id, i.address) are(indexed)
   ))
 
+  // Callbacks to manage populating and managing the address caches
+  Callback.on("ipAddresses_create") { pce =>
+    val newAddress = pce.getNewValue.asInstanceOf[IpAddresses]
+    logger.debug("ipAddress_create pool %s".format(newAddress.pool))
+    AddressConfig.flatMap(_.pool(newAddress.pool)).foreach { ap =>
+      logger.debug("Using address %s in pool %s".format(newAddress.dottedAddress, ap.name))
+      ap.useAddress(newAddress.address)
+    }
+  }
+  Callback.on("ipAddresses_update") { pce =>
+    val oldAddress = pce.getOldValue.asInstanceOf[IpAddresses]
+    val newAddress = pce.getNewValue.asInstanceOf[IpAddresses]
+    AddressConfig.flatMap(_.pool(oldAddress.pool)).foreach { ap =>
+      logger.debug("Purging address %s from pool %s".format(oldAddress.dottedAddress, ap.name))
+      ap.unuseAddress(oldAddress.address)
+    }
+    AddressConfig.flatMap(_.pool(newAddress.pool)).foreach { ap =>
+      logger.debug("Using address %s in pool %s".format(newAddress.dottedAddress, ap.name))
+      ap.useAddress(newAddress.address)
+    }
+  }
+  Callback.on("ipAddresses_delete") { pce =>
+    val oldAddress = pce.getOldValue.asInstanceOf[IpAddresses]
+    AddressConfig.flatMap(_.pool(oldAddress.pool)).foreach { ap =>
+      logger.debug("Purging address %s from pool %s".format(oldAddress.dottedAddress, ap.name))
+      ap.unuseAddress(oldAddress.address)
+    }
+  }
+
   def createForAsset(asset: Asset, count: Int, scope: Option[String]): Seq[IpAddresses] = {
     (0 until count).map { i =>
       createForAsset(asset, scope)
     }
   }
 
+  override protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long)(implicit scope: Option[String]): Option[Long] = {
+    populateCacheIfNeeded(scope)
+    nextAddressInPool(scope).orElse(super.getCurrentMaxAddress(minAddress, maxAddress)(scope))
+  }
+
   def createForAsset(asset: Asset, scope: Option[String]): IpAddresses = inTransaction {
     val assetId = asset.getId
+    val cfg = getConfig()(scope)
     createWithRetry(10) {
       val (gateway, address, netmask) = getNextAvailableAddress()(scope)
       val ipAddresses = IpAddresses(assetId, gateway, address, netmask, scope.getOrElse(""))
-      tableDef.insert(ipAddresses)
+      super.create(ipAddresses)
     }
   }
 
@@ -125,6 +166,39 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
   override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
     AddressConfig.flatMap { cfg =>
       scope.flatMap(cfg.pool(_)).orElse(cfg.defaultPool)
+    }
+  }
+
+  protected def populateCacheIfNeeded(opool: Option[String]) {
+    opool.foreach { pool =>
+      AddressConfig.flatMap(_.pool(pool)).foreach { ap =>
+        if (!ap.hasAddressCache) {
+          logger.debug("Populating cache for pool %s".format(ap.name))
+          findInPool(pool).foreach { address =>
+            try ap.useAddress(address.address) catch {
+              case e =>
+                logger.debug("Error using address %s in pool %s".format(address.dottedAddress, pool))
+            }
+          }
+        }
+      }
+    }
+  }
+
+  protected def nextAddressInPool(opool: Option[String]): Option[Long] = {
+    logger.debug("Trying to find pool %s".format(opool))
+    opool.flatMap { pool =>
+      try {
+        logger.debug("Found pool %s, looking for config".format(pool))
+        AddressConfig.flatMap(_.pool(pool)).map { ap =>
+          logger.debug("Next address in pool %s is %s".format(ap.name, ap.nextDottedAddress))
+          ap.nextAddress - 1
+        }
+      } catch {
+        case e =>
+          logger.warn("Exception getting next address: %s".format(e))
+          None
+      }
     }
   }
 

@@ -98,6 +98,8 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
   def broadcastAddress: String = subnetInfo.getBroadcastAddress
   def broadcastAddressAsLong = IpAddress.toLong(broadcastAddress)
   def lastOctetInRange: Long = IpAddress.lastOctet(maxAddressAsLong)
+  def startAddress: String = startAt.getOrElse(minAddress)
+  def startAddressAsLong = IpAddress.toLong(startAddress)
   def minAddress: String = subnetInfo.getLowAddress()
   def minAddressAsLong = IpAddress.toLong(minAddress)
   def maxAddress: String = subnetInfo.getHighAddress()
@@ -110,12 +112,7 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
     case Some(l) =>
       incrementAsLong(l)
     case None => startAt match {
-      case Some(start) => subnetInfo.isInRange(start) match {
-        case true =>
-          IpAddress.toLong(start)
-        case false =>
-          minAddressAsLong + 1
-      }
+      case Some(start) => IpAddress.toLong(start)
       case None =>
         minAddressAsLong + 1
     }
