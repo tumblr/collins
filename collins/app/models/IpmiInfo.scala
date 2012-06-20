@@ -1,5 +1,6 @@
 package models
 
+import shared.{AddressPool,IpAddressConfiguration}
 import util._
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
@@ -150,7 +151,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   }
 
   protected def getPasswordLength(): Int = {
-    getConfig()(None) match {
+    AppConfig.ipmi match {
       case None => DefaultPasswordLength
       case Some(config) => config.getInt("passwordLength") match {
         case None => DefaultPasswordLength
@@ -166,11 +167,11 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   }
 
   protected def getUsername(asset: Asset): String = {
-    Username(asset, getConfig()(None), false).get
+    Username(asset, AppConfig.ipmi, false).get
   }
 
-  override protected def getConfig()(implicit scope: Option[String]): Option[Configuration] = {
-    AppConfig.ipmi
+  override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
+    IpAddressConfiguration(AppConfig.ipmi).flatMap(_.defaultPool)
   }
 
   // Converts our query parameters to fragments and parameters for a query
