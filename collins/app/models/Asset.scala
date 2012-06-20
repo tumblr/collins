@@ -432,8 +432,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
           .copy(items = AssetDistanceSorter.sort(
             asset, 
             unsortedItems.items.collect{case a: Asset => a}.filter{_.tag != asset.tag}, 
-            new AbstractPhysicalDistanceSorter(Config.getString("nodeclass.sortkeys","")), sorter
-          ))
+            "physical",
+            sorter))
         Cache.set(cacheKey, sortedItems.items, 30)
         sortedItems
       }.getOrElse{
