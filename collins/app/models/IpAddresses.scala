@@ -1,5 +1,7 @@
 package models
 
+import shared.{AddressPool, IpAddressConfiguration}
+
 import play.api.Configuration
 import play.api.libs.json._
 import util.{Config, IpAddress, IpAddressCalc}
@@ -16,6 +18,7 @@ case class IpAddresses(
   override def asJson: String = {
     Json.stringify(JsObject(forJsonObject))
   }
+  def toJsonObject() = JsObject(forJsonObject)
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "ID" -> JsNumber(getId()),
     "ASSET_ID" -> JsNumber(getAssetId()),
@@ -28,6 +31,8 @@ case class IpAddresses(
 
 object IpAddresses extends IpAddressStorage[IpAddresses] {
   import org.squeryl.PrimitiveTypeMode._
+
+  lazy val AddressConfig = IpAddressConfiguration(Config.get("ipAddresses"))
 
   val tableDef = table[IpAddresses]("ip_addresses")
   on(tableDef)(i => declare(
@@ -111,15 +116,15 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     tableDef.lookup(i.id).get
   }
 
-  def getPools(): Seq[String] = getOrElseUpdate("getPools") {
+  def getPoolsInUse(): Set[String] = getOrElseUpdate("getPoolsInUse") {
     from(tableDef)(i =>
       select(i.pool)
-    ).distinct.toList
+    ).distinct.toSet
   }
 
-  override protected def getConfig()(implicit scope: Option[String]): Option[Configuration] = {
-    Config.get("ipAddresses").map { cfg =>
-      scope.flatMap(s => cfg.getConfig(s)).getOrElse(cfg)
+  override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
+    AddressConfig.flatMap { cfg =>
+      scope.flatMap(cfg.pool(_)).orElse(cfg.defaultPool)
     }
   }
 
@@ -129,11 +134,17 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
       (addressRow.address === IpAddress.toLong(address))
     } catch {
       case e =>
-        val padded = IpAddress.padRight(address, "0")
-        val netmask = IpAddress.netmaskFromPad(padded, "0")
-        val calc = IpAddressCalc(padded, netmask, None)
-        (addressRow.address gte calc.minAddressAsLong) and
-        (addressRow.address lte calc.maxAddressAsLong)
+        try {
+          val padded = IpAddress.padRight(address, "0")
+          val netmask = IpAddress.netmaskFromPad(padded, "0")
+          val calc = IpAddressCalc(padded, netmask, None)
+          (addressRow.address gte calc.minAddressAsLong) and
+          (addressRow.address lte calc.maxAddressAsLong)
+        } catch {
+          case ev =>
+            logger.warn("Totally invalid address: %s".format(address), e)
+            throw e
+        }
     }
   }
 

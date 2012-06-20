@@ -10,6 +10,8 @@ object Provisioner {
     }
   }
 
+  def plugin: Option[ProvisionerPlugin] = pluginEnabled
+
   def pluginEnabled[T](fn: ProvisionerPlugin => T): Option[T] = {
     pluginEnabled.map { p =>
       fn(p)
