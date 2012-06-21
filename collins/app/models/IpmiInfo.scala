@@ -69,7 +69,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
     val assetId = asset.getId
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
-    createWithRetry(10) {
+    createWithRetry(10) { attempt =>
       val (gateway, address, netmask) = getNextAvailableAddress()(None)
       val ipmiInfo = IpmiInfo(
         assetId, username, password, gateway, address, netmask
