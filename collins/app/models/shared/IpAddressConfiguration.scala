@@ -3,7 +3,7 @@ package shared
 
 import play.api.Configuration
 import util.{Config, IpAddress, IpAddressCalc, MessageHelper}
-import java.util.BitSet
+import util.concurrent.LockingBitSet
 
 /**
  * Represents an IP Address configuration.
@@ -57,6 +57,7 @@ case class IpAddressConfiguration(source: Configuration) extends MessageHelper("
   def poolNames: Set[String] = pools.keySet
   def defaultPoolName: Option[String] = defaultPool.map(_.name)
 }
+
 object IpAddressConfiguration {
   val DefaultPoolName = "DEFAULT"
   def apply(config: Option[Configuration]): Option[IpAddressConfiguration] =
@@ -69,17 +70,6 @@ object IpAddressConfiguration {
 case class AddressPool(
   name: String, network: String, startAddress: Option[String], gateway: Option[String]
 ) {
-
-  // Help iterate over used bits in a bit set
-  case class Biterator(bs: BitSet) extends Iterator[Int] {
-    private var pos = bs.nextSetBit(0)
-    override def hasNext() = (pos >= 0)
-    override def next() = {
-      val ret = pos
-      pos = bs.nextSetBit(pos+1)
-      ret
-    }
-  }
 
   require(name.toUpperCase == name, "pool name must be all caps")
   require(network.nonEmpty, "network must be nonEmpty")
@@ -102,46 +92,41 @@ case class AddressPool(
       startAddress.map(_ => "/startAddress").getOrElse("")
     ))
   }
+
   // Represent an IP range as a bit vector, where every address takes up a bit. We calculate the
   // used addresses as VectorIndex + ipCalc.minAddressAsLong. We calculate the next available
   // address as the next unused index >= the start address, plus the minAddress
-  private[this] val usedAddresses = new BitSet(ipCalc.addressCount)
-  protected def requireInRange(address: Long) {
-    val addressString = IpAddress.toString(address)
-    if (!ipCalc.subnetInfo.isInRange(addressString))
-      throw new RuntimeException("Address %s is not in network block %s".format(
-        addressString, network
-      ))
-  }
+  private[this] val addressCache = LockingBitSet(ipCalc.addressCount)
 
-  def hasAddressCache(): Boolean = !usedAddresses.isEmpty
+  def clearAddresses() { addressCache.forWrite(_.clear()) }
+  def hasAddressCache(): Boolean = !addressCache.forRead(_.isEmpty)
   def useAddress(address: String) {
     useAddress(IpAddress.toLong(address))
   }
   def useAddress(address: Long) {
     requireInRange(address)
-    usedAddresses.set(addressIndex(address))
+    addressCache.forWrite(_.set(addressIndex(address)))
   }
   def unuseAddress(address: String) {
     unuseAddress(IpAddress.toLong(address))
   }
   def unuseAddress(address: Long) {
     requireInRange(address)
-    usedAddresses.set(addressIndex(address), false)
+    addressCache.forWrite(_.set(addressIndex(address), false))
   }
   def nextDottedAddress(): String = {
     IpAddress.toString(nextAddress)
   }
   def nextAddress(): Long = {
     val idx = addressIndex(ipCalc.startAddressAsLong)
-    val next = usedAddresses.nextClearBit(idx)
+    val next = addressCache.forRead(_.nextClearBit(idx))
     val nextAddress = next + ipCalc.minAddressAsLong
     requireInRange(nextAddress)
     nextAddress
   }
   // mostly for testing
   protected[shared] def usedDottedAddresses(): Set[String] = {
-    (for (i <- Biterator(usedAddresses))
+    (for (i <- addressCache.indexIterator)
       yield IpAddress.toString(addressFromIndex(i))).toSet
   }
 
@@ -168,6 +153,13 @@ case class AddressPool(
   }
   protected def addressFromIndex(index: Int): Long = {
     index + ipCalc.minAddressAsLong
+  }
+  protected def requireInRange(address: Long) {
+    val addressString = IpAddress.toString(address)
+    if (!ipCalc.subnetInfo.isInRange(addressString))
+      throw new RuntimeException("Address %s is not in network block %s".format(
+        addressString, network
+      ))
   }
 }
 
