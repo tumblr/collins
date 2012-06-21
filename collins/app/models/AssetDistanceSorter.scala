@@ -1,9 +1,10 @@
 package models
 
 import scala.math
+import scala.collection.mutable.Queue
 import util.Config
 
-trait AssetDistanceSorter{
+trait AssetDistanceEval{
 
   /*
    * the name used in querystring parameters for "sortType"
@@ -23,45 +24,21 @@ trait AssetDistanceSorter{
   
 }
 
-object SortDirection extends Enumeration {
-  type SortDirection  = Value
-  val Asc = Value("ASC") //closest asset first
-  val Desc = Value("DESC") //furthest asset first
-
-  def op(dir: SortDirection): (Int, Int) => Boolean = if (dir == Asc) _ < _ else _ > _ 
-}
-import SortDirection._
-
-
-object AssetDistanceSorter {
-
-  def sort(
-    target: Asset, 
-    similarAssets: Seq[Asset], 
-    sorter: AssetDistanceSorter, 
-    direction: SortDirection
-  ): Seq[Asset] = similarAssets
-    .map{asset => (asset, sorter.distance(target, asset))}
-    .sortWith{(a,b) => SortDirection.op(direction)(a._2,b._2)}
-    .map{_._1}
-
-}
-
 /**
  * Expects asset names to be parsable integers!
  */
-class MockAssetNameSorter extends AssetDistanceSorter {
+class MockAssetNameEval extends AssetDistanceEval {
   val name = "name"
   def distance(a: Asset, b: Asset) = try {
     math.abs(Integer.parseInt(a.tag) - Integer.parseInt(b.tag))
   } catch {
     case n: NumberFormatException => 
-      throw new NumberFormatException("MockAssetNameSorter requires asset tags to be parse-able integers (%s)".format(n.getMessage))
+      throw new NumberFormatException("MockAssetNameEval requires asset tags to be parse-able integers (%s)".format(n.getMessage))
   }
     
 }
 
-class AbstractPhysicalDistanceSorter(sortkeys: String) extends AssetDistanceSorter{
+class PhysicalDistanceEval(sortkeys: String) extends AssetDistanceEval{
   val name = "distance"
 
   /**
@@ -77,9 +54,92 @@ class AbstractPhysicalDistanceSorter(sortkeys: String) extends AssetDistanceSort
       sortkeys
       .split(",")
       .zipWithIndex
-      .map{ key => if (a.getMetaAttribute(key._1) == b.getMetaAttribute(key._1)) math.pow(2, key._2).toInt else 0}
+      .map{ key => 
+                if ( (a.getMetaAttribute(key._1), b.getMetaAttribute(key._1)) match {
+                       case (None, None) => true
+                       case (None, _) => false
+                       case (_, None) => false
+                       case (Some(x),Some(y)) => x.valueEquals(y) } )
+                    math.pow(2, key._2).toInt 
+                else 0 }
       .sum
   }
+}
+
+object SortDirection extends Enumeration {
+  type SortDirection  = Value
+  val Asc = Value("ASC") //closest asset first
+  val Desc = Value("DESC") //furthest asset first
+
+  def op(dir: SortDirection): (Int, Int) => Boolean = if (dir == Asc) _ < _ else _ > _ 
+}
+import SortDirection._
+
+
+object AssetDistanceSorter {
+
+  def sort(
+    target: Asset, 
+    similarAssets: Seq[Asset], 
+    sorter: String, 
+    direction: SortDirection
+  ): Seq[Asset] =  
+    sorter match {
+        case "name" => genericsort(target, similarAssets, new MockAssetNameEval, direction)
+        case "distance" => genericsort(target, similarAssets, new PhysicalDistanceEval(Config.getString("nodeclass.sortkeys","")), direction)
+        case "sparse" => 
+            {
+                /** pulls out assets one at time based on physical proximity to
+                    current group of assets. sparse search orders based on least
+                    close assets physically. this can be pulled out to take a flag
+                    and also serve as a dense search if needed */
+                val pulled = new Queue[Asset]
+                var remaining = new Queue[(Asset, Int)]
+                similarAssets.foreach{ asset => remaining += (asset -> 0) }
+
+                /** start by calculating distance from target */
+                pulled += target
+                
+                val sort = new PhysicalDistanceEval(Config.getString("nodeclass,sortkeys", ""))
+                while( !remaining.isEmpty )
+                {
+                    val max = Int.MaxValue
+                    var pull : Option[(Asset, Int)] = None
+                    var newQueue = new Queue[(Asset, Int)]
+                    remaining.foreach
+                    { x => x match { case (asset, d) => 
+                        val dist = d + sort.distance(pulled.last, asset)
+                        pull = if (dist > max ) pull else 
+                            {
+                                pull match {
+                                    case None => Some(asset -> dist) 
+                                    case Some(t) => { newQueue += t 
+                                                      Some(asset -> dist) }
+                                           }
+                            }
+                        /* this should never be None since there should always be a min element
+                           we have a case for None so we don't get any warnings */
+                        pulled += (pull match { case Some((a, d)) => a case None => target})
+                        remaining = newQueue
+                        newQueue = new Queue[(Asset, Int)] 
+                    }}
+                }
+                /** remove target */
+                pulled.tail
+            } 
+        }
+ 
+    def genericsort(
+      target: Asset,
+      similarAssets: Seq[Asset],
+      sorter: AssetDistanceEval,
+      direction : SortDirection
+   ): Seq[Asset] = {
+        similarAssets
+        .map{asset => (asset, sorter.distance(target, asset))}
+        .sortWith{(a,b) => SortDirection.op(direction)(a._2,b._2)}
+        .map{_._1}
+    }
 }
 
 
