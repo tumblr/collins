@@ -71,7 +71,7 @@ trait ProvisionUtil { self: SecureAction =>
         val role = request.profile.role
         validatePrimaryRole(role, primary_role)
           .right.flatMap(vrole => validatePool(vrole, pool))
-          .right.flatMap(vrole => validateSecondaryRole(vrole, pool))
+          .right.flatMap(vrole => validateSecondaryRole(vrole, secondary_role))
           .right.map(frole => request.profile.copy(role = frole))
           .right.map(profile => request.copy(profile = profile))
           .right.map { frequest =>
