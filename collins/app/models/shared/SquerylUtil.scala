@@ -38,9 +38,9 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
   )
 
   protected def loggedInvalidation(s: String, t: T) {
-    logger.debug("Callback triggered: %s".format(s))
+    logger.trace("Callback triggered: %s".format(s))
     cacheKeys(t).map { k =>
-      logger.debug("Invalidating key %s".format(k))
+      logger.trace("Invalidating key %s".format(k))
       Cache.invalidate(k)
     }
   }
