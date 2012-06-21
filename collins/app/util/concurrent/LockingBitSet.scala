@@ -6,6 +6,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 
 object LockingBitSet {
   def apply(initialSize: Int): LockingBitSet = {
+    require(initialSize >= 0, "initialSize must be >= 0")
     new LockingBitSet(new BitSet(initialSize))
   }
 }
