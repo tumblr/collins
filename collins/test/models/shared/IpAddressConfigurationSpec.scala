@@ -9,6 +9,7 @@ import play.api.Configuration
 import com.typesafe.config.ConfigFactory
 
 class IpAddressConfigurationSpec extends mutable.Specification with test.ResourceFinder {
+
   "IpAddressConfiguration" should {
 
     "Provide None if given no config" in {

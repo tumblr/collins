@@ -27,6 +27,7 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
 
   protected def tableDef: Table[T] // Override
   protected def createEventName: Option[String] = None
+  protected def deleteEventName: Option[String] = None
 
   def inTransaction[A](f: => A): A = PrimitiveTypeMode.inTransaction(f)
   protected def cacheKeys(t: T): Seq[String] = Seq()
@@ -37,9 +38,9 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
   )
 
   protected def loggedInvalidation(s: String, t: T) {
-    logger.debug("Callback triggered: %s".format(s))
+    logger.trace("Callback triggered: %s".format(s))
     cacheKeys(t).map { k =>
-      logger.debug("Invalidating key %s".format(k))
+      logger.trace("Invalidating key %s".format(k))
       Cache.invalidate(k)
     }
   }
@@ -56,6 +57,9 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
 
   protected def afterDeleteCallback[A](t: T)(f: => A): A = {
     val result = f
+    deleteEventName.map { name =>
+      util.plugins.Callback.fire(name, t, null)
+    }
     callbacks.filter(_.e == PosoLifecycleEvent.AfterDelete).foreach { cb =>
       cb.callback(t)
     }
