@@ -24,6 +24,12 @@ trait Api extends ApiResponse with AssetApi with AssetManagementApi with AssetWe
   lazy protected implicit val securitySpec = Permissions.LoggedIn
 
   def ping = Action { implicit req =>
+    models.IpAddresses.AddressConfig.foreach { cfg =>
+      cfg.poolNames.foreach { pool =>
+        logger.info("Clearing address pool cache for %s".format(pool))
+        cfg.pool(pool).get.clearAddresses()
+      }
+    }
     formatResponseData(ResponseData(Results.Ok, JsObject(Seq(
       "Data" -> JsObject(Seq(
         "Timestamp" -> JsString(dateFormat(new Date())),

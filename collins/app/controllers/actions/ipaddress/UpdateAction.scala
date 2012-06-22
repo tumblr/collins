@@ -69,7 +69,7 @@ case class UpdateAction(
           handleError(RequestDataHolder.error409("Possible duplicate IP address"))
         case e =>
           handleError(
-            RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage))
+            RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage), e)
           )
       }
   }
