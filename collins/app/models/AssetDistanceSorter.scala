@@ -89,14 +89,15 @@ object AssetDistanceSorter {
         case "distance" => genericsort(target, similarAssets, new PhysicalDistanceEval(Config.getString("nodeclass.sortkeys","")), direction)
 
         /** need to add comparison argument */
-        case "sparse" => distributionsort(target, similarAssets)
-        case "dense" => distributionsort(target, similarAssets)
+        case "sparse" => distributionSort(target, similarAssets, direction,Config.getString("nodeclass,sortkeys", ""))
         }
 
 
-    def distributionsort(
+    def distributionSort(
         target: Asset,
-        similarAssets: Seq[Asset]
+        similarAssets: Seq[Asset],
+        direction: SortDirection,
+        sortConfig: String
 
         /** need to add comparison argument
         compare: Ordered[Int] */
@@ -112,7 +113,7 @@ object AssetDistanceSorter {
         /** start by calculating distance from target */
         pulled += target
            
-        val sort = new PhysicalDistanceEval(Config.getString("nodeclass,sortkeys", ""))
+        val sort = new PhysicalDistanceEval(sortConfig)
         while( !remaining.isEmpty )
         {
             val max = Int.MaxValue
