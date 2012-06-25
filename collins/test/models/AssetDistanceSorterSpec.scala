@@ -32,13 +32,13 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
     val sortParams = List("A", "B", "C")
     val sortValues = List(
       (0,List(0,0,0)),
-      (4,List(0,0,1)),
-      (2,List(0,1,0)),
-      (5,List(0,1,1)),
+      (5,List(0,0,1)),
+      (4,List(0,1,0)),
+      (2,List(0,1,1)),
       (3,List(1,0,0)),
       (1,List(1,0,1))
     )
-    val sortConfig = sortParams.mkString(",")
+    val sortConfig = sortParams.reverse.mkString(",")
     val assetValues = sortValues.map{case (assetTag, values) => (assetTag, values.zip(sortParams))}
   }
 
