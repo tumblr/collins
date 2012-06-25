@@ -3,6 +3,7 @@ package shared
 
 import play.api.Configuration
 import util.{Config, IpAddress, IpAddressCalc, MessageHelper}
+import util.concurrent.LockingBitSet
 
 /**
  * Represents an IP Address configuration.
@@ -56,6 +57,7 @@ case class IpAddressConfiguration(source: Configuration) extends MessageHelper("
   def poolNames: Set[String] = pools.keySet
   def defaultPoolName: Option[String] = defaultPool.map(_.name)
 }
+
 object IpAddressConfiguration {
   val DefaultPoolName = "DEFAULT"
   def apply(config: Option[Configuration]): Option[IpAddressConfiguration] =
@@ -91,6 +93,43 @@ case class AddressPool(
     ))
   }
 
+  // Represent an IP range as a bit vector, where every address takes up a bit. We calculate the
+  // used addresses as VectorIndex + ipCalc.minAddressAsLong. We calculate the next available
+  // address as the next unused index >= the start address, plus the minAddress
+  private[this] val addressCache = LockingBitSet(ipCalc.addressCount)
+
+  def clearAddresses() { addressCache.forWrite(_.clear()) }
+  def hasAddressCache(): Boolean = !addressCache.forRead(_.isEmpty)
+  def useAddress(address: String) {
+    useAddress(IpAddress.toLong(address))
+  }
+  def useAddress(address: Long) {
+    requireInRange(address)
+    addressCache.forWrite(_.set(addressIndex(address)))
+  }
+  def unuseAddress(address: String) {
+    unuseAddress(IpAddress.toLong(address))
+  }
+  def unuseAddress(address: Long) {
+    requireInRange(address)
+    addressCache.forWrite(_.set(addressIndex(address), false))
+  }
+  def nextDottedAddress(): String = {
+    IpAddress.toString(nextAddress)
+  }
+  def nextAddress(): Long = {
+    val idx = addressIndex(ipCalc.startAddressAsLong)
+    val next = addressCache.forRead(_.nextClearBit(idx))
+    val nextAddress = next + ipCalc.minAddressAsLong
+    requireInRange(nextAddress)
+    nextAddress
+  }
+  // mostly for testing
+  protected[shared] def usedDottedAddresses(): Set[String] = {
+    (for (i <- addressCache.indexIterator)
+      yield IpAddress.toString(addressFromIndex(i))).toSet
+  }
+
   // Ensure as a set, address pools with the same name are seen as equal
   override def equals(o: Any) = o match {
     case that: AddressPool => that.name.equalsIgnoreCase(this.name)
@@ -108,6 +147,20 @@ case class AddressPool(
   }
 
   def isMagic: Boolean = network == AddressPool.MagicNetwork // valid dummy value
+
+  protected def addressIndex(address: Long): Int = {
+    math.abs((address - ipCalc.minAddressAsLong).toInt)
+  }
+  protected def addressFromIndex(index: Int): Long = {
+    index + ipCalc.minAddressAsLong
+  }
+  protected def requireInRange(address: Long) {
+    val addressString = IpAddress.toString(address)
+    if (!ipCalc.subnetInfo.isInRange(addressString))
+      throw new RuntimeException("Address %s is not in network block %s".format(
+        addressString, network
+      ))
+  }
 }
 
 object AddressPool extends MessageHelper("ip_address") {
