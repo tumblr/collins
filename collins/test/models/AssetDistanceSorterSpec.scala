@@ -8,6 +8,9 @@ import java.sql.Timestamp
 
 class AssetDistanceSorterSpec extends ApplicationSpecification {
 
+/**
+class AssetDistanceSorterSpec extends mutable.Specification {
+*/
   "AssetDistanceSorter" should {
     "test" in new mocksorter{
       val assets = assetValues.map{ case(assetTag, metaList) => {
@@ -42,6 +45,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
     )
     val sortConfig = sortParams.mkString(",")
     val assetValues = sortValues.map{case (assetTag, values) => (assetTag, values.zip(sortParams))}
+}
 
     "MockAssetNameEval" should {
 
@@ -55,6 +59,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
 
     }
 
+/**
     "PhysicalDistanceEval" should {
         "return assets in ascending order" in
         {
@@ -70,6 +75,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
         }    
 
     }
+*/
 
     "AssetDistanceSorter" should {
 
@@ -93,9 +99,9 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
             val assets2 = 
             (1 to 10).map{ i => 
                 new Asset(i.toString, 0, 0, new Timestamp(System.currentTimeMillis), None, None)}
-            assets must_== AssetDistanceSorter.sort(
+            (assets2 ++ assets1) must_== AssetDistanceSorter.sort(
                                new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
-                               assets,
+                               (assets1 ++ assets2),
                                "name",
                                SortDirection.Asc)
         }
@@ -116,5 +122,5 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
         }
         
     }
-
+  
 }
