@@ -87,47 +87,65 @@ object AssetDistanceSorter {
     sorter match {
         case "name" => genericsort(target, similarAssets, new MockAssetNameEval, direction)
         case "distance" => genericsort(target, similarAssets, new PhysicalDistanceEval(Config.getString("nodeclass.sortkeys","")), direction)
-        case "sparse" => 
-            {
-                /** pulls out assets one at time based on physical proximity to
-                    current group of assets. sparse search orders based on least
-                    close assets physically. this can be pulled out to take a flag
-                    and also serve as a dense search if needed */
-                val pulled = new Queue[Asset]
-                var remaining = new Queue[(Asset, Int)]
-                similarAssets.foreach{ asset => remaining += (asset -> 0) }
 
-                /** start by calculating distance from target */
-                pulled += target
-                
-                val sort = new PhysicalDistanceEval(Config.getString("nodeclass,sortkeys", ""))
-                while( !remaining.isEmpty )
-                {
-                    val max = Int.MaxValue
-                    var pull : Option[(Asset, Int)] = None
-                    var newQueue = new Queue[(Asset, Int)]
-                    remaining.foreach
-                    { x => x match { case (asset, d) => 
-                        val dist = d + sort.distance(pulled.last, asset)
-                        pull = if (dist > max ) pull else 
-                            {
-                                pull match {
-                                    case None => Some(asset -> dist) 
-                                    case Some(t) => { newQueue += t 
-                                                      Some(asset -> dist) }
-                                           }
-                            }
-                        /* this should never be None since there should always be a min element
-                           we have a case for None so we don't get any warnings */
-                        pulled += (pull match { case Some((a, d)) => a case None => target})
-                        remaining = newQueue
-                        newQueue = new Queue[(Asset, Int)] 
-                    }}
-                }
-                /** remove target */
-                pulled.tail
-            } 
+        /** need to add comparison argument */
+        case "sparse" => distributionsort(target, similarAssets)
+        case "dense" => distributionsort(target, similarAssets)
         }
+
+
+    def distributionsort(
+        target: Asset,
+        similarAssets: Seq[Asset]
+
+        /** need to add comparison argument
+        compare: Ordered[Int] */
+        ) = {
+        /** pulls out assets one at time based on physical proximity to
+            current group of assets. sparse search orders based on least
+            close assets physically. this can be pulled out to take a flag
+            and also serve as a dense search if needed */
+        val pulled = new Queue[Asset]
+        var remaining = new Queue[(Asset, Int)]
+        similarAssets.foreach{ asset => remaining += (asset -> 0) }
+
+        /** start by calculating distance from target */
+        pulled += target
+           
+        val sort = new PhysicalDistanceEval(Config.getString("nodeclass,sortkeys", ""))
+        while( !remaining.isEmpty )
+        {
+            val max = Int.MaxValue
+            var pull : Option[(Asset, Int)] = None
+            var newQueue = new Queue[(Asset, Int)]
+
+            /** compute distances for each remaining element, extract min */
+            remaining.foreach
+            { x => x match { case (asset, d) => 
+                    val dist = d + sort.distance(pulled.last, asset)
+
+                    /** if a new min is found, add the old min to the queue */
+                    pull = if (dist > max ) pull else 
+                        {
+
+                           pull match {
+                              case None => Some(asset -> dist) 
+                              case Some(t) => { newQueue += t 
+                                                Some(asset -> dist) }
+                                     }
+                        }
+
+                   /* this should never be None since there should always be a min element
+                       we have a case for None so we don't get any warnings */
+                       pulled += (pull match { case Some((a, d)) => a case None => target})
+                       remaining = newQueue
+                       newQueue = new Queue[(Asset, Int)] 
+                   }}
+        }
+        /** remove target */
+        pulled.tail
+    }
+
  
     def genericsort(
       target: Asset,
