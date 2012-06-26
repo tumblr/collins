@@ -128,7 +128,7 @@ object AuthenticationProvider {
     r
   }
 
-  private def privileges: Privileges = {
+  protected[util] def privileges: Privileges = {
     val p = watcher.getFileContents()
     logger.debug("Privileges - %s".format(p))
     p
