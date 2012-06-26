@@ -24,7 +24,6 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
         similarAssets, 
         SortDirection.Asc,
         sortConfig) 
-      sortedAssets.foreach{a => println(a.tag)}
       sortedAssets must_== similarAssets.sortWith{(a,b) => a.tag < b.tag}
 
     }
