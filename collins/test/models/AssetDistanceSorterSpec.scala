@@ -25,7 +25,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
       val sortedAssets = AssetDistanceSorter.distributionSort(
         targetAsset, 
         similarAssets, 
-        SortDirection.Desc,
+        SortDirection.Asc,
         sortConfig) 
       sortedAssets.map{_.tag} must_== expected
     }
@@ -35,7 +35,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
       val sortedAssets = AssetDistanceSorter.distributionSort(
         targetAsset, 
         similarAssets, 
-        SortDirection.Asc,
+        SortDirection.Desc,
         sortConfig) 
       sortedAssets.map{_.tag} must_== expected
     }
