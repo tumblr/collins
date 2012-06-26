@@ -7,7 +7,8 @@ import specification._
 class AssetDistanceSorterSpec extends ApplicationSpecification {
 
   "AssetDistanceSorter" should {
-    "test" in new mocksorter{
+
+    "create assets" in new mocksorter {
       val assets = assetValues.map{ case(assetTag, metaList) => {
         val asset = Asset.create(Asset(assetTag.toString, Status.Enum.Unallocated, AssetType.Enum.ServerNode))
         metaList.foreach{ case (value, assetMetaTag) =>
@@ -15,31 +16,43 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
         }
         asset
       }}
-      val targetAsset = assets.head
-      val similarAssets = assets.tail
+    }
+
+    "sparse" in new mocksorter{
+      val expected = List("e","c","d","b","a")
+      val sortedAssets = AssetDistanceSorter.distributionSort(
+        targetAsset, 
+        similarAssets, 
+        SortDirection.Desc,
+        sortConfig) 
+      sortedAssets.map{_.tag} must_== expected
+    }
+
+    "dense" in new mocksorter {
+      val expected = List("a","b","c","d","e")
       val sortedAssets = AssetDistanceSorter.distributionSort(
         targetAsset, 
         similarAssets, 
         SortDirection.Asc,
         sortConfig) 
-      sortedAssets.foreach{a => println(a.tag)}
-      sortedAssets must_== similarAssets.sortWith{(a,b) => a.tag < b.tag}
-
+      sortedAssets.map{_.tag} must_== expected
     }
   }
 
   trait mocksorter extends Scope {
     val sortParams = List("A", "B", "C")
     val sortValues = List(
-      (0,List(0,0,0)),
-      (5,List(0,0,1)),
-      (4,List(0,1,0)),
-      (2,List(0,1,1)),
-      (3,List(1,0,0)),
-      (1,List(1,0,1))
+      ("t",List(0,0,0)),
+      ("a",List(0,0,1)),
+      ("b",List(0,1,0)),
+      ("c",List(0,1,1)),
+      ("d",List(1,0,0)),
+      ("e",List(1,0,1))
     )
     val sortConfig = sortParams.reverse.mkString(",")
     val assetValues = sortValues.map{case (assetTag, values) => (assetTag, values.zip(sortParams))}
+    def targetAsset = Asset.findByTag(sortValues.head._1).get
+    def similarAssets = sortValues.tail.map{t => Asset.findByTag(t._1).get}
   }
 
 }
