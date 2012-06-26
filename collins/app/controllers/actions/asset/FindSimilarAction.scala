@@ -11,6 +11,7 @@ import models.Status.{Enum => AssetStatusEnum}
 case class FindSimilarAction(
   assetTag: String,
   page: PageParams,
+  sortType: String,
   details: String,
   spec: SecuritySpecification,
   handler: SecureController
@@ -34,7 +35,7 @@ case class FindSimilarAction(
         assetType = Some(AssetType.Enum.ServerNode)
       )
       //TODO: Fix details to pull from query string
-      handleSuccess(Asset.findSimilar(asset, page, finder),details.isTruthy)
+      handleSuccess(Asset.findSimilar(asset, page, finder, sortType),details.isTruthy)
     }
   }
 
