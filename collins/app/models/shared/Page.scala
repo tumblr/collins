@@ -42,5 +42,5 @@ case class Page[A](items: Seq[A], page: Int, offset: Long, total: Long) {
 }
 
 object Page {
-  def EmptyPage[A] = Page[A](Nil, 0, 0, 0)
+  def emptyPage[A] = Page[A](Nil, 0, 0, 0)
 }

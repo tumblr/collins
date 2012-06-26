@@ -4,31 +4,21 @@ import scala.math
 import util.Config
 import play.api.Logger
 
-trait AssetDistanceEval{
-
-  /*
-   * the name used in querystring parameters for "sortType"
-   */
-  val name: String
+trait AssetDistanceEval {
 
   /**
    * calculates the distance between two assets, returning a positive integer.
    * Higher value corresponds with further distance
    *
    * The ordering induced by distance should be a preorder
-   *
    */
   def distance(a: Asset, b: Asset): Int
-
-  
-  
 }
 
 /**
  * Expects asset names to be parsable integers!
  */
 class MockAssetNameEval extends AssetDistanceEval {
-  val name = "name"
   def distance(a: Asset, b: Asset) = try {
     math.abs(Integer.parseInt(a.tag) - Integer.parseInt(b.tag))
   } catch {
@@ -38,9 +28,7 @@ class MockAssetNameEval extends AssetDistanceEval {
     
 }
 
-class PhysicalDistanceEval(sortkeys: String) extends AssetDistanceEval{
-  val name = "distance"
-
+class PhysicalDistanceEval(sortkeys: String) extends AssetDistanceEval {
   /**
    * Calculates physical distance using the configured set of nodeclass.sortKeys
    *
@@ -51,19 +39,21 @@ class PhysicalDistanceEval(sortkeys: String) extends AssetDistanceEval{
    * - let distance(a,b) = SUM(i: 0 to n-1) (2 * f(i))^i
    */
   def distance(a: Asset, b: Asset): Int = {
-      sortkeys
+    sortkeys
       .split(",")
       .zipWithIndex
       .map{ key => 
-                if ( (a.getMetaAttribute(key._1), b.getMetaAttribute(key._1)) match {
-                       case (None, None) => true
-                       case (None, _) => false
-                       case (_, None) => false
-                       case (Some(x),Some(y)) => x.valueEquals(y) } )
-                    math.pow(2, key._2).toInt 
-                else 0 }
+        if ( (a.getMetaAttribute(key._1), b.getMetaAttribute(key._1)) match {
+            case (None, None) => true
+            case (None, _) => false
+            case (_, None) => false
+            case (Some(x),Some(y)) => x.valueEquals(y) } )
+          math.pow(2, key._2).toInt 
+        else 0 
+      }
       .sum
   }
+
 }
 
 object SortDirection extends Enumeration {
@@ -86,8 +76,8 @@ object AssetDistanceSorter {
   ): Seq[Asset] = {
     def sparseSort = distributionSort(target, similarAssets, direction,Config.getString("nodeclass.sortKeys", ""))
     sorter match {
-      case "name" => genericsort(target, similarAssets, new MockAssetNameEval, direction)
-      case "distance" => genericsort(target, similarAssets, new PhysicalDistanceEval(Config.getString("nodeclass.sortKeys","")), direction)
+      case "name" => genericSort(target, similarAssets, new MockAssetNameEval, direction)
+      case "distance" => genericSort(target, similarAssets, new PhysicalDistanceEval(Config.getString("nodeclass.sortKeys","")), direction)
 
       /** Asc means sparse search, Desc means dense search */
       case "sparse" => sparseSort
@@ -115,7 +105,7 @@ object AssetDistanceSorter {
     sortLoop(Nil, similar.map{x => (x,0)}).reverse
   }
 
-  def genericsort(
+  def genericSort(
     target: Asset,
     similarAssets: Seq[Asset],
     sorter: AssetDistanceEval,

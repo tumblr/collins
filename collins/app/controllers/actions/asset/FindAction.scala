@@ -26,7 +26,7 @@ class FindAction(
   pageParams: PageParams,
   spec: SecuritySpecification,
   handler: SecureController
-) extends SecureAction(spec, handler) with AssetAction with AssetResultsAction{
+) extends SecureAction(spec, handler) with AssetAction with AssetResultsAction {
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
     try {

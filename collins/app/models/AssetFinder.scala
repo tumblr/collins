@@ -50,5 +50,5 @@ case class AssetFinder(
 
 object AssetFinder {
 
-  val Empty = AssetFinder(None,None,None,None,None,None,None)
+  val empty = AssetFinder(None,None,None,None,None,None,None)
 }

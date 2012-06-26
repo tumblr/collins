@@ -30,7 +30,7 @@ case class FindSimilarAction(
 
   override def execute(rd: RequestDataHolder) = rd match {
     case SimilarDataHolder(asset, details) => {
-      val finder = AssetFinder.Empty.copy(
+      val finder = AssetFinder.empty.copy(
         status = Some(AssetStatusEnum.Unallocated),
         assetType = Some(AssetType.Enum.ServerNode)
       )
