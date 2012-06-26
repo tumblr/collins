@@ -49,6 +49,6 @@ trait AssetApi {
 
   //GET /api/asset/:tag/similar
   def similar(tag: String, page: Int, size: Int, sortType: String, sort: String, details: String) = 
-    FindSimilarAction(tag, PageParams(page, size, sort), details, Permissions.Resources.Find, this)
+    FindSimilarAction(tag, PageParams(page, size, sort), sortType, details, Permissions.Resources.Find, this)
 
 }

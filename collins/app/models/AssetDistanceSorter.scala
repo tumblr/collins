@@ -1,8 +1,8 @@
 package models
 
 import scala.math
-import scala.collection.mutable.Queue
 import util.Config
+import play.api.Logger
 
 trait AssetDistanceEval{
 
@@ -83,12 +83,19 @@ object AssetDistanceSorter {
     similarAssets: Seq[Asset], 
     sorter: String, 
     direction: SortDirection
-  ): Seq[Asset] = sorter match {
-    case "name" => genericsort(target, similarAssets, new MockAssetNameEval, direction)
-    case "distance" => genericsort(target, similarAssets, new PhysicalDistanceEval(Config.getString("nodeclass.sortkeys","")), direction)
+  ): Seq[Asset] = {
+    def sparseSort = distributionSort(target, similarAssets, direction,Config.getString("nodeclass.sortKeys", ""))
+    sorter match {
+      case "name" => genericsort(target, similarAssets, new MockAssetNameEval, direction)
+      case "distance" => genericsort(target, similarAssets, new PhysicalDistanceEval(Config.getString("nodeclass.sortKeys","")), direction)
 
-    /** Asc means sparse search, Desc means dense search */
-    case "sparse" => distributionSort(target, similarAssets, direction,Config.getString("nodeclass,sortkeys", ""))
+      /** Asc means sparse search, Desc means dense search */
+      case "sparse" => sparseSort
+      case _ => {
+        Logger.logger.warn("Unknown sort type %s, defaulting to sparse")
+        sparseSort
+      }
+    }
   }
 
   def distributionSort(target: Asset, similar: Seq[Asset], direction: SortDirection, config: String) = {

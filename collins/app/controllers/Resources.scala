@@ -48,7 +48,7 @@ trait Resources extends Controller {
   )
 
   def similar(tag: String, page: Int, size: Int, sortType: String, sort: String) = 
-    FindSimilarAction(tag, PageParams(page, size, sort), "false", Permissions.Resources.Find, this)
+    FindSimilarAction(tag, PageParams(page, size, sort), sortType, "false", Permissions.Resources.Find, this)
 
   def intake(id: Long, stage: Int = 1) = stage match {
     case 2 => IntakeStage2Action(id, Permissions.Resources.Intake, this)
