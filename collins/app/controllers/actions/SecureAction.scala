@@ -7,7 +7,7 @@ import util.{OutputType, SecuritySpecification}
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.libs.concurrent.Promise
+import play.api.libs.concurrent.{Promise, PurePromise}
 import play.api.libs.json._
 import play.api.mvc._
 
@@ -81,13 +81,17 @@ abstract class SecureAction(
   def handleWebError(rd: RequestDataHolder): Option[Result] = None
 
   final override def parser: BodyParser[AnyContent] = BodyParsers.parse.anyContent
-  final override def apply(req: Request[AnyContent]): Result = {
+  final override def apply(req: Request[AnyContent]): AsyncResult = {
     setRequest(req)
     checkAuthorization() match {
-      case Left(res) => res
-      case Right(user) =>
+      case Left(res) => AsyncResult {PurePromise(res)}
+      case Right(user) => {
         setUser(user)
-        run()
+        run() match {
+          case a: AsyncResult => a
+          case r: Result => AsyncResult{PurePromise(r)}
+        }
+      }
     }
   }
 
