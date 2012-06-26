@@ -92,6 +92,16 @@ object AssetDistanceSorter {
         case "sparse" => distributionSort(target, similarAssets, direction,Config.getString("nodeclass,sortkeys", ""))
         }
 
+    def funcDistributionSort(target: Asset, similar: Seq[Asset], direction: SortDirection, config: String) = {
+      val sort = new PhysicalDistanceEval(config)
+      def sortLoop(build: Seq[Asset], remain: Seq[(Asset, Int)]): Seq[Asset] = if (remain == Nil) build else {
+        val s = remain
+          .map{case (assetA, sum) => (assetA, sum + sort.distance(assetA, build.headOption.getOrElse(target)))}
+          .sortWith{(a,b) => op(direction)(a._2,b._2) || (a._2 == b._2 && a._1.tag < b._1.tag)}
+        sortLoop(s.head._1 +: build, s.tail)
+      }
+      sortLoop(Nil, similar.map{x => (x,0)}).reverse
+    }
 
     def distributionSort(
         target: Asset,
