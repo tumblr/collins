@@ -88,7 +88,7 @@ object AssetDistanceSorter {
         case "name" => genericsort(target, similarAssets, new MockAssetNameEval, direction)
         case "distance" => genericsort(target, similarAssets, new PhysicalDistanceEval(Config.getString("nodeclass.sortkeys","")), direction)
 
-        /** need to add comparison argument */
+        /** Asc means sparse search, Desc means dense search */
         case "sparse" => distributionSort(target, similarAssets, direction,Config.getString("nodeclass,sortkeys", ""))
         }
 
@@ -98,9 +98,6 @@ object AssetDistanceSorter {
         similarAssets: Seq[Asset],
         direction: SortDirection,
         sortConfig: String
-
-        /** need to add comparison argument
-        compare: Ordered[Int] */
         ) = {
         /** pulls out assets one at time based on physical proximity to
             current group of assets. sparse search orders based on least
@@ -108,6 +105,12 @@ object AssetDistanceSorter {
             and also serve as a dense search if needed */
         val pulled = new Queue[Asset]
         var remaining = new Queue[(Asset, Int)]
+        var newQueue : Queue[(Asset, Int)] = Queue.empty
+
+        /** so that these don't have to be checked more than once */ 
+        var sortOp = SortDirection.op(direction)
+        val baseVal = if (direction == Asc) Int.MaxValue else Int.MinValue
+
         similarAssets.foreach{ asset => remaining += (asset -> 0) }
 
         /** start by calculating distance from target */
@@ -116,32 +119,40 @@ object AssetDistanceSorter {
         val sort = new PhysicalDistanceEval(sortConfig)
         while( !remaining.isEmpty )
         {
-            val max = Int.MaxValue
+            var minmax = baseVal 
             var pull : Option[(Asset, Int)] = None
-            var newQueue = new Queue[(Asset, Int)]
-
-            /** compute distances for each remaining element, extract min */
+            newQueue = new Queue[(Asset,Int)]
+            /** compute distances for each remaining element, extract min/max */
             remaining.foreach
             { x => x match { case (asset, d) => 
                     val dist = d + sort.distance(pulled.last, asset)
 
-                    /** if a new min is found, add the old min to the queue */
-                    pull = if (dist > max ) pull else 
-                        {
-
+                    /** if a new min/max is found, add the old min/max to the queue */
+                    pull = 
+                    if (sortOp(dist, minmax) || 
+                        /** choose the lexigraphically correct one if equal distance */ 
+                        (dist == minmax && (pull match { case None => true 
+                                                         case Some((old_a, old_d)) => asset.tag < old_a.tag }) ) )
+                        {  
+                           minmax = dist
                            pull match {
                               case None => Some(asset -> dist) 
-                              case Some(t) => { newQueue += t 
-                                                Some(asset -> dist) }
-                                     }
+                              case Some(t) => { newQueue += t
+                                                Some(asset -> dist) }}
+                        } 
+                    else 
+                        {   newQueue += (asset -> dist)
+                            pull 
                         }
 
-                   /* this should never be None since there should always be a min element
-                       we have a case for None so we don't get any warnings */
-                       pulled += (pull match { case Some((a, d)) => a case None => target})
-                       remaining = newQueue
-                       newQueue = new Queue[(Asset, Int)] 
-                   }}
+           }}
+
+        /* this should never be None since there should always be a min/max element
+           we have a case for None so we don't get any warnings */
+
+           pulled += (pull match { case Some((a, d)) => a case None => target})
+           remaining = newQueue
+
         }
         /** remove target */
         pulled.tail
