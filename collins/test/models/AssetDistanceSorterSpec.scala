@@ -22,7 +22,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
 
     "sparse" in new mocksorter{
       val expected = List("e","b","d","c","a")
-      val sortedAssets = AssetDistanceSorter.distributionSort(
+      val sortedAssets = AssetDistanceSorter.funcDistributionSort(
         targetAsset, 
         similarAssets, 
         SortDirection.Asc,
@@ -32,7 +32,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
 
     "dense" in new mocksorter {
       val expected = List("a","b","c","d","e")
-      val sortedAssets = AssetDistanceSorter.distributionSort(
+      val sortedAssets = AssetDistanceSorter.funcDistributionSort(
         targetAsset, 
         similarAssets, 
         SortDirection.Desc,
