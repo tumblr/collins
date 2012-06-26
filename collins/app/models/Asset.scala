@@ -205,10 +205,17 @@ case class Asset(tag: String, status: Int, asset_type: Int,
    */
   def nodeClass: Option[Asset] = {
     import util.AttributeResolver._
+    val nodeclassType = Config.getString("nodeclass.assetType","CONFIGURATION").trim.toString
+    val enum = try AssetType.Enum.withName(nodeclassType) catch {
+      case e: java.util.NoSuchElementException => {
+        Logger.logger.error("Invalid nodeclass asset type \"%s\", defaulting to configuration type".format(nodeclassType))
+        AssetType.Enum.Config
+      }
+    }
     val instanceFinder = AssetFinder
-      .Empty
+      .empty
       .copy ( 
-        assetType = Some(AssetType.Enum.withName(Config.getString("nodeclass.assetType","CONFIGURATION").trim.toString))
+        assetType = Some(enum)
       )
     val nodeclassParams: ResolvedAttributes = EmptyResolvedAttributes
       .withMeta(Config.getString("nodeclass.identifyingMetaTag", "IS_NODECLASS"), "true")
@@ -438,7 +445,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         sortedItems
       }.getOrElse{
         logger.warn("No Nodeclass for Asset " + asset.tag)
-        Page.EmptyPage
+        Page.emptyPage
       }}
   }
 
