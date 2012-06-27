@@ -5,7 +5,9 @@ import models.{User, UserImpl}
 import play.api._
 import com.tumblr.play.{PermissionsHelper, Privileges}
 import java.io.File
+import java.util.concurrent.TimeUnit
 import annotation.implicitNotFound
+import com.google.common.cache._
 
 @implicitNotFound(msg = "Didn't find an implicit SecuritySpecification but expected one")
 trait SecuritySpecification {
@@ -44,8 +46,36 @@ object SecuritySpec {
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger
+  type Credentials = Tuple2[String,String]
+  protected lazy val cache: LoadingCache[Credentials, Option[User]] = CacheBuilder.newBuilder()
+                                .maximumSize(100)
+                                .expireAfterWrite(cacheTimeout, TimeUnit.MILLISECONDS)
+                                .build(
+                                  new CacheLoader[Credentials, Option[User]] {
+                                    override def load(creds: Credentials): Option[User] = {
+                                      logger.debug("Loading user %s from backend".format(creds._1))
+                                      authenticate(creds._1, creds._2)
+                                    }
+                                  }
+                                )
   def authenticate(username: String, password: String): Option[User]
-  def validate() {
+  def validate() {}
+  def useCachedCredentials: Boolean =
+    Config.getBoolean("authentication", "cacheCredentials").getOrElse(false)
+  def cacheTimeout: Long =
+    Config.getMilliseconds("authentication", "cacheTimeout").getOrElse(0L)
+  def tryAuthCache(username: String, password: String): Option[User] = {
+    if (!useCachedCredentials) {
+      authenticate(username, password)
+    } else {
+      cache.get((username, password)) match {
+        case None =>
+          cache.invalidate((username, password))
+          None
+        case Some(u) =>
+          Some(u)
+      }
+    }
   }
 }
 trait AuthenticationAccessor {

@@ -26,11 +26,7 @@ JAVA_OPTS="-server $APP_OPTS $JMX_OPTS $GC_OPTS $GC_LOG_OPTS $GC_LOG $HEAP_OPTS 
 
 pidfile="/var/run/$APP_NAME/$APP_NAME.pid"
 daemon_pidfile="/var/run/$APP_NAME/$APP_NAME-daemon.pid"
-if [ $USER=$COLLINS_USER ]; then
-  daemon_args="--env HOME=$APP_HOME --name $APP_NAME --pidfile $daemon_pidfile --core -U --chdir /"
-else
-  daemon_args="-u $COLLINS_USER --env HOME=$APP_HOME --name $APP_NAME --pidfile $daemon_pidfile --core -U --chdir /"
-fi
+daemon_args="-u $COLLINS_USER --env HOME=$APP_HOME --name $APP_NAME --pidfile $daemon_pidfile --core -U --chdir /"
 daemon_start_args="--stdout=/var/log/$APP_NAME/stdout --stderr=/var/log/$APP_NAME/error"
 
 function running() {
@@ -97,8 +93,8 @@ case "$1" in
       exit 0
     fi
 
-    #ulimit -c unlimited || echo -n " (no coredump)"
-    #ulimit -n $FILE_LIMIT || echo -n " (could not set file limit)"
+    ulimit -c unlimited || echo -n " (no coredump)"
+    ulimit -n $FILE_LIMIT || echo -n " (could not set file limit)"
     $DAEMON $daemon_args $daemon_start_args -- sh -c "echo "'$$'" > $pidfile; exec ${JAVA_HOME}/bin/java ${JAVA_OPTS} -cp ${APP_HOME}'/lib/*' play.core.server.NettyServer ${APP_HOME}"
     tries=0
     while ! running; do
