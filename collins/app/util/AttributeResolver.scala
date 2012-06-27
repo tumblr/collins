@@ -9,6 +9,24 @@ object AttributeResolver extends MessageHelper("attributeresolver") {
   type AssetMetaTuple = Tuple2[AssetMeta, String]
   type ResultTuple = Tuple3[Seq[IpmiTuple], Seq[AssetMetaTuple], Seq[String]]
 
+  //same as ResultTuple, but with named fields
+  case class ResolvedAttributes(ipmi: Seq[IpmiTuple], assetMeta: Seq[AssetMetaTuple], ipAddress: Option[String]) { 
+    def withMeta(key: String, value: String) = this.copy(assetMeta = assetMeta :+ (AssetMeta.findOrCreateFromName(key), value))
+    def withMetas(metas: Seq[AssetMetaTuple]) = this.copy(assetMeta = assetMeta ++ metas)
+  }
+
+  val EmptyResolvedAttributes = ResolvedAttributes(Nil, Nil, None)
+
+  //TODO: refactor and get rid of the tuple and conversions
+  object ResolvedAttributes {
+
+    /*
+    implicit def resultTuple2ResolvedAttributes(t: ResultTuple): ResolvedAttributes = 
+      ResolvedAttributes(t._1, t._2, t._3)
+*/
+    //implicit def resolvedAttributes2resultTuple(a: ResolvedAttributes): ResultTuple = (a.ipmi, a.assetMeta, a.ipAddress)
+  }
+
   def apply(map: Map[String,String]): ResultTuple = {
     val init: ResultTuple = (Seq[IpmiTuple](), Seq[AssetMetaTuple](), Seq[String]())
     map.foldLeft(init) { case(total, kv) =>
