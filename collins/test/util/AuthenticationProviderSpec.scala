@@ -30,6 +30,7 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
         ("blake", "password123", Set("engineering")),
         ("testuser", "FizzBuzzAbc", Set("ny","also"))
       )
+
       users.foreach { case(username,password,roles) =>
         val user = provider.authenticate(username, password)
         user must beSome[User]
