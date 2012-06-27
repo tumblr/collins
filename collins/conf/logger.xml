@@ -3,15 +3,9 @@
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
      <file>/var/log/collins/application.log</file>
      <encoder>
-       <pattern>%date - [%level] - from %logger in %thread %n%message%n%xException{100}%n</pattern>
+       <pattern>%date - [%level] - from %logger in %thread %message%n%xException{100}%n</pattern>
      </encoder>
    </appender>
-
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>%date - [%level] - from %logger{15} - %message%n%xException{5}</pattern>
-    </encoder>
-  </appender>
 
   <logger name="play" level="INFO" />
   <logger name="application" level="INFO" />
@@ -23,7 +17,6 @@
 
   <root level="INFO">
     <appender-ref ref="FILE" />
-    <appender-ref ref="STDOUT" />
   </root>
   
 </configuration>
