@@ -53,7 +53,7 @@ trait AuthenticationProvider {
                                 .build(
                                   new CacheLoader[Credentials, Option[User]] {
                                     override def load(creds: Credentials): Option[User] = {
-                                      logger.debug("Loading user %s from backend".format(creds._1))
+                                      logger.info("Loading user %s from backend".format(creds._1))
                                       authenticate(creds._1, creds._2)
                                     }
                                   }
