@@ -98,6 +98,9 @@ case class AddressPool(
   // address as the next unused index >= the start address, plus the minAddress
   private[this] val addressCache = LockingBitSet(ipCalc.addressCount)
 
+  def isInRange(address: String): Boolean = ipCalc.subnetInfo.isInRange(address)
+  def isInRange(address: Long): Boolean = isInRange(IpAddress.toString(address))
+
   def clearAddresses() { addressCache.forWrite(_.clear()) }
   def hasAddressCache(): Boolean = !addressCache.forRead(_.isEmpty)
   def useAddress(address: String) {
@@ -156,7 +159,7 @@ case class AddressPool(
   }
   protected def requireInRange(address: Long) {
     val addressString = IpAddress.toString(address)
-    if (!ipCalc.subnetInfo.isInRange(addressString))
+    if (!isInRange(address))
       throw new RuntimeException("Address %s is not in network block %s".format(
         addressString, network
       ))
