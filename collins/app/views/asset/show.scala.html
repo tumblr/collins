@@ -21,6 +21,7 @@
 
 <div class="span14 tab-content">
 
+
   <div class="active tab-pane" id="overview">
     <h3>Overview</h3>
     <table id="basicDataTable" class="zebra-striped condensed-table">
@@ -49,7 +50,7 @@
           @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
 	    @slLink(aa.asset, aa.asset.tag)
 	  }.getOrElse{<td>@aa.asset.tag</td>}
-          <td></td>
+          <td><a href="@app.routes.Resources.similar(aa.asset.tag)"/>Find Similar Assets</a></td>
         </tr>
         <tr>
           <th>Asset Type</th>
