@@ -32,6 +32,8 @@ case class BooleanFormatException(rootKey: String, name: String, message: String
   extends ConfigFormatException(rootKey, name, message, "boolean")
 case class IntegerFormatException(rootKey: String, name: String, message: String)
   extends ConfigFormatException(rootKey, name, message, "integer")
+case class LongFormatException(rootKey: String, name: String, message: String)
+  extends ConfigFormatException(rootKey, name, message, "integer")
 case class SetFormatException(rootKey: String, name: String, message: String)
   extends ConfigFormatException(rootKey, name, message, "set")
 case class StringFormatException(rootKey: String, name: String, message: String)
@@ -64,6 +66,15 @@ trait Config {
   @throws(classOf[ConfigFormatException])
   def getBoolean(rootKey: String, name: String): Option[Boolean] = expectBool(rootKey, name) {
     get(rootKey).flatMap(_.getBoolean(name))
+  }
+
+  @throws(classOf[ConfigFormatException])
+  def getMilliseconds(name: String): Option[Long] = expectLong(name = name) {
+    get().flatMap(_.getMilliseconds(name))
+  }
+  @throws(classOf[ConfigFormatException])
+  def getMilliseconds(rootKey: String, name: String): Option[Long] = expectLong(rootKey, name) {
+    get(rootKey).flatMap(_.getMilliseconds(name))
   }
 
   @throws(classOf[ConfigFormatException])
@@ -107,6 +118,8 @@ trait Config {
     handleFormatException(rootKey, name, BooleanFormatException(rootKey, name, _), f)
   protected def expectInt[A](rootKey: String = "", name: String = "")(f: => A): A =
     handleFormatException(rootKey, name, IntegerFormatException(rootKey, name, _), f)
+  protected def expectLong[A](rootKey: String = "", name: String = "")(f: => A): A =
+    handleFormatException(rootKey, name, LongFormatException(rootKey, name, _), f)
   protected def expectSet[A](rootKey: String = "", name: String = "")(f: => A): A =
     handleFormatException(rootKey, name, SetFormatException(rootKey, name, _), f)
   protected def expectString[A](rootKey: String = "", name: String = "")(f: => A): A =

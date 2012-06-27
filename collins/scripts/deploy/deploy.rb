@@ -11,11 +11,12 @@ set :source_url, 'http://10.60.26.92:8888/collins.zip'
 set :deploy_to,  '/usr/local/collins'
 
 # user options
-set :user,       'deploy'
+set :user,       'root'
 set :use_sudo,   true
+set :admin_runner, 'collins'
 
 # ssh options
-ssh_options[:keys] = ['~/.ssh/tumblr_deploy']
+ssh_options[:keys] = ['~/.ssh/tumblr_deploy','~/.ssh/tumblr_root_dsa','~/.ssh/tumblr_root_rsa']
 ssh_options[:forward_agent] = true
 
 # misc options
@@ -24,7 +25,7 @@ set :normalize_asset_timestamps, false
 
 # nodes
 role :app, 'collins-24d1214f.ewr01.tumblr.net'
-role :appd2, 'collins-8a02f07e.d2.tumblr.net'
+role :appd2, 'collins-8a02f07e.d2.tumblr.net', :user => 'root'
 role :dev, 'localhost', :user => ENV['USER']
 
 # tasks
@@ -35,23 +36,23 @@ namespace :deploy do
   end
 
   task :start do
-    run "#{sudo :as => 'collins'} /usr/local/collins/current/scripts/collins.sh start"
+    run "/usr/local/collins/current/scripts/collins.sh start"
   end
 
   task :fix_permissions do
-    run "chmod 777 #{fetch(:release_path)}"
+    run "chown -R collins /usr/local/collins"
   end
 
   task :stop do
-    run "#{sudo :as => 'collins'} /usr/local/collins/current/scripts/collins.sh stop"
+    run "/usr/local/collins/current/scripts/collins.sh stop"
   end
 
   task :copy_config do
-    run "#{sudo :as => 'collins'} cp #{fetch(:previous_release)}/conf/production.conf #{fetch(:current_path)}/conf/production.conf" if fetch(:previous_release)
+    run "cp #{fetch(:previous_release)}/conf/production.conf #{fetch(:current_path)}/conf/production.conf" if fetch(:previous_release)
   end
 
   task :status do
-    run "#{sudo :as => 'collins'} /usr/local/collins/current/scripts/collins.sh status"
+    run "/usr/local/collins/current/scripts/collins.sh status"
   end
 
   task :restart do

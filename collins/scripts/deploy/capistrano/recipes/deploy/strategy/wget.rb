@@ -28,7 +28,7 @@ module Capistrano
           Compression.new("zip",     %w(zip -qyr), %w(unzip -q))
         end
         def decompress_remote_file
-          super
+          run "cd #{configuration[:releases_path]} && #{decompress(remote_filename).join(" ")} && rm #{remote_filename}"
           run "mv #{fetch(:releases_path)}/collins #{fetch(:release_path)}"
         end
       end
