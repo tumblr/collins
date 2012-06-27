@@ -7,7 +7,7 @@ set :scm,        :none
 set :deploy_via, :wget
 set :copy_strategy, :wget
 #set :wget_local, true
-set :source_url, 'http://10.60.26.92:8888/collins.zip'
+set :source_url, 'http://10.80.97.195:8888/collins.zip'
 set :deploy_to,  '/usr/local/collins'
 
 # user options
