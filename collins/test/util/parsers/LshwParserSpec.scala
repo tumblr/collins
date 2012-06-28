@@ -21,6 +21,31 @@ class LshwParserSpec extends mutable.Specification {
    
     "Parse Dell (AMD) lshw output" in {
 
+      "with a 10-Gig card" in new LshwParserHelper("lshw-10g.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 12
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(2.3, 0.1)
+    
+          rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
+          rep.memoryBanksUsed mustEqual 4
+          rep.memoryBanksUnused mustEqual 8
+          rep.memoryBanksTotal mustEqual 12
+    
+          rep.totalStorage.toHuman mustEqual "5.46 TB"
+          rep.diskCount mustEqual 6
+
+          rep.nicCount mustEqual 3
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beTrue
+          rep.macAddresses must have length 3
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      } // with a 10-gig card
+
       "basic" in new LshwParserHelper("lshw-basic.xml") {
         val parseResults = parsed()
         parseResults must beRight
@@ -48,7 +73,36 @@ class LshwParserSpec extends mutable.Specification {
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
         }
-      }
+      } // basic
+
+      "quad nic" in new LshwParserHelper("lshw-quad.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 12
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(2.3, 0.1)
+  
+          rep.totalMemory.inGigabytes must beCloseTo(96L, 1)
+          rep.memoryBanksUsed mustEqual 12
+          rep.memoryBanksUnused mustEqual 0
+          rep.memoryBanksTotal mustEqual 12
+    
+          rep.totalStorage.toHuman mustEqual "931.52 GB"
+          rep.diskCount mustEqual 2
+    
+          rep.hasFlashStorage must beFalse
+          rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
+          rep.totalUsableStorage.toHuman mustEqual "931.52 GB"
+
+          rep.nicCount mustEqual 6
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 6
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      } // basic
 
       "with a virident card" in new LshwParserHelper("lshw-virident.xml") {
         val parseResults = parsed()
@@ -79,30 +133,6 @@ class LshwParserSpec extends mutable.Specification {
         }
       }
 
-      "with a 10-Gig card" in new LshwParserHelper("lshw-10g.xml") {
-        val parseResults = parsed()
-        parseResults must beRight
-        parseResults.right.toOption must beSome.which { rep =>
-          rep.cpuCount mustEqual 2
-          rep.cpuCoreCount mustEqual 12
-          rep.hasHyperthreadingEnabled must beFalse
-          rep.cpuSpeed must beCloseTo(2.3, 0.1)
-    
-          rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
-          rep.memoryBanksUsed mustEqual 4
-          rep.memoryBanksUnused mustEqual 8
-          rep.memoryBanksTotal mustEqual 12
-    
-          rep.totalStorage.toHuman mustEqual "5.46 TB"
-          rep.diskCount mustEqual 6
-
-          rep.nicCount mustEqual 3
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beTrue
-          rep.macAddresses must have length 3
-          rep.macAddresses must beNonEmptyStringSeq
-        }
-      }
     } // Parse dell (AMD) lshw output
 
 

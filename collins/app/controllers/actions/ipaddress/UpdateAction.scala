@@ -61,16 +61,20 @@ case class UpdateAction(
       val addressInfo = IpAddresses.findAllByAsset(asset)
                                     .find(_.address == old.getOrElse(0L))
       val newAddress = adh.merge(addressInfo)
-      try {
-        val (status, success) = update(asset, newAddress)
-        Api.statusResponse(success, status)
-      } catch {
-        case e: SQLException =>
-          handleError(RequestDataHolder.error409("Possible duplicate IP address"))
-        case e =>
-          handleError(
-            RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage))
-          )
+      validateUpdatedAddress(newAddress) match {
+        case Left(err) => handleError(err)
+        case Right(_) =>
+          try {
+            val (status, success) = update(asset, newAddress)
+            Api.statusResponse(success, status)
+          } catch {
+            case e: SQLException =>
+              handleError(RequestDataHolder.error409("Possible duplicate IP address"))
+            case e =>
+              handleError(
+                RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage), e)
+              )
+          }
       }
   }
 
@@ -105,6 +109,29 @@ case class UpdateAction(
     }
   }
 
+  /**
+   * Validate a merged address. This protects against changing an existing address into a different
+   * pool in an invalid IP range, or changing an address into a different pool.
+   */
+  protected def validateUpdatedAddress(address: IpAddresses): Validation = {
+    if (!IpAddresses.AddressConfig.isDefined)
+      return Left(RequestDataHolder.error500("No address pools have been setup to allocate from"))
+    val config = IpAddresses.AddressConfig.get
+    if (!config.strict)
+      return Right(EphemeralDataHolder())
+    val poolName = address.pool
+    if (!config.hasPool(poolName))
+      return Left(RequestDataHolder.error400("Specified pool is invalid"))
+    val pool = config.pool(poolName).get
+    if (!pool.isInRange(address.address))
+      return Left(RequestDataHolder.error400("Specified address is not in range for pool"))
+    else
+      return Right(EphemeralDataHolder())
+  }
+
+  /**
+   * Do some basic pre validation with the data we have available to us
+   */
   type NormalizedForm = Either[RequestDataHolder,ActionDataHolder]
   protected def normalizeForm(asset: Asset, form: DataForm): NormalizedForm = {
     val (old,add,gate,net,pool) = form
@@ -112,8 +139,13 @@ case class UpdateAction(
     if (!IpAddresses.AddressConfig.isDefined)
       return Left(RequestDataHolder.error500("No address pools have been setup to allocate from"))
     val addressConfig = IpAddresses.AddressConfig.get
-    if (addressConfig.strict && pool.isDefined && !addressConfig.hasPool(pool.get))
-      return Left(RequestDataHolder.error400("Specified pool is invalid"))
+    if (addressConfig.strict && pool.isDefined) {
+      val poolName = pool.get
+      if (!addressConfig.hasPool(poolName))
+        return Left(RequestDataHolder.error400("Specified pool is invalid"))
+      if (add.isDefined && !addressConfig.pool(poolName).get.isInRange(add.get))
+        return Left(RequestDataHolder.error400("Specified address is not in range for pool"))
+    }
     seq.filter(_.isDefined).map(_.get).foreach { opt =>
       val trimmed = StringUtil.trim(opt)
       if (!trimmed.isDefined)
