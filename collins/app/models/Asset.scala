@@ -156,6 +156,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
 
   def getId(): Long = id
   def isServerNode(): Boolean = asset_type == AssetType.Enum.ServerNode.id
+  def isConfiguration(): Boolean = asset_type == AssetType.Enum.Config.id
   def isIncomplete(): Boolean = status == models.Status.Enum.Incomplete.id
   def isNew(): Boolean = status == models.Status.Enum.New.id
   def isProvisioning(): Boolean = status == models.Status.Enum.Provisioning.id
@@ -189,13 +190,22 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   }
 
   def getAllAttributes: Asset.AllAttributes = {
-    val (lshwRep, mvs) = LshwHelper.reconstruct(this)
-    val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
-    val ipmi = IpmiInfo.findByAsset(this)
-    val addresses = IpAddresses.findAllByAsset(this)
-    val (powerRep, mvs3) = PowerHelper.reconstruct(this, mvs2)
-    val filtered: Seq[MetaWrapper] = mvs3.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
-    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
+    if (isConfiguration) {
+      Asset.AllAttributes(this,
+        LshwRepresentation.empty,
+        LldpRepresentation.empty,
+        None, Seq(), PowerUnits(),
+        AssetMetaValue.findByAsset(this)
+      )
+    } else {
+      val (lshwRep, mvs) = LshwHelper.reconstruct(this)
+      val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
+      val ipmi = IpmiInfo.findByAsset(this)
+      val addresses = IpAddresses.findAllByAsset(this)
+      val (powerRep, mvs3) = PowerHelper.reconstruct(this, mvs2)
+      val filtered: Seq[MetaWrapper] = mvs3.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
+      Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
+    }
   }
 
   /**
@@ -448,10 +458,6 @@ object Asset extends Schema with AnormAdapter[Asset] {
         Page.emptyPage
       }}
   }
-
-
-  
-
 
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], power: PowerUnits, mvs: Seq[MetaWrapper]) {
     def exposeCredentials(showCreds: Boolean = false) = {
