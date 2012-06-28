@@ -62,3 +62,5 @@ powerconfiguration.unitComponents.invalid=Specified unitComponent ''{0}'' is inv
 powerconfiguration.uniqueComponents.invalid=Specified uniqueComponent ''{0}'' not found in unitComponents
 powerconfiguration.validation.missingRequired=Power component ''{0}'' is required, but expected key ''{1}'' was not found
 powerconfiguration.validation.nonUnique=Power component ''{0}'' requires unique values across power units, but found duplicate value ''{1}''
+
+sorttype.invalid=Invalid sort type ''{0}''

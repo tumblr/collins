@@ -38,6 +38,37 @@ class AssetSpec extends ApplicationSpecification {
       }
     }
 
+    "Support nodeclass" in {
+      
+      "nodeClass" in new mocknodeclass {
+        val nodeclass = Asset.create(Asset(nodeclassTag, nodeclassStatus,nodeclassType))
+        val testAsset = Asset.create(Asset(assetTag, assetStatus, assetType))
+        val nodeclassMetas = createAssetMetas(nodeclass, (nodeclassMetaTags + nodeclassIdentifierTag))
+        val assetMetas = createAssetMetas(testAsset, nodeclassMetaTags)
+        testAsset.nodeClass must_== Some(nodeclass)
+      }
+
+      "findSimilar" in new mocknodeclass {
+        val assets = similarAssetData.map{case (tag, status, metatags) => {
+          val asset = Asset.create(Asset(tag, status, AssetType.Enum.ServerNode))
+          createAssetMetas(asset, metatags)
+          asset
+        }}
+        val finder = AssetFinder.empty.copy(
+          status = Some(Status.Enum.Unallocated),
+          assetType = Some(AssetType.Enum.ServerNode)
+        )
+        val expected = assets.filter{_.tag == similarAssetTag}
+        val page = PageParams(0,10, "")
+        Asset.findByTag(assetTag).map{asset =>
+          Asset.findSimilar(asset, page, finder, "sparse").items must_== expected
+        }.getOrElse(failure("Couldn't find asset but expected to"))
+
+      }
+
+    } //support nodeclass
+        
+
     "Support getters/finders" in {
 
       "findByTag" in new concreteasset {
@@ -51,6 +82,8 @@ class AssetSpec extends ApplicationSpecification {
         assets.total must beGreaterThan(0L)
         assets.items must have {_.tag == assetTag}
       }
+
+      
 
       "getAllAttributes" in new concreteasset {
         val maybeAsset = Asset.findByTag(assetTag)
@@ -79,6 +112,28 @@ class AssetSpec extends ApplicationSpecification {
     val assetType = AssetType.Enum.ServerNode
     val assetId = 1
   }
+
+  trait mocknodeclass extends Scope {
+    def createAssetMetas(asset: Asset, metamap: Map[String, String]) = metamap
+      .map{ case (k,v) => 
+        AssetMetaValue.create(AssetMetaValue(asset.id, AssetMeta.findOrCreateFromName(k).id, 0, v))
+      }
+    val nodeclassTag = "test_nodeclass"
+    val nodeclassStatus = Status.Enum.Allocated
+    val nodeclassType = AssetType.Enum.Config
+    val nodeclassIdentifierTag = ("IS_NODECLASS" -> "true")
+    val nodeclassMetaTags = Map("FOOT1" -> "BAR", "BAZT1" -> "BAAAAZ")
+    val assetTag = "nodeclasstest"
+    val assetStatus = Status.Enum.Allocated
+    val assetType = AssetType.Enum.ServerNode
+    val similarAssetTag = "similar_asset"
+    val similarAssetData = List[(String, Status.Enum, Map[String,String])](
+      (similarAssetTag,Status.Enum.Unallocated,nodeclassMetaTags),
+      ("not_similar",Status.Enum.Unallocated,Map[String,String]()),
+      ("similar_not_unallocated", Status.Enum.Provisioned,nodeclassMetaTags)
+    )
+  }
+
 
 
 }

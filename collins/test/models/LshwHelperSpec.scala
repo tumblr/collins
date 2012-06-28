@@ -12,6 +12,13 @@ class LshwHelperSpec extends mutable.Specification {
 
   "The LSHW Helper" should {
     "Parse and reconstruct data" in {
+      "containing a 10-gig card" in new LshwCommonHelper("lshw-10g.xml") {
+        val lshw = parsed()
+        val stub = getStub()
+        val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
+        val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
+        lshw mustEqual reconstructed
+      }
       "containing basic info" in new LshwCommonHelper("lshw-basic.xml") {
         val lshw = parsed()
         val stub = getStub()
@@ -19,14 +26,21 @@ class LshwHelperSpec extends mutable.Specification {
         val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
         lshw mustEqual reconstructed
       }
-      "containing a virident card" in new LshwCommonHelper("lshw-virident.xml") {
+      "with an intel CPU" in new LshwCommonHelper("lshw-intel.xml") {
         val lshw = parsed()
         val stub = getStub()
         val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
         val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
         lshw mustEqual reconstructed
       }
-      "containing a 10-gig card" in new LshwCommonHelper("lshw-10g.xml") {
+      "with modern hardware but old lshw" in new LshwCommonHelper("lshw-new-web-old-lshw.xml") {
+        val lshw = parsed()
+        val stub = getStub()
+        val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
+        val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
+        lshw mustEqual reconstructed
+      }
+      "with old hardware and old lshw" in new LshwCommonHelper("lshw-old-web.xml") {
         val lshw = parsed()
         val stub = getStub()
         val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
@@ -40,7 +54,14 @@ class LshwHelperSpec extends mutable.Specification {
         val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
         lshw mustEqual reconstructed
       }
-      "with an intel CPU" in new LshwCommonHelper("lshw-intel.xml") {
+      "with a quad NIC" in new LshwCommonHelper("lshw-quad.xml") {
+        val lshw = parsed()
+        val stub = getStub()
+        val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
+        val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
+        lshw mustEqual reconstructed
+      }
+      "containing a virident card" in new LshwCommonHelper("lshw-virident.xml") {
         val lshw = parsed()
         val stub = getStub()
         val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
