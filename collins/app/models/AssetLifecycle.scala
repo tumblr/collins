@@ -113,9 +113,11 @@ object AssetLifecycle {
       val groupId = options.get("groupId").map(_.toInt)
       val opts = options - "groupId"
       logger.debug(restricted.toString)
-      opts.find(kv => restricted(kv._1)).map(kv =>
-        return Left(new Exception("Attribute %s is restricted".format(kv._1)))
-      )
+      if (!asset.isConfiguration) {
+        opts.find(kv => restricted(kv._1)).map(kv =>
+          return Left(new Exception("Attribute %s is restricted".format(kv._1)))
+        )
+      }
       Asset.inTransaction {
         MetaWrapper.createMeta(asset, opts, groupId)
         Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
