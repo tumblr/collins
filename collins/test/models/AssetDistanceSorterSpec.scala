@@ -4,6 +4,8 @@ import test.ApplicationSpecification
 import org.specs2._
 import specification._
 
+import SortType._
+
 import java.sql.Timestamp
 
 class AssetDistanceSorterSpec extends ApplicationSpecification {
@@ -79,7 +81,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
             assets must_== AssetDistanceSorter.sort(
                                new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
                                assets,
-                               "name",
+                               Name,
                                SortDirection.Asc)
         }
 
@@ -94,7 +96,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
             (assets2 ++ assets1) must_== AssetDistanceSorter.sort(
                                new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
                                (assets1 ++ assets2),
-                               "name",
+                               Name,
                                SortDirection.Asc)
         }
 
@@ -109,7 +111,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
             assets.reverse must_== AssetDistanceSorter.sort(
                                new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
                                assets,
-                               "name",
+                               Name,
                                SortDirection.Desc)
         }
         
