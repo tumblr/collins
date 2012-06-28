@@ -20,7 +20,15 @@ trait CommonHelper[T] {
   def updateAsset(asset: Asset, rep: T): Boolean = {
     // FIXME: Need to delete specific asset meta values before accepting an update
     // FIXME: Came from LshwHelper
+
+    //FIXME: If a new LSHW/LLDP profile is missing meta values set on the old
+    //one, those will not be deleted, since at this point we have no way of
+    //knowing which tags belonged to the old one versus other unrelated tags
     val mvs = construct(asset, rep)
+    val existing = AssetMetaValue.findByAsset(asset)
+    val (exists, notExists) = mvs.partition{m => existing.find{m.asset_meta_id == _.asset_meta_id}.isDefined}
+    exists.foreach{e => AssetMetaValue.deleteByAssetAndMetaId(asset.id, e.meta_id)}
+
     mvs.size == AssetMetaValue.create(mvs)
   }
 
