@@ -96,6 +96,7 @@ object AssetLifecycle {
         updateIncompleteServer(asset, options)
       case Status.Enum.New =>
         updateNewServer(asset, options)
+      //@DAN - updateMaintenance server
       case _ =>
         Left(new Exception("Only updates for Incomplete and New servers are currently supported"))
     }
