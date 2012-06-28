@@ -71,6 +71,12 @@ object Disk {
   }
 }
 
+object LshwRepresentation {
+  def empty(): LshwRepresentation = {
+    new LshwRepresentation(Seq(), Seq(), Seq(), Seq())
+  }
+}
+
 case class LshwRepresentation(
   cpus: Seq[Cpu],
   memory: Seq[Memory],
