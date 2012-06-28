@@ -54,7 +54,7 @@ class AssetSpec extends ApplicationSpecification {
           createAssetMetas(asset, metatags)
           asset
         }}
-        val finder = AssetFinder.Empty.copy(
+        val finder = AssetFinder.empty.copy(
           status = Some(Status.Enum.Unallocated),
           assetType = Some(AssetType.Enum.ServerNode)
         )
