@@ -49,6 +49,12 @@ case class Interface(name: String, chassis: Chassis, port: Port, vlan: Vlan) {
   }
 }
 
+object LldpRepresentation {
+  def empty(): LldpRepresentation = {
+    new LldpRepresentation(Seq())
+  }
+}
+
 case class LldpRepresentation(interfaces: Seq[Interface]) {
   def chassisNames: Seq[String] = interfaces.map { _.chassis.name }
   def interfaceCount: Int = interfaces.size

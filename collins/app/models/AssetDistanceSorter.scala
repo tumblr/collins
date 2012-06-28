@@ -81,8 +81,8 @@ object AssetDistanceSorter {
 
       /** Asc means sparse search, Desc means dense search */
       case "sparse" => sparseSort
-      case _ => {
-        Logger.logger.warn("Unknown sort type %s, defaulting to sparse")
+      case sname => {
+        Logger.logger.warn("Unknown sort type %s, defaulting to sparse".format(sname))
         sparseSort
       }
     }
