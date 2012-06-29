@@ -26,8 +26,10 @@ trait CommonHelper[T] {
     //knowing which tags belonged to the old one versus other unrelated tags
     val mvs = construct(asset, rep)
     val existing = AssetMetaValue.findByAsset(asset)
-    val (exists, notExists) = mvs.partition{m => existing.find{m.asset_meta_id == _.asset_meta_id}.isDefined}
-    exists.foreach{e => AssetMetaValue.deleteByAssetAndMetaId(asset.id, e.meta_id)}
+    val (exists, notExists) = mvs.partition{m => existing.find{m.asset_meta_id == _._value.asset_meta_id}.isDefined}
+    if (!exists.isEmpty) {
+      AssetMetaValue.deleteByAssetAndMetaId(asset, exists.map{_.asset_meta_id}.toSet)
+    }
 
     mvs.size == AssetMetaValue.create(mvs)
   }
