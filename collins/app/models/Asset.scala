@@ -25,6 +25,7 @@ import akka.dispatch.Await
 import akka.util.duration._
 
 import SortDirection._
+import SortType._
 
 object AssetConfig {
   lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
@@ -425,14 +426,14 @@ object Asset extends Schema with AnormAdapter[Asset] {
   /**
    * Finds assets in the same nodeclass as the given asset
    */
-  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sortType: String): Page[AssetView] = {
+  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sortType: SortType): Page[AssetView] = {
     val sorter = try SortDirection.withName(page.sort) catch {
       case _ => {
         logger.warn("Invalid sort " + page.sort)
         SortDirection.Desc
       }
     }
-    val cacheKey = "asset.findSimilar(%s)".format(asset.tag) + sorter.toString + sortType
+    val cacheKey = "asset.findSimilar(%s)".format(asset.tag) + sorter.toString + sortType + afinder.toString
     Cache
       .getAs[Seq[Asset]](cacheKey)
       .map{assets => Page[AssetView](assets.slice(page.offset, page.offset + page.size), page.page, page.offset, assets.size)}
