@@ -1,0 +1,40 @@
+begin
+  require 'rubygems'
+  require "railsless-deploy"
+rescue LoadError => e
+  puts e.message
+  abort "Please gem install railsless-deploy"
+end
+
+CURRENT_DIR = File.expand_path(File.dirname(__FILE__))
+CONFIG_DIR = CURRENT_DIR + "/lib"
+Dir[CONFIG_DIR + "/recipes/*.rb"].each { |x| require(x) }
+
+def distPath(app)
+  dir = File.expand_path(File.dirname(__FILE__))
+  if !File.exists?(dir) then
+    raise Exception.new("Dir #{dir} does not exist")
+  end
+  dir
+end
+
+def loadDeploy
+  load 'lib/deploy'
+end
+
+def safetyFirst
+  begin
+    yield
+  rescue Exception => e
+    logger.important e.message
+    logger.important "Exiting"
+    exit
+  end
+end
+
+safetyFirst do
+  application = "serx"
+  set :application, application
+  set :repository, distPath(application)
+  loadDeploy
+end
