@@ -340,13 +340,13 @@
         <tr>
           <th>VLAN ID</th>
           @aa.lldp.interfaces.map { interface =>
-          <td>@interface.vlan.id</td>
+          <td>@interface.vlans.map(_.id).mkString(",")</td>
           }
         </tr>
         <tr>
           <th>VLAN Name</th>
           @aa.lldp.interfaces.map { interface =>
-          <td>@interface.vlan.name</td>
+          <td>@interface.vlans.map(_.name).mkString(",")</td>
           }
         </tr>
       </tbody>

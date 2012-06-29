@@ -11,6 +11,7 @@ lshw_files=($LshwFiles)
 num_lshw_files=${#lshw_files[*]}
 
 LldpFiles="single
+four-nic
 two-nic"
 lldp_files=($LldpFiles)
 num_lldp_files=${#lldp_files[*]}
