@@ -15,8 +15,11 @@ object LldpHelper extends CommonHelper[LldpRepresentation] {
       val groupId = tuple._2
       val chassis = interface.chassis
       val port = interface.port
-      val vlan = interface.vlan
-      seq ++ Seq(
+      val vlans = interface.vlans.map { vlan =>
+        Seq(AssetMetaValue(asset_id, LldpVlanId.id, groupId, vlan.id.toString),
+            AssetMetaValue(asset_id, LldpVlanName.id, groupId, vlan.name))
+      }.flatten
+      seq ++ vlans ++ Seq(
         AssetMetaValue(asset_id, LldpInterfaceName.id, groupId, interface.name),
         AssetMetaValue(asset_id, LldpChassisName.id, groupId, chassis.name),
         AssetMetaValue(asset_id, LldpChassisIdType.id, groupId, chassis.id.idType),
@@ -24,9 +27,7 @@ object LldpHelper extends CommonHelper[LldpRepresentation] {
         AssetMetaValue(asset_id, LldpChassisDescription.id, groupId, chassis.description),
         AssetMetaValue(asset_id, LldpPortIdType.id, groupId, port.id.idType),
         AssetMetaValue(asset_id, LldpPortIdValue.id, groupId, port.id.value),
-        AssetMetaValue(asset_id, LldpPortDescription.id, groupId, port.description),
-        AssetMetaValue(asset_id, LldpVlanId.id, groupId, vlan.id.toString),
-        AssetMetaValue(asset_id, LldpVlanName.id, groupId, vlan.name)
+        AssetMetaValue(asset_id, LldpPortDescription.id, groupId, port.description)
       )
     }
   }
@@ -51,18 +52,23 @@ object LldpHelper extends CommonHelper[LldpRepresentation] {
       val portIdValue = finder(wrapSeq, LldpPortIdValue, _.toString, "")
       val portDescr = finder(wrapSeq, LldpPortDescription, _.toString, "")
 
-      val vlanId = finder(wrapSeq, LldpVlanId, _.toInt, 0)
-      val vlanName = finder(wrapSeq, LldpVlanName, _.toString, "")
+      // FIXME We lose associations between the vlan name and the vlan ID because this abstraction
+      // is: Interfaces -> Interface -> Vlans -> Vlan. An Interface has an associated groupId, but
+      // then has multiple vlans associated with it. A groupId only provides one dimension per unit,
+      // but the LLDP abstraction requires two dimensions. This only happens if an interface has
+      // more than one VLAN
+      val vlanId = seqFinder(wrapSeq, LldpVlanId, _.toInt)
+      val vlanName = seqFinder(wrapSeq, LldpVlanName, _.toString)
 
       val isInvalid = Seq(interfaceName, chassisName, chassisIdType, chassisIdValue, chassisDescr,
-        portIdType, portIdValue, portDescr, vlanName).find { _.isEmpty }.isDefined
+        portIdType, portIdValue, portDescr).find { _.isEmpty }.isDefined
       if (isInvalid) {
         seq
       } else {
         val chassis = Chassis(chassisName, ChassisId(chassisIdType, chassisIdValue), chassisDescr)
         val port = Port(PortId(portIdType, portIdValue), portDescr)
-        val vlan = Vlan(vlanId, vlanName)
-        Interface(interfaceName, chassis, port, vlan) +: seq
+        val vlans = vlanId.zip(vlanName).map(v => Vlan(v._1, v._2))
+        Interface(interfaceName, chassis, port, vlans) +: seq
       }
     }
     val filteredMeta = meta.map { case(groupId, metaSeq) =>
