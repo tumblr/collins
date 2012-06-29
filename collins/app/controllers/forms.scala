@@ -10,6 +10,9 @@ import play.api.data.format._
 
 import scala.util.control.Exception.allCatch
 
+import models.SortType
+import models.SortType._
+
 package object forms {
 
   implicit def statusFormat = new Formatter[Status.Enum] {
@@ -54,6 +57,17 @@ package object forms {
       }
     }
     def unbind(key: String, value: Truthy) = Map(key -> value.toString)
+  }
+
+  implicit def sortTypeformat = new Formatter[SortType] {
+    def bind(key: String, data: Map[String, String]) = {
+      Formats.stringFormat.bind(key, data).right.flatMap { s =>
+        allCatch[SortType]
+          .either(SortType.withName(s))
+          .left.map(e => Seq(FormError(key, "sorttype.invalid", Nil)))
+      }
+    }
+    def unbind(key: String, value: SortType) = Map(key -> value.toString)
   }
 
 }
