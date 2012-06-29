@@ -1,9 +1,0 @@
-#!/bin/sh
-
-if [ $# = 4 ]; then
-   curl -s -d "key=$1&value=$2&key2=$3&value2=$4" http://0.0.0.0:8888/multiPut
-elif [ $# = 5 ]; then
-   curl -s -d "key=$2&value=$3&key2=$4&value2=$5" $1:8888/multiPut
-else
-   echo "Wrong number of arguments"
-fi
