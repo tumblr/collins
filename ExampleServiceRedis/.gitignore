@@ -1,0 +1,24 @@
+*.class
+*.log
+*.gem
+
+# sbt specific
+dist
+target
+lib_managed
+src_managed
+project/boot/
+project/plugins/project/
+
+# vim specific
+*.swp
+.NERDTreeBookmarks
+
+# eclipse specific
+.classpath
+.cache
+.project
+.settings
+
+# emacs specific
+*~

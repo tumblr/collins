@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ $# = 0 ]; then
+   curl -s -d '' http://0.0.0.0:8888/clear
+elif [ $# = 1 ]; then
+   curl -s -d '' $1:8888/clear
+else
+   echo "Wrong number of arguments"
+fi
