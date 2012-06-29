@@ -35,7 +35,7 @@ case class Vlan(id: Int, name: String) {
     )
   }
 }
-case class Interface(name: String, chassis: Chassis, port: Port, vlan: Vlan) {
+case class Interface(name: String, chassis: Chassis, port: Port, vlans: Seq[Vlan]) {
   def isPortLocal: Boolean = port.isLocal
   def portAsInt: Int = port.toInt
   def macAddress: String = chassis.macAddress
@@ -44,7 +44,7 @@ case class Interface(name: String, chassis: Chassis, port: Port, vlan: Vlan) {
       "NAME" -> JsString(name),
       "CHASSIS" -> JsObject(chassis.forJsonObject),
       "PORT" -> JsObject(port.forJsonObject),
-      "VLAN" -> JsObject(vlan.forJsonObject)
+      "VLANS" -> JsArray(vlans.toList.map(v => JsObject(v.forJsonObject)))
     )
   }
 }
@@ -61,8 +61,8 @@ case class LldpRepresentation(interfaces: Seq[Interface]) {
   def interfaceNames: Seq[String] = interfaces.map { _.name }
   def localPorts: Seq[Int] = interfaces.map { _.portAsInt }
   def macAddresses: Seq[String] = interfaces.map { _.macAddress }
-  def vlanNames: Seq[String] = interfaces.map { _.vlan.name }
-  def vlanIds: Seq[Int] = interfaces.map { _.vlan.id }
+  def vlanNames: Seq[String] = interfaces.map(_.vlans.map(_.name)).flatten.distinct
+  def vlanIds: Seq[Int] = interfaces.map(_.vlans.map(_.id)).flatten.distinct
 
   def forJsonObject(): Seq[(String,JsValue)] = Seq(
     "INTERFACES" -> JsArray(interfaces.map { i => JsObject(i.forJsonObject) }.toList)
