@@ -30,8 +30,8 @@ class LldpParser(txt: String, config: Map[String,String] = Map.empty)
     val name = (seq \ "@name" text)
     val chassis = findChassis(seq)
     val port = findPort(seq)
-    val vlan = findVlan(seq)
-    Interface(name, chassis, port, vlan)
+    val vlans = findVlans(seq)
+    Interface(name, chassis, port, vlans)
   }
 
   protected def findChassis(seq: NodeSeq): Chassis = {
@@ -58,12 +58,13 @@ class LldpParser(txt: String, config: Map[String,String] = Map.empty)
     Port(PortId(idType, idValue), description)
   }
 
-  protected def findVlan(seq: NodeSeq): Vlan = {
-    val vlan = (seq \\ "vlan")
-    val id = (vlan \ "@vlan-id" text)
-    val name = vlan.text
-    requireNonEmpty((id -> "vlan-id"), (name -> "vlan name"))
-    Vlan(id.toInt, name)
+  protected def findVlans(seq: NodeSeq): Seq[Vlan] = {
+    (seq \\ "vlan").foldLeft(Seq[Vlan]()) { case(vseq, vlan) =>
+      val id = Option(vlan \ "@vlan-id" text).filter(_.nonEmpty).getOrElse("0")
+      val name = vlan.text
+      requireNonEmpty((id -> "vlan-id"), (name -> "vlan name"))
+      Vlan(id.toInt, name) +: vseq
+    }
   }
 
   protected def getInterfaces(elem: Elem): NodeSeq = {
