@@ -42,6 +42,22 @@ class LldpParserSpec extends mutable.Specification {
       }
     }
 
+    "Parse XML with four network interfaces" in new LldpParserHelper("lldpctl-four-nic.xml") {
+      val parseResult = parsed()
+      parseResult must beRight
+      parseResult.right.toOption must beSome.which { rep =>
+        rep.interfaceCount mustEqual(3)
+        rep.macAddresses must contain(
+          "2c:21:72:96:93:00", "28:c0:da:b9:5b:f0", "84:18:88:9c:57:f0").only
+        rep.interfaceNames must contain("eth0", "eth4", "eth5").only
+        rep.localPorts.toSet mustEqual(Set(588,2113,1488))
+        rep.chassisNames must contain(
+          "oob-switch013.ewr01", "re0.access-switch01.ewr01", "re0.access-switch02.ewr01").only
+        rep.vlanNames.toSet mustEqual(Set("EWR-PROVISIONING","OOB-NETWORK","OOB-POWER","OOB-SERVERS"))
+        rep.vlanIds.toSet mustEqual(Set(104,115,114,108))
+      }
+    }
+
     "Parse a generated XML file" in new LldpParserHelper("lldpctl-empty.xml") {
       parsed must beRight
     }

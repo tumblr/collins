@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lldp label="LLDP neighbors">
+ <interface label="Interface" name="eth0" via="LLDP" rid="3" age="0 day, 01:39:36">
+  <chassis label="Chassis">
+   <id label="ChassisID" type="mac">2c:21:72:96:93:00</id>
+   <name label="SysName">oob-switch013.ewr01</name>
+   <descr label="SysDescr">Juniper Networks, Inc. ex2200-48t-4g , version 11.4R2.14 Build date: 2012-03-17 16:36:22 UTC </descr>
+   <capability label="Capability" type="Bridge" enabled="on"/>
+   <capability label="Capability" type="Router" enabled="on"/>
+  </chassis>
+  <port label="Port">
+   <id label="PortID" type="local">588</id>
+   <descr label="PortDescr">ge-0/0/38.0</descr>
+   <mfs label="MFS">1514</mfs>
+   <auto-negotiation label="PMD autoneg" supported="yes" enabled="yes">
+    <advertised label="Adv" type="10Base-T" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="100Base-T" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="100Base-X" hd="no" fd="yes"/>
+    <advertised label="Adv" type="1000Base-T" hd="no" fd="yes"/>
+    <current label="MAU oper type">unknown</current>
+   </auto-negotiation>
+  </port>
+  <vlan label="VLAN" vlan-id="104">OOB-NETWORK</vlan>
+  <vlan label="VLAN" vlan-id="115">OOB-POWER</vlan>
+  <vlan label="VLAN" vlan-id="114">OOB-SERVERS</vlan>
+  <lldp-med label="LLDP-MED">
+   <device-type label="Device Type">Network Connectivity Device</device-type>
+   <capability label="Capability" type="Capabilities"/>
+   <capability label="Capability" type="Policy"/>
+   <capability label="Capability" type="Location"/>
+   <capability label="Capability" type="MDI/PSE"/>
+  </lldp-med>
+ </interface>
+ <interface label="Interface" name="eth4" via="LLDP" rid="1" age="0 day, 01:39:54">
+  <chassis label="Chassis">
+   <id label="ChassisID" type="mac">28:c0:da:b9:5b:f0</id>
+   <name label="SysName">re0.access-switch01.ewr01</name>
+   <descr label="SysDescr">Juniper Networks, Inc. ex8216 , version 11.4R2.14 Build date: 2012-03-17 17:46:53 UTC </descr>
+   <mgmt-ip label="MgmtIP">172.16.255.11</mgmt-ip>
+   <capability label="Capability" type="Bridge" enabled="on"/>
+   <capability label="Capability" type="Router" enabled="on"/>
+  </chassis>
+  <port label="Port">
+   <id label="PortID" type="local">2113</id>
+   <descr label="PortDescr">ge-6/0/19.0</descr>
+   <mfs label="MFS">1514</mfs>
+   <auto-negotiation label="PMD autoneg" supported="yes" enabled="yes">
+    <advertised label="Adv" type="10Base-T" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="100Base-T" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="100Base-X" hd="no" fd="yes"/>
+    <advertised label="Adv" type="1000Base-T" hd="no" fd="yes"/>
+    <current label="MAU oper type">unknown</current>
+   </auto-negotiation>
+  </port>
+  <vlan label="VLAN" vlan-id="108" pvid="yes">EWR-PROVISIONING</vlan>
+ </interface>
+ <interface label="Interface" name="eth5" via="LLDP" rid="2" age="0 day, 01:39:38">
+  <chassis label="Chassis">
+   <id label="ChassisID" type="mac">84:18:88:9c:57:f0</id>
+   <name label="SysName">re0.access-switch02.ewr01</name>
+   <descr label="SysDescr">Juniper Networks, Inc. ex8216 , version 11.4R2.14 Build date: 2012-03-17 17:46:53 UTC </descr>
+   <mgmt-ip label="MgmtIP">172.16.255.7</mgmt-ip>
+   <capability label="Capability" type="Bridge" enabled="on"/>
+   <capability label="Capability" type="Router" enabled="on"/>
+  </chassis>
+  <port label="Port">
+   <id label="PortID" type="local">1488</id>
+   <descr label="PortDescr">ge-6/0/18.0</descr>
+   <mfs label="MFS">1514</mfs>
+   <auto-negotiation label="PMD autoneg" supported="yes" enabled="yes">
+    <advertised label="Adv" type="10Base-T" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="100Base-T" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="100Base-X" hd="no" fd="yes"/>
+    <advertised label="Adv" type="1000Base-T" hd="no" fd="yes"/>
+    <current label="MAU oper type">unknown</current>
+   </auto-negotiation>
+  </port>
+  <vlan label="VLAN" vlan-id="108" pvid="yes">EWR-PROVISIONING</vlan>
+ </interface>
+</lldp>

@@ -27,6 +27,14 @@ class LldpHelperSpec extends mutable.Specification {
         val reconstructed = LldpHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
         lldp mustEqual reconstructed
       }
+      "with four network interfaces" in new LldpCommonHelper("lldpctl-four-nic.xml") {
+        val lldp = parsed()
+        lldp.interfaceCount mustEqual(3)
+        val stub = getStub()
+        val constructed: Seq[AssetMetaValue] = LldpHelper.construct(stub, lldp)
+        val reconstructed = LldpHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
+        lldp mustEqual reconstructed
+      }
     }
   }
 
