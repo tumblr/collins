@@ -15,7 +15,7 @@ trait Resources extends Controller {
   this: SecureController =>
 
   def index = SecureAction { implicit req =>
-    Ok(html.resources.index(AssetMeta.getViewable()))
+    Ok(html.resources.index(AssetMeta.getViewable())).withHeaders("Content-Language" -> "en")
   }(Permissions.Resources.Index)
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
