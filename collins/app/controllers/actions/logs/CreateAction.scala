@@ -116,7 +116,7 @@ case class CreateAction(
 
   // Given a text message, strip out bad HTML and include the user in the text
   protected def formatStringMessage(txt: String): String = {
-    val escapedMessage = Jsoup.clean(txt, Whitelist.basicWithImages())
+    val escapedMessage = Jsoup.clean(txt, Whitelist.basic())
     TattlerHelper.message(userOption, escapedMessage)
   }
 
