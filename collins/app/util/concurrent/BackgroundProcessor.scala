@@ -26,7 +26,7 @@ object BackgroundProcessor {
   import play.api.Play.current
 
   lazy val ref = {
-    val routees = (0 until 4).map { _ =>
+    val routees = (0 until 128).map { _ =>
       Akka.system.actorOf(Props[BackgroundProcessorActor])
     }
     Akka.system.actorOf(
