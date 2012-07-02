@@ -70,6 +70,7 @@ object SortType extends Enumeration {
   val Name = Value("name")
   val Distance = Value("distance")
   val Distribution = Value("distribution")
+  val Arbitrary = Value("arbitrary")
 }
 import SortType._
 
@@ -87,6 +88,7 @@ object AssetDistanceSorter {
     case Distance => genericSort(target, similarAssets, new PhysicalDistanceEval(sortKeys), direction)
     /** Asc means sparse search, Desc means dense search */
     case Distribution => distributionSort(target, similarAssets, direction, sortKeys)
+    case Arbitrary => similarAssets
   }
 
   def distributionSort(target: Asset, similar: Seq[Asset], direction: SortDirection, config: String) = {
