@@ -433,31 +433,26 @@ object Asset extends Schema with AnormAdapter[Asset] {
         SortDirection.Desc
       }
     }
-    val cacheKey = "asset.findSimilar(%s)".format(asset.tag) + sorter.toString + sortType + afinder.toString
-    Cache
-      .getAs[Seq[Asset]](cacheKey)
-      .map{assets => Page[AssetView](assets.slice(page.offset, page.offset + page.size), page.page, page.offset, assets.size)}
-      .getOrElse{asset.nodeClass.map{ nodeclass => 
-        logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
-        val unsortedItems:Page[AssetView] = find(
-          PageParams(0,1000, "asc"), //TODO: unbounded search
-          (Nil, nodeclass.filteredMetaSet.toSeq, Nil),
-          afinder,
-          Some("and")
-        )
-        //note, the type inference here is important
-        val sortedItems: Page[AssetView] = unsortedItems
-          .copy(items = AssetDistanceSorter.sort(
-            asset, 
-            unsortedItems.items.collect{case a: Asset => a}.filter{_.tag != asset.tag}, 
-            sortType,
-            sorter))
-        Cache.set(cacheKey, sortedItems.items, 30)
-        sortedItems
-      }.getOrElse{
-        logger.warn("No Nodeclass for Asset " + asset.tag)
-        Page.emptyPage
-      }}
+    asset.nodeClass.map{ nodeclass => 
+      logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
+      val unsortedItems:Page[AssetView] = find(
+        PageParams(0,1000, "asc"), //TODO: unbounded search
+        (Nil, nodeclass.filteredMetaSet.toSeq, Nil),
+        afinder,
+        Some("and")
+      )
+      val sortedItems = AssetDistanceSorter.sort(
+        asset, 
+        unsortedItems.items.collect{case a: Asset => a}.filter{_.tag != asset.tag}, 
+        sortType,
+        sorter
+      )
+      val sortedPage: Page[AssetView] = unsortedItems.copy(items = sortedItems.slice(page.offset, page.offset + page.size), total = sortedItems.size)
+      sortedPage
+    }.getOrElse{
+      logger.warn("No Nodeclass for Asset " + asset.tag)
+      Page.emptyPage
+    }
   }
 
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], power: PowerUnits, mvs: Seq[MetaWrapper]) {
