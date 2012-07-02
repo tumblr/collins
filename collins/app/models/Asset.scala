@@ -445,15 +445,15 @@ object Asset extends Schema with AnormAdapter[Asset] {
           afinder,
           Some("and")
         )
-        //note, the type inference here is important
-        val sortedItems: Page[AssetView] = unsortedItems
-          .copy(items = AssetDistanceSorter.sort(
-            asset, 
-            unsortedItems.items.collect{case a: Asset => a}.filter{_.tag != asset.tag}, 
-            sortType,
-            sorter))
-        Cache.set(cacheKey, sortedItems.items, 30)
-        sortedItems
+        val sortedItems = AssetDistanceSorter.sort(
+          asset, 
+          unsortedItems.items.collect{case a: Asset => a}.filter{_.tag != asset.tag}, 
+          sortType,
+          sorter
+        )
+        val sortedPage: Page[AssetView] = unsortedItems.copy(items = sortedItems.slice(page.offset, page.offset + page.size), total = sortedItems.size)
+        Cache.set(cacheKey, sortedItems, 15)
+        sortedPage
       }.getOrElse{
         logger.warn("No Nodeclass for Asset " + asset.tag)
         Page.emptyPage
