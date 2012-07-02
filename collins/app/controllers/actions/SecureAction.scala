@@ -91,6 +91,10 @@ abstract class SecureAction(
     }
   }
 
+  protected def getHeaders(): Seq[Tuple2[String,String]] = Seq(
+    "Content-Language" -> "en"
+  )
+
   protected def isHtml(): Boolean = OutputType.isHtml(request)
   protected def isReadRequest(): Boolean = request.method == "GET" || request.method == "HEAD"
   protected def isWriteRequest(): Boolean = request.method == "POST"
@@ -157,7 +161,10 @@ abstract class SecureAction(
   }
   private def run(): Result = handleValidation() match {
     case Left(rd) => handleError(rd)
-    case Right(rd) => handleExecution(rd)
+    case Right(rd) => handleExecution(rd) match {
+      case p: PlainResult => p.withHeaders(getHeaders:_*)
+      case o => o
+    }
   }
 
 }
