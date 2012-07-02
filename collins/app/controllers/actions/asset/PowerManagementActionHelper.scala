@@ -111,8 +111,8 @@ abstract class PowerManagementActionHelper(
   protected def verifyToString(): String = {
     verify match {
       case None => ""
-      case Some(r) if r => ". Asset IS remotely accessible for IPMI access."
-      case Some(r) if !r => ". Asset IS NOT remotely accessible for IPMI access."
+      case Some(r) if r => ". Asset %s IS remotely accessible for IPMI access.".format(definedAsset.tag)
+      case Some(r) if !r => ". Asset %s IS NOT remotely accessible for IPMI access.".format(definedAsset.tag)
     }
   }
 
