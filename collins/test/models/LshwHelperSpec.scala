@@ -6,7 +6,7 @@ import util.parsers.LshwParser
 import org.specs2._
 import specification._
 
-class LshwHelperSpec extends mutable.Specification {
+class LshwHelperSpec extends test.ApplicationSpecification {
 
   "LSHW Helper Specification".title
 
@@ -69,11 +69,30 @@ class LshwHelperSpec extends mutable.Specification {
         lshw mustEqual reconstructed
       }
     }
+
+    "update asset meta tags" in {
+      "create asset" in new AssetUpdateHelper("lshw-basic.xml") {
+        val asset = Asset.create(Asset(assetTag, Status.Enum.Incomplete, AssetType.Enum.ServerNode))
+        LshwHelper.updateAsset(asset, parsed())
+        asset.getMetaAttribute(AssetMeta.Enum.DiskType) must beSome
+      }
+      "update asset LSHW with smaller profile" in new AssetUpdateHelper("lshw-small.xml") {
+        //lshw-small.xml has no disks
+        Asset.findByTag(assetTag).map{asset =>
+          LshwHelper.updateAsset(asset, parsed())
+          asset.getMetaAttribute(AssetMeta.Enum.DiskType) must beNone
+        }.getOrElse(failure("expected to find asset"))
+      }
+    }
   }
 
   class LshwCommonHelper(txt: String) extends Scope with test.models.CommonHelperSpec[LshwRepresentation] {
     def getParser(str: String) = new LshwParser(str)
     override def parsed(): LshwRepresentation = getParsed(txt)
+  }
+
+  class AssetUpdateHelper(txt: String) extends LshwCommonHelper(txt) {
+    val assetTag = "lshw-asset"
   }
 
 }
