@@ -1,4 +1,4 @@
-@(assets: Page[AssetView])(implicit flash: Flash, req: Request[AnyContent])
+@(assets: Page[AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import _root_.util.SoftLayer
@@ -6,7 +6,7 @@
 @import util.notice
 
 @link(newPage: Int) = @{
-  Pagination.paginate(app.routes.Resources.find(newPage, 50, "DESC", "and").toString, req.queryString)
+  Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "DESC", "and").toString), req.queryString)
 }
 @main("Asset Search Results") {
 <div class="page-header">
@@ -17,7 +17,7 @@
     @notice("message", Some("notice"))
     @notice("error")
     @notice("warning")
-    <table class="condensed-table zebra-striped sortable" data-size="50">
+    <table class="condensed-table zebra-striped @(if(clientSort) "sortable" else "")" data-size="50">
       <thead>
         <tr>
           <th>Asset Tag</th>
