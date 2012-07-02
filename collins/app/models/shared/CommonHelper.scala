@@ -4,6 +4,9 @@ trait CommonHelper[T] {
   type Reconstruction = Tuple2[T, Seq[MetaWrapper]]
   type FilteredSeq[T1] = Tuple2[Seq[T1], Map[Int, Seq[MetaWrapper]]]
 
+
+  val managedTags: Set[AssetMeta.Enum]
+
   /**
    * Construct an appropriate AssetMetaValue sequence from the representation
    */
@@ -18,17 +21,9 @@ trait CommonHelper[T] {
    * Given some representation, update an asset with appropriate values
    */
   def updateAsset(asset: Asset, rep: T): Boolean = {
-    // FIXME: Need to delete specific asset meta values before accepting an update
-    // FIXME: Came from LshwHelper
-
-    //FIXME: If a new LSHW/LLDP profile is missing meta values set on the old
-    //one, those will not be deleted, since at this point we have no way of
-    //knowing which tags belonged to the old one versus other unrelated tags
     val mvs = construct(asset, rep)
-    val existing = AssetMetaValue.findByAsset(asset)
-    val (exists, notExists) = mvs.partition{m => existing.find{m.asset_meta_id == _._value.asset_meta_id}.isDefined}
-    if (!exists.isEmpty) {
-      AssetMetaValue.deleteByAssetAndMetaId(asset, exists.map{_.asset_meta_id}.toSet)
+    if (!managedTags.isEmpty) {
+      AssetMetaValue.deleteByAssetAndMetaId(asset, managedTags.map{_.id.toLong})
     }
 
     mvs.size == AssetMetaValue.create(mvs)
