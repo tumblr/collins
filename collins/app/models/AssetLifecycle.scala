@@ -96,8 +96,10 @@ object AssetLifecycle {
         updateIncompleteServer(asset, options)
       case Status.Enum.New =>
         updateNewServer(asset, options)
+      case Status.Enum.Maintenance =>
+        updateMaintenanceServer(asset, options)
       case _ =>
-        Left(new Exception("Only updates for Incomplete and New servers are currently supported"))
+        Left(new Exception("Only updates for Incomplete, New, and Maintenance servers are currently supported"))
     }
   }
 
@@ -209,6 +211,22 @@ object AssetLifecycle {
         val newAsset = asset.copy(status = Status.Enum.New.id, updated = Some(new Date().asTimestamp))
         Asset.update(newAsset)
         InternalTattler.informational(newAsset, None, "Parsing and storing LSHW data succeeded")
+        true
+      }
+    }.left.map(e => handleException(asset, "Exception updating asset", e))
+  }
+
+  
+  protected def updateMaintenanceServer(asset: Asset, options: Map[String, String]): Status[Boolean] = {
+    //only lshw,lldp can be updated in maintenance mode
+    allCatch[Boolean].either {
+      Asset.inTransaction {
+        options.get("lshw").foreach{lshw => 
+          parseLshw(asset, new LshwParser(lshw, lshwConfig)).left.foreach{throw _}
+        }
+        options.get("lldp").foreach{lldp =>
+          parseLldp(asset, new LldpParser(lldp)).left.foreach{throw _}
+        }
         true
       }
     }.left.map(e => handleException(asset, "Exception updating asset", e))
