@@ -87,20 +87,32 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   // This is needed because if two clients both cause getNextAvailableAddress at the same time, they
   // both have the same value from getCurrentMaxAddress. One of them will successfully insert while
   // the other will fail. This allows a few retries before giving up.
-  protected def createWithRetry(retryCount: Int)(f: => T): T = {
-    (0 until retryCount).foreach { _ =>
+  protected def createWithRetry(retryCount: Int)(f: Int => T): T = {
+    var res: Option[T] = None
+    var i = 0
+    do {
       try {
-        val res = f
-        return res
+        res = Some(f(i)) 
       } catch {
         case e: SQLException =>
-        case e => throw e
+          logger.info("createAddressWithRetry attempt %d".format(i + 1))
+          res = None
+        case e: RuntimeException =>
+          logger.info("createAddressWithRetry attempt %d".format(i + 1))
+          res = None
+        case e =>
+          logger.warn("Uncaught exception %s".format(e.getMessage), e)
+          throw e
+      } finally {
+        i += 1
       }
-    }
-    throw new Exception("Unable to create address after %d tries".format(retryCount))
+    } while (!res.isDefined && i < retryCount)
+    res.getOrElse(
+      throw new RuntimeException("Unable to create address after %d tries".format(retryCount))
+    )
   }
 
-  protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long): Option[Long] = inTransaction {
+  protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long)(implicit scope: Option[String]): Option[Long] = inTransaction {
     from(tableDef)(t =>
       where(
         (t.address gte minAddress) and

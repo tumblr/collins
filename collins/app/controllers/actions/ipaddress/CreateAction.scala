@@ -9,6 +9,7 @@ import util.{ApiTattler, SecuritySpecification}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json._
+import java.sql.SQLException
 
 // Allocate addresses for an asset
 case class CreateAction(
@@ -36,7 +37,7 @@ case class CreateAction(
           )
         poolName.filter(_.nonEmpty).foreach { p =>
           if (!IpAddresses.AddressConfig.get.hasPool(p)) {
-            return Left(RequestDataHolder.error404("Pool %s does not exist".format(p)))
+            return Left(RequestDataHolder.error400("Pool %s does not exist".format(p)))
           }
         }
         Right(ActionDataHolder(asset, poolName.getOrElse(""), count.getOrElse(1)))
@@ -58,7 +59,12 @@ case class CreateAction(
       ApiTattler.notice(asset, userOption, "Created %d IP addresses".format(created.size))
       ResponseData(Status.Created, created.toJson)
     } catch {
-      case e => handleError(RequestDataHolder.error500("Possible IP address conflict"))
+      case e: SQLException =>
+        handleError(RequestDataHolder.error409("Possible duplicate IP address"))
+      case e =>
+        handleError(
+          RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage), e)
+        )
     }
   }
 }

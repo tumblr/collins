@@ -51,6 +51,12 @@ trait ProvisionUtil { self: SecureAction =>
           return Left(error)
         case _ =>
       }
+    else if (!plugin.canProvision(asset))
+      return Left(
+        RequestDataHolder.error403(
+          "Provisioning prevented by configuration. Asset does not have allowed status"
+        )
+      )
     validateProvision(plugin, asset, form)
   }
 
@@ -65,7 +71,7 @@ trait ProvisionUtil { self: SecureAction =>
         val role = request.profile.role
         validatePrimaryRole(role, primary_role)
           .right.flatMap(vrole => validatePool(vrole, pool))
-          .right.flatMap(vrole => validateSecondaryRole(vrole, pool))
+          .right.flatMap(vrole => validateSecondaryRole(vrole, secondary_role))
           .right.map(frole => request.profile.copy(role = frole))
           .right.map(profile => request.copy(profile = profile))
           .right.map { frequest =>
@@ -80,7 +86,7 @@ trait ProvisionUtil { self: SecureAction =>
     if (!asset.isIncomplete)
       Some(RequestDataHolder.error409("Asset status must be 'Incomplete'"))
     else if (!SoftLayer.plugin.isDefined)
-      Some(RequestDataHolder.error500("SoftLayer plugin not enabled"))
+      Some(RequestDataHolder.error501("SoftLayer plugin not enabled"))
     else if (!SoftLayer.plugin.get.isSoftLayerAsset(asset))
       Some(RequestDataHolder.error400("Asset not a SoftLayer asset"))
     else if (!SoftLayer.plugin.get.softLayerId(asset).isDefined)
@@ -126,8 +132,10 @@ trait ProvisionUtil { self: SecureAction =>
       Right(role)
     else if (prole.isDefined)
       Right(role.copy(primary_role = prole.map(_.toUpperCase)))
-    else
+    else if (role.requires_primary_role)
       Left(RequestDataHolder.error400("A primary_role is required but none was specified"))
+    else
+      Right(role)
   }
 
   protected def validateSecondaryRole(role: ProvisionerRole, srole: Option[String]): ValidOption = {
@@ -135,8 +143,10 @@ trait ProvisionUtil { self: SecureAction =>
       Right(role)
     else if (srole.isDefined)
       Right(role.copy(secondary_role = srole.map(_.toUpperCase)))
-    else
+    else if (role.requires_secondary_role)
       Left(RequestDataHolder.error400("A secondary_role is required but none was specified"))
+    else
+      Right(role)
   }
 
   protected def validatePool(role: ProvisionerRole, pool: Option[String]): ValidOption = {
@@ -144,12 +154,21 @@ trait ProvisionUtil { self: SecureAction =>
       Right(role)
     else if (pool.isDefined)
       Right(role.copy(pool = pool.map(_.toUpperCase)))
-    else
+    else if (role.requires_pool)
       Left(RequestDataHolder.error400("A pool is required but none was specified"))
+    else
+      Right(role)
   }
 }
 
 trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
+
+  protected def onSuccess() {
+    // Hook for rate limiting if needed
+  }
+  protected def onFailure() {
+    // additional hook
+  }
 
   protected def tattle(message: String, error: Boolean) {
     val tattler = isHtml match {
@@ -180,8 +199,12 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
           None
         case false =>
           tattle("Asset activation failed", true)
+          onFailure()
           Some(handleError(RequestDataHolder.error400("Asset activation failed")))
-      }.getOrElse(Api.statusResponse(true))
+      }.getOrElse {
+        onSuccess()
+        Api.statusResponse(true)
+      }
     }
   }
 
@@ -195,6 +218,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
       }
     }.flatMap {
       case Some(err) =>
+        onFailure()
         Akka.future(err)
       case None =>
         if (attribs.nonEmpty) {
@@ -209,12 +233,18 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
               tattle("Provisioning failed. Exit code %d\n%s".format(result.commandResult.exitCode,
                 result.commandResult.toString
               ), true)
+              onFailure()
               err
             }.orElse {
-              tattle("Successfully provisioned server as %s".format(pRequest.profile.identifier), false)
+              tattle(
+                "Successfully provisioned server as %s".format(pRequest.profile.identifier), false
+              )
               None
             }
-          }.getOrElse(Api.statusResponse(true))
+          }.getOrElse {
+            onSuccess()
+            Api.statusResponse(true)
+          }
         }
     }
   }
@@ -243,9 +273,9 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
       None
     case failure if failure.commandResult.exitCode != 0 =>
       Some(handleError(RequestDataHolder.error500(
-        "There was an error processing your request. Exit Code %d\n%s".format(
-          failure.commandResult.exitCode, failure.commandResult.toString
-        )
+        "There was an error processing your request. Exit Code %d".format(
+          failure.commandResult.exitCode
+        ), new Exception(failure.commandResult.toString)
       )))
   }
 

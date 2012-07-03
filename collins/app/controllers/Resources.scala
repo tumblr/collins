@@ -1,6 +1,6 @@
 package controllers
 
-import actions.asset.CreateAction
+import actions.asset.{CreateAction, FindSimilarAction}
 import actions.resources.{FindAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action}
 
 import models._
@@ -15,7 +15,7 @@ trait Resources extends Controller {
   this: SecureController =>
 
   def index = SecureAction { implicit req =>
-    Ok(html.resources.index(AssetMeta.getViewable()))
+    Ok(html.resources.index(AssetMeta.getViewable())).withHeaders("Content-Language" -> "en")
   }(Permissions.Resources.Index)
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
@@ -46,6 +46,9 @@ trait Resources extends Controller {
   def find(page: Int, size: Int, sort: String, operation: String) = FindAction(
     PageParams(page, size, sort), operation, Permissions.Resources.Find, this
   )
+
+  def similar(tag: String, page: Int, size: Int, sort: String) = 
+    FindSimilarAction(tag, PageParams(page, size, sort), Permissions.Resources.Find, this)
 
   def intake(id: Long, stage: Int = 1) = stage match {
     case 2 => IntakeStage2Action(id, Permissions.Resources.Intake, this)
