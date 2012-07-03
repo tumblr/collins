@@ -10,6 +10,8 @@ import play.api.libs.json._
 import play.api.libs.ws.WS
 import play.api._
 import play.api.mvc._
+import play.api.cache.Cache
+import play.api.Play.current
 
 import org.squeryl.Schema
 import org.squeryl.PrimitiveTypeMode._
@@ -21,6 +23,9 @@ import java.util.Date
 
 import akka.dispatch.Await
 import akka.util.duration._
+
+import SortDirection._
+import SortType._
 
 object AssetConfig {
   lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
@@ -152,6 +157,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
 
   def getId(): Long = id
   def isServerNode(): Boolean = asset_type == AssetType.Enum.ServerNode.id
+  def isConfiguration(): Boolean = asset_type == AssetType.Enum.Config.id
   def isIncomplete(): Boolean = status == models.Status.Enum.Incomplete.id
   def isNew(): Boolean = status == models.Status.Enum.New.id
   def isProvisioning(): Boolean = status == models.Status.Enum.Provisioning.id
@@ -185,13 +191,63 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   }
 
   def getAllAttributes: Asset.AllAttributes = {
-    val (lshwRep, mvs) = LshwHelper.reconstruct(this)
-    val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
-    val ipmi = IpmiInfo.findByAsset(this)
-    val addresses = IpAddresses.findAllByAsset(this)
-    val (powerRep, mvs3) = PowerHelper.reconstruct(this, mvs2)
-    val filtered: Seq[MetaWrapper] = mvs3.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
-    Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
+    if (isConfiguration) {
+      Asset.AllAttributes(this,
+        LshwRepresentation.empty,
+        LldpRepresentation.empty,
+        None, Seq(), PowerUnits(),
+        AssetMetaValue.findByAsset(this)
+      )
+    } else {
+      val (lshwRep, mvs) = LshwHelper.reconstruct(this)
+      val (lldpRep, mvs2) = LldpHelper.reconstruct(this, mvs)
+      val ipmi = IpmiInfo.findByAsset(this)
+      val addresses = IpAddresses.findAllByAsset(this)
+      val (powerRep, mvs3) = PowerHelper.reconstruct(this, mvs2)
+      val filtered: Seq[MetaWrapper] = mvs3.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
+      Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
+    }
+  }
+
+  /**
+   * Returns the nodeclass of this asset.  Nodeclass is found by getting all
+   * nodeclass assets and finding the first one whose meta values match the values
+   * of this asset
+   */
+  def nodeClass: Option[Asset] = {
+    import util.AttributeResolver._
+    val nodeclassType = Config.getString("nodeclass.assetType","CONFIGURATION").trim.toString
+    val enum = try AssetType.Enum.withName(nodeclassType) catch {
+      case e: java.util.NoSuchElementException => {
+        Logger.logger.error("Invalid nodeclass asset type \"%s\", defaulting to configuration type".format(nodeclassType))
+        AssetType.Enum.Config
+      }
+    }
+    val instanceFinder = AssetFinder
+      .empty
+      .copy ( 
+        assetType = Some(enum)
+      )
+    val nodeclassParams: ResolvedAttributes = EmptyResolvedAttributes
+      .withMeta(Config.getString("nodeclass.identifyingMetaTag", "IS_NODECLASS"), "true")
+    val nodeclasses = AssetMetaValue
+      .findAssetsByMeta(PageParams(0,50,"ASC"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
+      .items
+      .collect{case a: Asset => a}
+    nodeclasses.find{_.filteredMetaSet subsetOf this.metaSet}
+  }
+
+  private[models] def metaSet: Set[(AssetMeta,String)] = AssetMetaValue
+    .findByAsset(this)
+    .map{wrapper => (wrapper._meta -> wrapper._value.value)}
+    .toSet
+
+  /**
+   * Filters out nodeclass exluded tags from the meta set
+   */
+  private[models] def filteredMetaSet = {
+    val excludeMetaTags = Config.getString("nodeclass.excludeMetaTags","").split(",")
+    metaSet.filter{case(meta, value) => !(excludeMetaTags contains meta.name)}
   }
 
   def remoteHost = None
@@ -365,6 +421,38 @@ object Asset extends Schema with AnormAdapter[Asset] {
     val (items, total) = RemoteAssetFinder(remoteClients :+ LocalAssetClient, page, AssetSearchParameters(params, afinder, operation, details))
     Page(items, page.page, page.offset,total)
 
+  }
+
+  /**
+   * Finds assets in the same nodeclass as the given asset
+   */
+  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sortType: SortType): Page[AssetView] = {
+    val sorter = try SortDirection.withName(page.sort) catch {
+      case _ => {
+        logger.warn("Invalid sort " + page.sort)
+        SortDirection.Desc
+      }
+    }
+    asset.nodeClass.map{ nodeclass => 
+      logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
+      val unsortedItems:Page[AssetView] = find(
+        PageParams(0,1000, "asc"), //TODO: unbounded search
+        (Nil, nodeclass.filteredMetaSet.toSeq, Nil),
+        afinder,
+        Some("and")
+      )
+      val sortedItems = AssetDistanceSorter.sort(
+        asset, 
+        unsortedItems.items.collect{case a: Asset => a}.filter{_.tag != asset.tag}, 
+        sortType,
+        sorter
+      )
+      val sortedPage: Page[AssetView] = unsortedItems.copy(items = sortedItems.slice(page.offset, page.offset + page.size), total = sortedItems.size)
+      sortedPage
+    }.getOrElse{
+      logger.warn("No Nodeclass for Asset " + asset.tag)
+      Page.emptyPage
+    }
   }
 
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], power: PowerUnits, mvs: Seq[MetaWrapper]) {

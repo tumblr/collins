@@ -22,7 +22,8 @@ object Permissions {
   }
 
   object Feature extends PermSpec("feature") {
-    val CanSeePasswords = SecuritySpec.fromConfig("canSeePasswords", AdminSpec)
+    val CanSeePasswords = spec("canSeePasswords", AdminSpec)
+    val NoRateLimit = spec("noRateLimit", AdminSpec)
   }
 
   object Admin extends PermSpec("controllers.Admin") {
@@ -44,11 +45,11 @@ object Permissions {
       SecuritySpec.fromConfig("controllers.AssetApi.updateAssetForMaintenance", AdminSpec)
   }
 
-  object AssetLogApi {
-    val Spec = SecuritySpec.fromConfig("controllers.AssetLogApi", LoggedIn);
-    val Create = SecuritySpec.fromConfig("controllers.AssetLogApi.submitLogData", AdminSpec);
-    val Get = SecuritySpec.fromConfig("controllers.AssetLogApi.getLogData", Spec);
-    val GetAll = SecuritySpec.fromConfig("controllers.AssetLogApi.getAllLogData", Spec);
+  object AssetLogApi extends PermSpec("controllers.AssetLogApi") {
+    val Spec = spec(AdminSpec)
+    val Create = spec("submitLogData", Spec)
+    val Get = spec("getLogData", LoggedIn)
+    val GetAll = spec("getAllLogData", Spec)
   }
 
   object AssetManagementApi extends PermSpec("controllers.AssetManagementApi") {
@@ -56,6 +57,7 @@ object Permissions {
     val PowerStatus = spec("powerStatus", Spec)
     val PowerManagement = spec("powerManagement", AdminSpec)
     val ProvisionAsset = spec("provisionAsset", AdminSpec)
+    val GetProvisioningProfiles = spec("getProvisioningProfiles", AdminSpec)
   }
 
   object AssetWebApi extends PermSpec("controllers.AssetWebApi") {
