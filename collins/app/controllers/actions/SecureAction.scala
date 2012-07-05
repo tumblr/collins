@@ -58,11 +58,11 @@ abstract class SecureAction(
   def validateDelete(): Option[Validation] = None
   def validate(): Validation
 
-  def executeRead(rd: RequestDataHolder): Option[Result] = None
-  def executeWrite(rd: RequestDataHolder): Option[Result] = None
-  def executeCreate(rd: RequestDataHolder): Option[Result] = None
-  def executeDelete(rd: RequestDataHolder): Option[Result] = None
-  def execute(rd: RequestDataHolder): Result
+  def executeRead(rd: RequestDataHolder): Option[Promise[Result]] = None
+  def executeWrite(rd: RequestDataHolder): Option[Promise[Result]] = None
+  def executeCreate(rd: RequestDataHolder): Option[Promise[Result]] = None
+  def executeDelete(rd: RequestDataHolder): Option[Promise[Result]] = None
+  def execute(rd: RequestDataHolder): Promise[Result]
 
   def handleError(rd: RequestDataHolder): Result = {
     val htmlOutput = isHtml match {
@@ -149,7 +149,7 @@ abstract class SecureAction(
         None
     validationResults.getOrElse(validate())
   }
-  private def handleExecution(rd: RequestDataHolder): Result = {
+  private def handleExecution(rd: RequestDataHolder): Promise[Result] = {
     val executionResults =
       if (isReadRequest)
         executeRead(rd)
@@ -163,9 +163,9 @@ abstract class SecureAction(
         None
     executionResults.getOrElse(execute(rd))
   }
-  private def run(): Result = handleValidation() match {
-    case Left(rd) => handleError(rd)
-    case Right(rd) => handleExecution(rd) match {
+  private def run(): Promise[Result] = handleValidation() match {
+    case Left(rd) => PurePromise(handleError(rd))
+    case Right(rd) => handleExecution(rd) map {
       case p: PlainResult => p.withHeaders(getHeaders:_*)
       case o => o
     }
