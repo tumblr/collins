@@ -5,6 +5,19 @@ import util._
 object LldpHelper extends CommonHelper[LldpRepresentation] {
   import AssetMeta.Enum._
 
+  val managedTags = Set(
+    LldpInterfaceName,
+    LldpChassisName,
+    LldpChassisIdType,
+    LldpChassisIdValue,
+    LldpChassisDescription,
+    LldpPortIdType,
+    LldpPortIdValue,
+    LldpPortDescription,
+    LldpVlanId,
+    LldpVlanName
+  )
+
   def construct(asset: Asset, lldp: LldpRepresentation): Seq[AssetMetaValue] = {
     if (lldp.interfaceCount < 1) {
       return Seq()

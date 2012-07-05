@@ -15,6 +15,8 @@ object PowerHelper extends CommonHelper[PowerUnits] {
     throw new UnsupportedOperationException("construct not used for power")
   }
 
+  val managedTags = Set[AssetMeta.Enum]()
+
   case class Intermediary(units: Seq[PowerUnit] = Seq(), remaining: Seq[MetaWrapper] = Seq())
   def reconstruct(asset: Asset, allMeta: Seq[MetaWrapper]): Reconstruction = {
     val metaMap = allMeta.groupBy(_.getGroupId)

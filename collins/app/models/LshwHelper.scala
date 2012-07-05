@@ -5,6 +5,29 @@ import util._
 object LshwHelper extends CommonHelper[LshwRepresentation] {
   import AssetMeta.Enum._
 
+  val managedTags = Set(
+    ServiceTag,
+    ChassisTag,
+    RackPosition,
+    PowerPort,
+    CpuCount,
+    CpuCores,
+    CpuThreads,
+    CpuSpeedGhz,
+    CpuDescription,
+    MemorySizeBytes,
+    MemoryDescription,
+    MemorySizeTotal,
+    MemoryBanksTotal,
+    NicSpeed,
+    MacAddress,
+    NicDescription,
+    DiskSizeBytes,
+    DiskType,
+    DiskDescription,
+    DiskStorageTotal
+  )
+
   def construct(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     collectCpus(asset, lshw) ++
       collectMemory(asset, lshw) ++
