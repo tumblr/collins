@@ -7,9 +7,10 @@ import util.{OutputType, SecuritySpecification}
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.libs.concurrent.{Promise, PurePromise}
+import play.api.libs.concurrent.{Akka, Promise, PurePromise}
 import play.api.libs.json._
 import play.api.mvc._
+import play.api.Play.current
 
 import ApiResponse.formatResponseData
 
@@ -62,7 +63,9 @@ abstract class SecureAction(
   def executeWrite(rd: RequestDataHolder): Option[Promise[Result]] = None
   def executeCreate(rd: RequestDataHolder): Option[Promise[Result]] = None
   def executeDelete(rd: RequestDataHolder): Option[Promise[Result]] = None
-  def execute(rd: RequestDataHolder): Promise[Result]
+  def execute(rd: RequestDataHolder): Result
+
+  def executeAsync(rd: RequestDataHolder): Promise[Result] = Akka.future{execute(rd)}
 
   def handleError(rd: RequestDataHolder): Result = {
     val htmlOutput = isHtml match {
@@ -87,10 +90,7 @@ abstract class SecureAction(
       case Left(res) => AsyncResult {PurePromise(res)}
       case Right(user) => {
         setUser(user)
-        run() match {
-          case a: AsyncResult => a
-          case r: Result => AsyncResult{PurePromise(r)}
-        }
+        AsyncResult(run())
       }
     }
   }
@@ -161,7 +161,7 @@ abstract class SecureAction(
         executeDelete(rd)
       else
         None
-    executionResults.getOrElse(execute(rd))
+    executionResults.getOrElse(executeAsync(rd))
   }
   private def run(): Promise[Result] = handleValidation() match {
     case Left(rd) => PurePromise(handleError(rd))
