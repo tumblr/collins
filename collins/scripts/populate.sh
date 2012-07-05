@@ -11,11 +11,12 @@ lshw_files=($LshwFiles)
 num_lshw_files=${#lshw_files[*]}
 
 LldpFiles="single
+four-nic
 two-nic"
 lldp_files=($LldpFiles)
 num_lldp_files=${#lldp_files[*]}
 
-for i in `seq 120 1500`; do
+for i in `seq 10 50`; do
   TAG="tumblrtag${i}"
   LSHW_FILE="./test/resources/lshw-${lshw_files[$((RANDOM%num_lshw_files))]}.xml"
   LLDP_FILE="./test/resources/lldpctl-${lldp_files[$((RANDOM%num_lldp_files))]}.xml"

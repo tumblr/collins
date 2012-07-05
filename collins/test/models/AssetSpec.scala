@@ -54,14 +54,14 @@ class AssetSpec extends ApplicationSpecification {
           createAssetMetas(asset, metatags)
           asset
         }}
-        val finder = AssetFinder.Empty.copy(
+        val finder = AssetFinder.empty.copy(
           status = Some(Status.Enum.Unallocated),
           assetType = Some(AssetType.Enum.ServerNode)
         )
         val expected = assets.filter{_.tag == similarAssetTag}
         val page = PageParams(0,10, "")
         Asset.findByTag(assetTag).map{asset =>
-          Asset.findSimilar(asset, page, finder, "sparse").items must_== expected
+          Asset.findSimilar(asset, page, finder, SortType.Distribution).items must_== expected
         }.getOrElse(failure("Couldn't find asset but expected to"))
 
       }
@@ -115,7 +115,6 @@ class AssetSpec extends ApplicationSpecification {
 
   trait mocknodeclass extends Scope {
     def createAssetMetas(asset: Asset, metamap: Map[String, String]) = metamap
-
       .map{ case (k,v) => 
         AssetMetaValue.create(AssetMetaValue(asset.id, AssetMeta.findOrCreateFromName(k).id, 0, v))
       }
@@ -123,7 +122,7 @@ class AssetSpec extends ApplicationSpecification {
     val nodeclassStatus = Status.Enum.Allocated
     val nodeclassType = AssetType.Enum.Config
     val nodeclassIdentifierTag = ("IS_NODECLASS" -> "true")
-    val nodeclassMetaTags = Map("FOO" -> "BAR", "BAZ" -> "BAAAAZ")
+    val nodeclassMetaTags = Map("FOOT1" -> "BAR", "BAZT1" -> "BAAAAZ")
     val assetTag = "nodeclasstest"
     val assetStatus = Status.Enum.Allocated
     val assetType = AssetType.Enum.ServerNode

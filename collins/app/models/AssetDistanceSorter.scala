@@ -65,27 +65,30 @@ object SortDirection extends Enumeration {
 }
 import SortDirection._
 
+object SortType extends Enumeration {
+  type SortType = Value
+  val Name = Value("name")
+  val Distance = Value("distance")
+  val Distribution = Value("distribution")
+  val Arbitrary = Value("arbitrary")
+}
+import SortType._
 
 object AssetDistanceSorter {
+  
+  def sortKeys = Config.getString("nodeclass.sortKeys","")
 
   def sort(
     target: Asset, 
     similarAssets: Seq[Asset], 
-    sorter: String, 
+    sortType: SortType, 
     direction: SortDirection
-  ): Seq[Asset] = {
-    def sparseSort = distributionSort(target, similarAssets, direction,Config.getString("nodeclass.sortKeys", ""))
-    sorter match {
-      case "name" => genericSort(target, similarAssets, new MockAssetNameEval, direction)
-      case "distance" => genericSort(target, similarAssets, new PhysicalDistanceEval(Config.getString("nodeclass.sortKeys","")), direction)
-
-      /** Asc means sparse search, Desc means dense search */
-      case "sparse" => sparseSort
-      case _ => {
-        Logger.logger.warn("Unknown sort type %s, defaulting to sparse")
-        sparseSort
-      }
-    }
+  ): Seq[Asset] = sortType match {
+    case Name => genericSort(target, similarAssets, new MockAssetNameEval, direction)
+    case Distance => genericSort(target, similarAssets, new PhysicalDistanceEval(sortKeys), direction)
+    /** Asc means sparse search, Desc means dense search */
+    case Distribution => distributionSort(target, similarAssets, direction, sortKeys)
+    case Arbitrary => similarAssets
   }
 
   def distributionSort(target: Asset, similar: Seq[Asset], direction: SortDirection, config: String) = {
