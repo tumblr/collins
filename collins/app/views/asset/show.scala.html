@@ -50,7 +50,8 @@
           @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
 	    @slLink(aa.asset, aa.asset.tag)
 	  }.getOrElse{<td>@aa.asset.tag</td>}
-          <td><a href="@app.routes.Resources.similar(aa.asset.tag)"/>Find Similar Assets</a></td>
+          <td>Find Similar Assets:<a href="@app.routes.Resources.similar(aa.asset.tag)"/>Unallocated</a>,
+          <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false"/>All</a></td>
         </tr>
         <tr>
           <th>Asset Type</th>
@@ -339,13 +340,13 @@
         <tr>
           <th>VLAN ID</th>
           @aa.lldp.interfaces.map { interface =>
-          <td>@interface.vlan.id</td>
+          <td>@interface.vlans.map(_.id).mkString(",")</td>
           }
         </tr>
         <tr>
           <th>VLAN Name</th>
           @aa.lldp.interfaces.map { interface =>
-          <td>@interface.vlan.name</td>
+          <td>@interface.vlans.map(_.name).mkString(",")</td>
           }
         </tr>
       </tbody>
