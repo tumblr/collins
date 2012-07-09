@@ -219,11 +219,13 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
   def list(asset: Option[Asset], page: Int = 0, pageSize: Int = 10, sort: String = "DESC", filter: String = ""): Page[AssetLog] = inTransaction {
     val offset = pageSize * page
     val asset_id = asset.map(_.getId)
-    val results = from(tableDef)(a =>
+    val query = from(tableDef)(a =>
       where(whereClause(a, asset_id, filter))
       select(a)
       orderBy(a.id.withSort(sort))
-    ).page(offset, pageSize).toList
+    )
+    val paginatedQuery = optionallyPaginate(query, offset, pageSize)
+    val results = paginatedQuery.toList
     val totalCount = from(tableDef)(a =>
       where(whereClause(a, asset_id, filter))
       compute(count)

@@ -3,7 +3,7 @@ package models
 import util.plugins.Cache
 
 import play.api.Logger
-import org.squeryl.{KeyedEntity, Schema, Table}
+import org.squeryl.{KeyedEntity, Query, Schema, Table}
 import org.squeryl.dsl.QueryDsl
 import org.squeryl.dsl.ast.LogicalBoolean
 import org.squeryl.internals.PosoLifecycleEvent
@@ -37,14 +37,6 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
     afterInsert(tableDef) call(loggedInvalidation("afterInsert", _))
   )
 
-  protected def loggedInvalidation(s: String, t: T) {
-    logger.trace("Callback triggered: %s".format(s))
-    cacheKeys(t).map { k =>
-      logger.trace("Invalidating key %s".format(k))
-      Cache.invalidate(k)
-    }
-  }
-
   def create(t: T): T = inTransaction {
     val newValue = tableDef.insert(t)
     createEventName.map { name =>
@@ -54,6 +46,26 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
   }
 
   def delete(t: T): Int // Override
+
+  /** Optionally return a paginated query
+   *
+   * If either the offset or pageSize are non-zero, pagination is applied. Otherwise, the query is
+   * given back without pagination being applied.
+   */
+  protected def optionallyPaginate[A](query: Query[A], offset: Int, pageSize: Int): Query[A] =
+    if (offset == 0 && pageSize == 0) {
+      query
+    } else {
+      query.page(offset, pageSize)
+    }
+
+  protected def loggedInvalidation(s: String, t: T) {
+    logger.trace("Callback triggered: %s".format(s))
+    cacheKeys(t).map { k =>
+      logger.trace("Invalidating key %s".format(k))
+      Cache.invalidate(k)
+    }
+  }
 
   protected def afterDeleteCallback[A](t: T)(f: => A): A = {
     val result = f
