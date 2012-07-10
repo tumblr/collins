@@ -67,11 +67,11 @@ sealed private[models] class PossibleRegex(left: StringExpression[String]) {
   protected def wrapRegex(pattern: String): String = {
     val prefixed = pattern.startsWith("^") match {
       case true => pattern
-      case false => ".*" + pattern.stripPrefix(".*")
+      case false => ".*" + pattern.stripPrefix(".*").stripPrefix("*")
     }
     pattern.endsWith("$") match {
       case true => prefixed
-      case false => prefixed.stripSuffix(".*") + ".*"
+      case false => prefixed.stripSuffix(".*").stripSuffix("*") + ".*"
     }
   }
 
