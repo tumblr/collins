@@ -12,7 +12,10 @@ libraryDependencies ++= Seq(
   "com.google.guava" % "guava" % "11.0",
   "com.yammer.metrics" %% "metrics-scala" % "2.1.1",
   "mysql" % "mysql-connector-java" % "5.1.19",
-  "com.h2database" % "h2" % "1.3.158"
+  "com.h2database" % "h2" % "1.3.158",
+  "org.apache.solr" % "solr-solrj" % "3.6.0",
+  "org.apache.solr" % "solr-core"  % "3.6.0",
+  "javax.servlet" % "servlet-api" % "2.5"
 )
 
 
