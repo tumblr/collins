@@ -91,7 +91,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
         collectParams(ipmi, ipmiRow)
       )
     }
-    inTransaction {
+    inTransaction { log {
       val results = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
         whereClause(assetRow, ipmiRow)
         select(assetRow)
@@ -101,7 +101,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
         compute(count)
       )
       Page(results, page.page, page.offset, totalCount)
-    }
+    }}
   }
 
   override def get(i: IpmiInfo) = getOrElseUpdate(getKey.format(i.id)) {

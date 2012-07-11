@@ -111,7 +111,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     deleteByAssetIdAndMetaId(asset.id, meta_id, None)
   }
 
-  def find(mv: AssetMetaValue, useValue: Boolean, groupId: Option[Int]): Option[AssetMetaValue] = inTransaction {
+  def find(mv: AssetMetaValue, useValue: Boolean, groupId: Option[Int]): Option[AssetMetaValue] = inTransaction { log {
     from(tableDef)(a =>
       where {
         a.asset_id === mv.asset_id and
@@ -121,7 +121,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       }
       select(a)
     ).headOption
-  }
+  }}
 
   def findAssetsByMeta(page: PageParams, toFind: AssetMetaFinder, afinder: AssetFinder,
                        op: Option[String]): Page[AssetView] = {
@@ -130,7 +130,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       val i = includes(asset, toFind, op)
       mergeBooleans(e, i)
     }
-    inTransaction {
+    inTransaction { log {
       logger.debug("Starting asset collection")
       val assets = from(Asset.tableDef)(asset =>
         where(whereClause(asset) and afinder.asLogicalBoolean(asset))
@@ -142,7 +142,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       )
       logger.debug("Finished asset collection")
       Page(assets, page.page, page.offset, totalCount)
-    }
+    }}
   }
 
   def findByAsset(asset: Asset): Seq[MetaWrapper] = {
