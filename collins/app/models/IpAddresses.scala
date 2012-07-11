@@ -106,7 +106,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
         finder.asLogicalBoolean(assetRow)
       )
     }
-    inTransaction {
+    inTransaction { log {
       val results = from(Asset.tableDef, tableDef)((assetRow, addressRow) =>
         whereClause(assetRow, addressRow)
         select(assetRow)
@@ -116,10 +116,10 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
         compute(count)
       )
       Page(results, page.page, page.offset, totalCount)
-    }
+    }}
   }
 
-  def findByAddress(address: String): Option[Asset] = inTransaction {
+  def findByAddress(address: String): Option[Asset] = inTransaction { log {
     val addressAsLong = try {
       IpAddress.toLong(address)
     } catch {
@@ -132,14 +132,14 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
       )
       select(a)
     ).headOption
-  }
+  }}
 
-  def findInPool(pool: String): Seq[IpAddresses] = inTransaction {
+  def findInPool(pool: String): Seq[IpAddresses] = inTransaction { log {
     from(tableDef)(i =>
       where(i.pool === pool)
       select(i)
     ).toList
-  }
+  }}
 
   override def get(i: IpAddresses) = getOrElseUpdate(getKey.format(i.id)) {
     tableDef.lookup(i.id).get
