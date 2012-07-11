@@ -7,9 +7,10 @@ import util.{OutputType, SecuritySpecification}
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms._
-import play.api.libs.concurrent.Promise
+import play.api.libs.concurrent.{Akka, Promise, PurePromise}
 import play.api.libs.json._
 import play.api.mvc._
+import play.api.Play.current
 
 import ApiResponse.formatResponseData
 
@@ -58,11 +59,13 @@ abstract class SecureAction(
   def validateDelete(): Option[Validation] = None
   def validate(): Validation
 
-  def executeRead(rd: RequestDataHolder): Option[Result] = None
-  def executeWrite(rd: RequestDataHolder): Option[Result] = None
-  def executeCreate(rd: RequestDataHolder): Option[Result] = None
-  def executeDelete(rd: RequestDataHolder): Option[Result] = None
+  def executeRead(rd: RequestDataHolder): Option[Promise[Result]] = None
+  def executeWrite(rd: RequestDataHolder): Option[Promise[Result]] = None
+  def executeCreate(rd: RequestDataHolder): Option[Promise[Result]] = None
+  def executeDelete(rd: RequestDataHolder): Option[Promise[Result]] = None
   def execute(rd: RequestDataHolder): Result
+
+  def executeAsync(rd: RequestDataHolder): Promise[Result] = Akka.future{execute(rd)}
 
   def handleError(rd: RequestDataHolder): Result = {
     val htmlOutput = isHtml match {
@@ -81,13 +84,14 @@ abstract class SecureAction(
   def handleWebError(rd: RequestDataHolder): Option[Result] = None
 
   final override def parser: BodyParser[AnyContent] = BodyParsers.parse.anyContent
-  final override def apply(req: Request[AnyContent]): Result = {
+  final override def apply(req: Request[AnyContent]): AsyncResult = {
     setRequest(req)
     checkAuthorization() match {
-      case Left(res) => res
-      case Right(user) =>
+      case Left(res) => AsyncResult {PurePromise(res)}
+      case Right(user) => {
         setUser(user)
-        run()
+        AsyncResult(run())
+      }
     }
   }
 
@@ -145,7 +149,7 @@ abstract class SecureAction(
         None
     validationResults.getOrElse(validate())
   }
-  private def handleExecution(rd: RequestDataHolder): Result = {
+  private def handleExecution(rd: RequestDataHolder): Promise[Result] = {
     val executionResults =
       if (isReadRequest)
         executeRead(rd)
@@ -157,11 +161,11 @@ abstract class SecureAction(
         executeDelete(rd)
       else
         None
-    executionResults.getOrElse(execute(rd))
+    executionResults.getOrElse(executeAsync(rd))
   }
-  private def run(): Result = handleValidation() match {
-    case Left(rd) => handleError(rd)
-    case Right(rd) => handleExecution(rd) match {
+  private def run(): Promise[Result] = handleValidation() match {
+    case Left(rd) => PurePromise(handleError(rd))
+    case Right(rd) => handleExecution(rd) map {
       case p: PlainResult => p.withHeaders(getHeaders:_*)
       case o => o
     }
