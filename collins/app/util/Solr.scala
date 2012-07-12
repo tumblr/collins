@@ -1,6 +1,6 @@
 package util.plugins
 
-import models.{Asset, AssetFinder, AssetMetaValue, AssetView, MetaWrapper, PageParams}
+import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetView, MetaWrapper, PageParams, Truthy}
 
 import org.apache.solr.client.solrj._
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
@@ -18,7 +18,7 @@ class SolrPlugin(app: Application) extends Plugin {
 
   private def config = app.configuration.getConfig("solr")
 
-  lazy val solrHome = config.flatMap{_.getString("solrHome")}.getOrElse(throw new Exception("No solrHome set!"))
+  lazy val solrHome = config.flatMap{_.getString("embeddedSolrHome")}.getOrElse(throw new Exception("No solrHome set!"))
   override lazy val enabled = config.flatMap{_.getBoolean("enabled")}.getOrElse(false)
   lazy val useEmbedded = config.flatMap{_.getBoolean("useEmbedded")}.getOrElse(true)
 
@@ -122,10 +122,16 @@ class FlatSerializer extends AssetSolrSerializer {
     "assetType" -> SolrIntValue(asset.getType.id)
   ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))
 
+  import AssetMeta.ValueType._
+
   def serializeMetaValues(values: Seq[MetaWrapper]) = {
     def process(build: AssetSolrDocument, remain: Seq[MetaWrapper]): AssetSolrDocument = remain match {
       case head :: tail => {
-        val newval = SolrStringValue(head.getValue())
+        val newval = head.getValueType() match {
+          case Boolean => SolrBooleanValue((new Truthy(head.getValue())).isTruthy)
+          case Number => SolrIntValue(Integer.parseInt(head.getValue()))
+          case _ => SolrStringValue(head.getValue())
+        }
         val mergedval = build.get(head.getName()) match {
           case Some(exist) => exist match {
             case s: SolrSingleValue => SolrMultiValue(s :: newval :: Nil)

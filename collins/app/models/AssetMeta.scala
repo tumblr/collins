@@ -10,12 +10,15 @@ case class AssetMeta(
     priority: Int,
     label: String,
     description: String,
-    id: Long = 0) extends ValidatedEntity[Long]
+    id: Long = 0,
+    value_type: String = "STRING"
+    ) extends ValidatedEntity[Long]
 {
   override def validate() {
     require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
     require(AssetMeta.isValidName(name), "Name must be all upper case, alpha numeric (and hyphens)")
     require(description != null && description.length > 0, "Need a description")
+    require(AssetMeta.ValueType.valStrings(value_type), "Invalid value_type, must be one of [%s]".format(AssetMeta.ValueType.valStrings.mkString(",")))
   }
   override def asJson: String = {
     Json.stringify(JsObject(Seq(
@@ -27,6 +30,8 @@ case class AssetMeta(
     )))
   }
   def getId(): Long = id
+
+  def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType.withName(value_type)
 }
 
 object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
@@ -63,8 +68,14 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     tableDef.lookup(id)
   }
 
-  def findOrCreateFromName(name: String): AssetMeta = findByName(name).getOrElse {
-    create(AssetMeta(name.toUpperCase, -1, name.toLowerCase.capitalize, name))
+  def findOrCreateFromName(name: String, valueType: ValueType = ValueType.String): AssetMeta = findByName(name).getOrElse {
+    create(AssetMeta(
+      name = name.toUpperCase, 
+      priority = -1, 
+      label = name.toLowerCase.capitalize, 
+      description = name,
+      value_type = valueType.toString
+    ))
     findByName(name).get
   }
 
@@ -84,6 +95,15 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
       select(a)
       orderBy(a.priority asc)
     ).toList
+  }
+
+  type ValueType = ValueType.Value
+  object ValueType extends Enumeration {
+    val String = Value("STRING")
+    val Number = Value("NUMBER")
+    val Boolean = Value("BOOLEAN")
+
+    def valStrings = values.map{_.toString}
   }
 
   type Enum = Enum.Value
