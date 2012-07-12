@@ -38,7 +38,8 @@ class SolrSpec extends ApplicationSpecification {
   def generateAsset(tag: String, assetType: AssetType.Enum, status: Status.Enum, metaValues: Seq[(String, ValueType, Int, String)]) = {
     val asset = Asset.create(Asset(tag, status, assetType))
     metaValues.foreach{case (name, value_type, group_id, value) =>
-      AssetMetaValue.create(AssetMetaValue(asset.id, AssetMeta.findOrCreateFromName(name, value_type).id, group_id, value))
+      val meta = AssetMeta.findOrCreateFromName(name, value_type)
+      AssetMetaValue.create(AssetMetaValue(asset.id, meta.id, group_id, value))
     }
     asset
   }
