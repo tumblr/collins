@@ -23,17 +23,19 @@ class SolrSpec extends ApplicationSpecification {
         ("double", Double, 0, "3.1415"),
         ("bool", Boolean, 0, "false")
       )
+      val asset = generateAsset(assetTag, assetType, status, meta)
       val expected = Map(
         "tag" -> SolrStringValue(assetTag),
         "status" -> SolrStringValue(status.toString),
         "assetType" -> SolrIntValue(assetType.id),
+        "created" -> SolrStringValue(asset.created.toString),
         "A_meta_s" -> SolrMultiValue(SolrStringValue("a") :: SolrStringValue("a1") :: Nil),
         "B_meta_s" -> SolrStringValue("b"),
         "INT_meta_i" -> SolrIntValue(1135),
         "DOUBLE_meta_d" -> SolrDoubleValue(3.1415),
         "BOOL_meta_b" -> SolrBooleanValue(false)
       )
-      (new FlatSerializer).serialize(generateAsset(assetTag, assetType, status, meta)) must_== expected
+      (new FlatSerializer).serialize(asset) must_== expected
     }
   }
 

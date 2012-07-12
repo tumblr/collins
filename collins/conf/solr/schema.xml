@@ -897,13 +897,13 @@
    <field name="asset_type" type="int" indexed="true" stored="true" required="true"/>
    <field name="status" type="int" indexed="true" stored="true" required="true"/>
    <field name="created" type="date" indexed="true" stored="true" requred="true"/>
-   <field name="updated" type="date" indexed="true" stored="true" requred="true"/>
+   <field name="updated" type="date" indexed="true" stored="true" requred="false"/>
    <field name="deleted" type="date" indexed="true" stored="true" requred="false"/>
 
-   <dynamicField name="*_meta_i"  type="int"    indexed="true"  stored="true"/>
-   <dynamicField name="*_meta_s"  type="string"  indexed="true"  stored="true"/>
-   <dynamicField name="*_meta_b"  type="boolean" indexed="true"  stored="true"/>
-   <dynamicField name="*_meta_d"  type="double" indexed="true"  stored="true"/>
+   <dynamicField name="*_meta_i"  type="int"    indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_meta_s"  type="string"  indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_meta_b"  type="boolean" indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_meta_d"  type="double" indexed="true"  stored="true" multiValued="true"/>
 
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->

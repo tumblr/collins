@@ -137,11 +137,19 @@ trait AssetSolrSerializer {
  */
 class FlatSerializer extends AssetSolrSerializer {
 
-  def serialize(asset: Asset) = Map[String, SolrValue](
-    "tag" -> SolrStringValue(asset.tag),
-    "status" -> SolrStringValue(asset.getStatusName()),
-    "assetType" -> SolrIntValue(asset.getType.id)
-  ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))
+  def serialize(asset: Asset) = {
+    val opt = Map[String, Option[SolrValue]](
+      "updated" -> asset.updated.map{t => SolrStringValue(t.toString)},
+      "deleted" -> asset.deleted.map{t => SolrStringValue(t.toString)}
+    ).collect{case(k, Some(v)) => (k,v)}
+      
+    opt ++ Map[String, SolrValue](
+      "tag" -> SolrStringValue(asset.tag),
+      "status" -> SolrStringValue(asset.getStatusName()),
+      "assetType" -> SolrIntValue(asset.getType.id),
+      "created" -> SolrStringValue(asset.created.toString)
+    ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))
+  }
 
   
   //FIXME: The parsing logic here is duplicated in AssetMeta.validateValue
