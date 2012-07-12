@@ -19,7 +19,8 @@ class SolrSpec extends ApplicationSpecification {
         ("A",String, 0,"a"),
         ("B",String, 0,"b"),
         ("A",String, 1,"a1"),
-        ("num", Number, 0, "1135"),
+        ("int", Integer, 0, "1135"),
+        ("double", Double, 0, "3.1415"),
         ("bool", Boolean, 0, "false")
       )
       val expected = Map(
@@ -28,7 +29,8 @@ class SolrSpec extends ApplicationSpecification {
         "assetType" -> SolrIntValue(assetType.id),
         "A" -> SolrMultiValue(SolrStringValue("a") :: SolrStringValue("a1") :: Nil),
         "B" -> SolrStringValue("b"),
-        "NUM" -> SolrIntValue(1135),
+        "INT" -> SolrIntValue(1135),
+        "DOUBLE" -> SolrDoubleValue(3.1415),
         "BOOL" -> SolrBooleanValue(false)
       )
       (new FlatSerializer).serialize(generateAsset(assetTag, assetType, status, meta)) must_== expected

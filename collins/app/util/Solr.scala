@@ -96,6 +96,7 @@ sealed trait SolrValue {
 
 trait SolrSingleValue extends SolrValue 
 case class SolrIntValue(value: Int) extends SolrSingleValue
+case class SolrDoubleValue(value: Double) extends SolrSingleValue
 case class SolrStringValue(value: String) extends SolrSingleValue
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue
 
@@ -123,13 +124,15 @@ class FlatSerializer extends AssetSolrSerializer {
   ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))
 
   import AssetMeta.ValueType._
-
+  
+  //FIXME: The parsing logic here is duplicated in AssetMeta.validateValue
   def serializeMetaValues(values: Seq[MetaWrapper]) = {
     def process(build: AssetSolrDocument, remain: Seq[MetaWrapper]): AssetSolrDocument = remain match {
       case head :: tail => {
         val newval = head.getValueType() match {
           case Boolean => SolrBooleanValue((new Truthy(head.getValue())).isTruthy)
-          case Number => SolrIntValue(Integer.parseInt(head.getValue()))
+          case Integer => SolrIntValue(java.lang.Integer.parseInt(head.getValue()))
+          case Double => SolrDoubleValue(java.lang.Double.parseDouble(head.getValue()))
           case _ => SolrStringValue(head.getValue())
         }
         val mergedval = build.get(head.getName()) match {
