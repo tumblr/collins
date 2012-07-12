@@ -8,6 +8,7 @@ import org.squeryl.dsl.QueryDsl
 import org.squeryl.dsl.ast.LogicalBoolean
 import org.squeryl.internals.PosoLifecycleEvent
 import scala.transient
+import util.Config
 
 trait ValidatedEntity[T] extends KeyedEntity[T] {
   def validate(): Unit
@@ -36,6 +37,17 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
     afterUpdate(tableDef) call(loggedInvalidation("afterUpdate", _)),
     afterInsert(tableDef) call(loggedInvalidation("afterInsert", _))
   )
+
+  protected def log[A](a: => A): A = {
+    if (Config.getBoolean("querylog.enabled").getOrElse(false)) {
+      org.squeryl.Session.currentSession.setLogger(query => 
+        if (Config.getBoolean("querylog.includeResults").getOrElse(false) || !(query startsWith "ResultSetRow")) {
+          Logger.logger.debug(Config.getString("querylog.prefix", "") + query)
+        }
+      )
+    }
+    a
+  }
 
   def create(t: T): T = inTransaction {
     val newValue = tableDef.insert(t)
@@ -106,6 +118,7 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
       case _ => 0
     }
   }
+
 
   override def callbacks = super.callbacks ++ Seq(
     beforeInsert(tableDef) call(_.validate),

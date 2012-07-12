@@ -325,7 +325,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, afinder: AssetFinder): Page[AssetView] = inTransaction {
+  def find(page: PageParams, afinder: AssetFinder): Page[AssetView] = inTransaction { log {
     val results = from(tableDef)(a =>
       where(afinder.asLogicalBoolean(a))
       select(a)
@@ -335,9 +335,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
       compute(count)
     )
     Page(results, page.page, page.offset, totalCount)
-  }
+  }}
 
-  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[AssetView] = inTransaction {
+  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[AssetView] = inTransaction { log {
     assets.size match {
       case 0 => Page(Seq(), page.page, page.offset, 0)
       case n =>
@@ -355,7 +355,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
         logger.debug("Finished Asset.find find")
         Page(results, page.page, page.offset, totalCount)
     }
-  }
+  }}
 
   def findById(id: Long) = getOrElseUpdate("Asset.findById(%d)".format(id)) {
     tableDef.lookup(id)
@@ -368,7 +368,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def findLikeTag(tag: String, params: PageParams): Page[AssetView] = inTransaction {
+  def findLikeTag(tag: String, params: PageParams): Page[AssetView] = inTransaction { log {
     val results = from(tableDef)(a =>
       where(a.tag.withPossibleRegex(tag))
       select(a)
@@ -379,7 +379,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       compute(count)
     )
     Page(results, params.page, params.offset, totalCount)
-  }
+  }}
 
   /**
    * Finds assets across multiple collins instances.  Data for instances are
