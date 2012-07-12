@@ -35,7 +35,7 @@ case class AssetMeta(
   def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType.withName(value_type)
 
   def validateValue(value: String): Boolean = getValueType() match {
-    case AssetMeta.ValueType.Number => try {
+    case AssetMeta.ValueType.Integer => try {
       Integer.parseInt(value)
       true
     } catch {
@@ -43,6 +43,12 @@ case class AssetMeta(
     }
     case AssetMeta.ValueType.Boolean => try {
       new Truthy(value)
+      true
+    } catch {
+      case _ => false
+    }
+    case AssetMeta.ValueType.Double => try {
+      java.lang.Double.parseDouble(value)
       true
     } catch {
       case _ => false
@@ -117,7 +123,8 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
   type ValueType = ValueType.Value
   object ValueType extends Enumeration {
     val String = Value("STRING")
-    val Number = Value("NUMBER")
+    val Integer = Value("Integer")
+    val Double = Value("Double")
     val Boolean = Value("BOOLEAN")
 
     def valStrings = values.map{_.toString}
