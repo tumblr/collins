@@ -6,6 +6,7 @@ import org.apache.solr.client.solrj._
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.core.CoreContainer
+import org.apache.solr.client.solrj.impl.{HttpSolrServer, XMLResponseParser}
 
 import play.api.{Application, Configuration, Logger, Play, PlayException, Plugin}
 
@@ -15,19 +16,39 @@ class SolrPlugin(app: Application) extends Plugin {
 
   def server = _server.get //FIXME: make the thrown exception more descriptive
 
-  lazy val solrHome = app.configuration.getConfig("solr").flatMap{_.getString("solrHome")}.getOrElse(throw new Exception("No solrHome set!"))
-  override lazy val enabled = app.configuration.getConfig("solr").flatMap{_.getBoolean("enabled")}.getOrElse(false)
+  private def config = app.configuration.getConfig("solr")
+
+  lazy val solrHome = config.flatMap{_.getString("solrHome")}.getOrElse(throw new Exception("No solrHome set!"))
+  override lazy val enabled = config.flatMap{_.getBoolean("enabled")}.getOrElse(false)
+  lazy val useEmbedded = config.flatMap{_.getBoolean("useEmbedded")}.getOrElse(true)
 
   val serializer = new FlatSerializer
 
 
   override def onStart() {
     if (enabled) {
-      System.setProperty("solr.solr.home",solrHome);
-      val initializer = new CoreContainer.Initializer();
-      val coreContainer = initializer.initialize();
-      Logger.logger.debug("Booting embedded Solr Server")
-      _server = Some(new EmbeddedSolrServer(coreContainer, ""))
+      _server = Some(if (useEmbedded) {
+        System.setProperty("solr.solr.home",solrHome);
+        val initializer = new CoreContainer.Initializer();
+        val coreContainer = initializer.initialize();
+        Logger.logger.debug("Booting embedded Solr Server")
+        new EmbeddedSolrServer(coreContainer, "")
+      } else {
+        //out-of-the-box config from solrj wiki
+        val url = app.configuration.getConfig("solr").flatMap{_.getString("externalUrl")}.getOrElse(throw new Exception("Missing required solr.externalUrl"))
+        val server = new HttpSolrServer( url );
+        server.setSoTimeout(1000);  // socket read timeout
+        server.setConnectionTimeout(100);
+        server.setDefaultMaxConnectionsPerHost(100);
+        server.setMaxTotalConnections(100);
+        server.setFollowRedirects(false);  // defaults to false
+        // allowCompression defaults to false.
+        // Server side must support gzip or deflate for this to have any effect.
+        server.setAllowCompression(true);
+        server.setMaxRetries(1); // defaults to 0.  > 1 not recommended.
+        server.setParser(new XMLResponseParser()); // binary parser is used by default
+        server
+      })
       populate()
     }
   }
