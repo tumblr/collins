@@ -21,6 +21,7 @@ class SolrPlugin(app: Application) extends Plugin {
   lazy val solrHome = config.flatMap{_.getString("embeddedSolrHome")}.getOrElse(throw new Exception("No solrHome set!"))
   override lazy val enabled = config.flatMap{_.getBoolean("enabled")}.getOrElse(false)
   lazy val useEmbedded = config.flatMap{_.getBoolean("useEmbedded")}.getOrElse(true)
+  lazy val repopulateOnStartup = config.flatMap{_.getBoolean("repopulateonStartup")}.getOrElse(false)
 
   val serializer = new FlatSerializer
 
@@ -49,13 +50,18 @@ class SolrPlugin(app: Application) extends Plugin {
         server.setParser(new XMLResponseParser()); // binary parser is used by default
         server
       })
-      populate()
+      if (repopulateOnStartup) {
+        populate()
+      }
     }
   }
 
-  protected def populate() {
-    Logger.logger.debug("Populating Solr with Assets")
-    Asset.find(PageParams(0,0,"asc"), AssetFinder.empty).items.collect{case a:Asset => a}.foreach{asset => Solr.insert(Solr.prepForInsertion(serializer.serialize(asset)))}
+  protected def populate() { 
+    _server.map{ server => 
+      server.deleteByQuery( "*:*" );
+      Logger.logger.debug("Populating Solr with Assets")
+      Asset.find(PageParams(0,0,"asc"), AssetFinder.empty).items.collect{case a:Asset => a}.foreach{asset => Solr.insert(Solr.prepForInsertion(serializer.serialize(asset)))}
+    }.getOrElse(Logger.logger.warn("attempted to populate solr when no server was initialized"))
   }
 
 
