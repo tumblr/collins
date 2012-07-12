@@ -5,6 +5,7 @@ import play.api.libs.json._
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
 
+
 case class AssetMeta(
     name: String,
     priority: Int,
@@ -32,6 +33,22 @@ case class AssetMeta(
   def getId(): Long = id
 
   def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType.withName(value_type)
+
+  def validateValue(value: String): Boolean = getValueType() match {
+    case AssetMeta.ValueType.Number => try {
+      Integer.parseInt(value)
+      true
+    } catch {
+      case _ => false
+    }
+    case AssetMeta.ValueType.Boolean => try {
+      new Truthy(value)
+      true
+    } catch {
+      case _ => false
+    }
+    case _ => true
+  }
 }
 
 object AssetMeta extends Schema with AnormAdapter[AssetMeta] {

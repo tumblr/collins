@@ -19,6 +19,7 @@ object AssetMetaValueConfig {
 }
 
 case class AssetMetaValue(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) {
+  require(asset_meta_id == 0 || getMeta().validateValue(value), "Invalid format for value" + value)
   def getAsset(): Asset = {
     Asset.findById(asset_id).get
   }
@@ -26,6 +27,7 @@ case class AssetMetaValue(asset_id: Long, asset_meta_id: Long, group_id: Int, va
   def getMeta(): AssetMeta = {
     AssetMeta.findById(asset_meta_id).get
   }
+
 }
 
 object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
