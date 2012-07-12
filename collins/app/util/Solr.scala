@@ -89,21 +89,35 @@ object Solr {
 
 }
 import Solr.AssetSolrDocument
+import AssetMeta.ValueType
+import AssetMeta.ValueType._
 
 sealed trait SolrValue {
   val value: Any
+  val valueType: ValueType
+  val postfix: String
 }
 
-trait SolrSingleValue extends SolrValue 
-case class SolrIntValue(value: Int) extends SolrSingleValue
-case class SolrDoubleValue(value: Double) extends SolrSingleValue
-case class SolrStringValue(value: String) extends SolrSingleValue
-case class SolrBooleanValue(value: Boolean) extends SolrSingleValue
+abstract class SolrSingleValue(val postfix: String, val valueType: ValueType) extends SolrValue 
 
-case class SolrMultiValue(values: Seq[SolrSingleValue]) extends SolrValue {
+case class SolrIntValue(value: Int) extends SolrSingleValue("_meta_i", Integer)
+case class SolrDoubleValue(value: Double) extends SolrSingleValue("_meta_d", Double)
+case class SolrStringValue(value: String) extends SolrSingleValue("_meta_s", String)
+case class SolrBooleanValue(value: Boolean) extends SolrSingleValue("_meta_b", Boolean)
+
+//note, we don't have to bother with checking the types of the contained values
+//since that's implicitly handled by AssetMeta
+case class SolrMultiValue(values: Seq[SolrSingleValue], valueType: ValueType) extends SolrValue {
+  require (values.size > 0, "Cannot create empty multi-value")
   def +(v: SolrSingleValue) = this.copy(values = values :+ v)
 
   lazy val value = values.map{_.value}.toArray
+
+  lazy val postfix = values.head.postfix
+
+}
+object SolrMultiValue {
+  def apply(values: Seq[SolrSingleValue]): SolrMultiValue = SolrMultiValue(values, values.headOption.map{_.valueType}.getOrElse(String))
 }
 
 
@@ -123,7 +137,6 @@ class FlatSerializer extends AssetSolrSerializer {
     "assetType" -> SolrIntValue(asset.getType.id)
   ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))
 
-  import AssetMeta.ValueType._
   
   //FIXME: The parsing logic here is duplicated in AssetMeta.validateValue
   def serializeMetaValues(values: Seq[MetaWrapper]) = {
@@ -135,14 +148,15 @@ class FlatSerializer extends AssetSolrSerializer {
           case Double => SolrDoubleValue(java.lang.Double.parseDouble(head.getValue()))
           case _ => SolrStringValue(head.getValue())
         }
-        val mergedval = build.get(head.getName()) match {
+        val solrKey = head.getName() + newval.postfix
+        val mergedval = build.get(solrKey) match {
           case Some(exist) => exist match {
-            case s: SolrSingleValue => SolrMultiValue(s :: newval :: Nil)
+            case s: SolrSingleValue => SolrMultiValue(s :: newval :: Nil, newval.valueType)
             case m: SolrMultiValue => m + newval
           }
           case None => newval
         }
-        process(build + (head.getName() -> mergedval), tail)
+        process(build + (solrKey -> mergedval), tail)
       }
       case _ => build
     }
