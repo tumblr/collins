@@ -475,9 +475,11 @@ object Asset extends Schema with AnormAdapter[Asset] {
     } else {
       throw new IllegalStateException("Neither updated or status were specified")
     }
-    val newAsset = Asset.findById(asset.id).get
     loggedInvalidation("partialUpdate", asset)
+    val newAsset = Asset.findById(asset.id).get
     updateEventName.foreach { name =>
+      oldAsset.forComparison
+      newAsset.forComparison
       util.plugins.Callback.fire(name, oldAsset, newAsset)
     }
     res
