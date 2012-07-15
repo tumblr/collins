@@ -456,6 +456,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }
 
   def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int]) = inTransaction {
+    val oldAsset = Asset.findById(asset.id).get
     val res = if (updated.isDefined && status.isDefined) {
       tableDef.update (a =>
         where(a.id === asset.id)
@@ -474,7 +475,11 @@ object Asset extends Schema with AnormAdapter[Asset] {
     } else {
       throw new IllegalStateException("Neither updated or status were specified")
     }
+    val newAsset = Asset.findById(asset.id).get
     loggedInvalidation("partialUpdate", asset)
+    updateEventName.foreach { name =>
+      util.plugins.Callback.fire(name, oldAsset, newAsset)
+    }
     res
   }
 
