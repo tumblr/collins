@@ -65,7 +65,10 @@ abstract class SecureAction(
   def executeDelete(rd: RequestDataHolder): Option[Promise[Result]] = None
   def execute(rd: RequestDataHolder): Result
 
-  def executeAsync(rd: RequestDataHolder): Promise[Result] = Akka.future{execute(rd)}
+  def executeAsync(rd: RequestDataHolder): Promise[Result] = Akka.future{
+    util.AppConfig.setUser(userOption)
+    execute(rd)
+  }
 
   def handleError(rd: RequestDataHolder): Result = {
     val htmlOutput = isHtml match {
@@ -84,13 +87,13 @@ abstract class SecureAction(
   def handleWebError(rd: RequestDataHolder): Option[Result] = None
 
   final override def parser: BodyParser[AnyContent] = BodyParsers.parse.anyContent
-  final override def apply(req: Request[AnyContent]): AsyncResult = {
+  final override def apply(req: Request[AnyContent]): AsyncResult = AsyncResult {
     setRequest(req)
     checkAuthorization() match {
-      case Left(res) => AsyncResult {PurePromise(res)}
+      case Left(res) => PurePromise(res)
       case Right(user) => {
         setUser(user)
-        AsyncResult(run())
+        run()
       }
     }
   }
