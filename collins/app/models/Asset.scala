@@ -455,6 +455,36 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
+  def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int]) = inTransaction {
+    val oldAsset = Asset.findById(asset.id).get
+    val res = if (updated.isDefined && status.isDefined) {
+      tableDef.update (a =>
+        where(a.id === asset.id)
+        set(a.updated := updated, a.status := status.get)
+      )
+    } else if (updated.isDefined) {
+      tableDef.update (a =>
+        where(a.id === asset.id)
+        set(a.updated := updated)
+      )
+    } else if (status.isDefined) {
+      tableDef.update (a =>
+        where(a.id === asset.id)
+        set(a.status := status.get)
+      )
+    } else {
+      throw new IllegalStateException("Neither updated or status were specified")
+    }
+    loggedInvalidation("partialUpdate", asset)
+    val newAsset = Asset.findById(asset.id).get
+    updateEventName.foreach { name =>
+      oldAsset.forComparison
+      newAsset.forComparison
+      util.plugins.Callback.fire(name, oldAsset, newAsset)
+    }
+    res
+  }
+
   case class AllAttributes(asset: Asset, lshw: LshwRepresentation, lldp: LldpRepresentation, ipmi: Option[IpmiInfo], addresses: Seq[IpAddresses], power: PowerUnits, mvs: Seq[MetaWrapper]) {
     def exposeCredentials(showCreds: Boolean = false) = {
       this.copy(ipmi = this.ipmi.map { _.withExposedCredentials(showCreds) })

@@ -122,7 +122,7 @@ object AssetLifecycle {
       }
       Asset.inTransaction {
         MetaWrapper.createMeta(asset, opts, groupId)
-        Asset.update(asset.copy(updated = Some(new Date().asTimestamp)))
+        Asset.partialUpdate(asset, Some(new Date().asTimestamp), None)
         true
       }
     }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
@@ -136,13 +136,14 @@ object AssetLifecycle {
     allCatch[Boolean].either {
       val status = AStatus.Enum.withName(stat)
       if (status.id == asset.status) {
+        logger.debug("Old status %d is same as new, returning".format(status.id))
         return Right(true)
       }
       val old = AStatus.Enum(asset.status).toString
       val defaultReason = "Asset state updated from %s to %s".format(old, stat)
       val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
       Asset.inTransaction {
-        Asset.update(asset.copy(status = status.id, updated = Some(new Date().asTimestamp)))
+        Asset.partialUpdate(asset, Some(new Date().asTimestamp), Some(status.id))
         ApiTattler.informational(asset, None, reason)
       }
       true
@@ -173,7 +174,7 @@ object AssetLifecycle {
         val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
         ApiTattler.informational(newAsset, None, "Intake now complete, asset Unallocated")
-        Asset.update(newAsset)
+        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status))
         true
       }
     }
@@ -209,7 +210,7 @@ object AssetLifecycle {
         }
         MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
         val newAsset = asset.copy(status = Status.Enum.New.id, updated = Some(new Date().asTimestamp))
-        Asset.update(newAsset)
+        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status))
         InternalTattler.informational(newAsset, None, "Parsing and storing LSHW data succeeded")
         true
       }
