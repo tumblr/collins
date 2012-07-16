@@ -90,6 +90,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       "boolean value" in {
         """foo = false""".query must_== (("foo" -> false): SolrKeyVal)
       }
+      "range" in {
+        """foo = [3, 5]""".query must_== SolrKeyRange("foo", SolrIntValue(3), SolrIntValue(5))
+      }
     }
 
     "complex expressions" in {
@@ -104,6 +107,15 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
       "arbitrary parentheses" in {
         """(((((((foo = true)))))))""".query must_== SolrKeyVal("foo", SolrBooleanValue(true))
+      }
+      "simple NOT" in {
+        """NOT foo = 5""".query must_== CollinsQueryDSL.not("foo" -> 5)
+      }
+      "not OOO" in {
+        """NOT foo = 5 OR bar = false""".query must_== (SolrNotOp(("foo" -> 5)) OR ("bar" -> false))
+      }
+      "negate complex expression" in {
+        """NOT (foo = 5 AND bar = "baz")""".query must_== SolrNotOp(("foo" -> 5) AND ("bar" -> "baz"))
       }
         
     }
@@ -136,6 +148,11 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
       "OR" in {
         "foo = 3 OR foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+      }
+      "range" in {
+        "foo = [3, 5]".query.typeCheck must beAnInstanceOf[Right[String, SolrExpression]]
+        "foo = [false, 5]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        "foo = [3, false]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
     }
 
