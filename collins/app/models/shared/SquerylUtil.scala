@@ -13,9 +13,14 @@ import util.Config
 trait ValidatedEntity[T] extends KeyedEntity[T] {
   def validate(): Unit
   def asJson: String
-  // I wish I had created a note as to why this is needed
   @transient private var persisted: Option[Boolean] = None
-  def forComparision {
+  // KeyedEntity overrides hashCode/equals with respect to isPersisted. Without the
+  // forComparison/isPersisted code, two models with the same primary key are considered identical
+  // (according to their PK) even if those models have different attributes. This behavior breaks
+  // callbacks that need to compare an 'old' and 'new' model. forComparison provides a short-hand
+  // for forcing KeyedEntity to use the class hashCode/equals instead of the custom one. This is
+  // horrible and will likely break since it depends on some squeryl internals.
+  def forComparison {
     persisted = Some(false)
   }
   override def isPersisted: Boolean = persisted.getOrElse(super.isPersisted)
@@ -109,8 +114,8 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
       val oldValue = get(t)
       tableDef.update(t)
       updateEventName.map { name =>
-        oldValue.forComparision
-        t.forComparision
+        oldValue.forComparison
+        t.forComparison
         util.plugins.Callback.fire(name, oldValue, t)
       }
       1
@@ -118,7 +123,6 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
       case _ => 0
     }
   }
-
 
   override def callbacks = super.callbacks ++ Seq(
     beforeInsert(tableDef) call(_.validate),
