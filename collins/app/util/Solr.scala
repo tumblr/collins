@@ -67,7 +67,7 @@ class SolrPlugin(app: Application) extends Plugin {
   }
 
   def initialize() {
-    if (repopulateOnStartup) {
+    if (enabled && repopulateOnStartup) {
       Akka.future {
         populate()
       }
@@ -256,6 +256,10 @@ class FlatSerializer extends AssetSolrSerializer {
  * key = "somevalue"
  * key1 = "a" AND (key2 = 3 OR key3 = true)
  */
+
+/**
+ * ADT for AST
+ */
 sealed trait SolrExpression extends SolrQueryComponent{ 
 
   /*
@@ -320,6 +324,9 @@ case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrExpressio
 
 }
 
+/**
+ * needs some work
+ */
 object CollinsQueryDSL {
   class CollinsQueryString(val s: String) {
     lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s)
@@ -337,6 +344,9 @@ object CollinsQueryDSL {
 
 class CollinsQueryException(m: String) extends PlayException("CQL", m)
 
+/** 
+ * Parses CQL strings into a SolrExpression AST
+ */
 class CollinsQueryParser extends JavaTokenParsers {
 
   def parseQuery(input: String) = parse(expr, input) match {
