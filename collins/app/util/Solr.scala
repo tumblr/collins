@@ -12,6 +12,8 @@ import play.api.{Application, Configuration, Logger, Play, PlayException, Plugin
 import play.api.libs.concurrent._
 import play.api.Play.current
 
+import scala.util.parsing.combinator._
+
 class SolrPlugin(app: Application) extends Plugin {
 
   private[this] var _server: Option[SolrServer] = None
@@ -35,7 +37,6 @@ class SolrPlugin(app: Application) extends Plugin {
       //System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "WARN");
       //System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "WARN");
       //System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.commons.httpclient", "WARN");
-      Logger.logger.debug("test")
       _server = Some(if (useEmbedded) {
         System.setProperty("solr.solr.home",solrHome);
         val initializer = new CoreContainer.Initializer();
@@ -60,6 +61,7 @@ class SolrPlugin(app: Application) extends Plugin {
         server.setParser(new XMLResponseParser()); // binary parser is used by default
         server
       })
+      initialize()
     }
   }
 
@@ -68,12 +70,11 @@ class SolrPlugin(app: Application) extends Plugin {
       Akka.future {
         populate()
       }
-      //println("POPULATE")
     }
 
   }
 
-  protected def populate() { 
+  def populate() { 
     _server.map{ server => 
       //server.deleteByQuery( "*:*" );
       Logger.logger.debug("Populating Solr with Assets")
@@ -102,8 +103,15 @@ object Solr {
   def initialize() {
     Play.maybeApplication.foreach { app =>
       app.plugin[SolrPlugin].foreach{plugin=>
-        println(plugin.toString)
         plugin.initialize()
+      }
+    }
+  }
+
+  def populate() {
+    Play.maybeApplication.foreach { app =>
+      app.plugin[SolrPlugin].foreach{plugin=>
+        plugin.populate()
       }
     }
   }
