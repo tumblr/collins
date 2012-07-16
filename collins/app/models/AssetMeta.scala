@@ -34,6 +34,8 @@ case class AssetMeta(
 
   def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType.withName(value_type)
 
+  lazy val valueType = getValueType
+
   def validateValue(value: String): Boolean = getValueType() match {
     case AssetMeta.ValueType.Integer => try {
       Integer.parseInt(value)
