@@ -307,20 +307,56 @@ case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "OR
 
 }
 
-case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrExpression {
+trait SolrSimpleExpr extends SolrExpression {
+
   def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
   def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
-  def toSolrQueryString(toplevel: Boolean) = key + ":" + value.toSolrQueryString(false)
-
-  def typeCheck = AssetMeta.findByName(key) match {
+  /**
+   * returns Left(error) or Right(solr_key_name)
+   */
+  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, String] = AssetMeta.findByName(key) match {
     case Some(meta) => if (meta.valueType == value.valueType) {
-      Right(SolrKeyVal(key + value.postfix, value))
+      Right(key + value.postfix)
     } else {
       Left("Key %s expects type %s, got %s".format(key, meta.valueType.toString, value.valueType.toString))
     }
     case None => Left("Unknown Meta tag \"%s\"".format(key))
   }
+
+}
+
+
+
+case class SolrNotOp(expr: SolrExpression) extends SolrSimpleExpr {
+
+  def typeCheck = expr.typeCheck
+
+  def toSolrQueryString(toplevel: Boolean) = "NOT " + expr.toSolrQueryString
+
+
+}
+
+case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExpr {
+
+  def toSolrQueryString(toplevel: Boolean) = key + ":" + value.toSolrQueryString(false)
+
+  def typeCheck = typeCheckValue(key, value).right.map{solr_key => SolrKeyVal(solr_key, value)}
+
+}
+
+case class SolrKeyRange(key: String, low: SolrSingleValue, high: SolrSingleValue) extends SolrSimpleExpr {
+
+  def toSolrQueryString(toplevel: Boolean) = key + ":[" + low.toSolrQueryString + "," + high.toSolrQueryString + "]"
+
+  def typeCheck = {
+    (typeCheckValue(key, low), typeCheckValue(key, high)) match {
+      case (Right(k), Right(_)) => Right(SolrKeyRange(k, low, high))
+      case (Left(e), _) => Left(e)
+      case (_, Left(e)) => Left(e)
+    }
+  }
+
 
 }
 
@@ -337,6 +373,8 @@ object CollinsQueryDSL {
   implicit def string_tuple2keyval(t: Tuple2[String, String]):SolrKeyVal = SolrKeyVal(t._1, SolrStringValue(t._2))
   implicit def double_tuple2keyval(t: Tuple2[String, Double]):SolrKeyVal = SolrKeyVal(t._1, SolrDoubleValue(t._2))
   implicit def boolean_tuple2keyval(t: Tuple2[String, Boolean]):SolrKeyVal = SolrKeyVal(t._1, SolrBooleanValue(t._2))
+
+  def not(exp: SolrExpression) = SolrNotOp(exp)
 
 
 
@@ -362,8 +400,10 @@ class CollinsQueryParser extends JavaTokenParsers {
 
   def orOp          = rep1sep(andOp , "OR") ^^ {i => if (i.tail == Nil) i.head else SolrOrOp(i)}
   def andOp         = rep1sep(simpleExpr , "AND")  ^^ {i => if (i.tail == Nil) i.head else SolrAndOp(i)}
-  def simpleExpr    = kv | "(" ~> expr <~ ")" 
+  def notExpr       = "NOT" ~> simpleExpr ^^ {e => SolrNotOp(e)}
+  def simpleExpr:Parser[SolrExpression]    = notExpr | rangeKv | kv | "(" ~> expr <~ ")" 
 
+  def rangeKv       = ident ~ "=" ~ "[" ~ value ~ "," ~ value <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
   def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
   def value         = numberValue | stringValue | booleanValue
   def numberValue   = decimalNumber ^^{case n => if (n contains ".") {
