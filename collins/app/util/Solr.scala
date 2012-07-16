@@ -226,4 +226,28 @@ class FlatSerializer extends AssetSolrSerializer {
 
 }
 
+sealed trait SolrExpression
+case class SolrAndOp(exprs: Seq[SolrExpression]) extends SolrExpression
+case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrExpression
+case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrExpression
+
+class CollinsQueryParser extends JavaTokenParsers {
+
+  def go(input: String) = parse(expr, input)
+
+  def expr: Parser[SolrExpression] = orOp
+  def orOp = rep1sep(andOp , "OR") ^^ {i => if (i.tail == Nil) i.head else SolrOrOp(i)}
+  def andOp = rep1sep(simpleExpr , "AND")  ^^ {i => if (i.tail == Nil) i.head else SolrAndOp(i)}
+  def simpleExpr = kv | "(" ~> expr <~ ")" 
+
+  def kv = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
+  def value: Parser[SolrSingleValue] = intValue | doubleValue | stringValue | booleanValue
+  def intValue : Parser[SolrSingleValue]= decimalNumber ^^{case n => SolrDoubleValue(java.lang.Double.parseDouble(n))}
+  def doubleValue: Parser[SolrSingleValue] = intValue //FIXME
+  def stringValue: Parser[SolrSingleValue] = stringLiteral  ^^ {s => SolrStringValue(s)}
+  def booleanValue: Parser[SolrSingleValue] = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
+
+
+}
+
 
