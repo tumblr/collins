@@ -1,4 +1,5 @@
 package util.plugins
+package solr
 
 import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetView, MetaWrapper, PageParams, Truthy}
 
@@ -226,26 +227,71 @@ class FlatSerializer extends AssetSolrSerializer {
 
 }
 
+/*
+ * This is the AST and parser for CQL Expressions are basically just
+ * primitive-recursive boolean expressions with a few extra operators for
+ * various solr functions.  Some exmaples:
+ *
+ * key = "somevalue"
+ * key1 = "a" AND (key2 = 3 OR key3 = true)
+ */
 sealed trait SolrExpression
-case class SolrAndOp(exprs: Seq[SolrExpression]) extends SolrExpression
-case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrExpression
-case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrExpression
+case class SolrAndOp(exprs: Seq[SolrExpression]) extends SolrExpression {
+  def AND(k: SolrKeyVal) = SolrAndOp(this :: k :: Nil)
+}
+
+case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrExpression {
+  def OR(k: SolrKeyVal) = SolrOrOp(this :: k :: Nil)
+}
+
+case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrExpression {
+  def AND(k: SolrKeyVal) = SolrAndOp(this :: k :: Nil)
+  def OR(k: SolrKeyVal) = SolrOrOp(this :: k :: Nil)
+}
+
+object CollinsQueryDSL {
+  class CollinsQueryString(val s: String) {
+    lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s)
+  }
+  implicit def str2collins(s: String): CollinsQueryString = new CollinsQueryString(s)
+  implicit def collins2str(c: CollinsQueryString): String = c.s
+  implicit def int_tuple2keyval(t: Tuple2[String, Int]):SolrKeyVal = SolrKeyVal(t._1, SolrIntValue(t._2))
+  implicit def string_tuple2keyval(t: Tuple2[String, String]):SolrKeyVal = SolrKeyVal(t._1, SolrStringValue(t._2))
+  implicit def double_tuple2keyval(t: Tuple2[String, Double]):SolrKeyVal = SolrKeyVal(t._1, SolrDoubleValue(t._2))
+  implicit def boolean_tuple2keyval(t: Tuple2[String, Boolean]):SolrKeyVal = SolrKeyVal(t._1, SolrBooleanValue(t._2))
+
+
+
+}
+
+class CollinsQueryException(m: String) extends PlayException("CQL", m)
 
 class CollinsQueryParser extends JavaTokenParsers {
 
-  def go(input: String) = parse(expr, input)
+  def parseQuery(input: String) = parse(expr, input) match {
+    case Success(exp, next) => if (next.atEnd) {
+      exp
+    } else {
+      throw new CollinsQueryException("Unexpected stuff after query at position %s: %s".format(next.pos.toString, next.first))
+    }
+    case Failure(wtf, _) => throw new CollinsQueryException("Error parsing query: %s".format(wtf.toString))
+  }
 
   def expr: Parser[SolrExpression] = orOp
-  def orOp = rep1sep(andOp , "OR") ^^ {i => if (i.tail == Nil) i.head else SolrOrOp(i)}
-  def andOp = rep1sep(simpleExpr , "AND")  ^^ {i => if (i.tail == Nil) i.head else SolrAndOp(i)}
-  def simpleExpr = kv | "(" ~> expr <~ ")" 
 
-  def kv = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
-  def value: Parser[SolrSingleValue] = intValue | doubleValue | stringValue | booleanValue
-  def intValue : Parser[SolrSingleValue]= decimalNumber ^^{case n => SolrDoubleValue(java.lang.Double.parseDouble(n))}
-  def doubleValue: Parser[SolrSingleValue] = intValue //FIXME
-  def stringValue: Parser[SolrSingleValue] = stringLiteral  ^^ {s => SolrStringValue(s)}
-  def booleanValue: Parser[SolrSingleValue] = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
+  def orOp          = rep1sep(andOp , "OR") ^^ {i => if (i.tail == Nil) i.head else SolrOrOp(i)}
+  def andOp         = rep1sep(simpleExpr , "AND")  ^^ {i => if (i.tail == Nil) i.head else SolrAndOp(i)}
+  def simpleExpr    = kv | "(" ~> expr <~ ")" 
+
+  def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
+  def value         = numberValue | stringValue | booleanValue
+  def numberValue   = decimalNumber ^^{case n => if (n contains ".") {
+    SolrDoubleValue(java.lang.Double.parseDouble(n))
+  } else {
+    SolrIntValue(java.lang.Integer.parseInt(n))
+  }}
+  def stringValue   = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1))}
+  def booleanValue  = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
 
 
 }
