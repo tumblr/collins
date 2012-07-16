@@ -6,7 +6,7 @@ import models.{IpAddresses, Model}
 import util.{AppConfig, AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 import util.power.PowerConfiguration
-import util.plugins.Solr
+import util.plugins.solr.Solr
 import java.io.File
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {

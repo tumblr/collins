@@ -1,4 +1,5 @@
 package util.plugins
+package solr
 
 import Solr._
 import org.specs2._
@@ -47,5 +48,55 @@ class SolrSpec extends ApplicationSpecification {
     }
     asset
   }
+
+}
+
+class SolrQuerySpec extends mutable.Specification {
+
+  def P = new CollinsQueryParser
+
+  import CollinsQueryDSL._
+
+  "CollinsQueryDSL" should {
+    "key vals" in {
+      "int" in {
+        (("foo" -> 3): SolrKeyVal) must_== SolrKeyVal("foo", SolrIntValue(3))
+      }
+      "bool" in {
+        (("foo" -> false): SolrKeyVal) must_== SolrKeyVal("foo", SolrBooleanValue(false))
+      }
+      "int" in {
+        (("foo" -> 3.1415): SolrKeyVal) must_== SolrKeyVal("foo", SolrDoubleValue(3.1415))
+      }
+      "string" in {
+        (("foo" -> "bar"): SolrKeyVal) must_== SolrKeyVal("foo", SolrStringValue("bar"))
+      }
+    }
+
+  }
+
+  "CollinsQueryParser" should {
+    "key-value" in {
+      "string value" in {
+        """foo = "bar"""".query must_== (("foo" -> "bar"): SolrKeyVal)
+      }
+      "int value" in {
+        """foo = 3""".query must_== (("foo" -> 3): SolrKeyVal)
+      }
+      "double value" in {
+        """foo = 3.1415""".query must_== (("foo" -> 3.1415): SolrKeyVal)
+      }
+      "boolean value" in {
+        """foo = false""".query must_== (("foo" -> false): SolrKeyVal)
+      }
+    }
+
+    "complex expressions" in {
+      "simple AND" in {
+        """foo = 3 AND bar = 4""".query must_== (("foo" -> 3) AND ("bar" -> 4))
+      }
+    }
+  }
+        
 
 }

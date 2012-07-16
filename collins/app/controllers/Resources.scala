@@ -10,7 +10,7 @@ import play.api._
 import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
-import util.plugins.Solr
+import util.plugins.solr.Solr
 
 trait Resources extends Controller {
   this: SecureController =>
