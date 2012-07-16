@@ -95,6 +95,28 @@ class SolrQuerySpec extends mutable.Specification {
       "simple AND" in {
         """foo = 3 AND bar = 4""".query must_== (("foo" -> 3) AND ("bar" -> 4))
       }
+      "simple OR" in {
+        """foo = 3 OR bar = 4""".query must_== (("foo" -> 3) OR ("bar" -> 4))
+      }
+      "order of operations" in {
+        """foo = 4 OR bar = 4 AND baz = false""".query must_== (("foo" -> 4) OR ("bar" -> 4 AND "baz" -> false))
+      }
+      "arbitrary parentheses" in {
+        """(((((((foo = true)))))))""".query must_== SolrKeyVal("foo", SolrBooleanValue(true))
+      }
+        
+    }
+  }
+
+  "solr query generation" should {
+    "simple keyval" in {
+      "foo = 3".query.toSolrQueryString must_== "foo:3"
+    }
+    "ANDs" in {
+       """foo = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== "foo:3 AND bar:abcdef AND baz:true"
+    }
+    "nested exprs" in {
+      """(foo = 3 OR foo = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== "(foo:3 OR foo:4) AND (bar:true OR (bar:false AND baz:5))"
     }
   }
         
