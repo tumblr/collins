@@ -147,7 +147,9 @@ import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
 sealed trait SolrQueryComponent {
-  def toSolrQueryString: String
+  def toSolrQueryString(): String = toSolrQueryString(true)
+
+  def toSolrQueryString(toplevel: Boolean): String
 
 }
 
@@ -163,19 +165,19 @@ abstract class SolrSingleValue(val postfix: String, val valueType: ValueType) ex
 
 
 case class SolrIntValue(value: Int) extends SolrSingleValue("_meta_i", Integer) {
-  def toSolrQueryString = value.toString
+  def toSolrQueryString(toplevel: Boolean) = value.toString
 }
 
 case class SolrDoubleValue(value: Double) extends SolrSingleValue("_meta_d", Double) {
-  def toSolrQueryString = value.toString
+  def toSolrQueryString(toplevel: Boolean) = value.toString
 }
 
 case class SolrStringValue(value: String) extends SolrSingleValue("_meta_s", String) {
-  def toSolrQueryString = value
+  def toSolrQueryString(toplevel: Boolean) = value
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue("_meta_b", Boolean) {
-  def toSolrQueryString = if (value) "true" else "false"
+  def toSolrQueryString(toplevel: Boolean) = if (value) "true" else "false"
 }
 
 //note, we don't have to bother with checking the types of the contained values
@@ -266,7 +268,10 @@ sealed trait SolrExpression extends SolrQueryComponent{
 
 abstract class SolrMultiExpr(exprs: Seq[SolrExpression], op: String) extends SolrExpression {
 
-  def toSolrQueryString = exprs.map{_.toSolrQueryString}.mkString(" %s ".format(op))
+  def toSolrQueryString(toplevel: Boolean) = {
+    val e = exprs.map{_.toSolrQueryString(false)}.mkString(" %s ".format(op))
+    if (toplevel) e else "(%s)".format(e)
+  }
 
   def create(exprs: Seq[SolrExpression]): SolrMultiExpr
 
@@ -284,7 +289,7 @@ abstract class SolrMultiExpr(exprs: Seq[SolrExpression], op: String) extends Sol
 }
 
 case class SolrAndOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "AND") {
-  def AND(k: SolrKeyVal) = SolrAndOp(this :: k :: Nil)
+  def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
 
   def create(exprs: Seq[SolrExpression]) = SolrAndOp(exprs)
 
@@ -292,17 +297,17 @@ case class SolrAndOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "A
 }
 
 case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "OR") {
-  def OR(k: SolrKeyVal) = SolrOrOp(this :: k :: Nil)
+  def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
   def create(exprs: Seq[SolrExpression]) = SolrOrOp(exprs)
 
 }
 
 case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrExpression {
-  def AND(k: SolrKeyVal) = SolrAndOp(this :: k :: Nil)
-  def OR(k: SolrKeyVal) = SolrOrOp(this :: k :: Nil)
+  def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
+  def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
-  def toSolrQueryString = key + ":" + value.toSolrQueryString
+  def toSolrQueryString(toplevel: Boolean) = key + ":" + value.toSolrQueryString(false)
 
   def typeCheck = AssetMeta.findByName(key) match {
     case Some(meta) => if (meta.valueType == value.valueType) {
