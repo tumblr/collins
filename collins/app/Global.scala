@@ -6,6 +6,7 @@ import models.{IpAddresses, Model}
 import util.{AppConfig, AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 import util.power.PowerConfiguration
+import util.plugins.Solr
 import java.io.File
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
@@ -36,6 +37,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     setAuthentication(auth)
     setCryptoKey(key)
     checkRuntime(app.configuration)
+    println("GLOBAL")
   }
 
   override def onRouteRequest(request: RequestHeader): Option[Handler] = {

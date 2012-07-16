@@ -894,11 +894,11 @@
    -->
 
    <field name="tag" type="string" indexed="true" stored="true" required="true" /> 
-   <field name="asset_type" type="int" indexed="true" stored="true" required="true"/>
+   <field name="assetType" type="int" indexed="true" stored="true" required="true"/>
    <field name="status" type="int" indexed="true" stored="true" required="true"/>
-   <field name="created" type="date" indexed="true" stored="true" requred="true"/>
-   <field name="updated" type="date" indexed="true" stored="true" requred="false"/>
-   <field name="deleted" type="date" indexed="true" stored="true" requred="false"/>
+   <field name="created" type="string" indexed="true" stored="true" requred="true"/>
+   <field name="updated" type="string" indexed="true" stored="true" requred="false"/>
+   <field name="deleted" type="string" indexed="true" stored="true" requred="false"/>
 
    <dynamicField name="*_meta_i"  type="int"    indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_meta_s"  type="string"  indexed="true"  stored="true" multiValued="true"/>
@@ -975,54 +975,7 @@
  <!-- Field to use to determine and enforce document uniqueness. 
       Unless this field is marked with required="false", it will be a required field
    -->
- <uniqueKey>id</uniqueKey>
-
-  <!-- field for the QueryParser to use when an explicit fieldname is absent
- DEPRECATED: specify "df" in your request handler instead.
- <defaultSearchField>text</defaultSearchField> -->
-
-  <!-- SolrQueryParser configuration: defaultOperator="AND|OR"
- DEPRECATED: specify "q.op" in your request handler to switch from the default of OR.
- <solrQueryParser defaultOperator="OR"/> -->
-
-  <!-- copyField commands copy one field to another at the time a document
-        is added to the index.  It's used either to index the same field differently,
-        or to add multiple fields to the same field for easier/faster searching.  -->
-
-   <copyField source="cat" dest="text"/>
-   <copyField source="name" dest="text"/>
-   <copyField source="manu" dest="text"/>
-   <copyField source="features" dest="text"/>
-   <copyField source="includes" dest="text"/>
-   <copyField source="manu" dest="manu_exact"/>
-
-   <!-- Copy the price into a currency enabled field (default USD) -->
-   <copyField source="price" dest="price_c"/>
-	
-   <!-- Above, multiple source fields are copied to the [text] field. 
-	  Another way to map multiple source fields to the same 
-	  destination field is to use the dynamic field syntax. 
-	  copyField also supports a maxChars to copy setting.  -->
-	   
-   <!-- <copyField source="*_t" dest="text" maxChars="3000"/> -->
-
-   <!-- copy name to alphaNameSort, a field designed for sorting by name -->
-   <!-- <copyField source="name" dest="alphaNameSort"/> -->
- 
-
- <!-- Similarity is the scoring routine for each document vs. a query.
-      A custom similarity may be specified here, but the default is fine
-      for most applications.  -->
- <!-- <similarity class="org.apache.lucene.search.DefaultSimilarity"/> -->
- <!-- ... OR ...
-      Specify a SimilarityFactory class name implementation
-      allowing parameters to be used.
- -->
- <!--
- <similarity class="com.example.solr.CustomSimilarityFactory">
-   <str name="paramkey">param value</str>
- </similarity>
- -->
+ <uniqueKey>tag</uniqueKey>
 
 
 </schema>
