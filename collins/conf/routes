@@ -51,6 +51,7 @@ DELETE  /api/asset/:tag/addresses            app.Api.purgeAddresses(tag: String)
 # Log API
 PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+GET     /api/assets/logs            app.Api.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
 
 DELETE  /api/asset/:tag/attribute/:attribute   app.Api.deleteAssetAttribute(tag: String, attribute: String)
 
