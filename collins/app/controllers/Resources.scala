@@ -20,8 +20,8 @@ trait Resources extends Controller {
   }(Permissions.Resources.Index)
 
   def populateSolr = Action {
-    Solr.initialize()
-    Ok("DONE")
+    Solr.populate()
+    Redirect(app.routes.Resources.index).flashing("error" -> "Repopulating Solr index in the background.  May take a few minutes to complete")
   }
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
