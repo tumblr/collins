@@ -51,11 +51,12 @@ class SolrSpec extends ApplicationSpecification {
 
 }
 
-class SolrQuerySpec extends mutable.Specification {
+class SolrQuerySpec extends ApplicationSpecification {
 
   def P = new CollinsQueryParser
 
   import CollinsQueryDSL._
+  import AssetMeta.ValueType._
 
   "CollinsQueryDSL" should {
     "key vals" in {
@@ -108,16 +109,36 @@ class SolrQuerySpec extends mutable.Specification {
     }
   }
 
-  "solr query generation" should {
-    "simple keyval" in {
-      "foo = 3".query.toSolrQueryString must_== "foo:3"
+  "CQL abstract syntax-tree" should {
+
+    "solr query generation" in {
+      "simple keyval" in {
+        "foo = 3".query.toSolrQueryString must_== "foo:3"
+      }
+      "ANDs" in {
+         """foo = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== "foo:3 AND bar:abcdef AND baz:true"
+      }
+      "nested exprs" in {
+        """(foo = 3 OR foo = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== "(foo:3 OR foo:4) AND (bar:true OR (bar:false AND baz:5))"
+      }
     }
-    "ANDs" in {
-       """foo = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== "foo:3 AND bar:abcdef AND baz:true"
+
+    "type checking" in {
+      "keyvals" in {
+        val m = AssetMeta.findOrCreateFromName("foo", Integer)
+        "foo = 3".query.typeCheck must_== Right("foo_meta_i = 3".query)
+        "foo = 3.123".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        "foo = true".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        """foo = "3"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+      }
+      "AND" in {
+        "foo = 3 AND foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+      }
+      "OR" in {
+        "foo = 3 OR foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+      }
     }
-    "nested exprs" in {
-      """(foo = 3 OR foo = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== "(foo:3 OR foo:4) AND (bar:true OR (bar:false AND baz:5))"
-    }
+
   }
         
 
