@@ -18,5 +18,26 @@
   <root level="INFO">
     <appender-ref ref="FILE" />
   </root>
+  <logger name="org.apache" level="WARN" />
+  <logger name="org.apache.axis2" level="WARN" />
+  <logger name="org.apache.axiom" level="WARN" />
+  <logger name="org.apache.httpclient.wire" level="WARN" />
+  <logger name="org.apache.httpclient.wire.content" level="WARN" />
+  <logger name="org.apache.http.wire" level="WARN" />
+  <logger name="org.apache.http.wire.content" level="WARN" />
+  <logger name="org.apache.commons.httpclient" level="WARN" />
+  <logger name="org.apache.commons.httpclient.wire" level="WARN" />
+  <logger name="org.apache.commons.httpclient.wire.content" level="WARN" />
+  <logger name="org.apache.commons.http" level="WARN" />
+  <logger name="org.apache.commons.http.wire" level="WARN" />
+  <logger name="org.apache.commons.http.wire.content" level="WARN" />
+  <logger name="httpclient.wire.content" level="WARN" />
+  <logger name="httpclient.wire.header" level="WARN" />
+  <logger name="httpclient.wire" level="WARN" />
+  <logger name="org.apache.http.impl.client" level="WARN" />
+  <logger name="org.apache.http.impl.client.wire" level="WARN" />
+  <logger name="org.apache.http.impl.client.wire.content" level="WARN" />
+  <logger name="org.apache.http.impl.client.Wire" level="WARN" />
+  <logger name="org.apache.http.impl.client.Wire.content" level="WARN" />
   
 </configuration>

@@ -15,8 +15,7 @@ libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.3.158",
   "org.apache.solr" % "solr-solrj" % "3.6.0",
   "org.apache.solr" % "solr-core"  % "3.6.0",
-  "javax.servlet" % "servlet-api" % "2.5",
-  "org.apache.httpcomponents" % "httpclient" % "4.2.1"
+  "javax.servlet" % "servlet-api" % "2.5"
 )
 
 

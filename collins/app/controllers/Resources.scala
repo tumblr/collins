@@ -10,6 +10,7 @@ import play.api._
 import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
+import util.plugins.Solr
 
 trait Resources extends Controller {
   this: SecureController =>
@@ -17,6 +18,11 @@ trait Resources extends Controller {
   def index = SecureAction { implicit req =>
     Ok(html.resources.index(AssetMeta.getViewable())).withHeaders("Content-Language" -> "en")
   }(Permissions.Resources.Index)
+
+  def populateSolr = Action {
+    Solr.initialize()
+    Ok("DONE")
+  }
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
     val atype: Option[AssetType.Enum] = try {

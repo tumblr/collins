@@ -6,9 +6,11 @@ import org.apache.solr.client.solrj._
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.core.CoreContainer
-import org.apache.solr.client.solrj.impl.{HttpSolrServer, XMLResponseParser}
+import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer, XMLResponseParser}
 
 import play.api.{Application, Configuration, Logger, Play, PlayException, Plugin}
+import play.api.libs.concurrent._
+import play.api.Play.current
 
 class SolrPlugin(app: Application) extends Plugin {
 
@@ -20,14 +22,20 @@ class SolrPlugin(app: Application) extends Plugin {
 
   lazy val solrHome = config.flatMap{_.getString("embeddedSolrHome")}.getOrElse(throw new Exception("No solrHome set!"))
   override lazy val enabled = config.flatMap{_.getBoolean("enabled")}.getOrElse(false)
-  lazy val useEmbedded = config.flatMap{_.getBoolean("useEmbedded")}.getOrElse(true)
-  lazy val repopulateOnStartup = config.flatMap{_.getBoolean("repopulateonStartup")}.getOrElse(false)
+  lazy val useEmbedded = config.flatMap{_.getBoolean("useEmbeddedServer")}.getOrElse(true)
+  lazy val repopulateOnStartup = config.flatMap{_.getBoolean("repopulateOnStartup")}.getOrElse(false)
 
   val serializer = new FlatSerializer
 
 
   override def onStart() {
     if (enabled) {
+      //System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+      //System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
+      //System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "WARN");
+      //System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "WARN");
+      //System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.commons.httpclient", "WARN");
+      Logger.logger.debug("test")
       _server = Some(if (useEmbedded) {
         System.setProperty("solr.solr.home",solrHome);
         val initializer = new CoreContainer.Initializer();
@@ -36,8 +44,10 @@ class SolrPlugin(app: Application) extends Plugin {
         new EmbeddedSolrServer(coreContainer, "")
       } else {
         //out-of-the-box config from solrj wiki
+        Logger.logger.debug("Using external Solr Server")
         val url = app.configuration.getConfig("solr").flatMap{_.getString("externalUrl")}.getOrElse(throw new Exception("Missing required solr.externalUrl"))
-        val server = new HttpSolrServer( url );
+        val server = new CommonsHttpSolrServer( url );
+        Logger.logger.debug("test")
         server.setSoTimeout(1000);  // socket read timeout
         server.setConnectionTimeout(100);
         server.setDefaultMaxConnectionsPerHost(100);
@@ -50,18 +60,38 @@ class SolrPlugin(app: Application) extends Plugin {
         server.setParser(new XMLResponseParser()); // binary parser is used by default
         server
       })
-      if (repopulateOnStartup) {
+    }
+  }
+
+  def initialize() {
+    if (repopulateOnStartup) {
+      Akka.future {
         populate()
       }
+      //println("POPULATE")
     }
+
   }
 
   protected def populate() { 
     _server.map{ server => 
-      server.deleteByQuery( "*:*" );
+      //server.deleteByQuery( "*:*" );
       Logger.logger.debug("Populating Solr with Assets")
-      Asset.find(PageParams(0,0,"asc"), AssetFinder.empty).items.collect{case a:Asset => a}.foreach{asset => Solr.insert(Solr.prepForInsertion(serializer.serialize(asset)))}
+      val docs = Asset.find(PageParams(0,10000,"asc"), AssetFinder.empty).items.collect{case asset:Asset => Solr.prepForInsertion(serializer.serialize(asset))}
+      if (docs.size > 0) {
+        val fuckingJava = new java.util.ArrayList[SolrInputDocument]
+        docs.foreach{doc => fuckingJava.add(doc)}
+        server.add(fuckingJava)
+        server.commit()
+        Logger.logger.info("Indexed %d assets".format(docs.size))
+      } else {
+        Logger.logger.warn("No assets to index!")
+      }
     }.getOrElse(Logger.logger.warn("attempted to populate solr when no server was initialized"))
+  }
+
+  override def onStop() {
+    _server.foreach{case s: EmbeddedSolrServer => s.shutdown}
   }
 
 
@@ -69,27 +99,36 @@ class SolrPlugin(app: Application) extends Plugin {
 
 object Solr {
 
+  def initialize() {
+    Play.maybeApplication.foreach { app =>
+      app.plugin[SolrPlugin].foreach{plugin=>
+        println(plugin.toString)
+        plugin.initialize()
+      }
+    }
+  }
+    
+
   def query(q: SolrQuery) = Nil
 
   type AssetSolrDocument = Map[String, SolrValue]
 
-  def prepForInsertion(typedMap: AssetSolrDocument): Map[String,Any] = typedMap.map{case(k,v) => (k,v.value)}
+  def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {
+    val untyped = typedMap.map{case(k,v) => (k,v.value)}
+    val input = new SolrInputDocument
+    untyped.foreach{case(key,value) => input.addField(key,value)}
+    input
+  }
 
   def server: Option[SolrServer] = Play.maybeApplication.flatMap { app =>
     app.plugin[SolrPlugin].filter(_.enabled).map{_.server}
   }
 
-  //NOTE: here we're inserting documents one at a time, which is fine for an
-  //embedded server, but if we switch to a standalone server over http, we
-  //should batch insert
-  def insert(untypedMap: Map[String, Any]) {
-    val input = new SolrInputDocument
-    untypedMap.foreach{case(key,value) => input.addField(key,value)}
+  def insert(docs: Seq[SolrInputDocument]) {
+    println(docs.size)
     val fuckingJava = new java.util.ArrayList[SolrInputDocument]
-    fuckingJava.add(input)
+    docs.foreach{doc => fuckingJava.add(doc)}
     server.foreach{_.add(fuckingJava)}
-
-
   }
 
 
@@ -145,7 +184,7 @@ class FlatSerializer extends AssetSolrSerializer {
       
     opt ++ Map[String, SolrValue](
       "tag" -> SolrStringValue(asset.tag),
-      "status" -> SolrStringValue(asset.getStatusName()),
+      "status" -> SolrIntValue(asset.status),
       "assetType" -> SolrIntValue(asset.getType.id),
       "created" -> SolrStringValue(asset.created.toString)
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))

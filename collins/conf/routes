@@ -35,6 +35,8 @@ GET     /login                      controllers.Application.login
 POST    /login                      controllers.Application.authenticate
 GET     /logout                     controllers.Application.logout
 
+GET   /solr                         app.Resources.populateSolr
+
 # API
 
 # IP Address API
