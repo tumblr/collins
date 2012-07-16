@@ -146,13 +146,21 @@ import Solr.AssetSolrDocument
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
+sealed trait SolrQueryComponent {
+  def toSolrQueryString: String
+
+}
+
 sealed trait SolrValue {
   val value: Any
   val valueType: ValueType
   val postfix: String
 }
 
-abstract class SolrSingleValue(val postfix: String, val valueType: ValueType) extends SolrValue with SolrExpression
+abstract class SolrSingleValue(val postfix: String, val valueType: ValueType) extends SolrValue with SolrQueryComponent{
+
+}
+
 
 case class SolrIntValue(value: Int) extends SolrSingleValue("_meta_i", Integer) {
   def toSolrQueryString = value.toString
@@ -246,19 +254,48 @@ class FlatSerializer extends AssetSolrSerializer {
  * key = "somevalue"
  * key1 = "a" AND (key2 = 3 OR key3 = true)
  */
-sealed trait SolrExpression { 
-  def toSolrQueryString: String
+sealed trait SolrExpression extends SolrQueryComponent{ 
+
+  /*
+   * Performs type-checking and solr-key name resolution: eg converts foo to
+   * foo_meta_i.  Returns Right(expr) with the new resolved expression or
+   * Left(msg) if there's an error somewhere
+   */
+  def typeCheck: Either[String, SolrExpression]
 }
-case class SolrAndOp(exprs: Seq[SolrExpression]) extends SolrExpression {
+
+abstract class SolrMultiExpr(exprs: Seq[SolrExpression], op: String) extends SolrExpression {
+
+  def toSolrQueryString = exprs.map{_.toSolrQueryString}.mkString(" %s ".format(op))
+
+  def create(exprs: Seq[SolrExpression]): SolrMultiExpr
+
+  def typeCheck = {
+    val r = exprs.map{_.typeCheck}.foldLeft(Right(Nil): Either[String, Seq[SolrExpression]]){(build, next) => build match {
+      case l@Left(error) => l
+      case Right(seq) => next match {
+        case Left(error) => Left(error)
+        case Right(expr) => Right(expr +: seq)
+      }
+    }}
+    r.right.map{s => create(s)}
+  }
+
+}
+
+case class SolrAndOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "AND") {
   def AND(k: SolrKeyVal) = SolrAndOp(this :: k :: Nil)
 
-  def toSolrQueryString = exprs.map{_.toSolrQueryString).mkString(" AND ")
+  def create(exprs: Seq[SolrExpression]) = SolrAndOp(exprs)
+
+
 }
 
-case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrExpression {
+case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "OR") {
   def OR(k: SolrKeyVal) = SolrOrOp(this :: k :: Nil)
 
-  def toSolrQueryString = exprs.map{_.toSolrqueryString}.mkString(" OR ")
+  def create(exprs: Seq[SolrExpression]) = SolrOrOp(exprs)
+
 }
 
 case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrExpression {
@@ -266,6 +303,16 @@ case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrExpressio
   def OR(k: SolrKeyVal) = SolrOrOp(this :: k :: Nil)
 
   def toSolrQueryString = key + ":" + value.toSolrQueryString
+
+  def typeCheck = AssetMeta.findByName(key) match {
+    case Some(meta) => if (meta.valueType == value.valueType) {
+      Right(SolrKeyVal(key + value.postfix, value))
+    } else {
+      Left("Key %s expects type %s, got %s".format(key, meta.valueType.toString, value.valueType.toString))
+    }
+    case None => Left("Unknown Meta tag \"%s\"".format(key))
+  }
+
 }
 
 object CollinsQueryDSL {
