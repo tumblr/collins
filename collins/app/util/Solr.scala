@@ -152,12 +152,23 @@ sealed trait SolrValue {
   val postfix: String
 }
 
-abstract class SolrSingleValue(val postfix: String, val valueType: ValueType) extends SolrValue 
+abstract class SolrSingleValue(val postfix: String, val valueType: ValueType) extends SolrValue with SolrExpression
 
-case class SolrIntValue(value: Int) extends SolrSingleValue("_meta_i", Integer)
-case class SolrDoubleValue(value: Double) extends SolrSingleValue("_meta_d", Double)
-case class SolrStringValue(value: String) extends SolrSingleValue("_meta_s", String)
-case class SolrBooleanValue(value: Boolean) extends SolrSingleValue("_meta_b", Boolean)
+case class SolrIntValue(value: Int) extends SolrSingleValue("_meta_i", Integer) {
+  def toSolrQueryString = value.toString
+}
+
+case class SolrDoubleValue(value: Double) extends SolrSingleValue("_meta_d", Double) {
+  def toSolrQueryString = value.toString
+}
+
+case class SolrStringValue(value: String) extends SolrSingleValue("_meta_s", String) {
+  def toSolrQueryString = value
+}
+
+case class SolrBooleanValue(value: Boolean) extends SolrSingleValue("_meta_b", Boolean) {
+  def toSolrQueryString = if (value) "true" else "false"
+}
 
 //note, we don't have to bother with checking the types of the contained values
 //since that's implicitly handled by AssetMeta
@@ -235,18 +246,26 @@ class FlatSerializer extends AssetSolrSerializer {
  * key = "somevalue"
  * key1 = "a" AND (key2 = 3 OR key3 = true)
  */
-sealed trait SolrExpression
+sealed trait SolrExpression { 
+  def toSolrQueryString: String
+}
 case class SolrAndOp(exprs: Seq[SolrExpression]) extends SolrExpression {
   def AND(k: SolrKeyVal) = SolrAndOp(this :: k :: Nil)
+
+  def toSolrQueryString = exprs.map{_.toSolrQueryString).mkString(" AND ")
 }
 
 case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrExpression {
   def OR(k: SolrKeyVal) = SolrOrOp(this :: k :: Nil)
+
+  def toSolrQueryString = exprs.map{_.toSolrqueryString}.mkString(" OR ")
 }
 
 case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrExpression {
   def AND(k: SolrKeyVal) = SolrAndOp(this :: k :: Nil)
   def OR(k: SolrKeyVal) = SolrOrOp(this :: k :: Nil)
+
+  def toSolrQueryString = key + ":" + value.toSolrQueryString
 }
 
 object CollinsQueryDSL {
