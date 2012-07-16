@@ -193,7 +193,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
       processProvisionAction(res) {
         case true =>
           val newAsset = Asset.findById(asset.getId).get
-          Asset.update(newAsset.copy(status = NewAsset.id))
+          Asset.partialUpdate(newAsset, None, Some(NewAsset.id))
           setAsset(newAsset)
           tattle("Asset successfully activated", false)
           None
