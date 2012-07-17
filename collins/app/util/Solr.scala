@@ -1,7 +1,7 @@
 package util.plugins
 package solr
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetView, MetaWrapper, PageParams, Truthy}
+import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetView, MetaWrapper, Page, PageParams, Truthy}
 
 import org.apache.solr.client.solrj._
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
@@ -324,10 +324,12 @@ trait SolrSimpleExpr extends SolrExpression {
   def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
   def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
+  val nonMetaKeys = List("tag", "assetType", "status", "created", "updated", "deleted")
+
   /**
    * returns Left(error) or Right(solr_key_name)
    */
-  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, String] = AssetMeta.findByName(key) match {
+  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, String] = if (nonMetaKeys contains key) Right(key) else AssetMeta.findByName(key) match {
     case Some(meta) => if (meta.valueType == value.valueType) {
       Right(key + value.postfix)
     } else {
@@ -376,7 +378,7 @@ case class SolrKeyRange(key: String, low: SolrSingleValue, high: SolrSingleValue
  */
 object CollinsQueryDSL {
   class CollinsQueryString(val s: String) {
-    lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s)
+    lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s).right.get
   }
   implicit def str2collins(s: String): CollinsQueryString = new CollinsQueryString(s)
   implicit def collins2str(c: CollinsQueryString): String = c.s
@@ -398,13 +400,13 @@ class CollinsQueryException(m: String) extends PlayException("CQL", m)
  */
 class CollinsQueryParser extends JavaTokenParsers {
 
-  def parseQuery(input: String) = parse(expr, input) match {
+  def parseQuery(input: String): Either[String, SolrExpression] = parse(expr, input) match {
     case Success(exp, next) => if (next.atEnd) {
-      exp
+      Right(exp)
     } else {
-      throw new CollinsQueryException("Unexpected stuff after query at position %s: %s".format(next.pos.toString, next.first))
+      Left("Unexpected stuff after query at position %s: %s".format(next.pos.toString, next.first))
     }
-    case Failure(wtf, _) => throw new CollinsQueryException("Error parsing query: %s".format(wtf.toString))
+    case Failure(wtf, _) => Left("Error parsing query: %s".format(wtf.toString))
   }
 
   def expr: Parser[SolrExpression] = orOp
@@ -427,4 +429,25 @@ class CollinsQueryParser extends JavaTokenParsers {
 
 }
 
+/**
+ * Note - eventually this can hold faceting information and other metadata
+ */
+case class CollinsSearchQuery(query: SolrExpression, page: PageParams) {
 
+  def getResults(): Either[String, (Seq[AssetView], Int)] = Solr.server.map{server =>
+    val q = new SolrQuery
+    q.setQuery(query.toSolrQueryString)
+    q.setStart(page.offset)
+    q.setRows(page.size)
+    val response = server.query(q)
+    Right((response.getResults.toArray.toSeq.map{case doc: SolrInputDocument => Asset.findByTag(doc.getFieldValue("tag").toString)}.flatten, 0))
+
+  }.getOrElse(Left("Solr Plugin not initialized!"))
+
+
+
+  def getPage(): Either[String, Page[AssetView]] = getResults().right.map{case (results, total) =>
+    Page(results, page.page, page.size, total)
+  }
+
+}
