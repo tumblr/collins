@@ -47,7 +47,7 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
     if (Config.getBoolean("querylog.enabled").getOrElse(false)) {
       org.squeryl.Session.currentSession.setLogger(query => 
         if (Config.getBoolean("querylog.includeResults").getOrElse(false) || !(query startsWith "ResultSetRow")) {
-          Logger.logger.debug(Config.getString("querylog.prefix", "") + query)
+          Logger.logger.info(Config.getString("querylog.prefix", "") + query)
         }
       )
     }
