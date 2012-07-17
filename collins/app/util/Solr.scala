@@ -333,7 +333,8 @@ trait SolrSimpleExpr extends SolrExpression {
    */
   def typeCheckValue(key: String, value: SolrSingleValue):Either[String, String] = if (nonMetaKeys contains key) Right(key) else AssetMeta.findByName(key) match {
     case Some(meta) => if (meta.valueType == value.valueType) {
-      Right(key + value.postfix)
+      //FIXME: perhaps centralize asset meta key formatting
+      Right(key.toUpperCase + value.postfix)
     } else {
       Left("Key %s expects type %s, got %s".format(key, meta.valueType.toString, value.valueType.toString))
     }
