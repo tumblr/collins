@@ -39,6 +39,9 @@ GET   /solr                         app.Resources.populateSolr
 
 # API
 
+# Generic Functionality
+GET     /api/timestamp                       app.Api.timestamp
+
 # IP Address API
 GET     /api/address/pools                   app.Api.getAddressPools(all: String ?= "true")
 GET     /api/asset/:tag/addresses            app.Api.getForAsset(tag: String)
