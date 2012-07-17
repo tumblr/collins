@@ -36,6 +36,7 @@ POST    /login                      controllers.Application.authenticate
 GET     /logout                     controllers.Application.logout
 
 GET   /solr                         app.Resources.populateSolr
+GET   /solrsearch                   app.Resources.searchSolr(query: String, details: String ?= "false", page: Int ?=0, size: Int ?=50, sort: String ?= "ASC")
 
 # API
 

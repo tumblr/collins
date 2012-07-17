@@ -1,7 +1,7 @@
 package controllers
 
 import actions.asset.{CreateAction, FindSimilarAction}
-import actions.resources.{FindAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action}
+import actions.resources.{FindAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action, SolrFindAction}
 
 import models._
 import views._
@@ -23,6 +23,10 @@ trait Resources extends Controller {
     Solr.populate()
     Redirect(app.routes.Resources.index).flashing("error" -> "Repopulating Solr index in the background.  May take a few minutes to complete")
   }
+
+  def searchSolr(query: String, details: String, page: Int, size: Int, sort: String) = 
+    SolrFindAction(PageParams(page, size, sort), query, new Truthy(details), Permissions.Resources.Find, this)
+  
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
     val atype: Option[AssetType.Enum] = try {
