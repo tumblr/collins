@@ -23,6 +23,21 @@ trait Api extends ApiResponse with AssetApi with AssetManagementApi with AssetWe
 
   lazy protected implicit val securitySpec = Permissions.LoggedIn
 
+  def timestamp = Action { implicit req =>
+    val time: Long = System.currentTimeMillis / 1000
+    OutputType(req).getOrElse(TextOutput()) match {
+      case o: TextOutput =>
+        Results.Ok(time.toString).as(o.contentType)
+      case o: BashOutput =>
+        Results.Ok("TIMESTAMP=%s".format(time.toString)).as(o.contentType)
+      case o: JsonOutput =>
+        val json = JsObject(Seq("timestamp" -> JsNumber(time)))
+        Results.Ok(Json.stringify(json)).as(o.contentType)
+      case o: HtmlOutput =>
+        Results.Ok(time.toString).as(o.contentType)
+    }
+  }
+
   def ping = Action { implicit req =>
     models.IpAddresses.AddressConfig.foreach { cfg =>
       cfg.poolNames.foreach { pool =>
