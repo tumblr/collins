@@ -33,11 +33,13 @@ class SolrPlugin(app: Application) extends Plugin {
 
   override def onStart() {
     if (enabled) {
-      //System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
-      //System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
-      //System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "WARN");
-      //System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "WARN");
-      //System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.commons.httpclient", "WARN");
+      System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+      System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
+      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "WARN");
+      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "WARN");
+      System.setProperty("org.apache.commons.logging.simplelog.http.wire", "WARN");
+      System.setProperty("org.apache.commons.logging.simplelog.http.wire.content", "WARN");
+      System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.commons.httpclient", "WARN");
       _server = Some(if (useEmbedded) {
         System.setProperty("solr.solr.home",solrHome);
         val initializer = new CoreContainer.Initializer();
