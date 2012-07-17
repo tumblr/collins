@@ -146,6 +146,14 @@ import Solr.AssetSolrDocument
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
+/**
+ * Any class mixing in this trait is part of the CQL AST that must translate
+ * itself into a Solr Query
+ *
+ * This is a super-trait of SolrExpression becuase SolrValues are
+ * QueryComponents, but should not require the typeCheck method of
+ * SolrExpression (probably ways to refactor this but whatevah)
+ */
 sealed trait SolrQueryComponent {
   def toSolrQueryString(): String = toSolrQueryString(true)
 
@@ -153,16 +161,20 @@ sealed trait SolrQueryComponent {
 
 }
 
+/**
+ * Base trait of Solr Value ADT
+ *
+ * A solr value can either be a typed single value, or a multival containing a
+ * seq of single values.  At the moment the Solr schema allows all meta values
+ * to be multi-valued
+ */
 sealed trait SolrValue {
   val value: Any
   val valueType: ValueType
   val postfix: String
 }
 
-abstract class SolrSingleValue(val postfix: String, val valueType: ValueType) extends SolrValue with SolrQueryComponent{
-
-}
-
+abstract class SolrSingleValue(val postfix: String, val valueType: ValueType) extends SolrValue with SolrQueryComponent
 
 case class SolrIntValue(value: Int) extends SolrSingleValue("_meta_i", Integer) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
@@ -334,7 +346,6 @@ case class SolrNotOp(expr: SolrExpression) extends SolrSimpleExpr {
 
   def toSolrQueryString(toplevel: Boolean) = "NOT " + expr.toSolrQueryString
 
-
 }
 
 case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExpr {
@@ -413,7 +424,6 @@ class CollinsQueryParser extends JavaTokenParsers {
   }}
   def stringValue   = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1))}
   def booleanValue  = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
-
 
 }
 
