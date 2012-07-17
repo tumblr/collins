@@ -5,7 +5,7 @@ import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetView, MetaWra
 
 import org.apache.solr.client.solrj._
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
-import org.apache.solr.common.SolrInputDocument
+import org.apache.solr.common.{SolrDocument, SolrInputDocument}
 import org.apache.solr.core.CoreContainer
 import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer, XMLResponseParser}
 
@@ -434,14 +434,22 @@ class CollinsQueryParser extends JavaTokenParsers {
  */
 case class CollinsSearchQuery(query: SolrExpression, page: PageParams) {
 
-  def getResults(): Either[String, (Seq[AssetView], Int)] = Solr.server.map{server =>
+  def getResults(): Either[String, (Seq[AssetView], Long)] = Solr.server.map{server =>
     val q = new SolrQuery
-    q.setQuery(query.toSolrQueryString)
+    val s = query.toSolrQueryString
+    Logger.logger.debug("SOLR: " + s)
+    q.setQuery(s)
     q.setStart(page.offset)
     q.setRows(page.size)
     val response = server.query(q)
-    Right((response.getResults.toArray.toSeq.map{case doc: SolrInputDocument => Asset.findByTag(doc.getFieldValue("tag").toString)}.flatten, 0))
-
+    val results = response.getResults
+    Right((results.toArray.toSeq.map{
+      case doc: SolrDocument => Asset.findByTag(doc.getFieldValue("tag").toString)
+      case other => {
+        Logger.logger.warn("Got something weird back from Solr %s".format(other.toString))
+        None
+      }
+    }.flatten, results.getNumFound))
   }.getOrElse(Left("Solr Plugin not initialized!"))
 
 
