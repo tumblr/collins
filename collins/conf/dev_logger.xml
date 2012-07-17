@@ -20,5 +20,8 @@
   <root level="DEBUG">
     <appender-ref ref="STDOUT" />
   </root>
+  <logger name="httpclient.wire.content" level="WARN" />
+  <logger name="httpclient.wire.header" level="WARN" />
+  <logger name="httpclient.wire" level="WARN" />
   
 </configuration>
