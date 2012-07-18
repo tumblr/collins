@@ -324,35 +324,55 @@ trait SolrSimpleExpr extends SolrExpression {
   def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
   def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
-  val nonMetaKeys = List("tag", "created", "updated", "deleted")
+  val nonMetaKeys = Map(
+    "tag" -> String, 
+    "created" -> String, 
+    "updated" -> String, 
+    "deleted" -> String
+  )
+
+  
 
   val enumKeys = Map(
     "assetType" -> AssetType.Enum,
     "status" -> Status.Enum
   )
 
-  def typeLeft(key: String, expected: ValueType, actual: ValueType) = Left("Key %s expects type %s, got %s".format(key, expected.toString, actual.toString))
+  def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = Left("Key %s expects type %s, got %s".format(key, expected.toString, actual.toString))
+
+
+  type TypeEither = Either[String, (String, SolrSingleValue)]
 
   /**
    * returns Left(error) or Right(solr_key_name)
    */
-  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = if (nonMetaKeys contains key) {
-    Right(key -> value) 
-  } else enumKeys.get(key).map{enum => value match {
-    case SolrStringValue(e) => try Right(key -> SolrIntValue(enum.withName(e).id)) catch {
-      case _ => Left("Invalid %s: %s".format(key, e))
-    }
-    case s:SolrIntValue => Right(key -> value)
-    case other => typeLeft(key, String, other.valueType)
-  }}.getOrElse(AssetMeta.findByName(key) match {
-    case Some(meta) => if (meta.valueType == value.valueType) {
-      //FIXME: perhaps centralize asset meta key formatting
-      Right(key.toUpperCase + value.postfix -> value)
-    } else {
-      typeLeft(key, meta.valueType, value.valueType)
-    }
-    case None => Left("Unknown Meta tag \"%s\"".format(key))
-  })
+
+
+  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = {
+    val a: Option[TypeEither] = nonMetaKeys.get(key).map {valueType =>
+      if (valueType == value.valueType) {
+        Right(key -> value) //FIXME no type  checking!
+
+      } else {
+        typeLeft(key, valueType, value.valueType)
+      }
+    } orElse{enumKeys.get(key).map{enum => value match {
+      case SolrStringValue(e) => try Right(key -> SolrIntValue(enum.withName(e).id)) catch {
+        case _ => Left("Invalid %s: %s".format(key, e))
+      }
+      case s:SolrIntValue => Right(key -> value) : Either[String, (String, SolrSingleValue)]
+      case other => typeLeft(key, String, other.valueType)
+    }}}
+    a.getOrElse(AssetMeta.findByName(key) match {
+      case Some(meta) => if (meta.valueType == value.valueType) {
+        //FIXME: perhaps centralize asset meta key formatting
+        Right(key.toUpperCase + value.postfix -> value)
+      } else {
+        typeLeft(key, meta.valueType, value.valueType)
+      }
+      case None => Left("Unknown Meta tag \"%s\"".format(key))
+    })
+  }
 
 }
 
