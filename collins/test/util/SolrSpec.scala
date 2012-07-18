@@ -133,6 +133,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       "nested exprs" in {
         """(foo = 3 OR foo = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== "(foo:3 OR foo:4) AND (bar:true OR (bar:false AND baz:5))"
       }
+      "support unquoted one-word strings" in {
+        """foo = bar""".query must_== """foo = "bar"""".query
+      }
     }
 
     "type checking" in {
@@ -148,6 +151,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
       "invalid enum" in {
         """assetType = "FOOBARRRRRR"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+      }
+      "use enum id" in {
+        """assetType = 1""".query.typeCheck must_== "assetType = SERVER_NODE".query.typeCheck
       }
       "AND" in {
         "foo = 3 AND foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
