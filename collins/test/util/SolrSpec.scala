@@ -90,8 +90,17 @@ class SolrQuerySpec extends ApplicationSpecification {
       "boolean value" in {
         """foo = false""".query must_== (("foo" -> false): SolrKeyVal)
       }
-      "range" in {
-        """foo = [3, 5]""".query must_== SolrKeyRange("foo", SolrIntValue(3), SolrIntValue(5))
+      "range both" in {
+        """foo = [3, 5]""".query must_== SolrKeyRange("foo", Some(SolrIntValue(3)), Some(SolrIntValue(5)))
+      }
+      "range opt low" in {
+        """foo = [*, 5]""".query must_== SolrKeyRange("foo", None, Some(SolrIntValue(5)))
+      }
+      "range opt high" in {
+        """foo = [3, *]""".query must_== SolrKeyRange("foo", Some(SolrIntValue(3)), None)
+      }
+      "range opt both" in {
+        """foo = [*, *]""".query must_== SolrKeyRange("foo", None, None)
       }
     }
 
