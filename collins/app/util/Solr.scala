@@ -70,14 +70,12 @@ class SolrPlugin(app: Application) extends Plugin {
 
   def initialize() {
     if (enabled && repopulateOnStartup) {
-      Akka.future {
-        populate()
-      }
+      populate()
     }
 
   }
 
-  def populate() { 
+  def populate() = Akka.future { 
     _server.map{ server => 
       //server.deleteByQuery( "*:*" );
       Logger.logger.debug("Populating Solr with Assets")
@@ -436,13 +434,15 @@ class CollinsQueryParser extends JavaTokenParsers {
 
   def rangeKv       = ident ~ "=" ~ "[" ~ value ~ "," ~ value <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
   def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
-  def value         = numberValue | stringValue | booleanValue
+  def value         = booleanValue | numberValue | stringValue
   def numberValue   = decimalNumber ^^{case n => if (n contains ".") {
     SolrDoubleValue(java.lang.Double.parseDouble(n))
   } else {
     SolrIntValue(java.lang.Integer.parseInt(n))
   }}
-  def stringValue   = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1))}
+  def stringValue   = quotedString | unquotedString
+  def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1))}
+  def unquotedString = ident  ^^ {s => SolrStringValue(s)}
   def booleanValue  = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
 
 }
