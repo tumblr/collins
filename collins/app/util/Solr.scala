@@ -400,13 +400,25 @@ case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExp
 
 }
 
-case class SolrKeyRange(key: String, low: SolrSingleValue, high: SolrSingleValue) extends SolrSimpleExpr {
+case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[SolrSingleValue]) extends SolrSimpleExpr {
 
-  def toSolrQueryString(toplevel: Boolean) = key + ":[" + low.toSolrQueryString + "," + high.toSolrQueryString + "]"
+  def toSolrQueryString(toplevel: Boolean) = {
+    val l = low.map{_.toSolrQueryString}.getOrElse("*")
+    val h = high.map{_.toSolrQueryString}.getOrElse("*")
+    key + ":[" + l + " TO " + h + "]"
+  }
+
+  def t(v: Option[SolrSingleValue]): Either[String, (String, Option[SolrSingleValue])] = v match {
+    case None => Right(key, None)//FIXME, need to separate key resolution and value type-checking!!
+    case Some(s) => typeCheckValue(key, s) match {
+      case Left(e) => Left(e)
+      case Right((k,v)) => Right((k,Some(v)))
+    }
+  }
 
   def typeCheck = {
-    (typeCheckValue(key, low), typeCheckValue(key, high)) match {
-      case (Right((k , cLow)), Right((ok ,cHigh))) => Right(SolrKeyRange(k, cLow, cHigh))
+    (t(low), t(high)) match {
+      case (Right((k,l)), Right((_,h))) => Right(SolrKeyRange(k, l, h))
       case (Left(e), _) => Left(e)
       case (_, Left(e)) => Left(e)
     }
@@ -458,8 +470,9 @@ class CollinsQueryParser extends JavaTokenParsers {
   def notExpr       = "NOT" ~> simpleExpr ^^ {e => SolrNotOp(e)}
   def simpleExpr:Parser[SolrExpression]    = notExpr | rangeKv | kv | "(" ~> expr <~ ")" 
 
-  def rangeKv       = ident ~ "=" ~ "[" ~ value ~ "," ~ value <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
+  def rangeKv       = ident ~ "=" ~ "[" ~ valueOpt ~ "," ~ valueOpt <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
   def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
+  def valueOpt: Parser[Option[SolrSingleValue]]      = "*"^^^{None} | value ^^{other => Some(other)}
   def value         = booleanValue | numberValue | stringValue
   def numberValue   = decimalNumber ^^{case n => if (n contains ".") {
     SolrDoubleValue(java.lang.Double.parseDouble(n))

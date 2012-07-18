@@ -52,13 +52,17 @@ case class AssetFinder(
   def toSolrKeyVals = {
     val items = tag.map{t => SolrKeyVal("tag", SolrStringValue(t))} ::
       status.map{t => SolrKeyVal("status" , SolrStringValue(t.toString))} ::
-      assetType.map{t => SolrKeyVal("type" , SolrStringValue(t.toString))} ::
-      createdAfter.map{t => SolrKeyVal("createdAfter" , SolrStringValue(t.toString))} ::
-      createdBefore.map{t => SolrKeyVal("createdBefore" , SolrStringValue(t.toString))} ::
-      updatedAfter.map{t => SolrKeyVal("updatedAfter" , SolrStringValue(t.toString))} ::
-      updatedBefore.map{t => SolrKeyVal("updatedBefore" , SolrStringValue(t.toString))} ::
+      assetType.map{t => SolrKeyVal("assetType" , SolrStringValue(t.toString))} ::
       Nil
-    items.flatten
+    val cOpt = (createdBefore.map{d =>SolrStringValue(d.toString)}, createdAfter.map{d =>SolrStringValue(d.toString)}) match {
+      case (None, None) => None
+      case (bOpt, aOpt) => Some(SolrKeyRange("created", bOpt, aOpt))
+    }
+    val uOpt = (updatedBefore.map{d =>SolrStringValue(d.toString)}, updatedAfter.map{d =>SolrStringValue(d.toString)}) match {
+      case (None, None) => None
+      case (bOpt, aOpt) => Some(SolrKeyRange("updated", bOpt, aOpt))
+    }
+    (cOpt :: uOpt :: items).flatten
   }
 
 
