@@ -1,7 +1,7 @@
 package util.plugins
 package solr
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetView, MetaWrapper, Page, PageParams, Truthy}
+import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, MetaWrapper, Page, PageParams, Status, Truthy}
 
 import org.apache.solr.client.solrj._
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
@@ -326,20 +326,35 @@ trait SolrSimpleExpr extends SolrExpression {
   def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
   def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
-  val nonMetaKeys = List("tag", "assetType", "status", "created", "updated", "deleted")
+  val nonMetaKeys = List("tag", "created", "updated", "deleted")
+
+  val enumKeys = Map(
+    "assetType" -> AssetType.Enum,
+    "status" -> Status.Enum
+  )
+
+  def typeLeft(key: String, expected: ValueType, actual: ValueType) = Left("Key %s expects type %s, got %s".format(key, expected.toString, actual.toString))
 
   /**
    * returns Left(error) or Right(solr_key_name)
    */
-  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, String] = if (nonMetaKeys contains key) Right(key) else AssetMeta.findByName(key) match {
+  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = if (nonMetaKeys contains key) {
+    Right(key -> value) 
+  } else enumKeys.get(key).map{enum => value match {
+    case SolrStringValue(e) => try Right(key -> SolrIntValue(enum.withName(e).id)) catch {
+      case _ => Left("Invalid %s: %s".format(key, e))
+    }
+    case s:SolrIntValue => Right(key -> value)
+    case other => typeLeft(key, String, other.valueType)
+  }}.getOrElse(AssetMeta.findByName(key) match {
     case Some(meta) => if (meta.valueType == value.valueType) {
       //FIXME: perhaps centralize asset meta key formatting
-      Right(key.toUpperCase + value.postfix)
+      Right(key.toUpperCase + value.postfix -> value)
     } else {
-      Left("Key %s expects type %s, got %s".format(key, meta.valueType.toString, value.valueType.toString))
+      typeLeft(key, meta.valueType, value.valueType)
     }
     case None => Left("Unknown Meta tag \"%s\"".format(key))
-  }
+  })
 
 }
 
@@ -357,7 +372,7 @@ case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExp
 
   def toSolrQueryString(toplevel: Boolean) = key + ":" + value.toSolrQueryString(false)
 
-  def typeCheck = typeCheckValue(key, value).right.map{solr_key => SolrKeyVal(solr_key, value)}
+  def typeCheck = typeCheckValue(key, value).right.map{case (solrKey, cleanValue) => SolrKeyVal(solrKey, cleanValue)}
 
 }
 
@@ -367,7 +382,7 @@ case class SolrKeyRange(key: String, low: SolrSingleValue, high: SolrSingleValue
 
   def typeCheck = {
     (typeCheckValue(key, low), typeCheckValue(key, high)) match {
-      case (Right(k), Right(_)) => Right(SolrKeyRange(k, low, high))
+      case (Right((k , cLow)), Right((ok ,cHigh))) => Right(SolrKeyRange(k, cLow, cHigh))
       case (Left(e), _) => Left(e)
       case (_, Left(e)) => Left(e)
     }
