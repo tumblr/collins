@@ -16,6 +16,7 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
   require(config.getString("searchbase").isDefined, "LDAP requires a searchbase attribute")
   require(config.getString("usersub").isDefined, "LDAP requires a usersub attribute")
   require(config.getString("groupsub").isDefined, "LDAP requires a groupsub attribute")
+  require(config.getString("groupAttribute").isDefined, "LDAP requires a groupAttribute attribute")
 
   // LDAP values
   val host = config.getString("host").get
@@ -27,6 +28,7 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
   val url = "%s://%s/%s".format(useSsl, host, searchbase)
   val usersub = config.getString("usersub").get
   val groupsub = config.getString("groupsub").get
+  val groupattrib = config.getString("groupAttribute").get
   logger.debug("LDAP URL: %s".format(url))
 
   // setup for LDAP
@@ -44,7 +46,7 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
   }
 
   protected def groupQuery(username: String): String = {
-    "(&(cn=*)(memberUid=%s))".format(username)
+    "(&(cn=*)(%s=%s))".format(groupattrib, getSecurityPrincipal(username))
   }
 
   // Authenticate via LDAP
