@@ -4,6 +4,7 @@ import play.api.libs.json._
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
+import util.plugins.solr._
 
 
 case class AssetMeta(
@@ -36,26 +37,25 @@ case class AssetMeta(
 
   def valueType = getValueType
 
-  def validateValue(value: String): Boolean = getValueType() match {
+  def validateValue(value: String): Boolean = typeStringValue(value).isDefined
+
+  def typeStringValue(value: String): Option[SolrSingleValue] = getValueType() match {
     case AssetMeta.ValueType.Integer => try {
-      Integer.parseInt(value)
-      true
+      Some(SolrIntValue(Integer.parseInt(value)))
     } catch {
-      case _ => false
+      case _ => None
     }
     case AssetMeta.ValueType.Boolean => try {
-      new Truthy(value)
-      true
+      Some(SolrBooleanValue((new Truthy(value)).isTruthy))
     } catch {
-      case _ => false
+      case _ => None
     }
     case AssetMeta.ValueType.Double => try {
-      java.lang.Double.parseDouble(value)
-      true
+      Some(SolrDoubleValue(java.lang.Double.parseDouble(value)))
     } catch {
-      case _ => false
+      case _ => None
     }
-    case _ => true
+    case _ => Some(SolrStringValue(value))
   }
 }
 
