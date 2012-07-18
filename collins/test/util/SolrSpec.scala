@@ -138,10 +138,16 @@ class SolrQuerySpec extends ApplicationSpecification {
     "type checking" in {
       "keyvals" in {
         val m = AssetMeta.findOrCreateFromName("foo", Integer)
-        "foo = 3".query.typeCheck must_== Right("foo_meta_i = 3".query)
+        "foo = 3".query.typeCheck must_== Right("FOO_meta_i = 3".query)
         "foo = 3.123".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
         "foo = true".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
         """foo = "3"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+      }
+      "valid enum" in {
+        """assetType = "SERVER_NODE"""".query.typeCheck must_== Right("assetType = 1".query)
+      }
+      "invalid enum" in {
+        """assetType = "FOOBARRRRRR"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "AND" in {
         "foo = 3 AND foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
