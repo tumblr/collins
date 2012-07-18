@@ -4,6 +4,8 @@ import conversions._
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
+import util.plugins.solr._
+import IpmiInfo.Enum._
 
 import java.util.Date
 
@@ -46,6 +48,20 @@ case class AssetFinder(
     )
     items.flatten
   }
+
+  def toSolrKeyVals = {
+    val items = tag.map{t => SolrKeyVal("tag", SolrStringValue(t))} ::
+      status.map{t => SolrKeyVal("status" , SolrStringValue(t.toString))} ::
+      assetType.map{t => SolrKeyVal("type" , SolrStringValue(t.toString))} ::
+      createdAfter.map{t => SolrKeyVal("createdAfter" , SolrStringValue(t.toString))} ::
+      createdBefore.map{t => SolrKeyVal("createdBefore" , SolrStringValue(t.toString))} ::
+      updatedAfter.map{t => SolrKeyVal("updatedAfter" , SolrStringValue(t.toString))} ::
+      updatedBefore.map{t => SolrKeyVal("updatedBefore" , SolrStringValue(t.toString))} ::
+      Nil
+    items.flatten
+  }
+
+
 }
 
 object AssetFinder {

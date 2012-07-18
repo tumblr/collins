@@ -2,6 +2,7 @@ package util.plugins
 package solr
 
 import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.IpmiInfo.Enum._
 
 import org.apache.solr.client.solrj._
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
@@ -328,7 +329,12 @@ trait SolrSimpleExpr extends SolrExpression {
     "tag" -> String, 
     "created" -> String, 
     "updated" -> String, 
-    "deleted" -> String
+    "deleted" -> String,
+    IpmiAddress.toString -> String,
+    IpmiUsername.toString -> String,
+    IpmiPassword.toString -> String,
+    IpmiGateway.toString -> String,
+    IpmiNetmask.toString -> String
   )
 
   
