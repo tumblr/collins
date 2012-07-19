@@ -223,11 +223,12 @@ class FlatSerializer extends AssetSolrSerializer {
 
   def serialize(asset: Asset) = {
     val opt = Map[String, Option[SolrValue]](
-      "updated" -> asset.updated.map{t => SolrStringValue(Formatter.dateFormat(t))},
-      "deleted" -> asset.deleted.map{t => SolrStringValue(Formatter.dateFormat(t))},
+      "updated" -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
+      "deleted" -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
       "ip_address" -> {
-        val addresses = SolrMultiValue(IpAddresses.findAllByAsset(asset).map{a => SolrStringValue(a.toString)})
-        if (addresses.values.size > 0) Some(addresses) else None
+        //val addresses = SolrMultiValue(Nil)//SolrMultiValue(IpAddresses.findAllByAsset(asset).map{a => SolrStringValue(a.toString)})
+        //if (addresses.values.size > 0) Some(addresses) else None
+        None
       }
     ).collect{case(k, Some(v)) => (k,v)}
       
@@ -235,7 +236,7 @@ class FlatSerializer extends AssetSolrSerializer {
       "tag" -> SolrStringValue(asset.tag),
       "status" -> SolrIntValue(asset.status),
       "assetType" -> SolrIntValue(asset.getType.id),
-      "created" -> SolrStringValue(Formatter.dateFormat(asset.created))
+      "created" -> SolrStringValue(Formatter.solrDateFormat(asset.created))
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))
   }
 
@@ -350,7 +351,8 @@ trait SolrSimpleExpr extends SolrExpression {
     "status" -> Status.Enum
   )
 
-  def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = Left("Key %s expects type %s, got %s".format(key, expected.toString, actual.toString))
+  def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = 
+    Left("Key %s expects type %s, got %s".format(key, expected.toString, actual.toString))
 
 
   type TypeEither = Either[String, (String, SolrSingleValue)]
@@ -487,7 +489,7 @@ class CollinsQueryParser extends JavaTokenParsers {
   }}
   def stringValue   = quotedString | unquotedString
   def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1))}
-  def unquotedString = ident  ^^ {s => SolrStringValue(s)}
+  def unquotedString = "\\*?[a-zA-Z0-9_-]+\\*?".r  ^^ {s => SolrStringValue(s)}
   def booleanValue  = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
 
 }
