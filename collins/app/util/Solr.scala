@@ -1,7 +1,7 @@
 package util.plugins
 package solr
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
 import models.IpmiInfo.Enum._
 
 import org.apache.solr.client.solrj.{SolrServer, SolrQuery}
@@ -224,7 +224,11 @@ class FlatSerializer extends AssetSolrSerializer {
   def serialize(asset: Asset) = {
     val opt = Map[String, Option[SolrValue]](
       "updated" -> asset.updated.map{t => SolrStringValue(Formatter.dateFormat(t))},
-      "deleted" -> asset.deleted.map{t => SolrStringValue(Formatter.dateFormat(t))}
+      "deleted" -> asset.deleted.map{t => SolrStringValue(Formatter.dateFormat(t))},
+      "ip_address" -> {
+        val addresses = SolrMultiValue(IpAddresses.findAllByAsset(asset).map{a => SolrStringValue(a.toString)})
+        if (addresses.values.size > 0) Some(addresses) else None
+      }
     ).collect{case(k, Some(v)) => (k,v)}
       
     opt ++ Map[String, SolrValue](
