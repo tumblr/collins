@@ -236,11 +236,16 @@ case class Asset(tag: String, status: Int, asset_type: Int,
       .collect{case a: Asset => a}
     val myMetaSeq = this.metaSeq
     //Note - we cannot use set operations because an asset may contain multiple values of the same meta
-    nodeclasses.find{n => Logger.logger.debug(n.tag);n.filteredMetaSeq.foldLeft(true){(ok, metaval) => 
-      val t = (myMetaSeq contains metaval)
-      if (!t) Logger.logger.debug("failed on " + metaval.toString)
-      ok && t
-    }}
+    nodeclasses.map{n => 
+      val metaseq = n.filteredMetaSeq
+      if (metaseq.foldLeft(true){(ok, metaval) => ok && (myMetaSeq contains metaval)}) {
+        Logger.logger.debug("%s,%d".format(n.toString, metaseq.size))
+        Some(n -> metaseq.size)
+      } else {
+        Logger.logger.debug("%s,NONE".format(n.toString))
+        None
+      }
+    }.flatten.sortWith{(a,b) => a._2 > b._2}.headOption.map{_._1}
   }
 
   private[models] def metaSeq: Seq[(AssetMeta,String)] = AssetMetaValue
