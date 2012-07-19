@@ -234,20 +234,30 @@ case class Asset(tag: String, status: Int, asset_type: Int,
       .findAssetsByMeta(PageParams(0,50,"ASC"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
       .items
       .collect{case a: Asset => a}
-    nodeclasses.find{_.filteredMetaSet subsetOf this.metaSet}
+    val myMetaSeq = this.metaSeq
+    //Note - we cannot use set operations because an asset may contain multiple values of the same meta
+    nodeclasses.map{n => 
+      val metaseq = n.filteredMetaSeq
+      if (metaseq.foldLeft(true){(ok, metaval) => ok && (myMetaSeq contains metaval)}) {
+        Logger.logger.debug("%s,%d".format(n.toString, metaseq.size))
+        Some(n -> metaseq.size)
+      } else {
+        Logger.logger.debug("%s,NONE".format(n.toString))
+        None
+      }
+    }.flatten.sortWith{(a,b) => a._2 > b._2}.headOption.map{_._1}
   }
 
-  private[models] def metaSet: Set[(AssetMeta,String)] = AssetMetaValue
+  private[models] def metaSeq: Seq[(AssetMeta,String)] = AssetMetaValue
     .findByAsset(this)
     .map{wrapper => (wrapper._meta -> wrapper._value.value)}
-    .toSet
 
   /**
    * Filters out nodeclass exluded tags from the meta set
    */
-  private[models] def filteredMetaSet = {
+  private[models] def filteredMetaSeq = {
     val excludeMetaTags = Config.getString("nodeclass.excludeMetaTags","").split(",")
-    metaSet.filter{case(meta, value) => !(excludeMetaTags contains meta.name)}
+    metaSeq.filter{case(meta, value) => !(excludeMetaTags contains meta.name)}
   }
 
   def remoteHost = None
@@ -436,8 +446,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
     asset.nodeClass.map{ nodeclass => 
       logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
       val unsortedItems:Page[AssetView] = find(
-        PageParams(0,1000, "asc"), //TODO: unbounded search
-        (Nil, nodeclass.filteredMetaSet.toSeq, Nil),
+        PageParams(0,10000, "asc"), //TODO: unbounded search
+        (Nil, nodeclass.filteredMetaSeq, Nil),
         afinder,
         Some("and")
       )
