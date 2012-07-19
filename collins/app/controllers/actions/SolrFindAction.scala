@@ -1,12 +1,12 @@
 package controllers
 package actions
-package resources
+package asset
 
-import asset.{AssetFinderDataHolder, FindAction => AssetFindAction}
-
+import asset.{FindAction => AssetFindAction}
 import models.{Asset, AssetView, Page, PageParams, Truthy}
 import util.SecuritySpecification
 import util.plugins.solr._
+
 
 import play.api.data.Form
 import play.api.data.Forms._
@@ -15,7 +15,8 @@ import play.api.mvc.Result
 case class SolrFindAction (
   pageParams: PageParams,
   query: String,
-  details: Truthy,
+  details: Boolean,
+  sortField: String,
   spec: SecuritySpecification,
   handler: SecureController
 ) extends AssetFindAction(pageParams, spec, handler) with AssetResultsAction {
@@ -28,14 +29,14 @@ case class SolrFindAction (
     .flatMap{_.typeCheck}
     .fold[Either[RequestDataHolder, RequestDataHolder]](
       error => Left(RequestDataHolder.error400(error)),
-      expr => Right(SolrQueryDataHolder(CollinsSearchQuery(expr, pageParams)))
+      expr => Right(SolrQueryDataHolder(CollinsSearchQuery(expr, pageParams, sortField)))
     )
 
   override def execute(rd: RequestDataHolder) = rd match {
     case SolrQueryDataHolder(query) => {
       query.getPage().fold (
         error => handleError(RequestDataHolder.error500(error)),
-        page => handleSuccess(page, details.isTruthy)
+        page => handleSuccess(page, details)
       )
     }
   }

@@ -1,7 +1,7 @@
 package controllers
 
-import actions.asset.{CreateAction, FindSimilarAction}
-import actions.resources.{FindAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action, SolrFindAction}
+import actions.asset.{CreateAction, FindSimilarAction,SolrFindAction}
+import actions.resources.{FindAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action}
 
 import models._
 import views._
@@ -25,7 +25,7 @@ trait Resources extends Controller {
   }
 
   def searchSolr(query: String, details: String, page: Int, size: Int, sort: String) = 
-    SolrFindAction(PageParams(page, size, sort), query, new Truthy(details), Permissions.Resources.Find, this)
+    SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, "tag", Permissions.Resources.Find, this)
   
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>

@@ -502,7 +502,7 @@ class CollinsQueryParser extends JavaTokenParsers {
 /**
  * Note - eventually this can hold faceting information and other metadata
  */
-case class CollinsSearchQuery(query: SolrExpression, page: PageParams) {
+case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField: String) {
 
   def getResults(): Either[String, (Seq[AssetView], Long)] = Solr.server.map{server =>
     val q = new SolrQuery
