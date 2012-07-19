@@ -511,6 +511,7 @@ case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField
     q.setQuery(s)
     q.setStart(page.offset)
     q.setRows(page.size)
+    q.addSortField(sortField, (if (page.sort == "ASC") SolrQuery.ORDER.asc else SolrQuery.ORDER.desc))
     val response = server.query(q)
     val results = response.getResults
     Right((results.toArray.toSeq.map{
