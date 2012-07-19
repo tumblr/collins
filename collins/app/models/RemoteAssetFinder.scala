@@ -55,6 +55,7 @@ case class AssetSearchParameters(
     val p = params._1.map{case (enum, value) => SolrKeyVal(enum.toString, SolrStringValue(value))} ++ 
       params._2.map{case (assetMeta,value) => SolrKeyVal(assetMeta.name, SolrStringValue(value))} ++ 
       params._3.map{i => SolrKeyVal("ip_address", SolrStringValue(i))}
+    val allkeyvals = p ++ afinder.toSolrKeyVals
     operation.map{_.toUpperCase} match {
       case Some("OR") => SolrOrOp(p)
       case _ => SolrAndOp(p)

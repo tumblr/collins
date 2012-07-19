@@ -1,6 +1,6 @@
 package controllers
 
-import actions.asset.{CreateAction, DeleteAction, DeleteAttributeAction, FindAction, FindSimilarAction, GetAction}
+import actions.asset.{CreateAction, DeleteAction, DeleteAttributeAction, FindAction, FindSimilarAction, GetAction, SolrFindAction}
 import actions.asset.{UpdateAction, UpdateForMaintenanceAction}
 
 import views.html
@@ -28,6 +28,9 @@ trait AssetApi {
   def getAssets(page: Int, size: Int, sort: String) = FindAction(
     PageParams(page, size, sort), Permissions.AssetApi.GetAssets, this
   )
+
+  def search(query: String, page: Int, size: Int, sortField: String, sort: String, details: String) = 
+    SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, sortField, Permissions.AssetApi.GetAssets, this)
 
   // PUT /api/asset/:tag
   def createAsset(tag: String) = CreateAction(Some(tag), None, Permissions.AssetApi.CreateAsset, this)
