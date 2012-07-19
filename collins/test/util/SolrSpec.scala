@@ -3,8 +3,9 @@ package solr
 
 import Solr._
 import org.specs2._
-import models.{Asset, AssetType, AssetMeta, Status, AssetMetaValue}
+import models.{Asset, AssetFinder, AssetType, AssetMeta, Status, AssetMetaValue}
 import test.ApplicationSpecification
+import util.views.Formatter
 
 class SolrSpec extends ApplicationSpecification {
 
@@ -29,7 +30,7 @@ class SolrSpec extends ApplicationSpecification {
         "tag" -> SolrStringValue(assetTag),
         "status" -> SolrStringValue(status.toString),
         "assetType" -> SolrIntValue(assetType.id),
-        "created" -> SolrStringValue(asset.created.toString),
+        "created" -> SolrStringValue(Formatter.dateFormat(asset.created)),
         "A_meta_s" -> SolrMultiValue(SolrStringValue("a") :: SolrStringValue("a1") :: Nil),
         "B_meta_s" -> SolrStringValue("b"),
         "INT_meta_i" -> SolrIntValue(1135),
@@ -66,7 +67,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       "bool" in {
         (("foo" -> false): SolrKeyVal) must_== SolrKeyVal("foo", SolrBooleanValue(false))
       }
-      "int" in {
+      "double" in {
         (("foo" -> 3.1415): SolrKeyVal) must_== SolrKeyVal("foo", SolrDoubleValue(3.1415))
       }
       "string" in {
@@ -175,6 +176,52 @@ class SolrQuerySpec extends ApplicationSpecification {
         "foo = [false, 5]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
         "foo = [3, false]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
+    }
+
+
+  }
+  
+  "AssetFinder solr conversion" should {
+    "basic conversion" in {
+      val somedate = new java.util.Date
+      val dateString = util.views.Formatter.dateFormat(somedate)
+      val afinder = AssetFinder(
+        Some("footag"), 
+        Some(Status.Enum.Allocated), 
+        Some(AssetType.Enum.ServerNode),
+        Some(somedate),
+        Some(somedate),
+        Some(somedate),
+        Some(somedate)
+      )
+      val expected = List(
+        SolrKeyVal("tag", SolrStringValue("footag")),
+        SolrKeyVal("status", SolrIntValue(Status.Enum.Allocated.id)),
+        SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id)),
+        SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
+        SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString)))
+      )
+      afinder.toSolrKeyVals.toSet must_== expected.toSet
+
+    }
+    "open date ranges" in {
+      val somedate = new java.util.Date
+      val dateString = util.views.Formatter.dateFormat(somedate)
+      val afinder = AssetFinder(
+        None,
+        None,
+        None,
+        None,
+        Some(somedate),
+        Some(somedate),
+        None
+      )
+      val expected = List(
+        SolrKeyRange("created", Some(SolrStringValue(dateString)),None),
+        SolrKeyRange("updated",None,Some(SolrStringValue(dateString)))
+      )
+      afinder.toSolrKeyVals.toSet must_== expected.toSet
+
     }
 
   }

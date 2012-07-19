@@ -4,7 +4,7 @@ package solr
 import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, MetaWrapper, Page, PageParams, Status, Truthy}
 import models.IpmiInfo.Enum._
 
-import org.apache.solr.client.solrj._
+import org.apache.solr.client.solrj.{SolrServer, SolrQuery}
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.common.{SolrDocument, SolrInputDocument}
 import org.apache.solr.core.CoreContainer
@@ -13,6 +13,8 @@ import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer, XMLResponsePars
 import play.api.{Application, Configuration, Logger, Play, PlayException, Plugin}
 import play.api.libs.concurrent._
 import play.api.Play.current
+
+import util.views.Formatter
 
 import scala.util.parsing.combinator._
 
@@ -221,15 +223,15 @@ class FlatSerializer extends AssetSolrSerializer {
 
   def serialize(asset: Asset) = {
     val opt = Map[String, Option[SolrValue]](
-      "updated" -> asset.updated.map{t => SolrStringValue(t.toString)},
-      "deleted" -> asset.deleted.map{t => SolrStringValue(t.toString)}
+      "updated" -> asset.updated.map{t => SolrStringValue(Formatter.dateFormat(t))},
+      "deleted" -> asset.deleted.map{t => SolrStringValue(Formatter.dateFormat(t))}
     ).collect{case(k, Some(v)) => (k,v)}
       
     opt ++ Map[String, SolrValue](
       "tag" -> SolrStringValue(asset.tag),
       "status" -> SolrIntValue(asset.status),
       "assetType" -> SolrIntValue(asset.getType.id),
-      "created" -> SolrStringValue(asset.created.toString)
+      "created" -> SolrStringValue(Formatter.dateFormat(asset.created))
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))
   }
 
