@@ -3,7 +3,7 @@ package solr
 
 import Solr._
 import org.specs2._
-import models.{Asset, AssetFinder, AssetType, AssetMeta, Status, AssetMetaValue}
+import models.{Asset, AssetFinder, AssetType, AssetMeta, IpAddresses, Status, AssetMetaValue}
 import test.ApplicationSpecification
 import util.views.Formatter
 
@@ -26,16 +26,18 @@ class SolrSpec extends ApplicationSpecification {
         ("bool", Boolean, 0, "false")
       )
       val asset = generateAsset(assetTag, assetType, status, meta)
+      val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
       val expected = Map(
         "tag" -> SolrStringValue(assetTag),
-        "status" -> SolrStringValue(status.toString),
-        "assetType" -> SolrIntValue(assetType.id),
-        "created" -> SolrStringValue(Formatter.dateFormat(asset.created)),
+        "status" -> SolrIntValue(status.id),
+        "type" -> SolrIntValue(assetType.id),
+        "created" -> SolrStringValue(Formatter.solrDateFormat(asset.created)),
         "A_meta_s" -> SolrMultiValue(SolrStringValue("a") :: SolrStringValue("a1") :: Nil),
         "B_meta_s" -> SolrStringValue("b"),
         "INT_meta_i" -> SolrIntValue(1135),
         "DOUBLE_meta_d" -> SolrDoubleValue(3.1415),
-        "BOOL_meta_b" -> SolrBooleanValue(false)
+        "BOOL_meta_b" -> SolrBooleanValue(false),
+        "ip_address" -> SolrMultiValue(addresses.map{a => SolrStringValue(a.dottedAddress)})
       )
       (new FlatSerializer).serialize(asset) must_== expected
     }
@@ -103,6 +105,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       "range opt both" in {
         """foo = [*, *]""".query must_== SolrKeyRange("foo", None, None)
       }
+      "ip address" in {
+        """ip_address = "192.168.1.1"""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1"))
+      }
     }
 
     "complex expressions" in {
@@ -157,13 +162,13 @@ class SolrQuerySpec extends ApplicationSpecification {
         """foo = "3"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "valid enum" in {
-        """assetType = "SERVER_NODE"""".query.typeCheck must_== Right("assetType = 1".query)
+        """type = "SERVER_NODE"""".query.typeCheck must_== Right("type = 1".query)
       }
       "invalid enum" in {
-        """assetType = "FOOBARRRRRR"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        """type = "FOOBARRRRRR"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "use enum id" in {
-        """assetType = 1""".query.typeCheck must_== "assetType = SERVER_NODE".query.typeCheck
+        """type = 1""".query.typeCheck must_== "type = SERVER_NODE".query.typeCheck
       }
       "AND" in {
         "foo = 3 AND foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]

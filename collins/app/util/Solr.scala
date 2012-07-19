@@ -226,16 +226,20 @@ class FlatSerializer extends AssetSolrSerializer {
       "updated" -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
       "deleted" -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
       "ip_address" -> {
-        //val addresses = SolrMultiValue(Nil)//SolrMultiValue(IpAddresses.findAllByAsset(asset).map{a => SolrStringValue(a.toString)})
-        //if (addresses.values.size > 0) Some(addresses) else None
-        None
+        val a = IpAddresses.findAllByAsset(asset)
+        if (a.size > 0) {
+          val addresses = SolrMultiValue(a.map{a => SolrStringValue(a.dottedAddress)})
+          Some(addresses)
+        } else {
+          None
+        }
       }
     ).collect{case(k, Some(v)) => (k,v)}
       
     opt ++ Map[String, SolrValue](
       "tag" -> SolrStringValue(asset.tag),
       "status" -> SolrIntValue(asset.status),
-      "assetType" -> SolrIntValue(asset.getType.id),
+      "type" -> SolrIntValue(asset.getType.id),
       "created" -> SolrStringValue(Formatter.solrDateFormat(asset.created))
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))
   }
@@ -337,6 +341,7 @@ trait SolrSimpleExpr extends SolrExpression {
     "created" -> String, 
     "updated" -> String, 
     "deleted" -> String,
+    "ip_address" -> String,
     IpmiAddress.toString -> String,
     IpmiUsername.toString -> String,
     IpmiPassword.toString -> String,
@@ -347,7 +352,7 @@ trait SolrSimpleExpr extends SolrExpression {
   
 
   val enumKeys = Map(
-    "assetType" -> AssetType.Enum,
+    "type" -> AssetType.Enum,
     "status" -> Status.Enum
   )
 
@@ -489,7 +494,7 @@ class CollinsQueryParser extends JavaTokenParsers {
   }}
   def stringValue   = quotedString | unquotedString
   def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1))}
-  def unquotedString = "\\*?[a-zA-Z0-9_-]+\\*?".r  ^^ {s => SolrStringValue(s)}
+  def unquotedString = "\\*?[a-zA-Z0-9_\\-.]+\\*?".r  ^^ {s => SolrStringValue(s)}
   def booleanValue  = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
 
 }
