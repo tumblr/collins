@@ -351,9 +351,9 @@ trait SolrSimpleExpr extends SolrExpression {
 
   
 
-  val enumKeys = Map(
-    "type" -> AssetType.Enum,
-    "status" -> Status.Enum
+  val enumKeys = Map[String, String => Option[Int]](
+    "type" -> ((s: String) => AssetType.findByName(s).map{_.id}),
+    "status" -> ((s: String) => Status.findByName(s).map{_.id})
   )
 
   def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = 
@@ -375,8 +375,9 @@ trait SolrSimpleExpr extends SolrExpression {
       } else {
         typeLeft(key, valueType, value.valueType)
       }
-    } orElse{enumKeys.get(key).map{enum => value match {
-      case SolrStringValue(e) => try Right(key -> SolrIntValue(enum.withName(e).id)) catch {
+    } orElse{enumKeys.get(key).map{f => value match {
+      case SolrStringValue(e) => f(e) match {
+        case Some(i) => Right(key -> SolrIntValue(i))
         case _ => Left("Invalid %s: %s".format(key, e))
       }
       case s:SolrIntValue => Right(key -> value) : Either[String, (String, SolrSingleValue)]
