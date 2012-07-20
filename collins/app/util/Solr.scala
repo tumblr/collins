@@ -352,7 +352,7 @@ trait SolrSimpleExpr extends SolrExpression {
   
 
   val enumKeys = Map[String, String => Option[Int]](
-    "type" -> ((s: String) => AssetType.findByName(s).map{_.id}),
+    "type" -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
     "status" -> ((s: String) => Status.findByName(s).map{_.id})
   )
 

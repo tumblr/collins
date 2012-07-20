@@ -164,8 +164,11 @@ class SolrQuerySpec extends ApplicationSpecification {
       "valid enum" in {
         """type = "SERVER_NODE"""".query.typeCheck must_== Right("type = 1".query)
       }
-      "case insensitive enum" in {
-        """status = unallocated""".query.typeCheck must_== Right("status = Unallocated".query.typeCheck)
+      "case insensitive status enum" in {
+        """status = unallocated""".query.typeCheck must_== "status = Unallocated".query.typeCheck
+      }
+      "case insensitive type enum" in {
+        """type = server_node""".query.typeCheck must_== """type = SERVER_NODE""".query.typeCheck
       }
       "invalid enum" in {
         """type = "FOOBARRRRRR"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
