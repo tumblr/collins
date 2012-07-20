@@ -70,6 +70,11 @@ object Permissions {
     val Index = spec("index", Spec)
   }
 
+  object IpmiApi extends PermSpec("controllers.IpmiApi") {
+    val Spec = spec(AdminSpec)
+    val UpdateIpmi = spec("updateIpmi", Spec)
+  }
+
   object IpAddressApi extends PermSpec("controllers.IpAddressApi") {
     val Spec = spec(AdminSpec)
     val AllocateAddress = spec("allocateAddress", Spec)
@@ -88,6 +93,12 @@ object Permissions {
     val Find = spec("find", Spec)
     val Index = spec("index", Spec)
     val Intake = spec("intake", AdminSpec)
+  }
+
+  object TagApi extends PermSpec("controllers.TagApi") {
+    val Spec = spec(LoggedIn)
+    val GetTags = spec("getTags", Spec)
+    val GetTagValues = spec("getTagValues", AdminSpec)
   }
 
 }
