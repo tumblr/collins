@@ -9,7 +9,8 @@
 - solr config branch: dan-collins-solr-config
 
 the solr config branch just has a new folder collins/conf/solr that has a ton
-of out-of-the-box config files.  The Solr schema is specified in schema.xml
+of out-of-the-box config files.  I put them in a branch just to avoid massive
+diffs when comparing the dev branch to master.  The Solr schema is specified in schema.xml
 
 #### Configuring Solr
 
@@ -23,7 +24,12 @@ Here are the config settings
 - solr.externalUrl="http://localhost:8983/solr"
 - solr.embeddedSolrHome = "/Users/dan/projects/platform_b/collins/conf/solr"
 
-NOTE!!! - When running collins in dev mode within Play/SBT, setting repopulateOnStartup to true will cause 
+NOTE!!! - When running collins in dev mode within Play/SBT, setting
+repopulateOnStartup to true will cause Collins to begin reloading forever.
+This appears to be due to some side effect caused by the apache httpclient when
+called from within a plugins onStart method.  To populate Solr in dev mode,
+instead set repopulateOnStartup to false and after starting collins navigate to
+/solr in the web app.  
 
 ## Key/values
 
@@ -75,9 +81,13 @@ CQL allows for queries that consist of arbirary boolean expressions on asset dat
 - single quote marks not supported
 - dates must be in ISO 8601 format (support for more formats on the way)
 
-## How to make CQL queries in collins_shell
+## Using CQL 
 
-    collin_shell asset find --selector='query:"query goes here"' 
+### How to make CQL queries in collins_shell
 
-## 
+    collin_shell asset find --selector='query:"status = unallocated AND ip_address = [192.168.1.1, 192.168.1.100]"' 
+
+### In the web app
+
+    http://collinsurl/solrsearch?query=urlencodedquery
 
