@@ -10,11 +10,15 @@
 
 the solr config branch just has a new folder collins/conf/solr that has a ton
 of out-of-the-box config files.  I put them in a branch just to avoid massive
-diffs when comparing the dev branch to master.  The Solr schema is specified in schema.xml
+diffs when comparing the dev branch to master.  The Solr schema is specified in
+schema.xml.  This branch can easily be merged into the dev branch to avoid
+needing two local repos for testing
 
 #### Configuring Solr
 
-Collins can either use an external running instance of Solr or launch its own embedded Server.  Using an external instance is better tested, but both appear to be working.
+Collins can either use an external running instance of Solr or launch its own
+embedded Server (version 3.6.0).  Using an external instance is better tested,
+but both appear to be working.
 
 Here are the config settings
 
@@ -23,6 +27,12 @@ Here are the config settings
 - solr.useEmbeddedServer = false
 - solr.externalUrl="http://localhost:8983/solr"
 - solr.embeddedSolrHome = "/Users/dan/projects/platform_b/collins/conf/solr"
+
+If using an external solr instance, it should be launched with the following setting
+
+    -Dsolr.solr.home=/PATH_TO_PLATFORM_REPO/collins/conf/solr/
+
+Solr 3.6.0 can be downloaded here: http://www.apache.org/dyn/closer.cgi/lucene/solr
 
 NOTE!!! - When running collins in dev mode within Play/SBT, setting
 repopulateOnStartup to true will cause Collins to begin reloading forever.
@@ -82,8 +92,8 @@ CQL allows for queries that consist of arbirary boolean expressions on asset dat
 ## Known Issues
 
 
-- Solr is not updated when an asset or value is created/updated/deleted (this is the last remaining functionality that needs to be finished)
-- Multi-collins CQL searching not implemented
+- Solr may not be updated when an asset or value is created/updated/deleted (this is the last remaining functionality that needs to be finished)
+- Multi-collins CQL searching not implemented yet
 - ip addresses must be quoted (otherwise it tries to parse it as a decimal)
 - single quote marks not supported
 - dates must be in ISO 8601 format (support for more formats on the way)
