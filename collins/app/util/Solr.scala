@@ -82,17 +82,36 @@ class SolrPlugin(app: Application) extends Plugin {
     _server.map{ server => 
       //server.deleteByQuery( "*:*" );
       Logger.logger.debug("Populating Solr with Assets")
-      val docs = Asset.find(PageParams(0,10000,"asc"), AssetFinder.empty).items.collect{case asset:Asset => Solr.prepForInsertion(serializer.serialize(asset))}
+      updateAssets(Asset.find(PageParams(0,10000,"asc"), AssetFinder.empty).items.collect{case a: Asset => a})
+    }.getOrElse(Logger.logger.warn("attempted to populate solr when no server was initialized"))
+  }
+
+  def updateAssets(assets: Seq[Asset]) {
+    _server.map{server =>
+      val docs = assets.map{asset => Solr.prepForInsertion(serializer.serialize(asset))}
       if (docs.size > 0) {
         val fuckingJava = new java.util.ArrayList[SolrInputDocument]
         docs.foreach{doc => fuckingJava.add(doc)}
         server.add(fuckingJava)
         server.commit()
-        Logger.logger.info("Indexed %d assets".format(docs.size))
+        if (assets.size == 1) {
+          Logger.logger.debug("Re-indexing asset " + assets.head.tag)
+        } else {
+          Logger.logger.info("Indexed %d assets".format(docs.size))
+        }
       } else {
         Logger.logger.warn("No assets to index!")
       }
-    }.getOrElse(Logger.logger.warn("attempted to populate solr when no server was initialized"))
+    }
+  }
+
+  def removeAssetByTag(tag: String) {
+    _server.map{server => 
+      if (tag != "*") {
+        server.deleteByQuery("tag:" + tag)
+        Logger.logger.info("Removed asset %s from index".format(tag))
+      }
+    }
   }
 
   override def onStop() {
@@ -104,25 +123,24 @@ class SolrPlugin(app: Application) extends Plugin {
 
 object Solr {
 
-  def initialize() {
+  protected def inPlugin(f: SolrPlugin => Unit): Unit = {
     Play.maybeApplication.foreach { app =>
       app.plugin[SolrPlugin].foreach{plugin=>
-        plugin.initialize()
+        f(plugin)
       }
     }
   }
 
-  def populate() {
-    Play.maybeApplication.foreach { app =>
-      app.plugin[SolrPlugin].foreach{plugin=>
-        plugin.populate()
-      }
-    }
-  }
+  def initialize() = inPlugin {_.initialize}
+
+  def populate() = inPlugin {_.populate()}
+
+  def updateAssets(assets: Seq[Asset]) = inPlugin {_.updateAssets(assets)}
+
+  def updateAsset(asset: Asset){updateAssets(asset :: Nil)}
+
+  def removeAssetByTag(tag: String) = inPlugin {_.removeAssetByTag(tag)}
     
-
-  def query(q: SolrQuery) = Nil
-
   type AssetSolrDocument = Map[String, SolrValue]
 
   def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {
@@ -136,15 +154,8 @@ object Solr {
     app.plugin[SolrPlugin].filter(_.enabled).map{_.server}
   }
 
-  def insert(docs: Seq[SolrInputDocument]) {
-    println(docs.size)
-    val fuckingJava = new java.util.ArrayList[SolrInputDocument]
-    docs.foreach{doc => fuckingJava.add(doc)}
-    server.foreach{_.add(fuckingJava)}
-  }
-
-
 }
+
 import Solr.AssetSolrDocument
 import AssetMeta.ValueType
 import AssetMeta.ValueType._

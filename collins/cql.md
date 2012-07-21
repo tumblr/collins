@@ -35,6 +35,10 @@ instead set repopulateOnStartup to false and after starting collins navigate to
 
 Any primary value (tag, status, type, etc.) or attribute can be searched on
 
+- key names are case insensitive
+- any string values that are one word don't need quotes
+- wildcards are supported at the beginning and/or end of string values
+
     tag = "test1"
     tag = test1
     tag = test*
@@ -77,6 +81,9 @@ CQL allows for queries that consist of arbirary boolean expressions on asset dat
 
 ## Known Issues
 
+
+- Solr is not updated when an asset or value is created/updated/deleted (this is the last remaining functionality that needs to be finished)
+- Multi-collins CQL searching not implemented
 - ip addresses must be quoted (otherwise it tries to parse it as a decimal)
 - single quote marks not supported
 - dates must be in ISO 8601 format (support for more formats on the way)
