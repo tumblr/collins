@@ -80,11 +80,11 @@ All values support ranges
 
 CQL allows for queries that consist of arbirary boolean expressions on asset data.
 
-    IP_ADDRESS = "192.168.*" OR IP_ADDRESS = "10.60.*"
+    IP_ADDRESS = 192.168.* OR IP_ADDRESS = 10.60.*
     
     TYPE = SERVER_NODE AND NOT TAG = foo-*
     
-    STATUS = UNALLOCATED OR (STATUS = ALLOCATED AND IP_ADDRESS = "192.168.*")
+    STATUS = UNALLOCATED OR (STATUS = ALLOCATED AND IP_ADDRESS = 192.168.*)
 
 ## Other details
 
@@ -96,7 +96,6 @@ CQL allows for queries that consist of arbirary boolean expressions on asset dat
 
 - Solr may not be updated when an asset or value is created/updated/deleted (this is the last remaining functionality that needs to be finished)
 - Multi-collins CQL searching not implemented yet
-- ip addresses must be quoted (otherwise it tries to parse it as a decimal)
 - single quote marks not supported
 - dates must be in ISO 8601 format (support for more formats on the way)
 
