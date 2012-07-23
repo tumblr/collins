@@ -417,7 +417,7 @@ trait SolrSimpleExpr extends SolrExpression {
 
 case class SolrNotOp(expr: SolrExpression) extends SolrSimpleExpr {
 
-  def typeCheck = expr.typeCheck
+  def typeCheck = expr.typeCheck.right.map{e => SolrNotOp(e)}
 
   def toSolrQueryString(toplevel: Boolean) = "NOT " + expr.toSolrQueryString
 

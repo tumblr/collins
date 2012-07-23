@@ -159,8 +159,17 @@ class SolrQuerySpec extends ApplicationSpecification {
       "simple keyval" in {
         "foo = 3".query.toSolrQueryString must_== "foo:3"
       }
+      "wildcard" in {
+        "foo = bar*".query.toSolrQueryString must_== "foo:bar*"
+      }
       "ANDs" in {
          """foo = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== "foo:3 AND bar:abcdef AND baz:true"
+      }
+      "ORs" in {
+         """foo = 3 OR bar = "abcdef" OR baz = true""".query.toSolrQueryString must_== "foo:3 OR bar:abcdef OR baz:true"
+      }
+      "NOT" in {
+        """NOT foo = 3""".query.toSolrQueryString must_== "NOT foo:3"
       }
       "nested exprs" in {
         """(foo = 3 OR foo = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== "(foo:3 OR foo:4) AND (bar:true OR (bar:false AND baz:5))"
@@ -203,6 +212,9 @@ class SolrQuerySpec extends ApplicationSpecification {
         "foo = [3, 5]".query.typeCheck must beAnInstanceOf[Right[String, SolrExpression]]
         "foo = [false, 5]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
         "foo = [3, false]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+      }
+      "not lose NOT" in {
+        "NOT foo = 3".query.typeCheck must_== Right(SolrNotOp(SolrKeyVal("FOO_meta_i", SolrIntValue(3))))
       }
     }
 
