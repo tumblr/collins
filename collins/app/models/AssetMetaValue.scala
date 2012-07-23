@@ -147,14 +147,19 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }}
   }
 
-  def findByAsset(asset: Asset): Seq[MetaWrapper] = {
-    getOrElseUpdate("AssetMetaValue.findByAsset(%d)".format(asset.id)) {
+  def findByAsset(asset: Asset, checkCache: Boolean = true): Seq[MetaWrapper] = {
+    lazy val op = {
       from(tableDef)(a =>
         where(a.asset_id === asset.id)
         select(a)
       ).toList.map { amv =>
         MetaWrapper(amv.getMeta(), amv)
       }
+    }
+    if (checkCache) {
+      getOrElseUpdate("AssetMetaValue.findByAsset(%d)".format(asset.id))(op) 
+    } else {
+      inTransaction{op}
     }
   }
 

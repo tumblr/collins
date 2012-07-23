@@ -135,6 +135,8 @@ object Solr {
 
   def updateAsset(asset: Asset){updateAssets(asset :: Nil)}
 
+  def updateAssetByTag(tag: String) = Asset.findByTag(tag, false).foreach{updateAsset}
+
   def removeAssetByTag(tag: String) = inPlugin {_.removeAssetByTag(tag)}
     
   type AssetSolrDocument = Map[String, SolrValue]
@@ -241,7 +243,7 @@ class FlatSerializer extends AssetSolrSerializer {
       "updated" -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
       "deleted" -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
       "ip_address" -> {
-        val a = IpAddresses.findAllByAsset(asset)
+        val a = IpAddresses.findAllByAsset(asset, false)
         if (a.size > 0) {
           val addresses = SolrMultiValue(a.map{a => SolrStringValue(a.dottedAddress)})
           Some(addresses)
@@ -256,7 +258,7 @@ class FlatSerializer extends AssetSolrSerializer {
       "status" -> SolrIntValue(asset.status),
       "type" -> SolrIntValue(asset.getType.id),
       "created" -> SolrStringValue(Formatter.solrDateFormat(asset.created))
-    ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset))
+    ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset, false))
   }
 
   
