@@ -85,16 +85,22 @@ CQL allows for queries that consist of arbirary boolean expressions on asset dat
     TYPE = SERVER_NODE AND NOT TAG = foo-*
     
     STATUS = UNALLOCATED OR (STATUS = ALLOCATED AND IP_ADDRESS = 192.168.*)
+    
+To find assets that don't have a certain attribute set, simply do
+
+    NOT attribute:*
+    
+Order of operations is standard for boolean expressions
+
+    NOT foo = bar AND bar = baz OR bar = asdf  <--> ((NOT foo = bar) AND bar = baz) OR bar = asdf
 
 ## Other details
 
-- Any key can be used to sort results
-- When a new attribute is created on-demand, its type defaults to String
+- Any key can be used to sort results, using the --sort_field option
+- When a new attribute is created on-demand, its type defaults to String.  
 
 ## Known Issues
 
-
-- Solr may not be updated when an asset or value is created/updated/deleted (this is the last remaining functionality that needs to be finished)
 - Multi-collins CQL searching not implemented yet
 - single quote marks not supported
 - dates must be in ISO 8601 format (support for more formats on the way)
@@ -106,6 +112,8 @@ CQL allows for queries that consist of arbirary boolean expressions on asset dat
     collin_shell asset find --selector='query:"status = unallocated AND ip_address = [192.168.1.1, 192.168.1.100]"' 
 
 ### In the web app
+
+There's currently no form for inputting a query in the web app, but the url endpoint is
 
     http://collinsurl/solrsearch?query=urlencodedquery
 
