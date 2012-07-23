@@ -6,6 +6,7 @@ import org.specs2._
 import models.{Asset, AssetFinder, AssetType, AssetMeta, IpAddresses, Status, AssetMetaValue}
 import test.ApplicationSpecification
 import util.views.Formatter
+import util.Config
 
 class SolrSpec extends ApplicationSpecification {
 
@@ -108,6 +109,13 @@ class SolrQuerySpec extends ApplicationSpecification {
       "ip address" in {
         """ip_address = "192.168.1.1"""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1"))
       }
+      "unquoted ip address" in {
+        """ip_address = 192.168.1.1""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1"))
+        """ip_address = 192.168.1.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.*"))
+        """ip_address = 192.168.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.*"))
+        """ip_address = 192.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.*"))
+        """ip_address = *""".query must_== SolrKeyVal("ip_address", SolrStringValue("*"))
+      }
     }
 
     "complex expressions" in {
@@ -117,6 +125,12 @@ class SolrQuerySpec extends ApplicationSpecification {
       "simple OR" in {
         """foo = 3 OR bar = 4""".query must_== (("foo" -> 3) OR ("bar" -> 4))
       }
+      "case insensitive AND" in {
+        """foo = 3 and bar = 4""".query must_== """foo = 3 AND bar = 4""".query
+      }
+      "case insensitive OR" in {
+        """foo = 3 or bar = 4""".query must_== """foo = 3 OR bar = 4""".query
+      }
       "order of operations" in {
         """foo = 4 OR bar = 4 AND baz = false""".query must_== (("foo" -> 4) OR ("bar" -> 4 AND "baz" -> false))
       }
@@ -125,6 +139,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
       "simple NOT" in {
         """NOT foo = 5""".query must_== CollinsQueryDSL.not("foo" -> 5)
+      }
+      "case insensitive NOT" in {
+        """not foo = 5""".query must_== """NOT foo = 5""".query
       }
       "not OOO" in {
         """NOT foo = 5 OR bar = false""".query must_== (SolrNotOp(("foo" -> 5)) OR ("bar" -> false))
@@ -237,5 +254,24 @@ class SolrQuerySpec extends ApplicationSpecification {
 
   }
         
+
+}
+
+class SolrServerSpecification extends ApplicationSpecification {
+
+  def home = Config.getString("solr.embeddedSolrHome", "NONE") 
+
+  lazy val server = Solr.getNewEmbeddedServer(home)
+
+  "solr server" should {
+    "get solrhome config" in {
+      home mustNotEqual "NONE"
+    }
+
+    "launch embedded server without crashing" in {
+      val s = server
+      true must_== true
+    }
+  }
 
 }
