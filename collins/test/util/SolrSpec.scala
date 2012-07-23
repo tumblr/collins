@@ -42,6 +42,11 @@ class SolrSpec extends ApplicationSpecification {
       )
       (new FlatSerializer).serialize(asset) must_== expected
     }
+    "post-process number of disks" in {
+      val m = Map[String, SolrValue]("DISK_SIZE_BYTES_meta_s" -> SolrMultiValue(SolrStringValue("123") :: SolrStringValue("456") :: Nil))
+      val expected = m + ("NUM_DISKS_meta_i" -> SolrIntValue(2))
+      (new FlatSerializer).postProcess(m) must_== expected
+    }
   }
 
   def generateAsset(tag: String, assetType: AssetType.Enum, status: Status.Enum, metaValues: Seq[(String, ValueType, Int, String)]) = {

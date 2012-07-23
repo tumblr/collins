@@ -238,7 +238,7 @@ trait AssetSolrSerializer {
  */
 class FlatSerializer extends AssetSolrSerializer {
 
-  def serialize(asset: Asset) = {
+  def serialize(asset: Asset) = postProcess {
     val opt = Map[String, Option[SolrValue]](
       "updated" -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
       "deleted" -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
@@ -285,6 +285,15 @@ class FlatSerializer extends AssetSolrSerializer {
       case _ => build
     }
     process(Map(), values)
+  }
+
+  def postProcess(doc: Map[String, SolrValue]): Map[String, SolrValue] = {
+    val disks = doc.get("DISK_SIZE_BYTES_meta_s").map{v => ("NUM_DISKS_meta_i" -> SolrIntValue(v match {
+      case s:SolrSingleValue => 1
+      case SolrMultiValue(vals, _) => vals.size
+    }))}
+    val newFields = List(disks).flatten
+    doc ++ newFields
   }
 
 }
