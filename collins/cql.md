@@ -49,6 +49,8 @@ Any primary value (tag, status, type, etc.) or attribute can be searched on
 - any string values that are one word don't need quotes
 - wildcards are supported at the beginning and/or end of string values
 
+Some example queries:
+
     tag = "test1"
     tag = test1
     tag = test*
