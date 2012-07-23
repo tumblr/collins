@@ -88,7 +88,7 @@ CQL allows for queries that consist of arbirary boolean expressions on asset dat
     
 To find assets that don't have a certain attribute set, simply do
 
-    NOT attribute:*
+    NOT attribute = *
     
 Order of operations is standard for boolean expressions
 
