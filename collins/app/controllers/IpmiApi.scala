@@ -71,6 +71,6 @@ trait IpmiApi {
       err => formatResponseData(err),
       suc => formatResponseData(suc)
     )
-  }(SecuritySpec(true, Seq("infra")))
+  }(Permissions.IpmiApi.UpdateIpmi)
 
 }

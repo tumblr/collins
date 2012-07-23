@@ -21,7 +21,7 @@ trait TagApi {
     val jsArray = JsArray(js.toList)
     val data = ResponseData(Results.Ok, JsObject(Seq("tags" -> jsArray)))
     formatResponseData(data)
-  }(SecuritySpec(true))
+  }(Permissions.TagApi.GetTags)
 
   def getTagValues(tag: String) = SecureAction { implicit req =>
     val response =
@@ -35,6 +35,6 @@ trait TagApi {
         }
       }.getOrElse(Api.getErrorMessage("Tag not found", Results.NotFound))
     formatResponseData(response)
-  }(SecuritySpec(true, Seq("infra")))
+  }(Permissions.TagApi.GetTagValues)
 
 }
