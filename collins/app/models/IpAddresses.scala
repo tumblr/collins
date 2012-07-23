@@ -6,6 +6,7 @@ import play.api.Configuration
 import play.api.libs.json._
 import util.{Config, IpAddress, IpAddressCalc}
 import util.plugins.Callback
+import util.plugins.solr.Solr
 import org.squeryl.dsl.ast.LogicalBoolean
 
 case class IpAddresses(
