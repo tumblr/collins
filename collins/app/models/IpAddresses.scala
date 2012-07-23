@@ -80,12 +80,14 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
   def createForAsset(asset: Asset, scope: Option[String]): IpAddresses = inTransaction {
     val assetId = asset.getId
     val cfg = getConfig()(scope)
-    createWithRetry(10) { attempt =>
+    val ipAddresses = createWithRetry(10) { attempt =>
       val (gateway, address, netmask) = getNextAddress(attempt)(scope)
       logger.debug("trying to use address %s".format(IpAddress.toString(address)))
       val ipAddresses = IpAddresses(assetId, gateway, address, netmask, scope.getOrElse(""))
       super.create(ipAddresses)
     }
+    Solr.updateAsset(asset)
+    ipAddresses
   }
 
   def deleteByAssetAndPool(asset: Asset, pool: Option[String]): Int = inTransaction {
@@ -93,9 +95,11 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
       i.asset_id === asset.id and
       i.pool === pool.?
     ).toList
-    rows.foldLeft(0) { case(sum, ipInfo) =>
+    val res = rows.foldLeft(0) { case(sum, ipInfo) =>
       sum + delete(ipInfo)
     }
+    Solr.updateAsset(asset)
+    res
   }
 
   def findAssetsByAddress(page: PageParams, addys: Seq[String], finder: AssetFinder): Page[AssetView] = {
