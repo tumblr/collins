@@ -119,6 +119,8 @@ class SolrPlugin(app: Application) extends Plugin {
 
 object Solr {
 
+  def plugin: Option[SolrPlugin] = Play.maybeApplication.flatMap{_.plugin[SolrPlugin]}.filter{_.enabled}
+
   protected def inPlugin(f: SolrPlugin => Unit): Unit = {
     Play.maybeApplication.foreach { app =>
       app.plugin[SolrPlugin].foreach{plugin=>
@@ -230,6 +232,8 @@ object SolrMultiValue {
 
 trait AssetSolrSerializer {
   def serialize(asset: Asset): AssetSolrDocument
+
+  val generatedFields: Map[String, ValueType]
 }
 
 /**
@@ -237,6 +241,8 @@ trait AssetSolrSerializer {
  * solr key, using group_id to group values in to multi-valued keys
  */
 class FlatSerializer extends AssetSolrSerializer {
+
+  val generatedFields = Map("NUM_DISKS" -> Integer)
 
   def serialize(asset: Asset) = postProcess {
     val opt = Map[String, Option[SolrValue]](
@@ -363,23 +369,25 @@ trait SolrSimpleExpr extends SolrExpression {
   def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
   val nonMetaKeys = Map(
-    "tag" -> String, 
-    "created" -> String, 
-    "updated" -> String, 
-    "deleted" -> String,
-    "ip_address" -> String,
+    "TAG" -> String, 
+    "CREATED" -> String, 
+    "UPDATE" -> String, 
+    "DELETED" -> String,
+    "IP_ADDRESS" -> String,
     IpmiAddress.toString -> String,
     IpmiUsername.toString -> String,
     IpmiPassword.toString -> String,
     IpmiGateway.toString -> String,
     IpmiNetmask.toString -> String
-  )
+  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(Map[String, ValueType]())
+
+  println(nonMetaKeys.toString)
 
   
 
   val enumKeys = Map[String, String => Option[Int]](
-    "type" -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
-    "status" -> ((s: String) => Status.findByName(s).map{_.id})
+    "TYPE" -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
+    "STATUS" -> ((s: String) => Status.findByName(s).map{_.id})
   )
 
   def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = 
@@ -394,25 +402,26 @@ trait SolrSimpleExpr extends SolrExpression {
 
 
   def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = {
-    val a: Option[TypeEither] = nonMetaKeys.get(key).map {valueType =>
+    val ukey = key.toUpperCase
+    val a: Option[TypeEither] = nonMetaKeys.get(ukey).map {valueType =>
       if (valueType == value.valueType) {
-        Right(key -> value) //FIXME no type  checking!
+        Right(ukey -> value) //FIXME no type  checking!
 
       } else {
         typeLeft(key, valueType, value.valueType)
       }
-    } orElse{enumKeys.get(key).map{f => value match {
+    } orElse{enumKeys.get(ukey).map{f => value match {
       case SolrStringValue(e) => f(e) match {
-        case Some(i) => Right(key -> SolrIntValue(i))
+        case Some(i) => Right(ukey -> SolrIntValue(i))
         case _ => Left("Invalid %s: %s".format(key, e))
       }
-      case s:SolrIntValue => Right(key -> value) : Either[String, (String, SolrSingleValue)]
+      case s:SolrIntValue => Right(ukey -> value) : Either[String, (String, SolrSingleValue)]
       case other => typeLeft(key, String, other.valueType)
     }}}
     a.getOrElse(AssetMeta.findByName(key) match {
       case Some(meta) => if (meta.valueType == value.valueType) {
         //FIXME: perhaps centralize asset meta key formatting
-        Right(key.toUpperCase + value.postfix -> value)
+        Right(ukey + value.postfix -> value)
       } else {
         typeLeft(key, meta.valueType, value.valueType)
       }

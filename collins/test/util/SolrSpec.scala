@@ -192,20 +192,23 @@ class SolrQuerySpec extends ApplicationSpecification {
         "foo = true".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
         """foo = "3"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
+      "case insensitive key" in {
+        "FoO = 3".query.typeCheck must_== Right("FOO_meta_i = 3".query)
+      }
       "valid enum" in {
-        """type = "SERVER_NODE"""".query.typeCheck must_== Right("type = 1".query)
+        """type = "SERVER_NODE"""".query.typeCheck must_== Right("TYPE = 1".query)
       }
       "case insensitive status enum" in {
-        """status = unallocated""".query.typeCheck must_== "status = Unallocated".query.typeCheck
+        """status = unallocated""".query.typeCheck must_== "STATUS = Unallocated".query.typeCheck
       }
       "case insensitive type enum" in {
-        """type = server_node""".query.typeCheck must_== """type = SERVER_NODE""".query.typeCheck
+        """type = server_node""".query.typeCheck must_== """TYPE = SERVER_NODE""".query.typeCheck
       }
       "invalid enum" in {
         """type = "FOOBARRRRRR"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "use enum id" in {
-        """type = 1""".query.typeCheck must_== "type = SERVER_NODE".query.typeCheck
+        """type = 1""".query.typeCheck must_== "TYPE = SERVER_NODE".query.typeCheck
       }
       "AND" in {
         "foo = 3 AND foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
