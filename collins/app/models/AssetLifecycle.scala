@@ -51,7 +51,7 @@ object AssetLifecycle {
         }
         InternalTattler.informational(asset, None,
           "Initial intake successful, status now %s".format(_status.toString))
-        Solr.updateAsset(asset)
+        Solr.updateAssetByTag(asset.tag)
         Right(Tuple2(asset, ipmi))
       }
     } catch {
@@ -74,7 +74,7 @@ object AssetLifecycle {
         AssetStateMachine(asset).decommission()
         InternalTattler.informational(asset, None, "Asset decommissioned successfully")
       }
-      Solr.updateAsset(asset)
+      Solr.updateAssetByTag(asset.tag)
       Right(true)
     } catch {
       case e => Left(e)
@@ -87,7 +87,7 @@ object AssetLifecycle {
       case true => updateServer(asset, options)
       case false => updateOther(asset, options)
     }
-    Solr.updateAsset(asset)
+    Solr.updateAssetByTag(asset.tag)
     status
   }
 
@@ -151,6 +151,7 @@ object AssetLifecycle {
         Asset.partialUpdate(asset, Some(new Date().asTimestamp), Some(status.id))
         ApiTattler.informational(asset, None, reason)
       }
+      Solr.updateAssetByTag(asset.tag)
       true
     }.left.map(e => handleException(asset, "Error updating status for asset", e))
   }

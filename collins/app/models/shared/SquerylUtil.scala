@@ -102,6 +102,7 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
       }
     }(m)
   }
+
 }
 
 trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema =>
