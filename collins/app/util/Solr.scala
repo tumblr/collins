@@ -44,11 +44,7 @@ class SolrPlugin(app: Application) extends Plugin {
       System.setProperty("org.apache.commons.logging.simplelog.http.wire.content", "WARN");
       System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.commons.httpclient", "WARN");
       _server = Some(if (useEmbedded) {
-        System.setProperty("solr.solr.home",solrHome);
-        val initializer = new CoreContainer.Initializer();
-        val coreContainer = initializer.initialize();
-        Logger.logger.debug("Booting embedded Solr Server")
-        new EmbeddedSolrServer(coreContainer, "")
+        Solr.getNewEmbeddedServer(solrHome)
       } else {
         //out-of-the-box config from solrj wiki
         Logger.logger.debug("Using external Solr Server")
@@ -152,6 +148,14 @@ object Solr {
 
   def server: Option[SolrServer] = Play.maybeApplication.flatMap { app =>
     app.plugin[SolrPlugin].filter(_.enabled).map{_.server}
+  }
+
+  private[solr] def getNewEmbeddedServer(solrHome: String) = {
+    System.setProperty("solr.solr.home",solrHome) // (╯°□°)╯︵ɐʌɐɾ
+    val initializer = new CoreContainer.Initializer()
+    val coreContainer = initializer.initialize()
+    Logger.logger.debug("Booting embedded Solr Server with solrhome " + solrHome)
+    new EmbeddedSolrServer(coreContainer, "")
   }
 
 }
@@ -479,7 +483,7 @@ class CollinsQueryException(m: String) extends PlayException("CQL", m)
  */
 class CollinsQueryParser extends JavaTokenParsers {
 
-  def parseQuery(input: String): Either[String, SolrExpression] = parse(expr, input) match {
+  def parseQuery(input: String): Either[String, SolrExpression] = parse(expr, input.trim) match {
     case Success(exp, next) => if (next.atEnd) {
       Right(exp)
     } else {
@@ -490,20 +494,21 @@ class CollinsQueryParser extends JavaTokenParsers {
 
   def expr: Parser[SolrExpression] = orOp
 
-  def orOp          = rep1sep(andOp , "OR") ^^ {i => if (i.tail == Nil) i.head else SolrOrOp(i)}
-  def andOp         = rep1sep(simpleExpr , "AND")  ^^ {i => if (i.tail == Nil) i.head else SolrAndOp(i)}
-  def notExpr       = "NOT" ~> simpleExpr ^^ {e => SolrNotOp(e)}
+  def orOp          = rep1sep(andOp , "(?iu)OR".r) ^^ {i => if (i.tail == Nil) i.head else SolrOrOp(i)}
+  def andOp         = rep1sep(simpleExpr , "(?iu)AND".r)  ^^ {i => if (i.tail == Nil) i.head else SolrAndOp(i)}
+  def notExpr       = "(?iu)NOT".r ~> simpleExpr ^^ {e => SolrNotOp(e)}
   def simpleExpr:Parser[SolrExpression]    = notExpr | rangeKv | kv | "(" ~> expr <~ ")" 
 
   def rangeKv       = ident ~ "=" ~ "[" ~ valueOpt ~ "," ~ valueOpt <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
   def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
   def valueOpt: Parser[Option[SolrSingleValue]]      = "*"^^^{None} | value ^^{other => Some(other)}
-  def value         = booleanValue | numberValue | stringValue
+  def value         = booleanValue | ipAddress | numberValue | stringValue
   def numberValue   = decimalNumber ^^{case n => if (n contains ".") {
     SolrDoubleValue(java.lang.Double.parseDouble(n))
   } else {
     SolrIntValue(java.lang.Integer.parseInt(n))
   }}
+  def ipAddress  = """^(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}))))$""".r ^^{s => SolrStringValue(s)}
   def stringValue   = quotedString | unquotedString
   def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1))}
   def unquotedString = "\\*?[a-zA-Z0-9_\\-.]+\\*?".r  ^^ {s => SolrStringValue(s)}
