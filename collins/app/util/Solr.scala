@@ -38,6 +38,7 @@ class SolrPlugin(app: Application) extends Plugin {
 
   val serializer = new FlatSerializer
 
+  //this must be lazy so it gets called after the system exists
   lazy val updater = Akka.system.actorOf(Props[SolrUpdater], name = "solr_updater")
 
 
@@ -71,6 +72,7 @@ class SolrPlugin(app: Application) extends Plugin {
         server
       })
       initialize()
+
       val callback: java.beans.PropertyChangeEvent => Unit = event => event.getNewValue match {
         case a: Asset => updater ! a
         case v: AssetMetaValue => updater ! v.getAsset
@@ -79,12 +81,19 @@ class SolrPlugin(app: Application) extends Plugin {
           case a: Asset => removeAssetByTag(a.tag)
           case v: AssetMetaValue => updater ! v.getAsset
           case i: IpAddresses => updater ! i.getAsset
+          case other => Logger.logger.error("Unknown old value in update callback %s".format((if (other == null) "null" else other.toString)))
         }
-        case other => Logger.logger.error("Unknown value in update callback %s".format(other.toString))      
+        case other => Logger.logger.error("Unknown new value in update callback %s".format(other.toString))      
       }
+
       Callback.on("asset_update")(callback)
+      Callback.on("asset_create")(callback)
+      Callback.on("asset_delete")(callback)
       Callback.on("asset_meta_value_create")(callback)
       Callback.on("asset_meta_value_delete")(callback)
+      Callback.on("ipAddresses_create")(callback)
+      Callback.on("ipAddresses_update")(callback)
+      Callback.on("ipAddresses_delete")(callback)
     }
   }
 
@@ -144,10 +153,18 @@ class SolrPlugin(app: Application) extends Plugin {
 
 }
 
+/**
+ * The SolrUpdater queues asset updates for batch updating.  Most importantly,
+ * if it receives multiple requests of the same asset, it will only update the
+ * asset once per batch.  This is to avoid reindexing an asset many times
+ * during large updates (such as updating lshw/lldp, which triggers dozens of
+ * callbacks)
+ */
 class SolrUpdater extends Actor {
 
   var queue = new collection.mutable.Queue[Asset]
 
+  //mutex to prevent multiple concurrent scheduler calls
   var scheduled = false
 
   case object Reindex
