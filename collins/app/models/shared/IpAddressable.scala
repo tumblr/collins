@@ -26,6 +26,8 @@ trait IpAddressable extends ValidatedEntity[Long] {
   def dottedNetmask(): String = IpAddress.toString(netmask)
   def getId(): Long = id
   def getAssetId(): Long = asset_id
+  def getAsset(): Asset = Asset.findById(getAssetId()).get
+    
 }
 
 trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {

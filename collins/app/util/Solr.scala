@@ -1,6 +1,9 @@
 package util.plugins
 package solr
 
+import akka.actor._
+import akka.util.duration._
+
 import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
 import models.IpmiInfo.Enum._
 
@@ -12,8 +15,10 @@ import org.apache.solr.client.solrj.impl.{CommonsHttpSolrServer, XMLResponsePars
 
 import play.api.{Application, Configuration, Logger, Play, PlayException, Plugin}
 import play.api.libs.concurrent._
+import play.api.libs.concurrent.Akka._
 import play.api.Play.current
 
+import util.plugins.Callback
 import util.views.Formatter
 
 import scala.util.parsing.combinator._
@@ -32,6 +37,8 @@ class SolrPlugin(app: Application) extends Plugin {
   lazy val repopulateOnStartup = config.flatMap{_.getBoolean("repopulateOnStartup")}.getOrElse(false)
 
   val serializer = new FlatSerializer
+
+  lazy val updater = Akka.system.actorOf(Props[SolrUpdater], name = "solr_updater")
 
 
   override def onStart() {
@@ -64,6 +71,20 @@ class SolrPlugin(app: Application) extends Plugin {
         server
       })
       initialize()
+      val callback: java.beans.PropertyChangeEvent => Unit = event => event.getNewValue match {
+        case a: Asset => updater ! a
+        case v: AssetMetaValue => updater ! v.getAsset
+        case i: IpAddresses => updater ! i.getAsset
+        case null => event.getOldValue match {
+          case a: Asset => removeAssetByTag(a.tag)
+          case v: AssetMetaValue => updater ! v.getAsset
+          case i: IpAddresses => updater ! i.getAsset
+        }
+        case other => Logger.logger.error("Unknown value in update callback %s".format(other.toString))      
+      }
+      Callback.on("asset_update")(callback)
+      Callback.on("asset_meta_value_create")(callback)
+      Callback.on("asset_meta_value_delete")(callback)
     }
   }
 
@@ -80,6 +101,11 @@ class SolrPlugin(app: Application) extends Plugin {
       Logger.logger.debug("Populating Solr with Assets")
       updateAssets(Asset.find(PageParams(0,10000,"asc"), AssetFinder.empty).items.collect{case a: Asset => a})
     }.getOrElse(Logger.logger.warn("attempted to populate solr when no server was initialized"))
+  }
+
+  def updateAsset(asset: Asset) = {
+    Logger.logger.debug("updating asset " + asset.tag)
+    //updateAssets(asset :: Nil)
   }
 
   def updateAssets(assets: Seq[Asset]) {
@@ -115,7 +141,33 @@ class SolrPlugin(app: Application) extends Plugin {
   }
 
 
+
 }
+
+class SolrUpdater extends Actor {
+
+  var queue = new collection.mutable.Queue[Asset]
+
+  var scheduled = false
+
+  case object Reindex
+
+  def receive = {
+    case asset: Asset => if (!queue.contains(asset)) {
+      queue += asset
+      if (!scheduled) {
+        context.system.scheduler.scheduleOnce(50 milliseconds, self, Reindex)
+        scheduled = true
+      }
+    }
+    case Reindex => {
+      Solr.plugin.foreach{_.updateAssets(queue.toSeq)}
+      queue = new collection.mutable.Queue[Asset]
+      scheduled = false
+    }
+  }
+}
+
 
 object Solr {
 

@@ -7,7 +7,6 @@ import models.{Status => AStatus}
 import util.{ApiTattler, AssetStateMachine, Config, Feature, InternalTattler, LldpRepresentation, LshwRepresentation}
 import util.parsers.{LldpParser, LshwParser}
 import util.power.PowerUnits
-import util.plugins.solr.Solr
 
 import play.api.Logger
 
@@ -51,7 +50,6 @@ object AssetLifecycle {
         }
         InternalTattler.informational(asset, None,
           "Initial intake successful, status now %s".format(_status.toString))
-        Solr.updateAssetByTag(asset.tag)
         Right(Tuple2(asset, ipmi))
       }
     } catch {
@@ -74,7 +72,6 @@ object AssetLifecycle {
         AssetStateMachine(asset).decommission()
         InternalTattler.informational(asset, None, "Asset decommissioned successfully")
       }
-      Solr.updateAssetByTag(asset.tag)
       Right(true)
     } catch {
       case e => Left(e)
@@ -87,7 +84,6 @@ object AssetLifecycle {
       case true => updateServer(asset, options)
       case false => updateOther(asset, options)
     }
-    Solr.updateAssetByTag(asset.tag)
     status
   }
 
@@ -151,7 +147,6 @@ object AssetLifecycle {
         Asset.partialUpdate(asset, Some(new Date().asTimestamp), Some(status.id))
         ApiTattler.informational(asset, None, reason)
       }
-      Solr.updateAssetByTag(asset.tag)
       true
     }.left.map(e => handleException(asset, "Error updating status for asset", e))
   }
