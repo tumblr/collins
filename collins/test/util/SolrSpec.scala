@@ -210,6 +210,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       "use enum id" in {
         """type = 1""".query.typeCheck must_== "TYPE = SERVER_NODE".query.typeCheck
       }
+      "generated key" in {
+        """num_disks = 3""".query.typeCheck must_== Right(SolrKeyVal("NUM_DISKS_meta_i", SolrIntValue(3)))
+      }
       "AND" in {
         "foo = 3 AND foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
