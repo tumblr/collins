@@ -368,18 +368,23 @@ trait SolrSimpleExpr extends SolrExpression {
   def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
   def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
-  val nonMetaKeys = Map(
-    "TAG" -> String, 
-    "CREATED" -> String, 
-    "UPDATE" -> String, 
-    "DELETED" -> String,
-    "IP_ADDRESS" -> String,
-    IpmiAddress.toString -> String,
-    IpmiUsername.toString -> String,
-    IpmiPassword.toString -> String,
-    IpmiGateway.toString -> String,
-    IpmiNetmask.toString -> String
-  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(Map[String, ValueType]())
+  /**
+   * each key is an "incoming" field from a query, the ValueType is the
+   * expected type of the key, and the Boolean indicates whether the key in
+   * Solr is static(false) or dynamic(true)
+   */
+  val nonMetaKeys: Map[String,(ValueType, Boolean)] = Map(
+    "TAG" -> (String,false), 
+    "CREATED" -> (String,false), 
+    "UPDATE" -> (String,false), 
+    "DELETED" -> (String,false),
+    "IP_ADDRESS" -> (String,false),
+    IpmiAddress.toString -> (String, true),
+    IpmiUsername.toString -> (String, true),
+    IpmiPassword.toString -> (String, true),
+    IpmiGateway.toString -> (String, true),
+    IpmiNetmask.toString -> (String, true)
+  ) ++ Solr.plugin.map{_.serializer.generatedFields.map{case (k,v) => (k,(v,true))}}.getOrElse(Map())
 
   println(nonMetaKeys.toString)
 
@@ -399,13 +404,11 @@ trait SolrSimpleExpr extends SolrExpression {
   /**
    * returns Left(error) or Right(solr_key_name)
    */
-
-
   def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = {
     val ukey = key.toUpperCase
-    val a: Option[TypeEither] = nonMetaKeys.get(ukey).map {valueType =>
+    val a: Option[TypeEither] = nonMetaKeys.get(ukey).map {case (valueType, transformKey) =>
       if (valueType == value.valueType) {
-        Right(ukey -> value) //FIXME no type  checking!
+        Right((if (transformKey) ukey + value.postfix else ukey) -> value)
 
       } else {
         typeLeft(key, valueType, value.valueType)
@@ -425,7 +428,7 @@ trait SolrSimpleExpr extends SolrExpression {
       } else {
         typeLeft(key, meta.valueType, value.valueType)
       }
-      case None => Left("Unknown Meta tag \"%s\"".format(key))
+      case None => Left("Unknown key \"%s\"".format(key))
     })
   }
 
