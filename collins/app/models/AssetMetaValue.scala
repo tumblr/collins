@@ -68,6 +68,8 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
         .getOrElse(v)
     )
   )
+  override protected val createEventName = Some("asset_meta_value_create")
+  override protected val deleteEventName = Some("asset_meta_value_delete")
 
   def shouldEncrypt(v: AssetMetaValue): Boolean = {
     try {
