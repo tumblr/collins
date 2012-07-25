@@ -29,16 +29,16 @@ class SolrSpec extends ApplicationSpecification {
       val asset = generateAsset(assetTag, assetType, status, meta)
       val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
       val expected = Map(
-        "tag" -> SolrStringValue(assetTag),
-        "status" -> SolrIntValue(status.id),
-        "type" -> SolrIntValue(assetType.id),
-        "created" -> SolrStringValue(Formatter.solrDateFormat(asset.created)),
+        "TAG" -> SolrStringValue(assetTag),
+        "STATUS" -> SolrIntValue(status.id),
+        "TYPE" -> SolrIntValue(assetType.id),
+        "CREATED" -> SolrStringValue(Formatter.solrDateFormat(asset.created)),
         "A_meta_s" -> SolrMultiValue(SolrStringValue("a") :: SolrStringValue("a1") :: Nil),
         "B_meta_s" -> SolrStringValue("b"),
         "INT_meta_i" -> SolrIntValue(1135),
         "DOUBLE_meta_d" -> SolrDoubleValue(3.1415),
         "BOOL_meta_b" -> SolrBooleanValue(false),
-        "ip_address" -> SolrMultiValue(addresses.map{a => SolrStringValue(a.dottedAddress)})
+        "IP_ADDRESS" -> SolrMultiValue(addresses.map{a => SolrStringValue(a.dottedAddress)})
       )
       (new FlatSerializer).serialize(asset) must_== expected
     }
@@ -226,6 +226,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
       "not lose NOT" in {
         "NOT foo = 3".query.typeCheck must_== Right(SolrNotOp(SolrKeyVal("FOO_meta_i", SolrIntValue(3))))
+      }
+      "tag search" in {
+        """tag = test""".query.typeCheck must_== Right(SolrKeyVal("TAG", SolrStringValue("test")))
       }
     }
 

@@ -315,9 +315,9 @@ class FlatSerializer extends AssetSolrSerializer {
 
   def serialize(asset: Asset) = postProcess {
     val opt = Map[String, Option[SolrValue]](
-      "updated" -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
-      "deleted" -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
-      "ip_address" -> {
+      "UPDATED" -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
+      "DELETED" -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
+      "IP_ADDRESS" -> {
         val a = IpAddresses.findAllByAsset(asset, false)
         if (a.size > 0) {
           val addresses = SolrMultiValue(a.map{a => SolrStringValue(a.dottedAddress)})
@@ -329,10 +329,10 @@ class FlatSerializer extends AssetSolrSerializer {
     ).collect{case(k, Some(v)) => (k,v)}
       
     opt ++ Map[String, SolrValue](
-      "tag" -> SolrStringValue(asset.tag),
-      "status" -> SolrIntValue(asset.status),
-      "type" -> SolrIntValue(asset.getType.id),
-      "created" -> SolrStringValue(Formatter.solrDateFormat(asset.created))
+      "TAG" -> SolrStringValue(asset.tag),
+      "STATUS" -> SolrIntValue(asset.status),
+      "TYPE" -> SolrIntValue(asset.getType.id),
+      "CREATED" -> SolrStringValue(Formatter.solrDateFormat(asset.created))
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset, false))
   }
 
@@ -454,10 +454,6 @@ trait SolrSimpleExpr extends SolrExpression {
     IpmiGateway.toString -> (String, true),
     IpmiNetmask.toString -> (String, true)
   ) ++ Solr.plugin.map{_.serializer.generatedFields.map{case (k,v) => (k,(v,true))}}.getOrElse(Map())
-
-  println(nonMetaKeys.toString)
-
-  
 
   val enumKeys = Map[String, String => Option[Int]](
     "TYPE" -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
@@ -591,6 +587,7 @@ class CollinsQueryParser extends JavaTokenParsers {
   def notExpr       = "(?iu)NOT".r ~> simpleExpr ^^ {e => SolrNotOp(e)}
   def simpleExpr:Parser[SolrExpression]    = notExpr | rangeKv | kv | "(" ~> expr <~ ")" 
 
+  //def inKv          = ident ~ "(?iu)IN".r ~> "[" ~>
   def rangeKv       = ident ~ "=" ~ "[" ~ valueOpt ~ "," ~ valueOpt <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
   def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
   def valueOpt: Parser[Option[SolrSingleValue]]      = "*"^^^{None} | value ^^{other => Some(other)}
@@ -609,7 +606,8 @@ class CollinsQueryParser extends JavaTokenParsers {
 }
 
 /**
- * Note - eventually this can hold faceting information and other metadata
+ * This class is a full search query, which includes an expression along with
+ * sorting and pagination parameters
  */
 case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField: String) {
 
@@ -620,11 +618,11 @@ case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField
     q.setQuery(s)
     q.setStart(page.offset)
     q.setRows(page.size)
-    q.addSortField(sortField, (if (page.sort == "ASC") SolrQuery.ORDER.asc else SolrQuery.ORDER.desc))
+    q.addSortField(sortField.toUpperCase, (if (page.sort == "ASC") SolrQuery.ORDER.asc else SolrQuery.ORDER.desc))
     val response = server.query(q)
     val results = response.getResults
     Right((results.toArray.toSeq.map{
-      case doc: SolrDocument => Asset.findByTag(doc.getFieldValue("tag").toString)
+      case doc: SolrDocument => Asset.findByTag(doc.getFieldValue("TAG").toString)
       case other => {
         Logger.logger.warn("Got something weird back from Solr %s".format(other.toString))
         None
