@@ -23,5 +23,9 @@
   <logger name="httpclient.wire.content" level="WARN" />
   <logger name="httpclient.wire.header" level="WARN" />
   <logger name="httpclient.wire" level="WARN" />
+  <logger name="org.apache.commons.httpclient" level="WARN"/>
+  <logger name="org.apache.commons" level="WARN"/>
+  <logger name="org.apache.commons.httpclient.HttpMethodBase" level="WARN"/>
+  <logger name="org.apache.commons.httpclient.MultiThreadedConnectionManager" level="WARN"/>
   
 </configuration>

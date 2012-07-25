@@ -74,7 +74,12 @@ class SolrPlugin(app: Application) extends Plugin {
       initialize()
 
       val callback: java.beans.PropertyChangeEvent => Unit = event => event.getNewValue match {
-        case a: Asset => updater ! a
+        case a: Asset => if (a.deleted.isDefined) {
+          removeAssetByTag(a.tag) //deletes are soft right now
+        } else {
+          //Logger.logger.debug("preparing to index asset " + a.toString
+          updater ! a
+        }
         case v: AssetMetaValue => updater ! v.getAsset
         case i: IpAddresses => updater ! i.getAsset
         case null => event.getOldValue match {
@@ -113,7 +118,7 @@ class SolrPlugin(app: Application) extends Plugin {
   }
 
   def updateAsset(asset: Asset) = {
-    Logger.logger.debug("updating asset " + asset.tag)
+    Logger.logger.debug("updating asset " + asset.toString)
     //updateAssets(asset :: Nil)
   }
 
@@ -126,7 +131,7 @@ class SolrPlugin(app: Application) extends Plugin {
         server.add(fuckingJava)
         server.commit()
         if (assets.size == 1) {
-          Logger.logger.debug("Re-indexing asset " + assets.head.tag)
+          Logger.logger.debug("Re-indexing asset " + assets.head.toString)
         } else {
           Logger.logger.info("Indexed %d assets".format(docs.size))
         }
@@ -139,7 +144,8 @@ class SolrPlugin(app: Application) extends Plugin {
   def removeAssetByTag(tag: String) {
     _server.map{server => 
       if (tag != "*") {
-        server.deleteByQuery("tag:" + tag)
+        server.deleteByQuery("TAG:" + tag)
+        server.commit()
         Logger.logger.info("Removed asset %s from index".format(tag))
       }
     }
@@ -169,11 +175,15 @@ class SolrUpdater extends Actor {
 
   case object Reindex
 
+  /**
+   * Note, even though the callback checks if the asset is deleted, we're still
+   * gonna get index requests from the delete asset's meta value deletions
+   */
   def receive = {
-    case asset: Asset => if (!queue.contains(asset)) {
+    case asset: Asset => if (!queue.contains(asset) && !asset.deleted.isDefined) {
       queue += asset
       if (!scheduled) {
-        context.system.scheduler.scheduleOnce(50 milliseconds, self, Reindex)
+        context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
         scheduled = true
       }
     }
