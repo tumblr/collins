@@ -178,9 +178,12 @@ class SolrUpdater extends Actor {
   /**
    * Note, even though the callback checks if the asset is deleted, we're still
    * gonna get index requests from the delete asset's meta value deletions
+   *
+   * Note - also we re-fetch the asset from MySQL to avoid a possible race
+   * condition where an asset is deleted immediately after it is updated
    */
   def receive = {
-    case asset: Asset => if (!queue.contains(asset) && !asset.deleted.isDefined) {
+    case asset: Asset => if ((!queue.contains(asset)) && Asset.findByTag(asset.tag).map{_.deleted.isDefined == false}.getOrElse(false)) {
       queue += asset
       if (!scheduled) {
         context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)

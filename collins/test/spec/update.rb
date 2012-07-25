@@ -12,10 +12,11 @@ describe "Asset Update and Search" do
   end
 
   it "put asset in maintenance mode" do
-    #the asset should be in allocated mode, but might not if a previous test failed
     assets = @client.search 'tag = "001016"'
     assets.size.should eql 1
-    @client.set_status!(assets[0], "Maintenance")
+    #the asset should be in allocated mode, but might not if a previous test failed
+    @client.set_status!(assets[0], "Allocated").should eql true
+    @client.set_status!(assets[0], "Maintenance").should eql true
     sleep(0.2)
     assets = @client.search 'tag = "001016" AND status = maintenance'
     assets.size.should eql 1
