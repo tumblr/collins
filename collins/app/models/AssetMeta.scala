@@ -125,8 +125,8 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
   type ValueType = ValueType.Value
   object ValueType extends Enumeration {
     val String = Value("STRING")
-    val Integer = Value("Integer")
-    val Double = Value("Double")
+    val Integer = Value("INTEGER")
+    val Double = Value("DOUBLE")
     val Boolean = Value("BOOLEAN")
 
     def valStrings = values.map{_.toString}

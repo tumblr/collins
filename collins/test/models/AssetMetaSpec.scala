@@ -118,7 +118,7 @@ class AssetMetaSpec extends ApplicationSpecification {
     val metaPriority = -1
     val metaLabel = "Numeric"
     val metaDescription = "Numeric tag for testing"
-    val metaType = "NUMBER"
+    val metaType = "INTEGER"
     val newMeta = AssetMeta(metaName, metaPriority, metaLabel, metaDescription, 0, metaType)
   }
 
