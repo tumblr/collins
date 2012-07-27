@@ -21,8 +21,6 @@ case class SolrFindAction (
   handler: SecureController
 ) extends AssetFindAction(pageParams, spec, handler) with AssetResultsAction {
 
-  println("got query " + query)
-
   case class SolrQueryDataHolder(query: CollinsSearchQuery) extends RequestDataHolder
 
   override def validate(): Either[RequestDataHolder, RequestDataHolder] = (new CollinsQueryParser)
