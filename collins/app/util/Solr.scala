@@ -36,6 +36,7 @@ class SolrPlugin(app: Application) extends Plugin {
   lazy val useEmbedded = config.flatMap{_.getBoolean("useEmbeddedServer")}.getOrElse(true)
   lazy val repopulateOnStartup = config.flatMap{_.getBoolean("repopulateOnStartup")}.getOrElse(false)
   lazy val reactToUpdates = config.flatMap{_.getBoolean("reactToUpdates")}.getOrElse(true)
+  lazy val remoteUrl: Option[String] = config.flatMap{_.getString("externalUrl")}
 
   val serializer = new FlatSerializer
 
@@ -55,53 +56,47 @@ class SolrPlugin(app: Application) extends Plugin {
       _server = Some(if (useEmbedded) {
         Solr.getNewEmbeddedServer(solrHome)
       } else {
-        //out-of-the-box config from solrj wiki
-        Logger.logger.debug("Using external Solr Server")
-        val url = app.configuration.getConfig("solr").flatMap{_.getString("externalUrl")}.getOrElse(throw new Exception("Missing required solr.externalUrl"))
-        val server = new CommonsHttpSolrServer( url );
-        Logger.logger.debug("test")
-        server.setSoTimeout(1000);  // socket read timeout
-        server.setConnectionTimeout(100);
-        server.setDefaultMaxConnectionsPerHost(100);
-        server.setMaxTotalConnections(100);
-        server.setFollowRedirects(false);  // defaults to false
-        // allowCompression defaults to false.
-        // Server side must support gzip or deflate for this to have any effect.
-        server.setAllowCompression(true);
-        server.setMaxRetries(1); // defaults to 0.  > 1 not recommended.
-        server.setParser(new XMLResponseParser()); // binary parser is used by default
-        server
+        Solr.getNewRemoteServer(remoteUrl.getOrElse(throw new IllegalArgumentException("Missing required solr.externalUrl")))
       })
       initialize()
 
-      val callback: java.beans.PropertyChangeEvent => Unit = event => event.getNewValue match {
-        case a: Asset => if (a.deleted.isDefined) {
-          removeAssetByTag(a.tag) //deletes are soft right now
-        } else {
-          //Logger.logger.debug("preparing to index asset " + a.toString
-          updater ! a
-        }
-        case v: AssetMetaValue => updater ! v.getAsset
-        case i: IpAddresses => updater ! i.getAsset
-        case null => event.getOldValue match {
-          case a: Asset => removeAssetByTag(a.tag)
-          case v: AssetMetaValue => updater ! v.getAsset
-          case i: IpAddresses => updater ! i.getAsset
-          case other => Logger.logger.error("Unknown old value in update callback %s".format((if (other == null) "null" else other.toString)))
-        }
-        case other => Logger.logger.error("Unknown new value in update callback %s".format(other.toString))      
-      }
       if (reactToUpdates) {
-        Callback.on("asset_update")(callback)
-        Callback.on("asset_create")(callback)
-        Callback.on("asset_delete")(callback)
-        Callback.on("asset_meta_value_create")(callback)
-        Callback.on("asset_meta_value_delete")(callback)
-        Callback.on("ipAddresses_create")(callback)
-        Callback.on("ipAddresses_update")(callback)
-        Callback.on("ipAddresses_delete")(callback)
+        initializeCallbacks()
       }
     }
+  }
+
+  /**
+   * Setup callbacks on all operations that modify asset data, so we can
+   * properly reindex the updated asset in Solr
+   */
+  private def initializeCallbacks() {
+    val callback: java.beans.PropertyChangeEvent => Unit = event => event.getNewValue match {
+      case a: Asset => if (a.deleted.isDefined) {
+        removeAssetByTag(a.tag) //deletes are soft right now
+      } else {
+        //Logger.logger.debug("preparing to index asset " + a.toString
+        updater ! a
+      }
+      case v: AssetMetaValue => updater ! v.getAsset
+      case i: IpAddresses => updater ! i.getAsset
+      case null => event.getOldValue match {
+        case a: Asset => removeAssetByTag(a.tag)
+        case v: AssetMetaValue => updater ! v.getAsset
+        case i: IpAddresses => updater ! i.getAsset
+        case other => Logger.logger.error("Unknown old value in update callback %s".format((if (other == null) "null" else other.toString)))
+      }
+      case other => Logger.logger.error("Unknown new value in update callback %s".format(other.toString))      
+    }
+    Callback.on("asset_update")(callback)
+    Callback.on("asset_create")(callback)
+    Callback.on("asset_delete")(callback)
+    Callback.on("asset_meta_value_create")(callback)
+    Callback.on("asset_meta_value_delete")(callback)
+    Callback.on("ipAddresses_create")(callback)
+    Callback.on("ipAddresses_update")(callback)
+    Callback.on("ipAddresses_delete")(callback)
+
   }
 
   def initialize() {
@@ -244,6 +239,24 @@ object Solr {
     val coreContainer = initializer.initialize()
     Logger.logger.debug("Booting embedded Solr Server with solrhome " + solrHome)
     new EmbeddedSolrServer(coreContainer, "")
+  }
+
+  private[solr] def getNewRemoteServer(remoteUrl: String) = {
+    //out-of-the-box config from solrj wiki
+    Logger.logger.debug("Using external Solr Server")
+    val server = new CommonsHttpSolrServer(remoteUrl);
+    Logger.logger.debug("test")
+    server.setSoTimeout(1000);  // socket read timeout
+    server.setConnectionTimeout(100);
+    server.setDefaultMaxConnectionsPerHost(100);
+    server.setMaxTotalConnections(100);
+    server.setFollowRedirects(false);  // defaults to false
+    // allowCompression defaults to false.
+    // Server side must support gzip or deflate for this to have any effect.
+    server.setAllowCompression(true);
+    server.setMaxRetries(1); // defaults to 0.  > 1 not recommended.
+    server.setParser(new XMLResponseParser()); // binary parser is used by default
+    server
   }
 
 }
