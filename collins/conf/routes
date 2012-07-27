@@ -26,6 +26,7 @@ GET     /asset/:tag/similar         app.Resources.similar(tag: String, page: Int
 GET     /admin/stats                controllers.Admin.stats
 GET     /admin/logs                 controllers.Admin.logs
 POST    /admin/cache/clear          controllers.Admin.clearCache
+GET     /admin/solr                 controllers.Admin.populateSolr
 
 # Help
 GET     /help                       app.HelpPage.index(t: String ?= controllers.Help.Default)
@@ -35,7 +36,6 @@ GET     /login                      controllers.Application.login
 POST    /login                      controllers.Application.authenticate
 GET     /logout                     controllers.Application.logout
 
-GET   /solr                         app.Resources.populateSolr
 GET   /solrsearch                   app.Resources.searchSolr(query: String, details: String ?= "false", page: Int ?=0, size: Int ?=50, sort: String ?= "ASC")
 
 # API

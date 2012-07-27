@@ -22,4 +22,9 @@ object Admin extends SecureWebController {
     Ok("ok")
   }(Permissions.Admin.ClearCache)
 
+  def populateSolr = SecureAction {
+    Solr.populate()
+    Redirect(app.routes.Resources.index).flashing("error" -> "Repopulating Solr index in the background.  May take a few minutes to complete")
+  }(Permissions.Admin.ClearCache)
+
 }
