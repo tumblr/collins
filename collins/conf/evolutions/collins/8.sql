@@ -2,7 +2,7 @@
 
 # --- !Ups
 
-ALTER TABLE asset_meta ADD value_type VARCHAR(32) NOT NULL DEFAULT 'STRING';
+ALTER TABLE asset_meta ADD value_type INT(4) NOT NULL DEFAULT 1;
 
 # --- !Downs
 

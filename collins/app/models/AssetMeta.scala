@@ -13,14 +13,14 @@ case class AssetMeta(
     label: String,
     description: String,
     id: Long = 0,
-    value_type: String = "STRING"
+    value_type: Int = AssetMeta.ValueType.String.id
     ) extends ValidatedEntity[Long]
 {
   override def validate() {
     require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
     require(AssetMeta.isValidName(name), "Name must be all upper case, alpha numeric (and hyphens)")
     require(description != null && description.length > 0, "Need a description")
-    require(AssetMeta.ValueType.valStrings(value_type), "Invalid value_type, must be one of [%s]".format(AssetMeta.ValueType.valStrings.mkString(",")))
+    require(AssetMeta.ValueType.valIds(value_type), "Invalid value_type, must be one of [%s]".format(AssetMeta.ValueType.valStrings.mkString(",")))
   }
   override def asJson: String = {
     Json.stringify(JsObject(Seq(
@@ -33,7 +33,7 @@ case class AssetMeta(
   }
   def getId(): Long = id
 
-  def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType.withName(value_type)
+  def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType(value_type)
 
   def valueType = getValueType
 
@@ -99,7 +99,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
       priority = -1, 
       label = name.toLowerCase.capitalize, 
       description = name,
-      value_type = valueType.toString
+      value_type = valueType.id
     ))
     findByName(name).get
   }
@@ -124,12 +124,13 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
 
   type ValueType = ValueType.Value
   object ValueType extends Enumeration {
-    val String = Value("STRING")
-    val Integer = Value("INTEGER")
-    val Double = Value("DOUBLE")
-    val Boolean = Value("BOOLEAN")
+    val String = Value(1,"STRING")
+    val Integer = Value(2,"INTEGER")
+    val Double = Value(3,"DOUBLE")
+    val Boolean = Value(4,"BOOLEAN")
 
     def valStrings = values.map{_.toString}
+    def valIds = values.map{_.id}
   }
 
   type Enum = Enum.Value
