@@ -47,7 +47,7 @@ object SecureController {
                   logger.debug("Credentials required and found, processing action")
                   getAction(Some(user), action, request)
                 } else {
-                  logger.warn("Credentials required and NOT found for %s".format(user.username))
+                  logger.warn("Credentials required for %s and NOT found for %s".format(request.path, user.username))
                   onUnauthorized(request)
                 }
               }
