@@ -19,10 +19,6 @@ trait Resources extends Controller {
     Ok(html.resources.index(AssetMeta.getViewable())).withHeaders("Content-Language" -> "en")
   }(Permissions.Resources.Index)
 
-  def populateSolr = Action {
-    Solr.populate()
-    Redirect(app.routes.Resources.index).flashing("error" -> "Repopulating Solr index in the background.  May take a few minutes to complete")
-  }
 
   def searchSolr(query: String, details: String, page: Int, size: Int, sort: String) = 
     SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, "tag", Permissions.Resources.Find, this)
