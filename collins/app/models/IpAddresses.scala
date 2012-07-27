@@ -6,7 +6,6 @@ import play.api.Configuration
 import play.api.libs.json._
 import util.{Config, IpAddress, IpAddressCalc}
 import util.plugins.Callback
-import util.plugins.solr.Solr
 import org.squeryl.dsl.ast.LogicalBoolean
 
 case class IpAddresses(
@@ -87,7 +86,6 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
       val ipAddresses = IpAddresses(assetId, gateway, address, netmask, scope.getOrElse(""))
       super.create(ipAddresses)
     }
-    Solr.updateAsset(asset)
     ipAddresses
   }
 
@@ -99,7 +97,6 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
     val res = rows.foldLeft(0) { case(sum, ipInfo) =>
       sum + delete(ipInfo)
     }
-    Solr.updateAsset(asset)
     res
   }
 

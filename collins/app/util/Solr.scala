@@ -35,6 +35,7 @@ class SolrPlugin(app: Application) extends Plugin {
   override lazy val enabled = config.flatMap{_.getBoolean("enabled")}.getOrElse(false)
   lazy val useEmbedded = config.flatMap{_.getBoolean("useEmbeddedServer")}.getOrElse(true)
   lazy val repopulateOnStartup = config.flatMap{_.getBoolean("repopulateOnStartup")}.getOrElse(false)
+  lazy val reactToUpdates = config.flatMap{_.getBoolean("reactToUpdates")}.getOrElse(true)
 
   val serializer = new FlatSerializer
 
@@ -90,15 +91,16 @@ class SolrPlugin(app: Application) extends Plugin {
         }
         case other => Logger.logger.error("Unknown new value in update callback %s".format(other.toString))      
       }
-
-      Callback.on("asset_update")(callback)
-      Callback.on("asset_create")(callback)
-      Callback.on("asset_delete")(callback)
-      Callback.on("asset_meta_value_create")(callback)
-      Callback.on("asset_meta_value_delete")(callback)
-      Callback.on("ipAddresses_create")(callback)
-      Callback.on("ipAddresses_update")(callback)
-      Callback.on("ipAddresses_delete")(callback)
+      if (reactToUpdates) {
+        Callback.on("asset_update")(callback)
+        Callback.on("asset_create")(callback)
+        Callback.on("asset_delete")(callback)
+        Callback.on("asset_meta_value_create")(callback)
+        Callback.on("asset_meta_value_delete")(callback)
+        Callback.on("ipAddresses_create")(callback)
+        Callback.on("ipAddresses_update")(callback)
+        Callback.on("ipAddresses_delete")(callback)
+      }
     }
   }
 
