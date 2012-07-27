@@ -27,11 +27,14 @@ class SolrPlugin(app: Application) extends Plugin {
 
   private[this] var _server: Option[SolrServer] = None
 
-  def server = _server.get //FIXME: make the thrown exception more descriptive
+  def server = _server match {
+    case Some(server) => server
+    case None => throw new RuntimeException("Attempted to get Solr server when no server is initialized")
+  }
 
   private def config = app.configuration.getConfig("solr")
 
-  lazy val solrHome = config.flatMap{_.getString("embeddedSolrHome")}.getOrElse(throw new Exception("No solrHome set!"))
+  lazy val solrHome = config.flatMap{_.getString("embeddedSolrHome")}.getOrElse(throw new IllegalArgumentException("No solrHome set!"))
   override lazy val enabled = config.flatMap{_.getBoolean("enabled")}.getOrElse(false)
   lazy val useEmbedded = config.flatMap{_.getBoolean("useEmbeddedServer")}.getOrElse(true)
   lazy val repopulateOnStartup = config.flatMap{_.getBoolean("repopulateOnStartup")}.getOrElse(false)
@@ -58,8 +61,10 @@ class SolrPlugin(app: Application) extends Plugin {
       } else {
         Solr.getNewRemoteServer(remoteUrl.getOrElse(throw new IllegalArgumentException("Missing required solr.externalUrl")))
       })
-      initialize()
 
+      if (repopulateOnStartup) {
+        populate()
+      }
       if (reactToUpdates) {
         initializeCallbacks()
       }
@@ -96,13 +101,6 @@ class SolrPlugin(app: Application) extends Plugin {
     Callback.on("ipAddresses_create")(callback)
     Callback.on("ipAddresses_update")(callback)
     Callback.on("ipAddresses_delete")(callback)
-
-  }
-
-  def initialize() {
-    if (enabled && repopulateOnStartup) {
-      populate()
-    }
 
   }
 
