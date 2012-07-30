@@ -37,6 +37,8 @@ case class AssetMeta(
 
   def valueType = getValueType
 
+  def getSolrKey() = SolrKey(name, valueType, true)
+
   def validateValue(value: String): Boolean = typeStringValue(value).isDefined
 
   def typeStringValue(value: String): Option[SolrSingleValue] = getValueType() match {
@@ -131,6 +133,13 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
 
     def valStrings = values.map{_.toString}
     def valIds = values.map{_.id}
+
+    val postFix = Map[ValueType,String](
+      String -> "_meta_s",
+      Integer -> "_meta_i",
+      Double -> "_meta_d",
+      Boolean -> "_meta_b"
+    )
   }
 
   type Enum = Enum.Value
