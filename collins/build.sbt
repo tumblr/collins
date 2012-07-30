@@ -13,8 +13,10 @@ libraryDependencies ++= Seq(
   "com.yammer.metrics" %% "metrics-scala" % "2.1.1",
   "mysql" % "mysql-connector-java" % "5.1.19",
   "com.h2database" % "h2" % "1.3.158",
-  "org.apache.solr" % "solr-solrj" % "3.6.0",
-  "org.apache.solr" % "solr-core"  % "3.6.0",
+  "org.apache.solr" % "solr-solrj" % "3.6.1",
+  "org.apache.solr" % "solr-core"  % "3.6.1",
+  "org.apache.httpcomponents" % "httpclient" % "4.2.1", 
+  "org.apache.httpcomponents" % "httpmime" % "4.2.1", 
   "javax.servlet" % "servlet-api" % "2.5"
 )
 
