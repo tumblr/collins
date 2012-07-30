@@ -49,12 +49,11 @@ object Solr {
 
   def removeAssetByTag(tag: String) = inPlugin {_.removeAssetByTag(tag)}
     
-  type AssetSolrDocument = Map[String, SolrValue]
+  type AssetSolrDocument = Map[SolrKey, SolrValue]
 
   def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {
-    val untyped = typedMap.map{case(k,v) => (k,v.value)}
     val input = new SolrInputDocument
-    untyped.foreach{case(key,value) => input.addField(key,value)}
+    typedMap.foreach{case(key,value) => input.addField(key.resolvedName,value.value)}
     input
   }
 
@@ -97,7 +96,7 @@ import Solr._
 trait AssetSolrSerializer {
   def serialize(asset: Asset): AssetSolrDocument
 
-  val generatedFields: Map[String, ValueType]
+  val generatedFields: Seq[SolrKey]
 }
 
 /**
@@ -106,13 +105,13 @@ trait AssetSolrSerializer {
  */
 class FlatSerializer extends AssetSolrSerializer {
 
-  val generatedFields = Map("NUM_DISKS" -> Integer)
+  val generatedFields = SolrKey("NUM_DISKS", Integer, true) :: SolrKey("KEYS", String, true) :: Nil
 
   def serialize(asset: Asset) = postProcess {
-    val opt = Map[String, Option[SolrValue]](
-      "UPDATED" -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
-      "DELETED" -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
-      "IP_ADDRESS" -> {
+    val opt = Map[SolrKey, Option[SolrValue]](
+      SolrKey("UPDATED", String, false) -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
+      SolrKey("DELETED", String, false) -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
+      SolrKey("IP_ADDRESS", String, false) -> {
         val a = IpAddresses.findAllByAsset(asset, false)
         if (a.size > 0) {
           val addresses = SolrMultiValue(a.map{a => SolrStringValue(a.dottedAddress)})
@@ -123,11 +122,11 @@ class FlatSerializer extends AssetSolrSerializer {
       }
     ).collect{case(k, Some(v)) => (k,v)}
       
-    opt ++ Map[String, SolrValue](
-      "TAG" -> SolrStringValue(asset.tag),
-      "STATUS" -> SolrIntValue(asset.status),
-      "TYPE" -> SolrIntValue(asset.getType.id),
-      "CREATED" -> SolrStringValue(Formatter.solrDateFormat(asset.created))
+    opt ++ Map[SolrKey, SolrValue](
+      SolrKey("TAG", String, false) -> SolrStringValue(asset.tag),
+      SolrKey("STATUS", Integer, false) -> SolrIntValue(asset.status),
+      SolrKey("TYPE", Integer, false) -> SolrIntValue(asset.getType.id),
+      SolrKey("CREATED", String, false) -> SolrStringValue(Formatter.solrDateFormat(asset.created))
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset, false))
   }
 
@@ -142,7 +141,7 @@ class FlatSerializer extends AssetSolrSerializer {
           case Double => SolrDoubleValue(java.lang.Double.parseDouble(head.getValue()))
           case _ => SolrStringValue(head.getValue())
         }
-        val solrKey = head.getName() + newval.postfix
+        val solrKey = SolrKey(head.getName(), head.getValueType(), true)
         val mergedval = build.get(solrKey) match {
           case Some(exist) => exist match {
             case s: SolrSingleValue => SolrMultiValue(s :: newval :: Nil, newval.valueType)
@@ -157,13 +156,15 @@ class FlatSerializer extends AssetSolrSerializer {
     process(Map(), values)
   }
 
-  def postProcess(doc: Map[String, SolrValue]): Map[String, SolrValue] = {
-    val disks = doc.get("DISK_SIZE_BYTES_meta_s").map{v => ("NUM_DISKS_meta_i" -> SolrIntValue(v match {
+  def postProcess(doc: AssetSolrDocument): AssetSolrDocument = {
+    val disks:Option[Tuple2[SolrKey, SolrValue]] = doc.find{case (k,v) => k.name == "DISK_SIZE_BYTES"}.map{case (k,v) => (SolrKey("NUM_DISKS", Integer, true) -> SolrIntValue(v match {
       case s:SolrSingleValue => 1
       case SolrMultiValue(vals, _) => vals.size
     }))}
-    val newFields = List(disks).flatten
-    doc ++ newFields
+    val newFields = List(disks).flatten.toMap
+    val almostDone = doc ++ newFields
+    val keyList = SolrMultiValue(almostDone.map{case (k,v) => SolrStringValue(k.name)}.toSeq, String)
+    almostDone + (SolrKey("KEYS", String, true) -> keyList)
   }
 
 }

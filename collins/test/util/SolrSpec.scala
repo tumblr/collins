@@ -28,23 +28,30 @@ class SolrSpec extends ApplicationSpecification {
       )
       val asset = generateAsset(assetTag, assetType, status, meta)
       val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
-      val expected = Map(
-        "TAG" -> SolrStringValue(assetTag),
-        "STATUS" -> SolrIntValue(status.id),
-        "TYPE" -> SolrIntValue(assetType.id),
-        "CREATED" -> SolrStringValue(Formatter.solrDateFormat(asset.created)),
-        "A_meta_s" -> SolrMultiValue(SolrStringValue("a") :: SolrStringValue("a1") :: Nil),
-        "B_meta_s" -> SolrStringValue("b"),
-        "INT_meta_i" -> SolrIntValue(1135),
-        "DOUBLE_meta_d" -> SolrDoubleValue(3.1415),
-        "BOOL_meta_b" -> SolrBooleanValue(false),
-        "IP_ADDRESS" -> SolrMultiValue(addresses.map{a => SolrStringValue(a.dottedAddress)})
+      val almostExpected = Map(
+        SolrKey("TAG", String, false) -> SolrStringValue(assetTag),
+        SolrKey("STATUS", Integer, false) -> SolrIntValue(status.id),
+        SolrKey("TYPE", Integer, false) -> SolrIntValue(assetType.id),
+        SolrKey("CREATED", String, false) -> SolrStringValue(Formatter.solrDateFormat(asset.created)),
+        SolrKey("A", String, true) -> SolrMultiValue(SolrStringValue("a") :: SolrStringValue("a1") :: Nil),
+        SolrKey("B", String, true) -> SolrStringValue("b"),
+        SolrKey("INT", Integer, true) -> SolrIntValue(1135),
+        SolrKey("DOUBLE", Double, true) -> SolrDoubleValue(3.1415),
+        SolrKey("BOOL", Boolean, true) -> SolrBooleanValue(false),
+        SolrKey("IP_ADDRESS", String, false) -> SolrMultiValue(addresses.map{a => SolrStringValue(a.dottedAddress)})
       )
-      (new FlatSerializer).serialize(asset) must_== expected
+      val expected = almostExpected + (SolrKey("KEYS", String, true) -> SolrMultiValue(almostExpected.map{case(k,v) => SolrStringValue(k.name)}.toSeq, String))
+      //expected.foreach{e => println(e.toString)}
+      //println("---")
+      val actual = (new FlatSerializer).serialize(asset) 
+      //actual.foreach{a => println(a.toString)}
+      actual must_== expected
     }
     "post-process number of disks" in {
-      val m = Map[String, SolrValue]("DISK_SIZE_BYTES_meta_s" -> SolrMultiValue(SolrStringValue("123") :: SolrStringValue("456") :: Nil))
-      val expected = m + ("NUM_DISKS_meta_i" -> SolrIntValue(2))
+      val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true) -> SolrMultiValue(SolrStringValue("123") :: SolrStringValue("456") :: Nil))
+      val expected = m + 
+        (SolrKey("NUM_DISKS", Integer, true) -> SolrIntValue(2)) + 
+        (SolrKey("KEYS", String, true) -> SolrMultiValue(SolrStringValue("DISK_SIZE_BYTES") :: SolrStringValue("NUM_DISKS") :: Nil))
       (new FlatSerializer).postProcess(m) must_== expected
     }
   }

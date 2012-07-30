@@ -24,6 +24,18 @@ sealed trait SolrQueryComponent {
 
 }
 
+/** 
+ * This class holds data about a solr key, mainly for translating "local" key
+ * names to their solr equivalent
+ */
+case class SolrKey (
+  val name: String,
+  val valueType: ValueType,
+  val isDynamic: Boolean = true
+) {
+  lazy val resolvedName = name.toUpperCase + (if(isDynamic) ValueType.postFix(valueType) else "")
+}
+
 /**
  * Base trait of Solr Value ADT
  *
@@ -34,24 +46,23 @@ sealed trait SolrQueryComponent {
 sealed trait SolrValue {
   val value: Any
   val valueType: ValueType
-  val postfix: String
 }
 
-abstract class SolrSingleValue(val postfix: String, val valueType: ValueType) extends SolrValue with SolrQueryComponent
+abstract class SolrSingleValue(val valueType: ValueType) extends SolrValue with SolrQueryComponent
 
-case class SolrIntValue(value: Int) extends SolrSingleValue("_meta_i", Integer) {
+case class SolrIntValue(value: Int) extends SolrSingleValue(Integer) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
 }
 
-case class SolrDoubleValue(value: Double) extends SolrSingleValue("_meta_d", Double) {
+case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
 }
 
-case class SolrStringValue(value: String) extends SolrSingleValue("_meta_s", String) {
+case class SolrStringValue(value: String) extends SolrSingleValue(String) {
   def toSolrQueryString(toplevel: Boolean) = value
 }
 
-case class SolrBooleanValue(value: Boolean) extends SolrSingleValue("_meta_b", Boolean) {
+case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
   def toSolrQueryString(toplevel: Boolean) = if (value) "true" else "false"
 }
 
@@ -63,8 +74,6 @@ case class SolrMultiValue(values: Seq[SolrSingleValue], valueType: ValueType) ex
   def +(v: SolrSingleValue) = this.copy(values = values :+ v)
 
   lazy val value = values.map{_.value}.toArray
-
-  lazy val postfix = values.head.postfix
 
 }
 
@@ -146,22 +155,22 @@ trait SolrSimpleExpr extends SolrExpression {
    * expected type of the key, and the Boolean indicates whether the key in
    * Solr is static(false) or dynamic(true)
    */
-  val nonMetaKeys: Map[String,(ValueType, Boolean)] = Map(
-    "TAG" -> (String,false), 
-    "CREATED" -> (String,false), 
-    "UPDATE" -> (String,false), 
-    "DELETED" -> (String,false),
-    "IP_ADDRESS" -> (String,false),
-    IpmiAddress.toString -> (String, true),
-    IpmiUsername.toString -> (String, true),
-    IpmiPassword.toString -> (String, true),
-    IpmiGateway.toString -> (String, true),
-    IpmiNetmask.toString -> (String, true)
-  ) ++ Solr.plugin.map{_.serializer.generatedFields.map{case (k,v) => (k,(v,true))}}.getOrElse(Map())
+  val nonMetaKeys: Seq[SolrKey] = List(
+    SolrKey("TAG", String,false), 
+    SolrKey("CREATED", String,false), 
+    SolrKey("UPDATE", String,false), 
+    SolrKey("DELETED", String,false),
+    SolrKey("IP_ADDRESS", String,false),
+    SolrKey(IpmiAddress.toString, String, true),
+    SolrKey(IpmiUsername.toString, String, true),
+    SolrKey(IpmiPassword.toString, String, true),
+    SolrKey(IpmiGateway.toString, String, true),
+    SolrKey(IpmiNetmask.toString, String, true)
+  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
 
-  val enumKeys = Map[String, String => Option[Int]](
-    "TYPE" -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
-    "STATUS" -> ((s: String) => Status.findByName(s).map{_.id})
+  val enumKeys = Map[SolrKey, String => Option[Int]](
+    SolrKey("TYPE",Integer,false) -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
+    SolrKey("STATUS",Integer,false) -> ((s: String) => Status.findByName(s).map{_.id})
   )
 
   def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = 
@@ -175,25 +184,24 @@ trait SolrSimpleExpr extends SolrExpression {
    */
   def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = {
     val ukey = key.toUpperCase
-    val a: Option[TypeEither] = nonMetaKeys.get(ukey).map {case (valueType, transformKey) =>
-      if (valueType == value.valueType) {
-        Right((if (transformKey) ukey + value.postfix else ukey) -> value)
-
+    val a: Option[TypeEither] = nonMetaKeys.find(_.name == ukey).map {solrKey =>
+      if (solrKey.valueType == value.valueType) {
+        Right(solrKey.resolvedName -> value)
       } else {
-        typeLeft(key, valueType, value.valueType)
+        typeLeft(key, solrKey.valueType, value.valueType)
       }
-    } orElse{enumKeys.get(ukey).map{f => value match {
-      case SolrStringValue(e) => f(e) match {
-        case Some(i) => Right(ukey -> SolrIntValue(i))
+    } orElse{enumKeys.find(_._1.name == ukey).map{case(solrKey, valueResolver) => value match {
+      case SolrStringValue(e) => valueResolver(e) match {
+        case Some(i) => Right(solrKey.resolvedName -> SolrIntValue(i))
         case _ => Left("Invalid %s: %s".format(key, e))
       }
-      case s:SolrIntValue => Right(ukey -> value) : Either[String, (String, SolrSingleValue)]
+      case s:SolrIntValue => Right(solrKey.resolvedName -> value) : Either[String, (String, SolrSingleValue)]
       case other => typeLeft(key, String, other.valueType)
     }}}
     a.getOrElse(AssetMeta.findByName(key) match {
       case Some(meta) => if (meta.valueType == value.valueType) {
         //FIXME: perhaps centralize asset meta key formatting
-        Right(ukey + value.postfix -> value)
+        Right(meta.getSolrKey.resolvedName -> value)
       } else {
         typeLeft(key, meta.valueType, value.valueType)
       }
