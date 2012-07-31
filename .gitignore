@@ -1,16 +1,12 @@
-# sbt detritus
-target/
-*.class
-dist/
-boot/
-
-# intellij detritus
-.idea
-.idea_modules/
-*.iml
-
-# gem detritus
-*.lock
+./logs
+project/project
+project/target
+target
+tmp
+dist
 *.swp
-
-.DS_Store
+tags
+*.log
+profileOfH2Tests.html
+test.rb
+*.db
