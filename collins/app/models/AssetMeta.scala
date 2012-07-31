@@ -4,18 +4,23 @@ import play.api.libs.json._
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
+import util.plugins.solr._
+
 
 case class AssetMeta(
     name: String,
     priority: Int,
     label: String,
     description: String,
-    id: Long = 0) extends ValidatedEntity[Long]
+    id: Long = 0,
+    value_type: Int = AssetMeta.ValueType.String.id
+    ) extends ValidatedEntity[Long]
 {
   override def validate() {
     require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
     require(AssetMeta.isValidName(name), "Name must be all upper case, alpha numeric (and hyphens)")
     require(description != null && description.length > 0, "Need a description")
+    require(AssetMeta.ValueType.valIds(value_type), "Invalid value_type, must be one of [%s]".format(AssetMeta.ValueType.valStrings.mkString(",")))
   }
   override def asJson: String = {
     Json.stringify(JsObject(Seq(
@@ -27,6 +32,33 @@ case class AssetMeta(
     )))
   }
   def getId(): Long = id
+
+  def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType(value_type)
+
+  def valueType = getValueType
+
+  def getSolrKey() = SolrKey(name, valueType, true)
+
+  def validateValue(value: String): Boolean = typeStringValue(value).isDefined
+
+  def typeStringValue(value: String): Option[SolrSingleValue] = getValueType() match {
+    case AssetMeta.ValueType.Integer => try {
+      Some(SolrIntValue(Integer.parseInt(value)))
+    } catch {
+      case _ => None
+    }
+    case AssetMeta.ValueType.Boolean => try {
+      Some(SolrBooleanValue((new Truthy(value)).isTruthy))
+    } catch {
+      case _ => None
+    }
+    case AssetMeta.ValueType.Double => try {
+      Some(SolrDoubleValue(java.lang.Double.parseDouble(value)))
+    } catch {
+      case _ => None
+    }
+    case _ => Some(SolrStringValue(value))
+  }
 }
 
 object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
@@ -63,8 +95,14 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     tableDef.lookup(id)
   }
 
-  def findOrCreateFromName(name: String): AssetMeta = findByName(name).getOrElse {
-    create(AssetMeta(name.toUpperCase, -1, name.toLowerCase.capitalize, name))
+  def findOrCreateFromName(name: String, valueType: ValueType = ValueType.String): AssetMeta = findByName(name).getOrElse {
+    create(AssetMeta(
+      name = name.toUpperCase, 
+      priority = -1, 
+      label = name.toLowerCase.capitalize, 
+      description = name,
+      value_type = valueType.id
+    ))
     findByName(name).get
   }
 
@@ -84,6 +122,24 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
       select(a)
       orderBy(a.priority asc)
     ).toList
+  }
+
+  type ValueType = ValueType.Value
+  object ValueType extends Enumeration {
+    val String = Value(1,"STRING")
+    val Integer = Value(2,"INTEGER")
+    val Double = Value(3,"DOUBLE")
+    val Boolean = Value(4,"BOOLEAN")
+
+    def valStrings = values.map{_.toString}
+    def valIds = values.map{_.id}
+
+    val postFix = Map[ValueType,String](
+      String -> "_meta_s",
+      Integer -> "_meta_i",
+      Double -> "_meta_d",
+      Boolean -> "_meta_b"
+    )
   }
 
   type Enum = Enum.Value

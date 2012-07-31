@@ -7,6 +7,9 @@ import java.util.Date
 // Used with views/asset/list
 object Formatter {
   val ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
+
+  def solrDateFormat(date: Date): String = dateFormat(date) + "Z"
+
   def dateFormat(date: Date): String = {
     new SimpleDateFormat(ISO_8601_FORMAT).format(date)
   }

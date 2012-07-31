@@ -26,6 +26,7 @@ GET     /asset/:tag/similar         app.Resources.similar(tag: String, page: Int
 GET     /admin/stats                controllers.Admin.stats
 GET     /admin/logs                 controllers.Admin.logs
 POST    /admin/cache/clear          controllers.Admin.clearCache
+GET     /admin/solr                 controllers.Admin.populateSolr
 
 # Help
 GET     /help                       app.HelpPage.index(t: String ?= controllers.Help.Default)
@@ -34,6 +35,8 @@ GET     /help                       app.HelpPage.index(t: String ?= controllers.
 GET     /login                      controllers.Application.login
 POST    /login                      controllers.Application.authenticate
 GET     /logout                     controllers.Application.logout
+
+GET   /solrsearch                   app.Resources.searchSolr(query: String, details: String ?= "false", page: Int ?=0, size: Int ?=50, sort: String ?= "ASC")
 
 # API
 
@@ -68,6 +71,7 @@ POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
 DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
 GET     /api/asset/:tag             app.Api.getAsset(tag: String, location: Option[String])
 GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC")
+GET     /api/assets/search          app.Api.search(query: String, page: Int ?=0, size: Int ?= 50, sortField: String ?= "tag", sort: String ?= "ASC", details: String ?= "true")
 GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
 
 GET     /api/tags                   app.Api.getTags

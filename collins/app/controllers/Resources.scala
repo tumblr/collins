@@ -1,6 +1,6 @@
 package controllers
 
-import actions.asset.{CreateAction, FindSimilarAction}
+import actions.asset.{CreateAction, FindSimilarAction,SolrFindAction}
 import actions.resources.{FindAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action}
 
 import models._
@@ -10,6 +10,7 @@ import play.api._
 import play.api.mvc._
 import play.api.data._
 import play.api.data.Forms._
+import util.plugins.solr.Solr
 
 trait Resources extends Controller {
   this: SecureController =>
@@ -17,6 +18,11 @@ trait Resources extends Controller {
   def index = SecureAction { implicit req =>
     Ok(html.resources.index(AssetMeta.getViewable())).withHeaders("Content-Language" -> "en")
   }(Permissions.Resources.Index)
+
+
+  def searchSolr(query: String, details: String, page: Int, size: Int, sort: String) = 
+    SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, "tag", Permissions.Resources.Find, this)
+  
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
     val atype: Option[AssetType.Enum] = try {

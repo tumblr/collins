@@ -4,6 +4,10 @@ import conversions._
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
+import util.plugins.solr._
+import IpmiInfo.Enum._
+
+import util.views.Formatter
 
 import java.util.Date
 
@@ -38,14 +42,32 @@ case class AssetFinder(
       tag.map{"tag" -> _} ::
       status.map{"status" -> _.toString} ::
       assetType.map{"type" -> _.toString} ::
-      createdAfter.map{"createdAfter" -> _.toString} ::
-      createdBefore.map{"createdBefore" -> _.toString} ::
-      updatedAfter.map{"updatedAfter" -> _.toString} ::
-      updatedBefore.map{"updatedBefore" -> _.toString} ::
+      createdAfter.map{t => "createdAfter" -> Formatter.dateFormat(t)} ::
+      createdBefore.map{t => "createdBefore" -> Formatter.dateFormat(t)} ::
+      updatedAfter.map{t => "updatedAfter" -> Formatter.dateFormat(t)} ::
+      updatedBefore.map{t => "updatedBefore" -> Formatter.dateFormat(t)} ::
       Nil
     )
     items.flatten
   }
+
+  def toSolrKeyVals = {
+    val items = tag.map{t => SolrKeyVal("tag", SolrStringValue(t))} ::
+      status.map{t => SolrKeyVal("status" , SolrIntValue(t.id))} ::
+      assetType.map{t => SolrKeyVal("assetType" , SolrIntValue(t.id))} ::
+      Nil
+    val cOpt = (createdBefore.map{d =>SolrStringValue(Formatter.dateFormat(d))}, createdAfter.map{d =>SolrStringValue(Formatter.dateFormat(d))}) match {
+      case (None, None) => None
+      case (bOpt, aOpt) => Some(SolrKeyRange("created", bOpt, aOpt))
+    }
+    val uOpt = (updatedBefore.map{d =>SolrStringValue(Formatter.dateFormat(d))}, updatedAfter.map{d =>SolrStringValue(Formatter.dateFormat(d))}) match {
+      case (None, None) => None
+      case (bOpt, aOpt) => Some(SolrKeyRange("updated", bOpt, aOpt))
+    }
+    (cOpt :: uOpt :: items).flatten
+  }
+
+
 }
 
 object AssetFinder {

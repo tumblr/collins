@@ -3,3 +3,4 @@
 5002:com.tumblr.play.ProvisionerPlugin
 5003:com.tumblr.play.CallbackManagerPlugin
 5004:util.plugins.IpmiPowerManagement
+5005:util.plugins.solr.SolrPlugin
