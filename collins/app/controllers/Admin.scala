@@ -2,6 +2,7 @@ package controllers
 
 import util.{AppConfig, SecuritySpec, Stats}
 import util.plugins.Cache
+import util.plugins.solr.Solr
 import views._
 
 import play.api.Play
@@ -20,6 +21,11 @@ object Admin extends SecureWebController {
   def clearCache = SecureAction { implicit req =>
     Cache.clear()
     Ok("ok")
+  }(Permissions.Admin.ClearCache)
+
+  def populateSolr = SecureAction {implicit req => 
+    Solr.populate()
+    Redirect(app.routes.Resources.index).flashing("error" -> "Repopulating Solr index in the background.  May take a few minutes to complete")
   }(Permissions.Admin.ClearCache)
 
 }

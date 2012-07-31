@@ -26,6 +26,8 @@ trait IpAddressable extends ValidatedEntity[Long] {
   def dottedNetmask(): String = IpAddress.toString(netmask)
   def getId(): Long = id
   def getAssetId(): Long = asset_id
+  def getAsset(): Asset = Asset.findById(getAssetId()).get
+    
 }
 
 trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
@@ -59,10 +61,11 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     }
   }
 
-  def findAllByAsset(asset: Asset)(implicit mf: Manifest[T]): Seq[T] = {
-    getOrElseUpdate(findAllByAssetKey.format(asset.getId)) {
-      tableDef.where(a => a.asset_id === asset.getId).toList
-    }
+  def findAllByAsset(asset: Asset, checkCache: Boolean = true)(implicit mf: Manifest[T]): Seq[T] = {
+    lazy val op = tableDef.where(a => a.asset_id === asset.getId).toList
+    if (checkCache) {
+      getOrElseUpdate(findAllByAssetKey.format(asset.getId)) (op)
+    } else inTransaction {op}
   }
 
   def findByAsset(asset: Asset)(implicit mf: Manifest[T]): Option[T] = {

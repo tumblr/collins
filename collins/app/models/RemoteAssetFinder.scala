@@ -11,6 +11,8 @@ import play.api.Play.current
 import java.net.URLEncoder
 import java.util.concurrent.TimeoutException
 
+import util.plugins.solr._
+
 /**
  * Just a combination of everything needed to do a search.  Probably should
  * combine all this in the future somehow
@@ -47,6 +49,20 @@ case class AssetSearchParameters(
     } else {
       None
     }
+  }
+
+  def toSolrExpression: SolrExpression = {
+    val p = params._1.map{case (enum, value) => SolrKeyVal(enum.toString, SolrStringValue(value))} ++ 
+      params._2.map{case (assetMeta,value) => SolrKeyVal(assetMeta.name, SolrStringValue(value))} ++ 
+      params._3.map{i => SolrKeyVal("ip_address", SolrStringValue(i))}
+    val allkeyvals = p ++ afinder.toSolrKeyVals
+    operation.map{_.toUpperCase} match {
+      case Some("OR") => SolrOrOp(p)
+      case _ => SolrAndOp(p)
+
+    }
+
+
   }
 
   def paginationKey = toQueryString

@@ -372,9 +372,15 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }
   def get(a: Asset) = findById(a.id).get
 
-  def findByTag(tag: String): Option[Asset] = {
-    getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
-      tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
+  /**
+   * checkCache is needed for solr re-indexing, avoids indexing out-of-date data
+   */
+  def findByTag(tag: String, checkCache: Boolean = true): Option[Asset] = {
+    lazy val op = tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
+    if (checkCache) {
+      getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase))(op)
+    } else inTransaction {
+      op
     }
   }
 

@@ -70,6 +70,32 @@ class AssetMetaSpec extends ApplicationSpecification {
       }
 
     } // support getters/finders
+
+    "Support value typeing enforcement" in {
+      "create typed meta" in new numberassetmeta {
+        val result = AssetMeta.create(newMeta)
+        result.id must beGreaterThan(1L)
+      }
+      "allow numeric value" in new numberassetmeta {
+        val maybeMeta = AssetMeta.findByName(metaName)
+        maybeMeta must beSome[AssetMeta]
+        val realMeta = maybeMeta.get
+        val whateverAsset = Asset("foo",Status.Enum.Allocated,AssetType.Enum.ServerNode)
+        AssetMetaValue(whateverAsset, realMeta.id, "123") 
+        success
+      }
+      "reject non-numeric value" in new numberassetmeta {
+        val maybeMeta = AssetMeta.findByName(metaName)
+        maybeMeta must beSome[AssetMeta]
+        val realMeta = maybeMeta.get
+        val whateverAsset = Asset("foo",Status.Enum.Allocated,AssetType.Enum.ServerNode)
+        AssetMetaValue(whateverAsset, realMeta.id, "a123") must throwA[IllegalArgumentException]
+
+      }
+
+      
+
+    }
   } // Asset should
 
   trait mockassetmeta extends Scope {
@@ -85,6 +111,15 @@ class AssetMetaSpec extends ApplicationSpecification {
     val metaPriority = 1
     val metaLabel = "Service Tag"
     val metaDescription = "Vendor supplied service tag"
+  }
+
+  trait numberassetmeta extends Scope {
+    val metaName = "NUMERIC"
+    val metaPriority = -1
+    val metaLabel = "Numeric"
+    val metaDescription = "Numeric tag for testing"
+    val metaType = AssetMeta.ValueType.Integer.id
+    val newMeta = AssetMeta(metaName, metaPriority, metaLabel, metaDescription, 0, metaType)
   }
 
 

@@ -19,6 +19,7 @@ object AssetMetaValueConfig {
 }
 
 case class AssetMetaValue(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) {
+  require(asset_meta_id == 0 || getMeta().validateValue(value), "Invalid format for value" + value)
   def getAsset(): Asset = {
     Asset.findById(asset_id).get
   }
@@ -26,6 +27,7 @@ case class AssetMetaValue(asset_id: Long, asset_meta_id: Long, group_id: Int, va
   def getMeta(): AssetMeta = {
     AssetMeta.findById(asset_meta_id).get
   }
+
 }
 
 object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
@@ -66,6 +68,8 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
         .getOrElse(v)
     )
   )
+  override protected val createEventName = Some("asset_meta_value_create")
+  override protected val deleteEventName = Some("asset_meta_value_delete")
 
   def shouldEncrypt(v: AssetMetaValue): Boolean = {
     try {
@@ -145,14 +149,19 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }}
   }
 
-  def findByAsset(asset: Asset): Seq[MetaWrapper] = {
-    getOrElseUpdate("AssetMetaValue.findByAsset(%d)".format(asset.id)) {
+  def findByAsset(asset: Asset, checkCache: Boolean = true): Seq[MetaWrapper] = {
+    lazy val op = {
       from(tableDef)(a =>
         where(a.asset_id === asset.id)
         select(a)
       ).toList.map { amv =>
         MetaWrapper(amv.getMeta(), amv)
       }
+    }
+    if (checkCache) {
+      getOrElseUpdate("AssetMetaValue.findByAsset(%d)".format(asset.id))(op) 
+    } else {
+      inTransaction{op}
     }
   }
 

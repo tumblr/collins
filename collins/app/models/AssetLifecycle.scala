@@ -79,11 +79,9 @@ object AssetLifecycle {
   }
 
   private lazy val lshwConfig = Config.toMap("lshw")
-  def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    asset.isServerNode match {
-      case true => updateServer(asset, options)
-      case false => updateOther(asset, options)
-    }
+  def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = asset.isServerNode match {
+    case true => updateServer(asset, options)
+    case false => updateOther(asset, options)
   }
 
   protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
