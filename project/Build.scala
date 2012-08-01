@@ -2,8 +2,6 @@ import sbt._
 import Keys._
 import PlayProject._
 
-import java.io.File
-
 object ApplicationBuild extends Build {
 
     val appName         = "collins"
