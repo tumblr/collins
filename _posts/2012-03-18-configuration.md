@@ -1,8 +1,9 @@
 ---
 permalink: configuration.html
 title: Configuration
-layout: config
-desc: Configuration Options in Collins
+<!--- change this layout type if necessary --->
+layout: post 
+desc: Documentation for permissions schema 
 ---
 
 This page provides the nitty gritty details of configurable assets in collins.
@@ -34,9 +35,6 @@ specific to any feature but are none the less required for operation.
     application.secret="SjRlgmfF/0aD3sVf0K,_W[sytUTZ!L^V5)!5BV>=`S3DV3/KEWV3w=3mBYIGoF%f"
     parsers.text.maxLength=1048576
     crypto.key="9e8J@U1+98_\pr*@HOi+]'FIL)5mHM[p5xQPm*N!^b1w`W7@|vV*RTOu=FBxksO"
-
-
-
 
 
 
@@ -358,7 +356,35 @@ The following will detect a Virident PCIe flash card and size it at 1.4TB.
 In future versions this will likely need to be expanded to cover additional
 models or generations of flash devices.
 
+## <a name ="multicollis">Multi Collins Configuration</a>
 
+Collins can use a multi-master topology for multiple data centers. Each
+Collins instance maintains its own local database of assets and fans out
+searches to remote instances, aggregating the results. In the webapp search
+results list page, assets from remote data-centers will link to the collins
+instance for that data-center and not the asset itself.
+
+In order to set up collins for multiple datacenters, the following configuration
+settings will need to be set:
+
+ * `multicollins.enabled` - boolean. Set to "true" to enable multi-datacenter 
+    searching
+ * `multicollins.instanceAssetType` - string, required. Name of the asset type
+    that represents a remote datacenter. Default "DATA_CENTER".
+ * `multicollins.locationAttribute` - string, required. The name of asset_meta
+    tag that holds the connection data for the remote datacenter. Default
+    "LOCATION". Format "http://\<hostname\>[:port];\<username\>:\<password\>".
+ * `multicollins.thisInstance` - string, required. Tag the data-center asset
+    that represents this instance of collins. Default "localhost".
+
+### Examples
+
+The following example sets up an instance of Collins to interact with other Collins
+
+    multicollins.enabled=true
+    multicollins.instanceAssetType = "DATA_CENTER"
+    multicollins.locationAttribute = "LOCATION"
+    multicollins.thisInstance = "localhost"
 
 ## <a name="tags">Tag Decorators</a>
 
