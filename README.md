@@ -33,3 +33,7 @@ https://github.com/tumblr/collins/blob/master/app/util/security/MockAuthenticati
 There is a supplied init script at `scripts/collins.sh`. This is a useful
 starting point for running the app. Note that the init script requires the
 daemon (http://libslack.org/daemon/).
+
+# Support
+
+Email collins-sm@googlegroups.com or see the mailing list archive at https://groups.google.com/forum/#!forum/collins-sm
