@@ -5,7 +5,7 @@ import util.parsers.LldpParser
 import org.specs2._
 import specification._
 
-class LldpHelperSpec extends mutable.Specification {
+class LldpHelperSpec extends test.ApplicationSpecification {
 
   "LLDP Helper Specification".title
 

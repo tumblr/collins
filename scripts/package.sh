@@ -1,7 +1,7 @@
 #! /usr/bin/env sh
 
 if [ -z "$PLAY_CMD" ]; then
-  PLAY_CMD="$HOME/src/play-2.0.1/play";
+  PLAY_CMD="$HOME/src/play-2.0.2/play";
 fi
 
 $PLAY_CMD clean compile stage

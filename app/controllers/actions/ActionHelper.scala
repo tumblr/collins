@@ -9,6 +9,7 @@ object ActionHelper {
     val path = "/"
     val method = "GET"
     val queryString = Map.empty[String, Seq[String]]
+    val remoteAddress = "127.0.0.1"
     val headers = new Headers {
       val keys = Set.empty[String]
       def getAll(key: String): Seq[String] = Seq.empty
@@ -24,5 +25,6 @@ object ActionHelper {
       def queryString = finalMap
       def headers = req.headers
       def body = req.body
+      def remoteAddress = req.remoteAddress
     }
 }
