@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+if ARGV.include?("--trace") then
+HTTP_DEBUG = true
+end
+
+# Make sure we're running a valid version of ruby
+if RUBY_VERSION !~ /^1\.9\./ then
+  puts("We require ruby 1.9.2")
+  exit(1)
+end
+
+if not ENV.key?('HOME') || ENV['HOME'].empty? then
+  puts("No HOME environment found. Exiting")
+  exit(2)
+end
+
+$:.unshift File.join File.dirname(__FILE__), *%w[.. lib]
+# Allows us to use a dev version of collins-client if needed
+$:.unshift File.join File.dirname(__FILE__), *%w[.. .. collins-client lib]
+%w[collins_shell collins_shell/cli].each {|f| require f}
+
+begin
+  CollinsShell::Cli.start
+rescue SystemExit => e
+rescue CollinsShell::ConfigurationError => e
+  cli = CollinsShell::Cli.new
+  cli.say_status("fatal", "your environment is not setup correctly", :red)
+  cli.say_status("message", "#{e.message}")
+  exit(1)
+rescue Exception => e
+  cli = CollinsShell::Cli.new
+  cli.print_error e
+  exit(2)
+end
+exit(0)
