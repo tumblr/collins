@@ -1,9 +1,8 @@
 ---
 permalink: configuration.html
 title: Configuration
-<!--- change this layout type if necessary --->
-layout: post 
-desc: Documentation for permissions schema 
+layout: config 
+desc: Configuration Options in Collins
 ---
 
 This page provides the nitty gritty details of configurable assets in collins.
