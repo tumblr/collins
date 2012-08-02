@@ -1,6 +1,6 @@
 ---
 permalink: permissions.html
-title: Configuration
+title: Permissions
 layout: post
 desc: Documentation for permissions schema
 ---

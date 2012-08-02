@@ -355,13 +355,13 @@ The following will detect a Virident PCIe flash card and size it at 1.4TB.
 In future versions this will likely need to be expanded to cover additional
 models or generations of flash devices.
 
-## <a name ="multicollis">Multi Collins Configuration</a>
+## <a name ="multicollins">Multi Collins Configuration</a>
 
-Collins can use a multi-master topology for multiple data centers. Each
-Collins instance maintains its own local database of assets and fans out
-searches to remote instances, aggregating the results. In the webapp search
-results list page, assets from remote data-centers will link to the collins
-instance for that data-center and not the asset itself.
+Collins can use a multi-master topology for multiple data centers. Each Collins
+instance maintains its own local database of assets and fans out searches to
+remote instances, aggregating the results. In the webapp search results list
+page, assets from remote data-centers will link to the asset page of the
+collins instance for that data-center.
 
 In order to set up collins for multiple datacenters, the following configuration
 settings will need to be set:
@@ -372,8 +372,8 @@ settings will need to be set:
     that represents a remote datacenter. Default "DATA_CENTER".
  * `multicollins.locationAttribute` - string, required. The name of asset_meta
     tag that holds the connection data for the remote datacenter. Default
-    "LOCATION". Format "http://\<hostname\>[:port];\<username\>:\<password\>".
- * `multicollins.thisInstance` - string, required. Tag the data-center asset
+    "LOCATION". The format of the value is basic auth `http://&lt;username&gt;:&lt;password&gt;@&lt;hostname&gt;[:port]`.
+ * `multicollins.thisInstance` - string, required. The data-center asset tag
     that represents this instance of collins. Default "localhost".
 
 ### Examples
@@ -698,3 +698,32 @@ Again, pretty straight forward.
 
 This plugin also is currently the only power management plugin (it serves
 double duty).
+
+## <a name="solr">Solr Plugin</a>
+
+The Solr plugin is required to perform searches using the Collins Query Language.
+
+ * `solr.enabled` - boolean, enables the plugin
+ * `solr.repopulateOnStartup` - boolean, if "true" the entire solr index will be recalculated on startup
+ * `solr.useEmbeddedServer` - boolean, if "true", Collins will start its own embedded Solr server (indexed data is persistent)
+ * `solr.embeddedSolrHome` - string, when using an embedded server, this should point to the directory that contains the solr-home config files
+ * `solr.externalUrl` - string, when using an external solr server, this should point to the url of that server
+
+### Examples
+
+If running an embedded Solr server:
+
+    solr.enabled = true
+    solr.repopulateOnStartup = false
+    solr.useEmbeddedServer = false
+    solr.embeddedSolrHome = "/path/to/collins/conf/solr"
+
+If running an external server
+
+    solr.enabled = true
+    solr.repopulateOnStartup = false
+    solr.useEmbeddedServer = false
+    solr.externalUrl="http://solr-url:8983/solr"
+
+externalUrl is only required if using an external server, and likewise
+embeddedSolrHome is only required when using an embedded server
