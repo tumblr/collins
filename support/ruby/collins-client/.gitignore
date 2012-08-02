@@ -1,0 +1,7 @@
+*.swp
+*.gem
+bin/*
+rdoc
+.yardoc
+doc
+coverage
