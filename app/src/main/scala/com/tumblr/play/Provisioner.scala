@@ -133,6 +133,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
     pool[CommandResult] {
       val result = runCommand(command(request, commandTemplate))
       if (result.exitCode != 0) {
+        logger.warn("Command executed: %s".format(command(request, commandTemplate)))
         logger.warn("Command code: %d, output %s".format(result.exitCode, result.output))
       }
       result
