@@ -15,6 +15,8 @@ object AttributeResolver extends MessageHelper("attributeresolver") {
     def withMetas(metas: Seq[AssetMetaTuple]) = this.copy(assetMeta = assetMeta ++ metas)
   }
 
+  val emptyResultTuple = (Nil, Nil, Nil)
+
   val EmptyResolvedAttributes = ResolvedAttributes(Nil, Nil, None)
 
   //TODO: refactor and get rid of the tuple and conversions

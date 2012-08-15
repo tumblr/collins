@@ -17,6 +17,7 @@ import play.api.libs.concurrent._
 import play.api.libs.concurrent.Akka._
 import play.api.Play.current
 
+import util.AttributeResolver
 import util.plugins.Callback
 import util.views.Formatter
 
@@ -108,7 +109,7 @@ class SolrPlugin(app: Application) extends Plugin {
     _server.map{ server => 
       //server.deleteByQuery( "*:*" );
       Logger.logger.debug("Populating Solr with Assets")
-      updateAssets(Asset.find(PageParams(0,10000,"asc"), AssetFinder.empty).items.collect{case a: Asset => a})
+      updateAssets(Asset.find(PageParams(0,10000,"asc"), AttributeResolver.emptyResultTuple, AssetFinder.empty).items.collect{case a: Asset => a})
     }.getOrElse(Logger.logger.warn("attempted to populate solr when no server was initialized"))
   }
 
