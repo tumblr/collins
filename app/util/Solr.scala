@@ -174,7 +174,7 @@ class FlatSerializer extends AssetSolrSerializer {
  * This class is a full search query, which includes an expression along with
  * sorting and pagination parameters
  */
-case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField: String) {
+case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField: String = "TAG") {
 
   def getResults(): Either[String, (Seq[AssetView], Long)] = Solr.server.map{server =>
     val q = new SolrQuery

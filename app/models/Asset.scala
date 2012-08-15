@@ -1,9 +1,10 @@
 package models
 
 import conversions._
-import util.{Config, Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.{AttributeResolver, Config, Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
 import util.power.PowerUnits
 import util.views.Formatter.dateFormat
+import util.plugins.solr._
 
 import play.api.Logger
 import play.api.libs.json._
@@ -324,48 +325,16 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] =
   Stats.time("Asset.find") {
-    if (params._1.nonEmpty) {
-      IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
-    } else if (params._2.nonEmpty) {
-      AssetMetaValue.findAssetsByMeta(page, params._2, afinder, operation)
-    } else if (params._3.nonEmpty) {
-      IpAddresses.findAssetsByAddress(page, params._3, afinder)
-    } else {
-      Asset.find(page, afinder)
-    }
+    AssetSearchParameters(params, afinder, operation)
+      .toSolrExpression
+      .typeCheck
+      .right
+      .flatMap{exp => CollinsSearchQuery(exp, page).getPage()}
+      .fold(
+        err => throw new Exception(err),
+        page => page
+      )
   }
-
-  def find(page: PageParams, afinder: AssetFinder): Page[AssetView] = inTransaction { log {
-    val results = from(tableDef)(a =>
-      where(afinder.asLogicalBoolean(a))
-      select(a)
-    ).page(page.offset, page.size).toList
-    val totalCount = from(tableDef)(a =>
-      where(afinder.asLogicalBoolean(a))
-      compute(count)
-    )
-    Page(results, page.page, page.offset, totalCount)
-  }}
-
-  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[AssetView] = inTransaction { log {
-    assets.size match {
-      case 0 => Page(Seq(), page.page, page.offset, 0)
-      case n =>
-        logger.debug("Starting Asset.find count")
-        val totalCount: Long = from(tableDef)(asset =>
-          where(asset.id in assets and finder.asLogicalBoolean(asset))
-          compute(count)
-        )
-        logger.debug("Finished Asset.find count")
-        val results = from(tableDef)(asset =>
-          where(asset.id in assets and finder.asLogicalBoolean(asset))
-          select(asset)
-          orderBy(asset.id.withSort(page.sort))
-        ).page(page.offset, page.size).toList
-        logger.debug("Finished Asset.find find")
-        Page(results, page.page, page.offset, totalCount)
-    }
-  }}
 
   def findById(id: Long) = getOrElseUpdate("Asset.findById(%d)".format(id)) {
     tableDef.lookup(id)
@@ -413,7 +382,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       assetType = Some(AssetType.Enum.withName(Config.getString("multicollins.instanceAssetType","DATA_CENTER").trim.toString))
     )
     val findLocations = Asset
-      .find(PageParams(0,50,"ASC"), instanceFinder)
+      .find(PageParams(0,50,"ASC"), AttributeResolver.emptyResultTuple, instanceFinder)
       .items
       .collect{case a: Asset => a}
       .filter{_.tag != Config.getString("multicollins.thisInstance","NONE")}
