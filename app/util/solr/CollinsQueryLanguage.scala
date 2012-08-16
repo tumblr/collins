@@ -34,6 +34,9 @@ case class SolrKey (
   val isDynamic: Boolean = true
 ) {
   lazy val resolvedName = name.toUpperCase + (if(isDynamic) ValueType.postFix(valueType) else "")
+  def isAliasOf(alias: String) = false //override for aliases
+
+  def matches(k: String) = (k == name) || isAliasOf(k)
 }
 
 /**
@@ -176,7 +179,9 @@ object SolrKeyResolver {
 
   val typeKey = new SolrKey("TYPE",Integer,false) with KeyLookup {
     def lookupValue(value: String) = try Some(AssetType.Enum.withName(value.toUpperCase).id) catch {case _ => None}
+    override def isAliasOf(a: String) = a == "ASSETTYPE"
   }
+
   val statusKey = new SolrKey("STATUS",Integer,false) with KeyLookup {
     def lookupValue(value: String) = Status.findByName(value).map{_.id}
   }
@@ -185,8 +190,8 @@ object SolrKeyResolver {
 
   def apply(_rawkey: String): Option[SolrKey] = {
     val ukey = _rawkey.toUpperCase
-    nonMetaKeys.find(_.name == ukey)
-      .orElse(enumKeys.find(_.name == ukey))
+    nonMetaKeys.find(_ matches ukey)
+      .orElse(enumKeys.find(_ matches ukey))
       .orElse(AssetMeta.findByName(ukey).map{_.getSolrKey})
   }
 
