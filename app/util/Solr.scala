@@ -198,7 +198,7 @@ case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField
 
 
   def getPage(): Either[String, Page[AssetView]] = getResults().right.map{case (results, total) =>
-    Page(results, page.page, page.size, total)
+    Page(results, page.page, page.size * page.page, total)
   }
 
 }

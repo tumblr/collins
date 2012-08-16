@@ -3,7 +3,7 @@ package solr
 
 import Solr._
 import org.specs2._
-import models.{Asset, AssetFinder, AssetType, AssetMeta, IpAddresses, Status, AssetMetaValue}
+import models.{Asset, AssetFinder, AssetType, AssetMeta, AssetSearchParameters, IpAddresses, IpmiInfo, Status, AssetMetaValue}
 import test.ApplicationSpecification
 import util.views.Formatter
 import util.Config
@@ -282,6 +282,47 @@ class SolrQuerySpec extends ApplicationSpecification {
         SolrKeyRange("updated",None,Some(SolrStringValue(dateString)))
       )
       afinder.toSolrKeyVals.toSet must_== expected.toSet
+
+    }
+
+  }
+
+  "AssetSearchParameters conversion" should {
+    "basic conversion" in {
+      //finder
+      val somedate = new java.util.Date
+      val dateString = util.views.Formatter.dateFormat(somedate)
+      val afinder = AssetFinder(
+        Some("footag"), 
+        Some(Status.Enum.Allocated), 
+        Some(AssetType.Enum.ServerNode),
+        Some(somedate),
+        Some(somedate),
+        Some(somedate),
+        Some(somedate)
+      )
+      val ipmiTuples = (IpmiInfo.Enum.IpmiAddress -> "ipmi_address") :: (IpmiInfo.Enum.IpmiUsername -> "ipmi_username") :: Nil
+      val metaTuples = (AssetMeta("meta1", 0, "meta1", "meta1") -> "meta1_value") :: (AssetMeta("meta2", 0, "meta2", "meta2") -> "meta2_value") :: Nil
+      val ipAddresses = List("1.2.3.4")
+      val resultTuple = (ipmiTuples, metaTuples, ipAddresses)
+
+      val expected: SolrExpression = SolrAndOp(List(
+        SolrKeyVal("IPMI_ADDRESS", SolrStringValue("ipmi_address")),
+        SolrKeyVal("IPMI_USERNAME", SolrStringValue("ipmi_username")),
+        SolrKeyVal("meta1", SolrStringValue("meta1_value")),
+        SolrKeyVal("meta2", SolrStringValue("meta2_value")),
+        SolrKeyVal("ip_address", SolrStringValue("1.2.3.4")),
+        SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
+        SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
+        SolrKeyVal("tag", SolrStringValue("footag")),
+        SolrKeyVal("status", SolrIntValue(Status.Enum.Allocated.id)),
+        SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id))
+      ))
+      val p = AssetSearchParameters(resultTuple, afinder)
+      println(p.toSolrExpression.toSolrQueryString)
+      println(expected.toSolrQueryString)
+      p.toSolrExpression must_== expected
+
 
     }
 
