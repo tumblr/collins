@@ -323,13 +323,13 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] =
+  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None, sortField: String = "TAG"): Page[AssetView] =
   Stats.time("Asset.find") {
     AssetSearchParameters(params, afinder, operation)
       .toSolrExpression
       .typeCheck
       .right
-      .flatMap{exp => CollinsSearchQuery(exp, page).getPage()}
+      .flatMap{exp => CollinsSearchQuery(exp, page, sortField).getPage()}
       .fold(
         err => throw new Exception(err),
         page => page

@@ -37,6 +37,14 @@ case class SolrKey (
 }
 
 /**
+ * Mixin for enum keys, allows us to resolve the solr key and then validate
+ * the enum value by passing it to the valueLookup method.
+ */
+trait KeyLookup{ self: SolrKey =>
+  def lookupValue(value: String): Option[Int]
+}
+
+/**
  * Base trait of Solr Value ADT
  *
  * A solr value can either be a typed single value, or a multival containing a
@@ -145,20 +153,17 @@ case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "OR
 
 }
 
-trait SolrSimpleExpr extends SolrExpression {
-
-  def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
-  def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
+object SolrKeyResolver {
 
   /**
    * each key is an "incoming" field from a query, the ValueType is the
    * expected type of the key, and the Boolean indicates whether the key in
    * Solr is static(false) or dynamic(true)
    */
-  val nonMetaKeys: Seq[SolrKey] = List(
+  lazy val nonMetaKeys: Seq[SolrKey] = List(
     SolrKey("TAG", String,false), 
     SolrKey("CREATED", String,false), 
-    SolrKey("UPDATE", String,false), 
+    SolrKey("UPDATED", String,false), 
     SolrKey("DELETED", String,false),
     SolrKey("IP_ADDRESS", String,false),
     SolrKey(IpmiAddress.toString, String, true),
@@ -168,10 +173,29 @@ trait SolrSimpleExpr extends SolrExpression {
     SolrKey(IpmiNetmask.toString, String, true)
   ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
 
-  val enumKeys = Map[SolrKey, String => Option[Int]](
-    SolrKey("TYPE",Integer,false) -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
-    SolrKey("STATUS",Integer,false) -> ((s: String) => Status.findByName(s).map{_.id})
-  )
+
+  val typeKey = new SolrKey("TYPE",Integer,false) with KeyLookup {
+    def lookupValue(value: String) = try Some(AssetType.Enum.withName(value.toUpperCase).id) catch {case _ => None}
+  }
+  val statusKey = new SolrKey("STATUS",Integer,false) with KeyLookup {
+    def lookupValue(value: String) = Status.findByName(value).map{_.id}
+  }
+
+  val enumKeys = typeKey :: statusKey :: Nil
+
+  def apply(_rawkey: String): Option[SolrKey] = {
+    val ukey = _rawkey.toUpperCase
+    nonMetaKeys.find(_.name == ukey)
+      .orElse(enumKeys.find(_.name == ukey))
+      .orElse(AssetMeta.findByName(ukey).map{_.getSolrKey})
+  }
+
+}
+
+trait SolrSimpleExpr extends SolrExpression {
+
+  def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
+  def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
   def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = 
     Left("Key %s expects type %s, got %s".format(key, expected.toString, actual.toString))
@@ -182,31 +206,23 @@ trait SolrSimpleExpr extends SolrExpression {
   /**
    * returns Left(error) or Right(solr_key_name)
    */
-  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = {
-    val ukey = key.toUpperCase
-    val a: Option[TypeEither] = nonMetaKeys.find(_.name == ukey).map {solrKey =>
-      if (solrKey.valueType == value.valueType) {
+  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = SolrKeyResolver(key) match {
+    case Some(solrKey) => solrKey match {
+      case j: KeyLookup => value match {
+        case SolrStringValue(stringValue) => j.lookupValue(stringValue) match {
+          case Some(i) => Right(solrKey.resolvedName -> SolrIntValue(i))
+          case _ => Left("Invalid %s: %s".format(key, stringValue))
+        }
+        case s:SolrIntValue => Right(solrKey.resolvedName -> value) : Either[String, (String, SolrSingleValue)]
+        case other => typeLeft(key, String, other.valueType)
+      }
+      case _ => if (solrKey.valueType == value.valueType) {
         Right(solrKey.resolvedName -> value)
       } else {
         typeLeft(key, solrKey.valueType, value.valueType)
       }
-    } orElse{enumKeys.find(_._1.name == ukey).map{case(solrKey, valueResolver) => value match {
-      case SolrStringValue(e) => valueResolver(e) match {
-        case Some(i) => Right(solrKey.resolvedName -> SolrIntValue(i))
-        case _ => Left("Invalid %s: %s".format(key, e))
-      }
-      case s:SolrIntValue => Right(solrKey.resolvedName -> value) : Either[String, (String, SolrSingleValue)]
-      case other => typeLeft(key, String, other.valueType)
-    }}}
-    a.getOrElse(AssetMeta.findByName(key) match {
-      case Some(meta) => if (meta.valueType == value.valueType) {
-        //FIXME: perhaps centralize asset meta key formatting
-        Right(meta.getSolrKey.resolvedName -> value)
-      } else {
-        typeLeft(key, meta.valueType, value.valueType)
-      }
-      case None => Left("Unknown key \"%s\"".format(key))
-    })
+    }
+    case None => Left("Unknown key \"%s\"".format(key))
   }
 
 }

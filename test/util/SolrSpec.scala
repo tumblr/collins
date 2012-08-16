@@ -319,8 +319,6 @@ class SolrQuerySpec extends ApplicationSpecification {
         SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id))
       ))
       val p = AssetSearchParameters(resultTuple, afinder)
-      println(p.toSolrExpression.toSolrQueryString)
-      println(expected.toSolrQueryString)
       p.toSolrExpression must_== expected
 
 
