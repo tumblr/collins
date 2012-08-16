@@ -25,8 +25,8 @@ trait AssetApi {
   )
 
   // GET /api/assets?params
-  def getAssets(page: Int, size: Int, sort: String) = FindAction(
-    PageParams(page, size, sort), Permissions.AssetApi.GetAssets, this
+  def getAssets(page: Int, size: Int, sort: String, sortField: String) = FindAction(
+    PageParams(page, size, sort), sortField, Permissions.AssetApi.GetAssets, this
   )
 
   def search(query: String, page: Int, size: Int, sortField: String, sort: String, details: String) = 
