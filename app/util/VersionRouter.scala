@@ -33,9 +33,9 @@ import ApiVersion._
 
 object VersionRouter {
 
-  val acceptHeader = """com.tumblr.collins;version=([0-9]+\.[0-9]+)""".r
+  val acceptHeader = """application/com.tumblr.collins;version=([0-9]+\.[0-9]+)""".r
 
-  def route[T](requestHeaders: Headers)(routes: PartialFunction[ApiVersion, T]): T = requestHeaders
+  def route[T](requestHeaders: Headers)(routes: Function1[ApiVersion, T]): T = requestHeaders
     .toMap
     //get the accept header
     .get("Accept")
@@ -55,7 +55,7 @@ object VersionRouter {
       route => route
     )
 
-  def apply(routes: PartialFunction[ApiVersion, SecureAction]): Action[AnyContent] = Action{implicit request =>
+  def apply(routes: Function1[ApiVersion, SecureAction]): Action[AnyContent] = Action{implicit request =>
     this.route(request.headers)(routes)(request)
   }
 
