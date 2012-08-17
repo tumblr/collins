@@ -70,7 +70,7 @@ case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
 }
 
 case class SolrStringValue(value: String) extends SolrSingleValue(String) {
-  def toSolrQueryString(toplevel: Boolean) = value
+  def toSolrQueryString(toplevel: Boolean) = "\"" + value + "\""
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
@@ -195,6 +195,11 @@ object SolrKeyResolver {
       .orElse(AssetMeta.findByName(ukey).map{_.getSolrKey})
   }
 
+  def either(_rawkey: String) = apply(_rawkey) match {
+    case Some(k) => Right(k)
+    case None => Left("Unknown key " + _rawkey)
+  }
+
 }
 
 trait SolrSimpleExpr extends SolrExpression {
@@ -202,8 +207,8 @@ trait SolrSimpleExpr extends SolrExpression {
   def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
   def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
 
-  def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = 
-    Left("Key %s expects type %s, got %s".format(key, expected.toString, actual.toString))
+  def typeError(key: String, expected: ValueType, actual: ValueType) = 
+    "Key %s expects type %s, got %s".format(key, expected.toString, actual.toString)
 
 
   type TypeEither = Either[String, (String, SolrSingleValue)]
@@ -212,23 +217,26 @@ trait SolrSimpleExpr extends SolrExpression {
    * returns Left(error) or Right(solr_key_name)
    */
   def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = SolrKeyResolver(key) match {
-    case Some(solrKey) => solrKey match {
-      case j: KeyLookup => value match {
-        case SolrStringValue(stringValue) => j.lookupValue(stringValue) match {
-          case Some(i) => Right(solrKey.resolvedName -> SolrIntValue(i))
-          case _ => Left("Invalid %s: %s".format(key, stringValue))
-        }
-        case s:SolrIntValue => Right(solrKey.resolvedName -> value) : Either[String, (String, SolrSingleValue)]
-        case other => typeLeft(key, String, other.valueType)
-      }
-      case _ => if (solrKey.valueType == value.valueType) {
-        Right(solrKey.resolvedName -> value)
-      } else {
-        typeLeft(key, solrKey.valueType, value.valueType)
-      }
-    }
+    case Some(solrKey) => typeCheckValue(solrKey, value).right.map{cleanValue => (solrKey.resolvedName, cleanValue)}
     case None => Left("Unknown key \"%s\"".format(key))
   }
+
+  def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
+    case j: KeyLookup => value match {
+      case SolrStringValue(stringValue) => j.lookupValue(stringValue) match {
+        case Some(i) => Right(SolrIntValue(i))
+        case _ => Left("Invalid %s: %s".format(solrKey.name, stringValue))
+      }
+      case s:SolrIntValue => Right(value)
+      case other => Left(typeError(solrKey.name, String, other.valueType))
+    }
+    case _ => if (solrKey.valueType == value.valueType) {
+      Right(value)
+    } else {
+      Left(typeError(solrKey.name, solrKey.valueType, value.valueType))
+    }
+  }
+
 
 }
 
@@ -258,23 +266,20 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
     key + ":[" + l + " TO " + h + "]"
   }
 
-  def t(v: Option[SolrSingleValue]): Either[String, (String, Option[SolrSingleValue])] = v match {
-    case None => Right(key, None)
-    case Some(s) => typeCheckValue(key, s) match {
-      case Left(e) => Left(e)
-      case Right((k,v)) => Right((k,Some(v)))
-    }
+  def t(k: SolrKey, v: Option[SolrSingleValue]): Either[String, Option[SolrSingleValue]] = v match {
+    case None => Right(None)
+    case Some(s) => typeCheckValue(k, s).right.map{cleanValue => Some(cleanValue)}
   }
 
   /**
    * When type-checking ranges, we need to account for open ranges, meaning we
    * don't want to treat a missing value as an error
    */
-  def typeCheck = {
-    (t(low), t(high)) match {
-      case (Right((k,l)), Right((_,h))) => Right(SolrKeyRange(k, l, h))
+  def typeCheck = SolrKeyResolver.either(key).right.flatMap{solrKey =>
+    (t(solrKey,low), t(solrKey,high)) match {
       case (Left(e), _) => Left(e)
       case (_, Left(e)) => Left(e)
+      case (Right(l), Right(h)) => Right(SolrKeyRange(solrKey.resolvedName, l,h))
     }
   }
 
