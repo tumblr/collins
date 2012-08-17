@@ -227,7 +227,10 @@ class SolrQuerySpec extends ApplicationSpecification {
         "foo = 3 OR foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "range" in {
-        "foo = [3, 5]".query.typeCheck must beAnInstanceOf[Right[String, SolrExpression]]
+        "foo = [3, 5]".query.typeCheck must_== Right(SolrKeyRange("FOO_meta_i", Some(SolrIntValue(3)), Some(SolrIntValue(5))))
+        "foo = [3, *]".query.typeCheck must_== Right(SolrKeyRange("FOO_meta_i", Some(SolrIntValue(3)), None))
+        "foo = [*, 5]".query.typeCheck must_== Right(SolrKeyRange("FOO_meta_i", None, Some(SolrIntValue(5))))
+        "foo = [*, *]".query.typeCheck must_== Right(SolrKeyRange("FOO_meta_i", None, None))
         "foo = [false, 5]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
         "foo = [3, false]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
