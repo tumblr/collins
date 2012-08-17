@@ -24,8 +24,8 @@ class VersionRouterSpec extends mutable.Specification {
       VersionRouter(map)(heads) must_== "B"
 
     }
-    "throw exception on missing header" in {
-      VersionRouter(map)(FakeHeaders(Map[String, Seq[String]]())) must throwA[Exception]
+    "default route on missing header" in {      
+      VersionRouter(map)(FakeHeaders(Map[String, Seq[String]]())) must_== map(ApiVersion.defaultVersion)
     }
     "throw exception on malformed header" in {
       VersionRouter(map)(FakeHeaders(Map("Accept" -> List("HASFIAFSHAF")))) must throwA[Exception]
