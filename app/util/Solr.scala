@@ -177,7 +177,6 @@ class FlatSerializer extends AssetSolrSerializer {
 case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField: String = "TAG") {
 
   def getResults(): Either[String, (Seq[AssetView], Long)] = Solr.server.map{server =>
-    println("SORT_FIELD " + sortField) 
     val q = new SolrQuery
     val queryString = query.toSolrQueryString
     Logger.logger.debug("SOLR: " + queryString)

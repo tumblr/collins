@@ -169,16 +169,16 @@ class SolrQuerySpec extends ApplicationSpecification {
 
     "solr query generation" in {
       "simple keyval" in {
-        "foo = 3".query.toSolrQueryString must_== "foo:3"
+        "foo = 3".query.toSolrQueryString must_== """foo:3"""
       }
       "wildcard" in {
-        "foo = bar*".query.toSolrQueryString must_== "foo:bar*"
+        "foo = bar*".query.toSolrQueryString must_== """foo:"bar*""""
       }
       "ANDs" in {
-         """foo = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== "foo:3 AND bar:abcdef AND baz:true"
+         """foo = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== """foo:3 AND bar:"abcdef" AND baz:true"""
       }
       "ORs" in {
-         """foo = 3 OR bar = "abcdef" OR baz = true""".query.toSolrQueryString must_== "foo:3 OR bar:abcdef OR baz:true"
+         """foo = 3 OR bar = "abcdef" OR baz = true""".query.toSolrQueryString must_== """foo:3 OR bar:"abcdef" OR baz:true"""
       }
       "NOT" in {
         """NOT foo = 3""".query.toSolrQueryString must_== "NOT foo:3"
@@ -248,7 +248,7 @@ class SolrQuerySpec extends ApplicationSpecification {
   "AssetFinder solr conversion" should {
     "basic conversion" in {
       val somedate = new java.util.Date
-      val dateString = util.views.Formatter.dateFormat(somedate)
+      val dateString = util.views.Formatter.solrDateFormat(somedate)
       val afinder = AssetFinder(
         Some("footag"), 
         Some(Status.Enum.Allocated), 
@@ -270,7 +270,7 @@ class SolrQuerySpec extends ApplicationSpecification {
     }
     "open date ranges" in {
       val somedate = new java.util.Date
-      val dateString = util.views.Formatter.dateFormat(somedate)
+      val dateString = util.views.Formatter.solrDateFormat(somedate)
       val afinder = AssetFinder(
         None,
         None,
@@ -281,8 +281,8 @@ class SolrQuerySpec extends ApplicationSpecification {
         None
       )
       val expected = List(
-        SolrKeyRange("created", Some(SolrStringValue(dateString)),None),
-        SolrKeyRange("updated",None,Some(SolrStringValue(dateString)))
+        SolrKeyRange("updated", Some(SolrStringValue(dateString)),None),
+        SolrKeyRange("created",None,Some(SolrStringValue(dateString)))
       )
       afinder.toSolrKeyVals.toSet must_== expected.toSet
 
@@ -294,7 +294,7 @@ class SolrQuerySpec extends ApplicationSpecification {
     "basic conversion" in {
       //finder
       val somedate = new java.util.Date
-      val dateString = util.views.Formatter.dateFormat(somedate)
+      val dateString = util.views.Formatter.solrDateFormat(somedate)
       val afinder = AssetFinder(
         Some("footag"), 
         Some(Status.Enum.Allocated), 
