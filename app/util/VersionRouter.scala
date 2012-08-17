@@ -5,18 +5,29 @@ import controllers.actions.SecureAction
 
 
 /**
- * This enumeration only exists to help keep versions consistent, so we don't
- * accidently route for non-existant versions
+ * We're using an algebraic data type and partial functions for the routing map to ensure
+ * 1 - we don't accidentally route to a non-existant version
+ * 2 - we make sure every router has a defined path for every version
+ *
+ * with this implementation, the compiler can check for both of these
  */
-object ApiVersion extends Enumeration {
-  type ApiVersion = Value
-  val `1.0` = Value("1.0")
-  val `2.0` = Value("2.0")
-  val `2.1` = Value("2.1")
 
-  val defaultVersion = `2.1`
+sealed trait ApiVersion {
+  def stringName: String
+}
 
-  def safeWithName(name: String): Option[ApiVersion] = try Some(withName(name)) catch {case _ => None}
+case object `1.1` extends ApiVersion {
+  def stringName = "1.1"
+}
+case object `1.2` extends ApiVersion {
+  def stringName = "1.2"
+}
+
+object ApiVersion {
+  val versions = Set(`1.1`, `1.2`)
+  val defaultVersion = `1.1`
+
+  def safeWithName(name: String): Option[ApiVersion] = versions.find(_.stringName == name)
 }
 import ApiVersion._
 
@@ -24,7 +35,7 @@ object VersionRouter {
 
   val acceptHeader = """com.tumblr.collins;version=([0-9]+\.[0-9]+)""".r
 
-  def apply[T](routes: Map[ApiVersion, T])(requestHeaders: Headers): T = requestHeaders
+  def apply[T](requestHeaders: Headers)(routes: PartialFunction[ApiVersion, T]): T = requestHeaders
     .toMap
     //get the accept header
     .get("Accept")
@@ -38,11 +49,13 @@ object VersionRouter {
     //or provide the default version if no header
     .getOrElse(Right(ApiVersion.defaultVersion)).right
     //find the route for the version
-    .flatMap{v => routes.get(v).toRight("Unrouted version " + v.toString)}
+    .map{v => routes(v)}
     .fold(
       err => throw new Exception(err),
       route => route
     )
+
+  def apply[R,T](request: Request[R])(routes: PartialFunction[ApiVersion, T]): T = this(request.headers)(routes)
 
 }
 
