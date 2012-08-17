@@ -25,12 +25,10 @@ trait AssetApi {
   )
 
   // GET /api/assets?params
-  def getAssets(page: Int, size: Int, sort: String, sortField: String) = FindAction(
-    PageParams(page, size, sort), sortField, Permissions.AssetApi.GetAssets, this
-  )
-
-  def search(query: String, page: Int, size: Int, sortField: String, sort: String, details: String) = 
-    SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, sortField, Permissions.AssetApi.GetAssets, this)
+  def getAssets(page: Int, size: Int, sort: String, sortField: String, query: String, details: String) = VersionRouter {
+    case `1.1` => FindAction(PageParams(page, size, sort), sortField, Permissions.AssetApi.GetAssets, this)
+    case `1.2` => SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, sortField, Permissions.AssetApi.GetAssets, this)
+  }
 
   // PUT /api/asset/:tag
   def createAsset(tag: String) = CreateAction(Some(tag), None, Permissions.AssetApi.CreateAsset, this)
