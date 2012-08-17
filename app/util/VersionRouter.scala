@@ -1,6 +1,6 @@
 package util
 
-import play.api.mvc.{Request, Headers}
+import play.api.mvc._
 import controllers.actions.SecureAction
 
 
@@ -35,7 +35,7 @@ object VersionRouter {
 
   val acceptHeader = """com.tumblr.collins;version=([0-9]+\.[0-9]+)""".r
 
-  def apply[T](requestHeaders: Headers)(routes: PartialFunction[ApiVersion, T]): T = requestHeaders
+  def route[T](requestHeaders: Headers)(routes: PartialFunction[ApiVersion, T]): T = requestHeaders
     .toMap
     //get the accept header
     .get("Accept")
@@ -55,7 +55,9 @@ object VersionRouter {
       route => route
     )
 
-  def apply[R,T](request: Request[R])(routes: PartialFunction[ApiVersion, T]): T = this(request.headers)(routes)
+  def apply(routes: PartialFunction[ApiVersion, SecureAction]): Action[AnyContent] = Action{implicit request =>
+    this.route(request.headers)(routes)(request)
+  }
 
 }
 
