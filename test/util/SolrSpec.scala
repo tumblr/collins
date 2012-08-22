@@ -93,6 +93,9 @@ class SolrQuerySpec extends ApplicationSpecification {
   }
 
   "CollinsQueryParser" should {
+    "empty query" in {
+      "*".query must_== EmptySolrQuery
+    }
     "key-value" in {
       "string value" in {
         """foo = "bar"""".query must_== (("foo" -> "bar"): SolrKeyVal)
@@ -168,6 +171,9 @@ class SolrQuerySpec extends ApplicationSpecification {
   "CQL abstract syntax-tree" should {
 
     "solr query generation" in {
+      "empty query" in {
+        "*".query.toSolrQueryString must_== "*:*"
+      }
       "simple keyval" in {
         "foo = 3".query.toSolrQueryString must_== """foo:3"""
       }

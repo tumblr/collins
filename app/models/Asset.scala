@@ -329,7 +329,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       .toSolrExpression
       .typeCheck
       .right
-      .flatMap{exp => CollinsSearchQuery(exp, page, sortField).getPage()}
+      .flatMap{exp => println(exp.toString);CollinsSearchQuery(exp, page, sortField).getPage()}
       .fold(
         err => throw new Exception(err),
         page => page

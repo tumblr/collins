@@ -56,13 +56,15 @@ case class AssetSearchParameters(
       params._2.map{case (assetMeta,value) => SolrKeyVal(assetMeta.name, SolrStringValue(value))} ++ 
       params._3.map{i => SolrKeyVal("ip_address", SolrStringValue(i))}
     val allkeyvals = p ++ afinder.toSolrKeyVals
-    operation.map{_.toUpperCase} match {
-      case Some("OR") => SolrOrOp(allkeyvals)
-      case _ => SolrAndOp(allkeyvals)
+    if (allkeyvals.size > 0) {
+      operation.map{_.toUpperCase} match {
+        case Some("OR") => SolrOrOp(allkeyvals)
+        case _ => SolrAndOp(allkeyvals)
 
+      }
+    } else {
+      EmptySolrQuery
     }
-
-
   }
 
   def paginationKey = toQueryString
