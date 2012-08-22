@@ -109,7 +109,10 @@ class SolrPlugin(app: Application) extends Plugin {
     _server.map{ server => 
       //server.deleteByQuery( "*:*" );
       Logger.logger.debug("Populating Solr with Assets")
-      updateAssets(Asset.find(PageParams(0,10000,"asc"), AttributeResolver.emptyResultTuple, AssetFinder.empty).items.collect{case a: Asset => a})
+      val assets = Asset.findRaw()
+
+      Logger.logger.debug("Preparing to index %d assets".format(assets.size))
+      updateAssets(assets)
     }.getOrElse(Logger.logger.warn("attempted to populate solr when no server was initialized"))
   }
 
