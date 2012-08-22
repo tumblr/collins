@@ -24,6 +24,12 @@ sealed trait SolrQueryComponent {
 
 }
 
+case object EmptySolrQuery extends SolrQueryComponent with SolrExpression{
+  def toSolrQueryString(toplevel: Boolean) = "*:*"
+
+  def typeCheck = Right(EmptySolrQuery)
+}
+
 /** 
  * This class holds data about a solr key, mainly for translating "local" key
  * names to their solr equivalent
@@ -120,6 +126,7 @@ sealed trait SolrExpression extends SolrQueryComponent{
 }
 
 abstract class SolrMultiExpr(exprs: Seq[SolrExpression], op: String) extends SolrExpression {
+  require(exprs.size > 0, "Cannot create empty multi-expression")
 
   def toSolrQueryString(toplevel: Boolean) = {
     val e = exprs.map{_.toSolrQueryString(false)}.mkString(" %s ".format(op))
