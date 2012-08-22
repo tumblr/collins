@@ -440,6 +440,16 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
+  /**
+   * Used only when repopulating the solr index, this should not be used anywhere else
+   */
+  def findRaw() = inTransaction { log {
+    from(tableDef){asset => 
+      where(AssetFinder.empty.asLogicalBoolean(asset))
+      select(asset)
+    }.toList
+  }}
+
   def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int]) = inTransaction {
     val oldAsset = Asset.findById(asset.id).get
     val res = if (updated.isDefined && status.isDefined) {
