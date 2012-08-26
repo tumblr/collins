@@ -3,8 +3,9 @@ import play.api.mvc._
 
 import controllers.ApiResponse
 import models.{IpAddresses, Model}
-import util.{AppConfig, AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
+import util.{AppConfig, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
+import util.security.{AuthenticationAccessor, AuthenticationProvider}
 import util.power.PowerConfiguration
 import util.plugins.solr.Solr
 import java.io.File

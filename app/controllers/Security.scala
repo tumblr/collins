@@ -10,6 +10,7 @@ import play.api.libs.iteratee._
 
 import models.User
 import util._
+import util.security._
 
 import org.apache.commons.codec.binary.Base64
 

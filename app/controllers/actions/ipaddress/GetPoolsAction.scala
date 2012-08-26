@@ -4,7 +4,7 @@ package ipaddress
 
 import models.{IpAddresses, Truthy}
 import models.shared.AddressPool
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 
 import play.api.libs.json._
 

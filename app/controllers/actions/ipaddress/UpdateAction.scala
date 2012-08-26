@@ -4,7 +4,8 @@ package ipaddress
 
 import models.{Asset, IpAddresses}
 import models.shared.IpAddressConfiguration
-import util.{ApiTattler, IpAddress, SecuritySpecification}
+import util.{ApiTattler, IpAddress}
+import util.security.SecuritySpecification
 import validators.{StringUtil, ParamValidation}
 
 import play.api.data.Form

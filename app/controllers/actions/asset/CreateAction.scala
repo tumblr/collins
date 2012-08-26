@@ -7,7 +7,8 @@ import forms._
 import models.{Asset, AssetLifecycle, AssetType, IpmiInfo, Status => AssetStatus, Truthy}
 import models.AssetType.{Enum => AssetTypeEnum}
 import models.Status.{Enum => AssetStatusEnum}
-import util.{OutputType, SecuritySpecification}
+import util.OutputType
+import util.security.SecuritySpecification
 import validators.StringUtil
 
 import play.api.data.Form

@@ -1,7 +1,6 @@
 package controllers
 
 import models.{AssetMeta, AssetMetaValue, AssetMetaValueConfig}
-import util.SecuritySpec
 
 import play.api.libs.json._
 import play.api.mvc.Results

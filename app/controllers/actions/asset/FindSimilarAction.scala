@@ -16,7 +16,7 @@ import play.api.Logger
 import play.api.mvc.{AnyContent, Request, Result}
 
 import util.MessageHelper
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 
 import views.html
 

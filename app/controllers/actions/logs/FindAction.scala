@@ -3,7 +3,7 @@ package actions
 package logs
 
 import models.{Asset, AssetLog, Page, PageParams}
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 import play.api.libs.json._
 
 case class FindAction(
