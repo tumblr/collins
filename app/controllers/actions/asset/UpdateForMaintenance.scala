@@ -3,7 +3,7 @@ package actions
 package asset
 
 import models.{Asset, Status => AssetStatus}
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 import util.plugins.Maintenance
 import validators.StringUtil
 

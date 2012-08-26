@@ -3,7 +3,7 @@ package actions
 package asset
 
 import models.Asset
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 
 import play.api.libs.json._
 

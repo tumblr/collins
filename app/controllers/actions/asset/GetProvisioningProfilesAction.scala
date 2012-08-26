@@ -2,7 +2,8 @@ package controllers
 package actions
 package asset
 
-import util.{Provisioner, SecuritySpecification}
+import util.Provisioner
+import util.security.SecuritySpecification
 import com.tumblr.play.ProvisionerProfile
 import play.api.libs.json._
 

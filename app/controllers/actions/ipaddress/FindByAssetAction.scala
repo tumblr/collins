@@ -3,7 +3,7 @@ package actions
 package ipaddress
 
 import models.{Asset, IpAddresses}
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 
 // Get the addresses associated with an asset
 case class FindByAssetAction(

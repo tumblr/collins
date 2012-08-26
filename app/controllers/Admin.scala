@@ -1,6 +1,6 @@
 package controllers
 
-import util.{AppConfig, SecuritySpec, Stats}
+import util.{AppConfig, Stats}
 import util.plugins.Cache
 import util.plugins.solr.Solr
 import views._

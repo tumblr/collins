@@ -1,4 +1,5 @@
 package util
+package security
 
 import models.{User, UserImpl}
 

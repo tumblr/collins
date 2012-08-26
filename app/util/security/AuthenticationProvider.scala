@@ -1,48 +1,13 @@
 package util
+package security
 
 import models.{User, UserImpl}
 
-import play.api._
-import com.tumblr.play.{PermissionsHelper, Privileges}
-import java.io.File
-import java.util.concurrent.TimeUnit
-import annotation.implicitNotFound
+import play.api.{Configuration, Logger}
 import com.google.common.cache._
+import java.util.concurrent.TimeUnit
+import com.tumblr.play.{PermissionsHelper, Privileges}
 
-@implicitNotFound(msg = "Didn't find an implicit SecuritySpecification but expected one")
-trait SecuritySpecification {
-  val isSecure: Boolean
-  val requiredCredentials: Set[String]
-  val securityConcern: String
-
-  def requiresAuthorization: Boolean = requiredCredentials.nonEmpty
-}
-
-case class SecuritySpec(
-  isSecure: Boolean,
-  requiredCredentials: Set[String],
-  securityConcern: String = SecuritySpec.LegacyMarker
-) extends SecuritySpecification {
-  def this(secure: Boolean, creds: Seq[String]) = this(secure, creds.toSet, SecuritySpec.LegacyMarker)
-}
-
-object SecuritySpec {
-  val LegacyMarker = "SecuritySpec Version 1.1"
-  def apply(isSecure: Boolean, requiredCredentials: String) =
-    new SecuritySpec(isSecure, Set(requiredCredentials))
-  def apply(creds: Set[String]) = new SecuritySpec(true, creds)
-  def apply(secure: Boolean, creds: Seq[String]) =
-    new SecuritySpec(secure, creds.toSet)
-  def apply(isSecure: Boolean) = new SecuritySpec(isSecure, Set[String]())
-  def fromConfig(concern: String, default: SecuritySpecification): SecuritySpecification = {
-    AuthenticationProvider.permissions(concern) match {
-      case None =>
-        SecuritySpec(default.isSecure, default.requiredCredentials, default.securityConcern)
-      case Some(set) =>
-        new SecuritySpec(true, set, concern)
-    }
-  }
-}
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger
@@ -78,14 +43,11 @@ trait AuthenticationProvider {
     }
   }
 }
-trait AuthenticationAccessor {
-  def getAuthentication(): AuthenticationProvider
-}
 
 object AuthenticationProvider {
   val Default = new MockAuthenticationProvider
   val Types = Set("ldap", "file", "default")
-  val filename = Config.getString("authentication", "permissionsFile", "conf/permissions.yaml").toString
+  lazy val filename = AuthenticationProviderConfig.permissionsFile 
 
   private val logger = Logger(getClass)
 

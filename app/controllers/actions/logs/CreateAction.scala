@@ -4,7 +4,8 @@ package logs
 
 import models.{Asset, AssetLog}
 import models.{LogMessageType, LogFormat, LogSource}
-import util.{FeatureConfig, MessageHelper, SecuritySpecification, TattlerHelper}
+import util.{FeatureConfig, MessageHelper, TattlerHelper}
+import util.security.SecuritySpecification
 import validators.ParamValidation
 
 import play.api.data.Form

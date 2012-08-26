@@ -2,8 +2,9 @@ package controllers
 package actions
 package asset
 
-import util.{AppConfig, Config, Provisioner, SecuritySpecification, SoftLayer}
+import util.{AppConfig, Config, Provisioner, SoftLayer}
 import util.concurrent.RateLimiter
+import util.security.SecuritySpecification
 import validators.StringUtil
 
 import play.api.data.Form

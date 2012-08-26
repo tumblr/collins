@@ -3,7 +3,7 @@ package actions
 package asset
 
 import models.AssetLifecycle
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 import validators.StringUtil
 
 import play.api.data.Form

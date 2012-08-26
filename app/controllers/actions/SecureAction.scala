@@ -2,7 +2,8 @@ package controllers
 package actions
 
 import models.User
-import util.{OutputType, SecuritySpecification}
+import util.OutputType
+import util.security.SecuritySpecification
 
 import play.api.Logger
 import play.api.data.Form

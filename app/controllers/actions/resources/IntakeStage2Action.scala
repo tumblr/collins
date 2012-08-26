@@ -3,7 +3,8 @@ package actions
 package resources
 
 import models.AssetMeta.Enum.ChassisTag
-import util.{MessageHelperI, SecuritySpecification}
+import util.MessageHelperI
+import util.security.SecuritySpecification
 import validators.ParamValidation
 
 import play.api.data.Form

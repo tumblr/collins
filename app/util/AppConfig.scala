@@ -8,10 +8,6 @@ import play.api.i18n.Messages
 object AppConfig extends Config {
   val IgnoredAssets = Feature("ignoreDangerousCommands").toSet
 
-  def adminGroup = FeatureConfigValue("authentication","adminGroup",false,Map.empty)
-                      .ifSet( f => f.toSet(false))
-                      .getOrElse(Set("infra"))
-
   // Ignore asset for dangerous commands
   def ignoreAsset(tag: String): Boolean = IgnoredAssets(tag.toUpperCase)
   def ignoreAsset(asset: Asset): Boolean = ignoreAsset(asset.tag)

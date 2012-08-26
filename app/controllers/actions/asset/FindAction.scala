@@ -9,7 +9,8 @@ import models.{Asset, AssetType, AssetView, AssetFinder, Page, PageParams, Remot
 import models.AssetType.{Enum => AssetTypeEnum}
 import models.Status.{Enum => AssetStatusEnum}
 
-import util.{AttributeResolver, SecuritySpecification}
+import util.AttributeResolver
+import util.security.SecuritySpecification
 
 import play.api.libs.json._
 import play.api.mvc.Result

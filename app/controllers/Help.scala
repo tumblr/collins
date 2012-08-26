@@ -2,7 +2,7 @@ package controllers
 
 import play.api.mvc._
 
-import util.{MessageHelper, SecuritySpec}
+import util.MessageHelper
 import views._
 
 import collection.immutable.DefaultMap

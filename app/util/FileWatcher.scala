@@ -5,6 +5,7 @@ import play.api.Logger
 import java.io.File
 import java.util.Date
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * Watch a file for changes and get notified when it has.
@@ -122,9 +123,21 @@ trait FileWatcher {
 trait FileWatcherResults[T] extends FileWatcher {
   protected val init: T
   lazy private val data = new AtomicReference[T](init)
+  // This isn't used for synchronization as much as just making sure that if fromFile happens to not
+  // be thread safe we don't see any weird issues
+  private val lock = new ReentrantLock();
 
   override protected def onChange(f: File) {
-    data.set(fromFile(f))
+    lock.isHeldByCurrentThread() match {
+      case false =>
+        lock.lock()
+        try {
+          data.set(fromFile(f))
+        } finally {
+          lock.unlock()
+        }
+      case true =>
+    }
   }
 
   protected def fromFile(f: File): T

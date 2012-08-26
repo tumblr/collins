@@ -4,8 +4,9 @@ package asset
 
 import models.{AssetLifecycle, Status => AStatus}
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
-import util.{MessageHelperI, SecuritySpecification}
+import util.MessageHelperI
 import util.power.PowerUnits
+import util.security.SecuritySpecification
 import validators.ParamValidation
 
 import forms._

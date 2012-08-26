@@ -5,9 +5,10 @@ package resources
 import forms._
 
 import models.Truthy
-import util.{IpmiCommand, PowerManagement, SecuritySpecification}
+import util.{IpmiCommand, PowerManagement}
 import util.concurrent.BackgroundProcessor
 import util.plugins.{IpmiPowerCommand, IpmiPowerManagementConfig}
+import util.security.SecuritySpecification
 
 import com.tumblr.play.PowerManagement
 
