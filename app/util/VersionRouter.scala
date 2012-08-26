@@ -35,25 +35,24 @@ object VersionRouter {
 
   val acceptHeader = """application/com.tumblr.collins;version=([0-9]+\.[0-9]+)""".r
 
-  def route[T](requestHeaders: Headers)(routes: Function1[ApiVersion, T]): T = requestHeaders
-    .toMap
-    //get the accept header
-    .get("Accept")
-    //match the regex if a header was sent
-    .map{_
-      .collectFirst{case acceptHeader(version) => version}
-      .toRight("invalid Accept header").right
-      //verify the version is valid
-      .flatMap{version => ApiVersion.safeWithName(version).toRight("Unknown Version " + version)}
-    }
-    //or provide the default version if no header
-    .getOrElse(Right(ApiVersion.defaultVersion)).right
-    //find the route for the version
-    .map{v => routes(v)}
-    .fold(
-      err => throw new Exception(err),
-      route => route
-    )
+  def route[T](requestHeaders: Headers)(routes: Function1[ApiVersion, T]): T = {
+    val apiVersion = requestHeaders
+      //get the accept header as sequence
+      .getAll("Accept")
+      // accept headers can be comma separated or multiple headers, convert to flattened list
+      .flatMap(_.split(","))
+      // find first matching accept header
+      .collectFirst { case acceptHeader(version) => version }
+      // or if unspecified, use the default
+      .getOrElse(ApiVersion.defaultVersion.stringName)
+    ApiVersion.safeWithName(apiVersion).toRight("Unknown API version " + apiVersion)
+      .right
+      .map(v => routes(v))
+      .fold(
+        err => throw new Exception(err),
+        route => route
+      )
+  }
 
   def apply(routes: Function1[ApiVersion, SecureAction]): Action[AnyContent] = Action{implicit request =>
     this.route(request.headers)(routes)(request)

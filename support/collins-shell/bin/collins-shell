@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-if ARGV.include?("--trace") then
-HTTP_DEBUG = true
+if ENV['COLLINS_DEBUG'] then
+  HTTP_DEBUG = true
 end
 
 # Make sure we're running a valid version of ruby
@@ -17,7 +17,7 @@ end
 
 $:.unshift File.join File.dirname(__FILE__), *%w[.. lib]
 # Allows us to use a dev version of collins-client if needed
-$:.unshift File.join File.dirname(__FILE__), *%w[.. .. collins-client lib]
+$:.unshift File.join File.dirname(__FILE__), *%w[.. .. ruby collins-client lib]
 %w[collins_shell collins_shell/cli].each {|f| require f}
 
 begin
