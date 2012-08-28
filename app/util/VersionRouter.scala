@@ -1,6 +1,7 @@
 package util
 
 import play.api.mvc._
+import controllers.ApiResponse
 import controllers.actions.SecureAction
 
 
@@ -31,14 +32,20 @@ object ApiVersion {
 }
 import ApiVersion._
 
+class VersionException(message: String) extends Exception(message)
+
 object VersionRouter {
 
   val acceptHeader = """application/com.tumblr.collins;version=([0-9]+\.[0-9]+)""".r
 
-  def route[T](requestHeaders: Headers)(routes: Function1[ApiVersion, T]): T = {
-    val apiVersion = requestHeaders
+  def routeEither[T](requestHeaders: Headers)(routes: Function1[ApiVersion, T]): Either[String, T] = {
+    val heads = try {
       //get the accept header as sequence
-      .getAll("Accept")
+      requestHeaders.getAll("Accept")
+    } catch {
+      case n: NoSuchElementException => Nil
+    }
+    val apiVersion = heads
       // accept headers can be comma separated or multiple headers, convert to flattened list
       .flatMap(_.split(","))
       // find first matching accept header
@@ -48,14 +55,22 @@ object VersionRouter {
     ApiVersion.safeWithName(apiVersion).toRight("Unknown API version " + apiVersion)
       .right
       .map(v => routes(v))
-      .fold(
-        err => throw new Exception(err),
-        route => route
-      )
   }
 
+  def route[T](requestHeaders: Headers)(routes: ApiVersion => T): T = routeEither(requestHeaders)(routes).fold(
+    err => throw new VersionException(err),
+    route => route
+  )
+
   def apply(routes: Function1[ApiVersion, SecureAction]): Action[AnyContent] = Action{implicit request =>
-    this.route(request.headers)(routes)(request)
+    routeEither(request.headers)(routes).fold(
+      err => if (OutputType.isHtml(request)) {
+        Results.Redirect(app.routes.Resources.index).flashing("error" -> err)
+      } else {
+        Results.BadRequest(ApiResponse.formatJsonError(err, None))
+      },
+      action => action(request)
+    )
   }
 
 }
