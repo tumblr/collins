@@ -1,4 +1,5 @@
 package util
+package security
 
 import play.api._
 import play.api.Configuration

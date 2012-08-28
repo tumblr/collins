@@ -11,20 +11,11 @@ import java.security.MessageDigest
 import io.Source
 
 class FileAuthenticationProvider(config: Configuration) extends AuthenticationProvider {
-  config.getString("type").foreach { cfg =>
-    require(cfg.toLowerCase == "file", "If specified, authentication type must be file")
-  }
 
-  private val authfile = config.getString("file").getOrElse {
-    throw new IllegalArgumentException("authentication.file not specified")
-  }
+  def authfile = FileAuthenticationProviderConfig().userfile
 
   private val watcher = FileWatcher.watchWithResults(authfile, Map.empty[String,UserImpl]) { file =>
     usersFromFile(file)
-  }
-
-  override def validate() {
-    FileWatcher.fileGuard(authfile)
   }
 
   override def authenticate(username: String, password: String): Option[User] = {

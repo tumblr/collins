@@ -1,6 +1,6 @@
 package models
 
-import util.AuthenticationProvider
+import util.security.AuthenticationProvider
 import org.specs2.mutable._
 import java.io.File
 

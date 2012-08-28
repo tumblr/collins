@@ -10,7 +10,6 @@ import org.squeryl.logging.{LocalH2SinkStatisticsListener, StatsSchema}
 
 import java.io.File
 import java.sql.{Connection, DriverManager}
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Wrapper on Play DB object so models don't need an implicit application
