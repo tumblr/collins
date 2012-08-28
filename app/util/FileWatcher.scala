@@ -60,6 +60,8 @@ trait FileWatcher {
   // Method to call if file can't be read
   protected def onError(file: File)
 
+  protected def delayInitialCheck: Boolean = false
+
   // Call check every time you use the data that came from this file.
   final def tick() {
     if (isTimeToCheckFile) {
@@ -83,6 +85,7 @@ trait FileWatcher {
   protected def notifyIfFileWasModified() {
     try {
       val file = FileWatcher.fileGuard(filename)
+      val previousCheckTime = lastTimeFileChecked
       // modify lastTimeFileChecked _after_ the guard. This will cause continued re-check of file in
       // the case that an exception is thrown (isTimeToCheckFile continues to be true)
       lastTimeFileChecked = now
@@ -96,7 +99,12 @@ trait FileWatcher {
         filename, lastModificationTime, mTime
       ))
       lastModificationTime = mTime
-      onChange(file)
+      (previousCheckTime == 0L && delayInitialCheck) match {
+        case true =>
+          // noop, was first check and were asked to delay initial check
+        case false =>
+          onChange(file)
+      }
     } catch {
       case e => handleFileNotFound(e)
     }
