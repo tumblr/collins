@@ -27,12 +27,12 @@ class VersionRouterSpec extends mutable.Specification {
     "default route on missing header" in {      
       VersionRouter.route(FakeHeaders(Map[String, Seq[String]]()))(map) must_== map(ApiVersion.defaultVersion)
     }
-    "throw exception on malformed header" in {
-      VersionRouter.route(FakeHeaders(Map("Accept" -> List("HASFIAFSHAF"))))(map) must throwA[Exception]
+    "default route on malformed header" in {
+      VersionRouter.route(FakeHeaders(Map("Accept" -> List("HASFIAFSHAF"))))(map) must_== map(ApiVersion.defaultVersion)
     }
     "throw exception on invalid version" in {
       val heads = FakeHeaders(Map("Accept" -> List("application/com.tumblr.collins;version=26.12", "foo", "com.tumblr.collins")))
-      VersionRouter.route(heads)(map) must throwA[Exception]
+      VersionRouter.route(heads)(map) must throwA[VersionException]
     }
   }
 
