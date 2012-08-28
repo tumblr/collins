@@ -7,6 +7,7 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicReference
 
 case class ConfigWatch private[config](config: Configuration) extends FileWatcher {
+  override def delayInitialCheck = true
   override def millisBetweenFileChecks = 15000L
   override def filename = Option(config.underlying.origin.filename).orElse {
     val cfg = config.underlying
