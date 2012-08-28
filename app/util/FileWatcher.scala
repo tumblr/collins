@@ -77,7 +77,7 @@ trait FileWatcher {
       ))
       true
     } else {
-      logger.debug("Keep using the cache, cache not yet expired")
+      logger.trace("Keep using the cache, cache not yet expired")
       false
     }
   }
@@ -101,7 +101,7 @@ trait FileWatcher {
       lastModificationTime = mTime
       (previousCheckTime == 0L && delayInitialCheck) match {
         case true =>
-          // noop, was first check and were asked to delay initial check
+          logger.info("Not triggerring onChange due to delayInitialCheck being true")
         case false =>
           onChange(file)
       }
