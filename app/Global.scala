@@ -5,6 +5,7 @@ import controllers.ApiResponse
 import models.{IpAddresses, Model}
 import util.{AppConfig, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
+import util.config.Registry
 import util.security.{AuthenticationAccessor, AuthenticationProvider}
 import util.power.PowerConfiguration
 import util.plugins.solr.Solr
@@ -18,8 +19,8 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   )
 
   override def onStart(app: Application) {
-    verifyConfiguration(app.configuration)
     setupLogging(app)
+    verifyConfiguration(app)
     val auth = app.configuration.getConfig("authentication") match {
       case None => AuthenticationProvider.Default
       case Some(config) => config.getString("type", Some(AuthenticationProvider.Types)) match {
@@ -107,14 +108,15 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
 
   protected def checkRuntime(config: Configuration) {
     PowerConfiguration.validate()
-    AuthenticationProvider.validate()
-    getAuthentication().validate()
     IpAddresses.AddressConfig
     AppConfig.ipmi
   }
 
   // Make sure we have a valid configuration before we start
-  protected def verifyConfiguration(config: Configuration) {
+  protected def verifyConfiguration(app: Application) {
+    val config = app.configuration
+    Registry.initializeAll(app)
+    Registry.validate
     RequiredConfig.foreach { key =>
       key.split("\\.", 2) match {
         case Array(sub,key) =>

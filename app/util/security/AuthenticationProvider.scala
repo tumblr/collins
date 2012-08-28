@@ -24,7 +24,6 @@ trait AuthenticationProvider {
                                   }
                                 )
   def authenticate(username: String, password: String): Option[User]
-  def validate() {}
   def useCachedCredentials: Boolean =
     Config.getBoolean("authentication", "cacheCredentials").getOrElse(false)
   def cacheTimeout: Long =
@@ -47,16 +46,12 @@ trait AuthenticationProvider {
 object AuthenticationProvider {
   val Default = new MockAuthenticationProvider
   val Types = Set("ldap", "file", "default")
-  lazy val filename = AuthenticationProviderConfig.permissionsFile 
+  def filename = AuthenticationProviderConfig().permissionsFile 
 
   private val logger = Logger(getClass)
 
   lazy private val watcher = FileWatcher.watchWithResults(filename, Privileges.empty) { f =>
     PermissionsHelper.fromFile(f.getAbsolutePath)
-  }
-
-  def validate() {
-    FileWatcher.fileGuard(filename)
   }
 
   def get(name: String, config: Configuration): AuthenticationProvider = {
