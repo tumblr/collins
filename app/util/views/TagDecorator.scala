@@ -7,7 +7,13 @@ import play.api.Configuration
 import play.api.mvc.Content
 import play.api.templates.Html
 
-object TagDecorator {
+/**
+ * A trait which allows for the values of asset metadata tags to be formatted
+ * for display in a manner appropriate to their context.
+ */
+trait DecoratorBase {
+
+  def configPrefix: String
 
   // optionalDelimiter only used if no decorator defined
   def decorate(key: String, values: Seq[String], optionalDelimiter: String): Content = {
@@ -32,7 +38,7 @@ object TagDecorator {
   }
 
   protected lazy val Decorators: Map[String,Decorator] =
-    Config.get("tagdecorators").map { decorators =>
+    Config.get(configPrefix).map { decorators =>
       decorators.subKeys.foldLeft(Map[String,Decorator]()) { case(total,current) =>
         val config = decorators.getConfig(current).get
         Map(current -> createDecorator(current, config)) ++ total
@@ -56,5 +62,12 @@ object TagDecorator {
   protected def getClassInstance(s: String) = {
     this.getClass.getClassLoader.loadClass(s).newInstance().asInstanceOf[DecoratorParser]
   }
+
+}
+
+
+object TagDecorator extends DecoratorBase {
+
+  def configPrefix: String = "tagdecorator"
 
 }
