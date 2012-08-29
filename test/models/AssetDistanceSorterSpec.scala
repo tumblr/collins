@@ -27,7 +27,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
       val sortedAssets = AssetDistanceSorter.distributionSort(
         targetAsset, 
         similarAssets, 
-        SortDirection.Asc,
+        SortAsc,
         sortConfig) 
       sortedAssets.map{_.tag} must_== expected
     }
@@ -37,7 +37,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
       val sortedAssets = AssetDistanceSorter.distributionSort(
         targetAsset, 
         similarAssets, 
-        SortDirection.Desc,
+        SortDesc,
         sortConfig) 
       sortedAssets.map{_.tag} must_== expected
     }
@@ -82,7 +82,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
                                new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
                                assets,
                                Name,
-                               SortDirection.Asc)
+                               SortAsc)
         }
 
         "sort permuted named assets in ascending order" in
@@ -97,7 +97,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
                                new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
                                (assets1 ++ assets2),
                                Name,
-                               SortDirection.Asc)
+                               SortAsc)
         }
 
 
@@ -112,7 +112,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
                                new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
                                assets,
                                Name,
-                               SortDirection.Desc)
+                               SortDesc)
         }
         
     }

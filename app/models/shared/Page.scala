@@ -16,7 +16,7 @@ object PageParams {
   /**
    * Currently if sort is invalid it will just default to Asc
    */
-  def apply(page: Int, size: Int, sort: String): PageParams = PageParams(page, size, SortDirection.withName(sort).getOrElse(SortAsc))
+  def apply(page: Int, size: Int, sort: String): PageParams = PageParams(page, size, SortDirection.withName(sort.toUpperCase).getOrElse(SortAsc))
 }
 
 sealed trait SortDirection {
