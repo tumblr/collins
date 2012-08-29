@@ -6,7 +6,7 @@
 GET     /                           app.Resources.index
 
 # Resources/Assets
-GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "DESC", operation: String ?= "and", sortField: String ?= "TAG")
+GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "ASC", operation: String ?= "and", sortField: String ?= "TAG")
 GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
 
 GET     /asset/create/:assetType    app.Resources.displayCreateForm(assetType: String)

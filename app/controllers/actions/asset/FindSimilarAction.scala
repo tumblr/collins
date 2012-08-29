@@ -86,7 +86,7 @@ case class FindSimilarAction(
       case 1 =>
         Status.Redirect(p.items(0).remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(p.items(0).tag))
       case n =>
-        Status.Ok(views.html.asset.list(p, false, Some((newPage: Int) => app.routes.Resources.similar(assetTag, newPage, 50).toString))(flash, request))
+        Status.Ok(views.html.asset.list(p, None, Some((newPage: Int) => app.routes.Resources.similar(assetTag, newPage, 50).toString))(flash, request))
     }
   }
 

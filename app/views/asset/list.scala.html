@@ -1,4 +1,4 @@
-@(assets: Page[AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
+@(assets: Page[AssetView], sortField: Option[String] = None, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import _root_.util.SoftLayer
@@ -6,28 +6,38 @@
 @import util.notice
 
 @link(newPage: Int) = @{
-  Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "DESC", "and").toString), req.queryString)
+  Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "ASC", "and").toString), req.queryString)
 }
+@sortLink(sort: String) = @{
+  val prefix = app.routes.Resources.find(0, 50, "ASC", "and", sort).toString
+  if (sortField.map{_ != sort}.getOrElse(true)) {
+    Pagination.paginate(prefix, req.queryString)
+  } else {
+    ""
+  }
+}
+
 @main("Asset Search Results") {
 <div class="page-header">
   <h1>Asset Search Results <small>@assets.items.size of @assets.total results</small></h1>
 </div>
+  @sortField.toString
 <div class="row">
   <div class="span14">
     @notice("message", Some("notice"))
     @notice("error")
     @notice("warning")
-    <table class="condensed-table zebra-striped @(if(clientSort) "sortable" else "")" data-size="50">
+    <table class="condensed-table zebra-striped" data-size="50">
       <thead>
         <tr>
-          <th>Asset Tag</th>
+          <th><a href="@sortLink("TAG")">Asset Tag</a></th>
           @if(ListHelper.showHostname(assets)) {
-          <th>Hostname</th>
+          <th><a href="@sortLink("HOSTNAME")">Hostname</a></th>
           }
-	  <th>Primary Role</th>
-          <th>Status</th>
-          <th>Created</th>
-          <th>Last Updated</th>
+	        <th><a href="@sortLink("PRIMARY_ROLE")">Primary Role</a></th>
+          <th><a href="@sortLink("STATUS")">Status</a></th>
+          <th><a href="@sortLink("CREATED")">Created</a></th>
+          <th><a href="@sortLink("UPDATED")">Last Updated</a></th>
           @if(ListHelper.showSoftLayerLink(assets)) {
           <th>SL Link</th>
           }

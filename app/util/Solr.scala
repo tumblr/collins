@@ -141,7 +141,7 @@ class FlatSerializer extends AssetSolrSerializer {
           case Double => SolrDoubleValue(java.lang.Double.parseDouble(head.getValue()))
           case _ => SolrStringValue(head.getValue())
         }
-        val solrKey = SolrKey(head.getName(), head.getValueType(), true)
+        val solrKey = SolrKeyResolver(head.getName()).get
         val mergedval = build.get(solrKey) match {
           case Some(exist) => exist match {
             case s: SolrSingleValue => SolrMultiValue(s :: newval :: Nil, newval.valueType)
@@ -180,23 +180,25 @@ case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField
     val q = new SolrQuery
     val queryString = query.toSolrQueryString
     Logger.logger.debug("SOLR: " + queryString)
-    q.setQuery(queryString)
-    q.setStart(page.offset)
-    q.setRows(page.size)
-    q.addSortField(sortField.toUpperCase, (if (page.sort == "ASC") SolrQuery.ORDER.asc else SolrQuery.ORDER.desc))
-    try {
-      val response = server.query(q)
-      val results = response.getResults
-      Right((results.toArray.toSeq.map{
-        case doc: SolrDocument => Asset.findByTag(doc.getFieldValue("TAG").toString)
-        case other => {
-          Logger.logger.warn("Got something weird back from Solr %s".format(other.toString))
-          None
-        }
-      }.flatten, results.getNumFound))
-    } catch {
-      case s: SolrServerException => Left(s.getMessage + "(query %s)".format(queryString))
-      case e => Left(e.getMessage)
+    SolrKeyResolver.either(sortField).right.flatMap{sortKey =>
+      q.setQuery(queryString)
+      q.setStart(page.offset)
+      q.setRows(page.size)
+      q.addSortField(sortKey.resolvedName, (if (page.sort == "ASC") SolrQuery.ORDER.asc else SolrQuery.ORDER.desc))
+      try {
+        val response = server.query(q)
+        val results = response.getResults
+        Right((results.toArray.toSeq.map{
+          case doc: SolrDocument => Asset.findByTag(doc.getFieldValue("TAG").toString)
+          case other => {
+            Logger.logger.warn("Got something weird back from Solr %s".format(other.toString))
+            None
+          }
+        }.flatten, results.getNumFound))
+      } catch {
+        case s: SolrServerException => Left(s.getMessage + "(query %s)".format(queryString))
+        case e => Left(e.getMessage)
+      }
     }
   }.getOrElse(Left("Solr Plugin not initialized!"))
 
