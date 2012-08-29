@@ -169,6 +169,8 @@ object SolrKeyResolver {
    * each key is an "incoming" field from a query, the ValueType is the
    * expected type of the key, and the Boolean indicates whether the key in
    * Solr is static(false) or dynamic(true)
+   *
+   * NOTE - For now, any single-valued field that needs to be sortable has to be explicitly declared
    */
   lazy val nonMetaKeys: Seq[SolrKey] = List(
     SolrKey("TAG", String,false), 
@@ -176,6 +178,8 @@ object SolrKeyResolver {
     SolrKey("UPDATED", String,false), 
     SolrKey("DELETED", String,false),
     SolrKey("IP_ADDRESS", String,false),
+    SolrKey("PRIMARY_ROLE", String,false),
+    SolrKey("HOSTNAME", String,false),
     SolrKey(IpmiAddress.toString, String, true),
     SolrKey(IpmiUsername.toString, String, true),
     SolrKey(IpmiPassword.toString, String, true),
