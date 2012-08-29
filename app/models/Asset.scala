@@ -357,7 +357,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     val results = from(tableDef)(a =>
       where(a.tag.withPossibleRegex(tag))
       select(a)
-      orderBy(a.id.withSort(params.sort))
+      orderBy(a.id.withSort(params.sort.toString))
     ).page(params.offset, params.size).toList
     val totalCount = from(tableDef)(a =>
       where(a.tag.withPossibleRegex(tag))
@@ -412,7 +412,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
    * Finds assets in the same nodeclass as the given asset
    */
   def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sortType: SortType): Page[AssetView] = {
-    val sorter = SortDirection.withName(page.sort).getOrElse( {
+    val sorter = SortDirection.withName(page.sort.toString).getOrElse( {
       logger.warn("Invalid sort " + page.sort)
       SortDesc
     })
