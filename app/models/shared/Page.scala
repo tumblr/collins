@@ -2,18 +2,27 @@ package models
 
 import play.api.libs.json._
 
-case class PageParams(page: Int, size: Int, sort: String) {
+case class PageParams(page: Int, size: Int, sort: SortDirection) {
   def offset: Int = page * size
   def validate() {
     require(page >= 0, "page must be >= 0")
     require(size >= 0, "size must be >= 0")
   }
 
-  def toSeq = List("page" -> page.toString, "size" -> size.toString, "sort" -> sort)
+  def toSeq = List("page" -> page.toString, "size" -> size.toString, "sort" -> sort.toString)
+}
+object PageParams {
+
+  /**
+   * Currently if sort is invalid it will just default to Asc
+   */
+  def apply(page: Int, size: Int, sort: String): PageParams = PageParams(page, size, SortDirection.withName(sort).getOrElse(SortAsc))
 }
 
 sealed trait SortDirection {
   val strVal: String
+
+  override def toString = strVal
 }
 case object SortAsc extends SortDirection {
   val strVal = "ASC"

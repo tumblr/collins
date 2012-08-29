@@ -35,7 +35,7 @@ case class FindAction(
 
   protected def getLogs(adh: ActionDataHolder): Page[AssetLog] = {
     val ActionDataHolder(asset, params, filter) = adh
-    AssetLog.list(asset, params.page, params.size, params.sort, filter)
+    AssetLog.list(asset, params.page, params.size, params.sort.toString, filter)
   }
 
   protected def getPaginationMap(logs: Page[AssetLog]) = logs.getPaginationJsObject
