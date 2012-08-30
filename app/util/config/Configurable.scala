@@ -8,13 +8,8 @@ import java.io.File
 
 /**
  * TODO
- *  - Hook into file watcher
- *  - Add basic message helper for message related code
  *  - Deprecate old Config class
  *  - Deprecate old Feature class
- *  - What about configs that aren't in separate files? Really you want to know when a namespace
- *  changes not neccesarily a particular file
- *  - Things extending COnfigurable should be objects, avoid using Registerable as well
  */
 trait Configurable extends DelayedInit with ConfigurationAccessor with ApplicationConfiguration { self =>
 

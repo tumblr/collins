@@ -12,7 +12,6 @@ import com.typesafe.config._
 class SampleConfigurable private[config]() extends Configurable {
   override val namespace = "sample"
   override val referenceConfigFilename = "config/reference_sampleconfig.conf"
-  override protected def appConfig = Configuration.from(Map.empty)
 
   override protected def validateConfig() {
   }
@@ -29,7 +28,6 @@ class SampleConfigurable private[config]() extends Configurable {
   // use for things that shouldn't be changed later on without a restart
   lazy val hostname = getString("hostname")
 }
-object SampleConfigurable extends Registerable(new SampleConfigurable)
 
 class SampleConfigSpec extends Specification {
   val sample1file = "test/resources/config/sampleconfig1.conf"
@@ -49,7 +47,6 @@ class SampleConfigSpec extends Specification {
       println(cfg.getPools)
       println(cfg.getTags)
       */
-     Registry.initializeAll
       true
     }
     "support required and validated params" in {

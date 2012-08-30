@@ -3,38 +3,52 @@ package util
 import play.api.{Play, Plugin, Logger}
 import com.tumblr.play.{Power, PowerAction, PowerManagement => PowerMgmt}
 import models.{Asset, AssetType, Status}
+import config.Configurable
 
 import scala.util.control.Exception.allCatch
 
-trait PowerManagementConfig extends FeatureConfigSkinny {
-  override val rootKey: String = "powermanagement"
+object PowerManagementConfig extends Configurable {
+  override val namespace = "powermanagement"
+  override val referenceConfigFilename = "powermanagement_reference.conf"
 
-  lazy val DisallowedAssetStates: Set[Int] = Config.statusAsSet(
-    rootKey, "disallowStatus", Status.statusNames.mkString(",")
-  )
-
-  lazy val DisallowedWhenAllocated: Set[PowerAction] =
-    feature("disallowWhenAllocated").toSet.map(a => Power(a))
-
-  lazy val AllowedAssetTypes: Set[Int] =
-    feature("allowAssetTypes").ifSet { f =>
-      f.toSet
-    }.filter(_.nonEmpty).getOrElse(Set("SERVER_NODE"))
-      .map(name => allCatch.opt(AssetType.Enum.withName(name)))
-      .filter(_.isDefined)
-      .map(_.get.id)
-
-  object Messages extends MessageHelper(rootKey) {
+  object Messages extends MessageHelper(namespace) {
     def assetStateAllowed(a: Asset) = message("disallowStatus", a.getStatus().name)
     def actionAllowed(p: PowerAction) = message("disallowWhenAllocated", p.toString)
     def assetTypeAllowed(a: Asset) = message("allowAssetTypes", a.getType().name)
   }
+
+  def allowAssetTypes: Set[Int] = getStringSet("allowAssetTypes").map { name =>
+    AssetType.findByName(name).getOrElse {
+      throw new Exception("%s is not a valid asset type".format(name))
+    }
+  }.map(_.id)
+  def disallowStatus: Set[Int] = getStringSet("disallowStatus").map { s =>
+    Status.findByName(s).getOrElse {
+      throw new Exception("%s is not a valid status name".format(s))
+    }
+  }.map(_.id)
+  def disallowWhenAllocated: Set[PowerAction] = getStringSet("disallowWhenAllocated").map { p =>
+    Power(p)
+  }
+
+  def enabled = getBoolean("enabled", false)
+  def getClassOption = getString("class")
+  def timeout = getMilliseconds("timeout").getOrElse(10000L)
+
+  override protected def validateConfig() {
+    allowAssetTypes
+    disallowStatus
+    disallowWhenAllocated
+    enabled
+    getClassOption
+    timeout
+  }
 }
 
-object PowerManagementConfig extends PowerManagementConfig
-
-object PowerManagement extends PowerManagementConfig {
+object PowerManagement {
   protected[this] val logger = Logger(getClass)
+
+  val PConfig = PowerManagementConfig
 
   def pluginEnabled: Option[PowerMgmt] = {
     Play.maybeApplication.flatMap { app =>
@@ -44,10 +58,8 @@ object PowerManagement extends PowerManagementConfig {
       plugins.size match {
         case 1 => plugins.headOption
         case n => // On case we have multiple, try and choose the one that was specified
-          app.configuration.getConfig("powermanagement").flatMap { cfg =>
-            cfg.getString("class").flatMap { klass =>
-              plugins.find(_.getClass.toString.contains(klass)) // Option[PowerMgmt]
-            }
+          PowerManagementConfig.getClassOption.flatMap { klass =>
+            plugins.find(_.getClass.toString.contains(klass))
           }.orElse(plugins.headOption)
       }
     }
@@ -62,17 +74,17 @@ object PowerManagement extends PowerManagementConfig {
   def isPluginEnabled = pluginEnabled.isDefined
 
   def assetTypeAllowed(asset: Asset): Boolean = {
-    val isTrue = AllowedAssetTypes.contains(asset.asset_type)
+    val isTrue = PConfig.allowAssetTypes.contains(asset.asset_type)
     logger.debug("assetTypeAllowed: %s".format(isTrue.toString))
     isTrue
   }
   def assetStateAllowed(asset: Asset): Boolean = {
-    val isFalse = !DisallowedAssetStates.contains(asset.status)
+    val isFalse = !PConfig.disallowStatus.contains(asset.status)
     logger.debug("assetStateAllowed: %s".format(isFalse.toString))
     isFalse
   }
   def actionAllowed(asset: Asset, action: PowerAction): Boolean = {
-    if (asset.getStatus().name == "Allocated" && DisallowedWhenAllocated.contains(action)) {
+    if (asset.getStatus().name == "Allocated" && PConfig.disallowWhenAllocated.contains(action)) {
       false
     } else {
       true

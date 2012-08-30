@@ -101,7 +101,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   }
 
   protected def checkRuntime(config: Configuration) {
-    PowerConfiguration.validate()
     IpAddresses.AddressConfig
     AppConfig.ipmi
   }
