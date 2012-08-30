@@ -80,6 +80,7 @@ trait Configurable extends DelayedInit with ConfigurationAccessor with Applicati
       }.getOrElse(config)
       self.underlying = Some(mergedConfig)
       try {
+        logger.info("Validationg configuration for %s".format(getClass.getName))
         validateConfig()
       } catch {
         case e =>

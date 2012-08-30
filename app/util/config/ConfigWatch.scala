@@ -26,7 +26,7 @@ object ConfigWatch extends FileWatcher with ApplicationConfiguration {
     }.filter(_.isDefined).map(_.get).toSet - rootConfig
     files.map { file =>
       logger.info("Setting up watch on %s".format(file))
-      file -> FileWatcher.watch(file, 15) { f =>
+      file -> FileWatcher.watch(file, 15, true) { f =>
         onChange(new File(rootConfig))
       }
     }.toMap

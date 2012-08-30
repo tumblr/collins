@@ -39,6 +39,6 @@
   <logger name="org.apache.impl.client" level="WARN" />
   <logger name="org.apache.impl.client.DefaultClientConnection" level="WARN" />
   <logger name="javax.management" level="WARN" />
-  <logger name="org.apache.solr" level="INFO" />
+  <logger name="org.apache.solr" level="WARN" />
   
 </configuration>

@@ -20,6 +20,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
 
   override def onStart(app: Application) {
     setupLogging(app)
+    Model.initialize()
     verifyConfiguration(app)
     val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
     val key = app.configuration.getConfig("crypto") match {
@@ -29,7 +30,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
         case Some(k) => k
       }
     }
-    Model.initialize()
     setAuthentication(auth)
     setCryptoKey(key)
     checkRuntime(app.configuration)
