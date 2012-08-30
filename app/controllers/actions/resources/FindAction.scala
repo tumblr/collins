@@ -48,7 +48,7 @@ case class FindAction(
       case 1 =>
         Status.Redirect(p.items(0).remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(p.items(0).tag))
       case n =>
-        Status.Ok(views.html.asset.list(p, Some(sortField))(flash, request))
+        Status.Ok(views.html.asset.list(p, pageParams.sort, Some(sortField))(flash, request))
     }
   }
 

@@ -1,27 +1,29 @@
-@(assets: Page[AssetView], sortField: Option[String] = None, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
+
+@(assets: Page[AssetView], sortDirection: SortDirection = SortDirection.SortAsc, sortField: Option[String] = None, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import _root_.util.SoftLayer
 @import _root_.util.views.{ListHelper, Formatter, Pagination}
 @import util.notice
+@import models.SortDirection._
 
 @link(newPage: Int) = @{
   Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "ASC", "and").toString), req.queryString)
 }
 @sortLink(sort: String) = @{
-  val prefix = app.routes.Resources.find(0, 50, "ASC", "and", sort).toString
-  if (sortField.map{_ != sort}.getOrElse(true)) {
-    Pagination.paginate(prefix, req.queryString)
+  val sortDir = if (sortField.map{_ != sort}.getOrElse(true)) {
+    SortAsc
   } else {
-    ""
+    ! sortDirection
   }
+  val prefix = app.routes.Resources.find(0, 50, sortDir.toString, "and", sort).toString
+  Pagination.paginate(prefix, req.queryString)
 }
 
 @main("Asset Search Results") {
 <div class="page-header">
   <h1>Asset Search Results <small>@assets.items.size of @assets.total results</small></h1>
 </div>
-  @sortField.toString
 <div class="row">
   <div class="span14">
     @notice("message", Some("notice"))
