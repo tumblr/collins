@@ -25,7 +25,7 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
       val config = Configuration.from(configData)
       val authConfig = config.getConfig("authentication")
       authConfig must beSome
-      val provider = AuthenticationProvider.get("file", authConfig.get)
+      val provider = AuthenticationProvider.get("file")
       provider must haveClass[FileAuthenticationProvider]
       val users = Seq(
         ("blake", "password123", Set("engineering")),

@@ -36,7 +36,7 @@ case class PowerUnit(config: PowerConfiguration, id: Int, components: PowerCompo
 
 object PowerUnits extends Iterable[PowerUnit] {
   def apply(): PowerUnits = apply(None)
-  def apply(cfg: Option[PowerConfiguration]): PowerUnits = apply(PowerConfiguration(cfg))
+  def apply(cfg: Option[PowerConfiguration]): PowerUnits = apply(PowerConfiguration.get(cfg))
   def apply(cfg: PowerConfiguration): PowerUnits =
     apply((0 until cfg.unitsRequired).map(PowerUnit(cfg, _)))
   def apply(punits: Seq[PowerUnit]): PowerUnits = SortedSet(punits:_*)
@@ -72,7 +72,7 @@ object PowerUnits extends Iterable[PowerUnit] {
   // An exception is thrown if the specified configuration is invalid
   def validateMap(values: Map[String, String]) { validateMap(values, None) }
   def validateMap(values: Map[String, String], config: Option[PowerConfiguration]) {
-    validateMap(values, config.getOrElse(PowerConfiguration()))
+    validateMap(values, config.getOrElse(PowerConfiguration.get()))
   }
   def validateMap(values: Map[String, String], config: PowerConfiguration) {
     val units = apply(config)

@@ -1,6 +1,7 @@
 package controllers
 
-import models.{AssetMeta, AssetMetaValue, AssetMetaValueConfig}
+import models.{AssetMeta, AssetMetaValue}
+import util.config.Feature
 
 import play.api.libs.json._
 import play.api.mvc.Results
@@ -25,7 +26,7 @@ trait TagApi {
   def getTagValues(tag: String) = SecureAction { implicit req =>
     val response =
       AssetMeta.findByName(tag).map { m =>
-        if (AssetMetaValueConfig.EncryptedMeta.contains(m.name)) {
+        if (Feature.encryptedTags.map(_.name).contains(m.name)) {
           Api.getErrorMessage("Refusing to give backs values for %s".format(m.name))
         } else {
           val s: Set[String] = AssetMetaValue.findByMeta(m).sorted.toSet

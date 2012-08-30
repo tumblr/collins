@@ -4,7 +4,7 @@ package asset
 
 import models.Asset
 
-import util.{AppConfig, IpmiCommand, PowerManagement, UserTattler}
+import util.{AppConfig, IpmiCommand, PowerManagement, PowerManagementConfig, UserTattler}
 import util.concurrent.BackgroundProcessor
 import util.plugins.{IpmiPowerCommand, IpmiPowerManagementConfig}
 import util.security.SecuritySpecification
@@ -27,7 +27,7 @@ abstract class PowerManagementActionHelper(
   val PowerActionNotFoundMessage = "Power management action must be one of: %s".format(
     IpmiPowerManagementConfig.RequiredKeys.mkString(", ")
   )
-  val PowerMessages = PowerManagement.Messages
+  val PowerMessages = PowerManagementConfig.Messages
 
   override def execute(rd: RequestDataHolder): Result = rd match {
     case PowerStatusRd(cmd) => AsyncResult { runCommand(cmd) }

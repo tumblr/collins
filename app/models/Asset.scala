@@ -1,7 +1,8 @@
 package models
 
 import conversions._
-import util.{Config, Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.{Config, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.config.Feature
 import util.power.PowerUnits
 import util.views.Formatter.dateFormat
 
@@ -26,10 +27,6 @@ import akka.util.duration._
 
 import SortDirection._
 import SortType._
-
-object AssetConfig {
-  lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
-}
 
 /**
  * An AssetView can be either a regular Asset or a RemoteAsset from another
@@ -204,7 +201,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
       val ipmi = IpmiInfo.findByAsset(this)
       val addresses = IpAddresses.findAllByAsset(this)
       val (powerRep, mvs3) = PowerHelper.reconstruct(this, mvs2)
-      val filtered: Seq[MetaWrapper] = mvs3.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
+      val filtered: Seq[MetaWrapper] = mvs3.filter(f => !Feature.hideMeta.contains(f.getName))
       Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
     }
   }
@@ -511,7 +508,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       if (showCreds) {
         mvs
       } else {
-        mvs.filter(mv => !AssetMetaValueConfig.EncryptedMeta.contains(mv.getName))
+        mvs.filter(mv => !Feature.encryptedTags.map(_.name).contains(mv.getName))
       }
     }
 

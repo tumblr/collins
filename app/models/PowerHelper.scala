@@ -4,12 +4,12 @@ import util.power._
 import collection.immutable.SortedSet
 
 object PowerHelper extends CommonHelper[PowerUnits] {
-  lazy val Config = PowerConfiguration()
-  lazy val Units = PowerUnits(Config)
-  lazy val Components: Set[Symbol] = Config.components
-  lazy val SymbolMap: Map[Long,Symbol] =
+  def Config = PowerConfiguration.get()
+  def Units = PowerUnits(Config)
+  def Components: Set[Symbol] = Config.components
+  def SymbolMap: Map[Long,Symbol] =
     (for (unit <- Units; component <- unit) yield(component.meta.id, component.componentType)).toMap
-  lazy val ComponentPriorities: Map[Symbol,Int] = Config.components.zipWithIndex.toMap
+  def ComponentPriorities: Map[Symbol,Int] = Config.components.zipWithIndex.toMap
 
   def construct(asset: Asset, units: PowerUnits): Seq[AssetMetaValue] = {
     throw new UnsupportedOperationException("construct not used for power")

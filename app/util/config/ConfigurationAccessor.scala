@@ -24,6 +24,8 @@ trait ConfigurationAccessor {
   protected def getBoolean(key: String, default: Boolean): Boolean =
     getBoolean(key).getOrElse(default)
 
+  protected def getInt(key: String): Option[Int] = getValue(key, _.getInt(key))
+
   protected def getIntList(key: String): List[Int] =
     getValue(key, _.getIntList(key).asScala.toList.map(_.toInt)).getOrElse(List())
 

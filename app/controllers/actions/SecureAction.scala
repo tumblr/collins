@@ -30,7 +30,7 @@ abstract class SecureAction(
 
   protected[this] val logger = Logger.logger
 
-  val FeatureMessages = util.Feature.Messages
+  val FeatureMessages = util.config.Feature.Messages
   val Status = Results
   def Redirect(call: Call) = Results.Redirect(call)
 

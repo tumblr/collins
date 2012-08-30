@@ -1,15 +1,17 @@
 package util
 
 import models.{Asset, User}
+import config.Feature
 import play.api.{Configuration, Mode, Play}
 import play.api.i18n.Messages
 
 // Globally useful configurations
 object AppConfig extends Config {
-  val IgnoredAssets = Feature("ignoreDangerousCommands").toSet
+
+  def ignoredAssets = Feature.ignoreDangerousCommands.map(_.toUpperCase)
 
   // Ignore asset for dangerous commands
-  def ignoreAsset(tag: String): Boolean = IgnoredAssets(tag.toUpperCase)
+  def ignoreAsset(tag: String): Boolean = ignoredAssets.contains(tag.toUpperCase)
   def ignoreAsset(asset: Asset): Boolean = ignoreAsset(asset.tag)
 
   // This is shared accross classes

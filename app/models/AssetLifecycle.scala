@@ -4,7 +4,8 @@ import conversions._
 import AssetMeta.Enum.RackPosition
 import models.{Status => AStatus}
 
-import util.{ApiTattler, AssetStateMachine, Config, Feature, InternalTattler, LldpRepresentation, LshwRepresentation}
+import util.{ApiTattler, AssetStateMachine, Config, InternalTattler, LldpRepresentation, LshwRepresentation}
+import util.config.Feature
 import util.parsers.{LldpParser, LshwParser}
 import util.power.PowerUnits
 
@@ -19,7 +20,7 @@ object AssetLifecycleConfig {
   // A few keys we generally want changable after intake
   private val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
   // User configured excludes, only applied to non-servers
-  private val ConfiguredExcludes = Feature("allowTagUpdates").toSet
+  private val ConfiguredExcludes = Feature.allowTagUpdates
   private val RestrictedKeys = AssetMeta.Enum.values.map { _.toString }.toSet ++ PossibleAssetKeys -- ExcludedKeys
 
   def isRestricted(s: String) = RestrictedKeys.contains(s.toUpperCase)
@@ -127,7 +128,7 @@ object AssetLifecycle {
   }
 
   def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    Feature("sloppyStatus").whenDisabledOrUnset {
+    if (!Feature.sloppyStatus) {
         return Left(new Exception("sloppyStatus not enabled"))
     }
     val stat = options.get("status").getOrElse("none")
