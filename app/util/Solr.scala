@@ -5,6 +5,7 @@ import akka.util.duration._
 
 import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
 import models.IpmiInfo.Enum._
+import models.SortDirection._
 
 import org.apache.solr.client.solrj.{SolrServer, SolrQuery, SolrServerException}
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
@@ -184,7 +185,7 @@ case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField
       q.setQuery(queryString)
       q.setStart(page.offset)
       q.setRows(page.size)
-      q.addSortField(sortKey.resolvedName, (if (page.sort == "ASC") SolrQuery.ORDER.asc else SolrQuery.ORDER.desc))
+      q.addSortField(sortKey.resolvedName, (if (page.sort == SortAsc) SolrQuery.ORDER.asc else SolrQuery.ORDER.desc))
       try {
         val response = server.query(q)
         val results = response.getResults
