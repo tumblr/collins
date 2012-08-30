@@ -53,3 +53,14 @@ limitations under the License.
 ## Support/Questions
 
 Email collins-sm@googlegroups.com or see the mailing list archive at https://groups.google.com/forum/#!forum/collins-sm
+
+
+# Users
+
+If you are using the supplied users.conf, usernames and passwords are:
+
+    blake - 8vCeb3h8F863
+    matt  - 0592607689Cr
+    test  - h2624A7WJA3y
+    joeengineer - 4ZRl5311al77
+

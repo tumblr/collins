@@ -1,20 +1,13 @@
 package util
 package config
 
+import play.api.Application
+
 import com.typesafe.config.{Config => TypesafeConfig}
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import play.api.Application
+import java.io.File
 import scala.collection.JavaConverters._
-
-/**
- * Registerable classes are Configurable as well that should be discovered upon system startup. This
- * discovery allows boot time validation of all Configurable classes.
- */
-abstract class Registerable[T <: Configurable](c: => T) {
-  private val Instance = c
-  def apply() = Instance
-}
 
 object Registry {
 
@@ -32,15 +25,15 @@ object Registry {
   }
 
   /**
-   * Here we discover all classes implementing Registerable and call the apply() method which brings
+   * Here we discover all classes implementing Configurable and call the apply() method which brings
    * that singleton instance to life, and in the process handles basic initialization and ensures
-   * registration. Thus when validate is called, all classes extending Registerable are validated.
+   * registration. Thus when validate is called, all classes extending Configurable are validated.
    */
   def initializeAll(app: Application) {
-    if (initialized.compareAndSet(false, true)) {
-      ConfigWatch.initialize(app.configuration)
+    if (initialized.compareAndSet(false, true) && !skipInitialization) {
+      ConfigWatch.tick
       logger.info("Initializing all subclasses")
-      getSubclassesOfRegisterable(app).foreach { k =>
+      getSubclassesOfConfigurable(app).foreach { k =>
         val klassName = getNormalizedClassName(k.getName)
         logger.info("Initializing %s".format(klassName))
         getClassFromName(klassName).foreach { klass =>
@@ -54,6 +47,23 @@ object Registry {
 
   def validate() {
     registered.values.asScala.foreach { c => c.initialize() }
+  }
+
+  protected def skipInitialization: Boolean = {
+    if (AppConfig.isProd()) {
+      // prod doesn't have the odd class reloader problem that dev does
+      false
+    } else {
+      val file = new File("%s/registry.tmp".format(System.getProperty("java.io.tmpdir")))
+      if (file.createNewFile) {
+        logger.info("Created temp file, skipping initialization")
+        file.deleteOnExit()
+        false
+      } else {
+        logger.info("Tmp file %s already exists, no need to initialized".format(file.toString))
+        true
+      }
+    }
   }
 
   // Given a class attempt to call the apply method on it
@@ -77,17 +87,18 @@ object Registry {
   // Convert a possible companion object name to a reflection friendly name
   protected def getNormalizedClassName(name: String): String = name.replace("$", "")
 
-  // Return a Set of classes extending util.config.Registerable
-  protected def getSubclassesOfRegisterable(app: Application) = {
+  // Return a Set of classes extending util.config.Configurable
+  protected def getSubclassesOfConfigurable(app: Application) = {
     import org.reflections._
     import org.reflections.util.{ConfigurationBuilder, FilterBuilder, ClasspathHelper}
     import org.reflections.scanners._
     try {
       val r = new Reflections(new ConfigurationBuilder()
         .filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix("")))
-        .setUrls(ClasspathHelper.forPackage(".", app.classloader))
+        .addUrls(ClasspathHelper.forPackage(".", app.classloader))
+        .addUrls(ClasspathHelper.forManifest())
         .setScanners(new SubTypesScanner()))
-      val c = Class.forName("util.config.Registerable")
+      val c = Class.forName("util.config.Configurable")
       r.getSubTypesOf(c).asScala
     } catch {
       case e =>

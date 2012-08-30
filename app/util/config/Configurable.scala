@@ -14,8 +14,11 @@ import java.io.File
  *  - Deprecate old Feature class
  *  - What about configs that aren't in separate files? Really you want to know when a namespace
  *  changes not neccesarily a particular file
+ *  - Things extending COnfigurable should be objects, avoid using Registerable as well
  */
-trait Configurable extends DelayedInit with ConfigurationAccessor { self =>
+trait Configurable extends DelayedInit with ConfigurationAccessor with ApplicationConfiguration { self =>
+
+  def apply() {} // noop, here for dynamic loading
 
   // By default values are optional, except when they aren't. Methods returning default values do
   // not use this. Methods without defaults will take a ConfigurationRequirement as an implicit
@@ -52,21 +55,9 @@ trait Configurable extends DelayedInit with ConfigurationAccessor { self =>
     Registry.add(namespace, this)
   }
 
-  // Handle on the play application configuration
-  protected def appConfig: Configuration = {
-    try {
-      import play.api.Play.current
-      current.configuration
-    } catch {
-      case e: RuntimeException =>
-        logger.info("No current play application configured")
-        Configuration.from(Map.empty)
-    }
-  }
-
   // Will be called from Registry.validate
   protected[config] def initialize() {
-    mergeReferenceAndSave(appConfig.underlying)
+    mergeReferenceAndSave(appConfig().underlying)
   }
 
   def onChange(newConfig: TypesafeConfig) {
@@ -97,14 +88,12 @@ trait Configurable extends DelayedInit with ConfigurationAccessor { self =>
         validateConfig()
       } catch {
         case e =>
-          println(e)
           self.underlying = savedConfig
           throw e
       }
     } catch {
       case e =>
-        println("mergeReferenceAndSave")
-        println(e)
+        logger.error("Exception in mergeReferenceAndSave %s".format(e.getMessage), e)
         throw e
     }
   }

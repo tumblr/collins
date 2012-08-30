@@ -1,9 +1,9 @@
 package util
 package security
 
-import util.config.{Configurable, ConfigValue, Registerable}
+import util.config.{Configurable, ConfigValue}
 
-class AuthenticationProviderConfig private[security]() extends Configurable {
+object AuthenticationProviderConfig extends Configurable {
   override val namespace = "authentication"
   override val referenceConfigFilename = "authentication_reference.conf"
 
@@ -19,9 +19,8 @@ class AuthenticationProviderConfig private[security]() extends Configurable {
     FileWatcher.fileGuard(permissionsFile)
   }
 }
-object AuthenticationProviderConfig extends Registerable(new AuthenticationProviderConfig())
 
-class FileAuthenticationProviderConfig private[security]() extends Configurable {
+object FileAuthenticationProviderConfig extends Configurable {
 
   override val namespace = "authentication.file"
   override val referenceConfigFilename = "authentication_reference.conf"
@@ -29,9 +28,32 @@ class FileAuthenticationProviderConfig private[security]() extends Configurable 
   def userfile = getString("userfile")(ConfigValue.Required).get
 
   override protected def validateConfig() {
-    if (AuthenticationProviderConfig().authType == "file") {
+    if (AuthenticationProviderConfig.authType == "file") {
       FileWatcher.fileGuard(userfile)
     }
   }
 }
-object FileAuthenticationProviderConfig extends Registerable(new FileAuthenticationProviderConfig())
+
+object LdapAuthenticationProviderConfig extends Configurable {
+
+  override val namespace = "authentication.ldap"
+  override val referenceConfigFilename = "authentication_reference.conf"
+
+  def host = getString("host")(ConfigValue.Required).get
+  def searchbase = getString("searchbase")(ConfigValue.Required).get
+  def usersub = getString("usersub")(ConfigValue.Required).get
+  def groupsub = getString("groupsub")(ConfigValue.Required).get
+  def groupAttribute = getString("groupAttribute")(ConfigValue.Required).get
+  def useSsl = getBoolean("ssl").getOrElse(false)
+
+  override protected def validateConfig() {
+    if (AuthenticationProviderConfig.authType == "ldap") {
+      return
+    }
+    host
+    searchbase
+    usersub
+    groupsub
+    groupAttribute
+  }
+}

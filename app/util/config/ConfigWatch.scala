@@ -4,12 +4,13 @@ package config
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
 import play.api.Configuration
 import java.io.File
-import java.util.concurrent.atomic.AtomicReference
+import scala.collection.JavaConverters._
 
-case class ConfigWatch private[config](config: Configuration) extends FileWatcher {
-  override def delayInitialCheck = true
-  override def millisBetweenFileChecks = 15000L
-  override def filename = Option(config.underlying.origin.filename).orElse {
+object ConfigWatch extends FileWatcher with ApplicationConfiguration {
+
+  def config = appConfig()
+
+  private lazy val rootConfig: String = Option(config.underlying.origin.filename).orElse {
     val cfg = config.underlying
     val refValue = cfg.getValue("application.secret")
     val origin = refValue.origin
@@ -17,22 +18,42 @@ case class ConfigWatch private[config](config: Configuration) extends FileWatche
   }.getOrElse {
     throw new Exception("Config has no file based origin, can not watch for changes")
   }
+
+  private lazy val otherWatches: Map[String,FileWatcher] = {
+    val cfg = config.underlying
+    val files = cfg.root.unwrapped.asScala.keys.map { key =>
+      Option(cfg.root.get(key).origin.filename)
+    }.filter(_.isDefined).map(_.get).toSet - rootConfig
+    files.map { file =>
+      logger.info("Setting up watch on %s".format(file))
+      file -> FileWatcher.watch(file, 15) { f =>
+        onChange(new File(rootConfig))
+      }
+    }.toMap
+  }
+
+  override def delayInitialCheck = true
+  override def millisBetweenFileChecks = 15000L
+  override def filename = {
+    // Do not change this ordering
+    val rc = rootConfig
+    otherWatches.foreach { case(key,value) => value.tick }
+    rc
+  }
+
   override def onError(file: File) {
   }
   override def onChange(file: File) {
-    val config = ConfigFactory.load(
-      ConfigFactory.parseFileAnySyntax(file)
-    ) // this is what Play does
-    Registry.onChange(config)
-  }
-}
-
-object ConfigWatch {
-  private val i = new AtomicReference[Option[ConfigWatch]](None)
-  def apply() = i.get().getOrElse {
-    throw new Exception("ConfigWatch not yet initialized")
-  }
-  protected[config] def initialize(cfg: Configuration) {
-    i.compareAndSet(None, Some(new ConfigWatch(cfg)))
+    try {
+      val config = ConfigFactory.load(
+        ConfigFactory.parseFileAnySyntax(file)
+      ) // this is what Play does
+      Registry.onChange(config)
+    } catch {
+      case e =>
+        logger.warn("Error loading configuration from %s: %s".format(
+          file.toString, e.getMessage
+        ), e)
+    }
   }
 }
