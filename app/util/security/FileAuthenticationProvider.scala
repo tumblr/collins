@@ -3,16 +3,14 @@ package security
 
 import models.{User, UserImpl}
 
-import play.api.Configuration
-
 import sun.misc.BASE64Encoder
 import java.io.File
 import java.security.MessageDigest
 import io.Source
 
-class FileAuthenticationProvider(config: Configuration) extends AuthenticationProvider {
+class FileAuthenticationProvider() extends AuthenticationProvider {
 
-  def authfile = FileAuthenticationProviderConfig().userfile
+  def authfile = FileAuthenticationProviderConfig.userfile
 
   private val watcher = FileWatcher.watchWithResults(authfile, Map.empty[String,UserImpl]) { file =>
     usersFromFile(file)

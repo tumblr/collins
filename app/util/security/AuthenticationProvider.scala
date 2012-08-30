@@ -46,7 +46,7 @@ trait AuthenticationProvider {
 object AuthenticationProvider {
   val Default = new MockAuthenticationProvider
   val Types = Set("ldap", "file", "default")
-  def filename = AuthenticationProviderConfig().permissionsFile 
+  def filename = AuthenticationProviderConfig.permissionsFile 
 
   private val logger = Logger(getClass)
 
@@ -54,14 +54,16 @@ object AuthenticationProvider {
     PermissionsHelper.fromFile(f.getAbsolutePath)
   }
 
-  def get(name: String, config: Configuration): AuthenticationProvider = {
+  def get(name: String): AuthenticationProvider = {
     name match {
       case "default" =>
         Default
       case "file" =>
-        new FileAuthenticationProvider(config)
+        new FileAuthenticationProvider()
       case "ldap" =>
-        new LdapAuthenticationProvider(config)
+        new LdapAuthenticationProvider()
+      case o =>
+        throw new Exception("Invalid auth type %s specified".format(name))
     }
   }
 

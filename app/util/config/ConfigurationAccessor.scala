@@ -12,7 +12,7 @@ trait ConfigurationAccessor {
   private val _underlying: AtomicReference[Option[TypesafeConfig]] = new AtomicReference(None)
 
   protected def underlying = {
-    ConfigWatch().tick()
+    ConfigWatch.tick
     _underlying.get()
   }
 

@@ -6,7 +6,7 @@ import util.security._
 
 object Permissions {
   val LoggedIn = SecuritySpec.fromConfig("controllers.Api", SecuritySpec(true))
-  def AdminSpec = SecuritySpec(true, AuthenticationProviderConfig().adminGroup)
+  def AdminSpec = SecuritySpec(true, AuthenticationProviderConfig.adminGroup)
 
   def please(user: User, spec: SecuritySpecification): Boolean = {
     AuthenticationProvider.userIsAuthorized(user, spec)

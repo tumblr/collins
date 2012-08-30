@@ -6,7 +6,7 @@ import models.{IpAddresses, Model}
 import util.{AppConfig, CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 import util.config.Registry
-import util.security.{AuthenticationAccessor, AuthenticationProvider}
+import util.security.{AuthenticationAccessor, AuthenticationProvider, AuthenticationProviderConfig}
 import util.power.PowerConfiguration
 import util.plugins.solr.Solr
 import java.io.File
@@ -21,13 +21,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   override def onStart(app: Application) {
     setupLogging(app)
     verifyConfiguration(app)
-    val auth = app.configuration.getConfig("authentication") match {
-      case None => AuthenticationProvider.Default
-      case Some(config) => config.getString("type", Some(AuthenticationProvider.Types)) match {
-        case None => AuthenticationProvider.Default
-        case Some(t) => AuthenticationProvider.get(t, config)
-      }
-    }
+    val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
     val key = app.configuration.getConfig("crypto") match {
       case None => throw new RuntimeException("No crypto.key specified in config")
       case Some(config) => config.getString("key") match {
