@@ -23,7 +23,7 @@
         <tr>
           @ListHelper.getListHeaderTags.map { tag =>
             @if(ListHelper.showColumnForTag(tag, assets)) {
-              <th>@AssetMeta.findByName(tag).get.getLabel()</th>
+              <th>@ListHelper.getColumnHeader(tag)</th>              
             }
           }
         </tr>
@@ -33,7 +33,7 @@
         <tr>
           @ListHelper.getListHeaderTags.map { tag =>
             @if(ListHelper.showColumnForTag(tag, assets)) {
-              <td>@ListHelper.decorate(tag, ListHelper.formatTagValue(tag, asset))</td>
+              <td>@ListHelper.decorateTagValueForAsset(tag, asset)</td>
             }
           }
         </tr>
@@ -41,7 +41,6 @@
       </tbody>
     </table>
 
-<!--
     <div id="pagination" class="pagination">
       <ul>
         @assets.prev.map { page =>
@@ -67,7 +66,7 @@
         }
 
       </ul>
-    </div> -->
+    </div>
   </div>
 </div>
 }
