@@ -13,13 +13,14 @@ import java.util.concurrent.locks.ReentrantLock
  * This will always notify the first time that tick is called.
  */
 object FileWatcher {
-  def watch(file: String, secondsBetweenChecks: Int = 30)(changeFn: File => Unit): FileWatcher = {
+  def watch(file: String, secondsBetweenChecks: Int = 30, dInitCheck: Boolean = false)(changeFn: File => Unit): FileWatcher = {
     fileGuard(file) // ensure file exists
     new FileWatcher {
       override protected val filename = file
       override protected val millisBetweenFileChecks = secondsBetweenChecks*1000L
       override protected def onChange(file: File) = changeFn(file)
       override protected def onError(file: File) = {}
+      override protected def delayInitialCheck: Boolean = dInitCheck
     }
   }
   def watchWithResults[T]

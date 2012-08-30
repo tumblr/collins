@@ -5,12 +5,12 @@ package resources
 import forms._
 
 import models.Truthy
-import util.{IpmiCommand, PowerManagement}
+import util.{IpmiCommand, PowerManagement, PowerManagementConfig}
 import util.concurrent.BackgroundProcessor
-import util.plugins.{IpmiPowerCommand, IpmiPowerManagementConfig}
+import util.plugins.IpmiPowerCommand
 import util.security.SecuritySpecification
 
-import com.tumblr.play.PowerManagement
+import com.tumblr.play.{PowerManagement, Identify}
 
 import play.api.data.Form
 import play.api.data.Forms._
@@ -56,8 +56,7 @@ case class IntakeStage1Action(
   )
 
   protected def identifyAsset(plugin: PowerManagement) = {
-    val cfgKey = IpmiPowerManagementConfig.IdentifyKey
-    val cmd = IpmiPowerCommand(definedAsset, cfgKey)
+    val cmd = IpmiPowerCommand.fromPowerAction(definedAsset, Identify)
     BackgroundProcessor.send(cmd) { result =>
       IpmiCommand.fromResult(result) match {
         case Left(throwable) =>

@@ -6,7 +6,7 @@ import models.Asset
 
 import util.{AppConfig, IpmiCommand, PowerManagement, PowerManagementConfig, UserTattler}
 import util.concurrent.BackgroundProcessor
-import util.plugins.{IpmiPowerCommand, IpmiPowerManagementConfig}
+import util.plugins.IpmiPowerCommand
 import util.security.SecuritySpecification
 
 import play.api.libs.json._
@@ -25,7 +25,7 @@ abstract class PowerManagementActionHelper(
   def powerAction(): Option[PowerAction]
 
   val PowerActionNotFoundMessage = "Power management action must be one of: %s".format(
-    IpmiPowerManagementConfig.RequiredKeys.mkString(", ")
+    PowerManagementConfig.RequiredKeys.mkString(", ")
   )
   val PowerMessages = PowerManagementConfig.Messages
 
