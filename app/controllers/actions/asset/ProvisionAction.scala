@@ -2,8 +2,9 @@ package controllers
 package actions
 package asset
 
-import util.{AppConfig, Config, Provisioner, SoftLayer}
+import util.{AppConfig, Provisioner, SoftLayer}
 import util.concurrent.RateLimiter
+import util.provisioner.ProvisionerConfig
 import util.security.SecuritySpecification
 import validators.StringUtil
 
@@ -17,7 +18,7 @@ case class ProvisionAction(
   handler: SecureController
 ) extends SecureAction(spec, handler) with Provisions {
 
-  private val rateLimiter = RateLimiter(Config.getString("provisioner", "rate", "1/0 seconds"))
+  private val rateLimiter = RateLimiter(ProvisionerConfig.rate)
 
   override def validate(): Validation = withValidAsset(assetTag) { asset =>
     if (isRateLimited) {

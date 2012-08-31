@@ -29,6 +29,10 @@ trait ConfigurationAccessor {
   protected def getIntList(key: String): List[Int] =
     getValue(key, _.getIntList(key).asScala.toList.map(_.toInt)).getOrElse(List())
 
+  protected def getLong(key: String): Option[Long] = getValue(key, _.getLong(key))
+  protected def getLong(key: String, default: Long): Long =
+    getLong(key).getOrElse(default)
+
   protected def getMilliseconds(key: String): Option[Long] = getValue(key, _.getMilliseconds(key))
 
   protected def getObjectMap(key: String): Map[String,ConfigObject] =
@@ -38,6 +42,18 @@ trait ConfigurationAccessor {
 
   protected def getString(key: String, default: String): String =
     getString(key)(ConfigValue.Optional).getOrElse(default)
+
+  protected def getString(key: String, validValues: Set[String]): Option[String] =
+    getString(key)(ConfigValue.Optional) match {
+      case None => None
+      case Some(v) => validValues.contains(v) match {
+        case true => Some(v)
+        case false =>
+          throw new Exception("Value %s for key %s is not one of %s".format(
+            v, key, validValues.mkString(", ")
+          ))
+      }
+    }
 
   protected def getString(key: String)(implicit cfgv: ConfigurationRequirement): Option[String] =
     getValue(key, _.getString(key)) match {

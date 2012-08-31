@@ -1,6 +1,7 @@
 package util
 package parsers
 
+import config.LshwConfig
 import scala.xml.{Elem, MalformedAttributeException, Node, NodeSeq, XML}
 
 object SpeedConversions {
@@ -10,9 +11,7 @@ object SpeedConversions {
   def hzToMhz(l: Long): Double = l/mhz
 }
 
-class LshwParser(txt: String, config: Map[String,String] = Map.empty)
-  extends CommonParser[LshwRepresentation](txt, config)
-{
+class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
 
   val wildcard: PartialFunction[NodeSeq,LshwAsset] = { case _ => null }
   lazy val matcher = cpuMatcher.orElse(
@@ -84,9 +83,6 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty)
       Memory(size, bank, asset.description, asset.product, asset.vendor)
   }
 
-  // NOTE There is no way to tell how large the virident cards are so we used a default
-  val flashProduct = config.getOrElse("flashProduct", "flash").toLowerCase
-  val flashSize = config.getOrElse("flashSize", "1400000000000").toLong
   val diskMatcher: PartialFunction[NodeSeq,Disk] = {
     case n if (n \ "@class" text) == "disk" =>
       val _type = (n \ "physid" text).contains("\\.") match {
@@ -103,9 +99,9 @@ class LshwParser(txt: String, config: Map[String,String] = Map.empty)
         case size => ByteStorageUnit(size.toLong)
       }
       Disk(size, _type, asset.description, asset.product, asset.vendor)
-    case n if (n \ "@class" text) == "memory" && (n \ "product" text).toLowerCase.contains(flashProduct) =>
+    case n if (n \ "@class" text) == "memory" && (n \ "product" text).toLowerCase.contains(LshwConfig.flashProduct) =>
       val asset = getAsset(n)
-      val size = ByteStorageUnit(flashSize)
+      val size = ByteStorageUnit(LshwConfig.flashSize)
       Disk(size, Disk.Type.Flash, asset.description, asset.product, asset.vendor)
   }
 

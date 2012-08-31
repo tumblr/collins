@@ -1,8 +1,8 @@
 package models
 
 import conversions._
-import util.{Config, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
-import util.config.Feature
+import util.{LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.config.{Feature, MultiCollins, NodeclassifierConfig}
 import util.power.PowerUnits
 import util.views.Formatter.dateFormat
 
@@ -26,7 +26,7 @@ import akka.dispatch.Await
 import akka.util.duration._
 
 import SortDirection._
-import SortType._
+import AssetSortType._
 
 /**
  * An AssetView can be either a regular Asset or a RemoteAsset from another
@@ -213,20 +213,14 @@ case class Asset(tag: String, status: Int, asset_type: Int,
    */
   def nodeClass: Option[Asset] = {
     import util.AttributeResolver._
-    val nodeclassType = Config.getString("nodeclass.assetType","CONFIGURATION").trim.toString
-    val enum = try AssetType.Enum.withName(nodeclassType) catch {
-      case e: java.util.NoSuchElementException => {
-        Logger.logger.error("Invalid nodeclass asset type \"%s\", defaulting to configuration type".format(nodeclassType))
-        AssetType.Enum.Config
-      }
-    }
+    val nodeclassType = NodeclassifierConfig.assetType
     val instanceFinder = AssetFinder
       .empty
       .copy ( 
-        assetType = Some(enum)
+        assetType = Some(nodeclassType)
       )
     val nodeclassParams: ResolvedAttributes = EmptyResolvedAttributes
-      .withMeta(Config.getString("nodeclass.identifyingMetaTag", "IS_NODECLASS"), "true")
+      .withMeta(NodeclassifierConfig.identifyingMetaTag, "true")
     val nodeclasses = AssetMetaValue
       .findAssetsByMeta(PageParams(0,50,"ASC"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
       .items
@@ -253,7 +247,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
    * Filters out nodeclass exluded tags from the meta set
    */
   private[models] def filteredMetaSeq = {
-    val excludeMetaTags = Config.getString("nodeclass.excludeMetaTags","").split(",")
+    val excludeMetaTags = NodeclassifierConfig.excludeMetaTags
     metaSeq.filter{case(meta, value) => !(excludeMetaTags contains meta.name)}
   }
 
@@ -407,16 +401,17 @@ object Asset extends Schema with AnormAdapter[Asset] {
       createdBefore = None,
       updatedAfter = None,
       updatedBefore = None,
-      assetType = Some(AssetType.Enum.withName(Config.getString("multicollins.instanceAssetType","DATA_CENTER").trim.toString))
+      assetType = Some(MultiCollins.instanceAssetType)
     )
     val findLocations = Asset
       .find(PageParams(0,50,"ASC"), instanceFinder)
       .items
       .collect{case a: Asset => a}
-      .filter{_.tag != Config.getString("multicollins.thisInstance","NONE")}
+      .filter{_.tag != MultiCollins.thisInstance}
     //iterate over the locations, sending requests to each one and aggregate their results
     val remoteClients = findLocations.flatMap { locationAsset => 
-      locationAsset.getMetaAttribute("LOCATION").map{_.getValue} match {
+      val locationAttribute = MultiCollins.locationAttribute
+      locationAsset.getMetaAttribute(locationAttribute).map(_.getValue) match {
         case None =>
           logger.warn("No location attribute for remote location asset %s".format(locationAsset.tag))
           None
@@ -439,7 +434,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
   /**
    * Finds assets in the same nodeclass as the given asset
    */
-  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sortType: SortType): Page[AssetView] = {
+  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sortType: AssetSortType): Page[AssetView] = {
     val sorter = try SortDirection.withName(page.sort) catch {
       case _ => {
         logger.warn("Invalid sort " + page.sort)
