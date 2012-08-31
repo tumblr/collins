@@ -58,11 +58,35 @@ object ListHelper extends DecoratorBase {
   override def configPrefix(): String = "listtags"
 
   /**
+   * Calls a method specified as a string, using the supplied arguments to
+   * determine the manner in which it gets called.
+   *
+   * @param method a String containing a method to call.
+   * @param asset an AssetView object.
+   * @return the results of the method call.
+   */
+  def callMethod(method: String, onObj: Object, args: Object*) = {
+    val parameterClasses = args.map{ arg => arg.getClass }
+    val methodSplit = method.split("\\.")
+    if (methodSplit.length > 1) {
+      val methodClass = methodSplit.slice(0, methodSplit.length - 1)
+        .reduceLeft(_ + "." + _)
+      val classMethod = methodSplit(methodSplit.length - 1)
+      onObj.getClass.getClassLoader.loadClass(methodClass)
+        .getMethod(classMethod, parameterClasses : _*).invoke(onObj, args : _*)
+    } else {
+      onObj.getClass.getMethod(method, parameterClasses : _*).invoke(onObj,
+          args : _*)
+    }
+  }
+
+  /**
    * Decorates the value of an asset, allowing for methods from the asset's
    * context to fill strings matching ~{<stuff>}.
    *
-   * @param key a String containing 
-   *
+   * @param key a String containing an asset metavalue tag or method call
+   * @param value the value of the asset metavalue tag or method call
+   * @param asset an AssetView corresponding to the value being decorated.
    * @return a Play Content object suitable for rendering.
    */
   def decorate(key: String, value: String, asset: AssetView): Content = {
@@ -84,6 +108,64 @@ object ListHelper extends DecoratorBase {
       }
     }
     Html(decoratedString)
+  }
+
+  /**
+   * Formats and decorates the value of an asset's metadata tag for HTML
+   * display by the configuration specified within the Collins config file.
+   *
+   * @param tag a String containing an asset metadata tag.
+   * @param asset the AssetView corresponding to the asset.
+   * @return a Play Content object containing the metadata tag's value.
+   */
+  def decorateTagValueForAsset(tag: String, asset: AssetView): Content = {
+    val formattedVal = formatTagValueForAsset(tag, asset)
+    val decorator = Config.getString("listtags.%s.decorator".format(tag), "")
+    if (!decorator.isEmpty()) {
+      decorate(tag, formattedVal, asset)
+    } else {
+      Html(formattedVal)
+    }
+  }
+
+  /**
+   * Formats the text value of an asset's metadata tag by the configuration
+   * specified within the Collins config file.
+   *
+   * @param tag a String containing an asset metadata tag.
+   * @param asset the AssetView corresponding to the asset.
+   * @return a formatted String containing the metadata tag's value.
+   */
+  def formatTagValueForAsset(tag: String, asset: AssetView): String = {
+    val tagValue = getTagValueForAsset(tag, asset)
+    val formatter = Config.getString("listtags.%s.formatter".format(tag), "")
+    if (!formatter.isEmpty() && tagValue != None) {
+      try {
+        this.callMethod(formatter, Formatter, tagValue).toString()
+      } catch {
+        case nsme: NoSuchMethodException =>
+          throw FormatConfigurationException(formatter, tag)
+      }
+    } else if (tagValue == None) {
+      val default = Config.getString("listtags.%s.default".format(tag), "")
+      if (!default.isEmpty()) {
+        default
+      } else {
+        Config.getString("listtags.all.default", DEFAULT_VALUE)
+      }
+    } else {
+      tagValue.toString()
+    }
+  }
+
+  /**
+   * Returns the URL where an asset can be found.
+   *
+   * @param asset an AssetView representing an asset
+   * @return a String containing an URL to the supplied Asset
+   */
+  def getAssetURL(asset: Asset): String = {
+    asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag)
   }
 
   /**
@@ -120,34 +202,15 @@ object ListHelper extends DecoratorBase {
     Config.getString("listtags.all.order", DEFAULT_TAG_ORDER).split(",")
   }
 
-  /**
-   * Formats the text value of an asset's metadata tag by the configuration
-   * specified within the Collins config file.
-   *
-   * @param tag a String containing an asset metadata tag.
-   * @param asset the AssetView corresponding to the asset.
-   * @return a formatted String containing the metadata tag's value.
-   */
-  def formatTagValueForAsset(tag: String, asset: AssetView): String = {
-    val tagValue = getTagValueForAsset(tag, asset)
-    val formatter = Config.getString("listtags.%s.formatter".format(tag), "")
-    if (!formatter.isEmpty() && tagValue != None) {
-      try {
-        this.callMethod(formatter, Formatter, tagValue).toString()
-      } catch {
-        case nsme: NoSuchMethodException =>
-          throw FormatConfigurationException(formatter, tag)
-      }
-    } else if (tagValue == None) {
-      val default = Config.getString("listtags.%s.default".format(tag), "")
-      if (!default.isEmpty()) {
-        default
-      } else {
-        Config.getString("listtags.all.default", DEFAULT_VALUE)
-      }
-    } else {
-      tagValue.toString()
+  def getPowerComponentsInOrder(units: PowerUnits): Seq[PowerComponent] = {
+    val components = units.flatMap { unit =>
+      unit.components
     }
+    components.toSeq.sorted
+  }
+
+  def getPowerComponentsInOrder(): Seq[PowerComponent] = {
+    getPowerComponentsInOrder(PowerUnits())
   }
 
   /**
@@ -180,21 +243,15 @@ object ListHelper extends DecoratorBase {
   }
 
   /**
-   * Formats and decorates the value of an asset's metadata tag for HTML
-   * display by the configuration specified within the Collins config file.
+   * Renders an asset's SoftLayer link into HTML form.
    *
-   * @param tag a String containing an asset metadata tag.
-   * @param asset the AssetView corresponding to the asset.
-   * @return a Play Content object containing the metadata tag's value.
+   * @param asset an AssetView to retrieve a SoftLayer link for.
+   * @return a Play Content object representing the SoftLayer link
    */
-  def decorateTagValueForAsset(tag: String, asset: AssetView): Content = {
-    val formattedVal = formatTagValueForAsset(tag, asset)
-    val decorator = Config.getString("listtags.%s.decorator".format(tag), "")
-    if (!decorator.isEmpty()) {
-      decorate(tag, formattedVal, asset)
-    } else {
-      Html(formattedVal)
-    }
+  def renderSoftLayerLink(asset: AssetView): Content = {
+    this.getClass.getClassLoader.loadClass("views.html.asset.slLink").getMethod(
+        "render", classOf[AssetView], classOf[String]).invoke(this, asset, "")
+      .asInstanceOf[Content]
   }
 
   /**
@@ -225,39 +282,6 @@ object ListHelper extends DecoratorBase {
   }
 
   /**
-   * Returns the URL where an asset can be found.
-   *
-   * @param asset an AssetView representing an asset
-   * @return a String containing an URL to the supplied Asset
-   */
-  def getAssetURL(asset: Asset): String = {
-    asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag)
-  }
-
-  /**
-   * Calls a method specified as a string, using the supplied arguments to
-   * determine the manner in which it gets called.
-   *
-   * @param method a String containing a method to call.
-   * @param asset an AssetView object.
-   * @return the results of the method call.
-   */
-  def callMethod(method: String, onObj: Object, args: Object*) = {
-    val parameterClasses = args.map{ arg => arg.getClass }
-    val methodSplit = method.split("\\.")
-    if (methodSplit.length > 1) {
-      val methodClass = methodSplit.slice(0, methodSplit.length - 1)
-        .reduceLeft(_ + "." + _)
-      val classMethod = methodSplit(methodSplit.length - 1)
-      onObj.getClass.getClassLoader.loadClass(methodClass)
-        .getMethod(classMethod, parameterClasses : _*).invoke(onObj, args : _*)
-    } else {
-      onObj.getClass.getMethod(method, parameterClasses : _*).invoke(onObj,
-          args : _*)
-    }
-  }
-
-  /**
    * Returns whether the Hostname column should be shown for a list of assets.
    *
    * @param assets a Page of AssetView objects, representing the assets to be
@@ -267,18 +291,6 @@ object ListHelper extends DecoratorBase {
   def showHostname(assets: Page[AssetView]): Boolean = {
     assets.items.find(_.getHostnameMetaValue.isDefined).map(_ => true)
       .getOrElse(false)
-  }
-
-  /**
-   * Renders an asset's SoftLayer link into HTML form.
-   *
-   * @param asset an AssetView to retrieve a SoftLayer link for.
-   * @return a Play Content object representing the SoftLayer link
-   */
-  def renderSoftLayerLink(asset: AssetView): Content = {
-    this.getClass.getClassLoader.loadClass("views.html.asset.slLink").getMethod(
-        "render", classOf[AssetView], classOf[String]).invoke(this, asset, "")
-      .asInstanceOf[Content]
   }
 
   /**
@@ -293,17 +305,6 @@ object ListHelper extends DecoratorBase {
         case asset: Asset if(plugin.isSoftLayerAsset(asset)) => true
       }.getOrElse(false)
     }.getOrElse(false)
-  }
-
-  def getPowerComponentsInOrder(units: PowerUnits): Seq[PowerComponent] = {
-    val components = units.flatMap { unit =>
-      unit.components
-    }
-    components.toSeq.sorted
-  }
-
-  def getPowerComponentsInOrder(): Seq[PowerComponent] = {
-    getPowerComponentsInOrder(PowerUnits())
   }
 
 }
