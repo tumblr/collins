@@ -1,8 +1,9 @@
 package util
 package config
 
+import play.api.PlayException
 import com.typesafe.config.{Config => TypesafeConfig}
-import com.typesafe.config.{ConfigException, ConfigObject}
+import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
 import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.AtomicReference
 
@@ -10,6 +11,9 @@ import java.util.concurrent.atomic.AtomicReference
 trait ConfigurationAccessor {
 
   private val _underlying: AtomicReference[Option[TypesafeConfig]] = new AtomicReference(None)
+
+  def globalError(message: String, e: Option[Throwable] = None) =
+    new PlayException("Confguration error", message, e)
 
   protected def underlying = {
     ConfigWatch.tick
@@ -24,7 +28,12 @@ trait ConfigurationAccessor {
   protected def getBoolean(key: String, default: Boolean): Boolean =
     getBoolean(key).getOrElse(default)
 
+  protected def getConfig(key: String): TypesafeConfig =
+    getValue(key, _.getObject(key)).map(_.toConfig).getOrElse(ConfigFactory.empty)
+
   protected def getInt(key: String): Option[Int] = getValue(key, _.getInt(key))
+  protected def getInt(key: String, default: Int): Int =
+    getInt(key).getOrElse(default)
 
   protected def getIntList(key: String): List[Int] =
     getValue(key, _.getIntList(key).asScala.toList.map(_.toInt)).getOrElse(List())
@@ -72,6 +81,13 @@ trait ConfigurationAccessor {
     getValue(key, _.getStringList(key).asScala.toList).getOrElse(List())
 
   protected def getStringSet(key: String): Set[String] = getStringList(key).toSet
+  protected def getStringSet(key: String, default: Set[String]): Set[String] = {
+    val set = getStringSet(key)
+    if (set.isEmpty)
+      default
+    else
+      set
+  }
 
   private def getValue[V](path: String, p: TypesafeConfig => V): Option[V] = try {
     underlying.flatMap(cfg => Option(p(cfg)))

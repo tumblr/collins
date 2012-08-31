@@ -4,7 +4,7 @@ import shared.{AddressPool, IpAddressConfiguration}
 
 import play.api.Configuration
 import play.api.libs.json._
-import util.{Config, IpAddress, IpAddressCalc}
+import util.{IpAddress, IpAddressCalc}
 import util.plugins.Callback
 import org.squeryl.dsl.ast.LogicalBoolean
 
@@ -36,8 +36,6 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
   override protected def createEventName: Option[String] = Some("ipAddresses_create")
   override protected def updateEventName: Option[String] = Some("ipAddresses_update")
   override protected def deleteEventName: Option[String] = Some("ipAddresses_delete")
-
-  lazy val AddressConfig = IpAddressConfiguration(Config.get("ipAddresses"))
 
   val tableDef = table[IpAddresses]("ip_addresses")
   on(tableDef)(i => declare(
@@ -154,14 +152,12 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
   }
 
   override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
-    AddressConfig.flatMap { cfg =>
-      scope.flatMap(cfg.pool(_)).orElse(cfg.defaultPool)
-    }
+    scope.flatMap(IpAddressConfiguration.pool(_)).orElse(IpAddressConfiguration.defaultPool)
   }
 
   protected def populateCacheIfNeeded(opool: Option[String], force: Boolean = false) {
     opool.foreach { pool =>
-      AddressConfig.flatMap(_.pool(pool)).foreach { ap =>
+      IpAddressConfiguration.pool(pool).foreach { ap =>
         if (!ap.hasAddressCache || force) {
           logger.trace("populating address cache for pool %s".format(ap.name))
           findInPool(pool).foreach { address =>
@@ -184,7 +180,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
     opool.flatMap { pool =>
       try {
         logger.trace("found pool %s, looking for config".format(pool))
-        AddressConfig.flatMap(_.pool(pool)).map { ap =>
+        IpAddressConfiguration.pool(pool).map { ap =>
           logger.debug("Next address in pool %s in cache is %s".format(ap.name, ap.nextDottedAddress))
           ap.nextAddress - 1
         }
@@ -227,7 +223,7 @@ trait IpAddressCacheManagement { self: IpAddressStorage[IpAddresses] =>
   Callback.on("ipAddresses_create") { pce =>
     val newAddress = pce.getNewValue.asInstanceOf[IpAddresses]
     logger.debug("ipAddress_create pool %s".format(newAddress.pool))
-    IpAddresses.AddressConfig.flatMap(_.pool(newAddress.pool)).foreach { ap =>
+    IpAddressConfiguration.pool(newAddress.pool).foreach { ap =>
       logger.debug("Using address %s in pool %s".format(newAddress.dottedAddress, ap.name))
       ap.useAddress(newAddress.address)
     }
@@ -235,18 +231,18 @@ trait IpAddressCacheManagement { self: IpAddressStorage[IpAddresses] =>
   Callback.on("ipAddresses_update") { pce =>
     val oldAddress = pce.getOldValue.asInstanceOf[IpAddresses]
     val newAddress = pce.getNewValue.asInstanceOf[IpAddresses]
-    IpAddresses.AddressConfig.flatMap(_.pool(oldAddress.pool)).foreach { ap =>
+    IpAddressConfiguration.pool(oldAddress.pool).foreach { ap =>
       logger.debug("Purging address %s from pool %s".format(oldAddress.dottedAddress, ap.name))
       ap.unuseAddress(oldAddress.address)
     }
-    IpAddresses.AddressConfig.flatMap(_.pool(newAddress.pool)).foreach { ap =>
+    IpAddressConfiguration.pool(newAddress.pool).foreach { ap =>
       logger.debug("Using address %s in pool %s".format(newAddress.dottedAddress, ap.name))
       ap.useAddress(newAddress.address)
     }
   }
   Callback.on("ipAddresses_delete") { pce =>
     val oldAddress = pce.getOldValue.asInstanceOf[IpAddresses]
-    IpAddresses.AddressConfig.flatMap(_.pool(oldAddress.pool)).foreach { ap =>
+    IpAddressConfiguration.pool(oldAddress.pool).foreach { ap =>
       logger.debug("Purging address %s from pool %s".format(oldAddress.dottedAddress, ap.name))
       ap.unuseAddress(oldAddress.address)
     }

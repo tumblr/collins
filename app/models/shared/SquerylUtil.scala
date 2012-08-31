@@ -1,6 +1,7 @@
 package models
 
 import util.plugins.Cache
+import shared.QueryLogConfig
 
 import play.api.Logger
 import org.squeryl.{KeyedEntity, Query, Schema, Table}
@@ -8,7 +9,6 @@ import org.squeryl.dsl.QueryDsl
 import org.squeryl.dsl.ast.LogicalBoolean
 import org.squeryl.internals.PosoLifecycleEvent
 import scala.transient
-import util.Config
 
 trait ValidatedEntity[T] extends KeyedEntity[T] {
   def validate(): Unit
@@ -44,10 +44,10 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
   )
 
   protected def log[A](a: => A): A = {
-    if (Config.getBoolean("querylog.enabled").getOrElse(false)) {
+    if (QueryLogConfig.enabled) {
       org.squeryl.Session.currentSession.setLogger(query => 
-        if (Config.getBoolean("querylog.includeResults").getOrElse(false) || !(query startsWith "ResultSetRow")) {
-          Logger.logger.info(Config.getString("querylog.prefix", "") + query)
+        if (QueryLogConfig.includeResults || !(query startsWith "ResultSetRow")) {
+          Logger.logger.info(QueryLogConfig.prefix + query)
         }
       )
     }

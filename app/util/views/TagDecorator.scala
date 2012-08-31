@@ -1,11 +1,23 @@
 package util
 package views
 
+import config.Configurable
 import models.MetaWrapper
 
 import play.api.Configuration
 import play.api.mvc.Content
 import play.api.templates.Html
+
+object TagDecoratorConfig extends Configurable {
+  override val namespace = "tagdecorators"
+  override val referenceConfigFilename = "tagdecorators_reference.conf"
+
+  def decorators = new Configuration(getConfig("decorators"))
+
+  override protected def validateConfig() {
+    decorators
+  }
+}
 
 object TagDecorator {
 
@@ -31,16 +43,16 @@ object TagDecorator {
     }
   }
 
-  protected lazy val Decorators: Map[String,Decorator] =
-    Config.get("tagdecorators").map { decorators =>
-      decorators.subKeys.foldLeft(Map[String,Decorator]()) { case(total,current) =>
-        val config = decorators.getConfig(current).get
-        Map(current -> createDecorator(current, config)) ++ total
-      }
-    }.getOrElse(Map[String,Decorator]())
+  protected def decorators: Map[String,Decorator] = {
+    val decorators = TagDecoratorConfig.decorators
+    decorators.subKeys.foldLeft(Map[String,Decorator]()) { case(total,current) =>
+      val config = decorators.getConfig(current).get
+      Map(current -> createDecorator(current, config)) ++ total
+    }
+  }
 
   protected def getDecorator(key: String): Option[Decorator] = {
-    Decorators.get(key)
+    decorators.get(key)
   }
 
   protected def createDecorator(key: String, config: Configuration): Decorator = {
