@@ -10,6 +10,8 @@ object Formatter {
 
   val ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
 
+  val HUMAN_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss"
+
   def solrDateFormat(date: Date): String = dateFormat(date) + "Z"
 
   def dateFormat(date: Date): String = {
@@ -17,7 +19,8 @@ object Formatter {
   }
 
   def dateFormat(timestamp: Timestamp): String = {
-    dateFormat(timestamp.asInstanceOf[Date])
+    new SimpleDateFormat(HUMAN_DATE_FORMAT).format(
+        timestamp.asInstanceOf[Date])
   }
 
   def ellipsis(source: String): String = {

@@ -1,9 +1,8 @@
 package util
 package views
 
-
-import play.api.Configuration
 import play.api.Logger
+import play.api.Configuration
 import play.api.mvc.Content
 import play.api.templates.Html
 
@@ -78,7 +77,7 @@ object ListHelper extends DecoratorBase {
       val methodCall = found.group(1)
       try {
         decoratedString = decoratedString.replace("~{%s}".format(methodCall),
-            this.callMethodWithAsset(methodCall, asset).toString())
+            this.callMethod(methodCall, this, asset).toString())
       } catch {
         case nsme: NoSuchMethodException =>
           throw MethodCallConfigurationException(methodCall, key)
@@ -134,11 +133,17 @@ object ListHelper extends DecoratorBase {
     val formatter = Config.getString("listtags.%s.formatter".format(tag), "")
     if (!formatter.isEmpty() && tagValue != None) {
       try {
-        Formatter.getClass.getMethod(formatter, tagValue.getClass).invoke(
-            Formatter, tagValue).toString()
+        this.callMethod(formatter, Formatter, tagValue).toString()
       } catch {
         case nsme: NoSuchMethodException =>
           throw FormatConfigurationException(formatter, tag)
+      }
+    } else if (tagValue == None) {
+      val default = Config.getString("listtags.%s.default".format(tag), "")
+      if (!default.isEmpty()) {
+        default
+      } else {
+        Config.getString("listtags.all.default", DEFAULT_VALUE)
       }
     } else {
       tagValue.toString()
@@ -157,13 +162,19 @@ object ListHelper extends DecoratorBase {
     // If the tag starts with the method prefix, call the method on the asset
     // object instead of performing an asset metadata lookup.
     if (tag.contains(METHOD_PREFIX)) {
-      asset.getClass.getMethod(tag.split(METHOD_PREFIX)(1)).invoke(asset)
+      val method = tag.split(METHOD_PREFIX)(1)
+      val retVal = this.callMethod(method, asset)
+      retVal match {
+        case Some(value) => value.asInstanceOf[Object]
+        case None => None
+        case _ => retVal
+      }
     } else {
       val metaValue = Asset.findByTag(asset.tag).get.getMetaAttribute(tag)
       if (metaValue != None) {
         metaValue.get.getValue
       } else {
-        ""
+        None
       }
     }
   }
@@ -179,14 +190,7 @@ object ListHelper extends DecoratorBase {
   def decorateTagValueForAsset(tag: String, asset: AssetView): Content = {
     val formattedVal = formatTagValueForAsset(tag, asset)
     val decorator = Config.getString("listtags.%s.decorator".format(tag), "")
-    if (formattedVal.isEmpty()) {
-      val default = Config.getString("listtags.%s.default".format(tag), "")
-      if (!default.isEmpty()) {
-        Html(default)
-      } else {
-        Html(Config.getString("listtags.all.default", DEFAULT_VALUE))
-      }
-    } else if (!decorator.isEmpty()) {
+    if (!decorator.isEmpty()) {
       decorate(tag, formattedVal, asset)
     } else {
       Html(formattedVal)
@@ -205,8 +209,7 @@ object ListHelper extends DecoratorBase {
     if (!method.isEmpty()) {
       // Calls the user-supplied method to check whether column should be shown.
       try {
-        return this.getClass.getMethod(method, assets.getClass)
-          .invoke(this, assets).asInstanceOf[Boolean]
+        this.callMethod(method, this, assets).asInstanceOf[Boolean]
       } catch {
         case nsme: NoSuchMethodException =>
           throw ShowIfConfigurationException(method, tag)
@@ -227,29 +230,30 @@ object ListHelper extends DecoratorBase {
    * @param asset an AssetView representing an asset
    * @return a String containing an URL to the supplied Asset
    */
-  def getAssetURL(asset: AssetView): String = {
+  def getAssetURL(asset: Asset): String = {
     asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag)
   }
 
   /**
-   * Calls a method from the ListHelper context, passing the supplied asset
-   * as an argument.
+   * Calls a method specified as a string, using the supplied arguments to
+   * determine the manner in which it gets called.
    *
    * @param method a String containing a method to call.
    * @param asset an AssetView object.
    * @return the results of the method call.
    */
-  def callMethodWithAsset(method: String, asset: AssetView,
-      onObj: Object = this) = {
+  def callMethod(method: String, onObj: Object, args: Object*) = {
+    val parameterClasses = args.map{ arg => arg.getClass }
     val methodSplit = method.split("\\.")
     if (methodSplit.length > 1) {
       val methodClass = methodSplit.slice(0, methodSplit.length - 1)
         .reduceLeft(_ + "." + _)
       val classMethod = methodSplit(methodSplit.length - 1)
-      this.getClass.getClassLoader.loadClass(methodClass)
-        .getMethod(classMethod, classOf[AssetView]).invoke(onObj, asset)
+      onObj.getClass.getClassLoader.loadClass(methodClass)
+        .getMethod(classMethod, parameterClasses : _*).invoke(onObj, args : _*)
     } else {
-      this.getClass.getMethod(method, classOf[AssetView]).invoke(onObj, asset)
+      onObj.getClass.getMethod(method, parameterClasses : _*).invoke(onObj,
+          args : _*)
     }
   }
 
@@ -263,6 +267,18 @@ object ListHelper extends DecoratorBase {
   def showHostname(assets: Page[AssetView]): Boolean = {
     assets.items.find(_.getHostnameMetaValue.isDefined).map(_ => true)
       .getOrElse(false)
+  }
+
+  /**
+   * Renders an asset's SoftLayer link into HTML form.
+   *
+   * @param asset an AssetView to retrieve a SoftLayer link for.
+   * @return a Play Content object representing the SoftLayer link
+   */
+  def renderSoftLayerLink(asset: AssetView): Content = {
+    this.getClass.getClassLoader.loadClass("views.html.asset.slLink").getMethod(
+        "render", classOf[AssetView], classOf[String]).invoke(this, asset, "")
+      .asInstanceOf[Content]
   }
 
   /**

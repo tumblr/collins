@@ -3,7 +3,6 @@ package views
 
 import models.MetaWrapper
 
-import play.api.Logger
 import play.api.Configuration
 import play.api.mvc.Content
 import play.api.templates.Html
@@ -45,7 +44,6 @@ trait DecoratorBase {
       decorators.subKeys.map{key => key.replace("\"", "")}
         .foldLeft(Map[String,Decorator]()) { case(total,current) =>
           val config = decorators.getConfig(current).get
-          Logger.logger.warn(current)
           Map(current -> createDecorator(current, config)) ++ total
         }
       }.getOrElse(Map[String,Decorator]())
