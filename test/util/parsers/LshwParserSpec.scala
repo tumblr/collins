@@ -2,6 +2,7 @@ package util
 package parsers
 
 import test.util.parsers.CommonParserSpec
+import util.config.LshwConfig
 
 import org.specs2._
 import specification._
@@ -12,8 +13,8 @@ class LshwParserSpec extends mutable.Specification {
   def beNonEmptyStringSeq: Matcher[Seq[String]] = have(s => s.nonEmpty && s.size >= 5)
 
   class LshwParserHelper(val filename: String) extends Scope with CommonParserSpec[LshwRepresentation] {
-    override def getParser(txt: String, options: Map[String,String] = Map.empty) =
-      new LshwParser(txt, options)
+    override def getParser(txt: String) =
+      new LshwParser(txt)
     def parsed(options: Map[String,String] = Map.empty) = getParseResults(filename, options)
   }
 

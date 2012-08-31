@@ -5,8 +5,8 @@ import Solr._
 import org.specs2._
 import models.{Asset, AssetFinder, AssetType, AssetMeta, IpAddresses, Status, AssetMetaValue}
 import test.ApplicationSpecification
+import util.solr.SolrConfig
 import util.views.Formatter
-import util.Config
 
 class SolrSpec extends ApplicationSpecification {
 
@@ -292,7 +292,7 @@ class SolrQuerySpec extends ApplicationSpecification {
 
 class SolrServerSpecification extends ApplicationSpecification {
 
-  def home = Config.getString("solr.embeddedSolrHome", "NONE") 
+  def home = SolrConfig.embeddedSolrHome
 
   lazy val server = Solr.getNewEmbeddedServer(home)
 

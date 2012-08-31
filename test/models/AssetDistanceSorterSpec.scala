@@ -4,7 +4,7 @@ import test.ApplicationSpecification
 import org.specs2._
 import specification._
 
-import SortType._
+import AssetSortType._
 
 import java.sql.Timestamp
 
