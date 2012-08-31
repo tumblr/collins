@@ -3,6 +3,7 @@ package views
 
 import models.MetaWrapper
 
+import play.api.Logger
 import play.api.Configuration
 import play.api.mvc.Content
 import play.api.templates.Html
@@ -12,6 +13,8 @@ import play.api.templates.Html
  * for display in a manner appropriate to their context.
  */
 trait DecoratorBase {
+
+  val DEFAULT_DECORATOR = "{value}"
 
   def configPrefix: String
 
@@ -37,22 +40,22 @@ trait DecoratorBase {
     }
   }
 
-  protected lazy val Decorators: Map[String,Decorator] =
+  lazy val Decorators: Map[String,Decorator] =
     Config.get(configPrefix).map { decorators =>
-      decorators.subKeys.foldLeft(Map[String,Decorator]()) { case(total,current) =>
-        val config = decorators.getConfig(current).get
-        Map(current -> createDecorator(current, config)) ++ total
-      }
-    }.getOrElse(Map[String,Decorator]())
+      decorators.subKeys.map{key => key.replace("\"", "")}
+        .foldLeft(Map[String,Decorator]()) { case(total,current) =>
+          val config = decorators.getConfig(current).get
+          Logger.logger.warn(current)
+          Map(current -> createDecorator(current, config)) ++ total
+        }
+      }.getOrElse(Map[String,Decorator]())
 
-  protected def getDecorator(key: String): Option[Decorator] = {
+  def getDecorator(key: String): Option[Decorator] = {
     Decorators.get(key)
   }
 
   protected def createDecorator(key: String, config: Configuration): Decorator = {
-    val decorator = config.getString("decorator").getOrElse {
-      throw DecoratorConfigurationException(key, "decorator")
-    }
+    val decorator = config.getString("decorator").getOrElse{ DEFAULT_DECORATOR }
     val parser = config.getString("valueParser")
       .map(c => getClassInstance(c))
       .getOrElse(new IdentityParser)

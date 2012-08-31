@@ -1,6 +1,7 @@
 package util
 package views
 
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -13,6 +14,10 @@ object Formatter {
 
   def dateFormat(date: Date): String = {
     new SimpleDateFormat(ISO_8601_FORMAT).format(date)
+  }
+
+  def dateFormat(timestamp: Timestamp): String = {
+    dateFormat(timestamp.asInstanceOf[Date])
   }
 
   def ellipsis(source: String): String = {
