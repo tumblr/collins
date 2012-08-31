@@ -1,7 +1,7 @@
 package models
 
 import scala.math
-import util.Config
+import util.config.NodeclassifierConfig
 import play.api.Logger
 
 trait AssetDistanceEval {
@@ -65,23 +65,23 @@ object SortDirection extends Enumeration {
 }
 import SortDirection._
 
-object SortType extends Enumeration {
-  type SortType = Value
+object AssetSortType extends Enumeration {
+  type AssetSortType = Value
   val Name = Value("name")
   val Distance = Value("distance")
   val Distribution = Value("distribution")
   val Arbitrary = Value("arbitrary")
 }
-import SortType._
+import AssetSortType._
 
 object AssetDistanceSorter {
   
-  def sortKeys = Config.getString("nodeclass.sortKeys","")
+  def sortKeys = NodeclassifierConfig.sortKeys
 
   def sort(
     target: Asset, 
     similarAssets: Seq[Asset], 
-    sortType: SortType, 
+    sortType: AssetSortType, 
     direction: SortDirection
   ): Seq[Asset] = sortType match {
     case Name => genericSort(target, similarAssets, new MockAssetNameEval, direction)

@@ -6,7 +6,7 @@ import play.api.{Configuration, Mode, Play}
 import play.api.i18n.Messages
 
 // Globally useful configurations
-object AppConfig extends Config {
+object AppConfig {
 
   def ignoredAssets = Feature.ignoreDangerousCommands.map(_.toUpperCase)
 
@@ -16,8 +16,9 @@ object AppConfig extends Config {
 
   // This is shared accross classes
   val IpmiKey = "ipmi"
-  def ipmi: Option[Configuration] = Config.get(IpmiKey)
-  def ipmiMap = Config.toMap(IpmiKey)
+  // FIXME
+  def ipmi: Option[Configuration] = new Configuration() //Config.get(IpmiKey)
+  def ipmiMap = Map[String,String].empty // Config.toMap(IpmiKey)
 
   def isProd() = getApplicationMode() == Mode.Prod
   def getApplicationMode(): Mode.Mode = {

@@ -4,8 +4,8 @@ import conversions._
 import AssetMeta.Enum.RackPosition
 import models.{Status => AStatus}
 
-import util.{ApiTattler, AssetStateMachine, Config, InternalTattler, LldpRepresentation, LshwRepresentation}
-import util.config.Feature
+import util.{ApiTattler, AssetStateMachine, InternalTattler, LldpRepresentation, LshwRepresentation}
+import util.config.{Feature, LshwConfig}
 import util.parsers.{LldpParser, LshwParser}
 import util.power.PowerUnits
 
@@ -79,7 +79,6 @@ object AssetLifecycle {
     }
   }
 
-  private lazy val lshwConfig = Config.toMap("lshw")
   def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = asset.isServerNode match {
     case true => updateServer(asset, options)
     case false => updateOther(asset, options)
@@ -194,7 +193,7 @@ object AssetLifecycle {
     filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
-    val lshwParser = new LshwParser(lshw, lshwConfig)
+    val lshwParser = new LshwParser(lshw)
     val lldpParser = new LldpParser(lldp)
 
     allCatch[Boolean].either {
@@ -222,7 +221,7 @@ object AssetLifecycle {
     allCatch[Boolean].either {
       Asset.inTransaction {
         options.get("lshw").foreach{lshw => 
-          parseLshw(asset, new LshwParser(lshw, lshwConfig)).left.foreach{throw _}
+          parseLshw(asset, new LshwParser(lshw)).left.foreach{throw _}
         }
         options.get("lldp").foreach{lldp =>
           parseLldp(asset, new LldpParser(lldp)).left.foreach{throw _}

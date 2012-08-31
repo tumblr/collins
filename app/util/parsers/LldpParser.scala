@@ -3,9 +3,7 @@ package parsers
 
 import scala.xml.{Elem, MalformedAttributeException, Node, NodeSeq, XML}
 
-class LldpParser(txt: String, config: Map[String,String] = Map.empty)
-  extends CommonParser[LldpRepresentation](txt, config)
-{
+class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
   override def parse(): Either[Throwable,LldpRepresentation] = {
     val xml = try {
       XML.loadString(txt)

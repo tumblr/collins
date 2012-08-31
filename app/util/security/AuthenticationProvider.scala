@@ -3,7 +3,7 @@ package security
 
 import models.{User, UserImpl}
 
-import play.api.{Configuration, Logger}
+import play.api.Logger
 import com.google.common.cache._
 import java.util.concurrent.TimeUnit
 import com.tumblr.play.{PermissionsHelper, Privileges}
@@ -24,10 +24,8 @@ trait AuthenticationProvider {
                                   }
                                 )
   def authenticate(username: String, password: String): Option[User]
-  def useCachedCredentials: Boolean =
-    Config.getBoolean("authentication", "cacheCredentials").getOrElse(false)
-  def cacheTimeout: Long =
-    Config.getMilliseconds("authentication", "cacheTimeout").getOrElse(0L)
+  def useCachedCredentials: Boolean = AuthenticationProviderConfig.cacheCredentials
+  def cacheTimeout: Long = AuthenticationProviderConfig.cacheTimeout
   def tryAuthCache(username: String, password: String): Option[User] = {
     if (!useCachedCredentials) {
       authenticate(username, password)
