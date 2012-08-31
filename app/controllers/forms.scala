@@ -10,8 +10,8 @@ import play.api.data.format._
 
 import scala.util.control.Exception.allCatch
 
-import models.SortType
-import models.SortType._
+import models.AssetSortType
+import models.AssetSortType._
 
 package object forms {
 
@@ -59,15 +59,15 @@ package object forms {
     def unbind(key: String, value: Truthy) = Map(key -> value.toString)
   }
 
-  implicit def sortTypeformat = new Formatter[SortType] {
+  implicit def sortTypeformat = new Formatter[AssetSortType] {
     def bind(key: String, data: Map[String, String]) = {
       Formats.stringFormat.bind(key, data).right.flatMap { s =>
-        allCatch[SortType]
-          .either(SortType.withName(s))
+        allCatch[AssetSortType]
+          .either(AssetSortType.withName(s))
           .left.map(e => Seq(FormError(key, "sorttype.invalid", Nil)))
       }
     }
-    def unbind(key: String, value: SortType) = Map(key -> value.toString)
+    def unbind(key: String, value: AssetSortType) = Map(key -> value.toString)
   }
 
 }

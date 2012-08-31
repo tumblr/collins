@@ -32,12 +32,12 @@ case class CreateAction(
       form => {
         val (pool, count) = form
         val poolName = pool.map(convertPoolName(_))
-        if (!IpAddresses.AddressConfig.isDefined)
+        if (IpAddressConfiguration.poolCount == 0)
           return Left(
             RequestDataHolder.error500("No address pools have been setup to allocate from")
           )
         poolName.filter(_.nonEmpty).foreach { p =>
-          if (!IpAddresses.AddressConfig.get.hasPool(p)) {
+          if (!IpAddressConfiguration.hasPool(p)) {
             return Left(RequestDataHolder.error400("Pool %s does not exist".format(p)))
           }
         }
@@ -50,9 +50,8 @@ case class CreateAction(
     case ActionDataHolder(asset, pool, count) => try {
       val poolName = pool.isEmpty match {
         case true =>
-          val addressConfig = IpAddresses.AddressConfig.get
           // if default pool being used, store that pool name if the pool name isn't DEFAULT
-          addressConfig.defaultPoolName.filter(_ != IpAddressConfiguration.DefaultPoolName)
+          IpAddressConfiguration.defaultPoolName.filter(_ != IpAddressConfiguration.DefaultPoolName)
                                         .getOrElse("")
         case false => pool
       }
