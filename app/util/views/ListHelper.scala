@@ -1,7 +1,6 @@
 package util
 package views
 
-import play.api.Logger
 import play.api.Configuration
 import play.api.mvc.Content
 import play.api.templates.Html

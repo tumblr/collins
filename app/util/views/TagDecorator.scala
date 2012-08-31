@@ -13,8 +13,6 @@ import play.api.templates.Html
  */
 trait DecoratorBase {
 
-  val DEFAULT_DECORATOR = "{value}"
-
   def configPrefix: String
 
   // optionalDelimiter only used if no decorator defined
@@ -39,7 +37,7 @@ trait DecoratorBase {
     }
   }
 
-  lazy val Decorators: Map[String,Decorator] =
+  protected lazy val Decorators: Map[String,Decorator] =
     Config.get(configPrefix).map { decorators =>
       decorators.subKeys.map{key => key.replace("\"", "")}
         .foldLeft(Map[String,Decorator]()) { case(total,current) =>
@@ -48,12 +46,12 @@ trait DecoratorBase {
         }
       }.getOrElse(Map[String,Decorator]())
 
-  def getDecorator(key: String): Option[Decorator] = {
+  protected def getDecorator(key: String): Option[Decorator] = {
     Decorators.get(key)
   }
 
   protected def createDecorator(key: String, config: Configuration): Decorator = {
-    val decorator = config.getString("decorator").getOrElse{ DEFAULT_DECORATOR }
+    val decorator = config.getString("decorator").getOrElse{ "" }
     val parser = config.getString("valueParser")
       .map(c => getClassInstance(c))
       .getOrElse(new IdentityParser)
