@@ -9,7 +9,7 @@ import specification._
 class LldpParserSpec extends mutable.Specification {
 
   class LldpParserHelper(val filename: String) extends Scope with CommonParserSpec[LldpRepresentation] {
-    override def getParser(txt: String, options: Map[String,String] = Map.empty) = new LldpParser(txt, options)
+    override def getParser(txt: String) = new LldpParser(txt)
     def parsed() = getParseResults(filename)
   }
 
@@ -73,7 +73,7 @@ class LldpParserSpec extends mutable.Specification {
     "Fail to parse invalid XML" in new LldpParserHelper("lldpctl-bad.xml") {
       val invalidXml = getResource(filename)
       override def getParseResults(data: String, opts: Map[String,String] = Map.empty): Either[Throwable,LldpRepresentation] = {
-        getParser(data, opts).parse()
+        getParser(data).parse()
       }
 
       "Missing chassis name" >> {

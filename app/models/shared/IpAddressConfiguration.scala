@@ -23,7 +23,18 @@ import util.concurrent.LockingBitSet
  *
  * FIXME - cache no longer valid if ranges, etc can change (val -> def)
  */
-object IpAddressConfiguration extends MessageHelper("ip_address") with Configurable {
+trait IpAddressConfiguration {
+  def defaultPoolName: Option[String]
+  def strict: Boolean
+  def pools: Map[String,AddressPool]
+  def defaultPool: Option[AddressPool]
+  def hasDefault: Boolean
+  def hasPool(pool: String): Boolean
+  def pool(name: String): Option[AddressPool]
+  def poolNames: Set[String]
+  def poolCount: Int
+}
+object IpAddressConfiguration extends MessageHelper("ip_address") with Configurable with IpAddressConfiguration {
 
   val DefaultPoolName = "DEFAULT"
 
