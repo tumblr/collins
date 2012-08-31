@@ -2,12 +2,11 @@ import play.api._
 import play.api.mvc._
 
 import controllers.ApiResponse
-import models.{IpAddresses, Model}
-import util.{AppConfig, CryptoAccessor, Stats}
+import models.Model
+import util.{CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 import util.config.Registry
 import util.security.{AuthenticationAccessor, AuthenticationProvider, AuthenticationProviderConfig}
-import util.power.PowerConfiguration
 import util.plugins.solr.Solr
 import java.io.File
 
@@ -32,7 +31,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
     setAuthentication(auth)
     setCryptoKey(key)
-    checkRuntime(app.configuration)
   }
 
   override def onRouteRequest(request: RequestHeader): Option[Handler] = {
@@ -98,11 +96,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
       case t =>
         super.onBadRequest(request, error)
     }
-  }
-
-  protected def checkRuntime(config: Configuration) {
-    IpAddresses.AddressConfig
-    AppConfig.ipmi
   }
 
   // Make sure we have a valid configuration before we start

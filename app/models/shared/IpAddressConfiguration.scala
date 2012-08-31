@@ -56,6 +56,7 @@ object IpAddressConfiguration extends MessageHelper("ip_address") with Configura
   def hasPool(pool: String): Boolean = pools.contains(poolName(pool))
   def pool(name: String): Option[AddressPool] = pools.get(poolName(name))
   def poolNames: Set[String] = pools.keySet
+  def poolCount: Int = poolNames.size
 
   override protected def validateConfig() {
     defaultPoolName
