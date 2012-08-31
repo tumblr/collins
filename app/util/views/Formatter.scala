@@ -1,12 +1,16 @@
 package util
 package views
 
+import java.sql.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
 
 // Used with views/asset/list
 object Formatter {
+
   val ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
+
+  val HUMAN_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss"
 
   def solrDateFormat(date: Date): String = dateFormat(date) + "Z"
 
@@ -14,7 +18,16 @@ object Formatter {
     new SimpleDateFormat(ISO_8601_FORMAT).format(date)
   }
 
-  def elipse(source: String, maxLength: Int = 25, filler: String = "..."): String = {
+  def dateFormat(timestamp: Timestamp): String = {
+    new SimpleDateFormat(HUMAN_DATE_FORMAT).format(
+        timestamp.asInstanceOf[Date])
+  }
+
+  def ellipsis(source: String): String = {
+    ellipsis(source, 25, "...")
+  }
+
+  def ellipsis(source: String, maxLength: Int, filler: String) : String = {
     val sourceLength = source.length // 12 characters
     val fillerLength = filler.length // 3 characters
     val maxSize = maxLength - fillerLength // 10 - 3 = 7
@@ -29,6 +42,7 @@ object Formatter {
 
   private[this] val words = """([a-zA-Z]+)""".r
   private[this] val separators = """([^a-zA-Z]+)""".r
+
   def camelCase(value: String, sep: String = "") = {
     separators.replaceAllIn(words.replaceAllIn(value, m => m.matched.toLowerCase.capitalize), sep)
   }

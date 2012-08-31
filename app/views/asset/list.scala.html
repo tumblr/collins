@@ -1,6 +1,7 @@
 @(assets: Page[AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
+@import _root_.models.AssetMeta
 @import _root_.util.SoftLayer
 @import _root_.util.views.{ListHelper, Formatter, Pagination}
 @import util.notice
@@ -20,32 +21,20 @@
     <table class="condensed-table zebra-striped @(if(clientSort) "sortable" else "")" data-size="50">
       <thead>
         <tr>
-          <th>Asset Tag</th>
-          @if(ListHelper.showHostname(assets)) {
-          <th>Hostname</th>
-          }
-	  <th>Primary Role</th>
-          <th>Status</th>
-          <th>Created</th>
-          <th>Last Updated</th>
-          @if(ListHelper.showSoftLayerLink(assets)) {
-          <th>SL Link</th>
+          @ListHelper.getListHeaderTags.map { tag =>
+            @if(ListHelper.showColumnForTag(tag, assets)) {
+              <th>@ListHelper.getColumnHeader(tag)</th>              
+            }
           }
         </tr>
       </thead>
       <tbody>
         @assets.items.map { asset =>
         <tr>
-          <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
-          @if(ListHelper.showHostname(assets)) {
-          <td>@asset.getHostnameMetaValue.map(v => Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>
-          }
-	  <td>@asset.getPrimaryRoleMetaValue().getOrElse { <em>Unknown</em> }</td>
-	  <td>@Formatter.elipse(asset.getStatusName(), 12)</td>
-          <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
-          <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
-          @if(ListHelper.showSoftLayerLink(assets)) {
-            @slLink(asset)
+          @ListHelper.getListHeaderTags.map { tag =>
+            @if(ListHelper.showColumnForTag(tag, assets)) {
+              <td>@ListHelper.decorateTagValueForAsset(tag, asset)</td>
+            }
           }
         </tr>
         }

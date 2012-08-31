@@ -33,6 +33,8 @@ case class AssetMeta(
   }
   def getId(): Long = id
 
+  def getLabel(): String = label
+
   def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType(value_type)
 
   def valueType = getValueType
