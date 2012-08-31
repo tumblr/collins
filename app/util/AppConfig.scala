@@ -14,12 +14,6 @@ object AppConfig {
   def ignoreAsset(tag: String): Boolean = ignoredAssets.contains(tag.toUpperCase)
   def ignoreAsset(asset: Asset): Boolean = ignoreAsset(asset.tag)
 
-  // This is shared accross classes
-  val IpmiKey = "ipmi"
-  // FIXME
-  def ipmi: Option[Configuration] = new Configuration() //Config.get(IpmiKey)
-  def ipmiMap = Map[String,String].empty // Config.toMap(IpmiKey)
-
   def isProd() = getApplicationMode() == Mode.Prod
   def getApplicationMode(): Mode.Mode = {
     Play.maybeApplication.map { app =>

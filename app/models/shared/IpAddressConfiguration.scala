@@ -1,8 +1,9 @@
 package models
 package shared
 
-import play.api.Configuration
-import util.{Config, IpAddress, IpAddressCalc, MessageHelper}
+import com.typesafe.config.{Config => TypesafeConfig}
+import util.{IpAddress, IpAddressCalc, MessageHelper}
+import util.config.{Configurable, ConfigurationAccessor}
 import util.concurrent.LockingBitSet
 
 /**
@@ -19,51 +20,66 @@ import util.concurrent.LockingBitSet
  *     key.pools.provisioning.network="172.16.16.0/24"
  *     key.pools.provisioning.startAddress="172.16.16.100"
  *     key.pools.provisionnig.name="PROVISIONING"
+ *
+ * FIXME - cache no longer valid if ranges, etc can change (val -> def)
  */
-case class IpAddressConfiguration(source: Configuration) extends MessageHelper("ip_address") {
+object IpAddressConfiguration extends MessageHelper("ip_address") with Configurable {
+
+  val DefaultPoolName = "DEFAULT"
 
   import AddressPool.poolName
 
+  override val namespace = "ipAddresses"
+  override val referenceConfigFilename = "ipaddresses_reference.conf"
+
   // Default pool to use, if configured, hidden since we may end up with a nake config which will
   // still end up with the DefaultPoolName
-  private val _defaultPoolName: Option[String] =
-    source.getString("defaultPool").map(poolName(_))
-
-  // Whether or not to be strict about address creation, names, etc
-  val strict = source.getBoolean("strict").getOrElse(true)
+  def defaultPoolName: Option[String] = getString("defaultPoolName").filter(_.nonEmpty).map(poolName(_).toString)
+  def strict = getBoolean("strict", false)
 
   // PoolName -> AddressPool map, if pools are specified
-  val pools: Map[String,AddressPool] = source.getConfig("pools").map { cfg =>
-    cfg.subKeys.map { key =>
-      val keyCfg = cfg.getConfig(key)
-      val addressPool = AddressPool.fromConfiguration(keyCfg, key, true, strict).get
-      poolName(addressPool.name) -> addressPool
-    }.toMap
-  }.getOrElse(Map.empty)
+  def pools: Map[String,AddressPool] = getObjectMap("pools").map { case(name, pool) =>
+    val poolConfig = new PoolConfig(name, pool.toConfig)
+    val addressPool = AddressPool.fromConfiguration(poolConfig, true, strict).get
+    poolName(addressPool.name) -> addressPool
+  }.toMap
 
   // The default address pool, either one from the pools map, or if no pools were specified, assume
   // a 'naked' config (e.g. network/etc hanging off the key)
-  val defaultPool: Option[AddressPool] = _defaultPoolName.map { pool =>
+  def defaultPool: Option[AddressPool] = defaultPoolName.map { pool =>
     pools.get(poolName(pool)).getOrElse(
-      throw source.globalError(message("invalidDefaultPool", pool))
+      throw globalError(message("invalidDefaultPool", pool))
     )
-  }.orElse(
-    AddressPool.fromConfiguration(source, IpAddressConfiguration.DefaultPoolName, false, false)
-  )
+  }
 
   def hasDefault: Boolean = defaultPool.isDefined
   def hasPool(pool: String): Boolean = pools.contains(poolName(pool))
   def pool(name: String): Option[AddressPool] = pools.get(poolName(name))
   def poolNames: Set[String] = pools.keySet
-  def defaultPoolName: Option[String] = defaultPool.map(_.name)
+
+  override protected def validateConfig() {
+    defaultPoolName
+    strict
+    pools
+    defaultPool
+    hasDefault
+    poolNames
+  }
+
 }
 
-object IpAddressConfiguration {
-  val DefaultPoolName = "DEFAULT"
-  def apply(config: Option[Configuration]): Option[IpAddressConfiguration] =
-    config.map(cfg => new IpAddressConfiguration(cfg))
-  def get(): Option[IpAddressConfiguration] = Config.get("ipAddresses").map { cfg =>
-    new IpAddressConfiguration(cfg)
+class PoolConfig(key: String, cfg: TypesafeConfig) extends ConfigurationAccessor {
+
+  implicit val requirement = util.config.ConfigValue.Optional
+
+  override protected def underlying = Some(cfg)
+
+  def name = getString("name").getOrElse(key)
+  def startAddress = getString("startAddress")
+  def network = getString("network")
+  def gateway = getString("gateway")
+
+  override protected def underlying_=(config: Option[TypesafeConfig]) {
   }
 }
 
@@ -140,15 +156,6 @@ case class AddressPool(
   }
   override def hashCode = name.toUpperCase.hashCode
 
-  lazy val toConfiguration: Configuration = {
-    val saOpt = if(startAddress.isDefined) Seq(("startAddress" -> startAddress.get)) else Nil
-    val gwOpt = if(gateway.isDefined) Seq(("gateway" -> gateway.get)) else Nil
-    val entities = Seq(
-      "network" -> network, "name" -> name
-    ) ++ saOpt ++ gwOpt
-    Configuration.from(Map(entities:_*))
-  }
-
   def isMagic: Boolean = network == AddressPool.MagicNetwork // valid dummy value
 
   protected def addressIndex(address: Long): Int = {
@@ -173,38 +180,24 @@ object AddressPool extends MessageHelper("ip_address") {
   def poolName(pool: String) = pool.toUpperCase
 
   def fromConfiguration(
-    cfg: Configuration, uname: String, required: Boolean, strict: Boolean
+    cfg: PoolConfig, required: Boolean, strict: Boolean
   ): Option[AddressPool] = {
-    val startAddress = cfg.getString("startAddress")
-    val network = cfg.getString("network")
-    val name = cfg.getString("name")
-    val gw = cfg.getString("gateway")
-    (startAddress.isDefined || network.isDefined || name.isDefined || gw.isDefined) match {
+    val startAddress = cfg.startAddress
+    val network = cfg.network
+    val name = cfg.name
+    val gw = cfg.gateway
+    (startAddress.isDefined || network.isDefined || gw.isDefined) match {
       case true =>
-        if (strict && !name.isDefined)
-          throw cfg.globalError(message("strictConfig"))
         if (!network.isDefined)
-          throw cfg.globalError(message("invalidConfig", uname))
-        val normName = name.getOrElse(uname).toUpperCase
+          throw cfg.globalError(message("invalidConfig", cfg.name))
+        val normName = name.toUpperCase
         Some(AddressPool(normName, network.get, startAddress, gw))
       case false =>
         if (required)
-          throw cfg.globalError(message("missingConfig", uname))
+          throw cfg.globalError(message("missingConfig", name))
         else
           None
     }
   }
 
-  def fromConfiguration(
-    cfg: Option[Configuration], uname: String, required: Boolean, strict: Boolean
-  ): Option[AddressPool] = cfg match {
-    case None =>
-      if (required)
-        throw new IllegalArgumentException(messageWithDefault(
-          "missingConfig", "no config defined", uname
-        ))
-      else
-        None
-    case Some(config) => fromConfiguration(config, uname, required, strict)
-  }
 }
