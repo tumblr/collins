@@ -115,9 +115,9 @@ case class UpdateAction(
    * pool in an invalid IP range, or changing an address into a different pool.
    */
   protected def validateUpdatedAddress(address: IpAddresses): Validation = {
-    if (IpAddressConfiguration.poolCount == 0)
+    if (!IpAddresses.AddressConfig.isDefined)
       return Left(RequestDataHolder.error500("No address pools have been setup to allocate from"))
-    val config = IpAddressConfiguration
+    val config = IpAddresses.AddressConfig.get
     if (!config.strict)
       return Right(EphemeralDataHolder())
     val poolName = address.pool
@@ -137,9 +137,9 @@ case class UpdateAction(
   protected def normalizeForm(asset: Asset, form: DataForm): NormalizedForm = {
     val (old,add,gate,net,pool) = form
     val seq = Seq(old,add,gate,net,pool)
-    if (IpAddressConfiguration.poolCount == 0)
+    if (!IpAddresses.AddressConfig.isDefined)
       return Left(RequestDataHolder.error500("No address pools have been setup to allocate from"))
-    val addressConfig = IpAddressConfiguration
+    val addressConfig = IpAddresses.AddressConfig.get
     if (addressConfig.strict && pool.isDefined) {
       val poolName = pool.get
       if (!addressConfig.hasPool(poolName))

@@ -2,7 +2,6 @@ package util
 package config
 
 import play.api.{Configuration, PlayException}
-import com.typesafe.config.{Config => TypesafeConfig}
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
 import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.AtomicReference
@@ -33,7 +32,7 @@ trait ConfigurationAccessor {
     getBoolean(key).getOrElse(default)
 
   protected def getConfig(key: String): TypesafeConfig =
-    getValue(key, _.getObject(key)).map(_.toConfig).getOrElse(ConfigFactory.empty)
+    getValue(key, _.getObject(key)).map(_.toConfig).getOrElse(ConfigFactory.empty).resolve
 
   protected def getInt(key: String): Option[Int] = getValue(key, _.getInt(key))
   protected def getInt(key: String, default: Int): Int =

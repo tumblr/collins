@@ -13,9 +13,11 @@ class SolrSpec extends ApplicationSpecification {
   import AssetMeta.ValueType._
   import AssetMeta.ValueType
 
+  args(sequential = true)
+
   "FlatSerializer" should {
     "serialize an asset" in {
-      val assetTag = "solr1"
+      val assetTag = "solr%d".format(scala.util.Random.nextInt)
       val assetType = AssetType.Enum.ServerNode
       val status = Status.Enum.Allocated
       val meta = List(
@@ -59,8 +61,15 @@ class SolrSpec extends ApplicationSpecification {
   def generateAsset(tag: String, assetType: AssetType.Enum, status: Status.Enum, metaValues: Seq[(String, ValueType, Int, String)]) = {
     val asset = Asset.create(Asset(tag, status, assetType))
     metaValues.foreach{case (name, value_type, group_id, value) =>
-      val meta = AssetMeta.findOrCreateFromName(name, value_type)
-      AssetMetaValue.create(AssetMetaValue(asset.id, meta.id, group_id, value))
+      AssetMeta.findOrCreateFromName(name, value_type)
+      val meta = AssetMeta.findByName(name).get
+      try {
+        AssetMetaValue.create(AssetMetaValue(asset.id, meta.id, group_id, value))
+      } catch {
+        case e: RuntimeException =>
+          Thread.sleep(1000)
+          AssetMetaValue.create(AssetMetaValue(asset.id, meta.id, group_id, value))
+      }
     }
     asset
   }
@@ -74,19 +83,20 @@ class SolrQuerySpec extends ApplicationSpecification {
   import CollinsQueryDSL._
   import AssetMeta.ValueType._
 
+
   "CollinsQueryDSL" should {
     "key vals" in {
       "int" in {
-        (("foo" -> 3): SolrKeyVal) must_== SolrKeyVal("foo", SolrIntValue(3))
+        (("foosolr" -> 3): SolrKeyVal) must_== SolrKeyVal("foosolr", SolrIntValue(3))
       }
       "bool" in {
-        (("foo" -> false): SolrKeyVal) must_== SolrKeyVal("foo", SolrBooleanValue(false))
+        (("foosolr" -> false): SolrKeyVal) must_== SolrKeyVal("foosolr", SolrBooleanValue(false))
       }
       "double" in {
-        (("foo" -> 3.1415): SolrKeyVal) must_== SolrKeyVal("foo", SolrDoubleValue(3.1415))
+        (("foosolr" -> 3.1415): SolrKeyVal) must_== SolrKeyVal("foosolr", SolrDoubleValue(3.1415))
       }
       "string" in {
-        (("foo" -> "bar"): SolrKeyVal) must_== SolrKeyVal("foo", SolrStringValue("bar"))
+        (("foosolr" -> "bar"): SolrKeyVal) must_== SolrKeyVal("foosolr", SolrStringValue("bar"))
       }
     }
 
@@ -95,28 +105,28 @@ class SolrQuerySpec extends ApplicationSpecification {
   "CollinsQueryParser" should {
     "key-value" in {
       "string value" in {
-        """foo = "bar"""".query must_== (("foo" -> "bar"): SolrKeyVal)
+        """foosolr = "bar"""".query must_== (("foosolr" -> "bar"): SolrKeyVal)
       }
       "int value" in {
-        """foo = 3""".query must_== (("foo" -> 3): SolrKeyVal)
+        """foosolr = 3""".query must_== (("foosolr" -> 3): SolrKeyVal)
       }
       "double value" in {
-        """foo = 3.1415""".query must_== (("foo" -> 3.1415): SolrKeyVal)
+        """foosolr = 3.1415""".query must_== (("foosolr" -> 3.1415): SolrKeyVal)
       }
       "boolean value" in {
-        """foo = false""".query must_== (("foo" -> false): SolrKeyVal)
+        """foosolr = false""".query must_== (("foosolr" -> false): SolrKeyVal)
       }
       "range both" in {
-        """foo = [3, 5]""".query must_== SolrKeyRange("foo", Some(SolrIntValue(3)), Some(SolrIntValue(5)))
+        """foosolr = [3, 5]""".query must_== SolrKeyRange("foosolr", Some(SolrIntValue(3)), Some(SolrIntValue(5)))
       }
       "range opt low" in {
-        """foo = [*, 5]""".query must_== SolrKeyRange("foo", None, Some(SolrIntValue(5)))
+        """foosolr = [*, 5]""".query must_== SolrKeyRange("foosolr", None, Some(SolrIntValue(5)))
       }
       "range opt high" in {
-        """foo = [3, *]""".query must_== SolrKeyRange("foo", Some(SolrIntValue(3)), None)
+        """foosolr = [3, *]""".query must_== SolrKeyRange("foosolr", Some(SolrIntValue(3)), None)
       }
       "range opt both" in {
-        """foo = [*, *]""".query must_== SolrKeyRange("foo", None, None)
+        """foosolr = [*, *]""".query must_== SolrKeyRange("foosolr", None, None)
       }
       "ip address" in {
         """ip_address = "192.168.1.1"""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1"))
@@ -132,34 +142,34 @@ class SolrQuerySpec extends ApplicationSpecification {
 
     "complex expressions" in {
       "simple AND" in {
-        """foo = 3 AND bar = 4""".query must_== (("foo" -> 3) AND ("bar" -> 4))
+        """foosolr = 3 AND bar = 4""".query must_== (("foosolr" -> 3) AND ("bar" -> 4))
       }
       "simple OR" in {
-        """foo = 3 OR bar = 4""".query must_== (("foo" -> 3) OR ("bar" -> 4))
+        """foosolr = 3 OR bar = 4""".query must_== (("foosolr" -> 3) OR ("bar" -> 4))
       }
       "case insensitive AND" in {
-        """foo = 3 and bar = 4""".query must_== """foo = 3 AND bar = 4""".query
+        """foosolr = 3 and bar = 4""".query must_== """foosolr = 3 AND bar = 4""".query
       }
       "case insensitive OR" in {
-        """foo = 3 or bar = 4""".query must_== """foo = 3 OR bar = 4""".query
+        """foosolr = 3 or bar = 4""".query must_== """foosolr = 3 OR bar = 4""".query
       }
       "order of operations" in {
-        """foo = 4 OR bar = 4 AND baz = false""".query must_== (("foo" -> 4) OR ("bar" -> 4 AND "baz" -> false))
+        """foosolr = 4 OR bar = 4 AND baz = false""".query must_== (("foosolr" -> 4) OR ("bar" -> 4 AND "baz" -> false))
       }
       "arbitrary parentheses" in {
-        """(((((((foo = true)))))))""".query must_== SolrKeyVal("foo", SolrBooleanValue(true))
+        """(((((((foosolr = true)))))))""".query must_== SolrKeyVal("foosolr", SolrBooleanValue(true))
       }
       "simple NOT" in {
-        """NOT foo = 5""".query must_== CollinsQueryDSL.not("foo" -> 5)
+        """NOT foosolr = 5""".query must_== CollinsQueryDSL.not("foosolr" -> 5)
       }
       "case insensitive NOT" in {
-        """not foo = 5""".query must_== """NOT foo = 5""".query
+        """not foosolr = 5""".query must_== """NOT foosolr = 5""".query
       }
       "not OOO" in {
-        """NOT foo = 5 OR bar = false""".query must_== (SolrNotOp(("foo" -> 5)) OR ("bar" -> false))
+        """NOT foosolr = 5 OR bar = false""".query must_== (SolrNotOp(("foosolr" -> 5)) OR ("bar" -> false))
       }
       "negate complex expression" in {
-        """NOT (foo = 5 AND bar = "baz")""".query must_== SolrNotOp(("foo" -> 5) AND ("bar" -> "baz"))
+        """NOT (foosolr = 5 AND bar = "baz")""".query must_== SolrNotOp(("foosolr" -> 5) AND ("bar" -> "baz"))
       }
         
     }
@@ -169,38 +179,38 @@ class SolrQuerySpec extends ApplicationSpecification {
 
     "solr query generation" in {
       "simple keyval" in {
-        "foo = 3".query.toSolrQueryString must_== "foo:3"
+        "foosolr = 3".query.toSolrQueryString must_== "foosolr:3"
       }
       "wildcard" in {
-        "foo = bar*".query.toSolrQueryString must_== "foo:bar*"
+        "foosolr = bar*".query.toSolrQueryString must_== "foosolr:bar*"
       }
       "ANDs" in {
-         """foo = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== "foo:3 AND bar:abcdef AND baz:true"
+         """foosolr = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== "foosolr:3 AND bar:abcdef AND baz:true"
       }
       "ORs" in {
-         """foo = 3 OR bar = "abcdef" OR baz = true""".query.toSolrQueryString must_== "foo:3 OR bar:abcdef OR baz:true"
+         """foosolr = 3 OR bar = "abcdef" OR baz = true""".query.toSolrQueryString must_== "foosolr:3 OR bar:abcdef OR baz:true"
       }
       "NOT" in {
-        """NOT foo = 3""".query.toSolrQueryString must_== "NOT foo:3"
+        """NOT foosolr = 3""".query.toSolrQueryString must_== "NOT foosolr:3"
       }
       "nested exprs" in {
-        """(foo = 3 OR foo = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== "(foo:3 OR foo:4) AND (bar:true OR (bar:false AND baz:5))"
+        """(foosolr = 3 OR foosolr = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== "(foosolr:3 OR foosolr:4) AND (bar:true OR (bar:false AND baz:5))"
       }
       "support unquoted one-word strings" in {
-        """foo = bar""".query must_== """foo = "bar"""".query
+        """foosolr = bar""".query must_== """foosolr = "bar"""".query
       }
     }
 
     "type checking" in {
       "keyvals" in {
-        val m = AssetMeta.findOrCreateFromName("foo", Integer)
-        "foo = 3".query.typeCheck must_== Right("FOO_meta_i = 3".query)
-        "foo = 3.123".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
-        "foo = true".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
-        """foo = "3"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        val m = AssetMeta.findOrCreateFromName("foosolr", Integer)
+        "foosolr = 3".query.typeCheck must_== Right("FOOSOLR_meta_i = 3".query)
+        "foosolr = 3.123".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        "foosolr = true".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        """foosolr = "3"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "case insensitive key" in {
-        "FoO = 3".query.typeCheck must_== Right("FOO_meta_i = 3".query)
+        "FoOsOlR = 3".query.typeCheck must_== Right("FOOSOLR_meta_i = 3".query)
       }
       "valid enum" in {
         """type = "SERVER_NODE"""".query.typeCheck must_== Right("TYPE = 1".query)
@@ -212,7 +222,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         """type = server_node""".query.typeCheck must_== """TYPE = SERVER_NODE""".query.typeCheck
       }
       "invalid enum" in {
-        """type = "FOOBARRRRRR"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        """type = "FOOSOLRBARRRRRR"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "use enum id" in {
         """type = 1""".query.typeCheck must_== "TYPE = SERVER_NODE".query.typeCheck
@@ -221,18 +231,18 @@ class SolrQuerySpec extends ApplicationSpecification {
         """num_disks = 3""".query.typeCheck must_== Right(SolrKeyVal("NUM_DISKS_meta_i", SolrIntValue(3)))
       }
       "AND" in {
-        "foo = 3 AND foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        "foosolr = 3 AND foosolr = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "OR" in {
-        "foo = 3 OR foo = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        "foosolr = 3 OR foosolr = false".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "range" in {
-        "foo = [3, 5]".query.typeCheck must beAnInstanceOf[Right[String, SolrExpression]]
-        "foo = [false, 5]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
-        "foo = [3, false]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        "foosolr = [3, 5]".query.typeCheck must beAnInstanceOf[Right[String, SolrExpression]]
+        "foosolr = [false, 5]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        "foosolr = [3, false]".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "not lose NOT" in {
-        "NOT foo = 3".query.typeCheck must_== Right(SolrNotOp(SolrKeyVal("FOO_meta_i", SolrIntValue(3))))
+        "NOT foosolr = 3".query.typeCheck must_== Right(SolrNotOp(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3))))
       }
       "tag search" in {
         """tag = test""".query.typeCheck must_== Right(SolrKeyVal("TAG", SolrStringValue("test")))
@@ -247,7 +257,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       val somedate = new java.util.Date
       val dateString = util.views.Formatter.dateFormat(somedate)
       val afinder = AssetFinder(
-        Some("footag"), 
+        Some("foosolrtag"), 
         Some(Status.Enum.Allocated), 
         Some(AssetType.Enum.ServerNode),
         Some(somedate),
@@ -256,7 +266,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         Some(somedate)
       )
       val expected = List(
-        SolrKeyVal("tag", SolrStringValue("footag")),
+        SolrKeyVal("tag", SolrStringValue("foosolrtag")),
         SolrKeyVal("status", SolrIntValue(Status.Enum.Allocated.id)),
         SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id)),
         SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),

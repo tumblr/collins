@@ -10,26 +10,36 @@ object ConfigWatch extends FileWatcher with ApplicationConfiguration {
 
   def config = appConfig()
 
+  val DummyFile = System.getProperty("java.io.tmpdir")
+
   private lazy val rootConfig: String = Option(config.underlying.origin.filename).orElse {
     val cfg = config.underlying
-    val refValue = cfg.getValue("application.secret")
-    val origin = refValue.origin
-    Option(origin.filename)
+    try {
+      val refValue = cfg.getValue("application.secret")
+      val origin = refValue.origin
+      Option(origin.filename)
+    } catch {
+      case e => Option(DummyFile)
+    }
   }.getOrElse {
     throw new Exception("Config has no file based origin, can not watch for changes")
   }
 
   private lazy val otherWatches: Map[String,FileWatcher] = {
-    val cfg = config.underlying
-    val files = cfg.root.unwrapped.asScala.keys.map { key =>
-      Option(cfg.root.get(key).origin.filename)
-    }.filter(_.isDefined).map(_.get).toSet - rootConfig
-    files.map { file =>
-      logger.info("Setting up watch on %s".format(file))
-      file -> FileWatcher.watch(file, 15, true) { f =>
-        onChange(new File(rootConfig))
-      }
-    }.toMap
+    if (rootConfig == DummyFile) {
+      Map.empty
+    } else {
+      val cfg = config.underlying
+      val files = cfg.root.unwrapped.asScala.keys.map { key =>
+        Option(cfg.root.get(key).origin.filename)
+      }.filter(_.isDefined).map(_.get).toSet - rootConfig
+      files.map { file =>
+        logger.info("Setting up watch on %s".format(file))
+        file -> FileWatcher.watch(file, 15, true) { f =>
+          onChange(new File(rootConfig))
+        }
+      }.toMap
+    }
   }
 
   override def delayInitialCheck = true
@@ -44,6 +54,9 @@ object ConfigWatch extends FileWatcher with ApplicationConfiguration {
   override def onError(file: File) {
   }
   override def onChange(file: File) {
+    if (file.getAbsolutePath.startsWith(DummyFile)) {
+      return
+    }
     try {
       val config = ConfigFactory.load(
         ConfigFactory.parseFileAnySyntax(file)

@@ -14,8 +14,11 @@ trait CommonParserSpec[REP] extends ResourceFinder {
     val data = getResource(filename)
     if (options.nonEmpty) {
       val cfg = Configuration.from(options)
-      LshwConfig.overwriteConfig(cfg)
+      _root_.util.config.ApplicationConfiguration.globalConfig = Some(cfg);
+    } else {
+      _root_.util.config.ApplicationConfiguration.globalConfig = None;
     }
+    LshwConfig.initialize
     val parser = getParser(data)
     parser.parse()
   }

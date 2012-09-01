@@ -3,7 +3,6 @@ package config
 
 import play.api.Application
 
-import com.typesafe.config.{Config => TypesafeConfig}
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.io.File
@@ -50,7 +49,7 @@ object Registry {
   }
 
   protected def skipInitialization: Boolean = {
-    if (AppConfig.isProd()) {
+    if (!AppConfig.isDev()) {
       // prod doesn't have the odd class reloader problem that dev does
       false
     } else {

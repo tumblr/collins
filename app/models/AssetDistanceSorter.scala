@@ -28,7 +28,7 @@ class MockAssetNameEval extends AssetDistanceEval {
     
 }
 
-class PhysicalDistanceEval(sortkeys: String) extends AssetDistanceEval {
+class PhysicalDistanceEval(sortkeys: Set[String]) extends AssetDistanceEval {
   /**
    * Calculates physical distance using the configured set of nodeclass.sortKeys
    *
@@ -40,7 +40,6 @@ class PhysicalDistanceEval(sortkeys: String) extends AssetDistanceEval {
    */
   def distance(a: Asset, b: Asset): Int = {
     sortkeys
-      .split(",")
       .zipWithIndex
       .map{ key => 
         if ( (a.getMetaAttribute(key._1), b.getMetaAttribute(key._1)) match {
@@ -91,8 +90,8 @@ object AssetDistanceSorter {
     case Arbitrary => similarAssets
   }
 
-  def distributionSort(target: Asset, similar: Seq[Asset], direction: SortDirection, config: String) = {
-    val sort = new PhysicalDistanceEval(config)
+  def distributionSort(target: Asset, similar: Seq[Asset], direction: SortDirection, sortKeys: Set[String]) = {
+    val sort = new PhysicalDistanceEval(sortKeys)
 
     /** pulls out assets one at time based on physical proximity to
         current group of assets. sparse search orders based on least

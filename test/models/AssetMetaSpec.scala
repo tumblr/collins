@@ -90,11 +90,7 @@ class AssetMetaSpec extends ApplicationSpecification {
         val realMeta = maybeMeta.get
         val whateverAsset = Asset("foo",Status.Enum.Allocated,AssetType.Enum.ServerNode)
         AssetMetaValue(whateverAsset, realMeta.id, "a123") must throwA[IllegalArgumentException]
-
       }
-
-      
-
     }
   } // Asset should
 
