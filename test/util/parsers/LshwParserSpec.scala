@@ -142,8 +142,8 @@ class LshwParserSpec extends mutable.Specification {
 
       "Different flash description and size" in new LshwParserHelper(file) {
         val config = Map(
-          "flashProduct" -> "flashmax",
-          "flashSize" -> "1048576"
+          "lshw.flashProduct" -> "flashmax",
+          "lshw.flashSize" -> "1048576"
         )
         val parseResults = parsed(config)
         parseResults must beRight
@@ -156,8 +156,8 @@ class LshwParserSpec extends mutable.Specification {
 
       "Bad flash description" in new LshwParserHelper(file) {
         val config = Map(
-          "flashProduct" -> "flashing memory",
-          "flashSize" -> "1048576"
+          "lshw.flashProduct" -> "flashing memory",
+          "lshw.flashSize" -> "1048576"
         )
         val parseResults = parsed(config)
         parseResults must beRight

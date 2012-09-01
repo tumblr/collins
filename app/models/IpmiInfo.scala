@@ -1,6 +1,6 @@
 package models
 
-import shared.{AddressPool,IpAddressConfiguration}
+import shared.{AddressPool,IpAddressConfiguration,SimpleAddressConfig}
 import util._
 import util.config.Configurable
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
@@ -26,6 +26,9 @@ object IpmiConfig extends Configurable {
     }
   }
 
+  def get(): Option[IpAddressConfiguration] = underlying.map { cfg =>
+    new IpAddressConfiguration(new SimpleAddressConfig(cfg))
+  }
   override protected def validateConfig() {
     require(passwordLength > 0 && passwordLength <= 16, "ipmi.passwordLength must be between 1 and 16")
   }
@@ -156,7 +159,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   }
 
   override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
-    IpAddressConfiguration.defaultPool
+    IpmiConfig.get.flatMap(_.defaultPool)
   }
 
   // Converts our query parameters to fragments and parameters for a query

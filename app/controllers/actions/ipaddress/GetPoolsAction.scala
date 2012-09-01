@@ -23,7 +23,7 @@ case class GetPoolsAction(
     case ActionDataHolder(all) => 
       val pools: Set[String] =
         if (all) {
-          val set = IpAddressConfiguration.poolNames
+          val set = IpAddresses.AddressConfig.map(_.poolNames).getOrElse(Set())
           set | IpAddresses.getPoolsInUse()
         } else {
           IpAddresses.getPoolsInUse()
@@ -61,6 +61,13 @@ case class GetPoolsAction(
   }
 
   protected def toAddressPools(pools: Set[String]): Set[AddressPool] =
-    IpAddressConfiguration.pools.values.toSet
+    IpAddresses.AddressConfig.map { cfg =>
+      pools.map { pool =>
+        cfg.pool(pool).getOrElse {
+          val poolName = AddressPool.poolName(pool)
+          AddressPool(poolName, AddressPool.MagicNetwork, None, None)
+        }
+      }
+    }.getOrElse(Set())
 
 }

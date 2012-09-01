@@ -8,6 +8,7 @@ import org.specs2.mutable._
 import java.io.File
 
 object AuthenticationProviderSpec extends Specification with _root_.test.ResourceFinder {
+
   "Authentication Providers" should {
     "work with default authentication" >> {
       val provider = AuthenticationProvider.Default
@@ -15,16 +16,15 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
       provider.authenticate("no", "suchuser") must beNone
     }
     "work with file based auth" >> {
-      val thisFile = new File("")
       val authFile = findResource("htpasswd_users")
       val configData = Map(
         "authentication.type" -> "file",
         "authentication.permissionsFile" -> "conf/permissions.yaml",
-        "authentication.file" -> authFile.getAbsolutePath
+        "authentication.file.userfile" -> authFile.getAbsolutePath
       )
       val config = Configuration.from(configData)
-      val authConfig = config.getConfig("authentication")
-      authConfig must beSome
+      _root_.util.config.ApplicationConfiguration.globalConfig = Some(config)
+      FileAuthenticationProviderConfig.initialize
       val provider = AuthenticationProvider.get("file")
       provider must haveClass[FileAuthenticationProvider]
       val users = Seq(
@@ -44,7 +44,6 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
     }
     /*
     "work with IPA authentication" >> {
-      val thisFile = new File("")
       val configData = Map(
         "authentication.type" -> "ipa",
         "authentication.host" -> "192.168.130.53",
@@ -72,7 +71,6 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
       provider.authenticate("fizz", "buzz") must beNone
     } // with IPA authentication
     "work with LDAP authentication" >> {
-      val thisFile = new File("")
       val configData = Map(
         "authentication.type" -> "ldap",
         "authentication.host" -> "192.168.130.7",

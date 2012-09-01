@@ -15,6 +15,7 @@ object AppConfig {
   def ignoreAsset(asset: Asset): Boolean = ignoreAsset(asset.tag)
 
   def isProd() = getApplicationMode() == Mode.Prod
+  def isDev() = getApplicationMode() == Mode.Dev
   def getApplicationMode(): Mode.Mode = {
     Play.maybeApplication.map { app =>
       app.mode

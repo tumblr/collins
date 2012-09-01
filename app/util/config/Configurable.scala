@@ -1,7 +1,6 @@
 package util
 package config
 
-import com.typesafe.config.{Config => TypesafeConfig}
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
 import play.api.{Configuration, Logger}
 import java.io.File
@@ -25,7 +24,7 @@ trait Configurable extends DelayedInit with ConfigurationAccessor with Applicati
   // A reference configuration for sanity checking and defaults
   val referenceConfigFilename: String
 
-  protected val logger = Logger(getClass)
+  protected val logger = Logger("configurable")
 
   // Called when the underlying configuration changes in any way
   protected def validateConfig()
@@ -39,7 +38,7 @@ trait Configurable extends DelayedInit with ConfigurationAccessor with Applicati
     x
     logger.trace("Ran constructor code")
     try {
-      referenceConfig = Some(ConfigFactory.parseResourcesAnySyntax(referenceConfigFilename))
+      referenceConfig = Some(ConfigFactory.parseResourcesAnySyntax(referenceConfigFilename).resolve)
     } catch {
       case e =>
         logger.error("Reference configuration %s not found or invalid: %s".format(
@@ -50,8 +49,8 @@ trait Configurable extends DelayedInit with ConfigurationAccessor with Applicati
     Registry.add(namespace, this)
   }
 
-  // Will be called from Registry.validate
-  protected[config] def initialize() {
+  // Will be called from Registry.validate, should not be called directly except maybe in tests
+  def initialize() {
     mergeReferenceAndSave(appConfig().underlying)
   }
 
@@ -71,13 +70,13 @@ trait Configurable extends DelayedInit with ConfigurationAccessor with Applicati
       logger.trace("Trying to merge reference config and save")
       val savedConfig = underlying
       val mergedConfig = referenceConfig.map { rc =>
-        val merged = config.withFallback(rc)
+        val merged = config.withFallback(rc).resolve()
         logger.trace("Reference config: " + rc.toString)
         logger.trace("Merged config: " + merged.toString)
         logger.debug("Checking namespace " + namespace)
         merged.checkValid(rc, namespace)
         merged.getConfig(namespace)
-      }.getOrElse(config)
+      }.getOrElse(config.resolve)
       self.underlying = Some(mergedConfig)
       try {
         logger.info("Validationg configuration for %s".format(getClass.getName))

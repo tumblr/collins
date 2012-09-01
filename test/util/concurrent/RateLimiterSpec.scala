@@ -100,7 +100,7 @@ class RateLimiterSpec extends Specification {
       "config=50/1 second, 100 concurrent tries" in new RateLimiterScope("50/1 second", "uncle") {
         val results = run(100) {i => }
         val gotLimited = results.filter(res => res._2).size
-        gotLimited must beCloseTo(50, 10)
+        gotLimited must beCloseTo(50, 20)
       }
     }
 

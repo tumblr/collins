@@ -13,8 +13,6 @@ object AuthenticationProviderConfig extends Configurable {
   lazy val permissionsFile = getString("permissionsFile")(ConfigValue.Required).get
   def authType = getString("type", "default").toLowerCase
 
-  //protected def implementation(name: String) = getObject(name)
-
   override protected def validateConfig() {
     FileWatcher.fileGuard(permissionsFile)
   }
