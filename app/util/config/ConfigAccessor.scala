@@ -15,7 +15,6 @@ trait ConfigAccessor {
     new PlayException("Confguration error", message, e)
 
   protected def underlying = {
-    ConfigWatch.tick
     _underlying.get()
   }
 

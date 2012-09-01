@@ -50,6 +50,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     logger.info("Stopping application")
     super.onStop(app)
     Model.shutdown()
+    Registry.shutdown()
   }
 
   override def onError(request: RequestHeader, ex: Throwable): Result = {
