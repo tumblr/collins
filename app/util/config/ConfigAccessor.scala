@@ -11,6 +11,8 @@ trait ConfigAccessor {
 
   private val _underlying: AtomicReference[Option[TypesafeConfiguration]] = new AtomicReference(None)
 
+  def ns: Option[String] = None
+
   def globalError(message: String, e: Option[Throwable] = None) =
     new PlayException("Confguration error", message, e)
 
@@ -72,7 +74,8 @@ trait ConfigAccessor {
       case None =>
         cfgv match {
           case ConfigValue.Required =>
-            throw new Exception("Required configuration %s not found".format(key))
+            val keyname = ns.map { n => "%s.%s".format(n, key) }.getOrElse(key)
+            throw new Exception("Required configuration %s not found".format(keyname))
           case _ =>
             None
         }

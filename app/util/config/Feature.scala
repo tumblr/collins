@@ -12,8 +12,8 @@ object Feature extends Configurable {
     def ignoreDangerousCommands(s: String) = message("ignoreDangerousCommands", s)
   }
 
-  val namespace = "features"
-  val referenceConfigFilename = "features_reference.conf"
+  override val namespace = "features"
+  override val referenceConfigFilename = "features_reference.conf"
 
   def allowTagUpdates = getStringSet("allowTagUpdates")
   def defaultLogType = {
