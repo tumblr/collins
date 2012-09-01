@@ -4,7 +4,8 @@ package asset
 
 import models.Asset
 
-import util.{AppConfig, IpmiCommand, PowerManagement, PowerManagementConfig, UserTattler}
+import util.{IpmiCommand, PowerManagement, PowerManagementConfig, UserTattler}
+import util.config.AppConfig
 import util.concurrent.BackgroundProcessor
 import util.plugins.IpmiPowerCommand
 import util.security.SecuritySpecification

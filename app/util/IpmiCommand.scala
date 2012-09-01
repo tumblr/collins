@@ -1,5 +1,6 @@
 package util
 
+import config.AppConfig
 import models.{Asset, IpmiInfo}
 import concurrent.BackgroundProcess
 import com.tumblr.play.CommandResult

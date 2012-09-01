@@ -1,15 +1,15 @@
 package util
 package config
 
-import play.api.{Configuration, PlayException}
+import play.api.PlayException
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
 import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.AtomicReference
 
 // Provide access to values from an underlying configuration
-trait ConfigurationAccessor {
+trait ConfigAccessor {
 
-  private val _underlying: AtomicReference[Option[TypesafeConfig]] = new AtomicReference(None)
+  private val _underlying: AtomicReference[Option[TypesafeConfiguration]] = new AtomicReference(None)
 
   def globalError(message: String, e: Option[Throwable] = None) =
     new PlayException("Confguration error", message, e)
@@ -19,7 +19,7 @@ trait ConfigurationAccessor {
     _underlying.get()
   }
 
-  protected def underlying_=(config: Option[TypesafeConfig]) {
+  protected def underlying_=(config: Option[TypesafeConfiguration]) {
     _underlying.set(config)
   }
 
@@ -27,7 +27,7 @@ trait ConfigurationAccessor {
   protected def getBoolean(key: String, default: Boolean): Boolean =
     getBoolean(key).getOrElse(default)
 
-  protected def getConfig(key: String): TypesafeConfig =
+  protected def getConfig(key: String): TypesafeConfiguration =
     getValue(key, _.getObject(key)).map(_.toConfig).getOrElse(ConfigFactory.empty).resolve
 
   protected def getInt(key: String): Option[Int] = getValue(key, _.getInt(key))
@@ -63,7 +63,7 @@ trait ConfigurationAccessor {
       }
     }
 
-  protected def getString(key: String)(implicit cfgv: ConfigurationRequirement): Option[String] =
+  protected def getString(key: String)(implicit cfgv: ConfigRequirement): Option[String] =
     getValue(key, _.getString(key)) match {
       case None =>
         cfgv match {
@@ -88,7 +88,7 @@ trait ConfigurationAccessor {
       set
   }
 
-  private def getValue[V](path: String, p: TypesafeConfig => V): Option[V] = try {
+  private def getValue[V](path: String, p: TypesafeConfiguration => V): Option[V] = try {
     underlying.flatMap(cfg => Option(p(cfg)))
   } catch {
     case e: ConfigException.Missing =>

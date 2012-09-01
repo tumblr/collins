@@ -19,7 +19,7 @@ object Registry {
     registered.put(name, config)
   }
 
-  def onChange(config: TypesafeConfig) {
+  def onChange(config: TypesafeConfiguration) {
     registered.values.asScala.foreach { c => c.onChange(config) }
   }
 

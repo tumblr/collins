@@ -1,7 +1,7 @@
 package util
 
+import config.AppConfig
 import models._
-import models.{LogMessageType, LogFormat, LogSource}
 
 trait TattlerHelper {
   val pString: Option[String] = None

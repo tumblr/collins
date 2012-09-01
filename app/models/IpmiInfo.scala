@@ -2,18 +2,17 @@ package models
 
 import shared.{AddressPool,IpAddressConfig,SimpleAddressConfig}
 import util._
-import util.config.Configurable
+import util.config.{Configurable, TypesafeConfiguration}
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
-import play.api._
 import play.api.libs.json._
 
 object IpmiConfig extends Configurable {
   override val namespace = "ipmi"
   override val referenceConfigFilename = "ipmi_reference.conf"
 
-  def overwriteConfig(config: Configuration) {
-    underlying_=(Some(config.underlying))
+  def overwriteConfig(config: TypesafeConfiguration) {
+    underlying_=(Some(config))
   }
 
   def passwordLength = getInt("passwordLength", 12)

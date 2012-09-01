@@ -3,6 +3,7 @@ package actions
 
 import models.User
 import util.OutputType
+import util.config.AppConfig
 import util.security.SecuritySpecification
 
 import play.api.Logger
@@ -67,7 +68,7 @@ abstract class SecureAction(
   def execute(rd: RequestDataHolder): Result
 
   def executeAsync(rd: RequestDataHolder): Promise[Result] = Akka.future{
-    util.AppConfig.setUser(userOption)
+    AppConfig.setUser(userOption)
     execute(rd)
   }
 
