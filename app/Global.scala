@@ -101,7 +101,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   // Make sure we have a valid configuration before we start
   protected def verifyConfiguration(app: Application) {
     val config = app.configuration
-    //AuthenticationProviderConfig.initialize
     Registry.initializeAll(app)
     Registry.validate
     RequiredConfig.foreach { key =>

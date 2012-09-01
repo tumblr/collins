@@ -14,10 +14,6 @@ trait ConfigurationAccessor {
   def globalError(message: String, e: Option[Throwable] = None) =
     new PlayException("Confguration error", message, e)
 
-  // This exists for test purposes
-  def overwriteConfig(config: Configuration) {
-    underlying_=(Some(config.underlying))
-  }
   protected def underlying = {
     ConfigWatch.tick
     _underlying.get()
