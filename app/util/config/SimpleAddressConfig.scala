@@ -4,18 +4,12 @@ package config
 import models.shared.AddressPool
 
 case class SimpleAddressConfig(
-  cfg: TypesafeConfiguration,
+  override val source: TypesafeConfiguration,
   orName: Option[String] = None,
   orStrict: Option[Boolean] = None
-) extends ConfigAccessor {
+) extends ConfigAccessor with ConfigSource {
 
   import AddressPool.poolName
-
-  implicit val configVal = ConfigValue.Optional
-
-  override protected def underlying = Some(cfg)
-  override protected def underlying_=(config: Option[TypesafeConfiguration]) {
-  }
 
   // Default pool to use, if configured, hidden since we may end up with a nake config which will
   // still end up with the DefaultPoolName

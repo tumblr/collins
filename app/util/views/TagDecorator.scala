@@ -1,23 +1,10 @@
 package util
 package views
 
-import config.Configurable
 import models.MetaWrapper
 
-import play.api.Configuration
 import play.api.mvc.Content
 import play.api.templates.Html
-
-object TagDecoratorConfig extends Configurable {
-  override val namespace = "tagdecorators"
-  override val referenceConfigFilename = "tagdecorators_reference.conf"
-
-  def decorators = new Configuration(getConfig("decorators"))
-
-  override protected def validateConfig() {
-    decorators
-  }
-}
 
 object TagDecorator {
 
@@ -45,9 +32,8 @@ object TagDecorator {
 
   protected def decorators: Map[String,Decorator] = {
     val decorators = TagDecoratorConfig.decorators
-    decorators.subKeys.foldLeft(Map[String,Decorator]()) { case(total,current) =>
-      val config = decorators.getConfig(current).get
-      Map(current -> createDecorator(current, config)) ++ total
+    decorators.map { case(name, config) =>
+      name -> createDecorator(config)
     }
   }
 
@@ -55,14 +41,12 @@ object TagDecorator {
     decorators.get(key)
   }
 
-  protected def createDecorator(key: String, config: Configuration): Decorator = {
-    val decorator = config.getString("decorator").getOrElse {
-      throw DecoratorConfigurationException(key, "decorator")
-    }
-    val parser = config.getString("valueParser")
+  protected def createDecorator(config: DecoratorConfig): Decorator = {
+    val decorator = config.decorator
+    val parser = config.valueParser
       .map(c => getClassInstance(c))
       .getOrElse(new IdentityParser)
-    Decorator(decorator, parser(key, config), config)
+    Decorator(config, parser(config.name, config))
   }
 
   protected def getClassInstance(s: String) = {
