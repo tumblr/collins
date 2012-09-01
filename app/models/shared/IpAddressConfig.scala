@@ -1,21 +1,21 @@
 package models
 package shared
 
-import util.config.{Configurable, ConfigurationAccessor, ConfigValue, TypesafeConfig}
+import util.config.{Configurable, ConfigAccessor, ConfigValue, TypesafeConfiguration}
 import util.{IpAddress, IpAddressCalc, MessageHelper}
 import util.concurrent.LockingBitSet
 
 case class SimpleAddressConfig(
-  cfg: TypesafeConfig,
+  cfg: TypesafeConfiguration,
   orName: Option[String] = None,
   orStrict: Option[Boolean] = None
-) extends ConfigurationAccessor {
+) extends ConfigAccessor {
   import AddressPool.poolName
 
   implicit val configVal = ConfigValue.Optional
 
   override protected def underlying = Some(cfg)
-  override protected def underlying_=(config: Option[TypesafeConfig]) {
+  override protected def underlying_=(config: Option[TypesafeConfiguration]) {
   }
 
   // Default pool to use, if configured, hidden since we may end up with a nake config which will
@@ -81,7 +81,7 @@ object IpAddressConfig extends Configurable {
 
   val DefaultPoolName = "DEFAULT"
 
-  def apply(config: Option[TypesafeConfig]): Option[IpAddressConfig] =
+  def apply(config: Option[TypesafeConfiguration]): Option[IpAddressConfig] =
     config.map(cfg => new IpAddressConfig(new SimpleAddressConfig(cfg)))
   def get(): Option[IpAddressConfig] = underlying.map { cfg =>
     new IpAddressConfig(new SimpleAddressConfig(cfg))

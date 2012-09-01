@@ -5,7 +5,7 @@ import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
 import java.io.File
 import scala.collection.JavaConverters._
 
-object ConfigWatch extends FileWatcher with ApplicationConfiguration {
+object ConfigWatch extends FileWatcher with AppConfig {
 
   def config = appConfig()
 

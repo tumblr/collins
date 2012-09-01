@@ -10,14 +10,14 @@ import java.io.File
  *  - Deprecate old Config class
  *  - Deprecate old Feature class
  */
-trait Configurable extends DelayedInit with ConfigurationAccessor with ApplicationConfiguration { self =>
+trait Configurable extends DelayedInit with ConfigAccessor with AppConfig { self =>
 
   def apply() {} // noop, here for dynamic loading
 
   // By default values are optional, except when they aren't. Methods returning default values do
-  // not use this. Methods without defaults will take a ConfigurationRequirement as an implicit
+  // not use this. Methods without defaults will take a ConfigRequirement as an implicit
   // argument, or fall back to this
-  implicit val configValue: ConfigurationRequirement = ConfigValue.Optional
+  implicit val configValue: ConfigRequirement = ConfigValue.Optional
 
   // Namespace owned by implementor
   val namespace: String
@@ -30,7 +30,7 @@ trait Configurable extends DelayedInit with ConfigurationAccessor with Applicati
   protected def validateConfig()
 
   // This is only assigned to during delayedInit call, after constructor code
-  private var referenceConfig: Option[TypesafeConfig] = None
+  private var referenceConfig: Option[TypesafeConfiguration] = None
 
   // Setup referenceConfig and register self with Registry
   override def delayedInit(x: => Unit) {
@@ -54,7 +54,7 @@ trait Configurable extends DelayedInit with ConfigurationAccessor with Applicati
     mergeReferenceAndSave(appConfig().underlying)
   }
 
-  def onChange(newConfig: TypesafeConfig) {
+  def onChange(newConfig: TypesafeConfiguration) {
     try {
       mergeReferenceAndSave(newConfig)
     } catch {
@@ -65,7 +65,7 @@ trait Configurable extends DelayedInit with ConfigurationAccessor with Applicati
     }
   }
 
-  protected def mergeReferenceAndSave(config: TypesafeConfig) {
+  protected def mergeReferenceAndSave(config: TypesafeConfiguration) {
     try {
       logger.trace("Trying to merge reference config and save")
       val savedConfig = underlying

@@ -3,7 +3,6 @@ package shared
 
 import util.{IpAddress, IpAddressCalc, MessageHelper}
 import util.concurrent.LockingBitSet
-import util.config.{Configurable, TypesafeConfig}
 
 case class AddressPool(
   name: String, network: String, startAddress: Option[String], gateway: Option[String]
