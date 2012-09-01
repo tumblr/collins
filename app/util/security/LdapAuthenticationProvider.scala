@@ -12,6 +12,7 @@ import javax.naming.directory._
 class LdapAuthenticationProvider() extends AuthenticationProvider {
 
   val config = LdapAuthenticationProviderConfig
+  override val authType = "ldap"
 
   // LDAP values
   val host = config.host

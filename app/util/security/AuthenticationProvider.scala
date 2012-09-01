@@ -23,6 +23,7 @@ trait AuthenticationProvider {
                                     }
                                   }
                                 )
+  def authType: String
   def authenticate(username: String, password: String): Option[User]
   def useCachedCredentials: Boolean = AuthenticationProviderConfig.cacheCredentials
   def cacheTimeout: Long = AuthenticationProviderConfig.cacheTimeout
@@ -54,12 +55,9 @@ object AuthenticationProvider {
 
   def get(name: String): AuthenticationProvider = {
     name match {
-      case "default" =>
-        Default
-      case "file" =>
-        new FileAuthenticationProvider()
-      case "ldap" =>
-        new LdapAuthenticationProvider()
+      case "default" => Default
+      case "file" => new FileAuthenticationProvider()
+      case "ldap" => new LdapAuthenticationProvider()
       case o =>
         throw new Exception("Invalid auth type %s specified".format(name))
     }
