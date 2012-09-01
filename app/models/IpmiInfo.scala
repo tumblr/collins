@@ -12,6 +12,10 @@ object IpmiConfig extends Configurable {
   override val namespace = "ipmi"
   override val referenceConfigFilename = "ipmi_reference.conf"
 
+  def overwriteConfig(config: Configuration) {
+    underlying_=(Some(config.underlying))
+  }
+
   def passwordLength = getInt("passwordLength", 12)
   def randomUsername = getBoolean("randomUsername", false)
   def username = getString("username").filter(_.nonEmpty)
