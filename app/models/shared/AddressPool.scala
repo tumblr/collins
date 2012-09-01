@@ -3,6 +3,7 @@ package shared
 
 import util.{IpAddress, IpAddressCalc, MessageHelper}
 import util.concurrent.LockingBitSet
+import util.config.SimpleAddressConfig
 
 case class AddressPool(
   name: String, network: String, startAddress: Option[String], gateway: Option[String]
@@ -100,7 +101,7 @@ object AddressPool extends MessageHelper("ip_address") {
 
   def poolName(pool: String) = pool.toUpperCase
 
-  def fromConfiguration(
+  def fromConfig(
     cfg: SimpleAddressConfig, uname: String, required: Boolean, strict: Boolean
   ): Option[AddressPool] = {
     val startAddress = cfg.startAddress
@@ -123,7 +124,7 @@ object AddressPool extends MessageHelper("ip_address") {
     }
   }
 
-  def fromConfiguration(
+  def fromConfig(
     cfg: Option[SimpleAddressConfig], uname: String, required: Boolean, strict: Boolean
   ): Option[AddressPool] = cfg match {
     case None =>
@@ -133,6 +134,6 @@ object AddressPool extends MessageHelper("ip_address") {
         ))
       else
         None
-    case Some(config) => fromConfiguration(config, uname, required, strict)
+    case Some(config) => fromConfig(config, uname, required, strict)
   }
 }

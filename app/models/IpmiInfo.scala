@@ -1,13 +1,15 @@
 package models
 
-import shared.{AddressPool,IpAddressConfig,SimpleAddressConfig}
+import shared.{AddressPool,IpAddressConfig}
 import util._
-import util.config.{Configurable, TypesafeConfiguration}
+import util.config.{Configurable, SimpleAddressConfig}
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import play.api.libs.json._
 
 object IpmiConfig extends Configurable {
+  import util.config.TypesafeConfiguration
+
   override val namespace = "ipmi"
   override val referenceConfigFilename = "ipmi_reference.conf"
 
