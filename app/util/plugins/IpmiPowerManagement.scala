@@ -5,7 +5,7 @@ import models.{Asset, IpmiInfo}
 
 import akka.util.Duration
 import akka.util.duration._
-import play.api.{Application, Configuration, PlayException, Plugin}
+import play.api.{Application, PlayException, Plugin}
 
 import com.tumblr.play.{AssetWithTag, PowerManagement, Power, PowerAction, PowerOff}
 import com.tumblr.play.{PowerOn, PowerSoft, PowerState, RebootSoft, RebootHard, Verify, Identify}
@@ -50,10 +50,6 @@ object IpmiPowerCommand {
 class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement {
   protected[this] val executor = Executors.newCachedThreadPool()
   protected[this] val pool = FuturePool(executor)
-
-  protected lazy val configuration: Option[Configuration] = {
-    app.configuration.getConfig("powermanagement")
-  }
 
   override def enabled: Boolean = {
     val isEnabled = PowerManagementConfig.enabled

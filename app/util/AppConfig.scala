@@ -2,7 +2,7 @@ package util
 
 import models.{Asset, User}
 import config.Feature
-import play.api.{Configuration, Mode, Play}
+import play.api.{Mode, Play}
 import play.api.i18n.Messages
 
 // Globally useful configurations

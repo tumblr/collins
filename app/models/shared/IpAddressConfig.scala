@@ -44,7 +44,7 @@ case class SimpleAddressConfig(
  *     key.pools.provisioning.startAddress="172.16.16.100"
  *     key.pools.provisionnig.name="PROVISIONING"
  */
-case class IpAddressConfiguration(source: SimpleAddressConfig) extends MessageHelper("ip_address") {
+case class IpAddressConfig(source: SimpleAddressConfig) extends MessageHelper("ip_address") {
 
   import AddressPool.poolName
 
@@ -65,7 +65,7 @@ case class IpAddressConfiguration(source: SimpleAddressConfig) extends MessageHe
       throw source.globalError(message("invalidDefaultPool", pool))
     )
   }.orElse(
-    AddressPool.fromConfiguration(source, IpAddressConfiguration.DefaultPoolName, false, false)
+    AddressPool.fromConfiguration(source, IpAddressConfig.DefaultPoolName, false, false)
   )
 
   def hasDefault: Boolean = defaultPool.isDefined
@@ -75,16 +75,16 @@ case class IpAddressConfiguration(source: SimpleAddressConfig) extends MessageHe
   def defaultPoolName: Option[String] = defaultPool.map(_.name)
 }
 
-object IpAddressConfiguration extends Configurable {
+object IpAddressConfig extends Configurable {
   override val namespace = "ipAddresses"
   override val referenceConfigFilename = "ipaddresses_reference.conf"
 
   val DefaultPoolName = "DEFAULT"
 
-  def apply(config: Option[TypesafeConfig]): Option[IpAddressConfiguration] =
-    config.map(cfg => new IpAddressConfiguration(new SimpleAddressConfig(cfg)))
-  def get(): Option[IpAddressConfiguration] = underlying.map { cfg =>
-    new IpAddressConfiguration(new SimpleAddressConfig(cfg))
+  def apply(config: Option[TypesafeConfig]): Option[IpAddressConfig] =
+    config.map(cfg => new IpAddressConfig(new SimpleAddressConfig(cfg)))
+  def get(): Option[IpAddressConfig] = underlying.map { cfg =>
+    new IpAddressConfig(new SimpleAddressConfig(cfg))
   }
 
   override protected def validateConfig() {

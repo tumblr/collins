@@ -1,8 +1,7 @@
 package models
 
-import shared.{AddressPool, IpAddressConfiguration}
+import shared.{AddressPool, IpAddressConfig}
 
-import play.api.Configuration
 import play.api.libs.json._
 import util.{IpAddress, IpAddressCalc}
 import util.plugins.Callback
@@ -38,7 +37,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
   override protected def deleteEventName: Option[String] = Some("ipAddresses_delete")
 
   val tableDef = table[IpAddresses]("ip_addresses")
-  lazy val AddressConfig = IpAddressConfiguration.get()
+  lazy val AddressConfig = IpAddressConfig.get()
 
   on(tableDef)(i => declare(
     i.id is(autoIncremented,primaryKey),

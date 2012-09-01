@@ -2,7 +2,6 @@ package util
 package config
 
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
-import play.api.Configuration
 import java.io.File
 import scala.collection.JavaConverters._
 

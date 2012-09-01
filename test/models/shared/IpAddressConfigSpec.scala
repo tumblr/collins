@@ -8,12 +8,12 @@ import org.specs2.matcher._
 import play.api.Configuration
 import com.typesafe.config.ConfigFactory
 
-class IpAddressConfigurationSpec extends mutable.Specification with test.ResourceFinder {
+class IpAddressConfigSpec extends mutable.Specification with test.ResourceFinder {
 
-  "IpAddressConfiguration" should {
+  "IpAddressConfig" should {
 
     "Provide None if given no config" in {
-      IpAddressConfiguration(None) must beNone
+      IpAddressConfig(None) must beNone
     }
 
     "Provide appropriate data if no pools are specified" in new IpAddressConfigMatchers {
@@ -21,7 +21,7 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
         "network" -> "172.16.32.0/20"
       )
       val cfg = Configuration.from(goodMap)
-      val ipCfg = IpAddressConfiguration(Some(cfg.underlying))
+      val ipCfg = IpAddressConfig(Some(cfg.underlying))
       ipCfg must beSome
       ipCfg.get must haveDefaultPool
       ipCfg.get.defaultPool must haveNetwork("172.16.32.0/20")
@@ -50,7 +50,7 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
     }
 
     "Provide appropriate data when pools specified without an explicit default" in new ValidIpAddressConfig("valid_address_pools_with_implicit_default.conf") {
-      config must haveDefaultPoolName(IpAddressConfiguration.DefaultPoolName)
+      config must haveDefaultPoolName(IpAddressConfig.DefaultPoolName)
       config must haveDefaultPool
       config.defaultPool must haveStartAddress("172.16.15.10")
       config.defaultPool must haveNetwork("172.16.15.0/24")
@@ -61,7 +61,7 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
         "network" -> "500.500.500.0/24"
       )
       val cfg = Configuration.from(badMap)
-      IpAddressConfiguration(Some(cfg.underlying)).get.pools must throwA[IllegalArgumentException]
+      IpAddressConfig(Some(cfg.underlying)).get.pools must throwA[IllegalArgumentException]
     }
 
     "Fail if provided an invalid network/startAddress combination" in {
@@ -70,7 +70,7 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
         "startAddress" -> "10.0.1.100"
       )
       val cfg = Configuration.from(badMap)
-      IpAddressConfiguration(Some(cfg.underlying)).get.pools must throwA[IllegalArgumentException]
+      IpAddressConfig(Some(cfg.underlying)).get.pools must throwA[IllegalArgumentException]
     }
 
     "Fail if provided an invalid configuration" in {
@@ -78,7 +78,7 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
         "startAddress" -> "172.16.32.100"
       )
       val cfg = Configuration.from(badMap)
-      IpAddressConfiguration(Some(cfg.underlying)).get.pools must throwA[Exception].like {
+      IpAddressConfig(Some(cfg.underlying)).get.pools must throwA[Exception].like {
         case e => e.getMessage must contain("ip_address.invalidConfig")
       }
     }
@@ -88,7 +88,7 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
         "pools.foo.thing" -> "",
         "pools.foo.thang" -> ""
       ))
-      IpAddressConfiguration(Some(cfg.underlying)).get.pools must throwA[Exception].like {
+      IpAddressConfig(Some(cfg.underlying)).get.pools must throwA[Exception].like {
         case e => e.getMessage must contain("ip_address.missingConfig")
       }
     }
@@ -98,7 +98,7 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
         "defaultPoolName" -> "test",
         "pools.foo.network" -> "172.16.16.0/24"
       ))
-      IpAddressConfiguration(Some(cfg.underlying)).get.pools must throwA[Exception].like {
+      IpAddressConfig(Some(cfg.underlying)).get.pools must throwA[Exception].like {
         case e => e.getMessage must contain("ip_address.invalidDefaultPool")
       }
     }
@@ -106,23 +106,23 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
 
 
   trait IpAddressConfigMatchers extends Scope {
-    def haveDefaultPool: Matcher[IpAddressConfiguration] = (i:IpAddressConfiguration) => (
+    def haveDefaultPool: Matcher[IpAddressConfig] = (i:IpAddressConfig) => (
       i.hasDefault, "defaultPool exists", "defaultPool doest not exist"
     )
     val notHaveDefaultPool = haveDefaultPool.not
 
-    def haveDefaultPoolName(name: String): Matcher[IpAddressConfiguration] = (i:IpAddressConfiguration) => (
+    def haveDefaultPoolName(name: String): Matcher[IpAddressConfig] = (i:IpAddressConfig) => (
       i.defaultPoolName.isDefined && i.defaultPoolName.get == name,
       "defaultPoolName exists and is %s".format(name),
       "expected defaultPoolName to be %s, was %s".format(name, i)
     )
-    def notHaveDefaultPoolName: Matcher[IpAddressConfiguration] = (i:IpAddressConfiguration) => (
+    def notHaveDefaultPoolName: Matcher[IpAddressConfig] = (i:IpAddressConfig) => (
       !i.defaultPoolName.isDefined,
       "defaultPoolName is not defined",
       "defaultPoolName is defined"
     )
 
-    def havePool(p: String): Matcher[IpAddressConfiguration] = (i:IpAddressConfiguration) => (
+    def havePool(p: String): Matcher[IpAddressConfig] = (i:IpAddressConfig) => (
       i.hasPool(p), "have pool %s".format(p), "do not have pool %s".format(p)
     )
 
@@ -143,7 +143,7 @@ class IpAddressConfigurationSpec extends mutable.Specification with test.Resourc
     val file = findResource(filename)
     val typesafeConfig =
       ConfigFactory.load(ConfigFactory.parseFileAnySyntax(file)).getConfig("ipAddresses")
-    val config = IpAddressConfiguration(Some(typesafeConfig)).get
+    val config = IpAddressConfig(Some(typesafeConfig)).get
     val pools = config.pools
     def pool(p: String) = config.pool(p)
   }
