@@ -15,21 +15,19 @@ class LdapAuthenticationProvider() extends AuthenticationProvider {
   override val authType = "ldap"
 
   // LDAP values
-  val host = config.host
-  val searchbase = config.searchbase
-  val useSsl = config.useSsl match {
+  def host = config.host
+  def searchbase = config.searchbase
+  def useSsl = config.useSsl match {
     case true => "ldaps"
     case _ => "ldap"
   }
-  val url = "%s://%s/%s".format(useSsl, host, searchbase)
-  val usersub = config.usersub
-  val groupsub = config.groupsub
-  val groupattrib = config.groupAttribute
-
-  logger.debug("LDAP URL: %s".format(url))
+  def url = "%s://%s/%s".format(useSsl, host, searchbase)
+  def usersub = config.usersub
+  def groupsub = config.groupsub
+  def groupattrib = config.groupAttribute
 
   // setup for LDAP
-  protected val env = Map(
+  protected def env = Map(
     Context.INITIAL_CONTEXT_FACTORY -> "com.sun.jndi.ldap.LdapCtxFactory",
     Context.PROVIDER_URL -> url,
     Context.SECURITY_AUTHENTICATION -> "simple")
@@ -45,6 +43,8 @@ class LdapAuthenticationProvider() extends AuthenticationProvider {
   protected def groupQuery(username: String): String = {
     "(&(cn=*)(%s=%s))".format(groupattrib, getSecurityPrincipal(username))
   }
+
+  logger.debug("LDAP URL: %s".format(url))
 
   // Authenticate via LDAP
   override def authenticate(username: String, password: String): Option[User] = {

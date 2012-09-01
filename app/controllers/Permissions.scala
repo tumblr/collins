@@ -23,83 +23,81 @@ object Permissions {
   }
 
   object Feature extends PermSpec("feature") {
-    val CanSeePasswords = spec("canSeePasswords", AdminSpec)
-    val NoRateLimit = spec("noRateLimit", AdminSpec)
+    def CanSeePasswords = spec("canSeePasswords", AdminSpec)
+    def NoRateLimit = spec("noRateLimit", AdminSpec)
   }
 
   object Admin extends PermSpec("controllers.Admin") {
-    val Spec = spec(AdminSpec)
-    val Stats = spec("stats", Spec)
-    val ClearCache = spec("clearCache", Stats)
+    def Spec = spec(AdminSpec)
+    def Stats = spec("stats", Spec)
+    def ClearCache = spec("clearCache", Stats)
   }
 
-  object AssetApi {
-    val Spec = SecuritySpec.fromConfig("controllers.AssetApi", LoggedIn)
-    val CreateAsset = SecuritySpec.fromConfig("controllers.AssetApi.createAsset", AdminSpec)
-    val DeleteAsset = SecuritySpec.fromConfig("controllers.AssetApi.deleteAsset", AdminSpec)
-    val DeleteAssetAttribute =
-      SecuritySpec.fromConfig("controllers.AssetApi.deleteAssetAttribute", AdminSpec)
-    val GetAsset = SecuritySpec.fromConfig("controllers.AssetApi.getAsset", Spec)
-    val GetAssets = SecuritySpec.fromConfig("controllers.AssetApi.getAssets", Spec)
-    val UpdateAsset = SecuritySpec.fromConfig("controllers.AssetApi.updateAsset", AdminSpec)
-    val UpdateAssetForMaintenance =
-      SecuritySpec.fromConfig("controllers.AssetApi.updateAssetForMaintenance", AdminSpec)
+  object AssetApi extends PermSpec("controllers.AssetApi") {
+    def Spec = spec(LoggedIn)
+    def CreateAsset = spec("createAsset", AdminSpec)
+    def DeleteAsset = spec("deleteAsset", AdminSpec)
+    def DeleteAssetAttribute = spec("deleteAssetAttribute", AdminSpec)
+    def GetAsset = spec("getAsset", Spec)
+    def GetAssets = spec("getAssets", Spec)
+    def UpdateAsset = spec("updateAsset", AdminSpec)
+    def UpdateAssetForMaintenance = spec("updateAssetForMaintenance", AdminSpec)
   }
 
   object AssetLogApi extends PermSpec("controllers.AssetLogApi") {
-    val Spec = spec(AdminSpec)
-    val Create = spec("submitLogData", Spec)
-    val Get = spec("getLogData", LoggedIn)
-    val GetAll = spec("getAllLogData", Spec)
+    def Spec = spec(AdminSpec)
+    def Create = spec("submitLogData", Spec)
+    def Get = spec("getLogData", LoggedIn)
+    def GetAll = spec("getAllLogData", Spec)
   }
 
   object AssetManagementApi extends PermSpec("controllers.AssetManagementApi") {
-    val Spec = spec(LoggedIn)
-    val PowerStatus = spec("powerStatus", Spec)
-    val PowerManagement = spec("powerManagement", AdminSpec)
-    val ProvisionAsset = spec("provisionAsset", AdminSpec)
-    val GetProvisioningProfiles = spec("getProvisioningProfiles", AdminSpec)
+    def Spec = spec(LoggedIn)
+    def PowerStatus = spec("powerStatus", Spec)
+    def PowerManagement = spec("powerManagement", AdminSpec)
+    def ProvisionAsset = spec("provisionAsset", AdminSpec)
+    def GetProvisioningProfiles = spec("getProvisioningProfiles", AdminSpec)
   }
 
   object AssetWebApi extends PermSpec("controllers.AssetWebApi") {
-    val Spec = spec(AdminSpec)
-    val CancelAsset = spec("cancelAsset", Spec)
+    def Spec = spec(AdminSpec)
+    def CancelAsset = spec("cancelAsset", Spec)
   }
 
   object Help extends PermSpec("controllers.Help") {
-    val Spec = spec(LoggedIn)
-    val Index = spec("index", Spec)
+    def Spec = spec(LoggedIn)
+    def Index = spec("index", Spec)
   }
 
   object IpmiApi extends PermSpec("controllers.IpmiApi") {
-    val Spec = spec(AdminSpec)
-    val UpdateIpmi = spec("updateIpmi", Spec)
+    def Spec = spec(AdminSpec)
+    def UpdateIpmi = spec("updateIpmi", Spec)
   }
 
   object IpAddressApi extends PermSpec("controllers.IpAddressApi") {
-    val Spec = spec(AdminSpec)
-    val AllocateAddress = spec("allocateAddress", Spec)
-    val AssetFromAddress = spec("assetFromAddress", LoggedIn)
-    val AssetsFromPool = spec("assetsFromPool", LoggedIn)
-    val GetForAsset = spec("getForAsset", LoggedIn)
-    val GetAddressPools = spec("getAddressPools", LoggedIn)
-    val UpdateAddress = spec("updateAddress", Spec)
-    val PurgeAddresses = spec("purgeAddresses", Spec)
+    def Spec = spec(AdminSpec)
+    def AllocateAddress = spec("allocateAddress", Spec)
+    def AssetFromAddress = spec("assetFromAddress", LoggedIn)
+    def AssetsFromPool = spec("assetsFromPool", LoggedIn)
+    def GetForAsset = spec("getForAsset", LoggedIn)
+    def GetAddressPools = spec("getAddressPools", LoggedIn)
+    def UpdateAddress = spec("updateAddress", Spec)
+    def PurgeAddresses = spec("purgeAddresses", Spec)
   }
 
   object Resources extends PermSpec("controllers.Resources") {
-    val Spec = spec(LoggedIn)
-    val CreateAsset = spec("createAsset", AdminSpec)
-    val CreateForm = spec("displayCreateForm", AdminSpec)
-    val Find = spec("find", Spec)
-    val Index = spec("index", Spec)
-    val Intake = spec("intake", AdminSpec)
+    def Spec = spec(LoggedIn)
+    def CreateAsset = spec("createAsset", AdminSpec)
+    def CreateForm = spec("displayCreateForm", AdminSpec)
+    def Find = spec("find", Spec)
+    def Index = spec("index", Spec)
+    def Intake = spec("intake", AdminSpec)
   }
 
   object TagApi extends PermSpec("controllers.TagApi") {
-    val Spec = spec(LoggedIn)
-    val GetTags = spec("getTags", Spec)
-    val GetTagValues = spec("getTagValues", AdminSpec)
+    def Spec = spec(LoggedIn)
+    def GetTags = spec("getTags", Spec)
+    def GetTagValues = spec("getTagValues", AdminSpec)
   }
 
 }
