@@ -11,6 +11,7 @@ import io.Source
 class FileAuthenticationProvider() extends AuthenticationProvider {
 
   def authfile = FileAuthenticationProviderConfig.userfile
+  override val authType = "file"
 
   private val watcher = FileWatcher.watchWithResults(authfile, Map.empty[String,UserImpl]) { file =>
     usersFromFile(file)

@@ -11,3 +11,5 @@ profileOfH2Tests.html
 test.rb
 *.db
 _site
+RUNNING_PID
+conf/solr/data/

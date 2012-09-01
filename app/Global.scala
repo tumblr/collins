@@ -5,29 +5,19 @@ import controllers.ApiResponse
 import models.Model
 import util.{CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
-import util.config.Registry
+import util.config.{CryptoConfig, Registry}
 import util.security.{AuthenticationAccessor, AuthenticationProvider, AuthenticationProviderConfig}
 import java.io.File
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
 
-  private val RequiredConfig = Set(
-    "crypto.key", "ipmi.network"
-  )
-
   override def onStart(app: Application) {
     setupLogging(app)
     Model.initialize()
     verifyConfig(app)
     val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
-    val key = app.configuration.getConfig("crypto") match {
-      case None => throw new RuntimeException("No crypto.key specified in config")
-      case Some(config) => config.getString("key") match {
-        case None => throw new RuntimeException("No crypto.key specified in config")
-        case Some(k) => k
-      }
-    }
+    val key = CryptoConfig.key
     setAuthentication(auth)
     setCryptoKey(key)
   }
@@ -100,23 +90,8 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
 
   // Make sure we have a valid configuration before we start
   protected def verifyConfig(app: Application) {
-    val config = app.configuration
     Registry.initializeAll(app)
     Registry.validate
-    RequiredConfig.foreach { key =>
-      key.split("\\.", 2) match {
-        case Array(sub,key) =>
-          config.getConfig(sub).map { _.getString(key).getOrElse(
-            throw config.globalError("No %s.%s found in configuration".format(sub, key))
-          )}.getOrElse(
-            throw config.globalError("No configuration found '" + sub + "'")
-          )
-        case _ =>
-          config.getConfig(key).getOrElse(
-            throw config.globalError("No configuration found '" + key + "'")
-          )
-      }
-    }
   }
 
   // Implements CryptoAccessor
@@ -137,7 +112,18 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
       case false => authentication = Some(auth)
     }
   }
-  def getAuthentication() = authentication.get
+  def getAuthentication() = {
+    val authen = authentication.get
+    if (AuthenticationProviderConfig.authType != authen.authType) {
+      try {
+        val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
+        authentication = Some(auth)
+      } catch {
+        case e =>
+      }
+    }
+    authen
+  }
 
   protected def setupLogging(app: Application) {
     if (Play.isDev(app)) {
