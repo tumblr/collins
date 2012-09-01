@@ -45,7 +45,7 @@ object Solr {
 
   def updateAsset(asset: Asset){updateAssets(asset :: Nil)}
 
-  def updateAssetByTag(tag: String) = Asset.findByTag(tag, false).foreach{updateAsset}
+  def updateAssetByTag(tag: String) = Asset.findByTag(tag).foreach{updateAsset}
 
   def removeAssetByTag(tag: String) = inPlugin {_.removeAssetByTag(tag)}
     

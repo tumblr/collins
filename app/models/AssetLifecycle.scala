@@ -43,7 +43,7 @@ object AssetLifecycle {
     import IpmiInfo.Enum._
     try {
       val _status = status.getOrElse(Status.Enum.Incomplete)
-      Asset.inTransaction {
+      val res = Asset.inTransaction {
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
           case true => Some(IpmiInfo.createForAsset(asset))
@@ -51,8 +51,10 @@ object AssetLifecycle {
         }
         InternalTattler.informational(asset, None,
           "Initial intake successful, status now %s".format(_status.toString))
-        Right(Tuple2(asset, ipmi))
+        Tuple2(asset, ipmi)
       }
+      Asset.flushCache(res._1)
+      Right(res)
     } catch {
       case e =>
         // FIXME once we have logging for non-assets

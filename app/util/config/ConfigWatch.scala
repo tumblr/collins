@@ -12,13 +12,17 @@ object ConfigWatch extends FileWatcher with AppConfig {
   val DummyFile = System.getProperty("java.io.tmpdir")
 
   private lazy val rootConfig: String = Option(config.underlying.origin.filename).orElse {
+    Option(System.getProperty("config.file"))
+  }.orElse {
     val cfg = config.underlying
     try {
       val refValue = cfg.getValue("application.secret")
       val origin = refValue.origin
       Option(origin.filename)
     } catch {
-      case e => Option(DummyFile)
+      case e =>
+        println("Error doing stuff in %s: %s".format(cfg.origin, e.getMessage))
+        Option(DummyFile)
     }
   }.getOrElse {
     throw new Exception("Config has no file based origin, can not watch for changes")

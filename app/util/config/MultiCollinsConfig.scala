@@ -3,7 +3,7 @@ package config
 
 import models.AssetType
 
-object MultiCollins extends Configurable {
+object MultiCollinsConfig extends Configurable {
 
   override val namespace = "multicollins"
   override val referenceConfigFilename = "multicollins_reference.conf"

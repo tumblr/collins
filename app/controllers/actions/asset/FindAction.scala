@@ -9,7 +9,7 @@ import models.AssetType.{Enum => AssetTypeEnum}
 import models.Status.{Enum => AssetStatusEnum}
 
 import util.AttributeResolver
-import util.config.MultiCollins
+import util.config.MultiCollinsConfig
 import util.security.SecuritySpecification
 
 import play.api.libs.json._
@@ -43,7 +43,7 @@ class FindAction(
     case afdh: AssetFinderDataHolder =>
       val AssetFinderDataHolder(af, ra, op, de, rl) = afdh
       try {
-        val results = if (MultiCollins.enabled && rl.map{_.isTruthy}.getOrElse(false)) {
+        val results = if (MultiCollinsConfig.enabled && rl.map{_.isTruthy}.getOrElse(false)) {
           logger.debug("Performing remote asset find")
           Asset.findMulti(pageParams, ra, af, op, de.map{_.isTruthy}.getOrElse(false) || isHtml)
         } else {

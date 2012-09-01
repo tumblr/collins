@@ -12,9 +12,7 @@ case class DecoratorConfig(val name: String, override val source: TypesafeConfig
   }
   def delimiter = getString("delimiter")
   def valueParser = getString("valueParser")
-  def getIndex(i: Int): Map[String,String] = getObjectMap(i.toString).map { case(name, o) =>
-    name -> o.get(name).render()
-  }
+  def getIndex(i: Int): Map[String,String] = getStringMap(i.toString)
   def validateConfig() {
     decorator
   }
