@@ -7,7 +7,6 @@ import util.{CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
 import util.config.Registry
 import util.security.{AuthenticationAccessor, AuthenticationProvider, AuthenticationProviderConfig}
-import util.plugins.solr.Solr
 import java.io.File
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
@@ -20,7 +19,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   override def onStart(app: Application) {
     setupLogging(app)
     Model.initialize()
-    verifyConfiguration(app)
+    verifyConfig(app)
     val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
     val key = app.configuration.getConfig("crypto") match {
       case None => throw new RuntimeException("No crypto.key specified in config")
@@ -99,7 +98,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   }
 
   // Make sure we have a valid configuration before we start
-  protected def verifyConfiguration(app: Application) {
+  protected def verifyConfig(app: Application) {
     val config = app.configuration
     Registry.initializeAll(app)
     Registry.validate

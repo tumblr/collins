@@ -12,7 +12,7 @@ import org.apache.solr.common.{SolrDocument, SolrInputDocument}
 import org.apache.solr.core.CoreContainer
 import org.apache.solr.client.solrj.impl.{HttpSolrServer, XMLResponseParser}
 
-import play.api.{Application, Configuration, Logger, Play, PlayException, Plugin}
+import play.api.{Application, Logger, Play, PlayException, Plugin}
 import play.api.libs.concurrent._
 import play.api.libs.concurrent.Akka._
 import play.api.Play.current

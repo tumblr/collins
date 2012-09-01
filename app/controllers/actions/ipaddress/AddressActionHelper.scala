@@ -3,7 +3,7 @@ package actions
 package ipaddress
 
 import models.IpAddresses
-import models.shared.IpAddressConfiguration
+import models.shared.IpAddressConfig
 import util.IpAddress
 import play.api.libs.json._
 
@@ -24,10 +24,10 @@ trait AddressActionHelper { self: SecureAction =>
     }
 
   def convertPoolName(name: String, emptyToDef: Boolean = false) = name match {
-    case default if default.equalsIgnoreCase(IpAddressConfiguration.DefaultPoolName) =>
+    case default if default.equalsIgnoreCase(IpAddressConfig.DefaultPoolName) =>
       ""
     case empty if empty.isEmpty && emptyToDef =>
-      IpAddressConfiguration.DefaultPoolName
+      IpAddressConfig.DefaultPoolName
     case other => other.toUpperCase
   }
 }

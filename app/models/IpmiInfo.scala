@@ -1,6 +1,6 @@
 package models
 
-import shared.{AddressPool,IpAddressConfiguration,SimpleAddressConfig}
+import shared.{AddressPool,IpAddressConfig,SimpleAddressConfig}
 import util._
 import util.config.Configurable
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
@@ -30,8 +30,8 @@ object IpmiConfig extends Configurable {
     }
   }
 
-  def get(): Option[IpAddressConfiguration] = underlying.map { cfg =>
-    new IpAddressConfiguration(new SimpleAddressConfig(cfg))
+  def get(): Option[IpAddressConfig] = underlying.map { cfg =>
+    new IpAddressConfig(new SimpleAddressConfig(cfg))
   }
   override protected def validateConfig() {
     require(passwordLength > 0 && passwordLength <= 16, "ipmi.passwordLength must be between 1 and 16")

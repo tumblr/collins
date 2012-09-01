@@ -2,7 +2,7 @@ package util
 package config
 
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
-import play.api.{Configuration, Logger}
+import play.api.Logger
 import java.io.File
 
 /**

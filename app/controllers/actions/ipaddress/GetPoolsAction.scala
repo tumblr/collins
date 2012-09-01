@@ -3,7 +3,7 @@ package actions
 package ipaddress
 
 import models.{IpAddresses, Truthy}
-import models.shared.{AddressPool, IpAddressConfiguration}
+import models.shared.AddressPool
 import util.security.SecuritySpecification
 
 import play.api.libs.json._

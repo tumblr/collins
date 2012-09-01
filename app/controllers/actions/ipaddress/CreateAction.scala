@@ -3,7 +3,7 @@ package actions
 package ipaddress
 
 import models.{Asset, IpAddresses}
-import models.shared.IpAddressConfiguration
+import models.shared.IpAddressConfig
 import util.ApiTattler
 import util.security.SecuritySpecification
 
@@ -53,7 +53,7 @@ case class CreateAction(
         case true =>
           // if default pool being used, store that pool name if the pool name isn't DEFAULT
           val addressConfig = IpAddresses.AddressConfig.get
-          addressConfig.defaultPoolName.filter(_ != IpAddressConfiguration.DefaultPoolName)
+          addressConfig.defaultPoolName.filter(_ != IpAddressConfig.DefaultPoolName)
                                         .getOrElse("")
         case false => pool
       }
