@@ -163,6 +163,7 @@ class SolrPlugin(app: Application) extends Plugin {
  */
 class SolrUpdater extends Actor {
 
+  // FIXME this is not thread safe
   var queue = new collection.mutable.Queue[Asset]
 
   //mutex to prevent multiple concurrent scheduler calls

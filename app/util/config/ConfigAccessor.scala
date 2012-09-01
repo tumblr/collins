@@ -2,7 +2,7 @@ package util
 package config
 
 import play.api.PlayException
-import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
+import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject, ConfigValue => TypesafeConfigValue}
 import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.AtomicReference
 
@@ -47,6 +47,11 @@ trait ConfigAccessor {
     getValue(key, _.getObject(key).toConfig.root.asScala.map {
       case(key: String, value: ConfigObject) => (key -> value)
     }).getOrElse(Map.empty[String,ConfigObject]).toMap
+
+  protected def getStringMap(key: String): Map[String,String] =
+    getValue(key, _.getObject(key).toConfig.root.asScala.map { case(key: String, value) =>
+      (key -> value.unwrapped.toString)
+    }).getOrElse(Map.empty[String,String]).toMap
 
   protected def getString(key: String, default: String): String =
     getString(key)(ConfigValue.Optional).getOrElse(default)

@@ -2,7 +2,8 @@ package models
 
 import conversions._
 import util.{LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
-import util.config.{Feature, MultiCollins, NodeclassifierConfig}
+import util.config.{Feature, MultiCollinsConfig, NodeclassifierConfig}
+import util.plugins.Cache
 import util.power.PowerUnits
 import util.views.Formatter.dateFormat
 
@@ -11,7 +12,6 @@ import play.api.libs.json._
 import play.api.libs.ws.WS
 import play.api._
 import play.api.mvc._
-import play.api.cache.Cache
 import play.api.Play.current
 
 import org.squeryl.Schema
@@ -274,7 +274,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
     "Asset.findByTag(%s)".format(asset.tag.toLowerCase),
     "Asset.findById(%d)".format(asset.id)
   )
-
+  def flushCache(asset: Asset) = cacheKeys(asset).foreach { k =>
+    Cache.invalidate(k)
+  }
   object Messages extends MessageHelper("asset") {
     def intakeError(t: String, a: Asset) = "intake.error.%s".format(t.toLowerCase) match {
       case msg if msg == "intake.error.new" =>
@@ -363,15 +365,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }
   def get(a: Asset) = findById(a.id).get
 
-  /**
-   * checkCache is needed for solr re-indexing, avoids indexing out-of-date data
-   */
-  def findByTag(tag: String, checkCache: Boolean = true): Option[Asset] = {
-    lazy val op = tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
-    if (checkCache) {
-      getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase))(op)
-    } else inTransaction {
-      op
+  def findByTag(tag: String): Option[Asset] = {
+    getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
+      tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
     }
   }
 
@@ -401,16 +397,16 @@ object Asset extends Schema with AnormAdapter[Asset] {
       createdBefore = None,
       updatedAfter = None,
       updatedBefore = None,
-      assetType = Some(MultiCollins.instanceAssetType)
+      assetType = Some(MultiCollinsConfig.instanceAssetType)
     )
     val findLocations = Asset
       .find(PageParams(0,50,"ASC"), instanceFinder)
       .items
       .collect{case a: Asset => a}
-      .filter{_.tag != MultiCollins.thisInstance}
+      .filter{_.tag != MultiCollinsConfig.thisInstance}
     //iterate over the locations, sending requests to each one and aggregate their results
     val remoteClients = findLocations.flatMap { locationAsset => 
-      val locationAttribute = MultiCollins.locationAttribute
+      val locationAttribute = MultiCollinsConfig.locationAttribute
       locationAsset.getMetaAttribute(locationAttribute).map(_.getValue) match {
         case None =>
           logger.warn("No location attribute for remote location asset %s".format(locationAsset.tag))

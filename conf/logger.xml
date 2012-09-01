@@ -3,7 +3,7 @@
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
      <file>/var/log/collins/application.log</file>
      <encoder>
-       <pattern>%date - [%level] - from %logger in %thread %message%n%xException{100}%n</pattern>
+       <pattern>%date - [%level] - from %logger in %thread %message%n%xException{100}</pattern>
      </encoder>
    </appender>
 

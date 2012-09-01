@@ -29,7 +29,7 @@ object Registry {
    * registration. Thus when validate is called, all classes extending Configurable are validated.
    */
   def initializeAll(app: Application) {
-    if (initialized.compareAndSet(false, true) && !skipInitialization) {
+    if (initialized.compareAndSet(false, true)) {
       ConfigWatch.tick
       logger.info("Initializing all subclasses")
       getSubclassesOfConfigurable(app).foreach { k =>
@@ -46,23 +46,6 @@ object Registry {
 
   def validate() {
     registered.values.asScala.foreach { c => c.initialize() }
-  }
-
-  protected def skipInitialization: Boolean = {
-    if (!AppConfig.isDev()) {
-      // prod doesn't have the odd class reloader problem that dev does
-      false
-    } else {
-      val file = new File("%s/registry.tmp".format(System.getProperty("java.io.tmpdir")))
-      if (file.createNewFile) {
-        logger.info("Created temp file, skipping initialization")
-        file.deleteOnExit()
-        false
-      } else {
-        logger.info("Tmp file %s already exists, no need to initialized".format(file.toString))
-        true
-      }
-    }
   }
 
   // Given a class attempt to call the apply method on it
@@ -88,21 +71,8 @@ object Registry {
 
   // Return a Set of classes extending util.config.Configurable
   protected def getSubclassesOfConfigurable(app: Application) = {
-    import org.reflections._
-    import org.reflections.util.{ConfigurationBuilder, FilterBuilder, ClasspathHelper}
-    import org.reflections.scanners._
-    try {
-      val r = new Reflections(new ConfigurationBuilder()
-        .filterInputsBy(new FilterBuilder().include(FilterBuilder.prefix("")))
-        .addUrls(ClasspathHelper.forPackage(".", app.classloader))
-        .addUrls(ClasspathHelper.forManifest())
-        .setScanners(new SubTypesScanner()))
-      val c = Class.forName("util.config.Configurable")
-      r.getSubTypesOf(c).asScala
-    } catch {
-      case e =>
-        logger.error("Error finding registerable: %s".format(e.getMessage), e)
-        Set()
+    app.configuration.underlying.getStringList("config.validations").asScala.toSet[String].map { k =>
+      Class.forName(k)
     }
   }
 }
