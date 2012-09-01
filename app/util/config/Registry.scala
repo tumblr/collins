@@ -40,7 +40,7 @@ object Registry {
         val klassName = getNormalizedClassName(k.getName)
         logger.info("Initializing %s".format(klassName))
         getClassFromName(klassName).foreach { klass =>
-          callApplyOnClass(klass)
+          callOnceOnClass(klass)
         }
       }
     } else {
@@ -53,12 +53,12 @@ object Registry {
   }
 
   // Given a class attempt to call the apply method on it
-  protected def callApplyOnClass[_](klass: Class[_]) = try {
-    val meth = klass.getDeclaredMethod("apply")
+  protected def callOnceOnClass[_](klass: Class[_]) = try {
+    val meth = klass.getDeclaredMethod("once")
     meth.invoke(null)
   } catch {
     case e =>
-      logger.info("Error calling apply method on %s: %s".format(klass.getName, e.getMessage), e)
+      logger.info("Error calling once method on %s: %s".format(klass.getName, e.getMessage), e)
   }
 
   // Given a class name return the class

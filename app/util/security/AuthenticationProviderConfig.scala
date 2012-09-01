@@ -46,12 +46,11 @@ object LdapAuthenticationProviderConfig extends Configurable {
 
   override protected def validateConfig() {
     if (AuthenticationProviderConfig.authType == "ldap") {
-      return
+      host
+      searchbase
+      usersub
+      groupsub
+      groupAttribute
     }
-    host
-    searchbase
-    usersub
-    groupsub
-    groupAttribute
   }
 }
