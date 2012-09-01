@@ -23,7 +23,7 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
         "authentication.file.userfile" -> authFile.getAbsolutePath
       )
       val config = Configuration.from(configData)
-      _root_.util.config.ApplicationConfiguration.globalConfig = Some(config)
+      _root_.util.config.AppConfig.globalConfig = Some(config)
       FileAuthenticationProviderConfig.initialize
       val provider = AuthenticationProvider.get("file")
       provider must haveClass[FileAuthenticationProvider]
