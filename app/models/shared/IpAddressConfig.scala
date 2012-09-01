@@ -1,33 +1,9 @@
 package models
 package shared
 
-import util.config.{Configurable, ConfigAccessor, ConfigValue, TypesafeConfiguration}
 import util.{IpAddress, IpAddressCalc, MessageHelper}
 import util.concurrent.LockingBitSet
-
-case class SimpleAddressConfig(
-  cfg: TypesafeConfiguration,
-  orName: Option[String] = None,
-  orStrict: Option[Boolean] = None
-) extends ConfigAccessor {
-  import AddressPool.poolName
-
-  implicit val configVal = ConfigValue.Optional
-
-  override protected def underlying = Some(cfg)
-  override protected def underlying_=(config: Option[TypesafeConfiguration]) {
-  }
-
-  // Default pool to use, if configured, hidden since we may end up with a nake config which will
-  // still end up with the DefaultPoolName
-  def defaultPoolName: Option[String] = getString("defaultPoolName").map(poolName(_)).filter(_.nonEmpty)
-  def name = getString("name").orElse(orName)
-  def strict = orStrict.orElse(getBoolean("strict")).getOrElse(true)
-  def pools = getObjectMap("pools")
-  def startAddress = getString("startAddress")
-  def gateway = getString("gateway")
-  def network = getString("network")
-}
+import util.config.{Configurable, ConfigAccessor, ConfigValue, SimpleAddressConfig}
 
 /**
  * Represents an IP Address configuration.
@@ -54,7 +30,7 @@ case class IpAddressConfig(source: SimpleAddressConfig) extends MessageHelper("i
   // PoolName -> AddressPool map, if pools are specified
   val pools: Map[String,AddressPool] = source.pools.map { case(name, poolCfg) =>
     val simpleConfig = SimpleAddressConfig(poolCfg.toConfig, Some(name), Some(strict))
-    val addressPool = AddressPool.fromConfiguration(simpleConfig, name, true, strict).get
+    val addressPool = AddressPool.fromConfig(simpleConfig, name, true, strict).get
     poolName(addressPool.name) -> addressPool
   }.toMap
 
@@ -65,7 +41,7 @@ case class IpAddressConfig(source: SimpleAddressConfig) extends MessageHelper("i
       throw source.globalError(message("invalidDefaultPool", pool))
     )
   }.orElse(
-    AddressPool.fromConfiguration(source, IpAddressConfig.DefaultPoolName, false, false)
+    AddressPool.fromConfig(source, IpAddressConfig.DefaultPoolName, false, false)
   )
 
   def hasDefault: Boolean = defaultPool.isDefined
@@ -76,6 +52,8 @@ case class IpAddressConfig(source: SimpleAddressConfig) extends MessageHelper("i
 }
 
 object IpAddressConfig extends Configurable {
+  import util.config.TypesafeConfiguration
+
   override val namespace = "ipAddresses"
   override val referenceConfigFilename = "ipaddresses_reference.conf"
 
