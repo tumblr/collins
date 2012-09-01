@@ -69,11 +69,11 @@ object AuthenticationProvider {
     val p = privileges
     if (p.hasConcern(concern)) {
       val c = p.getConcern(concern)
-      logger.debug("Concern '%s' has concerns '%s'".format(
+      logger.trace("Concern '%s' has concerns '%s'".format(
         concern, c.mkString(",")))
       Some(c)
     } else {
-      logger.debug("Missing configuration for concern %s".format(concern))
+      logger.trace("Missing configuration for concern %s".format(concern))
       None
     }
   }
@@ -87,7 +87,7 @@ object AuthenticationProvider {
         user.roles.intersect(spec.requiredCredentials).size > 0
       }
     } else {
-      logger.debug("Have concern '%s'".format(concern))
+      logger.trace("Have concern '%s'".format(concern))
       loggedAuth {
         user.roles
           .find { role =>
@@ -115,7 +115,7 @@ object AuthenticationProvider {
 
   protected[util] def privileges: Privileges = {
     val p = watcher.getFileContents()
-    logger.debug("Privileges - %s".format(p))
+    logger.trace("Privileges - %s".format(p))
     p
   }
 

@@ -23,6 +23,10 @@ object Registry {
     registered.values.asScala.foreach { c => c.onChange(config) }
   }
 
+  def shutdown() {
+    ConfigWatch.stop()
+  }
+
   /**
    * Here we discover all classes implementing Configurable and call the apply() method which brings
    * that singleton instance to life, and in the process handles basic initialization and ensures
@@ -30,7 +34,7 @@ object Registry {
    */
   def initializeAll(app: Application) {
     if (initialized.compareAndSet(false, true)) {
-      ConfigWatch.tick
+      ConfigWatch.start
       logger.info("Initializing all subclasses")
       getSubclassesOfConfigurable(app).foreach { k =>
         val klassName = getNormalizedClassName(k.getName)
