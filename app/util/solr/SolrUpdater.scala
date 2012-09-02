@@ -22,8 +22,8 @@ import scala.collection.JavaConverters._
  */
 class SolrUpdater extends Actor {
 
-  private[this] val set = Collections.newSetFromMap[Asset](
-    new ConcurrentHashMap[Asset,java.lang.Boolean]()
+  private[this] val set = Collections.newSetFromMap[String](
+    new ConcurrentHashMap[String,java.lang.Boolean]()
   )
   private[this] val logger = Logger("SolrUpdater")
 
@@ -42,18 +42,22 @@ class SolrUpdater extends Actor {
   def receive = {
     case asset: Asset =>
       if (shouldIndex(asset)) {
-        set.add(asset)
-      }
-      if (scheduled.compareAndSet(false, true)) {
-        logger.info("Scheduling update")
-        context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
+        set.add(asset.tag)
+        if (scheduled.compareAndSet(false, true)) {
+          logger.debug("Scheduling update, saw %s".format(asset.tag))
+          context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
+        } else {
+          logger.debug("Not scheduling update, saw %s".format(asset.tag))
+        }
       }
     case Reindex =>
       if (scheduled.get == true) {
         val toRemove = set.asScala.toSeq
-        logger.info("Got Reindex task, working on %d assets".format(toRemove.size))
-        Solr.plugin.foreach(_.updateAssets(toRemove))
+        val assets = toRemove.map(t => Asset.findByTag(t)).filter(_.isDefined).map(_.get)
+        logger.debug("Got Reindex task, working on %d assets, set is %d".format(toRemove.size, set.size))
+        Solr.plugin.foreach(_.updateAssets(assets))
         set.removeAll(toRemove.asJava)
+        logger.debug("Set size now %d".format(set.size))
         scheduled.set(false)
       }
   }
