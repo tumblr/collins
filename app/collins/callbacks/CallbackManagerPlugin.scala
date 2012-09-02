@@ -10,7 +10,10 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
   protected[this] val executor = Executors.newCachedThreadPool()
   protected[this] val pool = FuturePool(executor)
 
-  override def enabled: Boolean = CallbackConfig.enabled
+  override def enabled: Boolean = {
+    CallbackConfig.pluginInitialize(app.configuration)
+    CallbackConfig.enabled
+  }
 
   // overrides Plugin.onStart
   override def onStart() {

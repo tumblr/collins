@@ -34,6 +34,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
   // This is only assigned to during delayedInit call, after constructor code
   private var referenceConfig: Option[TypesafeConfiguration] = None
 
+  // Used with plugins that need to use configs before the system is initialized
   def pluginInitialize(config: PlayConfiguration) {
     once
     mergeReferenceAndSave(config.underlying)
