@@ -2,10 +2,10 @@ package util
 package plugins
 
 import play.api.{Play, Plugin}
-import com.tumblr.play.{CallbackManagerPlugin, CallbackManagerInterface}
+import collins.callbacks.{CallbackManagerPlugin, CallbackManager}
 import java.beans.PropertyChangeEvent
 
-object Callback extends CallbackManagerInterface {
+object Callback extends CallbackManager {
   def pluginEnabled: Option[CallbackManagerPlugin] = {
     Play.maybeApplication.flatMap { app =>
       app.plugin[CallbackManagerPlugin].filter(_.enabled)
