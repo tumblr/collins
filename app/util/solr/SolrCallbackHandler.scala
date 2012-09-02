@@ -23,7 +23,7 @@ case class SolrCallbackHandler(server: SolrServer, updater: ActorRef) extends Ca
   }
 
   protected def processValue(v: AnyRef) = v match {
-    case a: Asset => if (a.deleted.isDefined) {
+    case a: Asset => if (a.deleted.isDefined && a.isDecommissioned) {
       removeAssetByTag(a.tag)
     } else {
       updater ! a

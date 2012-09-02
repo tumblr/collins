@@ -157,6 +157,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   def isConfiguration(): Boolean = asset_type == AssetType.Enum.Config.id
 
   def isAllocated(): Boolean = status == models.Status.Enum.Allocated.id
+  def isDecommissioned(): Boolean = status == models.Status.Enum.Decommissioned.id
   def isIncomplete(): Boolean = status == models.Status.Enum.Incomplete.id
   def isNew(): Boolean = status == models.Status.Enum.New.id
   def isProvisioning(): Boolean = status == models.Status.Enum.Provisioning.id

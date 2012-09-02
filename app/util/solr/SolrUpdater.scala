@@ -63,5 +63,10 @@ class SolrUpdater extends Actor {
   }
 
   protected def shouldIndex(asset: Asset): Boolean =
-    Asset.findByTag(asset.tag).map(_.deleted.isDefined == false).getOrElse(false)
+    Asset.findByTag(asset.tag).map { oasset =>
+      if (oasset.deleted.isDefined == true && oasset.isDecommissioned)
+        false
+      else
+        true
+    }.getOrElse(false)
 }
