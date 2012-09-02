@@ -9,10 +9,12 @@ trait CallbackManager {
   protected val pcs = new PropertyChangeSupport(this)
 
   def fire(propertyName: String, oldValue: AnyRef, newValue: AnyRef) {
+    logger.debug("Firing %s".format(propertyName))
     pcs.firePropertyChange(propertyName, oldValue, newValue)
   }
 
   def on(propertyName: String)(f: PropertyChangeEvent => Unit) {
+    logger.debug("Registering %s".format(propertyName))
     pcs.addPropertyChangeListener(propertyName, new PropertyChangeListener {
       override def propertyChange(pce: PropertyChangeEvent): Unit = f(pce)
     })
