@@ -34,7 +34,10 @@ class SolrPlugin(app: Application) extends Plugin {
     case None => throw new RuntimeException("Attempted to get Solr server when no server is initialized")
   }
 
-  override def enabled = SolrConfig.enabled
+  override def enabled = {
+    SolrConfig.pluginInitialize(app.configuration)
+    SolrConfig.enabled
+  }
 
   val serializer = new FlatSerializer
 

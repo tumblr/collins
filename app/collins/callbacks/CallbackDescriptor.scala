@@ -23,6 +23,24 @@ case class CallbackDescriptor(name: String, override val source: TypesafeConfigu
       throw CallbackConfigException("action", name)
     }
     val atype = cfg.get("type").flatMap(CallbackActionType(_)).getOrElse(CallbackActionType.Exec)
+    val cmd = getCommand
+    CallbackAction(cmd, atype)
+  }
+
+  def validateConfig() {
+    logger.debug("validateConfig - event - %s".format(getString("on","NONE")))
+    on
+    logger.debug("validateConfig - matchCondition - %s".format(matchCondition.toString))
+    matchCondition
+    logger.debug("validateConfig - matchAction - %s".format(matchAction.toString))
+    matchAction
+  }
+
+  protected def current = getStringMap("when.current")
+  protected def previous = getStringMap("when.previous")
+  // Get an action.command as a sequence of strings, detecting whether the command was specified as
+  // a string or as a list
+  protected def getCommand(): Seq[String] = {
     val cmd = getConfigValue("action.command") match {
       case None =>
         throw CallbackConfigException("command", "%s.action".format(name))
@@ -37,18 +55,7 @@ case class CallbackDescriptor(name: String, override val source: TypesafeConfigu
     if (filtered.isEmpty) {
       throw CallbackConfigException("command", "%s.action".format(name))
     }
-    CallbackAction(filtered, atype)
+    filtered
   }
 
-  protected def current = getStringMap("when.current")
-  protected def previous = getStringMap("when.previous")
-
-  def validateConfig() {
-    logger.debug("validateConfig - event - %s".format(getString("on","NONE")))
-    on
-    logger.debug("validateConfig - matchCondition - %s".format(matchCondition.toString))
-    matchCondition
-    logger.debug("validateConfig - matchAction - %s".format(matchAction.toString))
-    matchAction
-  }
 }

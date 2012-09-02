@@ -22,6 +22,9 @@ prepackaged version. You must build yourself from source.
 Follow the building quickstart but instead of breaking out of the play console
 or running the package step, just type `run` and then visit `http://localhost:9000`.
 
+Alternatively, to run in dev with a different configuration do
+`run -Dconfig.file=conf/alt.conf` where `alt.conf` is your alternate configuration.
+
 Edits you make to the code just require reloading the page (or hitting an API
 endpoint). The code will be recompiled on the fly.
 
