@@ -20,11 +20,10 @@ import play.api.Play.current
 import util.plugins.Callback
 import util.views.Formatter
 
+import java.net.URL
+
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
-
-
-
 
 
 object Solr {
@@ -69,10 +68,10 @@ object Solr {
     new EmbeddedSolrServer(coreContainer, "")
   }
 
-  private[solr] def getNewRemoteServer(remoteUrl: String) = {
+  private[solr] def getNewRemoteServer(remoteUrl: URL) = {
     //out-of-the-box config from solrj wiki
     Logger.logger.debug("Using external Solr Server")
-    val server = new HttpSolrServer(remoteUrl);
+    val server = new HttpSolrServer(remoteUrl.toString);
     Logger.logger.debug("test")
     server.setSoTimeout(1000);  // socket read timeout
     server.setConnectionTimeout(100);
