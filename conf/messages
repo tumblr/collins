@@ -63,4 +63,6 @@ powerconfiguration.uniqueComponents.invalid=Specified uniqueComponent ''{0}'' no
 powerconfiguration.validation.missingRequired=Power component ''{0}'' is required, but expected key ''{1}'' was not found
 powerconfiguration.validation.nonUnique=Power component ''{0}'' requires unique values across power units, but found duplicate value ''{1}''
 
+solr.invalidHome=solr.embeddedSolrHome ''{0}'' is not writable or not a directory
+solr.invalidUrl=solr.useEmbeddedServer is false and solr.externalUrl ''{0}'' is not valid
 sorttype.invalid=Invalid sort type ''{0}''

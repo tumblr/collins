@@ -4,6 +4,7 @@ package config
 import play.api.PlayException
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject, ConfigValue => TypesafeConfigValue}
 import scala.collection.JavaConverters._
+import java.net.{MalformedURLException, URL}
 import java.util.concurrent.atomic.AtomicReference
 
 // Provide access to values from an underlying configuration
@@ -74,7 +75,7 @@ trait ConfigAccessor {
       case None =>
         cfgv match {
           case ConfigValue.Required =>
-            val keyname = ns.map { n => "%s.%s".format(n, key) }.getOrElse(key)
+            val keyname = getFqNs(key)
             throw new Exception("Required configuration %s not found".format(keyname))
           case _ =>
             None
@@ -94,6 +95,22 @@ trait ConfigAccessor {
     else
       set
   }
+
+  protected def getUrl(key: String): Option[URL] = {
+    getString(key)(ConfigValue.Optional)
+      .filter(_.nonEmpty)
+      .flatMap { url =>
+        try {
+          Some(new URL(url))
+        } catch {
+          case e: MalformedURLException =>
+            None
+        }
+      }
+  }
+
+  // get a fully qualified namespace + key if namespace is specified
+  protected def getFqNs(key: String) = ns.map(n => "%s.%s".format(n, key)).getOrElse(key)
 
   private def getValue[V](path: String, p: TypesafeConfiguration => V): Option[V] = try {
     underlying.flatMap(cfg => Option(p(cfg)))

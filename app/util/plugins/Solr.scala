@@ -18,6 +18,7 @@ import play.api.libs.concurrent.Akka._
 import play.api.Play.current
 
 import util.plugins.Callback
+import util.solr.SolrConfig
 import util.views.Formatter
 
 import AssetMeta.ValueType
@@ -32,20 +33,17 @@ class SolrPlugin(app: Application) extends Plugin {
     case None => throw new RuntimeException("Attempted to get Solr server when no server is initialized")
   }
 
-  private def config = app.configuration.getConfig("solr")
-
-  lazy val solrHome = config.flatMap{_.getString("embeddedSolrHome")}.getOrElse(throw new IllegalArgumentException("No solrHome set!"))
-  override lazy val enabled = config.flatMap{_.getBoolean("enabled")}.getOrElse(false)
-  lazy val useEmbedded = config.flatMap{_.getBoolean("useEmbeddedServer")}.getOrElse(true)
-  lazy val repopulateOnStartup = config.flatMap{_.getBoolean("repopulateOnStartup")}.getOrElse(false)
-  lazy val reactToUpdates = config.flatMap{_.getBoolean("reactToUpdates")}.getOrElse(true)
-  lazy val remoteUrl: Option[String] = config.flatMap{_.getString("externalUrl")}
+  def solrHome = SolrConfig.embeddedSolrHome
+  override def enabled = SolrConfig.enabled
+  def useEmbedded = SolrConfig.useEmbeddedServer
+  def repopulateOnStartup = SolrConfig.repopulateOnStartup
+  def reactToUpdates = SolrConfig.reactToUpdates
+  def remoteUrl = SolrConfig.externalUrl
 
   val serializer = new FlatSerializer
 
   //this must be lazy so it gets called after the system exists
   lazy val updater = Akka.system.actorOf(Props[SolrUpdater], name = "solr_updater")
-
 
   override def onStart() {
     if (enabled) {
@@ -56,11 +54,8 @@ class SolrPlugin(app: Application) extends Plugin {
       System.setProperty("org.apache.commons.logging.simplelog.http.wire", "WARN");
       System.setProperty("org.apache.commons.logging.simplelog.http.wire.content", "WARN");
       System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.commons.httpclient", "WARN");
-      _server = Some(if (useEmbedded) {
-        Solr.getNewEmbeddedServer(solrHome)
-      } else {
-        Solr.getNewRemoteServer(remoteUrl.getOrElse(throw new IllegalArgumentException("Missing required solr.externalUrl")))
-      })
+
+      setupServer
 
       if (repopulateOnStartup) {
         populate()
@@ -71,6 +66,14 @@ class SolrPlugin(app: Application) extends Plugin {
     }
   }
 
+  private def setupServer() {
+    val server = if (useEmbedded) {
+      Solr.getNewEmbeddedServer(solrHome)
+    } else {
+      Solr.getNewRemoteServer(remoteUrl.get)
+    }
+    _server = Some(server)
+  }
   /**
    * Setup callbacks on all operations that modify asset data, so we can
    * properly reindex the updated asset in Solr
@@ -149,8 +152,6 @@ class SolrPlugin(app: Application) extends Plugin {
   override def onStop() {
     _server.foreach{case s: EmbeddedSolrServer => s.shutdown}
   }
-
-
 
 }
 

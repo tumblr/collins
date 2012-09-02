@@ -8,7 +8,7 @@ case class DecoratorConfig(val name: String, override val source: TypesafeConfig
 {
   def between = getString("between","")
   def decorator = getString("decorator").getOrElse {
-    throw DecoratorConfigurationException(name, "decorator")
+    throw DecoratorConfigException(name, "decorator")
   }
   def delimiter = getString("delimiter")
   def valueParser = getString("valueParser")

@@ -15,7 +15,7 @@ class DelimiterParser(delimiter: String) extends DecoratorParser {
   def this() = this(" ")
   def apply(key: String, config: DecoratorConfig) = {
     val d = config.delimiter.getOrElse {
-      throw DecoratorConfigurationException(key, "delimiter")
+      throw DecoratorConfigException(key, "delimiter")
     }
     new DelimiterParser(d)
   }
