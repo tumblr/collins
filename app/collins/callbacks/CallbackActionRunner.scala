@@ -38,7 +38,4 @@ trait CallbackActionRunner[T] extends CallbackActionHandler {
     METHOD_CALL_REGEX.findAllIn(commandString).matchData.map { md =>
       MethodReplacement(md.group(0), md.group(1))
     }.toSet
-
-  protected def getValue(pce: PropertyChangeEvent): AnyRef =
-    Option(pce.getNewValue).getOrElse(pce.getOldValue)
 }

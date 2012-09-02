@@ -7,7 +7,7 @@ object AuthenticationProviderConfig extends Configurable {
   override val namespace = "authentication"
   override val referenceConfigFilename = "authentication_reference.conf"
 
-  def adminGroup = getStringSet("adminGroup")
+  def adminGroup = getStringSet("adminGroup").map(_.toLowerCase)
   def cacheCredentials = getBoolean("cacheCredentials", false)
   def cacheTimeout = getMilliseconds("cacheTimeout").getOrElse(0L)
   lazy val permissionsFile = getString("permissionsFile")(ConfigValue.Required).get

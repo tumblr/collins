@@ -13,7 +13,7 @@ trait CallbackManager {
     pcs.firePropertyChange(propertyName, oldValue, newValue)
   }
 
-  def on(propertyName: String)(f: PropertyChangeEvent => Unit) {
+  def on(propertyName: String, f: CallbackActionHandler) {
     logger.debug("Registering %s".format(propertyName))
     pcs.addPropertyChangeListener(propertyName, new PropertyChangeListener {
       override def propertyChange(pce: PropertyChangeEvent): Unit = f(pce)

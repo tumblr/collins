@@ -11,7 +11,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
   private[this] val logger = Logger.logger
 
   override def onStart(app: Application) {
-    println(util.solr.SolrConfig.enabled)
     val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
     val key = CryptoConfig.key
     setAuthentication(auth)

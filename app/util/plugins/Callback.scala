@@ -2,7 +2,7 @@ package util
 package plugins
 
 import play.api.{Play, Plugin}
-import collins.callbacks.{CallbackManagerPlugin, CallbackManager}
+import collins.callbacks.{CallbackActionHandler, CallbackManagerPlugin, CallbackManager}
 import java.beans.PropertyChangeEvent
 
 object Callback extends CallbackManager {
@@ -24,9 +24,16 @@ object Callback extends CallbackManager {
     }
   }
 
-  override def on(propertyName: String)(f: PropertyChangeEvent => Unit) {
+  def on(propertyName: String)(fn: PropertyChangeEvent => Unit) {
+    val cbah = new CallbackActionHandler {
+      override def apply(pce: PropertyChangeEvent) = fn(pce)
+    }
+    on(propertyName, cbah)
+  }
+
+  override def on(propertyName: String, f: CallbackActionHandler) {
     pluginEnabled { plugin =>
-      plugin.on(propertyName)(f)
+      plugin.on(propertyName, f)
     }
   }
 
