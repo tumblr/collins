@@ -3,6 +3,7 @@ package solr
 
 import akka.actor._
 import akka.util.duration._
+import play.api.Logger
 
 import plugins.solr.Solr 
 import models.Asset
@@ -24,6 +25,7 @@ class SolrUpdater extends Actor {
   private[this] val set = Collections.newSetFromMap[Asset](
     new ConcurrentHashMap[Asset,java.lang.Boolean]()
   )
+  private[this] val logger = Logger("SolrUpdater")
 
   //mutex to prevent multiple concurrent scheduler calls
   val scheduled = new AtomicBoolean(false)
@@ -48,6 +50,7 @@ class SolrUpdater extends Actor {
     case Reindex =>
       if (scheduled.get == true) {
         val toRemove = set.asScala.toSeq
+        logger.info("Got Reindex task, working on %d assets".format(toRemove.size))
         Solr.plugin.foreach(_.updateAssets(toRemove))
         set.removeAll(toRemove.asJava)
         scheduled.set(false)
