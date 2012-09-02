@@ -11,9 +11,6 @@ case class SecuritySpec(
 
 object SecuritySpec {
   val LegacyMarker = "SecuritySpec Version 1.1"
-  def apply(isSecure: Boolean, requiredCredentials: String) =
-    new SecuritySpec(isSecure, Set(requiredCredentials))
-  def apply(creds: Set[String]) = new SecuritySpec(true, creds)
   def apply(secure: Boolean, creds: Seq[String]) =
     new SecuritySpec(secure, creds.toSet)
   def apply(isSecure: Boolean) = new SecuritySpec(isSecure, Set[String]())
@@ -26,4 +23,3 @@ object SecuritySpec {
     }
   }
 }
-

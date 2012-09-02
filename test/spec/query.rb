@@ -4,11 +4,9 @@ require 'collins_client'
 describe "Asset Search" do
 
   def checkTags query, expectedTags
-    assets = @client.search query
-    tags = assets.map do |asset|
-      asset.tag
-    end
-    tags.should eql expectedTags
+    assets = @client.search query, 500
+    tags = assets.map {|a| a.tag}
+    tags.should include(*expectedTags)
   end
     
   
@@ -52,13 +50,14 @@ describe "Asset Search" do
 
   it "asset status" do
     assets_1 = @client.search 'status = allocated AND hostname=web-a*', 1000
-    assets_1.size.should eq 37
+    assets_1.size.should eq 19
 
     assets_1 = @client.search 'status = new', 1000
-    assets_1.size.should eq 53
+    assets_1.size.should eq 14
   end
 
-  it "status and type and not" do
+  it "with type and negated status" do
+    res = @client.search 'type = configuration AND NOT status = incomplete'
     checkTags  'type = configuration AND NOT status = incomplete', [
       "nodeclassifer_web_10g",
       "nodeclassifier_compute",

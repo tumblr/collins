@@ -37,7 +37,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
   // Used with plugins that need to use configs before the system is initialized
   def pluginInitialize(config: PlayConfiguration) {
     once
-    mergeReferenceAndSave(config.underlying)
+    mergeReferenceAndSave(config.underlying, true)
   }
 
   // Setup referenceConfig and register self with Registry
@@ -84,7 +84,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
     }
   }
 
-  protected def mergeReferenceAndSave(config: TypesafeConfiguration) {
+  protected def mergeReferenceAndSave(config: TypesafeConfiguration, skipValidation: Boolean = false) {
     try {
       logger.trace("Trying to merge reference config and save")
       val savedConfig = underlying
@@ -98,8 +98,10 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
       }.getOrElse(config.resolve)
       self.underlying = Some(mergedConfig)
       try {
-        logger.debug("Validating configuration for %s".format(getClass.getName))
-        validateConfig()
+        if (!skipValidation) {
+          logger.debug("Validating configuration for %s".format(getClass.getName))
+          validateConfig()
+        }
       } catch {
         case e =>
           logger.error("Error validating configuration for %s: %s".format(

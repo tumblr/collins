@@ -32,20 +32,21 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
 
   override protected def loadListeners(): Unit = {
     CallbackConfig.registry.foreach { callback =>
-      val cb = createCallback(callback)
-      on(cb.propertyName) { pce => cb.handle(pce) }
+      setupCallback(callback)
     }
   }
 
-  protected def createCallback(descriptor: CallbackDescriptor): Callback = {
+  protected def setupCallback(descriptor: CallbackDescriptor) {
     val eventName = descriptor.on
     val matchCondition = descriptor.matchCondition
     val currentConfigMatches = CallbackMatcher(matchCondition.current, _.getNewValue)
     val previousConfigMatches = CallbackMatcher(matchCondition.previous, _.getOldValue)
     val handlesMatch = createMatchHandler(descriptor.matchAction)
-    CallbackImpl(eventName, { pce =>
-      if (previousConfigMatches(pce) && currentConfigMatches(pce)) {
-        handlesMatch(pce)
+    on(eventName, new CallbackActionHandler {
+      override def apply(pce: PropertyChangeEvent) {
+        if (previousConfigMatches(pce) && currentConfigMatches(pce)) {
+          handlesMatch(pce)
+        }
       }
     })
   }
