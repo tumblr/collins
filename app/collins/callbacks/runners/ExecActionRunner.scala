@@ -16,7 +16,12 @@ case class ExecActionRunner(command: Seq[String]) extends CallbackActionRunner[S
   }
 
   override protected def runCommand(cmd: Seq[String]) {
-    val process = Process(cmd)
+    val process = if (cmd.size == 1) {
+      // If we got a string which was converted to a list, use the normal Process parsing
+      Process(cmd.head)
+    } else {
+      Process(cmd)
+    }
     val stdout = new StringBuilder()
     val stderr = new StringBuilder()
     val exitStatus = try {
