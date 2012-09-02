@@ -2,11 +2,12 @@ package collins
 package callbacks
 
 import util.config.{ConfigAccessor, ConfigSource, ConfigValue, TypesafeConfiguration}
+import com.typesafe.config.ConfigValueType
 
 import play.api.Logger
 
 case class CallbackConditional(previous: Option[String], current: Option[String])
-case class CallbackAction(command: String, actionType: CallbackActionType = CallbackActionType.Exec)
+case class CallbackAction(command: Seq[String], actionType: CallbackActionType = CallbackActionType.Exec)
 
 case class CallbackDescriptor(name: String, override val source: TypesafeConfiguration)
   extends ConfigAccessor
@@ -22,10 +23,21 @@ case class CallbackDescriptor(name: String, override val source: TypesafeConfigu
       throw CallbackConfigException("action", name)
     }
     val atype = cfg.get("type").flatMap(CallbackActionType(_)).getOrElse(CallbackActionType.Exec)
-    val cmd = cfg.get("command").getOrElse {
+    val cmd = getConfigValue("action.command") match {
+      case None =>
+        throw CallbackConfigException("command", "%s.action".format(name))
+      case Some(v) => v.valueType match {
+        case ConfigValueType.LIST =>
+          getStringList("action.command")
+        case o =>
+          Seq(getString("action.command")(ConfigValue.Required).get)
+      }
+    }
+    val filtered = cmd.filter(_.nonEmpty)
+    if (filtered.isEmpty) {
       throw CallbackConfigException("command", "%s.action".format(name))
     }
-    CallbackAction(cmd, atype)
+    CallbackAction(filtered, atype)
   }
 
   protected def current = getStringMap("when.current")

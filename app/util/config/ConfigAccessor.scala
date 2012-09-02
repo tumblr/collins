@@ -32,6 +32,9 @@ trait ConfigAccessor {
   protected def getConfig(key: String): TypesafeConfiguration =
     getValue(key, _.getObject(key)).map(_.toConfig).getOrElse(ConfigFactory.empty).resolve
 
+  protected def getConfigValue(key: String): Option[TypesafeConfigValue] =
+    getValue(key, _.getValue(key))
+
   protected def getInt(key: String): Option[Int] = getValue(key, _.getInt(key))
   protected def getInt(key: String, default: Int): Int =
     getInt(key).getOrElse(default)

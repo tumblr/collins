@@ -5,15 +5,17 @@ package runners
 import scala.collection.mutable.StringBuilder
 import scala.sys.process._
 
-case class ExecActionRunner(command: String) extends CallbackActionRunner[String] {
+case class ExecActionRunner(command: Seq[String]) extends CallbackActionRunner[Seq[String]] {
 
-  override def formatCommand(v: AnyRef, replacements: Set[MethodReplacement]): String = {
-    replacements.foldLeft(command) { case(string, replacement) =>
-      string.replaceAllLiterally(replacement.originalValue, replacement.newValue)
+  override def formatCommand(v: AnyRef, replacements: Set[MethodReplacement]): Seq[String] = {
+    command.map { cmd =>
+      replacements.foldLeft(cmd) { case(string, replacement) =>
+        string.replaceAllLiterally(replacement.originalValue, replacement.newValue)
+      }
     }
   }
 
-  override protected def runCommand(cmd: String) {
+  override protected def runCommand(cmd: Seq[String]) {
     val process = Process(cmd)
     val stdout = new StringBuilder()
     val stderr = new StringBuilder()
