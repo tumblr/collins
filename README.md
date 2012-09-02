@@ -54,7 +54,6 @@ limitations under the License.
 
 Email collins-sm@googlegroups.com or see the mailing list archive at https://groups.google.com/forum/#!forum/collins-sm
 
-
 # Users
 
 If you are using the supplied users.conf, usernames and passwords are:
