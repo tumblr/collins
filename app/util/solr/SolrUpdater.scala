@@ -4,8 +4,13 @@ package solr
 import akka.actor._
 import akka.util.duration._
 
-import _root_.util.plugins.solr.Solr 
+import plugins.solr.Solr 
 import models.Asset
+
+import java.util.Collections
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
+import scala.collection.JavaConverters._
 
 /**
  * The SolrUpdater queues asset updates for batch updating.  Most importantly,
@@ -16,11 +21,12 @@ import models.Asset
  */
 class SolrUpdater extends Actor {
 
-  // FIXME this is not thread safe
-  var queue = new collection.mutable.Queue[Asset]
+  private[this] val set = Collections.newSetFromMap[Asset](
+    new ConcurrentHashMap[Asset,java.lang.Boolean]()
+  )
 
   //mutex to prevent multiple concurrent scheduler calls
-  var scheduled = false
+  val scheduled = new AtomicBoolean(false)
 
   case object Reindex
 
@@ -32,17 +38,22 @@ class SolrUpdater extends Actor {
    * condition where an asset is deleted immediately after it is updated
    */
   def receive = {
-    case asset: Asset => if ((!queue.contains(asset)) && Asset.findByTag(asset.tag).map{_.deleted.isDefined == false}.getOrElse(false)) {
-      queue += asset
-      if (!scheduled) {
-        context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
-        scheduled = true
+    case asset: Asset =>
+      if (shouldIndex(asset)) {
+        set.add(asset)
       }
-    }
-    case Reindex => {
-      Solr.plugin.foreach{_.updateAssets(queue.toSeq)}
-      queue = new collection.mutable.Queue[Asset]
-      scheduled = false
-    }
+      if (scheduled.compareAndSet(false, true)) {
+        context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
+      }
+    case Reindex =>
+      if (scheduled.get == true) {
+        val toRemove = set.asScala.toSeq
+        Solr.plugin.foreach(_.updateAssets(toRemove))
+        set.removeAll(toRemove.asJava)
+        scheduled.set(false)
+      }
   }
+
+  protected def shouldIndex(asset: Asset): Boolean =
+    Asset.findByTag(asset.tag).map(_.deleted.isDefined == false).getOrElse(false)
 }
