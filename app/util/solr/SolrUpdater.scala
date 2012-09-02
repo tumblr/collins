@@ -45,6 +45,7 @@ class SolrUpdater extends Actor {
         set.add(asset)
       }
       if (scheduled.compareAndSet(false, true)) {
+        logger.info("Scheduling update")
         context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
       }
     case Reindex =>
