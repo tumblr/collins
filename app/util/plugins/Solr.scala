@@ -27,18 +27,14 @@ import AssetMeta.ValueType._
 class SolrPlugin(app: Application) extends Plugin {
 
   private[this] var _server: Option[SolrServer] = None
+  private[this] val logger = Logger("SolrPlugin")
 
   def server = _server match {
     case Some(server) => server
     case None => throw new RuntimeException("Attempted to get Solr server when no server is initialized")
   }
 
-  def solrHome = SolrConfig.embeddedSolrHome
   override def enabled = SolrConfig.enabled
-  def useEmbedded = SolrConfig.useEmbeddedServer
-  def repopulateOnStartup = SolrConfig.repopulateOnStartup
-  def reactToUpdates = SolrConfig.reactToUpdates
-  def remoteUrl = SolrConfig.externalUrl
 
   val serializer = new FlatSerializer
 
@@ -57,20 +53,20 @@ class SolrPlugin(app: Application) extends Plugin {
 
       setupServer
 
-      if (repopulateOnStartup) {
+      if (SolrConfig.repopulateOnStartup) {
         populate()
       }
-      if (reactToUpdates) {
+      if (SolrConfig.reactToUpdates) {
         initializeCallbacks()
       }
     }
   }
 
   private def setupServer() {
-    val server = if (useEmbedded) {
-      Solr.getNewEmbeddedServer(solrHome)
+    val server = if (SolrConfig.useEmbeddedServer) {
+      Solr.getNewEmbeddedServer(SolrConfig.embeddedSolrHome)
     } else {
-      Solr.getNewRemoteServer(remoteUrl.get)
+      Solr.getNewRemoteServer(SolrConfig.externalUrl.get)
     }
     _server = Some(server)
   }
@@ -83,7 +79,7 @@ class SolrPlugin(app: Application) extends Plugin {
       case a: Asset => if (a.deleted.isDefined) {
         removeAssetByTag(a.tag) //deletes are soft right now
       } else {
-        //Logger.logger.debug("preparing to index asset " + a.toString
+        //logger.debug("preparing to index asset " + a.toString
         updater ! a
       }
       case v: AssetMetaValue => updater ! v.getAsset
@@ -92,9 +88,9 @@ class SolrPlugin(app: Application) extends Plugin {
         case a: Asset => removeAssetByTag(a.tag)
         case v: AssetMetaValue => updater ! v.getAsset
         case i: IpAddresses => updater ! i.getAsset
-        case other => Logger.logger.error("Unknown old value in update callback %s".format((if (other == null) "null" else other.toString)))
+        case other => logger.error("Unknown old value in update callback %s".format((if (other == null) "null" else other.toString)))
       }
-      case other => Logger.logger.error("Unknown new value in update callback %s".format(other.toString))      
+      case other => logger.error("Unknown new value in update callback %s".format(other.toString))      
     }
     Callback.on("asset_update")(callback)
     Callback.on("asset_create")(callback)
@@ -110,13 +106,13 @@ class SolrPlugin(app: Application) extends Plugin {
   def populate() = Akka.future { 
     _server.map{ server => 
       //server.deleteByQuery( "*:*" );
-      Logger.logger.debug("Populating Solr with Assets")
+      logger.debug("Populating Solr with Assets")
       updateAssets(Asset.find(PageParams(0,10000,"asc"), AssetFinder.empty).items.collect{case a: Asset => a})
-    }.getOrElse(Logger.logger.warn("attempted to populate solr when no server was initialized"))
+    }.getOrElse(logger.warn("attempted to populate solr when no server was initialized"))
   }
 
   def updateAsset(asset: Asset) = {
-    Logger.logger.debug("updating asset " + asset.toString)
+    logger.debug("updating asset " + asset.toString)
     //updateAssets(asset :: Nil)
   }
 
@@ -129,12 +125,12 @@ class SolrPlugin(app: Application) extends Plugin {
         server.add(fuckingJava)
         server.commit()
         if (assets.size == 1) {
-          Logger.logger.debug("Re-indexing asset " + assets.head.toString)
+          logger.debug("Re-indexing asset " + assets.head.toString)
         } else {
-          Logger.logger.info("Indexed %d assets".format(docs.size))
+          logger.info("Indexed %d assets".format(docs.size))
         }
       } else {
-        Logger.logger.warn("No assets to index!")
+        logger.warn("No assets to index!")
       }
     }
   }
@@ -144,7 +140,7 @@ class SolrPlugin(app: Application) extends Plugin {
       if (tag != "*") {
         server.deleteByQuery("TAG:" + tag)
         server.commit()
-        Logger.logger.info("Removed asset %s from index".format(tag))
+        logger.info("Removed asset %s from index".format(tag))
       }
     }
   }
