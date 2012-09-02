@@ -2,20 +2,16 @@ import play.api._
 import play.api.mvc._
 
 import controllers.ApiResponse
-import models.Model
 import util.{CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
-import util.config.{CryptoConfig, Registry}
+import util.config.CryptoConfig
 import util.security.{AuthenticationAccessor, AuthenticationProvider, AuthenticationProviderConfig}
-import java.io.File
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
 
   override def onStart(app: Application) {
-    setupLogging(app)
-    Model.initialize()
-    verifyConfig(app)
+    println(util.solr.SolrConfig.enabled)
     val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
     val key = CryptoConfig.key
     setAuthentication(auth)
@@ -34,13 +30,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     } else {
       super.onRouteRequest(request)
     }
-  }
-
-  override def onStop(app: Application) {
-    logger.info("Stopping application")
-    super.onStop(app)
-    Model.shutdown()
-    Registry.shutdown()
   }
 
   override def onError(request: RequestHeader, ex: Throwable): Result = {
@@ -88,12 +77,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  // Make sure we have a valid configuration before we start
-  protected def verifyConfig(app: Application) {
-    Registry.initializeAll(app)
-    Registry.validate
-  }
-
   // Implements CryptoAccessor
   var cryptoKey: Option[String] = None
   protected def setCryptoKey(key: String) {
@@ -125,14 +108,4 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     authen
   }
 
-  protected def setupLogging(app: Application) {
-    if (Play.isDev(app)) {
-      Option(this.getClass.getClassLoader.getResource("dev_logger.xml"))
-        .map(_.getFile())
-        .foreach { file =>
-          System.setProperty("logger.file", file)
-          Logger.init(new File("."))
-        }
-    }
-  }
 }

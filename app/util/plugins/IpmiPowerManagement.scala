@@ -52,6 +52,7 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
   protected[this] val pool = FuturePool(executor)
 
   override def enabled: Boolean = {
+    PowerManagementConfig.pluginInitialize(app.configuration)
     val isEnabled = PowerManagementConfig.enabled
     val isMe = PowerManagementConfig.getClassOption.getOrElse("").contains("IpmiPowerManagement")
     isEnabled && isMe
