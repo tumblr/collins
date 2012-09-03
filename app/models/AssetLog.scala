@@ -34,6 +34,7 @@ object LogSource extends Enumeration {
   val Internal = Value(0, "INTERNAL")
   val Api = Value(1, "API")
   val User = Value(2, "USER")
+  val System = Value(3, "SYSTEM")
 }
 import LogFormat.LogFormat
 import LogMessageType.LogMessageType
@@ -84,6 +85,7 @@ case class AssetLog(
   def isInternalSource(): Boolean = getSource() == LogSource.Internal
   def isApiSource(): Boolean = getSource() == LogSource.Api
   def isUserSource(): Boolean = getSource() == LogSource.User
+  def isSystemSource(): Boolean = getSource() == LogSource.System
 
   def getMessageType(): LogMessageType = message_type
   def isEmergency(): Boolean =

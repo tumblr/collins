@@ -1,6 +1,8 @@
 package collins
 package callbacks
 
+import util.SystemTattler
+
 import play.api.Logger
 
 /**
@@ -33,7 +35,9 @@ case class MethodReplacement(originalValue: String, methodName: String, newValue
       this.copy(newValue = newv)
     } catch {
       case e =>
-        logger.error("Error running %s on %s: %s".format(methodName, v, e.getMessage), e)
+        val msg = "Error running %s on %s: %s".format(methodName, v, e.getMessage)
+        SystemTattler.safeError(msg)
+        logger.error(msg, e)
         this
     }
   }
