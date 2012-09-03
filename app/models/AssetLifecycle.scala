@@ -4,7 +4,7 @@ import conversions._
 import AssetMeta.Enum.RackPosition
 import models.{Status => AStatus}
 
-import util.{ApiTattler, AssetStateMachine, InternalTattler, LldpRepresentation, LshwRepresentation}
+import util.{ApiTattler, AssetStateMachine, InternalTattler, LldpRepresentation, LshwRepresentation, SystemTattler}
 import util.config.{Feature, LshwConfig}
 import util.parsers.{LldpParser, LshwParser}
 import util.power.PowerUnits
@@ -279,6 +279,7 @@ object AssetLifecycle {
     } catch {
       case ex =>
         logger.error("Database problems", ex)
+        SystemTattler.safeError("Database problems: %s".format(ex.getMessage))
     }
     e
   }

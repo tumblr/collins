@@ -2,6 +2,7 @@ package util
 package config
 
 import models.{AssetMeta, LogMessageType}
+import models.Asset
 
 /**
  * Describes general features for collins, not tied to particular pieces of functionality
@@ -24,6 +25,11 @@ object Feature extends Configurable {
       case e =>
         featureException("defaultLogType", "%s is not a valid log type".format(lts))
     }
+  }
+  def syslogAsset = Asset.findByTag(getString("syslogAsset", MultiCollinsConfig.thisInstance)).orElse {
+    Asset.findByTag("tumblrtag1")
+  }.getOrElse {
+    throw globalError("neither features.syslogAsset or multicollins.thisInstance were specified")
   }
   def deleteIpmiOnDecommission = getBoolean("deleteIpmiOnDecommission", true)
   def deleteIpAddressOnDecommission = getBoolean("deleteIpAddressOnDecommission", true)
@@ -48,5 +54,6 @@ object Feature extends Configurable {
     defaultLogType
     encryptedTags
     deleteSomeMetaOnRepurpose
+    syslogAsset
   }
 }

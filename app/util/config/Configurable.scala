@@ -65,9 +65,11 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
       referenceConfig = Some(rc)
     } catch {
       case e =>
-        logger.error("Reference configuration %s not found or invalid: %s".format(
+        val msg = "Reference configuration %s not found or invalid: %s".format(
           refFilename, e.getMessage
-        ), e)
+        )
+        SystemTattler.safeError(msg)
+        logger.error(msg, e)
         referenceConfig = None
     }
     Registry.add(namespace, this)
@@ -104,14 +106,19 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
         }
       } catch {
         case e =>
-          logger.error("Error validating configuration for %s: %s".format(
-            getClass.getName, e.getMessage))
+          val msg = "Error validating configuration for %s: %s".format(
+            getClass.getName, e.getMessage
+          )
+          SystemTattler.safeError(msg)
+          logger.error(msg, e)
           self.underlying = savedConfig
           throw e
       }
     } catch {
       case e =>
-        logger.error("Exception in mergeReferenceAndSave %s".format(e.getMessage), e)
+        val msg = "Exception in mergeReferenceAndSave: %s".format(e.getMessage)
+        SystemTattler.safeError(msg)
+        logger.error(msg, e)
         throw e
     }
   }

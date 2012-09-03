@@ -1,6 +1,8 @@
 package collins
 package callbacks
 
+import util.SystemTattler
+
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
 import java.lang.reflect.Method
 import play.api.Logger
@@ -52,14 +54,18 @@ case class CallbackMatcher(matchMethod: Option[String], fn: PropertyChangeEvent 
       try {
         val valueMethod = value.getClass().getMethod(method)
         if (!isBooleanReturnType(valueMethod)) {
-          logger.error("%s does not return a boolean value".format(
+          val msg = "%s does not return a boolean value".format(
             valueMethod.toString
-          ))
+          )
+          SystemTattler.safeError(msg)
+          logger.error(msg)
           None
         } else if (!isZeroArityMethod(valueMethod)) {
-          logger.error("%s takes arguments which is unsupported".format(
+          val msg = "%s takes arguments which is unsupported".format(
             valueMethod.toString
-          ))
+          )
+          SystemTattler.safeError(msg)
+          logger.error(msg)
           None
         } else {
           Some(valueMethod.invoke(value).asInstanceOf[Boolean])
