@@ -1,11 +1,8 @@
 package collins
 package callbacks
 
-import util.SystemTattler
-
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
-import java.lang.reflect.Method
-import play.api.Logger
+import reflection.MethodHelper
 
 /**
  * Given a matchMethod, apply it to the PCE.
@@ -14,10 +11,10 @@ import play.api.Logger
  * @param fn a function that takes a PCE and returns some value for it
  */
 case class CallbackMatcher(matchMethod: Option[String], fn: PropertyChangeEvent => AnyRef)
-  extends MethodInvoker
+  extends MethodHelper
 {
 
-  protected[this] val logger = Logger("CallbackMatcher")
+  override val chattyFailures = true
 
   /**
    * Given a PCE, apply the matchMethod against it and return that value.
@@ -31,8 +28,8 @@ case class CallbackMatcher(matchMethod: Option[String], fn: PropertyChangeEvent 
   def apply(pce: PropertyChangeEvent): Boolean = matchMethod.map { method =>
     val value = fn(pce)
     negation(method) match {
-      case (true, meth) => invoke(meth, value).map(b => !b).getOrElse(false)
-      case (false, meth) => invoke(meth, value).getOrElse(false)
+      case (true, meth) => invokeMethod(meth, value).map(b => !b).getOrElse(false)
+      case (false, meth) => invokeMethod(meth, value).getOrElse(false)
     }
   }.getOrElse(true)
 
@@ -51,44 +48,8 @@ case class CallbackMatcher(matchMethod: Option[String], fn: PropertyChangeEvent 
     case false => (false, method)
   }
 
-  protected def invoke(method: String, value: AnyRef): Option[Boolean] = {
-    Option(value).flatMap { v =>
-      getMethod(method, v)
-        .orElse {
-          handleError("Method %s does not exist".format(method))
-          None
-        }
-        .filter(hasBooleanReturnType(_))
-        .filter(hasZeroArityMethod(_))
-        .flatMap { method =>
-          invoke(method, v).map(_.asInstanceOf[Boolean]).orElse {
-            handleError("Failed to invoke %s on value".format(method.toString))
-            None
-          }
-        }
-    }
-  }
-
-  protected def hasBooleanReturnType(m: Method): Boolean = if (isBooleanReturnType(m)) {
-    true
-  } else {
-    handleError(
-      "Method %s does not have a boolean return value".format(m.toString)
-    )
-  }
-
-  protected def hasZeroArityMethod(m: Method): Boolean = if (isZeroArityMethod(m)) {
-    true
-  } else {
-    handleError(
-      "Method %s takes more than zero arguments which is not supported".format(m.toString)
-    )
-  }
-
-  private def handleError(msg: String): Boolean = {
-    logger.error(msg)
-    SystemTattler.safeError(msg)
-    false
+  protected def invokeMethod(meth: String, v: AnyRef): Option[Boolean] = {
+    getMethod(meth, v).flatMap(invokePredicateMethod(_, v))
   }
 
 }

@@ -1,10 +1,7 @@
 package collins
 package callbacks
 
-import util.SystemTattler
-
-import play.api.Logger
-import java.lang.reflect.Method
+import reflection.MethodHelper
 
 /**
  * Represents the results of a regular expression.
@@ -21,9 +18,9 @@ import java.lang.reflect.Method
  */
 case class MethodReplacement(
   originalValue: String, methodName: String, newValue: String = ""
-) extends MethodInvoker {
+) extends MethodHelper {
 
-  protected[this] val logger = Logger("MethodReplacement")
+  override val chattyFailures = true
 
   /**
    * Apply methodName to v, return a MethodReplacement with an updated newValue.
@@ -33,36 +30,11 @@ case class MethodReplacement(
    * failure
    */
   def runMethod(v: AnyRef): MethodReplacement = {
-    Option(v).flatMap { value =>
-      getMethod(methodName, value)
-        .orElse {
-          handleError("Method %s does not exist".format(methodName))
-          None
-        }
-        .filter(hasZeroArityMethod(_))
-        .flatMap { method =>
-          invoke(method, value).map(nv => this.copy(newValue = nv.toString)).orElse {
-            handleError("Failed to invoke %s on value".format(method.toString))
-            None
-          }
-        }
-    }.getOrElse {
-      this
-    }
-  }
-
-  protected def hasZeroArityMethod(m: Method): Boolean = if (isZeroArityMethod(m)) {
-    true
-  } else {
-    handleError(
-      "Method %s takes more than zero arguments which is not supported".format(m.toString)
-    )
-  }
-
-  private def handleError(msg: String): Boolean = {
-    logger.error(msg)
-    SystemTattler.safeError(msg)
-    false
+    getMethod(methodName, v).flatMap { method =>
+      invokeZeroArityMethod(method, v)
+        .map(_.toString)
+        .map(s => this.copy(newValue = s))
+    }.getOrElse(this)
   }
 
 }
