@@ -4,6 +4,7 @@ package callbacks
 import util.SystemTattler
 
 import play.api.Logger
+import java.lang.reflect.Method
 
 /**
  * Represents the results of a regular expression.
@@ -18,7 +19,10 @@ import play.api.Logger
  * @param methodName the match from the original source string (e.g. tag)
  * @param newValue the result of applying methodName on a class instance
  */
-case class MethodReplacement(originalValue: String, methodName: String, newValue: String = "") {
+case class MethodReplacement(
+  originalValue: String, methodName: String, newValue: String = ""
+) extends MethodInvoker {
+
   protected[this] val logger = Logger("MethodReplacement")
 
   /**
@@ -28,17 +32,37 @@ case class MethodReplacement(originalValue: String, methodName: String, newValue
    * @return a MethodReplacement with an updated newValue on success, or an empty newValue on
    * failure
    */
-  def runMethod(v: AnyRef) = {
-    try {
-      val method = v.getClass.getMethod(methodName)
-      val newv = method.invoke(v).toString
-      this.copy(newValue = newv)
-    } catch {
-      case e =>
-        val msg = "Error running %s on %s: %s".format(methodName, v, e.getMessage)
-        SystemTattler.safeError(msg)
-        logger.error(msg, e)
-        this
+  def runMethod(v: AnyRef): MethodReplacement = {
+    Option(v).flatMap { value =>
+      getMethod(methodName, value)
+        .orElse {
+          handleError("Method %s does not exist".format(methodName))
+          None
+        }
+        .filter(hasZeroArityMethod(_))
+        .flatMap { method =>
+          invoke(method, value).map(nv => this.copy(newValue = nv.toString)).orElse {
+            handleError("Failed to invoke %s on value".format(method.toString))
+            None
+          }
+        }
+    }.getOrElse {
+      this
     }
   }
+
+  protected def hasZeroArityMethod(m: Method): Boolean = if (isZeroArityMethod(m)) {
+    true
+  } else {
+    handleError(
+      "Method %s takes more than zero arguments which is not supported".format(m.toString)
+    )
+  }
+
+  private def handleError(msg: String): Boolean = {
+    logger.error(msg)
+    SystemTattler.safeError(msg)
+    false
+  }
+
 }

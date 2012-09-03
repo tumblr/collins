@@ -13,7 +13,9 @@ import play.api.Logger
  * @param matchMethod a string containing a method to apply
  * @param fn a function that takes a PCE and returns some value for it
  */
-case class CallbackMatcher(matchMethod: Option[String], fn: PropertyChangeEvent => AnyRef) {
+case class CallbackMatcher(matchMethod: Option[String], fn: PropertyChangeEvent => AnyRef)
+  extends MethodInvoker
+{
 
   protected[this] val logger = Logger("CallbackMatcher")
 
@@ -51,34 +53,42 @@ case class CallbackMatcher(matchMethod: Option[String], fn: PropertyChangeEvent 
 
   protected def invoke(method: String, value: AnyRef): Option[Boolean] = {
     Option(value).flatMap { v =>
-      try {
-        val valueMethod = value.getClass().getMethod(method)
-        if (!isBooleanReturnType(valueMethod)) {
-          val msg = "%s does not return a boolean value".format(
-            valueMethod.toString
-          )
-          SystemTattler.safeError(msg)
-          logger.error(msg)
+      getMethod(method, v)
+        .orElse {
+          handleError("Method %s does not exist".format(method))
           None
-        } else if (!isZeroArityMethod(valueMethod)) {
-          val msg = "%s takes arguments which is unsupported".format(
-            valueMethod.toString
-          )
-          SystemTattler.safeError(msg)
-          logger.error(msg)
-          None
-        } else {
-          Some(valueMethod.invoke(value).asInstanceOf[Boolean])
         }
-      } catch {
-        case e => None
-      }
+        .filter(hasBooleanReturnType(_))
+        .filter(hasZeroArityMethod(_))
+        .flatMap { method =>
+          invoke(method, v).map(_.asInstanceOf[Boolean]).orElse {
+            handleError("Failed to invoke %s on value".format(method.toString))
+            None
+          }
+        }
     }
   }
 
-  protected def isBooleanReturnType(method: Method): Boolean =
-    method.getReturnType.equals(java.lang.Boolean.TYPE)
+  protected def hasBooleanReturnType(m: Method): Boolean = if (isBooleanReturnType(m)) {
+    true
+  } else {
+    handleError(
+      "Method %s does not have a boolean return value".format(m.toString)
+    )
+  }
 
-  protected def isZeroArityMethod(method: Method): Boolean =
-    method.getParameterTypes.size == 0
+  protected def hasZeroArityMethod(m: Method): Boolean = if (isZeroArityMethod(m)) {
+    true
+  } else {
+    handleError(
+      "Method %s takes more than zero arguments which is not supported".format(m.toString)
+    )
+  }
+
+  private def handleError(msg: String): Boolean = {
+    logger.error(msg)
+    SystemTattler.safeError(msg)
+    false
+  }
+
 }
