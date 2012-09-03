@@ -3,8 +3,7 @@ package actions
 package ipaddress
 
 import models.{Asset, IpAddresses}
-import models.shared.IpAddressConfiguration
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 
 import play.api.libs.json._
 

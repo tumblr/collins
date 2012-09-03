@@ -1,12 +1,13 @@
 package util
 
+import config.AppConfig
 import models.{Asset, IpmiInfo}
 import concurrent.BackgroundProcess
 import com.tumblr.play.CommandResult
 
 import akka.util.Duration
 import play.api.{Logger, Mode}
-
+import java.util.concurrent.TimeUnit
 import scala.collection.mutable.StringBuilder
 import scala.sys.process._
 
@@ -24,10 +25,10 @@ object IpmiCommand {
 
 abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
   val interval: Duration
-  val configKey: String
   var debug: Boolean = false
 
   protected def ipmiInfo: IpmiInfo
+  protected def ipmiCommand: String
 
   protected val logger = Logger(getClass)
 
@@ -40,15 +41,11 @@ abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
     AppConfig.isProd() || debug
   }
 
-  def getConfig(): Map[String,String] = {
-    AppConfig.ipmiMap
-  }
-
   def run(): Option[CommandResult] = {
     if (!shouldRun) {
       return None
     }
-    val command = substitute(getIpmiCommand())
+    val command = substitute(ipmiCommand)
     val process = Process(command, None, ("IPMI_PASSWORD" -> password))
     val stdout = new StringBuilder()
     val stderr = new StringBuilder()
@@ -75,19 +72,7 @@ abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
     Some(cr)
   }
 
-  override protected def defaultTimeout: Duration = {
-    Duration.parse(getConfig.getOrElse("timeout", "2 seconds"))
-  }
-
-  protected def getIpmiCommand(): String = {
-    val config = getConfig
-    if (config.isEmpty)
-      throw new IllegalStateException("No valid ipmi configuration available")
-    val ipmiCmd = config.get(configKey)
-    if (!ipmiCmd.isDefined)
-      throw new IllegalStateException("No %s configuration available".format(configKey))
-    ipmiCmd.get
-  }
+  override protected def defaultTimeout: Duration = Duration(2, TimeUnit.MILLISECONDS)
 
   protected def substitute(cmd: String): String = {
     cmd.replace("<host>", address)

@@ -2,7 +2,8 @@ package models
 
 import play.api._
 import controllers.Permissions
-import util.{AuthenticationAccessor, AuthenticationProvider, Stats}
+import util.Stats
+import util.security.{AuthenticationAccessor, AuthenticationProvider}
 
 case class UserException(message: String) extends Exception(message)
 

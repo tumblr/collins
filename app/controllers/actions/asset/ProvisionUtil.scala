@@ -6,8 +6,9 @@ import actors._
 import forms._
 import models.{Asset, AssetLifecycle, Truthy}
 import models.Status.Enum.{New => NewAsset}
-import util.{ApiTattler, AssetStateMachine, SoftLayer, UserTattler}
+import util.{ApiTattler, SoftLayer, UserTattler}
 import util.concurrent.BackgroundProcessor
+import util.config.Feature
 
 import play.api.data._
 import play.api.data.Forms._
@@ -108,7 +109,7 @@ trait ProvisionUtil { self: SecureAction =>
         "POOL" -> role.pool.getOrElse(""),
         "SECONDARY_ROLE" -> role.secondary_role.getOrElse("")
       )
-    val mapForDelete = AssetStateMachine.DeleteSomeAttributes.map(s => (s -> "")).toMap
+    val mapForDelete = Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
     mapForDelete ++ Map(attribSequence:_*)
   }
 

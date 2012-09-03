@@ -83,22 +83,18 @@ class IpmiInfoSpec extends ApplicationSpecification {
           "username"       -> "root",
           "randomUsername" -> "false"
         ))
-        val ipmiUsername = new IpmiInfo.Username(ipmiAsset(), config, false)
+        IpmiConfig.overwriteConfig(config.underlying)
+        val ipmiUsername = IpmiConfig.username
         ipmiUsername.get mustEqual "root"
       }
       "when randomUsername is set, override passed in config values" in {
         val config = Configuration.from(Map(
           "randomUsername" -> "true"
         ))
-        val ipmiUsername = new IpmiInfo.Username(ipmiAsset(), config, false)
-        ipmiUsername.get mustNotEqual ipmiUsername.get
-      }
-      "when randomUsername is unset, respect passed in config values" in {
-        val ipmiUsername = new IpmiInfo.Username(ipmiAsset(), None, false)
-        ipmiUsername.get mustEqual ipmiUsername.get
-
-        val ipmiUsername2 = new IpmiInfo.Username(ipmiAsset(), None, true)
-        ipmiUsername2.get mustNotEqual ipmiUsername2.get
+        IpmiConfig.overwriteConfig(config.underlying)
+        val ipmiUsername = IpmiConfig.genUsername(ipmiAsset())
+        val ipmiUsername2 = IpmiConfig.genUsername(ipmiAsset())
+        ipmiUsername mustNotEqual ipmiUsername2
       }
     }
 

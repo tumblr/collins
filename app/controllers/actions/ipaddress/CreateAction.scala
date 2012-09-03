@@ -3,8 +3,9 @@ package actions
 package ipaddress
 
 import models.{Asset, IpAddresses}
-import models.shared.IpAddressConfiguration
-import util.{ApiTattler, SecuritySpecification}
+import models.shared.IpAddressConfig
+import util.ApiTattler
+import util.security.SecuritySpecification
 
 import play.api.data.Form
 import play.api.data.Forms._
@@ -35,8 +36,9 @@ case class CreateAction(
           return Left(
             RequestDataHolder.error500("No address pools have been setup to allocate from")
           )
+        val addressConfig = IpAddresses.AddressConfig.get
         poolName.filter(_.nonEmpty).foreach { p =>
-          if (!IpAddresses.AddressConfig.get.hasPool(p)) {
+          if (!addressConfig.hasPool(p)) {
             return Left(RequestDataHolder.error400("Pool %s does not exist".format(p)))
           }
         }
@@ -49,9 +51,9 @@ case class CreateAction(
     case ActionDataHolder(asset, pool, count) => try {
       val poolName = pool.isEmpty match {
         case true =>
-          val addressConfig = IpAddresses.AddressConfig.get
           // if default pool being used, store that pool name if the pool name isn't DEFAULT
-          addressConfig.defaultPoolName.filter(_ != IpAddressConfiguration.DefaultPoolName)
+          val addressConfig = IpAddresses.AddressConfig.get
+          addressConfig.defaultPoolName.filter(_ != IpAddressConfig.DefaultPoolName)
                                         .getOrElse("")
         case false => pool
       }

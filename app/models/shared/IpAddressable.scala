@@ -1,10 +1,10 @@
 package models
 
-import shared.{AddressPool, IpAddressConfiguration}
+import shared.AddressPool
 
 import util.{IpAddress, IpAddressCalc}
 import org.squeryl.Schema
-import play.api.{Configuration, Logger}
+import play.api.Logger
 import java.sql.SQLException
 
 trait IpAddressable extends ValidatedEntity[Long] {

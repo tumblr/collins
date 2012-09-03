@@ -1,8 +1,11 @@
 package util
+package security
 
 import models.{User, UserImpl}
 
 class MockAuthenticationProvider extends AuthenticationProvider {
+  override val authType = "default"
+
   val users = Map(
     "blake" -> UserImpl("blake", "admin:first", Set("engineering","infra","ops"), 1024, false),
     "matt" -> UserImpl("matt", "foobar", Set("engineering", "management"), 1025, false),

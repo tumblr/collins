@@ -6,7 +6,7 @@ import play.api.data.Forms._
 import play.api.mvc._
 
 import models._
-import util.SecuritySpec
+import util.security.SecuritySpec
 import views._
 
 object Application extends SecureWebController {

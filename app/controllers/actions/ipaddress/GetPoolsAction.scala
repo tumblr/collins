@@ -4,7 +4,7 @@ package ipaddress
 
 import models.{IpAddresses, Truthy}
 import models.shared.AddressPool
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 
 import play.api.libs.json._
 
@@ -61,17 +61,13 @@ case class GetPoolsAction(
   }
 
   protected def toAddressPools(pools: Set[String]): Set[AddressPool] =
-    IpAddresses.AddressConfig match {
-      case None => Set()
-      case Some(cfg) =>
-        pools.map { pool =>
-          cfg.pool(pool) match {
-            case Some(addressPool) => addressPool
-            case None =>
-              val poolName = AddressPool.poolName(pool)
-              AddressPool(poolName, AddressPool.MagicNetwork, None, None)
-          }
+    IpAddresses.AddressConfig.map { cfg =>
+      pools.map { pool =>
+        cfg.pool(pool).getOrElse {
+          val poolName = AddressPool.poolName(pool)
+          AddressPool(poolName, AddressPool.MagicNetwork, None, None)
         }
-    }
+      }
+    }.getOrElse(Set())
 
 }

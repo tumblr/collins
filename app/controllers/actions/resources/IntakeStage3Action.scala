@@ -5,7 +5,8 @@ package resources
 import asset.ActionAttributeHelper
 import models.AssetLifecycle
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
-import util.{MessageHelperI, SecuritySpecification}
+import util.MessageHelperI
+import util.security.SecuritySpecification
 import util.power.{InvalidPowerConfigurationException, PowerUnits}
 import validators.ParamValidation
 

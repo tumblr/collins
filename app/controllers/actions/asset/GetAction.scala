@@ -3,7 +3,7 @@ package actions
 package asset
 
 import models.{Asset, RemoteCollinsHost}
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 import views.html
 import play.api.mvc.Result
 

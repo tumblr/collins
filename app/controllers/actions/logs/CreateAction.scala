@@ -4,7 +4,9 @@ package logs
 
 import models.{Asset, AssetLog}
 import models.{LogMessageType, LogFormat, LogSource}
-import util.{FeatureConfig, MessageHelper, SecuritySpecification, TattlerHelper}
+import util.{MessageHelper, TattlerHelper}
+import util.config.Feature
+import util.security.SecuritySpecification
 import validators.ParamValidation
 
 import play.api.data.Form
@@ -16,12 +18,8 @@ import org.jsoup.safety.Whitelist
 
 import scala.util.control.Exception.allCatch
 
-object CreateAction extends FeatureConfig("features") {
-  val DefaultMessageType: LogMessageType.LogMessageType = feature("defaultLogType").ifSet { ltype =>
-    ltype.getString("default")
-  }.flatMap(ltype => allCatch.opt(LogMessageType.withName(ltype)))
-   .getOrElse(LogMessageType.Informational)
-
+object CreateAction {
+  val DefaultMessageType = Feature.defaultLogType
   val ValidMessageSources = LogSource.values.mkString(", ")
   val ValidMessageTypes = LogMessageType.values.mkString(", ")
   object Messages extends MessageHelper("assetlog.create") {

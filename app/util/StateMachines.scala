@@ -1,17 +1,12 @@
 package util
 
+import config.Feature
+
 import models.{Asset, AssetMeta, AssetMetaValue, IpAddresses, IpmiInfo, Status}
 import models.conversions._
 
 import java.util.Date
 import java.sql._
-
-object AssetStateMachine {
-  lazy val DeleteSomeAttributes: Set[String] = Feature("deleteSomeMetaOnRepurpose").toSet
-  lazy val DeleteAttributes: Set[Long] = DeleteSomeAttributes.map { v =>
-    AssetMeta.findByName(v).map(_.getId).getOrElse(-1L)
-  }
-}
 
 case class AssetStateMachine(asset: Asset) {
   import Status.Enum._
@@ -23,16 +18,17 @@ case class AssetStateMachine(asset: Asset) {
         case 1 => Some(newAsset)
         case n => None
       }
-      Feature("deleteIpmiOnDecommission").whenEnabledOrUnset {
+      if (Feature.deleteIpmiOnDecommission) {
         IpmiInfo.deleteByAsset(asset)
       }
-      Feature("deleteIpAddressOnDecommission").whenEnabledOrUnset {
+      if (Feature.deleteIpAddressOnDecommission) {
         IpAddresses.deleteByAsset(asset)
       }
-      Feature("deleteMetaOnDecommission").whenEnabledOrUnset {
+      if (Feature.deleteMetaOnDecommission) {
         AssetMetaValue.deleteByAsset(asset)
-      }.orElse {
-        AssetMetaValue.deleteByAssetAndMetaId(asset, AssetStateMachine.DeleteAttributes)
+      } else {
+        val deleteAttributes: Set[Long] = Feature.deleteSomeMetaOnRepurpose.map(_.id)
+        AssetMetaValue.deleteByAssetAndMetaId(asset, deleteAttributes)
       }
       res
     case _ =>

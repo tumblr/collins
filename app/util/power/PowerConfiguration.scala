@@ -1,6 +1,8 @@
 package util
 package power
 
+import config.Configurable
+
 case class InvalidPowerConfigurationException(message: String, key: Option[String] = None) extends RuntimeException(message)
 
 case class PowerConfiguration(
@@ -43,14 +45,26 @@ case class PowerConfiguration(
   def hasComponent(component: Symbol) = components.contains(Symbol(component.name.toUpperCase))
 }
 
-object PowerConfiguration extends FeatureConfig("powerconfiguration") {
+object PowerConfiguration extends Configurable {
 
-  val DefaultUnitsRequired = feature("unitsRequired").ifSet { f =>
-    f.toInt(-1)
-  }.filter(i => i >= 0 && i <= 18).getOrElse(1)
-  val DefaultUseAlphabeticNames = feature("useAlphabeticNames").ifSet(_.enabled).getOrElse(true)
-  val DefaultComponents = feature("unitComponents").toSet
-  val DefaultUniques = feature("uniqueComponents").toSet
+  override val namespace = "powerconfiguration"
+  override val referenceConfigFilename = "powerconfiguration_reference.conf"
+
+  def unitsRequired = getInt("unitsRequired").filter(i => i >= 0 && i <= 18).getOrElse(1)
+  def useAlphabeticNames = getBoolean("useAlphabeticNames", true)
+  def unitComponents = getStringSet("unitComponents")
+  def uniqueComponents = getStringSet("uniqueComponents")
+
+  override protected def validateConfig() {
+    unitsRequired
+    useAlphabeticNames
+    unitComponents
+    uniqueComponents
+    val config = get()
+    PowerUnits().foreach { unit => unit.foreach { component =>
+      component.meta
+    }}
+  }
 
   object Messages extends MessageHelper("powerconfiguration") {
     def InvalidComponent(ct: String) =
@@ -78,21 +92,13 @@ object PowerConfiguration extends FeatureConfig("powerconfiguration") {
       "Did not find value for %s, required for %s".format(k, l)
   }
 
-  def apply(): PowerConfiguration = {
+  def get(): PowerConfiguration = {
     new PowerConfiguration(
-      DefaultUnitsRequired, DefaultUseAlphabeticNames, DefaultComponents, DefaultUniques
+      unitsRequired, useAlphabeticNames, unitComponents, uniqueComponents
     )
   }
 
-  def validate() {
-    // validates config on initialization
-    val config = apply()
-    PowerUnits().foreach { unit => unit.foreach { component =>
-      component.meta
-    }}
-  }
-
-  def apply(cfg: Option[PowerConfiguration]): PowerConfiguration = {
-    cfg.getOrElse(apply())
+  def get(cfg: Option[PowerConfiguration]): PowerConfiguration = {
+    cfg.getOrElse(get())
   }
 }

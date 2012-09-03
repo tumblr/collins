@@ -1,7 +1,7 @@
 package models
 
 import scala.math
-import util.Config
+import util.config.NodeclassifierConfig
 import play.api.Logger
 
 trait AssetDistanceEval {
@@ -28,7 +28,7 @@ class MockAssetNameEval extends AssetDistanceEval {
     
 }
 
-class PhysicalDistanceEval(sortkeys: String) extends AssetDistanceEval {
+class PhysicalDistanceEval(sortkeys: Set[String]) extends AssetDistanceEval {
   /**
    * Calculates physical distance using the configured set of nodeclass.sortKeys
    *
@@ -40,7 +40,6 @@ class PhysicalDistanceEval(sortkeys: String) extends AssetDistanceEval {
    */
   def distance(a: Asset, b: Asset): Int = {
     sortkeys
-      .split(",")
       .zipWithIndex
       .map{ key => 
         if ( (a.getMetaAttribute(key._1), b.getMetaAttribute(key._1)) match {
@@ -58,23 +57,23 @@ class PhysicalDistanceEval(sortkeys: String) extends AssetDistanceEval {
 
 import SortDirection._
 
-object SortType extends Enumeration {
-  type SortType = Value
+object AssetSortType extends Enumeration {
+  type AssetSortType = Value
   val Name = Value("name")
   val Distance = Value("distance")
   val Distribution = Value("distribution")
   val Arbitrary = Value("arbitrary")
 }
-import SortType._
+import AssetSortType._
 
 object AssetDistanceSorter {
   
-  def sortKeys = Config.getString("nodeclass.sortKeys","")
+  def sortKeys = NodeclassifierConfig.sortKeys
 
   def sort(
     target: Asset, 
     similarAssets: Seq[Asset], 
-    sortType: SortType, 
+    sortType: AssetSortType, 
     direction: SortDirection
   ): Seq[Asset] = sortType match {
     case Name => genericSort(target, similarAssets, new MockAssetNameEval, direction)
@@ -84,8 +83,8 @@ object AssetDistanceSorter {
     case Arbitrary => similarAssets
   }
 
-  def distributionSort(target: Asset, similar: Seq[Asset], direction: SortDirection, config: String) = {
-    val sort = new PhysicalDistanceEval(config)
+  def distributionSort(target: Asset, similar: Seq[Asset], direction: SortDirection, sortKeys: Set[String]) = {
+    val sort = new PhysicalDistanceEval(sortKeys)
 
     /** pulls out assets one at time based on physical proximity to
         current group of assets. sparse search orders based on least

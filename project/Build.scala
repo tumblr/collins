@@ -5,7 +5,7 @@ import PlayProject._
 object ApplicationBuild extends Build {
 
     val appName         = "collins"
-    val appVersion      = "1.1"
+    val appVersion      = "1.2"
 
     val appDependencies = Seq(
       "commons-net" % "commons-net" % "3.1",
@@ -15,7 +15,8 @@ object ApplicationBuild extends Build {
       "com.twitter" %% "finagle-http" % "1.10.0",
       "org.jsoup" % "jsoup" % "1.6.1",
       "org.squeryl" %% "squeryl" % "0.9.5",
-      "org.yaml" % "snakeyaml" % "1.10"
+      "org.yaml" % "snakeyaml" % "1.10",
+      "org.reflections" % "reflections" % "0.9.8" notTransitive()
     )
 
     val main = PlayProject(appName, appVersion, appDependencies, mainLang = SCALA).settings(

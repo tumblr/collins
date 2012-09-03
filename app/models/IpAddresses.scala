@@ -1,10 +1,9 @@
 package models
 
-import shared.{AddressPool, IpAddressConfiguration}
+import shared.{AddressPool, IpAddressConfig}
 
-import play.api.Configuration
 import play.api.libs.json._
-import util.{Config, IpAddress, IpAddressCalc}
+import util.{IpAddress, IpAddressCalc}
 import util.plugins.Callback
 import org.squeryl.dsl.ast.LogicalBoolean
 
@@ -37,9 +36,9 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
   override protected def updateEventName: Option[String] = Some("ipAddresses_update")
   override protected def deleteEventName: Option[String] = Some("ipAddresses_delete")
 
-  lazy val AddressConfig = IpAddressConfiguration(Config.get("ipAddresses"))
-
   val tableDef = table[IpAddresses]("ip_addresses")
+  lazy val AddressConfig = IpAddressConfig.get()
+
   on(tableDef)(i => declare(
     i.id is(autoIncremented,primaryKey),
     i.address is(unique),
@@ -154,9 +153,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
   }
 
   override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
-    AddressConfig.flatMap { cfg =>
-      scope.flatMap(cfg.pool(_)).orElse(cfg.defaultPool)
-    }
+    AddressConfig.flatMap(cfg => scope.flatMap(cfg.pool(_)).orElse(cfg.defaultPool))
   }
 
   protected def populateCacheIfNeeded(opool: Option[String], force: Boolean = false) {

@@ -3,8 +3,9 @@ package actions
 package ipaddress
 
 import models.{Asset, IpAddresses}
-import models.shared.IpAddressConfiguration
-import util.{ApiTattler, IpAddress, SecuritySpecification}
+import models.shared.IpAddressConfig
+import util.{ApiTattler, IpAddress}
+import util.security.SecuritySpecification
 import validators.{StringUtil, ParamValidation}
 
 import play.api.data.Form
@@ -30,7 +31,7 @@ case class UpdateAction(
       )
     }.getOrElse {
       if (address.isDefined && gateway.isDefined && netmask.isDefined) {
-        val p = convertPoolName(pool.getOrElse(IpAddressConfiguration.DefaultPoolName))
+        val p = convertPoolName(pool.getOrElse(IpAddressConfig.DefaultPoolName))
         IpAddresses(asset.getId, gateway.get, address.get, netmask.get, p)
       } else {
         throw new Exception("If creating a new IP the address, gateway and netmask must be specified")

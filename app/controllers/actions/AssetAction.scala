@@ -3,7 +3,7 @@ package actions
 
 import asset.AssetFinderDataHolder
 import models.{Asset, AssetType, AssetView, Page, RemoteAsset}
-import util.Feature
+import util.config.Feature
 
 import java.util.concurrent.atomic.AtomicReference
 
@@ -51,7 +51,7 @@ trait AssetAction {
       Some(AssetMessages.intakeError("new", asset))
     else if (asset.asset_type != AssetType.Enum.ServerNode.id)
       Some(AssetMessages.intakeError("type", asset))
-    else if (!Feature("intakeSupported").toBoolean(true))
+    else if (!Feature.intakeSupported)
       Some(AssetMessages.intakeError("disabled", asset))
     else if (!Permissions.please(user(), Permissions.Resources.Intake))
       Some(AssetMessages.intakeError("permissions", asset))

@@ -3,7 +3,6 @@ package views
 
 import models.MetaWrapper
 
-import play.api.Configuration
 import play.api.mvc.Content
 import play.api.templates.Html
 
@@ -31,26 +30,23 @@ object TagDecorator {
     }
   }
 
-  protected lazy val Decorators: Map[String,Decorator] =
-    Config.get("tagdecorators").map { decorators =>
-      decorators.subKeys.foldLeft(Map[String,Decorator]()) { case(total,current) =>
-        val config = decorators.getConfig(current).get
-        Map(current -> createDecorator(current, config)) ++ total
-      }
-    }.getOrElse(Map[String,Decorator]())
-
-  protected def getDecorator(key: String): Option[Decorator] = {
-    Decorators.get(key)
+  protected def decorators: Map[String,Decorator] = {
+    val decorators = TagDecoratorConfig.decorators
+    decorators.map { case(name, config) =>
+      name -> createDecorator(config)
+    }
   }
 
-  protected def createDecorator(key: String, config: Configuration): Decorator = {
-    val decorator = config.getString("decorator").getOrElse {
-      throw DecoratorConfigurationException(key, "decorator")
-    }
-    val parser = config.getString("valueParser")
+  protected def getDecorator(key: String): Option[Decorator] = {
+    decorators.get(key)
+  }
+
+  protected def createDecorator(config: DecoratorConfig): Decorator = {
+    val decorator = config.decorator
+    val parser = config.valueParser
       .map(c => getClassInstance(c))
       .getOrElse(new IdentityParser)
-    Decorator(decorator, parser(key, config), config)
+    Decorator(config, parser(config.name, config))
   }
 
   protected def getClassInstance(s: String) = {
