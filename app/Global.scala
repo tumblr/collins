@@ -2,41 +2,19 @@ import play.api._
 import play.api.mvc._
 
 import controllers.ApiResponse
-import models.{IpAddresses, Model}
-import util.{AppConfig, AuthenticationAccessor, AuthenticationProvider, CryptoAccessor, Stats}
+import util.{CryptoAccessor, Stats}
 import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
-import util.power.PowerConfiguration
-import util.plugins.solr.Solr
-import java.io.File
+import util.config.CryptoConfig
+import util.security.{AuthenticationAccessor, AuthenticationProvider, AuthenticationProviderConfig}
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
 
-  private val RequiredConfig = Set(
-    "crypto.key", "ipmi.network"
-  )
-
   override def onStart(app: Application) {
-    verifyConfiguration(app.configuration)
-    setupLogging(app)
-    val auth = app.configuration.getConfig("authentication") match {
-      case None => AuthenticationProvider.Default
-      case Some(config) => config.getString("type", Some(AuthenticationProvider.Types)) match {
-        case None => AuthenticationProvider.Default
-        case Some(t) => AuthenticationProvider.get(t, config)
-      }
-    }
-    val key = app.configuration.getConfig("crypto") match {
-      case None => throw new RuntimeException("No crypto.key specified in config")
-      case Some(config) => config.getString("key") match {
-        case None => throw new RuntimeException("No crypto.key specified in config")
-        case Some(k) => k
-      }
-    }
-    Model.initialize()
+    val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
+    val key = CryptoConfig.key
     setAuthentication(auth)
     setCryptoKey(key)
-    checkRuntime(app.configuration)
   }
 
   override def onRouteRequest(request: RequestHeader): Option[Handler] = {
@@ -51,12 +29,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     } else {
       super.onRouteRequest(request)
     }
-  }
-
-  override def onStop(app: Application) {
-    logger.info("Stopping application")
-    super.onStop(app)
-    Model.shutdown()
   }
 
   override def onError(request: RequestHeader, ex: Throwable): Result = {
@@ -104,32 +76,6 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  protected def checkRuntime(config: Configuration) {
-    PowerConfiguration.validate()
-    AuthenticationProvider.validate()
-    getAuthentication().validate()
-    IpAddresses.AddressConfig
-    AppConfig.ipmi
-  }
-
-  // Make sure we have a valid configuration before we start
-  protected def verifyConfiguration(config: Configuration) {
-    RequiredConfig.foreach { key =>
-      key.split("\\.", 2) match {
-        case Array(sub,key) =>
-          config.getConfig(sub).map { _.getString(key).getOrElse(
-            throw config.globalError("No %s.%s found in configuration".format(sub, key))
-          )}.getOrElse(
-            throw config.globalError("No configuration found '" + sub + "'")
-          )
-        case _ =>
-          config.getConfig(key).getOrElse(
-            throw config.globalError("No configuration found '" + key + "'")
-          )
-      }
-    }
-  }
-
   // Implements CryptoAccessor
   var cryptoKey: Option[String] = None
   protected def setCryptoKey(key: String) {
@@ -148,16 +94,17 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
       case false => authentication = Some(auth)
     }
   }
-  def getAuthentication() = authentication.get
-
-  protected def setupLogging(app: Application) {
-    if (Play.isDev(app)) {
-      Option(this.getClass.getClassLoader.getResource("dev_logger.xml"))
-        .map(_.getFile())
-        .foreach { file =>
-          System.setProperty("logger.file", file)
-          Logger.init(new File("."))
-        }
+  def getAuthentication() = {
+    val authen = authentication.get
+    if (AuthenticationProviderConfig.authType != authen.authType) {
+      try {
+        val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
+        authentication = Some(auth)
+      } catch {
+        case e =>
+      }
     }
+    authen
   }
+
 }

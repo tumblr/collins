@@ -1,6 +1,7 @@
 package models
 
 import util.CryptoCodec
+import util.config.Feature
 
 import conversions._
 import java.util.Date
@@ -20,7 +21,7 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getLabel(): String = _meta.label
   def getDescription(): String = _meta.description
   def getValueType(): AssetMeta.ValueType = _meta.getValueType()
-  def getValue(): String = AssetMetaValueConfig.EncryptedMeta.contains(getName) match {
+  def getValue(): String = Feature.encryptedTags.map(_.name).contains(getName) match {
     case true => CryptoCodec.withKeyFromFramework.Decode(_value.value).getOrElse(_value.value)
     case false => _value.value
   }

@@ -1,19 +1,31 @@
 package util
 
+import config.Configurable
 import models.Status
 import play.api.{Play, Plugin}
 import com.tumblr.play.SoftLayerPlugin
 
-object SoftLayerConfig {
-  lazy val AllowedCancelStates: Set[Int] =
-    Config.statusAsSet(
-      "softlayer", "allowedCancelStatus", Status.statusNames.mkString(",")
-  )
+object SoftLayerConfig extends Configurable {
+  override val namespace = "softlayer"
+  override val referenceConfigFilename = "softlayer_reference.conf"
+
+  def enabled = getBoolean("enabled", false)
+  def username = getString("username", "")
+  def password = getString("password", "")
+  def allowedCancelStatus = getStringSet("allowedCancelStatus", Status.statusNames).map { s =>
+    Status.Enum.withName(s).id
+  }
+
+  override protected def validateConfig() {
+    if (enabled) {
+      require(username.nonEmpty, "softlayer.username must not be empty if enabled")
+      require(password.nonEmpty, "softlayer.password must not be empty if enabled")
+      allowedCancelStatus
+    }
+  }
 }
 
 object SoftLayer {
-
-  import SoftLayerConfig._
 
   def plugin: Option[SoftLayerPlugin] = pluginEnabled
 
@@ -49,7 +61,7 @@ object SoftLayer {
   }
 
   def cancelAllowed(asset: models.Asset): Boolean = {
-    AllowedCancelStates.contains(asset.status)
+    SoftLayerConfig.allowedCancelStatus.contains(asset.status)
   }
 
 }

@@ -1,7 +1,7 @@
 package controllers
 
 import models.{Asset, IpmiInfo}
-import util.{IpAddress, SecuritySpec}
+import util.IpAddress
 
 import play.api.data._
 import play.api.data.Forms._

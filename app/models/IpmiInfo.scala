@@ -1,11 +1,43 @@
 package models
 
-import shared.{AddressPool,IpAddressConfiguration}
+import shared.{AddressPool,IpAddressConfig}
 import util._
+import util.config.{Configurable, SimpleAddressConfig}
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
-import play.api._
 import play.api.libs.json._
+
+object IpmiConfig extends Configurable {
+  import util.config.TypesafeConfiguration
+
+  override val namespace = "ipmi"
+  override val referenceConfigFilename = "ipmi_reference.conf"
+
+  def overwriteConfig(config: TypesafeConfiguration) {
+    underlying_=(Some(config))
+  }
+
+  def passwordLength = getInt("passwordLength", 12)
+  def randomUsername = getBoolean("randomUsername", false)
+  def username = getString("username").filter(_.nonEmpty)
+
+  def genUsername(asset: Asset): String = {
+    if (randomUsername) {
+      CryptoCodec.randomString(8)
+    } else if (username.isDefined) {
+      username.get
+    } else {
+      "%s-ipmi".format(asset.tag)
+    }
+  }
+
+  def get(): Option[IpAddressConfig] = underlying.map { cfg =>
+    new IpAddressConfig(new SimpleAddressConfig(cfg))
+  }
+  override protected def validateConfig() {
+    require(passwordLength > 0 && passwordLength <= 16, "ipmi.passwordLength must be between 1 and 16")
+  }
+}
 
 case class IpmiInfo(
   asset_id: Long,
@@ -53,8 +85,6 @@ case class IpmiInfo(
 
 object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   import org.squeryl.PrimitiveTypeMode._
-
-  val DefaultPasswordLength = 12
 
   val tableDef = table[IpmiInfo]("ipmi_info")
   on(tableDef)(i => declare(
@@ -117,49 +147,12 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
     val IpmiNetmask = Value("IPMI_NETMASK")
   }
 
-  case class Username(asset: Asset, config: Option[Configuration], randomUsername: Boolean = false) {
-    def this(asset: Asset, config: Configuration, randomUsername: Boolean) =
-      this(asset, Some(config), randomUsername)
-
-    def isRandom: Boolean = config match {
-      case None => randomUsername
-      case Some(cfg) => cfg.getBoolean("randomUsername") match {
-        case Some(bool) => bool
-        case None => randomUsername
-      }
-    }
-
-    def fromAsset: String = "%s-ipmi".format(asset.tag)
-
-    def get(): String = {
-      isRandom match {
-        case true => CryptoCodec.randomString(8)
-        case false => config match {
-          case None => fromAsset
-          case Some(cfg) => cfg.getString("username") match {
-            case Some(uname) => uname
-            case None => fromAsset
-          }
-        }
-      }
-    }
-  }
-
   protected def decrypt(password: String) = {
     logger.debug("Decrypting %s".format(password))
     CryptoCodec.withKeyFromFramework.Decode(password).getOrElse("")
   }
 
-  protected def getPasswordLength(): Int = {
-    AppConfig.ipmi match {
-      case None => DefaultPasswordLength
-      case Some(config) => config.getInt("passwordLength") match {
-        case None => DefaultPasswordLength
-        case Some(len) if len > 0 && len <= 16 => len
-        case _ => throw new IllegalArgumentException("passwordLength must be between 1 and 16")
-      }
-    }
-  }
+  protected def getPasswordLength(): Int = IpmiConfig.passwordLength
 
   protected def generateEncryptedPassword(): String = {
     val length = getPasswordLength()
@@ -167,11 +160,11 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   }
 
   protected def getUsername(asset: Asset): String = {
-    Username(asset, AppConfig.ipmi, false).get
+    IpmiConfig.genUsername(asset)
   }
 
   override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
-    IpAddressConfiguration(AppConfig.ipmi).flatMap(_.defaultPool)
+    IpmiConfig.get.flatMap(_.defaultPool)
   }
 
   // Converts our query parameters to fragments and parameters for a query

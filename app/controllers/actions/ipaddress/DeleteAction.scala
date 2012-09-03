@@ -3,7 +3,8 @@ package actions
 package ipaddress
 
 import models.{Asset, IpAddresses}
-import util.{ApiTattler, SecuritySpecification}
+import util.ApiTattler
+import util.security.SecuritySpecification
 import validators.ParamValidation
 
 import play.api.data.Form

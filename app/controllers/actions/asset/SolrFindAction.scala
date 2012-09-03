@@ -4,7 +4,7 @@ package asset
 
 import asset.{FindAction => AssetFindAction}
 import models.{Asset, AssetView, Page, PageParams, Truthy}
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 import util.plugins.solr._
 
 

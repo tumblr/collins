@@ -1,38 +1,33 @@
 package util
+package security
 
 import models.{User, UserImpl}
 
-import play.api.Configuration
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import java.util.{Hashtable => JHashTable}
 import javax.naming._
 import javax.naming.directory._
 
-class LdapAuthenticationProvider(config: Configuration) extends AuthenticationProvider {
+class LdapAuthenticationProvider() extends AuthenticationProvider {
 
-  // validation
-  require(config.getString("host").isDefined, "LDAP requires a host attribute")
-  require(config.getString("searchbase").isDefined, "LDAP requires a searchbase attribute")
-  require(config.getString("usersub").isDefined, "LDAP requires a usersub attribute")
-  require(config.getString("groupsub").isDefined, "LDAP requires a groupsub attribute")
-  require(config.getString("groupAttribute").isDefined, "LDAP requires a groupAttribute attribute")
+  val config = LdapAuthenticationProviderConfig
+  override val authType = "ldap"
 
   // LDAP values
-  val host = config.getString("host").get
-  val searchbase = config.getString("searchbase").get
-  val useSsl = config.getBoolean("ssl") match {
-    case Some(true) => "ldaps"
+  def host = config.host
+  def searchbase = config.searchbase
+  def useSsl = config.useSsl match {
+    case true => "ldaps"
     case _ => "ldap"
   }
-  val url = "%s://%s/%s".format(useSsl, host, searchbase)
-  val usersub = config.getString("usersub").get
-  val groupsub = config.getString("groupsub").get
-  val groupattrib = config.getString("groupAttribute").get
-  logger.debug("LDAP URL: %s".format(url))
+  def url = "%s://%s/%s".format(useSsl, host, searchbase)
+  def usersub = config.usersub
+  def groupsub = config.groupsub
+  def groupattrib = config.groupAttribute
 
   // setup for LDAP
-  protected val env = Map(
+  protected def env = Map(
     Context.INITIAL_CONTEXT_FACTORY -> "com.sun.jndi.ldap.LdapCtxFactory",
     Context.PROVIDER_URL -> url,
     Context.SECURITY_AUTHENTICATION -> "simple")
@@ -48,6 +43,8 @@ class LdapAuthenticationProvider(config: Configuration) extends AuthenticationPr
   protected def groupQuery(username: String): String = {
     "(&(cn=*)(%s=%s))".format(groupattrib, getSecurityPrincipal(username))
   }
+
+  logger.debug("LDAP URL: %s".format(url))
 
   // Authenticate via LDAP
   override def authenticate(username: String, password: String): Option[User] = {

@@ -2,7 +2,9 @@ package controllers
 package actions
 
 import models.User
-import util.{OutputType, SecuritySpecification}
+import util.OutputType
+import util.config.AppConfig
+import util.security.SecuritySpecification
 
 import play.api.Logger
 import play.api.data.Form
@@ -29,7 +31,7 @@ abstract class SecureAction(
 
   protected[this] val logger = Logger.logger
 
-  val FeatureMessages = util.Feature.Messages
+  val FeatureMessages = util.config.Feature.Messages
   val Status = Results
   def Redirect(call: Call) = Results.Redirect(call)
 
@@ -66,7 +68,7 @@ abstract class SecureAction(
   def execute(rd: RequestDataHolder): Result
 
   def executeAsync(rd: RequestDataHolder): Promise[Result] = Akka.future{
-    util.AppConfig.setUser(userOption)
+    AppConfig.setUser(userOption)
     execute(rd)
   }
 

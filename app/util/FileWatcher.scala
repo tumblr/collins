@@ -5,6 +5,7 @@ import play.api.Logger
 import java.io.File
 import java.util.Date
 import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * Watch a file for changes and get notified when it has.
@@ -12,13 +13,14 @@ import java.util.concurrent.atomic.AtomicReference
  * This will always notify the first time that tick is called.
  */
 object FileWatcher {
-  def watch(file: String, secondsBetweenChecks: Int = 30)(changeFn: File => Unit): FileWatcher = {
+  def watch(file: String, secondsBetweenChecks: Int = 30, dInitCheck: Boolean = false)(changeFn: File => Unit): FileWatcher = {
     fileGuard(file) // ensure file exists
     new FileWatcher {
       override protected val filename = file
       override protected val millisBetweenFileChecks = secondsBetweenChecks*1000L
       override protected def onChange(file: File) = changeFn(file)
       override protected def onError(file: File) = {}
+      override protected def delayInitialCheck: Boolean = dInitCheck
     }
   }
   def watchWithResults[T]
@@ -59,6 +61,8 @@ trait FileWatcher {
   // Method to call if file can't be read
   protected def onError(file: File)
 
+  protected def delayInitialCheck: Boolean = false
+
   // Call check every time you use the data that came from this file.
   final def tick() {
     if (isTimeToCheckFile) {
@@ -74,7 +78,7 @@ trait FileWatcher {
       ))
       true
     } else {
-      logger.debug("Keep using the cache, cache not yet expired")
+      logger.trace("Keep using the cache, cache not yet expired")
       false
     }
   }
@@ -82,6 +86,7 @@ trait FileWatcher {
   protected def notifyIfFileWasModified() {
     try {
       val file = FileWatcher.fileGuard(filename)
+      val previousCheckTime = lastTimeFileChecked
       // modify lastTimeFileChecked _after_ the guard. This will cause continued re-check of file in
       // the case that an exception is thrown (isTimeToCheckFile continues to be true)
       lastTimeFileChecked = now
@@ -95,7 +100,12 @@ trait FileWatcher {
         filename, lastModificationTime, mTime
       ))
       lastModificationTime = mTime
-      onChange(file)
+      (previousCheckTime == 0L && delayInitialCheck) match {
+        case true =>
+          logger.info("Not triggerring onChange due to delayInitialCheck being true")
+        case false =>
+          onChange(file)
+      }
     } catch {
       case e => handleFileNotFound(e)
     }
@@ -122,9 +132,21 @@ trait FileWatcher {
 trait FileWatcherResults[T] extends FileWatcher {
   protected val init: T
   lazy private val data = new AtomicReference[T](init)
+  // This isn't used for synchronization as much as just making sure that if fromFile happens to not
+  // be thread safe we don't see any weird issues
+  private val lock = new ReentrantLock();
 
   override protected def onChange(f: File) {
-    data.set(fromFile(f))
+    lock.isHeldByCurrentThread() match {
+      case false =>
+        lock.lock()
+        try {
+          data.set(fromFile(f))
+        } finally {
+          lock.unlock()
+        }
+      case true =>
+    }
   }
 
   protected def fromFile(f: File): T

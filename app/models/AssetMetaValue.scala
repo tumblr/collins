@@ -1,7 +1,8 @@
 package models
 
 import conversions._
-import util.{CryptoCodec, Feature, InternalTattler}
+import util.{CryptoCodec, InternalTattler}
+import util.config.Feature
 import play.api.Logger
 import java.sql.Timestamp
 import java.util.Date
@@ -10,23 +11,13 @@ import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Query, Schema}
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, ExistsExpression, ExpressionNode, LogicalBoolean}
 
-object AssetMetaValueConfig {
-  lazy val ExcludedAttributes: Set[Long] = Feature("noLogPurges").toSet.map { name =>
-    AssetMeta.findByName(name).map(_.getId).getOrElse(-1L)
-  }
-  lazy val ExcludedAssets: Set[String] = Feature("noLogAssets").toSet.map(_.toLowerCase)
-  lazy val EncryptedMeta: Set[String] = Feature("encryptedTags").toSet
-}
-
 case class AssetMetaValue(asset_id: Long, asset_meta_id: Long, group_id: Int, value: String) {
-  require(asset_meta_id == 0 || getMeta().validateValue(value), "Invalid format for value" + value)
-  def getAsset(): Asset = {
-    Asset.findById(asset_id).get
-  }
+
+  def getAsset(): Asset = Asset.findById(asset_id).get
   def getAssetId(): Long = asset_id
-  def getMeta(): AssetMeta = {
-    AssetMeta.findById(asset_meta_id).get
-  }
+  def getMeta(): AssetMeta = AssetMeta.findById(asset_meta_id).get
+
+  require(asset_meta_id == 0 || getMeta().validateValue(value), "Invalid format for value" + value)
 
 }
 
@@ -73,7 +64,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
 
   def shouldEncrypt(v: AssetMetaValue): Boolean = {
     try {
-      AssetMetaValueConfig.EncryptedMeta.contains(v.getMeta().name)
+      Feature.encryptedTags.map(_.name).contains(v.getMeta().name)
     } catch {
       case e =>
         logger.error("Caught exception trying to determine whether to encrypt", v)
@@ -261,9 +252,9 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
 
   protected def shouldLogChange(oldValue: Option[AssetMetaValue], newValue: AssetMetaValue): Boolean = {
     val newAsset = Asset.findById(newValue.asset_id)
-    val excludeAsset = newAsset.isDefined && AssetMetaValueConfig.ExcludedAssets.contains(newAsset.get.tag.toLowerCase)
+    val excludeAsset = newAsset.isDefined && Feature.noLogAssets.map(_.toLowerCase).contains(newAsset.get.tag.toLowerCase)
     oldValue.isDefined &&
-    !AssetMetaValueConfig.ExcludedAttributes.contains(newValue.asset_meta_id) &&
+    !Feature.noLogPurges.map(AssetMeta.findByName(_).map(_.id).getOrElse(0L)).contains(newValue.asset_meta_id) &&
     !excludeAsset &&
     oldValue.get.value != newValue.value
   }

@@ -1,8 +1,9 @@
 package controllers
 
-import util.{AppConfig, SecuritySpec, Stats}
+import util.Stats
 import util.plugins.Cache
 import util.plugins.solr.Solr
+import util.security.AuthenticationProviderConfig
 import views._
 
 import play.api.Play

@@ -1,7 +1,9 @@
 package models
 
 import conversions._
-import util.{AttributeResolver, Config, Feature, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.{AttributeResolver, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.config.{Feature, MultiCollinsConfig, NodeclassifierConfig}
+import util.plugins.Cache
 import util.power.PowerUnits
 import util.views.Formatter.dateFormat
 import util.plugins.solr._
@@ -11,7 +13,6 @@ import play.api.libs.json._
 import play.api.libs.ws.WS
 import play.api._
 import play.api.mvc._
-import play.api.cache.Cache
 import play.api.Play.current
 
 import org.squeryl.Schema
@@ -26,11 +27,7 @@ import akka.dispatch.Await
 import akka.util.duration._
 
 import SortDirection._
-import SortType._
-
-object AssetConfig {
-  lazy val HiddenMeta: Set[String] = Feature("hideMeta").toSet
-}
+import AssetSortType._
 
 /**
  * An AssetView can be either a regular Asset or a RemoteAsset from another
@@ -159,6 +156,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   def getId(): Long = id
   def isServerNode(): Boolean = asset_type == AssetType.Enum.ServerNode.id
   def isConfiguration(): Boolean = asset_type == AssetType.Enum.Config.id
+
+  def isAllocated(): Boolean = status == models.Status.Enum.Allocated.id
+  def isDecommissioned(): Boolean = status == models.Status.Enum.Decommissioned.id
   def isIncomplete(): Boolean = status == models.Status.Enum.Incomplete.id
   def isNew(): Boolean = status == models.Status.Enum.New.id
   def isProvisioning(): Boolean = status == models.Status.Enum.Provisioning.id
@@ -205,7 +205,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
       val ipmi = IpmiInfo.findByAsset(this)
       val addresses = IpAddresses.findAllByAsset(this)
       val (powerRep, mvs3) = PowerHelper.reconstruct(this, mvs2)
-      val filtered: Seq[MetaWrapper] = mvs3.filter(f => !AssetConfig.HiddenMeta.contains(f.getName))
+      val filtered: Seq[MetaWrapper] = mvs3.filter(f => !Feature.hideMeta.contains(f.getName))
       Asset.AllAttributes(this, lshwRep, lldpRep, ipmi, addresses, powerRep, filtered)
     }
   }
@@ -217,20 +217,14 @@ case class Asset(tag: String, status: Int, asset_type: Int,
    */
   def nodeClass: Option[Asset] = {
     import util.AttributeResolver._
-    val nodeclassType = Config.getString("nodeclass.assetType","CONFIGURATION").trim.toString
-    val enum = try AssetType.Enum.withName(nodeclassType) catch {
-      case e: java.util.NoSuchElementException => {
-        Logger.logger.error("Invalid nodeclass asset type \"%s\", defaulting to configuration type".format(nodeclassType))
-        AssetType.Enum.Config
-      }
-    }
+    val nodeclassType = NodeclassifierConfig.assetType
     val instanceFinder = AssetFinder
       .empty
       .copy ( 
-        assetType = Some(enum)
+        assetType = Some(nodeclassType)
       )
     val nodeclassParams: ResolvedAttributes = EmptyResolvedAttributes
-      .withMeta(Config.getString("nodeclass.identifyingMetaTag", "IS_NODECLASS"), "true")
+      .withMeta(NodeclassifierConfig.identifyingMetaTag, "true")
     val nodeclasses = AssetMetaValue
       .findAssetsByMeta(PageParams(0,50,"ASC"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
       .items
@@ -257,7 +251,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
    * Filters out nodeclass exluded tags from the meta set
    */
   private[models] def filteredMetaSeq = {
-    val excludeMetaTags = Config.getString("nodeclass.excludeMetaTags","").split(",")
+    val excludeMetaTags = NodeclassifierConfig.excludeMetaTags
     metaSeq.filter{case(meta, value) => !(excludeMetaTags contains meta.name)}
   }
 
@@ -284,7 +278,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
     "Asset.findByTag(%s)".format(asset.tag.toLowerCase),
     "Asset.findById(%d)".format(asset.id)
   )
-
+  def flushCache(asset: Asset) = cacheKeys(asset).foreach { k =>
+    Cache.invalidate(k)
+  }
   object Messages extends MessageHelper("asset") {
     def intakeError(t: String, a: Asset) = "intake.error.%s".format(t.toLowerCase) match {
       case msg if msg == "intake.error.new" =>
@@ -341,15 +337,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }
   def get(a: Asset) = findById(a.id).get
 
-  /**
-   * checkCache is needed for solr re-indexing, avoids indexing out-of-date data
-   */
-  def findByTag(tag: String, checkCache: Boolean = true): Option[Asset] = {
-    lazy val op = tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
-    if (checkCache) {
-      getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase))(op)
-    } else inTransaction {
-      op
+  def findByTag(tag: String): Option[Asset] = {
+    getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
+      tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
     }
   }
 
@@ -379,16 +369,17 @@ object Asset extends Schema with AnormAdapter[Asset] {
       createdBefore = None,
       updatedAfter = None,
       updatedBefore = None,
-      assetType = Some(AssetType.Enum.withName(Config.getString("multicollins.instanceAssetType","DATA_CENTER").trim.toString))
+      assetType = Some(MultiCollinsConfig.instanceAssetType)
     )
     val findLocations = Asset
       .find(PageParams(0,50,"ASC"), AttributeResolver.emptyResultTuple, instanceFinder)
       .items
       .collect{case a: Asset => a}
-      .filter{_.tag != Config.getString("multicollins.thisInstance","NONE")}
+      .filter{_.tag != MultiCollinsConfig.thisInstance}
     //iterate over the locations, sending requests to each one and aggregate their results
     val remoteClients = findLocations.flatMap { locationAsset => 
-      locationAsset.getMetaAttribute("LOCATION").map{_.getValue} match {
+      val locationAttribute = MultiCollinsConfig.locationAttribute
+      locationAsset.getMetaAttribute(locationAttribute).map(_.getValue) match {
         case None =>
           logger.warn("No location attribute for remote location asset %s".format(locationAsset.tag))
           None
@@ -411,7 +402,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
   /**
    * Finds assets in the same nodeclass as the given asset
    */
-  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sortType: SortType): Page[AssetView] = {
+  def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sortType: AssetSortType): Page[AssetView] = {
     val sorter = SortDirection.withName(page.sort.toString).getOrElse( {
       logger.warn("Invalid sort " + page.sort)
       SortDesc
@@ -488,7 +479,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       if (showCreds) {
         mvs
       } else {
-        mvs.filter(mv => !AssetMetaValueConfig.EncryptedMeta.contains(mv.getName))
+        mvs.filter(mv => !Feature.encryptedTags.map(_.name).contains(mv.getName))
       }
     }
 

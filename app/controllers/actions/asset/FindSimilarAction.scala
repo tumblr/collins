@@ -6,7 +6,7 @@ import forms._
 
 import models.{Asset, AssetFinder, AssetType, AssetView, Page, PageParams, RemoteCollinsHost, SortDirection, Truthy}
 import models.Status.{Enum => AssetStatusEnum}
-import models.SortType._
+import models.AssetSortType._
 import models.SortDirection._
 
 import play.api.mvc.Result
@@ -16,7 +16,7 @@ import play.api.Logger
 import play.api.mvc.{AnyContent, Request, Result}
 
 import util.MessageHelper
-import util.SecuritySpecification
+import util.security.SecuritySpecification
 
 import views.html
 
@@ -32,12 +32,12 @@ case class FindSimilarAction(
     asset: Asset,
     details: Option[Truthy], 
     onlyUnallocated: Option[Truthy],
-    sortType: Option[SortType]
+    sortType: Option[AssetSortType]
   ) extends RequestDataHolder
 
   object SimilarDataHolder extends MessageHelper("similar"){
     def form = Form(tuple(
-      "sortType"        -> optional(of[SortType]),
+      "sortType"        -> optional(of[AssetSortType]),
       "onlyUnallocated" -> optional(of[Truthy]),
       "details"         -> optional(of[Truthy])
     ))

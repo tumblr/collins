@@ -4,7 +4,8 @@ import conversions._
 import AssetMeta.Enum.RackPosition
 import models.{Status => AStatus}
 
-import util.{ApiTattler, AssetStateMachine, Config, Feature, InternalTattler, LldpRepresentation, LshwRepresentation}
+import util.{ApiTattler, AssetStateMachine, InternalTattler, LldpRepresentation, LshwRepresentation, SystemTattler}
+import util.config.{Feature, LshwConfig}
 import util.parsers.{LldpParser, LshwParser}
 import util.power.PowerUnits
 
@@ -19,7 +20,7 @@ object AssetLifecycleConfig {
   // A few keys we generally want changable after intake
   private val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
   // User configured excludes, only applied to non-servers
-  private val ConfiguredExcludes = Feature("allowTagUpdates").toSet
+  private val ConfiguredExcludes = Feature.allowTagUpdates
   private val RestrictedKeys = AssetMeta.Enum.values.map { _.toString }.toSet ++ PossibleAssetKeys -- ExcludedKeys
 
   def isRestricted(s: String) = RestrictedKeys.contains(s.toUpperCase)
@@ -42,7 +43,7 @@ object AssetLifecycle {
     import IpmiInfo.Enum._
     try {
       val _status = status.getOrElse(Status.Enum.Incomplete)
-      Asset.inTransaction {
+      val res = Asset.inTransaction {
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
           case true => Some(IpmiInfo.createForAsset(asset))
@@ -50,8 +51,10 @@ object AssetLifecycle {
         }
         InternalTattler.informational(asset, None,
           "Initial intake successful, status now %s".format(_status.toString))
-        Right(Tuple2(asset, ipmi))
+        Tuple2(asset, ipmi)
       }
+      Asset.flushCache(res._1)
+      Right(res)
     } catch {
       case e =>
         // FIXME once we have logging for non-assets
@@ -78,7 +81,6 @@ object AssetLifecycle {
     }
   }
 
-  private lazy val lshwConfig = Config.toMap("lshw")
   def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = asset.isServerNode match {
     case true => updateServer(asset, options)
     case false => updateOther(asset, options)
@@ -127,7 +129,7 @@ object AssetLifecycle {
   }
 
   def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    Feature("sloppyStatus").whenDisabledOrUnset {
+    if (!Feature.sloppyStatus) {
         return Left(new Exception("sloppyStatus not enabled"))
     }
     val stat = options.get("status").getOrElse("none")
@@ -193,7 +195,7 @@ object AssetLifecycle {
     filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
-    val lshwParser = new LshwParser(lshw, lshwConfig)
+    val lshwParser = new LshwParser(lshw)
     val lldpParser = new LldpParser(lldp)
 
     allCatch[Boolean].either {
@@ -221,7 +223,7 @@ object AssetLifecycle {
     allCatch[Boolean].either {
       Asset.inTransaction {
         options.get("lshw").foreach{lshw => 
-          parseLshw(asset, new LshwParser(lshw, lshwConfig)).left.foreach{throw _}
+          parseLshw(asset, new LshwParser(lshw)).left.foreach{throw _}
         }
         options.get("lldp").foreach{lldp =>
           parseLldp(asset, new LldpParser(lldp)).left.foreach{throw _}
@@ -277,6 +279,7 @@ object AssetLifecycle {
     } catch {
       case ex =>
         logger.error("Database problems", ex)
+        SystemTattler.safeError("Database problems: %s".format(ex.getMessage))
     }
     e
   }

@@ -2,7 +2,7 @@
 
 @import helper._
 @import _root_.util.views.OptionSorter
-@import _root_.util.Config
+@import _root_.util.config.MultiCollinsConfig
 @import util.notice
 
 @basicFormatter(asset: AssetMeta) = {
@@ -113,7 +113,7 @@
         <span class="help-inline">IPMI Address</span>
       </div>
     </div>
-    @if(Config.getBoolean("multicollins.enabled").getOrElse(false)) {
+    @if(MultiCollinsConfig.enabled) {
     <div class="clearfix">
       <label for="REMOTE_LOOKUP">Remote Search</label>
       <div class="input">

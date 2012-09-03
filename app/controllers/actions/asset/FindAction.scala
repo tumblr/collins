@@ -3,13 +3,14 @@ package actions
 package asset
 
 import forms._
-import util.Config
 
 import models.{Asset, AssetType, AssetView, AssetFinder, Page, PageParams, RemoteAsset, Status => AssetStatus, Truthy}
 import models.AssetType.{Enum => AssetTypeEnum}
 import models.Status.{Enum => AssetStatusEnum}
 
-import util.{AttributeResolver, SecuritySpecification}
+import util.AttributeResolver
+import util.config.MultiCollinsConfig
+import util.security.SecuritySpecification
 
 import play.api.libs.json._
 import play.api.mvc.Result
@@ -43,7 +44,7 @@ class FindAction(
     case afdh: AssetFinderDataHolder =>
       val AssetFinderDataHolder(af, ra, op, de, rl) = afdh
       try {
-        val results = if (Config.getBoolean("multicollins.enabled").getOrElse(false) && rl.map{_.isTruthy}.getOrElse(false)) {
+        val results = if (MultiCollinsConfig.enabled && rl.map{_.isTruthy}.getOrElse(false)) {
           logger.debug("Performing remote asset find")
           Asset.findMulti(pageParams, ra, af, op, de.map{_.isTruthy}.getOrElse(false) || isHtml)
         } else {

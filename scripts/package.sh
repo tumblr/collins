@@ -1,7 +1,7 @@
 #! /usr/bin/env sh
 
 if [ -z "$PLAY_CMD" ]; then
-  PLAY_CMD="$HOME/src/play-2.0.2/play";
+  PLAY_CMD="$HOME/src/play-2.0.3/play";
 fi
 
 $PLAY_CMD clean compile stage
@@ -15,6 +15,7 @@ cp ../scripts/collins.sh collins/scripts/collins.sh
 cp ../conf/logger.xml collins/conf/
 cp ../conf/production*.conf collins/conf/
 cp ../conf/permissions.yaml collins/conf/
+cp ../conf/validations.conf collins/conf/
 cp -R ../conf/solr collins/conf/
 mkdir -p collins/conf/
 cp -R ../conf/evolutions/* collins/conf/evolutions/

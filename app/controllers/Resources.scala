@@ -62,15 +62,4 @@ trait Resources extends Controller {
     case n => IntakeStage1Action(id, Permissions.Resources.Intake, this)
   }
 
-  /**
-   * Manage 4 stage asset intake process
-   */
-  /*
-  def intake(id: Long, stage: Int = 1) = SecureAction { implicit req =>
-    Redirect(app.routes.Resources.index).flashing(
-      "success" -> "Successfull intake of %s".format(asset.tag)
-    )
-  }(Permissions.Resources.Intake)
-  */
-
 }

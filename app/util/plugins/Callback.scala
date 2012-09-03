@@ -2,10 +2,10 @@ package util
 package plugins
 
 import play.api.{Play, Plugin}
-import com.tumblr.play.{CallbackManagerPlugin, CallbackManagerInterface}
+import collins.callbacks.{CallbackActionHandler, CallbackManagerPlugin, CallbackManager}
 import java.beans.PropertyChangeEvent
 
-object Callback extends CallbackManagerInterface {
+object Callback extends CallbackManager {
   def pluginEnabled: Option[CallbackManagerPlugin] = {
     Play.maybeApplication.flatMap { app =>
       app.plugin[CallbackManagerPlugin].filter(_.enabled)
@@ -24,9 +24,16 @@ object Callback extends CallbackManagerInterface {
     }
   }
 
-  override def on(propertyName: String)(f: PropertyChangeEvent => Unit) {
+  def on(propertyName: String)(fn: PropertyChangeEvent => Unit) {
+    val cbah = new CallbackActionHandler {
+      override def apply(pce: PropertyChangeEvent) = fn(pce)
+    }
+    on(propertyName, cbah)
+  }
+
+  override def on(propertyName: String, f: CallbackActionHandler) {
     pluginEnabled { plugin =>
-      plugin.on(propertyName)(f)
+      plugin.on(propertyName, f)
     }
   }
 
