@@ -13,11 +13,13 @@ object AuthenticationProviderConfig extends Configurable {
   def adminGroup = getStringSet("adminGroup").map(_.toLowerCase)
   def cacheCredentials = getBoolean("cacheCredentials", false)
   def cacheTimeout = getMilliseconds("cacheTimeout").getOrElse(0L)
+  def cachePermissionsTimeout = getMilliseconds("cachePermissionsTimeout").getOrElse(30000L)
   def permissionsFile = getString("permissionsFile")(ConfigValue.Required).get
   def authType = getString("type", "default").toLowerCase
 
   override protected def validateConfig() {
     File.requireFileIsReadable(permissionsFile)
+    require(cachePermissionsTimeout > 0, "cachePermissionsTimeout must be > 0")
     PermissionsLoader()
   }
 }
