@@ -44,7 +44,6 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
   protected[this] val configuration: Option[Configuration] = app.configuration.getConfig("softlayer")
   protected[this] val _username: Option[String] = configuration.flatMap(_.getString("username"))
   protected[this] val _password: Option[String] = configuration.flatMap(_.getString("password"))
-  protected[this] val cachePlugin = new CachePlugin(app, None, 86400)
   protected[this] def InvalidConfig(s: Option[String] = None): Exception = PlayException(
     "Invalid Configuration",
     s.getOrElse("softlayer.enabled is true but username or password not specified"),
@@ -70,8 +69,6 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     }
   }
   override def onStop() {
-    cachePlugin.clear()
-    cachePlugin.onStop()
   }
 
   override def username = _username.get
