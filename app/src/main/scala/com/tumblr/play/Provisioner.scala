@@ -5,6 +5,7 @@ import com.twitter.util.{Future, FuturePool}
 import org.yaml.snakeyaml.Yaml
 import play.api.{Application, Configuration, Logger, PlayException, Plugin}
 
+import collins.cache.CachePlugin
 import java.io.{File, FileInputStream, InputStream}
 import java.util.concurrent.Executors
 
@@ -60,7 +61,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
     s.getOrElse("provisioner.enabled is true but provisioner.command or provisioner.profiles not specified"),
     None
   )
-  protected[this] val cachePlugin = new CachePlugin(app, None, 30)
+  protected[this] val cachePlugin = new CachePlugin(app, 30)
   protected[this] val allowedStatus: Set[Int] =
     configuration.flatMap(_.getString("allowedStatus")).getOrElse("1,2,3,5,7").split(",").map(_.toInt).toSet
   protected[this] val executor = Executors.newCachedThreadPool()
