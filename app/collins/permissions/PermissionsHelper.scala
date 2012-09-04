@@ -14,8 +14,7 @@ object PermissionsHelper {
     val perms = Permissions(converted(p.permissions))
     Privileges(users, perms)
   }
-  private
-  def converted(map: JMap[String,JList[String]]): Map[String,Set[String]] = {
+  private def converted(map: JMap[String,JList[String]]): Map[String,Set[String]] = {
     map.asScala.map { t =>
       val key = t._1.toLowerCase
       val value = if (t._2 == null) { Set[String]() } else { t._2.asScala.toSet }

@@ -2,11 +2,8 @@ package collins
 package cache
 
 import util.config.Configurable
-import play.api.Logger
 
 object CacheConfig extends Configurable {
-  private[this] val logger = Logger("CacheConfig")
-
   override val namespace = "cache"
   override val referenceConfigFilename = "cache_reference.conf"
 

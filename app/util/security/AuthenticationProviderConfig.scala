@@ -2,6 +2,9 @@ package util
 package security
 
 import util.config.{Configurable, ConfigValue}
+import collins.permissions.PermissionsHelper
+import collins.validation.File
+import java.io.{File => IoFile}
 
 object AuthenticationProviderConfig extends Configurable {
   override val namespace = "authentication"
@@ -10,11 +13,12 @@ object AuthenticationProviderConfig extends Configurable {
   def adminGroup = getStringSet("adminGroup").map(_.toLowerCase)
   def cacheCredentials = getBoolean("cacheCredentials", false)
   def cacheTimeout = getMilliseconds("cacheTimeout").getOrElse(0L)
-  lazy val permissionsFile = getString("permissionsFile")(ConfigValue.Required).get
+  def permissionsFile = getString("permissionsFile")(ConfigValue.Required).get
   def authType = getString("type", "default").toLowerCase
 
   override protected def validateConfig() {
-    FileWatcher.fileGuard(permissionsFile)
+    File.requireFileIsReadable(permissionsFile)
+    PermissionsLoader()
   }
 }
 
@@ -27,7 +31,7 @@ object FileAuthenticationProviderConfig extends Configurable {
 
   override protected def validateConfig() {
     if (AuthenticationProviderConfig.authType == "file") {
-      FileWatcher.fileGuard(userfile)
+      File.requireFileIsReadable(userfile)
     }
   }
 }

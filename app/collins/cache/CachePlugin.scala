@@ -10,15 +10,19 @@ class CachePlugin(app: Application, override val timeoutInSeconds: java.lang.Int
 
   override def enabled = {
     CacheConfig.pluginInitialize(app.configuration)
+    // the cache gets used before the system is initialized
+    // This is terrible, a thousand curses upon my head
+    ensureCacheInstance()
     CacheConfig.enabled
   }
   override def onStart() {
-    underlying = getCacheInstance()
+    ensureCacheInstance()
     clear()
   }
   override def onStop() {
-    clear()
-    underlying = null
+    if (underlying != null) {
+      clear()
+    }
   }
 
   override def set(key: String, value: AnyRef) = underlying.set(key, value)
@@ -35,5 +39,19 @@ class CachePlugin(app: Application, override val timeoutInSeconds: java.lang.Int
       .getConstructor(classOf[java.lang.Integer])
       .newInstance(timeoutInSeconds)
       .asInstanceOf[Cache]
+  }
+
+  protected def ensureCacheInstance() {
+    if (underlying == null) {
+      underlying = getCacheInstance()
+    }
+  }
+}
+
+object CachePlugin {
+  def getInstance(app: Application, timeout: Int): CachePlugin = {
+    val instance = new CachePlugin(app, timeout)
+    instance.onStart()
+    instance
   }
 }
