@@ -1,4 +1,4 @@
-package com.tumblr.play
+package collins.provisioning
 
 import com.google.common.util.concurrent.UncheckedExecutionException
 import com.twitter.util.{Future, FuturePool}
@@ -13,46 +13,10 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.SortedSet
 import scala.collection.mutable.{Map => MutableMap, StringBuilder}
 import scala.sys.process._
+import models.Asset
+import collins.shell.CommandResult
 
-// Token is used for looking up an asset, notify is the address to use for notification
-// Profile would be the same as the profile identifier
-case class ProvisionerRoleData(primary_role: Option[String], pool: Option[String], secondary_role: Option[String], requires_primary_role: Boolean, requires_pool: Boolean, requires_secondary_role: Boolean) {
-  def this() = this(None,None,None,false,false,false)
-}
-case class ProvisionerRequest(token: String, profile: ProvisionerProfile, notification: Option[String] = None, suffix: Option[String] = None)
-case class ProvisionerProfile(identifier: String, label: String, prefix: String, allow_suffix: Boolean, role: ProvisionerRoleData) extends Ordered[ProvisionerProfile] {
-  override def compare(that: ProvisionerProfile): Int = {
-    this.label.compare(that.label)
-  }
-}
-
-case class CommandResult(exitCode: Int, output: String, stderr: Option[String] = None) {
-  def isSuccess: Boolean = exitCode == 0
-  override def toString(): String = {
-    "Exit Code: %d, Stdout: %s, Stderr: %s".format(exitCode, output, stderr.getOrElse(""))
-  }
-}
-
-trait ProvisionerInterface {
-  protected[this] val logger = Logger(getClass)
-  type ThingWithStatus = {
-    def status: Int
-  }
-  def profiles: Set[ProvisionerProfile]
-  def canProvision(thing: ThingWithStatus): Boolean
-  def provision(request: ProvisionerRequest): Future[CommandResult]
-  def test(request: ProvisionerRequest): Future[CommandResult]
-  def profile(id: String): Option[ProvisionerProfile] = {
-    profiles.find(_.identifier == id)
-  }
-  def makeRequest(token: String, id: String, notification: Option[String] = None, suffix: Option[String] = None): Option[ProvisionerRequest] = {
-    profile(id).map { p =>
-      ProvisionerRequest(token, p, notification, suffix)
-    }
-  }
-}
-
-class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterface {
+class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
   protected[this] val configuration: Option[Configuration] = app.configuration.getConfig("provisioner")
   protected[this] val commandTemplate: Option[String] = configuration.flatMap(_.getString("command"))
   protected[this] val checkCommandTemplate: Option[String] = configuration.flatMap(_.getString("checkCommand"))
@@ -123,8 +87,8 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
   }
 
   // overrides ProvisionerInterface.canProvision
-  override def canProvision(thing: ThingWithStatus): Boolean = {
-    allowedStatus.contains(thing.status)
+  override def canProvision(asset: Asset): Boolean = {
+    allowedStatus.contains(asset.status)
   }
 
   // overrides ProvisionerInterface.provision

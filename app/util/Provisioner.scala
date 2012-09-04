@@ -1,7 +1,7 @@
 package util
 
 import play.api.{Play, Plugin}
-import com.tumblr.play.ProvisionerPlugin
+import collins.provisioning.ProvisionerPlugin
 
 object Provisioner {
   def pluginEnabled: Option[ProvisionerPlugin] = {

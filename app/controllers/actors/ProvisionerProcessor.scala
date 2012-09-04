@@ -2,7 +2,8 @@ package controllers
 package actors
 
 import akka.util.Duration
-import com.tumblr.play.{CommandResult, ProvisionerRequest}
+import collins.provisioning.ProvisionerRequest
+import collins.shell.CommandResult
 import com.twitter.util.Future
 import play.api.mvc.{AnyContent, Request}
 import util.Provisioner

@@ -3,7 +3,7 @@ package util
 import config.AppConfig
 import models.{Asset, IpmiInfo}
 import concurrent.BackgroundProcess
-import com.tumblr.play.CommandResult
+import collins.shell.CommandResult
 
 import akka.util.Duration
 import play.api.{Logger, Mode}
