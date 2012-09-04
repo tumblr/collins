@@ -19,7 +19,7 @@ object Cache {
       case e =>
         new Application(new File("."), this.getClass.getClassLoader, None, Mode.Dev)
     }
-    new CachePlugin(app, timeoutInSeconds)
+    CachePlugin.getInstance(app, timeoutInSeconds)
   }
 
   def set(key: String, value: AnyRef) {

@@ -19,6 +19,9 @@ class GuavaCache(override val timeoutInSeconds: java.lang.Integer) extends Cache
     cache.put(key, value)
   }
 
+  override def toString(): String =
+    "GuavaCache(%d)".format(timeoutInSeconds)
+
   override def getOrElseUpdate[T <: AnyRef](key: String, op: => T)(implicit m: Manifest[T]): T = {
     val value = cache.get(key, op)
     if (m.erasure.isAssignableFrom(value.getClass))

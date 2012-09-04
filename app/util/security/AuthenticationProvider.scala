@@ -2,6 +2,7 @@ package util
 package security
 
 import models.{User, UserImpl}
+import collins.validation.File
 
 import play.api.Logger
 import com.google.common.cache._
@@ -46,11 +47,12 @@ object AuthenticationProvider {
   val Types = Set("ldap", "file", "default")
   def filename = AuthenticationProviderConfig.permissionsFile 
 
-  private val logger = Logger(getClass)
+  private val logger = Logger("util.security.AuthenticationProvider")
 
-  lazy private val watcher = FileWatcher.watchWithResults(filename, Privileges.empty) { f =>
-    PermissionsHelper.fromFile(f.getAbsolutePath)
-  }
+  lazy private val permissionsCache: LoadingCache[String,Privileges] = CacheBuilder.newBuilder()
+                                      .maximumSize(1)
+                                      .expireAfterWrite(30, TimeUnit.SECONDS)
+                                      .build(PermissionsLoader())
 
   def get(name: String): AuthenticationProvider = {
     name match {
@@ -111,7 +113,7 @@ object AuthenticationProvider {
   }
 
   protected[util] def privileges: Privileges = {
-    val p = watcher.getFileContents()
+    val p = permissionsCache.get(filename)
     logger.trace("Privileges - %s".format(p))
     p
   }

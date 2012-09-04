@@ -61,7 +61,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
     s.getOrElse("provisioner.enabled is true but provisioner.command or provisioner.profiles not specified"),
     None
   )
-  protected[this] val cachePlugin = new CachePlugin(app, 30)
+  protected[this] val cachePlugin = CachePlugin.getInstance(app, 30)
   protected[this] val allowedStatus: Set[Int] =
     configuration.flatMap(_.getString("allowedStatus")).getOrElse("1,2,3,5,7").split(",").map(_.toInt).toSet
   protected[this] val executor = Executors.newCachedThreadPool()
@@ -77,8 +77,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
   // overrides Plugin.onStart
   override def onStart() {
     if (enabled) {
-      cachePlugin.clear()
-      logger.info("Cleared cache")
+      cachePlugin.onStart()
       try {
         if (!commandTemplate.isDefined || !haveProfiles) {
           throw InvalidConfig()
@@ -94,7 +93,6 @@ class ProvisionerPlugin(app: Application) extends Plugin with ProvisionerInterfa
 
   // overrides Plugin.onStop
   override def onStop() {
-    cachePlugin.clear()
     cachePlugin.onStop()
     try executor.shutdown() catch {
       case _ => // swallow this
