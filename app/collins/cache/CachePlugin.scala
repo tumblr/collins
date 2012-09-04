@@ -32,7 +32,7 @@ class CachePlugin(app: Application, override val timeoutInSeconds: java.lang.Int
 
   protected def getCacheInstance(): Cache = {
     this.getClass.getClassLoader.loadClass(CacheConfig.className)
-      .getConstructor(classOf[Int])
+      .getConstructor(classOf[java.lang.Integer])
       .newInstance(timeoutInSeconds)
       .asInstanceOf[Cache]
   }
