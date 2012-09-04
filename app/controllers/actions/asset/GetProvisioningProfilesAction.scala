@@ -4,7 +4,7 @@ package asset
 
 import util.Provisioner
 import util.security.SecuritySpecification
-import com.tumblr.play.ProvisionerProfile
+import collins.provisioning.ProvisionerProfile
 import play.api.libs.json._
 
 case class GetProvisioningProfilesAction(

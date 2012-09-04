@@ -15,8 +15,8 @@ import play.api.data.Forms._
 import play.api.libs.concurrent.{Akka, Promise}
 import play.api.mvc._
 
-import com.tumblr.play.{ProvisionerPlugin, ProvisionerProfile, ProvisionerRequest}
-import com.tumblr.play.{ProvisionerRoleData => ProvisionerRole}
+import collins.provisioning.{ProvisionerPlugin, ProvisionerProfile, ProvisionerRequest}
+import collins.provisioning.{ProvisionerRoleData => ProvisionerRole}
 
 trait ProvisionUtil { self: SecureAction =>
 

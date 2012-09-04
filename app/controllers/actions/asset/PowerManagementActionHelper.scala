@@ -13,7 +13,8 @@ import util.security.SecuritySpecification
 import play.api.libs.json._
 import play.api.mvc._
 
-import com.tumblr.play.{CommandResult, PowerAction, PowerState, Verify, Identify}
+import com.tumblr.play.{PowerAction, PowerState, Verify, Identify}
+import collins.shell.CommandResult
 
 abstract class PowerManagementActionHelper(
   assetTag: String,

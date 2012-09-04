@@ -1,7 +1,8 @@
 package controllers
 
 import actors._
-import com.tumblr.play.{CommandResult, ProvisionerProfile, ProvisionerRequest}
+import collins.provisioning.{ProvisionerProfile, ProvisionerRequest}
+import collins.shell.CommandResult
 import forms._
 import models.{Status => AStatus}
 import models._
