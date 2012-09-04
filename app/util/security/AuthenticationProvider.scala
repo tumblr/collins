@@ -6,8 +6,7 @@ import models.{User, UserImpl}
 import play.api.Logger
 import com.google.common.cache._
 import java.util.concurrent.TimeUnit
-import com.tumblr.play.{PermissionsHelper, Privileges}
-
+import collins.permissions.{PermissionsHelper, Privileges}
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger
