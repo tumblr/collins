@@ -51,7 +51,7 @@ object AuthenticationProvider {
 
   lazy private val permissionsCache: LoadingCache[String,Privileges] = CacheBuilder.newBuilder()
                                       .maximumSize(1)
-                                      .expireAfterWrite(30, TimeUnit.SECONDS)
+                                      .expireAfterWrite(AuthenticationProviderConfig.cachePermissionsTimeout, TimeUnit.MILLISECONDS)
                                       .build(PermissionsLoader())
 
   def get(name: String): AuthenticationProvider = {

@@ -4,18 +4,21 @@ package security
 import models.{User, UserImpl}
 
 import sun.misc.BASE64Encoder
+import com.google.common.cache.{CacheBuilder, LoadingCache}
 import java.io.File
 import java.security.MessageDigest
+import java.util.concurrent.TimeUnit
 import io.Source
 
 class FileAuthenticationProvider() extends AuthenticationProvider {
 
-  def authfile = FileAuthenticationProviderConfig.userfile
+  def userfile = FileAuthenticationProviderConfig.userfile
   override val authType = "file"
 
-  private val watcher = FileWatcher.watchWithResults(authfile, Map.empty[String,UserImpl]) { file =>
-    usersFromFile(file)
-  }
+  lazy private val userCache: LoadingCache[String,FileUserMap] = CacheBuilder.newBuilder()
+                                      .maximumSize(1)
+                                      .expireAfterWrite(10, TimeUnit.SECONDS)
+                                      .build(FileUserLoader())
 
   override def authenticate(username: String, password: String): Option[User] = {
     user(username) match {
@@ -30,20 +33,7 @@ class FileAuthenticationProvider() extends AuthenticationProvider {
   }
 
   protected def user(username: String): Option[UserImpl] = {
-    watcher.getFileContents().get(username)
-  }
-
-  protected def usersFromFile(file: File): Map[String,UserImpl] = {
-    Source.fromFile(file, "UTF-8").getLines().map { line =>
-      val split = line.split(":", 3)
-      if (split.length != 3) {
-        throw new Exception("Invalid line format for users")
-      }
-      val username = split(0)
-      val password = split(1)
-      val roles = split(2).split(",").toSet
-      (username -> UserImpl(username, password, roles, username.hashCode, false))
-    }.toMap
+    userCache.get(userfile).get(username)
   }
 
   // This is consistent with how apache encrypts SHA1
@@ -51,4 +41,3 @@ class FileAuthenticationProvider() extends AuthenticationProvider {
     "{SHA}" + new BASE64Encoder().encode(MessageDigest.getInstance("SHA1").digest(s.getBytes()))
   }
 }
-
