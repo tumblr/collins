@@ -2,10 +2,10 @@ package controllers
 package actions
 package asset
 
+import collins.provisioning.ProvisionerConfig
 import util.{Provisioner, SoftLayer}
 import util.concurrent.RateLimiter
 import util.config.AppConfig
-import util.provisioner.ProvisionerConfig
 import util.security.SecuritySpecification
 import validators.StringUtil
 
