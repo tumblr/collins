@@ -80,7 +80,7 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
     IpmiPowerCommand.fromPowerAction(getAsset(e), action).run() match {
       case None => Failure("powermanagement not enabled or available in environment")
       case Some(status) => status.isSuccess match {
-        case true => Success(status.output)
+        case true => Success(status.stdout)
         case false => Failure(status.stderr.getOrElse("Error running command for %s".format(action)))
       }
     }

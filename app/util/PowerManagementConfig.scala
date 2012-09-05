@@ -38,12 +38,12 @@ object PowerManagementConfig extends Configurable {
         case e => None
       }
     }.flatMap(AssetType.findById(_)).getOrElse {
-      throw new Exception("%s is not a valid asset type".format(name))
+      throw globalError("%s is not a valid asset type".format(name))
     }
   }.map(_.id)
   def disallowStatus: Set[Int] = getStringSet("disallowStatus").map { s =>
     Status.findByName(s).getOrElse {
-      throw new Exception("%s is not a valid status name".format(s))
+      throw globalError("%s is not a valid status name".format(s))
     }
   }.map(_.id)
   def disallowWhenAllocated: Set[PowerAction] = getStringSet("disallowWhenAllocated").map { p =>

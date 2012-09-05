@@ -24,7 +24,7 @@ case class PowerStatusAction(
 
   override protected def onSuccess(s: CommandResult): ResponseData = {
     logSuccessfulPowerEvent()
-    val status = s.output.contains("on") match {
+    val status = s.stdout.contains("on") match {
       case true => "on"
       case false => "off"
     }

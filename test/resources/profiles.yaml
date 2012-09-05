@@ -1,13 +1,18 @@
 ---
-:profiles:
+profiles:
     searchnode:
+        label: "Search Server"
+        prefix: "search"
+        allow_suffix: true
+        primary_role: "SEARCH"
+        pool: "SEARCH_POOL"
+        secondary_role: "MASTER"
+        requires_primary_role: false
+        requires_secondary_role: true
+        requires_pool: false
         cobbler_profile: "centos-5.6-x86_64-db-v2"
         operating_system: "centos_5"
         vlans: ["search"]
-        label: "Search Server"
-        prefix: "search"
-        primary_role: "SEARCH"
-        requires_pool: false
     databasenode:
         cobbler_profile: "centos-5.6-x86_64-db-v2"
         operating_system: "centos_5"
@@ -230,7 +235,6 @@
         prefix: "scribe"
         primary_role: "SCRIBE"
         allow_suffix: true
-        allow_suffix: false
     collinsnode:
         cobbler_profile: "centos-5.6-x86_64-web"
         operating_system: "centos_5"

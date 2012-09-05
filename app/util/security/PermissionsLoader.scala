@@ -18,7 +18,7 @@ case class PermissionsLoader(privileges: Privileges) extends CacheLoader[String,
       PermissionsHelper.fromFile(new IoFile(filename).getAbsolutePath)
     } catch {
       case e =>
-        logger.error("There is a problem with permissions file %s: %s".format(
+        logger.error("There is a problem with the permissions file %s: %s".format(
           filename, e.getMessage
         ))
         privileges
