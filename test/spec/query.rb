@@ -50,10 +50,10 @@ describe "Asset Search" do
 
   it "asset status" do
     assets_1 = @client.search 'status = allocated AND hostname=web-a*', 1000
-    assets_1.size.should eq 19
+    assets_1.size.should eq 37
 
     assets_1 = @client.search 'status = new', 1000
-    assets_1.size.should eq 14
+    assets_1.size.should eq 53
   end
 
   it "with type and negated status" do
