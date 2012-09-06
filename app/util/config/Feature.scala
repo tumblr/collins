@@ -46,6 +46,7 @@ object Feature extends Configurable {
   def noLogAssets = getStringSet("noLogAssets")
   def noLogPurges = getStringSet("noLogPurges")
   def sloppyStatus = getBoolean("sloppyStatus", true)
+  def sloppyTags = getBoolean("sloppyTags", false)
 
   protected def featureException(key: String, error: String) =
     throw new Exception("%s.%s - %s".format(namespace, key, error))

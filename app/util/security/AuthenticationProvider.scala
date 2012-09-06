@@ -83,7 +83,7 @@ object AuthenticationProvider {
     if (concern == SecuritySpec.LegacyMarker) {
       logger.debug("Found legacy security spec, defaulting to basic roles")
       loggedAuth {
-        user.roles.intersect(spec.requiredCredentials).size > 0
+        user.roles.map(_.toLowerCase).intersect(spec.requiredCredentials.map(_.toLowerCase)).size > 0
       }
     } else {
       logger.trace("Have concern '%s'".format(concern))

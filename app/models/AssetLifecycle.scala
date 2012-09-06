@@ -20,14 +20,20 @@ object AssetLifecycleConfig {
   // A few keys we generally want changable after intake
   private val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
   // User configured excludes, only applied to non-servers
-  private val ConfiguredExcludes = Feature.allowTagUpdates
+  private def configuredExcludes = Feature.allowTagUpdates
   private val RestrictedKeys = AssetMeta.Enum.values.map { _.toString }.toSet ++ PossibleAssetKeys -- ExcludedKeys
 
-  def isRestricted(s: String) = RestrictedKeys.contains(s.toUpperCase)
+  def isRestricted(s: String) = {
+    if (Feature.sloppyTags) {
+      false
+    } else {
+      RestrictedKeys.contains(s.toUpperCase)
+    }
+  }
 
   def withExcludes(includeUser: Boolean = false) = includeUser match {
     case false => RestrictedKeys
-    case true => RestrictedKeys -- ConfiguredExcludes
+    case true => RestrictedKeys -- Feature.allowTagUpdates
   }
 }
 

@@ -12,7 +12,7 @@ case class PermissionsLoader(privileges: Privileges) extends CacheLoader[String,
   private[this] val logger = Logger("util.security.PermissionsLoader")
 
   override def load(filename: String): Privileges = {
-    logger.debug("Refreshing permissions from %s".format(filename))
+    logger.info("Refreshing permissions from %s".format(filename))
     try {
       File.requireFileIsReadable(filename)
       PermissionsHelper.fromFile(new IoFile(filename).getAbsolutePath)
