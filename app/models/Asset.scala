@@ -333,7 +333,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     })
     //log the frontend query as a query string with result count
     if (QueryLogConfig.frontendLogging) {
-      logger.debug("API_QUERY:" + AssetSearchParameters(params, afinder, operation).toQueryString.getOrElse("(empty)") + ":" + results.total)
+      logger.info("API_QUERY:" + AssetSearchParameters(params, afinder, operation).toQueryString.getOrElse("(empty)") + ":" + results.total)
     }
     results
   }
