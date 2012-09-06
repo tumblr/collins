@@ -7,3 +7,4 @@
 4400:util.plugins.IpmiPowerManagement
 4500:com.tumblr.play.SoftLayerPlugin
 4600:com.tumblr.play.ProvisionerPlugin
+4700:collins.script.CollinScriptPlugin
