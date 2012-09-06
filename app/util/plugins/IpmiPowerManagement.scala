@@ -8,6 +8,7 @@ import akka.util.duration._
 import play.api.{Application, Plugin}
 
 import collins.power._
+import collins.power.management._
 import com.twitter.util.{Future, FuturePool}
 import java.util.concurrent.{Executors, TimeUnit}
 

@@ -1,6 +1,6 @@
-package util
+package util.plugins
 
-import play.api.{Play, Plugin}
+import play.api.Play
 import collins.provisioning.ProvisionerPlugin
 
 object Provisioner {

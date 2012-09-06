@@ -6,8 +6,8 @@ import collins.provisioning.ProvisionerRequest
 import collins.shell.CommandResult
 import com.twitter.util.Future
 import play.api.mvc.{AnyContent, Request}
-import util.Provisioner
 import util.concurrent.BackgroundProcess
+import util.plugins.Provisioner
 
 sealed trait ProvisionerStatus
 sealed trait ProvisionerFailure extends ProvisionerStatus

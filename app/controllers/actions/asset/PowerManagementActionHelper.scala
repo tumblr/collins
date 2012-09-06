@@ -4,10 +4,10 @@ package asset
 
 import models.Asset
 
-import util.{IpmiCommand, PowerManagement, PowerManagementConfig, UserTattler}
+import util.{IpmiCommand, PowerManagementConfig, UserTattler}
 import util.config.AppConfig
 import util.concurrent.BackgroundProcessor
-import util.plugins.IpmiPowerCommand
+import util.plugins.{IpmiPowerCommand, PowerManagement}
 import util.security.SecuritySpecification
 
 import play.api.libs.json._

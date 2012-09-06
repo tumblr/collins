@@ -1,6 +1,7 @@
 package collins.softlayer
 
 import collins.power._
+import collins.power.management._
 import models.Asset
 
 import play.api.{Application, Plugin}
