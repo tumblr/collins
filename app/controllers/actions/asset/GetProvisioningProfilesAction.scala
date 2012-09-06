@@ -2,7 +2,7 @@ package controllers
 package actions
 package asset
 
-import util.Provisioner
+import util.plugins.Provisioner
 import util.security.SecuritySpecification
 import collins.provisioning.ProvisionerProfile
 import play.api.libs.json._

@@ -1,5 +1,6 @@
-package collins.power
+package collins.power.management
 
+import collins.power._
 import com.twitter.util.Future
 import models.Asset
 

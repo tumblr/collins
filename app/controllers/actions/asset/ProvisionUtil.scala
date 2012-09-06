@@ -6,9 +6,10 @@ import actors._
 import forms._
 import models.{Asset, AssetLifecycle, Truthy}
 import models.Status.Enum.{New => NewAsset}
-import util.{ApiTattler, SoftLayer, UserTattler}
+import util.{ApiTattler, UserTattler}
 import util.concurrent.BackgroundProcessor
 import util.config.Feature
+import util.plugins.SoftLayer
 
 import play.api.data._
 import play.api.data.Forms._

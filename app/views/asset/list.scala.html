@@ -1,7 +1,6 @@
 @(assets: Page[AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.SoftLayer
 @import _root_.util.views.{ListHelper, Formatter, Pagination}
 @import util.notice
 

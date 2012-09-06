@@ -3,9 +3,9 @@ package actions
 package asset
 
 import collins.provisioning.ProvisionerConfig
-import util.{Provisioner, SoftLayer}
 import util.concurrent.RateLimiter
 import util.config.AppConfig
+import util.plugins.Provisioner
 import util.security.SecuritySpecification
 import validators.StringUtil
 

@@ -1,11 +1,12 @@
-package util
+package util.plugins
 
-import play.api.{Play, Plugin, Logger}
-import collins.power.{PowerAction, PowerManagement => PowerManagementTrait}
+import collins.power.PowerAction
+import collins.power.management.{PowerManagement => PowerManagementTrait}
 import models.{Asset, AssetType, Status}
-import config.{Configurable, ConfigValue}
+import util.PowerManagementConfig
+import util.config.{Configurable, ConfigValue}
 
-import scala.util.control.Exception.allCatch
+import play.api.{Play, Logger}
 
 object PowerManagement {
   protected[this] val logger = Logger(getClass)

@@ -1,6 +1,6 @@
 package util
 
-import collins.power.{PowerAction, PowerManagement => PowerMgmt}
+import collins.power.PowerAction
 
 import models.{Asset, AssetType, Status}
 import config.{Configurable, ConfigValue}

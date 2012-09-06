@@ -2,7 +2,7 @@ package util
 package views
 
 import models.{AssetMeta, AssetMetaValue}
-import util.Provisioner
+import util.plugins.Provisioner
 import com.tumblr.play._
 import play.api.libs.json._
 import play.api.templates.Html

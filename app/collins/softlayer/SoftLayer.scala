@@ -1,6 +1,6 @@
 package collins.softlayer
 
-import collins.power.PowerManagement
+import collins.power.management.PowerManagement
 import models.Asset
 
 import play.api.Logger
