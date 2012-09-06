@@ -1,6 +1,6 @@
 package util
 
-import com.tumblr.play.{Power, PowerAction, PowerManagement => PowerMgmt}
+import collins.power.{PowerAction, PowerManagement => PowerMgmt}
 
 import models.{Asset, AssetType, Status}
 import config.{Configurable, ConfigValue}
@@ -47,7 +47,7 @@ object PowerManagementConfig extends Configurable {
     }
   }.map(_.id)
   def disallowWhenAllocated: Set[PowerAction] = getStringSet("disallowWhenAllocated").map { p =>
-    Power(p)
+    PowerAction(p)
   }
 
   def enabled = getBoolean("enabled", false)

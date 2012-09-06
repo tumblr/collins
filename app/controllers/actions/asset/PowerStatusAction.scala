@@ -7,7 +7,7 @@ import util.security.SecuritySpecification
 
 import play.api.libs.json._
 
-import com.tumblr.play.{PowerAction, PowerState}
+import collins.power.{PowerAction, PowerState}
 import collins.shell.CommandResult
 
 case class PowerStatusAction(
