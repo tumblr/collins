@@ -42,6 +42,7 @@
 
   <root level="TRACE">
     <appender-ref ref="MULTIPLEX" />
+    <appender-ref ref="STDOUT" />
   </root>
  
 </configuration>
