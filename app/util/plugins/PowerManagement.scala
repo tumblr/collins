@@ -1,9 +1,8 @@
 package util.plugins
 
 import collins.power.PowerAction
-import collins.power.management.{PowerManagement => PowerManagementTrait}
+import collins.power.management.{PowerManagement => PowerManagementTrait, PowerManagementConfig}
 import models.{Asset, AssetType, Status}
-import util.PowerManagementConfig
 import util.config.{Configurable, ConfigValue}
 
 import play.api.{Play, Logger}
