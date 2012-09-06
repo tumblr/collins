@@ -4,7 +4,7 @@ package asset
 
 import models.Asset
 
-import util.{IpmiCommand, PowerManagementConfig, UserTattler}
+import util.{IpmiCommand, UserTattler}
 import util.config.AppConfig
 import util.concurrent.BackgroundProcessor
 import util.plugins.{IpmiPowerCommand, PowerManagement}
@@ -14,6 +14,7 @@ import play.api.libs.json._
 import play.api.mvc._
 
 import collins.power.{PowerAction, PowerState, Verify, Identify}
+import collins.power.management.PowerManagementConfig
 import collins.shell.CommandResult
 
 abstract class PowerManagementActionHelper(
