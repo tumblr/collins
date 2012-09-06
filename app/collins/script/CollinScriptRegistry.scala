@@ -10,20 +10,14 @@ import java.io.File
 import java.net.URLClassLoader
 
 import play.api.Application
-import play.api.mvc.Content
-import play.api.templates.Html
 
 import scala.collection.JavaConversions._
-
-import util.RichFile._
 
 case class CollinScriptCompileException(script: String, msg: String)
   extends Exception("Compile exception while compiling %s: %s".format(script, msg))
 
 
 trait ScriptWrapper {
-
-  val DEFAULT_PACKAGE = "collins.script"
 
   val sourceDir = new File(CollinScriptConfig.scriptDir)
   var compilationClassPath = getAppClasspath
@@ -34,10 +28,16 @@ trait ScriptWrapper {
   val engine = new ScalaScriptEngine(Config(
       Set(sourceDir), compilationClassPath, runtimeClasspath,
       outputDir)) with RefreshAsynchronously with FromClasspathFirst {
-        // each file will only be checked maximum once per second
-        val recheckEveryMillis: Long = 1000
+        // each file will only be checked once per second maximum
+        val recheckEveryMillis: Long = CollinScriptConfig.refreshPeriod
       }
 
+  /**
+   * Returns the classpath used by the Collins application.
+   *
+   * @return a Set of File objects representing all search locations on the
+   *   classpath
+   */
   def getAppClasspath: Set[File] = {
     classOf[Application].getClassLoader.asInstanceOf[URLClassLoader].getURLs()
       .map{ url => new File(url.getPath) }.toSet

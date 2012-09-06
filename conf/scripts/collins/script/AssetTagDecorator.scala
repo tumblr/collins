@@ -5,5 +5,7 @@ class AssetTagDecorator {
 }
 
 object AssetTagDecorator {
-
+  def format(test: String): String = {
+    return test
+  }
 }
