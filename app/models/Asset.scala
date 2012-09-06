@@ -25,6 +25,8 @@ import java.util.Date
 import akka.dispatch.Await
 import akka.util.duration._
 
+import shared.QueryLogConfig
+
 import SortDirection._
 import AssetSortType._
 
@@ -320,7 +322,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] =
   Stats.time("Asset.find") {
-    if (params._1.nonEmpty) {
+    val results = (if (params._1.nonEmpty) {
       IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
     } else if (params._2.nonEmpty) {
       AssetMetaValue.findAssetsByMeta(page, params._2, afinder, operation)
@@ -328,7 +330,12 @@ object Asset extends Schema with AnormAdapter[Asset] {
       IpAddresses.findAssetsByAddress(page, params._3, afinder)
     } else {
       Asset.find(page, afinder)
+    })
+    //log the frontend query as a query string with result count
+    if (QueryLogConfig.frontendLogging) {
+      logger.debug("API_QUERY:" + AssetSearchParameters(params, afinder, operation).toQueryString.getOrElse("(empty)") + ":" + results.total)
     }
+    results
   }
 
   def find(page: PageParams, afinder: AssetFinder): Page[AssetView] = inTransaction { log {
