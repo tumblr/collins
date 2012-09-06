@@ -1,55 +1,21 @@
-package com.tumblr.play
+package collins.softlayer
 
-import play.api.{Application, Configuration, Logger, PlayException, Plugin}
+import collins.power._
+import models.Asset
+
+import play.api.{Application, Plugin}
 import play.api.libs.json._
 
 import com.twitter.finagle.Service
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.http.{Http, RequestBuilder, Response}
 import com.twitter.util.Future
-import java.net.URL
 import org.jboss.netty.buffer.ChannelBuffers
 import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse, QueryStringEncoder}
 import org.jboss.netty.util.CharsetUtil.UTF_8
 import scala.util.control.Exception.allCatch
 
-trait SoftLayerInterface extends PowerManagement {
-  val SOFTLAYER_API_HOST = "api.softlayer.com:443"
-
-  protected val logger = Logger(getClass)
-  protected def username: String
-  protected def password: String
-
-  // Informational API
-  def isSoftLayerAsset(asset: AssetWithTag): Boolean
-  def softLayerId(asset: AssetWithTag): Option[Long]
-  def softLayerUrl(asset: AssetWithTag): Option[String] =
-    softLayerId(asset).map(id => "https://manage.softlayer.com/Hardware/view/%d".format(id))
-  def ticketUrl(id: Long): String =
-    "https://manage.softlayer.com/Support/editTicket/%d".format(id)
-
-  // Interactive API
-  def activateServer(id: Long): Future[Boolean]
-  def cancelServer(id: Long, reason: String = "No longer needed"): Future[Long]
-  def setNote(id: Long, note: String): Future[Boolean]
-
-  protected def softLayerApiUrl: String =
-    "https://%s:%s@%s/rest/v3".format(username, password, SOFTLAYER_API_HOST)
-  protected def softLayerUrl(uri: String) = new URL(softLayerApiUrl + uri)
-  protected def cancelServerPath(id: Long) =
-    "/SoftLayer_Ticket/createCancelServerTicket/%d.json".format(id)
-}
-
-class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
-  protected[this] val configuration: Option[Configuration] = app.configuration.getConfig("softlayer")
-  protected[this] val _username: Option[String] = configuration.flatMap(_.getString("username"))
-  protected[this] val _password: Option[String] = configuration.flatMap(_.getString("password"))
-  protected[this] def InvalidConfig(s: Option[String] = None): Exception = PlayException(
-    "Invalid Configuration",
-    s.getOrElse("softlayer.enabled is true but username or password not specified"),
-    None
-  )
-
+class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
   type ClientSpec = ClientBuilder.Complete[HttpRequest, HttpResponse]
   protected[this] val clientSpec: ClientSpec = ClientBuilder()
     .tlsWithoutValidation()
@@ -58,27 +24,24 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     .hostConnectionLimit(1)
 
   override def enabled: Boolean = {
-    configuration.flatMap { cfg =>
-      cfg.getBoolean("enabled")
-    }.getOrElse(false)
+    SoftLayerConfig.pluginInitialize(app.configuration)
+    SoftLayerConfig.enabled
   }
 
   override def onStart() {
-    if (!_username.isDefined || !_password.isDefined) {
-      throw InvalidConfig()
-    }
+    SoftLayerConfig.validateConfig()
   }
   override def onStop() {
   }
 
-  override def username = _username.get
-  override def password = _password.get
+  override def username = SoftLayerConfig.username
+  override def password = SoftLayerConfig.password
 
   // start plugin API
-  override def isSoftLayerAsset(asset: AssetWithTag): Boolean = {
+  override def isSoftLayerAsset(asset: Asset): Boolean = {
     asset.tag.startsWith("sl-")
   }
-  override def softLayerId(asset: AssetWithTag): Option[Long] = isSoftLayerAsset(asset) match {
+  override def softLayerId(asset: Asset): Option[Long] = isSoftLayerAsset(asset) match {
     case true => try {
       Some(asset.tag.split("-", 2).last.toLong)
     } catch {
@@ -118,35 +81,35 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
   }
 
   /*
-  override def powerCycle(e: AssetWithTag): PowerStatus = {
+  override def powerCycle(e: Asset): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerCycle.json")
   }
   */
-  override def powerSoft(e: AssetWithTag): PowerStatus = {
+  override def powerSoft(e: Asset): PowerStatus = {
     // This does not actually exist at SL
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerSoft.json")
   }
-  override def powerOff(e: AssetWithTag): PowerStatus = {
+  override def powerOff(e: Asset): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerOff.json")
   }
-  override def powerOn(e: AssetWithTag): PowerStatus = {
+  override def powerOn(e: Asset): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/powerOn.json")
   }
-  override def powerState(e: AssetWithTag): PowerStatus = {
+  override def powerState(e: Asset): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/getServerPowerState.json", Some({ s =>
       s.replace("\"", "")
     }))
   }
-  override def rebootHard(e: AssetWithTag): PowerStatus = {
+  override def rebootHard(e: Asset): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/rebootHard.json")
   }
-  override def rebootSoft(e: AssetWithTag): PowerStatus = {
+  override def rebootSoft(e: Asset): PowerStatus = {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/rebootSoft.json")
   }
-  override def verify(e: AssetWithTag): PowerStatus = {
+  override def verify(e: Asset): PowerStatus = {
     Future.value(Failure("verify not implemented for softlayer"))
   }
-  override def identify(e: AssetWithTag): PowerStatus = {
+  override def identify(e: Asset): PowerStatus = {
     Future.value(Failure("identify not implemented for softlayer"))
   }
 
@@ -195,7 +158,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayerInterface {
     }
   }
 
-  private def doPowerOperation(e: AssetWithTag, url: String, captureFn: Option[String => String] = None): PowerStatus = {
+  private def doPowerOperation(e: Asset, url: String, captureFn: Option[String => String] = None): PowerStatus = {
     softLayerId(e).map { id =>
       val request = RequestBuilder()
         .url(softLayerUrl(url.format(id)))

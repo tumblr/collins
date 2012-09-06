@@ -1,7 +1,4 @@
-package com.tumblr.play
-
-import play.api.{Application, Configuration, Logger, PlayException, Plugin}
-import com.twitter.util.Future
+package collins.power
 
 sealed trait PowerAction
 case object PowerOff extends PowerAction {
@@ -33,7 +30,7 @@ case object RebootHard extends Reboot {
   override def toString: String = "RebootHard"
 }
 
-object Power {
+object PowerAction {
   def off() = PowerOff
   def on() = PowerOn
   def soft() = PowerSoft
@@ -59,28 +56,4 @@ object Power {
   }
 }
 
-trait PowerManagement extends Plugin {
-  sealed trait PowerCommandStatus {
-    def isSuccess: Boolean
-    def description: String
-  }
-  case class Success(override val description: String = "Command successful") extends PowerCommandStatus {
-    override val isSuccess = true
-  }
-  case object RateLimit extends PowerCommandStatus {
-    override val isSuccess = false
-    override val description = "Only one power event every 20 minutes is allowed"
-  }
-  case class Failure(override val description: String = "Failed to execute power command") extends PowerCommandStatus {
-    override val isSuccess = false
-  }
-  type PowerStatus = Future[PowerCommandStatus]
-  def powerSoft(e: AssetWithTag): PowerStatus
-  def powerOff(e: AssetWithTag): PowerStatus
-  def powerOn(e: AssetWithTag): PowerStatus
-  def powerState(e: AssetWithTag): PowerStatus
-  def rebootHard(e: AssetWithTag): PowerStatus
-  def rebootSoft(e: AssetWithTag): PowerStatus
-  def verify(e: AssetWithTag): PowerStatus
-  def identify(e: AssetWithTag): PowerStatus
-}
+

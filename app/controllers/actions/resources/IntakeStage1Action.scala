@@ -10,7 +10,7 @@ import util.concurrent.BackgroundProcessor
 import util.plugins.IpmiPowerCommand
 import util.security.SecuritySpecification
 
-import com.tumblr.play.{PowerManagement, Identify}
+import collins.power.{PowerManagement, Identify}
 
 import play.api.data.Form
 import play.api.data.Forms._

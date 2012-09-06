@@ -1,7 +1,7 @@
 package util
 
 import play.api.{Play, Plugin, Logger}
-import com.tumblr.play.{Power, PowerAction, PowerManagement => PowerMgmt}
+import collins.power.{PowerAction, PowerManagement => PowerManagementTrait}
 import models.{Asset, AssetType, Status}
 import config.{Configurable, ConfigValue}
 
@@ -12,11 +12,11 @@ object PowerManagement {
 
   val PConfig = PowerManagementConfig
 
-  def pluginEnabled: Option[PowerMgmt] = {
+  def pluginEnabled: Option[PowerManagementTrait] = {
     Play.maybeApplication.flatMap { app =>
-      val plugins: Seq[PowerMgmt] = app.plugins.filter { plugin =>
-        plugin.isInstanceOf[PowerMgmt] && plugin.enabled
-      }.map(_.asInstanceOf[PowerMgmt])
+      val plugins: Seq[PowerManagementTrait] = app.plugins.filter { plugin =>
+        plugin.isInstanceOf[PowerManagementTrait] && plugin.enabled
+      }.map(_.asInstanceOf[PowerManagementTrait])
       plugins.size match {
         case 1 => plugins.headOption
         case n => // On case we have multiple, try and choose the one that was specified
@@ -27,7 +27,7 @@ object PowerManagement {
     }
   }
 
-  def pluginEnabled[T](fn: PowerMgmt => T): Option[T] = {
+  def pluginEnabled[T](fn: PowerManagementTrait => T): Option[T] = {
     pluginEnabled.map { p =>
       fn(p)
     }

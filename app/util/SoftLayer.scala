@@ -1,29 +1,7 @@
 package util
 
-import config.Configurable
-import models.Status
 import play.api.{Play, Plugin}
-import com.tumblr.play.SoftLayerPlugin
-
-object SoftLayerConfig extends Configurable {
-  override val namespace = "softlayer"
-  override val referenceConfigFilename = "softlayer_reference.conf"
-
-  def enabled = getBoolean("enabled", false)
-  def username = getString("username", "")
-  def password = getString("password", "")
-  def allowedCancelStatus = getStringSet("allowedCancelStatus", Status.statusNames).map { s =>
-    Status.Enum.withName(s).id
-  }
-
-  override protected def validateConfig() {
-    if (enabled) {
-      require(username.nonEmpty, "softlayer.username must not be empty if enabled")
-      require(password.nonEmpty, "softlayer.password must not be empty if enabled")
-      allowedCancelStatus
-    }
-  }
-}
+import collins.softlayer.{SoftLayerConfig, SoftLayerPlugin}
 
 object SoftLayer {
 
@@ -54,7 +32,7 @@ object SoftLayer {
   def assetLink(asset: models.AssetView): Option[String] = asset match {
     case a: models.Asset => {
       pluginEnabled.flatMap { p =>
-        p.softLayerUrl(asset)
+        p.softLayerUrl(a)
       }
     }
     case _ => None

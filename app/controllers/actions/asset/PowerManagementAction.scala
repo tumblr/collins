@@ -2,14 +2,13 @@ package controllers
 package actions
 package asset
 
+import collins.power.PowerAction
 import forms._
 
 import util.security.SecuritySpecification
 
 import play.api.data.Form
 import play.api.data.Forms._
-
-import com.tumblr.play.PowerAction
 
 case class PowerManagementAction(
   assetTag: String,
