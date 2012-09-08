@@ -42,6 +42,8 @@ assetlog.create.error.messageSourceInvalid=specified source is invalid, valid so
 
 attributeresolver.notfound=Invalid search field ''{0}''. Not found as asset tag, IPMI field or IP Address field.
 
+crypto.missingJCE=I'm sorry, but it looks like you may be missing the unlimited strength Java Cryptography Extension. Unfortunately this is required for operations. You can find more details here http://www.bouncycastle.org/wiki/display/JA1/Frequently+Asked+Questions.
+
 feature.ignoreDangerousCommands=Ignoring dangerous command for asset with tag ''{0}''. Configured by ''features.ignoreDangerousCommands''.
 
 ip_address.missingConfig=IP address config for ''{0}'' is missing (naked).
