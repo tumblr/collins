@@ -28,7 +28,7 @@ object IpmiConfig extends Configurable {
   }
 
   def get(): Option[IpAddressConfig] = underlying.map { cfg =>
-    new IpAddressConfig(new SimpleAddressConfig(cfg))
+    new IpAddressConfig("IpmiConfig.get", new SimpleAddressConfig(cfg))
   }
   override protected def validateConfig() {
     require(passwordLength > 0 && passwordLength <= 16, "ipmi.passwordLength must be between 1 and 16")
