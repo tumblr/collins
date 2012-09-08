@@ -4,7 +4,8 @@ package asset
 
 import forms._
 
-import models.{Asset, AssetFinder, AssetType, AssetView, Page, PageParams, RemoteCollinsHost, SortDirection, Truthy}
+import models.{Asset, AssetFinder, AssetType, Page, PageParams, SortDirection, Truthy}
+import models.asset.AssetView
 import models.Status.{Enum => AssetStatusEnum}
 import models.AssetSortType._
 import models.SortDirection._

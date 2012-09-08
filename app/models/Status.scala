@@ -10,16 +10,24 @@ case class Status(name: String, description: String, id: Int = 0) extends Valida
     require(name != null && name.length > 0, "Name must not be empty")
     require(description != null && description.length > 0, "Description must not be empty")
   }
-  override def asJson: String = {
-    Json.stringify(JsObject(Seq(
-      "ID" -> JsNumber(id),
-      "NAME" -> JsString(name),
-      "DESCRIPTION" -> JsString(description)
-    )))
-  }
+  override def asJson: String =
+    Json.stringify(Status.StatusFormat.writes(this))
 }
 
-object Status extends Schema with AnormAdapter[Status] { //Magic[Status](Some("status")) {
+object Status extends Schema with AnormAdapter[Status] {
+
+  implicit object StatusFormat extends Format[Status] {
+    override def reads(json: JsValue) = Status(
+      (json \ "NAME").as[String],
+      (json \ "DESCRIPTION").as[String],
+      (json \ "ID").as[Int]
+    )
+    override def writes(status: Status) = JsObject(Seq(
+      "ID" -> JsNumber(status.id),
+      "NAME" -> JsString(status.name),
+      "DESCRIPTION" -> JsString(status.description)
+    ))
+  }
 
   override val tableDef = table[Status]("status")
   on(tableDef)(s => declare(

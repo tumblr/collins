@@ -1,6 +1,7 @@
 package util
 package parsers
 
+import models.lshw._
 import config.LshwConfig
 import scala.xml.{Elem, MalformedAttributeException, Node, NodeSeq, XML}
 

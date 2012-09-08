@@ -9,13 +9,13 @@ object ApiResponse extends ApiResponse {
   import Results._
   import OutputType.contentTypeWithCharset
 
-  def formatJsonMessage(status: String, data: JsObject): JsObject = {
+  def formatJsonMessage(status: String, data: JsValue): JsObject = {
     JsObject(Seq(
       "status" -> JsString(status),
       "data" -> data
     ))
   }
-  def formatJsonMessage(status: Results.Status, data: JsObject): JsObject = {
+  def formatJsonMessage(status: Results.Status, data: JsValue): JsObject = {
     formatJsonMessage(statusToString(status), data)
   }
 
@@ -121,7 +121,7 @@ trait ApiResponse extends Controller {
     }
   }
 
-  protected def formatBashResponse(jsobject: JsObject, prefix: String = ""): String = {
+  protected def formatBashResponse(jsobject: JsValue, prefix: String = ""): String = {
     def formatBasic(jsvalue: JsValue): String = {
       jsvalue match {
         case JsNull => ""
@@ -154,7 +154,9 @@ trait ApiResponse extends Controller {
         throw new Exception("Invalid JS specified")
       }
     }
-    jsobject.value.map { case(k, v) =>
+    // FIXME
+    require(jsobject.isInstanceOf[JsObject], "Required a JsObject")
+    jsobject.asInstanceOf[JsObject].value.map { case(k, v) =>
       v match {
         case m: JsObject => formatBashResponse(m, "%s_".format(prefix + k))
         case JsArray(list) => formatList(list, "%s_".format(prefix + k))
@@ -163,7 +165,7 @@ trait ApiResponse extends Controller {
     }.mkString("\n")
   }
 
-  protected def formatTextResponse(jsobject: JsObject, depth: Int = 0): String = {
+  protected def formatTextResponse(jsobject: JsValue, depth: Int = 0): String = {
     def formatBasic(jsvalue: JsValue): String = {
       jsvalue match {
         case JsNull => "null"
@@ -184,7 +186,9 @@ trait ApiResponse extends Controller {
       }.mkString(",")
     }
     val prefix = if (depth > 0) { "\t" * depth } else { "" }
-    jsobject.value.map { case(k, v) =>
+    // FIXME
+    require(jsobject.isInstanceOf[JsObject], "Required a JsObject")
+    jsobject.asInstanceOf[JsObject].value.map { case(k, v) =>
       prefix + k + "\t" + (v match {
         case m: JsObject => "\n" + formatTextResponse(m, depth + 1)
         case JsArray(list) => formatList(list)
@@ -200,8 +204,4 @@ trait ApiResponse extends Controller {
       case None => defaultOutputType
     }
   }
-
-
 }
-
-

@@ -1,8 +1,8 @@
 package util
 package config
 
-import models.{AssetMeta, LogMessageType}
-import models.Asset
+import models.{Asset, AssetMeta}
+import models.logs.LogMessageType
 
 /**
  * Describes general features for collins, not tied to particular pieces of functionality

@@ -1,6 +1,7 @@
 package util.plugins.solr
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.asset.AssetView
 import models.IpmiInfo.Enum._
 
 import scala.util.parsing.combinator._
