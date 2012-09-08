@@ -533,7 +533,7 @@
     </div>
     <div class="modal-footer">
       <button type="submit" class="btn">Asset in Maintenance Mode</button>
-      <button type="reset" data-closes-modal="cancel-server" class="btn primary">Go back to browsing tumblr</button>
+      <button type="reset" data-closes-modal="asset-maintenance" class="btn primary">Go back to browsing tumblr</button>
     </div>
     } else {
     <div class="modal-body">
@@ -568,7 +568,7 @@
     </div>
     <div class="modal-footer">
       <button type="submit" class="btn">Asset out of Maintenance Mode</button>
-      <button type="reset" data-closes-modal="cancel-server" class="btn primary">Go back to browsing tumblr</button>
+      <button type="reset" data-closes-modal="asset-maintenance" class="btn primary">Go back to browsing tumblr</button>
     </div>
     }
   }
@@ -603,6 +603,40 @@
   <div class="modal-footer">
     <button type="submit" class="btn">Delete Server</button>
     <button type="reset" data-closes-modal="cancel-server" class="btn primary">Go back to browsing tumblr</button>
+  </div>
+  }
+</div>
+
+<div id="delete-asset" class="modal hide fade">
+  <div class="modal-header">
+    <a href="#" class="close">&times;</a>
+    <h3>Asset Deletion</h3>
+  </div>
+  @form(app.routes.CookieApi.realDeleteAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "deleteError", Symbol("data-modal") -> "delete-asset", Symbol("data-refresh") -> ".window") {
+  <div class="modal-body">
+    <p><span class="label important">Warning</span> Deleting this asset will</p>
+    <ul>
+      <li>Delete log data</li>
+      <li>Delete IPMI data</li>
+      <li>Delete IP address data</li>
+      <li>Delete all tags</li>
+      <li>Delete this asset</li>
+    </ul>
+    <p>If that all sounds good, provide a reason and then click the button below</p>
+    <div class="clearfix">
+      <label for="reason">Reason</label>
+      <div class="input">
+        <textarea name="reason" id="reason" class="xlarge" rows="3"></textarea>
+      </div>
+    </div>
+    <div class="clearfix">
+      <label for="deleteError" style="margin-right: 15px;"></label>
+      <span class="alert-message error hide hideAfterClose modalErrorMessage" id="deleteError" data-purge="true"></span>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn">Delete Asset</button>
+    <button type="reset" data-closes-modal="delete-asset" class="btn primary">Go back to browsing tumblr</button>
   </div>
   }
 </div>
