@@ -3,6 +3,8 @@ package actions
 package asset
 
 import models.AssetLifecycle
+import models.asset.AssetDeleter
+import util.SystemTattler
 import util.security.SecuritySpecification
 import validators.StringUtil
 
@@ -11,6 +13,7 @@ import play.api.data.Forms._
 
 case class DeleteAction(
   _assetTag: String,
+  realDelete: Boolean,
   spec: SecuritySpecification,
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction {
@@ -26,8 +29,12 @@ case class DeleteAction(
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
     withValidAsset(_assetTag) { asset =>
-      val options = reason.map(r => Map("reason" -> r)).getOrElse(Map.empty)
-      Right(ActionDataHolder(options))
+      if (realDelete && !reason.isDefined) {
+        Left(RequestDataHolder.error400("reason must be specified"))
+      } else {
+        val options = reason.map(r => Map("reason" -> r)).getOrElse(Map.empty)
+        Right(ActionDataHolder(options))
+      }
     }
   }
 
@@ -39,7 +46,15 @@ case class DeleteAction(
             RequestDataHolder.error409("Illegal state transition: %s".format(throwable.getMessage))
           )
         case Right(status) =>
-          Api.statusResponse(status)
+          if (realDelete) {
+            val errMsg = "User deleted asset %s. Reason: %s".format(
+              definedAsset.tag, options.get("reason").getOrElse("Unspecified")
+            )
+            SystemTattler.safeError(errMsg)
+            Api.statusResponse(AssetDeleter.purge(definedAsset))
+          } else {
+            Api.statusResponse(status)
+          }
       }
   }
 

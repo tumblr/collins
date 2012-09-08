@@ -83,6 +83,7 @@ class SolrPlugin(app: Application) extends Plugin {
     Callback.on("asset_update", callback)
     Callback.on("asset_create", callback)
     Callback.on("asset_delete", callback)
+    Callback.on("asset_purge", callback)
     Callback.on("asset_meta_value_create", callback)
     Callback.on("asset_meta_value_delete", callback)
     Callback.on("ipAddresses_create", callback)

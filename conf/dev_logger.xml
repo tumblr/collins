@@ -13,10 +13,12 @@
 
   <logger name="play" level="INFO" />
   <logger name="application" level="TRACE" />
-  
+
+  <logger name="configurable" level="DEBUG" />
+
   <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
   <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
-  <logger name="util.AuthenticationProvider" level="INFO" />
+  <logger name="util.security.AuthenticationProvider" level="INFO" />
   <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
   <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
 

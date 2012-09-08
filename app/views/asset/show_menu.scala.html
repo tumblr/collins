@@ -1,5 +1,6 @@
 @(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
+@import _root_.util.AssetStateMachine
 @import _root_.util.plugins.{Maintenance, PowerManagement, Provisioner, SoftLayer}
 @import _root_.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
 @import _root_.collins.provisioning.ProvisionerConfig
@@ -31,6 +32,9 @@
           <li class="divider"></li>
           @if(Permissions.please(user, Permissions.AssetWebApi.CancelAsset) && SoftLayer.canCancel(aa.asset)) {
             <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
+          }
+          @if(Permissions.please(user, Permissions.AssetWebApi.DeleteAsset) && AssetStateMachine(aa.asset).canDecommission) {
+            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="delete-asset">Delete Asset</a></li>
           }
           @if(Permissions.please(user, Permissions.AssetApi.UpdateAssetForMaintenance)) {
             @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
