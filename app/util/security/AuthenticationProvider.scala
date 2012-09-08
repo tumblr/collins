@@ -2,6 +2,7 @@ package util
 package security
 
 import models.{User, UserImpl}
+import collins.cache.ConfigCache
 import collins.validation.File
 
 import play.api.Logger
@@ -49,10 +50,8 @@ object AuthenticationProvider {
 
   private val logger = Logger("util.security.AuthenticationProvider")
 
-  lazy private val permissionsCache: LoadingCache[String,Privileges] = CacheBuilder.newBuilder()
-                                      .maximumSize(1)
-                                      .expireAfterWrite(AuthenticationProviderConfig.cachePermissionsTimeout, TimeUnit.MILLISECONDS)
-                                      .build(PermissionsLoader())
+  lazy private val permissionsCache =
+    ConfigCache.create(AuthenticationProviderConfig.cachePermissionsTimeout, PermissionsLoader())
 
   def get(name: String): AuthenticationProvider = {
     name match {
