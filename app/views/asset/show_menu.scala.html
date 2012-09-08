@@ -2,6 +2,7 @@
 
 @import _root_.util.plugins.{Maintenance, PowerManagement, Provisioner, SoftLayer}
 @import _root_.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
+@import _root_.collins.provisioning.ProvisionerConfig
 @import _root_.controllers.Permissions
 
 <div class="row">
@@ -28,12 +29,8 @@
         <ul class="dropdown-menu">
           <li><a href="#" data-keyboard="true" data-controls-modal="asset-note">Create Note</a></li>
           <li class="divider"></li>
-          @if(Permissions.please(user, Permissions.AssetWebApi.CancelAsset)) {
-            @SoftLayer.pluginEnabled.map { p =>
-              @if(p.isSoftLayerAsset(aa.asset) && SoftLayer.cancelAllowed(aa.asset) ) {
-                <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
-              }
-            }
+          @if(Permissions.please(user, Permissions.AssetWebApi.CancelAsset) && SoftLayer.canCancel(aa.asset)) {
+            <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
           }
           @if(Permissions.please(user, Permissions.AssetApi.UpdateAssetForMaintenance)) {
             @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
@@ -50,19 +47,17 @@
               }
             }
           }
-	  @if(Permissions.please(user, Permissions.AssetManagementApi.ProvisionAsset)) {
-	    @Provisioner.pluginEnabled.map { p =>
-              @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete && aa.asset.getType().name == "Server Node") {
+	        @if(Permissions.please(user, Permissions.AssetManagementApi.ProvisionAsset)) {
+	          @Provisioner.pluginEnabled.map { p =>
+              @if(p.canProvision(aa.asset)) {
                 <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
               } else {
-                @SoftLayer.pluginEnabled.map { p =>
-                  @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
-                    <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Activate Server</a></li>
-                  }
+                @if(SoftLayer.canActivate(aa.asset)) {
+                  <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Activate Server</a></li>
                 }
               }
-	    }
-	  }
+	          }
+	        }
         </ul>
       </li>
     </ul>

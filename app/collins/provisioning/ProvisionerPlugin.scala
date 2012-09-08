@@ -53,7 +53,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   // overrides ProvisionerInterface.canProvision
   override def canProvision(asset: Asset): Boolean = {
-    ProvisionerConfig.allowedStatus(asset.status)
+    ProvisionerConfig.allowedStatus(asset.status) && ProvisionerConfig.allowedType(asset.asset_type)
   }
 
   // overrides ProvisionerInterface.provision
