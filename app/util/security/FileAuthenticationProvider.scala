@@ -1,13 +1,12 @@
 package util
 package security
 
+import collins.cache.ConfigCache
 import models.{User, UserImpl}
 
 import sun.misc.BASE64Encoder
-import com.google.common.cache.{CacheBuilder, LoadingCache}
 import java.io.File
 import java.security.MessageDigest
-import java.util.concurrent.TimeUnit
 import io.Source
 
 class FileAuthenticationProvider() extends AuthenticationProvider {
@@ -15,10 +14,7 @@ class FileAuthenticationProvider() extends AuthenticationProvider {
   def userfile = FileAuthenticationProviderConfig.userfile
   override val authType = "file"
 
-  lazy private val userCache: LoadingCache[String,FileUserMap] = CacheBuilder.newBuilder()
-                                      .maximumSize(1)
-                                      .expireAfterWrite(10, TimeUnit.SECONDS)
-                                      .build(FileUserLoader())
+  lazy private val userCache = ConfigCache.create(10000L, FileUserLoader())
 
   override def authenticate(username: String, password: String): Option[User] = {
     user(username) match {
