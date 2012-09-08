@@ -29,7 +29,7 @@ object SoftLayer {
     }
   }
 
-  def assetLink(asset: models.AssetView): Option[String] = asset match {
+  def assetLink(asset: models.asset.AssetView): Option[String] = asset match {
     case a: models.Asset => {
       pluginEnabled.flatMap { p =>
         p.softLayerUrl(a)

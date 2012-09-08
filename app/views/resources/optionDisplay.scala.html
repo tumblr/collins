@@ -1,6 +1,7 @@
 @(assetMeta: AssetMeta, displayAs: Int = 0)
 
-@import _root_.util.{BitStorageUnit, ByteStorageUnit, Disk}
+@import _root_.util.{BitStorageUnit, ByteStorageUnit}
+@import _root_.models.lshw.Disk
 
 @formatValue(value: String, display: String) = {
 <option value="@value">@display</option>

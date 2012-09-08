@@ -1,5 +1,6 @@
 package models
 
+import asset.AssetView
 import conversions._
 import util.{CryptoCodec, InternalTattler}
 import util.config.Feature

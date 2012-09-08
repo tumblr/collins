@@ -1,4 +1,4 @@
-@(assets: Page[AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
+@(assets: Page[models.asset.AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import _root_.util.views.{ListHelper, Formatter, Pagination}

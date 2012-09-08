@@ -1,5 +1,6 @@
 package models
 
+import asset.AssetView
 import shared.{AddressPool, IpAddressConfig}
 
 import play.api.libs.json._
@@ -15,18 +16,9 @@ case class IpAddresses(
   pool: String,
   id: Long = 0) extends IpAddressable
 {
-  override def asJson: String = {
-    Json.stringify(JsObject(forJsonObject))
-  }
-  def toJsonObject() = JsObject(forJsonObject)
-  def forJsonObject(): Seq[(String,JsValue)] = Seq(
-    "ID" -> JsNumber(getId()),
-    "ASSET_ID" -> JsNumber(getAssetId()),
-    "ADDRESS" -> JsString(dottedAddress),
-    "GATEWAY" -> JsString(dottedGateway),
-    "NETMASK" -> JsString(dottedNetmask),
-    "POOL" -> JsString(pool)
-  )
+  import conversions._
+  override def asJson: String = toJsValue.toString
+  def toJsValue = Json.toJson(this)
 }
 
 object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheManagement {
@@ -249,5 +241,3 @@ trait IpAddressCacheManagement { self: IpAddressStorage[IpAddresses] =>
     }
   }
 }
-
-

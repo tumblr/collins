@@ -22,7 +22,7 @@ case class FindAssetAction(
     case ActionDataHolder(validAddress) =>
       IpAddresses.findByAddress(validAddress) match {
         case Some(asset) =>
-          ResponseData(Status.Ok, asset.toJsonObject)
+          ResponseData(Status.Ok, asset.toJsValue)
         case None =>
           handleError(RequestDataHolder.error404("No assets found with specified address"))
       }

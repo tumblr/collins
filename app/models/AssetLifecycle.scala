@@ -3,6 +3,7 @@ package models
 import conversions._
 import AssetMeta.Enum.RackPosition
 import models.{Status => AStatus}
+import models.logs._
 
 import util.{ApiTattler, AssetStateMachine, InternalTattler, LldpRepresentation, LshwRepresentation, SystemTattler}
 import util.config.{Feature, LshwConfig}

@@ -120,8 +120,8 @@ case class CreateAction(
   }
 
   protected def createMessage(asset: Asset, ipmi: Option[IpmiInfo]) = {
-    val as = Seq("ASSET" -> asset.toJsonObject)
-    ipmi.map(i => i.withExposedCredentials(true).toJsonObject) match {
+    val as = Seq("ASSET" -> asset.toJsValue)
+    ipmi.map(i => i.withExposedCredentials(true).toJsValue) match {
       case None => as
       case Some(js) => as ++ Seq("IPMI" -> js)
     }

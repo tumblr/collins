@@ -1,4 +1,4 @@
-@(aa: Asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import _root_.util.plugins.{Maintenance, PowerManagement, Provisioner, SoftLayer}
 @import _root_.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}

@@ -1,15 +1,102 @@
 package models
 
+import util.views.Formatter.{dateFormat, ISO_8601_FORMAT}
+import util.IpAddress
+
+import play.api.libs.json._
+import Json.toJson
+
 import java.util.Date
 import java.sql.Timestamp
 import org.squeryl.dsl.{NonNumericalExpression, StringExpression}
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, ExpressionNode, LogicalBoolean, OrderByArg, TypedExpressionNode}
+import java.text.SimpleDateFormat
 
 object conversions {
   implicit def dateToTimestamp(date: Date) = new DateToTimestamp(date)
   implicit def ops2bo(o: Option[String]) = new LogicalBooleanFromString(o)
   implicit def reOrLike[E <% StringExpression[String]](s: E) = new PossibleRegex(s)
   implicit def orderByString2oba[E <% TypedExpressionNode[_]](e: E) = new OrderByFromString(e)
+  implicit object TimestampFormat extends Format[Timestamp] {
+    override def reads(json: JsValue) =
+      json.asOpt[String].filter(_.nonEmpty)
+        .map { str =>
+          val formatter = new SimpleDateFormat(ISO_8601_FORMAT)
+          new Timestamp(formatter.parse(str).getTime)
+        }.getOrElse {
+          new Timestamp(0L)
+        }
+    override def writes(ts: Timestamp) = toJson(dateFormat(ts))
+  }
+  implicit object IpmiFormat extends Format[IpmiInfo] {
+    import IpmiInfo.Enum._
+    override def reads(json: JsValue) = IpmiInfo(
+      (json \ "ASSET_ID").as[Long],
+      (json \ IpmiUsername.toString).as[String],
+      (json \ IpmiPassword.toString).as[String],
+      IpAddress.toLong((json \ IpmiGateway.toString).as[String]),
+      IpAddress.toLong((json \ IpmiAddress.toString).as[String]),
+      IpAddress.toLong((json \ IpmiNetmask.toString).as[String]),
+      (json \ "ID").asOpt[Long].getOrElse(0L)
+    )
+    override def writes(ipmi: IpmiInfo) = JsObject(Seq(
+      "ASSET_ID" -> toJson(ipmi.asset_id),
+      "ASSET_TAG" -> toJson(Asset.findById(ipmi.asset_id).map(_.tag).getOrElse("Unknown")),
+      IpmiUsername.toString -> toJson(ipmi.username),
+      IpmiPassword.toString -> toJson(ipmi.password),
+      IpmiGateway.toString -> toJson(ipmi.dottedGateway),
+      IpmiAddress.toString -> toJson(ipmi.dottedAddress),
+      IpmiNetmask.toString -> toJson(ipmi.dottedNetmask),
+      "ID" -> toJson(ipmi.id)
+    ))
+  }
+  implicit object IpAddressFormat extends Format[IpAddresses] {
+    override def reads(json: JsValue) = IpAddresses(
+      (json \ "ASSET_ID").as[Long],
+      IpAddress.toLong((json \ "GATEWAY").as[String]),
+      IpAddress.toLong((json \ "ADDRESS").as[String]),
+      IpAddress.toLong((json \ "NETMASK").as[String]),
+      (json \ "POOL").asOpt[String].getOrElse(shared.IpAddressConfig.DefaultPoolName),
+      (json \ "ID").asOpt[Long].getOrElse(0L)
+    )
+    override def writes(ip: IpAddresses) = JsObject(Seq(
+      "ASSET_ID" -> toJson(ip.asset_id),
+      "ASSET_TAG" -> toJson(Asset.findById(ip.asset_id).map(_.tag).getOrElse("Unknown")),
+      "GATEWAY" -> toJson(ip.dottedGateway),
+      "ADDRESS" -> toJson(ip.dottedAddress),
+      "NETMASK" -> toJson(ip.dottedNetmask),
+      "POOLS" -> toJson(ip.pool),
+      "ID" -> toJson(ip.id)
+    ))
+  }
+  implicit object AssetLogFormat extends Format[AssetLog] {
+    override def reads(json: JsValue) = AssetLog(
+      (json \ "ASSET_ID").as[Long],
+      (json \ "CREATED").as[Timestamp],
+      logs.LogFormat.withName((json \ "FORMAT").as[String]),
+      logs.LogSource.withName((json \ "SOURCE").as[String]),
+      logs.LogMessageType.withName((json \ "TYPE").as[String]),
+      (json \ "MESSAGE").as[String],
+      (json \ "ID").asOpt[Long].getOrElse(0L)
+    )
+    override def writes(log: AssetLog) = JsObject(Seq(
+      "ID" -> toJson(log.id),
+      "ASSET_TAG" -> toJson(Asset.findById(log.asset_id).map(_.tag).getOrElse("Unknown")),
+      "CREATED" -> toJson(log.created),
+      "FORMAT" -> toJson(log.format.toString),
+      "SOURCE" -> toJson(log.source.toString),
+      "TYPE" -> toJson(log.message_type.toString),
+      "MESSAGE" -> (if (log.isJson()) {
+        try {
+          Json.parse(log.message)
+        } catch {
+          case e => toJson("Error parsing JSON: %s".format(e.getMessage))
+        }
+      } else {
+        toJson(log.message)
+      })
+    ))
+  }
 }
 
 sealed private[models] class OrderByFromString(o: TypedExpressionNode[_]) {
