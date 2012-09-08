@@ -153,10 +153,11 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
       AddressConfig.flatMap(_.pool(pool)).foreach { ap =>
         if (!ap.hasAddressCache || force) {
           logger.trace("populating address cache for pool %s".format(ap.name))
+          ap.clearAddresses
           findInPool(pool).foreach { address =>
             try ap.useAddress(address.address) catch {
               case e =>
-                logger.info("Error using address %s in pool %s".format(address.dottedAddress, pool))
+                logger.info("Error using address %s in pool %s: %s".format(address.dottedAddress, pool, e.getMessage))
             }
           }
         }
@@ -237,7 +238,10 @@ trait IpAddressCacheManagement { self: IpAddressStorage[IpAddresses] =>
     val oldAddress = pce.getOldValue.asInstanceOf[IpAddresses]
     IpAddresses.AddressConfig.flatMap(_.pool(oldAddress.pool)).foreach { ap =>
       logger.debug("Purging address %s from pool %s".format(oldAddress.dottedAddress, ap.name))
-      ap.unuseAddress(oldAddress.address)
+      try ap.unuseAddress(oldAddress.address) catch {
+        case e =>
+          logger.info("Exception unusing old address %s: %s".format(oldAddress.address, e.getMessage))
+      }
     }
   }
 }

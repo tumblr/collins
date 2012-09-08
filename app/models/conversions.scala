@@ -65,7 +65,7 @@ object conversions {
       "GATEWAY" -> toJson(ip.dottedGateway),
       "ADDRESS" -> toJson(ip.dottedAddress),
       "NETMASK" -> toJson(ip.dottedNetmask),
-      "POOLS" -> toJson(ip.pool),
+      "POOL" -> toJson(ip.pool),
       "ID" -> toJson(ip.id)
     ))
   }
