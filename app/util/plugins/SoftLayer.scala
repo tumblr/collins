@@ -1,7 +1,10 @@
 package util.plugins
 
-import play.api.Play
+import models.Asset
+import collins.provisioning.ProvisionerConfig
 import collins.softlayer.{SoftLayerConfig, SoftLayerPlugin}
+
+import play.api.Play
 
 object SoftLayer {
 
@@ -38,8 +41,18 @@ object SoftLayer {
     case _ => None
   }
 
-  def cancelAllowed(asset: models.Asset): Boolean = {
-    SoftLayerConfig.allowedCancelStatus.contains(asset.status)
+  def canCancel(asset: Asset): Boolean = {
+    validAsset(asset) && SoftLayerConfig.allowedCancelStatus.contains(asset.status)
+  }
+
+  def canActivate(asset: Asset): Boolean = {
+    validAsset(asset) && asset.isIncomplete
+  }
+
+  protected def validAsset(asset: Asset): Boolean = {
+    plugin.isDefined &&
+      plugin.map(_.isSoftLayerAsset(asset)).getOrElse(false) &&
+      ProvisionerConfig.allowedType(asset.asset_type)
   }
 
 }
