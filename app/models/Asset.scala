@@ -37,18 +37,6 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   }
 
   def getId(): Long = id
-  def isServerNode(): Boolean = asset_type == AssetType.Enum.ServerNode.id
-  def isConfiguration(): Boolean = asset_type == AssetType.Enum.Config.id
-
-  def isAllocated(): Boolean = status == models.Status.Enum.Allocated.id
-  def isCancelled(): Boolean = status == models.Status.Enum.Cancelled.id
-  def isDecommissioned(): Boolean = status == models.Status.Enum.Decommissioned.id
-  def isIncomplete(): Boolean = status == models.Status.Enum.Incomplete.id
-  def isMaintenance(): Boolean = status == models.Status.Enum.Maintenance.id
-  def isNew(): Boolean = status == models.Status.Enum.New.id
-  def isProvisioned(): Boolean = status == models.Status.Enum.Provisioned.id
-  def isProvisioning(): Boolean = status == models.Status.Enum.Provisioning.id
-  def isUnallocated(): Boolean = status == models.Status.Enum.Unallocated.id
 
   def getStatus(): Status = Status.findById(status).get
 

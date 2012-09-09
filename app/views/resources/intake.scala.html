@@ -8,16 +8,18 @@
   <h1>Asset Intake Step 1 <small>Verify IPMI Light for @asset.tag</small></h1>
 </div>
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     @notice("message", Some("notice"))
     @notice("error")
     @notice("warning")
-    <div class="alert-message block-message warning">
-      <p><strong>Did the correct light come on?</strong></p>
-      <div class="alert-actions">
-        <a class="btn primary" data-altkey="yes" href="@app.routes.Resources.intake(asset.getId, 1)?light=yes">Yes</a>
+    <div class="alert alert-block">
+      <h4 class="alert-heading">Did the correct light come on?</h4>
+      <p>
+      </p>
+      <p>
+        <a class="btn btn-primary" data-altkey="yes" href="@app.routes.Resources.intake(asset.getId, 1)?light=yes">Yes</a>
         <a class="btn" data-altkey="no" href="@app.routes.HelpPage.index(Help.IpmiNoLight)">No</a>
-      </div>
+      </p>
     </div>
   </div>
 </div>

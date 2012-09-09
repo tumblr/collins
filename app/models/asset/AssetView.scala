@@ -1,6 +1,6 @@
 package models.asset
 
-import models.Status
+import models.{AssetType, Status}
 import play.api.libs.json.JsValue
 import java.sql.Timestamp
 
@@ -22,9 +22,30 @@ trait AssetView {
 
   def getHostnameMetaValue(): Option[String]
   def getPrimaryRoleMetaValue(): Option[String]
+  def remoteHost: Option[String] //none if local
+  def toJsValue(): JsValue
+
   def getStatusName(): String = Status.findById(status).map(_.name).getOrElse("Unknown")
 
-  def remoteHost: Option[String] //none if local
+  def isServerNode(): Boolean = asset_type == AssetType.Enum.ServerNode.id
+  def isConfiguration(): Boolean = asset_type == AssetType.Enum.Config.id
 
-  def toJsValue(): JsValue
+  // yellow
+  def isIncomplete(): Boolean = status == Status.Enum.Incomplete.id
+  def isNew(): Boolean = status == Status.Enum.New.id
+
+  def isUnallocated(): Boolean = status == Status.Enum.Unallocated.id
+
+  // blue
+  def isProvisioning(): Boolean = status == Status.Enum.Provisioning.id
+  def isProvisioned(): Boolean = status == Status.Enum.Provisioned.id
+
+  def isAllocated(): Boolean = status == Status.Enum.Allocated.id
+
+  // green
+  def isCancelled(): Boolean = status == Status.Enum.Cancelled.id
+  def isDecommissioned(): Boolean = status == Status.Enum.Decommissioned.id
+
+  // red
+  def isMaintenance(): Boolean = status == Status.Enum.Maintenance.id
 }
