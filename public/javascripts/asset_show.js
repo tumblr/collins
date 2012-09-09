@@ -5,7 +5,7 @@ $(document).ready(function() {
   var secondary_role = "#secondary-role-container";
 
   function resetContainerInput(id) {
-    $(id).find('div.input').each(function() {
+    $(id).find('div.controls').each(function() {
       $(this).empty();
     });
   };
@@ -18,9 +18,9 @@ $(document).ready(function() {
   function setProvisionerValue(id, profile, values, name_id, label, type) {
     var config_value = profile[name_id];
     if (config_value) {
-      $(id).find('div.input').append('<span id="'+name_id+'" class="uneditable-input">' + config_value + "</span>");
+      $(id).find('div.controls').append('<span id="'+name_id+'" class="uneditable-input">' + config_value + "</span>");
     } else {
-      var input = $(id).find('div.input')
+      var input = $(id).find('div.controls')
       input.empty();
       if ($(id).hasClass('haveChoice')) {
         var check_name = name_id + '_check';
