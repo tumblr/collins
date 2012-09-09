@@ -2,25 +2,25 @@
 
 @main("Asset Logs") {
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     <script type="text/javascript">
       var logDataCols = [
-        {"mDataProp": "ASSET_TAG", "sWidth": "15%"},
         {"mDataProp": "CREATED", "sWidth": "20%"},
-	{"mDataProp": "SOURCE", "sWidth": "10%", "bSortable": false},
+        {"mDataProp": "SOURCE", "sWidth": "10%", "bSortable": false},
+        {"mDataProp": "ASSET_TAG", "sWidth": "15%"},
         {"mDataProp": "TYPE", "sWidth": "10%", "bSortable": false},
-	{"mDataProp": "MESSAGE", "sWidth": "45%", "bSortable": false}
+        {"mDataProp": "MESSAGE", "sWidth": "45%", "bSortable": false}
       ];
     </script>
     <h1>All Log Data</h1>
     <button id="logRefresh" style="float: right;" class="btn" data-interval-refresh="10;#log_data">Auto Refresh</button>
     <div id="log_data_container">
-      <table id="log_data" class="log-data zebra-striped condensed-table" data-size="100" data-cols="logDataCols" data-source="/assets/logs">
+      <table id="log_data" class="log-data table table-striped table-condensed" data-size="100" data-cols="logDataCols" data-source="/assets/logs">
         <thead>
           <tr>
-            <th>Asset</th>
             <th>Date</th>
             <th>Source</th>
+            <th>Asset</th>
             <th>Level</th>
             <th>Message</th>
           </tr>
@@ -29,8 +29,8 @@
         </tbody>
         <tfoot>
           <tr>
-            <th>Asset</th>
             <th>Date</th>
+            <th>Asset</th>
             <th>Source</th>
             <th>Level</th>
             <th>Message</th>

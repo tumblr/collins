@@ -9,17 +9,10 @@
   Server Start Time: @Formatter.dateFormat(Stats.StartupTime)
 </div>
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     @appStats.map { stats =>
     <h3><a data-collapsible="@{stats.name}Stats">@{stats.name.capitalize} Stats</a></h3>
-    <table id="@{stats.name}Stats" class="zebra-striped condensed-table">
-
-      <thead>
-        <tr>
-          <th></th>
-          <th></th>
-        </tr>
-      </thead>
+    <table id="@{stats.name}Stats" class="table table-bordered table-hover table-condensed">
 
       <tbody>
         @stats.toMap.map { case(statName, statValue) =>
@@ -37,20 +30,13 @@
 
 
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     <h3 style="display: inline; float: left;"><a data-collapsible="cacheStats">Cache Stats</a></h3>
-    <button style="float: right" class="btn" data-refresh='.window' data-remote="/admin/cache/clear" data-method="POST">Clear Cache</button>
+    <button style="float: right" class="btn btn-primary" data-refresh='.window' data-remote="/admin/cache/clear" data-method="POST">Clear Cache</button>
   </div>
 
-  <div class="span14">
-    <table id="cacheStats" class="zebra-striped condensed-table">
-
-      <thead>
-        <tr>
-          <th></th><th></th>
-        </tr>
-      </thead>
-
+  <div class="span12">
+    <table id="cacheStats" class="table table-bordered table-hover table-condensed">
       <tbody>
         <tr>
           <th>Eviction Count</th>

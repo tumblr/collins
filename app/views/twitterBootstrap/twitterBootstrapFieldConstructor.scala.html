@@ -12,13 +12,11 @@
   }
 }
 
-<div class="clearfix @el.args.get('_class) @if(el.hasErrors) {error}" id="@el.args.get('_id).getOrElse(el.id + "_field")">
-  <label for="@el.id">@el.label(el.lang)</label>
-  <div class="input">
+<div class="control-group @el.args.get('_class) @if(el.hasErrors) {error}" id="@el.args.get('_id).getOrElse(el.id + "_field")">
+  <label for="@el.id" class="control-label">@el.label(el.lang)</label>
+  <div class="controls">
     @el.input
     @if(el.hasErrors) {
-    <span class="help-block">@infos</span>
-    } else {
     <span class="help-inline">@infos</span>
     }
   </div>

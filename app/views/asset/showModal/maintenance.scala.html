@@ -1,0 +1,64 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import helper._
+@import _root_.util.plugins.Maintenance
+@import _root_.util.views.OptionSorter
+
+<!-- start asset maintenance modal -->
+@container("asset-maintenance", "assetMaintenanceLabel") {
+  @header("Asset Maintenance", Some("Warning"))
+  @form(app.routes.CookieApi.updateAssetForMaintenance(aa.asset.tag), 'class -> "form-horizontal", Symbol("data-form") -> "true", Symbol("data-error") -> "maintenanceError", Symbol("data-modal") -> "asset-maintenance", Symbol("data-refresh") -> ".window") {
+    @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
+    <div class="modal-body">
+      <p>Asset is <em>not</em> currently in maintenance mode. Putting an asset in maintenance mode will:</p>
+      <ul>
+        <li>Change the asset status</li>
+        <li>Cause it to be pulled from relavent configurations</li>
+        <li>Stop getting production traffic</li>
+      </ul>
+      <p>If that all sounds good, provide a reason below and then click appropriate</p>
+      <input type="hidden" name="status" value="Maintenance">
+      <textarea name="reason" id="reason" class="input-xxlarge" rows="3" placeholder="Reason"></textarea>
+      <div id="maintenanceError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn">Asset in Maintenance Mode</button>
+      @resetButton("Go back to browsing tumblr")
+    </div>
+    } else {
+    <div class="modal-body">
+      <p>Asset is currently in maintenance mode. Taking an asset out of maintenance mode will:</p>
+      <ul>
+        <li>Change the asset status</li>
+        <li>Cause it to be added back to relavent configurations</li>
+        <li>Start getting production traffic</li>
+      </ul>
+      <p>If that all sounds good, provide a reason and then click the button below. Be certain that you are putting the asset into an approprite status. For instance, if prior to maintenance an asset was Incomplete, you should probably move it back to Incomplete.</p>
+      <div class="control-group">
+        <label for="status" class="control-label">Status</label>
+        <div class="controls">
+          <select name="status" id="status">
+            <option value="" selected="selected"></option>
+            @OptionSorter.sortStrings(Status.Enum.values.toSeq, Some(" ")).map { v =>
+            <option value="@v._1">@v._2</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="reason" class="control-label">Reason</label>
+        <div class="controls">
+          <textarea name="reason" id="reason" class="input-xlarge" rows="3"></textarea>
+        </div>
+      </div>
+      <div id="maintenanceError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn">Asset out of Maintenance Mode</button>
+      @resetButton("Go back to browsing tumblr")
+    </div>
+    }
+  }
+}
+<!-- end asset maintenance modal -->
+
