@@ -5,22 +5,22 @@
 @import util.notice
 
 @main("Login", false) {
-<div class="page-header"><h1>Login <small>enter your credentials</small></h1></div>
+<div class="page-header"><h1>Login <small>Enter your credentials</small></h1></div>
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     @notice("success")
     @notice("security", Some("error"))
 
-@form(routes.Application.authenticate) {
+@form(routes.Application.authenticate, 'class -> "form-horizontal") {
     @inputText(loginForm("username"), '_label -> "Username")
     @inputPassword(loginForm("password"), '_label -> "Password")
     @loginForm.globalError.map { error =>
-      <div class="alert-message error">
+    <div class="alert alert-error">
         <strong>Unable to login</strong> @error.message
       </div>
     }
-    <div class="actions">
-      <input type="submit" class="btn primary" value="Sign in">
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Sign in</button>
       @loginForm("location").value.map { value =>
       <input type="hidden" name="location" value="@value">
       }

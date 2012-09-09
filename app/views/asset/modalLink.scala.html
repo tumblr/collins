@@ -1,0 +1,11 @@
+@(target: String = "#foo", linkText: String = "Something", backdrop: String = "static", icon: Option[String] = None)
+
+@formatWithIcon(iconName: Option[String], text: String) = {
+  @iconName.map { ic =>
+    <i class="@ic"></i> @text
+  }.getOrElse {
+    <i class="icon-bar"></i> @text
+  }
+}
+
+<a href="@target" role="button" data-keyboard="true" data-toggle="modal" @if(backdrop.nonEmpty) {data-backdrop="@backdrop"}>@formatWithIcon(icon, linkText)</a>
