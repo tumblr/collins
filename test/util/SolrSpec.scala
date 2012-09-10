@@ -199,6 +199,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       "support unquoted one-word strings" in {
         """foosolr = bar""".query must_== """foosolr = "bar"""".query
       }
+      "properly escape leading dash" in {
+        """TAG = -""".query.toSolrQueryString must_== """TAG:\-"""
+      }
     }
 
     "type checking" in {
