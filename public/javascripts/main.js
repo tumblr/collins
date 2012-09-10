@@ -36,7 +36,7 @@ $(document).ready(function() {
     $(this).find('input').val(isoDate.replace(/Z/, ''));
   });
 
-  $("[rel=tooltip]").tooltip();
+  $("[data-rel=tooltip]").tooltip();
 
   // Attach a keypress handler that moves to the next input on enter
   $("input[enter-style=tab]").each(function() {

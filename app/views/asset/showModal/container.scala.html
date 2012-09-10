@@ -1,5 +1,5 @@
 @(id: String, ariaLabel: String, dynamic: Boolean = false)(inside: Html)
 
-<div id="@id" class="modal hide fade @if(dynamic) {dynamicModal}" tabindex="-1" role="dialog" aria-labelledby="@ariaLabel" aria-hidden="true">
+<div id="@id" class="modal hide fade @if(dynamic) {dynamicModal}" tabindex="-1" role="dialog" aria-label="@ariaLabel" aria-hidden="true">
   @inside
 </div>
