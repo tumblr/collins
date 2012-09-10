@@ -1,3 +1,3 @@
 @(name: String, label: String)
 
-<label for="@name" class="control-label">@label</label>
+<label @if(name.nonEmpty){for="@name"} class="control-label">@label</label>
