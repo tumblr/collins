@@ -7,7 +7,7 @@
 
 @basicFormatter(asset: AssetMeta) = {
 <input type="text" id="@asset.name" name="@asset.name">
-  <span class="help-inline"><i class="icon-question-sign" rel="tooltip" title="@asset.description"></i></span>
+  <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="@asset.description"></i></span>
 }
 
 @main("Asset Search") {
@@ -21,7 +21,8 @@
 
     @form(app.routes.Resources.find(0,50,"DESC","and"), 'class -> "form-horizontal") {
 
-    <legend><h1>Asset Search</h1></legend>
+    <h1>Asset Search</h1>
+    <hr>
 
     <input type="hidden" name="operation" value="and">
 
@@ -31,7 +32,7 @@
           @formLabel("ASSET_TAG", "Asset Tag")
           @formInput {
             <input type="text" class="focus" id="ASSET_TAG" name="ASSET_TAG" autocomplete="off">
-            <span class="help-inline"><i class="icon-question-sign" rel="tooltip" title="Unique identifier for asset"></i></span>
+            <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Unique identifier for asset"></i></span>
           }
         }
         @formField {
@@ -43,7 +44,7 @@
               <option value="@v._1">@v._2</option>
               }
             </select>
-            <span class="help-inline"><i class="icon-question-sign" rel="tooltip" title="Asset Status (New, Incomplete, etc)"></i></span>
+            <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Asset Status (New, Incomplete, etc)"></i></span>
           }
         }
         @formField {
@@ -55,14 +56,14 @@
               <option value="@v._1">@v._2</option>
               }
             </select>
-            <span class="help-inline"><i class="icon-question-sign" rel="tooltip" title="Type of Asset (Service Chassis, Server Node, etc)"></i></span>
+            <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Type of Asset (Service Chassis, Server Node, etc)"></i></span>
           }
         }
         @formField {
           @formLabel("IP_ADDRESS", "IP Address")
           @formInput {
             <input type="text" id="IP_ADDRESS" name="IP_ADDRESS">
-            <span class="help-inline"><i class="icon-question-sign" rel="tooltip" title="IP address of the asset. Prefix searches are also supported."></i></span>
+            <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="IP address of the asset. Prefix searches are also supported."></i></span>
           }
         }
         @formField {
@@ -103,7 +104,7 @@
         @if(MultiCollinsConfig.enabled) {
           @formField {
             @formLabel("", "")
-            <input type="checkbox" id="remoteLookup" name="remoteLookup" value="true"> Remote Search <i class="icon-question-sign" rel="tooltip" title="Search for assets in other data-centers"></i>
+            <input type="checkbox" id="remoteLookup" name="remoteLookup" value="true"> Remote Search <i class="icon-question-sign" data-rel="tooltip" title="Search for assets in other data-centers"></i>
           }
         }
       </div>

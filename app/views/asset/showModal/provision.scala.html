@@ -4,7 +4,7 @@
 @import _root_.util.plugins.Provisioner
 @import _root_.util.views.ProvisionerHelper
 
-@container("provision-server", "provisionServerLabel", true) {
+@container("provision-server", "Provision Server", true) {
   @if(aa.asset.isIncomplete) {
     @header("Activate Server", Some("Warning"))
   } else {
