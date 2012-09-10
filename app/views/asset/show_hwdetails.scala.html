@@ -27,7 +27,9 @@
   <h4>CPU <small>Collected CPU Information</small></h4>
   <table class="table table-bordered table-hover table-condensed">
     <thead>
-      <th>Id</th><th>Cores</th><th>Threads</th><th>Speed</th><th>Description</th>
+      <tr>
+        <th>Id</th><th>Cores</th><th>Threads</th><th>Speed</th><th>Description</th>
+      </tr>
     </thead>
     <tbody>
     @aa.lshw.cpus.zipWithIndex.map { case(cpu,id) =>
