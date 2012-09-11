@@ -52,11 +52,7 @@
           <td></td>
         </tr>
         <tr class="@if(aa.asset.isMaintenance){error}">
-          @if(aa.asset.isMaintenance) {
           <td><strong>Asset Status</strong></td>
-          } else {
-          <th>Asset Status</th>
-          }
           <td>@aa.asset.getStatus().name</td>
           @if(aa.asset.isMaintenance) {
             <td><span class="label label-important">See Notes</span> @aa.asset.getStatus().description</td>
@@ -64,6 +60,15 @@
             <td>@aa.asset.getStatus().description</td>
           }
         </tr>
+@if(aa.asset.state != 0) {
+  @State.findById(aa.asset.state).map { state =>
+        <tr>
+          <th>Asset State</th>
+          <td>@state.label</td>
+          <td>@state.description</td>
+        </tr>
+  }
+}
         <tr>
           <th>Created On</th>
           <td>@aa.asset.created.format("yyyy-MM-dd HH:mm:ss")</td>

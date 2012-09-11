@@ -6,6 +6,8 @@ import conversions._
 import shared.QueryLogConfig
 import AssetSortType.AssetSortType
 
+import collins.validation.Pattern.isAlphaNumericString
+
 import util.{MessageHelper, RemoteCollinsHost, Stats}
 import util.config.{MultiCollinsConfig, NodeclassifierConfig}
 import util.plugins.Cache
@@ -21,7 +23,7 @@ import java.util.Date
 
 case class Asset(tag: String, status: Int, asset_type: Int,
     created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp],
-    id: Long = 0) extends ValidatedEntity[Long] with AssetView
+    id: Long = 0, state: Int = 0) extends ValidatedEntity[Long] with AssetView
 {
   private[this] val logger = Logger("Asset")
 
@@ -114,7 +116,6 @@ case class Asset(tag: String, status: Int, asset_type: Int,
 
 object Asset extends Schema with AnormAdapter[Asset] {
 
-  private[this] val TagR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
   private[this] val logger = Logger("Asset")
   override protected val createEventName = Some("asset_create")
   override protected val updateEventName = Some("asset_update")
@@ -156,9 +157,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     def noMatch() = message("nomatch")
   }
 
-  def isValidTag(tag: String): Boolean = {
-    tag != null && tag.nonEmpty && TagR(tag).matches
-  }
+  def isValidTag(tag: String): Boolean = isAlphaNumericString(tag)
 
   def apply(tag: String, status: Status.Enum, asset_type: AssetType.Enum) = {
     new Asset(tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
@@ -320,6 +319,22 @@ object Asset extends Schema with AnormAdapter[Asset] {
       logger.warn("No Nodeclass for Asset " + asset.tag)
       Page.emptyPage
     }
+  }
+
+  def setState(asset: Asset, state: State): Int = inTransaction {
+    val oldAsset = Asset.findById(asset.id).get
+    val res = tableDef.update(a =>
+      where(a.id === asset.id)
+      set(a.state := state.id)
+    )
+    loggedInvalidation("setState", asset)
+    val newAsset = Asset.findById(asset.id).get
+    updateEventName.foreach { name =>
+      oldAsset.forComparison
+      newAsset.forComparison
+      util.plugins.Callback.fire(name, oldAsset, newAsset)
+    }
+    res
   }
 
   def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int]) = inTransaction {

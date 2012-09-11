@@ -37,6 +37,15 @@ $(document).ready(function() {
   });
 
   $("[data-rel=tooltip]").tooltip();
+  $("[data-rel=popover]").each(function() {
+    var jsFn = $(this).attr('data-source');
+    if (jsFn && jsFn.search("javascript://") === 0) {
+      jsFn = window[jsFn.slice(13)];
+      $(this).popover({content: jsFn});
+    } else {
+      $(this).popover();
+    }
+  });
 
   // Attach a keypress handler that moves to the next input on enter
   $("input[enter-style=tab]").each(function() {

@@ -1,6 +1,8 @@
 @(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
+@import util._
+@import _root_.models.State
 @import _root_.util.plugins.Maintenance
 @import _root_.util.views.OptionSorter
 
@@ -16,9 +18,23 @@
         <li>Cause it to be pulled from relavent configurations</li>
         <li>Stop getting production traffic</li>
       </ul>
-      <p>If that all sounds good, provide a reason below and then click appropriate</p>
+      <p>If that all sounds good select a maintenance type, provide a description, and then click the appropriate button</p>
       <input type="hidden" name="status" value="Maintenance">
-      <textarea name="reason" id="maintenanceReason" class="input-xxlarge" rows="3" placeholder="Reason"></textarea>
+      <div class="control-group">
+        <label for="state" class="span1" style="display: inline;">Type</label>
+        <select name="state" id="state">
+          <option value="" selected="selected"></option>
+          @Status.findByName("Maintenance").map { status =>
+            @State.findByStatus(status).sorted(State.StateOrdering).map { state =>
+              <option value="@state.name">@state.label</option>
+            }
+          }
+        </select>
+      </div>
+      @maintenanceHelp()
+      <div class="control-group">
+        <textarea name="description" id="maintenanceDescription" class="input-xxlarge" rows="3" placeholder="Description"></textarea>
+      </div>
       <div id="maintenanceError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
     </div>
     <div class="modal-footer">
@@ -33,7 +49,7 @@
         <li>Cause it to be added back to relavent configurations</li>
         <li>Start getting production traffic</li>
       </ul>
-      <p>If that all sounds good, provide a reason and then click the button below. Be certain that you are putting the asset into an approprite status. For instance, if prior to maintenance an asset was Incomplete, you should probably move it back to Incomplete.</p>
+      <p>If that all sounds good, provide a description of the problem resolution and then click the button below. Be certain that you are putting the asset into an approprite status. For instance, if prior to maintenance an asset was Incomplete, you should probably move it back to Incomplete.</p>
       <div class="control-group">
         <label for="status" class="control-label">Status</label>
         <div class="controls">
@@ -46,9 +62,9 @@
         </div>
       </div>
       <div class="control-group">
-        <label for="maintenanceReason" class="control-label">Reason</label>
+        <label for="maintenanceDescription" class="control-label">Description</label>
         <div class="controls">
-          <textarea name="reason" id="maintenanceReason" class="input-xlarge" rows="3"></textarea>
+          <textarea name="description" id="maintenanceDescription" class="input-xlarge" rows="3"></textarea>
         </div>
       </div>
       <div id="maintenanceError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
