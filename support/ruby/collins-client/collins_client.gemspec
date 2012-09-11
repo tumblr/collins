@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "collins_client"
-  s.version = "0.2.2"
+  s.version = "0.2.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Blake Matheny"]
-  s.date = "2012-09-02"
+  s.date = "2012-09-11"
   s.description = "Provides ruby support for interacting with the Collins API"
   s.email = "bmatheny@tumblr.com"
   s.extra_rdoc_files = [
@@ -46,6 +46,7 @@ Gem::Specification.new do |s|
     "lib/collins/power.rb",
     "lib/collins/profile.rb",
     "lib/collins/simple_callback.rb",
+    "lib/collins/state.rb",
     "lib/collins/util.rb",
     "lib/collins_client.rb"
   ]
