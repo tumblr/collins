@@ -18,7 +18,7 @@ object State extends Schema with AnormAdapter[State] {
   def Terminated = State.findByName("TERMINATED")
 
   object StateOrdering extends Ordering[State] {
-    override def compare(a: State, b: State) = a.label compare b.label
+    override def compare(a: State, b: State) = a.getDisplayLabel compare b.getDisplayLabel
   }
 
   implicit object StateFormat extends Format[State] {
@@ -46,6 +46,7 @@ object State extends Schema with AnormAdapter[State] {
   ))
 
   override def cacheKeys(s: State) = Seq(
+    "State.find",
     "State.findById(%d)".format(s.id),
     "State.findByName(%s)".format(s.name.toLowerCase),
     "State.findByAnyStatus",
@@ -58,6 +59,9 @@ object State extends Schema with AnormAdapter[State] {
     }
   }
 
+  def find(): List[State] = getOrElseUpdate("State.find") {
+    from(tableDef)(s => select(s)).toList
+  }
   def findById(id: Int): Option[State] = getOrElseUpdate("State.findById(%d)".format(id)) {
     tableDef.lookup(id)
   }
@@ -92,6 +96,11 @@ case class State(
   private[this] val logger = Logger("State")
 
   def getId(): Int = id
+  def getDisplayLabel(): String = "%s - %s".format(getStatusName, label)
+  def getStatusName(): String = status match {
+    case 0 => "Any"
+    case n => Status.findById(n).map(_.name).getOrElse("Unknown")
+  }
   override def validate() {
     require(status >= 0, "status must be >= 0")
     require(isAlphaNumericString(name), "State name must be alphanumeric")

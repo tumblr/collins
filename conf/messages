@@ -6,7 +6,8 @@ constraint.minLength=The minimum length is {0}
 
 # --- Errors
 error.minLength=The minimum length is {0}
-error.truthy={0} is truthy. Must be a value like ''true'' or ''false''.
+error.truthy={0} is not truthy. Must be a value like ''true'' or ''false''.
+error.state=Specified state is invalid.
 error.unknown=An unknown error occurred
 
 asset.id.notfound=No asset with ID {0} could be found
