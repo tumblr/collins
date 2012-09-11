@@ -183,7 +183,7 @@ object AssetLifecycle {
         val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
         ApiTattler.informational(newAsset, None, "Intake now complete, asset Unallocated")
-        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.New)
+        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.Starting)
         true
       }
     }
@@ -219,7 +219,7 @@ object AssetLifecycle {
         }
         MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
         val newAsset = asset.copy(status = Status.Enum.New.id, updated = Some(new Date().asTimestamp))
-        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status))
+        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.New)
         InternalTattler.informational(newAsset, None, "Parsing and storing LSHW data succeeded")
         true
       }

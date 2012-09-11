@@ -170,6 +170,7 @@
    <field name="TAG" type="string" indexed="true" stored="true" required="true" /> 
    <field name="TYPE" type="int" indexed="true" stored="true" required="true"/>
    <field name="STATUS" type="int" indexed="true" stored="true" required="true"/>
+   <field name="STATE" type="int" indexed="true" stored="true" required="true"/>
    <field name="CREATED" type="tdate" indexed="true" stored="true" requred="true"/>
    <field name="UPDATED" type="tdate" indexed="true" stored="true" requred="false"/>
    <field name="DELETED" type="tdate" indexed="true" stored="true" requred="false"/>

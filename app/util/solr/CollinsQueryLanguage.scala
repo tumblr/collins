@@ -1,6 +1,6 @@
 package util.plugins.solr
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, State, Status, Truthy}
 import models.asset.AssetView
 import models.IpmiInfo.Enum._
 
@@ -171,7 +171,8 @@ trait SolrSimpleExpr extends SolrExpression {
 
   val enumKeys = Map[SolrKey, String => Option[Int]](
     SolrKey("TYPE",Integer,false) -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
-    SolrKey("STATUS",Integer,false) -> ((s: String) => Status.findByName(s).map{_.id})
+    SolrKey("STATUS",Integer,false) -> ((s: String) => Status.findByName(s).map{_.id}),
+    SolrKey("STATE",Integer,false) -> ((s: String) => State.findByName(s).map(_.id))
   )
 
   def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = 
