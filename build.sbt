@@ -2,6 +2,8 @@ scalacOptions ++= Seq("-deprecation","-unchecked")
 
 resolvers += "Twitter Repository" at "http://maven.twttr.com/"
 
+resolvers += "Sonatype-public" at "http://oss.sonatype.org/content/groups/public"
+
 parallelExecution in Test := false
 
 parallelExecution in IntegrationTest := false
@@ -25,7 +27,7 @@ libraryDependencies ++= Seq(
   "com.twitter" %% "finagle-http" % "1.10.0",
   "org.jsoup" % "jsoup" % "1.6.1",
   "org.squeryl" %% "squeryl" % "0.9.5",
-  "org.yaml" % "snakeyaml" % "1.11-SNAPSHOT" from ("file://" + file(".") + "lib/snakeyaml-1.11-SNAPSHOT.jar")
+  "org.yaml" % "snakeyaml" % "1.11-SNAPSHOT" 
 )
 
 
