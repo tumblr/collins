@@ -1,12 +1,18 @@
 package collins
 package callbacks
 
+import action.Action
+import action.handler.CallbackActionHandler
+
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
-import play.api.{Application, Configuration, Logger, Plugin}
-import com.twitter.util.{Future, FuturePool}
 import java.util.concurrent.Executors
 
+import com.twitter.util.{Future, FuturePool}
+import play.api.{Application, Configuration, Logger, Plugin}
+
+
 class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManager {
+
   protected[this] val executor = Executors.newCachedThreadPool()
   protected[this] val pool = FuturePool(executor)
 
@@ -41,7 +47,7 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
     val matchCondition = descriptor.matchCondition
     val currentConfigMatches = CallbackMatcher(matchCondition.current, _.getNewValue)
     val previousConfigMatches = CallbackMatcher(matchCondition.previous, _.getOldValue)
-    val handlesMatch = createMatchHandler(descriptor.matchAction)
+    val handlesMatch = Action.getExecutor(descriptor.matchAction)
     on(eventName, new CallbackActionHandler {
       override def apply(pce: PropertyChangeEvent) {
         if (previousConfigMatches(pce) && currentConfigMatches(pce)) {
@@ -49,13 +55,6 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
         }
       }
     })
-  }
-
-  protected def createMatchHandler(cfg: CallbackAction): CallbackActionHandler = {
-    cfg.actionType match {
-      case CallbackActionType.Exec =>
-        runners.ExecActionRunner(cfg.command)
-    }
   }
 
 }

@@ -1,6 +1,7 @@
 package util
 package views
 
+import collins.script.CollinScriptRegistry
 import models.MetaWrapper
 
 import play.api.mvc.Content

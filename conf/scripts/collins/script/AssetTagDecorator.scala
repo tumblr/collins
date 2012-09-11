@@ -1,11 +1,12 @@
-package collins.script
+package collins
+package script
 
-class AssetTagDecorator {
-  val a = 1
-}
+import models.AssetView
 
-object AssetTagDecorator {
+object AssetTagDecorator extends CollinScript {
+
   def format(test: String): String = {
-    return test
+    return classOf[CollinScript].toString
   }
+
 }

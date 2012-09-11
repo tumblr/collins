@@ -6,6 +6,7 @@ import java.util.Date
 
 // Used with views/asset/list
 object Formatter {
+
   val ISO_8601_FORMAT = "yyyy-MM-dd'T'HH:mm:ss"
 
   def solrDateFormat(date: Date): String = dateFormat(date) + "Z"
@@ -14,7 +15,7 @@ object Formatter {
     new SimpleDateFormat(ISO_8601_FORMAT).format(date)
   }
 
-  def elipse(source: String, maxLength: Int = 25, filler: String = "..."): String = {
+  def ellipsis(source: String, maxLength: Int = 25, filler: String = "..."): String = {
     val sourceLength = source.length // 12 characters
     val fillerLength = filler.length // 3 characters
     val maxSize = maxLength - fillerLength // 10 - 3 = 7

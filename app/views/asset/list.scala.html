@@ -38,10 +38,10 @@
         <tr>
           <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
           @if(ListHelper.showHostname(assets)) {
-          <td>@asset.getHostnameMetaValue.map(v => Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>
+          <td>@asset.getHostnameMetaValue.map(v => Formatter.ellipsis(v)).getOrElse { <em>Unknown</em> }</td>
           }
 	  <td>@asset.getPrimaryRoleMetaValue().getOrElse { <em>Unknown</em> }</td>
-	  <td>@Formatter.elipse(asset.getStatusName(), 12)</td>
+	  <td>@Formatter.ellipsis(asset.getStatusName(), 12)</td>
           <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
           <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
           @if(ListHelper.showSoftLayerLink(assets)) {

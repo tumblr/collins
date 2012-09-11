@@ -1,7 +1,7 @@
 package util
 package solr
 
-import collins.callbacks.CallbackActionHandler
+import collins.action.handler.CallbackActionHandler
 import models.{Asset, AssetMetaValue, IpAddresses}
 
 import akka.actor._

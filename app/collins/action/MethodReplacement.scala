@@ -1,7 +1,8 @@
 package collins
-package callbacks
+package action
 
-import reflection.MethodHelper
+import collins.reflection.MethodHelper
+
 
 /**
  * Represents the results of a regular expression.

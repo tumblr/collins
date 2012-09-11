@@ -2,10 +2,12 @@ package util
 package plugins
 
 import play.api.{Play, Plugin}
-import collins.callbacks.{CallbackActionHandler, CallbackManagerPlugin, CallbackManager}
+import collins.action.handler.CallbackActionHandler
+import collins.callbacks.{CallbackManagerPlugin, CallbackManager}
 import java.beans.PropertyChangeEvent
 
 object Callback extends CallbackManager {
+
   def pluginEnabled: Option[CallbackManagerPlugin] = {
     Play.maybeApplication.flatMap { app =>
       app.plugin[CallbackManagerPlugin].filter(_.enabled)
@@ -41,4 +43,5 @@ object Callback extends CallbackManager {
     // Load from database or whatever. Need to call myself or figure out a way to give this
     // to the manager plugin
   }
+
 }

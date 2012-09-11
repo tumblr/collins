@@ -1,4 +1,5 @@
 package collins
 package script
 
-trait CollinScript {}
+
+trait CollinScript
