@@ -6,11 +6,9 @@ import models.{Asset, AssetLifecycle, State, Status}
 object Maintenance {
   def toMaintenance(asset: Asset, reason: String, state: State): Boolean = {
     if (canTransitionToMaintenance(asset)) {
-      AssetLifecycle.updateAssetStatus(asset, Map("reason" -> reason, "status" -> "Maintenance")) match {
+      AssetLifecycle.updateAssetStatus(asset, Map("reason" -> reason, "status" -> "Maintenance", "state" -> state.name)) match {
         case Left(e) => false
-        case _ =>
-          Asset.setState(asset, state)
-          true
+        case _ => true
       }
     } else {
       false
@@ -19,11 +17,9 @@ object Maintenance {
 
   def fromMaintenance(asset: Asset, reason: String, status: String, state: State): Boolean = {
     if (canTransitionFromMaintenance(asset)) {
-      AssetLifecycle.updateAssetStatus(asset, Map("status" -> status, "reason" -> reason)) match {
+      AssetLifecycle.updateAssetStatus(asset, Map("status" -> status, "reason" -> reason, "state" -> state.name)) match {
         case Left(e) => false
-        case _ =>
-          Asset.setState(asset, state)
-          true
+        case _ => true
       }
     } else {
       false

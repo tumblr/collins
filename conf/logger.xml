@@ -14,8 +14,9 @@
   <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
   <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
   <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
+  <logger name="util.security.AuthenticationProvider" level="INFO" />
 
-  <root level="INFO">
+  <root level="DEBUG">
     <appender-ref ref="FILE" />
   </root>
   <logger name="org.apache" level="WARN" />
