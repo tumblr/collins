@@ -29,14 +29,14 @@ case class UpdateForMaintenanceAction(
 
   import UpdateForMaintenance.Messages._
 
-  case class ActionDataHolder(aStatus: AssetStatus.Enum, description: String, state: Option[State]) extends RequestDataHolder {
+  case class ActionDataHolder(aStatus: AssetStatus.Enum, description: String, state: State) extends RequestDataHolder {
     def assetStatusName: String = aStatus.toString
   }
 
   lazy val params: Either[String,ActionDataHolder] = Form(tuple(
     "status" -> of[AssetStatus.Enum],
     "description" -> text(1),
-    "state"  -> optional(of[State])
+    "state"  -> of[State]
   )).bindFromRequest()(request).fold(
     err => {
       err.error("status").map { e =>
@@ -44,6 +44,10 @@ case class UpdateForMaintenanceAction(
       }.orElse {
         err.error("description").map { e =>
           Left(missingDescription)
+        }
+      }.orElse {
+        err.error("state").map { e =>
+          Left(missingState)
         }
       }.getOrElse {
         Left(missingDescriptionAndStatus)
@@ -65,15 +69,6 @@ case class UpdateForMaintenanceAction(
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
     withValidAsset(assetTag) { asset =>
       params.left.map(e => RequestDataHolder.error400(e))
-        .right.flatMap {
-          case adh@ActionDataHolder(status, description, state) =>
-            status match {
-              case failed if failed == AssetStatus.Enum.Maintenance && !state.isDefined =>
-                Left(RequestDataHolder.error400(missingState))
-              case _ =>
-                Right(adh)
-            }
-        }
     }
   }
 
@@ -82,7 +77,7 @@ case class UpdateForMaintenanceAction(
       val success = if (status.id == AssetStatus.Enum.Maintenance.id) {
         Maintenance.toMaintenance(definedAsset, description, state)
       } else {
-        Maintenance.fromMaintenance(definedAsset, description, status.toString)
+        Maintenance.fromMaintenance(definedAsset, description, status.toString, state)
       }
       success match {
         case true => Api.statusResponse(true)

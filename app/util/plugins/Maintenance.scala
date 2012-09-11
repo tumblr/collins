@@ -4,14 +4,12 @@ package plugins
 import models.{Asset, AssetLifecycle, State, Status}
 
 object Maintenance {
-  def toMaintenance(asset: Asset, reason: String, state: Option[State]): Boolean = {
+  def toMaintenance(asset: Asset, reason: String, state: State): Boolean = {
     if (canTransitionToMaintenance(asset)) {
       AssetLifecycle.updateAssetStatus(asset, Map("reason" -> reason, "status" -> "Maintenance")) match {
         case Left(e) => false
         case _ =>
-          state.foreach { s =>
-            Asset.setState(asset, s)
-          }
+          Asset.setState(asset, state)
           true
       }
     } else {
@@ -19,14 +17,12 @@ object Maintenance {
     }
   }
 
-  def fromMaintenance(asset: Asset, reason: String, status: String): Boolean = {
+  def fromMaintenance(asset: Asset, reason: String, status: String, state: State): Boolean = {
     if (canTransitionFromMaintenance(asset)) {
       AssetLifecycle.updateAssetStatus(asset, Map("status" -> status, "reason" -> reason)) match {
         case Left(e) => false
         case _ =>
-          State.Running.foreach { state =>
-            Asset.setState(asset, state)
-          }
+          Asset.setState(asset, state)
           true
       }
     } else {
