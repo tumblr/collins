@@ -37,7 +37,7 @@ object State extends Schema with AnormAdapter[State] {
       "STATUS" -> toJson(Status.findById(state.status)),
       "NAME" -> toJson(state.name),
       "LABEL" -> toJson(state.label),
-      "DESCRIPTION" -> toJson(state.name)
+      "DESCRIPTION" -> toJson(state.description)
     ))
   }
   override val tableDef = table[State]("state")
