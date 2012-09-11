@@ -335,15 +335,17 @@ object Asset extends Schema with AnormAdapter[Asset] {
       newAsset.forComparison
       util.plugins.Callback.fire(name, oldAsset, newAsset)
     }
+    loggedInvalidation("setState", asset)
     res
   }
 
-  def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int]) = inTransaction {
+  def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int], state: Option[State] = None) = inTransaction {
     val oldAsset = Asset.findById(asset.id).get
-    val res = if (updated.isDefined && status.isDefined) {
+    val res = if (updated.isDefined && status.isDefined && state.isDefined) {
+      logger.info("Got update for all states")
       tableDef.update (a =>
         where(a.id === asset.id)
-        set(a.updated := updated, a.status := status.get)
+        set(a.updated := updated, a.status := status.get, a.state := state.get.id)
       )
     } else if (updated.isDefined) {
       tableDef.update (a =>
@@ -355,8 +357,13 @@ object Asset extends Schema with AnormAdapter[Asset] {
         where(a.id === asset.id)
         set(a.status := status.get)
       )
+    } else if (state.isDefined) {
+      tableDef.update (a =>
+        where(a.id === asset.id)
+        set(a.status := state.get.id)
+      )
     } else {
-      throw new IllegalStateException("Neither updated or status were specified")
+      throw new Exception("Invalid usage of partialUpdate")
     }
     loggedInvalidation("partialUpdate", asset)
     val newAsset = Asset.findById(asset.id).get
@@ -365,6 +372,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       newAsset.forComparison
       util.plugins.Callback.fire(name, oldAsset, newAsset)
     }
+    loggedInvalidation("partialUpdate", asset)
     res
   }
 

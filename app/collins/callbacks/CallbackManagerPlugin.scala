@@ -44,7 +44,9 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
     val handlesMatch = createMatchHandler(descriptor.matchAction)
     on(eventName, new CallbackActionHandler {
       override def apply(pce: PropertyChangeEvent) {
-        if (previousConfigMatches(pce) && currentConfigMatches(pce)) {
+        val prevMatch = previousConfigMatches(pce)
+        val curMatch = currentConfigMatches(pce)
+        if (prevMatch && curMatch) {
           handlesMatch(pce)
         }
       }

@@ -140,6 +140,7 @@ object AssetLifecycle {
         return Left(new Exception("sloppyStatus not enabled"))
     }
     val stat = options.get("status").getOrElse("none")
+    val state = options.get("state").flatMap(s => State.findByName(s))
     allCatch[Boolean].either {
       val status = AStatus.Enum.withName(stat)
       if (status.id == asset.status) {
@@ -150,9 +151,10 @@ object AssetLifecycle {
       val defaultReason = "Asset state updated from %s to %s".format(old, stat)
       val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
       Asset.inTransaction {
-        Asset.partialUpdate(asset, Some(new Date().asTimestamp), Some(status.id))
+        Asset.partialUpdate(asset, Some(new Date().asTimestamp), Some(status.id), state)
         ApiTattler.informational(asset, None, reason)
       }
+      Asset.flushCache(asset)
       true
     }.left.map(e => handleException(asset, "Error updating status for asset", e))
   }
@@ -181,7 +183,7 @@ object AssetLifecycle {
         val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
         ApiTattler.informational(newAsset, None, "Intake now complete, asset Unallocated")
-        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status))
+        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.New)
         true
       }
     }

@@ -14,6 +14,7 @@ object State extends Schema with AnormAdapter[State] {
   /** Status value that can apply to any asset, regardless of status **/
   val ANY_STATUS = 0
 
+  def New = State.findByName("NEW")
   def Running = State.findByName("RUNNING")
   def Terminated = State.findByName("TERMINATED")
 
