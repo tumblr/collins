@@ -48,6 +48,18 @@
           }
         }
         @formField {
+          @formLabel("state", "State")
+          @formInput {
+            <select name="state" id="state">
+              <option value="" selected="selected"></option>
+              @State.find().sorted(State.StateOrdering).map { state =>
+                <option value="@state.name">@state.getDisplayLabel</option>
+              }
+            </select>
+            <span class="help-inline"><a target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="icon-question-sign"></i></a></span>
+          }
+        }
+        @formField {
           @formLabel("type", "Type")
           @formInput {
             <select name="type" id="type">

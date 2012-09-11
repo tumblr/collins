@@ -4,7 +4,7 @@ package asset
 
 import forms._
 
-import models.{Asset, AssetType, AssetFinder, Page, PageParams, Status => AssetStatus, Truthy}
+import models.{Asset, AssetType, AssetFinder, Page, PageParams, State, Status => AssetStatus, Truthy}
 import models.asset.AssetView
 import models.AssetType.{Enum => AssetTypeEnum}
 import models.Status.{Enum => AssetStatusEnum}
@@ -66,6 +66,4 @@ class FindAction(
       }
   }
 
-
 }
-

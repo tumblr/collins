@@ -259,7 +259,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
       createdBefore = None,
       updatedAfter = None,
       updatedBefore = None,
-      assetType = Some(MultiCollinsConfig.instanceAssetType)
+      assetType = Some(MultiCollinsConfig.instanceAssetType),
+      state = None
     )
     val findLocations = Asset
       .find(PageParams(0,50,"ASC"), instanceFinder)

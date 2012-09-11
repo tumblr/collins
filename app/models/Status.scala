@@ -36,10 +36,14 @@ object Status extends Schema with AnormAdapter[Status] {
   ))
 
   override protected def cacheKeys(s: Status) = Seq(
+    "Status.find",
     "Status.findById(%d)".format(s.id),
     "Status.findByName(%s)".format(s.name.toLowerCase)
   )
 
+  def find(): List[Status] = getOrElseUpdate("Status.find") {
+    from(tableDef)(s => select(s)).toList
+  }
   def findById(id: Int): Option[Status] = getOrElseUpdate("Status.findById(%d)".format(id)) {
     tableDef.lookup(id)
   }
