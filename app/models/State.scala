@@ -16,6 +16,7 @@ object State extends Schema with AnormAdapter[State] {
 
   def New = State.findByName("NEW")
   def Running = State.findByName("RUNNING")
+  def Starting = State.findByName("STARTING")
   def Terminated = State.findByName("TERMINATED")
 
   object StateOrdering extends Ordering[State] {
