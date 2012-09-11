@@ -2,6 +2,8 @@ scalacOptions ++= Seq("-deprecation","-unchecked")
 
 resolvers += "Twitter Repository" at "http://maven.twttr.com/"
 
+resolvers += "Sonatype-public" at "http://oss.sonatype.org/content/groups/public"
+
 parallelExecution in Test := false
 
 parallelExecution in IntegrationTest := false
@@ -21,6 +23,16 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-compiler" % "2.9.1",
   "org.slf4j" % "slf4j-api" % "1.6.1",
   "javax.servlet" % "servlet-api" % "2.5"
+  "org.apache.httpcomponents" % "httpmime" % "4.2.1", 
+  "javax.servlet" % "servlet-api" % "2.5",
+  "commons-net" % "commons-net" % "3.1",
+  "org.apache.commons" % "commons-lang3" % "3.1",
+  "org.bouncycastle" % "bcprov-jdk16" % "1.46",
+  "com.twitter" %% "util-core" % "1.12.12",
+  "com.twitter" %% "finagle-http" % "1.10.0",
+  "org.jsoup" % "jsoup" % "1.6.1",
+  "org.squeryl" %% "squeryl" % "0.9.5",
+  "org.yaml" % "snakeyaml" % "1.11-SNAPSHOT" 
 )
 
 

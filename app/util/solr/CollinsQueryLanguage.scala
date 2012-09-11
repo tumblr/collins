@@ -1,6 +1,7 @@
 package util.plugins.solr
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.asset.AssetView
 import models.IpmiInfo.Enum._
 
 import scala.util.parsing.combinator._
@@ -59,7 +60,7 @@ case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
 }
 
 case class SolrStringValue(value: String) extends SolrSingleValue(String) {
-  def toSolrQueryString(toplevel: Boolean) = value
+  def toSolrQueryString(toplevel: Boolean) = if (value startsWith "-") "\\" + value else value
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {

@@ -26,10 +26,10 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
   // A reference configuration for sanity checking and defaults
   val referenceConfigFilename: String
 
-  override def ns = Some(namespace)
-
   // Called when the underlying configuration changes in any way
   protected def validateConfig()
+
+  override def ns = Some(namespace)
 
   // This is only assigned to during delayedInit call, after constructor code
   private var referenceConfig: Option[TypesafeConfiguration] = None
@@ -75,15 +75,19 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
     Registry.add(namespace, this)
   }
 
-  protected[config] def onChange(newConfig: TypesafeConfiguration) {
+  final protected[config] def onChange(newConfig: TypesafeConfiguration) {
     try {
       mergeReferenceAndSave(newConfig)
+      afterChange()
     } catch {
       case e =>
         logger.warn("Exception handling file (%s) change: %s".format(
           Option(newConfig.origin.filename).getOrElse("unknown"), e.getMessage
         ))
     }
+  }
+
+  protected def afterChange() {
   }
 
   protected def mergeReferenceAndSave(config: TypesafeConfiguration, skipValidation: Boolean = false) {

@@ -1,5 +1,8 @@
 package models
 
+import asset.{AssetView, BasicRemoteAsset, DetailedRemoteAsset, RemoteAsset}
+import util.RemoteCollinsHost
+
 import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.ws.WS

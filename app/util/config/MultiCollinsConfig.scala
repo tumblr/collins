@@ -15,7 +15,7 @@ object MultiCollinsConfig extends Configurable {
       AssetType.Enum.withName(itype)
     } catch {
       case e => 
-        throw new Exception("multicollins.instanceAssetType - %s is not a valid asset type".format(itype))
+        throw globalError("multicollins.instanceAssetType - %s is not a valid asset type".format(itype))
     }
   }
   def locationAttribute = getString("locationAttribute", "LOCATION")

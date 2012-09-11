@@ -3,7 +3,7 @@ package controllers
 import models.{AssetType,Status,Truthy}
 import util.views.Formatter.camelCase
 
-import com.tumblr.play.{Power, PowerAction}
+import collins.power.PowerAction
 
 import play.api.data.FormError
 import play.api.data.format._
@@ -41,7 +41,7 @@ package object forms {
     def bind(key: String, data: Map[String, String]) = {
       Formats.stringFormat.bind(key, data).right.flatMap { s =>
         allCatch[PowerAction]
-          .either(Power(s))
+          .either(PowerAction(s))
           .left.map(e => Seq(FormError(key, "error.power", Nil)))
       }
     }

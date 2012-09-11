@@ -4,7 +4,8 @@ package solr
 
 import util.solr._
 
-import models.{Asset, AssetView, Page, PageParams}
+import models.{Asset, Page, PageParams}
+import models.asset.AssetView
 
 import play.api.Logger
 import org.apache.solr.client.solrj.SolrQuery

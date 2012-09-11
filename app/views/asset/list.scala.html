@@ -1,30 +1,39 @@
-@(assets: Page[AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
+@(assets: Page[models.asset.AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.SoftLayer
 @import _root_.util.views.{ListHelper, Formatter, Pagination}
 @import util.notice
 
 @link(newPage: Int) = @{
   Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "DESC", "and").toString), req.queryString)
 }
+@rowClassFromAsset(a: models.asset.AssetView) = @{
+  a match {
+    case warn if warn.isIncomplete || warn.isNew => "warning"
+    case info if info.isProvisioning || info.isProvisioned => "info"
+    case ok if ok.isCancelled || ok.isDecommissioned => "success"
+    case err if err.isMaintenance => "error"
+    case default => ""
+  }
+}
+
 @main("Asset Search Results") {
 <div class="page-header">
-  <h1>Asset Search Results <small>@assets.items.size of @assets.total results</small></h1>
+  <h1>Asset Search Results <small>Displaying @(assets.offset + 1) to @(assets.offset + assets.size) of @assets.total results</small></h1>
 </div>
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     @notice("message", Some("notice"))
     @notice("error")
     @notice("warning")
-    <table class="condensed-table zebra-striped @(if(clientSort) "sortable" else "")" data-size="50">
+    <table class="table table-bordered table-hover @(if(clientSort) "sortable" else "")" data-size="50">
       <thead>
         <tr>
           <th>Asset Tag</th>
           @if(ListHelper.showHostname(assets)) {
           <th>Hostname</th>
           }
-	  <th>Primary Role</th>
+	        <th>Primary Role</th>
           <th>Status</th>
           <th>Created</th>
           <th>Last Updated</th>
@@ -35,7 +44,7 @@
       </thead>
       <tbody>
         @assets.items.map { asset =>
-        <tr>
+        <tr class="@rowClassFromAsset(asset)">
           <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
           @if(ListHelper.showHostname(assets)) {
           <td>@asset.getHostnameMetaValue.map(v => Formatter.ellipsis(v)).getOrElse { <em>Unknown</em> }</td>

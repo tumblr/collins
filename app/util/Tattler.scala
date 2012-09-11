@@ -2,6 +2,7 @@ package util
 
 import config.{AppConfig, Feature}
 import models._
+import models.logs._
 
 trait TattlerHelper {
   val pString: Option[String] = None

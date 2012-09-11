@@ -3,7 +3,8 @@ package util.plugins.solr
 import akka.actor._
 import akka.util.duration._
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.asset.AssetView
 import models.IpmiInfo.Enum._
 
 import org.apache.solr.client.solrj.{SolrServer, SolrQuery}
@@ -82,6 +83,7 @@ class SolrPlugin(app: Application) extends Plugin {
     Callback.on("asset_update", callback)
     Callback.on("asset_create", callback)
     Callback.on("asset_delete", callback)
+    Callback.on("asset_purge", callback)
     Callback.on("asset_meta_value_create", callback)
     Callback.on("asset_meta_value_delete", callback)
     Callback.on("ipAddresses_create", callback)
