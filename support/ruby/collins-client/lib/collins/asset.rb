@@ -1,6 +1,7 @@
 require 'collins/address'
 require 'collins/ipmi'
 require 'collins/power'
+require 'collins/state'
 require 'date'
 
 module Collins
@@ -24,7 +25,7 @@ module Collins
       # are attributes of the asset (such as hostname), and which are nort (such as sort or page).
       # @return [Array,<String>] Non-date related query parameters that are 'reserved'
       GENERAL_PARAMS = [
-        "details", "tag", "type", "status", "page", "size", "sort", "operation", "remoteLookup"
+        "details", "tag", "type", "status", "page", "size", "sort", "state", "operation", "remoteLookup"
       ]
       # @return [Array<String>] DATE_PARAMS plus GENERAL_PARAMS
       ALL_PARAMS = DATE_PARAMS + GENERAL_PARAMS
@@ -53,6 +54,8 @@ module Collins
     attr_reader :location
     # @return [Collins::Power] Power configuration information
     attr_reader :power
+    # @return [Collins::AssetState] Asset state, or nil
+    attr_reader :state
     # @return [String] Asset status, or empty string
     attr_reader :status
     # @return [String] Asset tag, or empty string
@@ -120,6 +123,7 @@ module Collins
       @status = hash.delete(:status).to_s
       @tag = hash.delete(:tag).to_s
       @type = hash.delete(:type).to_s
+      @state = Collins::AssetState.from_json(hash.delete(:state))
       @updated = parse_datetime hash.delete(:updated).to_s
       @deleted = parse_datetime hash.delete(:deleted).to_s
       hash.each {|k,v| @extras[k] = v}
@@ -238,7 +242,7 @@ module Collins
       updated_t = format_datetime(updated, "Never")
       created_t = format_datetime(created, "Never")
       ipmi_i = ipmi.nil? ? "No IPMI Data" : ipmi.to_s
-      "Asset(id = #{id}, tag = #{tag}, status = #{status}, type = #{type}, created = #{created_t}, updated = #{updated_t}, ipmi = #{ipmi_i})"
+      "Asset(id = #{id}, tag = #{tag}, status = #{status}, type = #{type}, created = #{created_t}, updated = #{updated_t}, ipmi = #{ipmi_i}, state = #{state.to_s})"
     end
 
     def respond_to? name
@@ -251,7 +255,7 @@ module Collins
 
     protected
     # We do not allow these to be externally writable since we won't actually update any of the data
-    attr_writer :addresses, :created, :id, :ipmi, :location, :power, :status, :tag, :type, :updated, :extras
+    attr_writer :addresses, :created, :id, :ipmi, :location, :power, :state, :status, :tag, :type, :updated, :extras
 
     # Convenience method for {#get_attribute}
     #
