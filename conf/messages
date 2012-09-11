@@ -43,9 +43,10 @@ assetlog.create.error.messageSourceInvalid=specified source is invalid, valid so
 
 attributeresolver.notfound=Invalid search field ''{0}''. Not found as asset tag, IPMI field or IP Address field.
 
-controllers.updateForMaintenance.missingReasonAndStatus=A reason and status must both be specified
+controllers.updateForMaintenance.missingDescriptionAndStatus=A problem/solution description and status must both be specified
 controllers.updateForMaintenance.missingStatus=Asset status must be specified
-controllers.updateForMaintenance.missingReason=A reason for the maintenance operation must be specified
+controllers.updateForMaintenance.missingDescription=A problem/solution description for the maintenance operation must be specified
+controllers.updateForMaintenance.missingState=A state must be specified. The state is used to help route the request.
 
 crypto.missingJCE=I'm sorry, but it looks like you may be missing the unlimited strength Java Cryptography Extension. Unfortunately this is required for operations. You can find more details here http://www.bouncycastle.org/wiki/display/JA1/Frequently+Asked+Questions.
 

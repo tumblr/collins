@@ -15,6 +15,7 @@ trait AssetView {
   def id: Long
   def tag: String
   def status: Int
+  def state: Int
   def asset_type: Int
   def created: Timestamp
   def updated: Option[Timestamp]
