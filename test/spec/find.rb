@@ -30,7 +30,7 @@ describe "Asset Find" do
 
   it "attribute=HOSTNAME;service-wentworth&details=false:1" do
     p = {
-      "hostname" => "service-bustworth"
+      "hostname" => "service-bustworth*"
     }
     checkQuery p,10
   end
@@ -47,7 +47,7 @@ describe "Asset Find" do
 
   it "attribute=HOSTNAME;%5EMAIL.*&attribute=POOL;MAILPARSER_POOL&attribute=PRIMARY_ROLE;TUMBLR_APP&status=Allocated&type=SERVER_NODE&details=false&operation=and:0" do
     p = {
-      "hostname" => "%5EMAIL.*",
+      "hostname" => "EMAIL*",
       "pool" => "MAILPARSER_POOL",
       "primary_role" => "TUMBLR_APP",
       "status" => "Allocated",
