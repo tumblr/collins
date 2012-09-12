@@ -10,7 +10,7 @@ import play.api.libs.json._
 class AssetSearchParametersSpec extends mutable.Specification {
 
   val EMPTY_RESULT_TUPLE = (Nil, Nil, Nil)
-  val EMPTY_FINDER = AssetFinder(None, None, None, None, None, None, None)
+  val EMPTY_FINDER = AssetFinder(None, None, None, None, None, None, None, None)
 
 
   class QuerySeq(items: Seq[(String, String)]) {

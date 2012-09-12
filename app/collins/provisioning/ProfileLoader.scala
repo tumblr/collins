@@ -1,10 +1,11 @@
 package collins.provisioning
 
 import collins.validation.File
-import com.tumblr.play.interop.ProvisionerProfileHelper
+import com.tumblr.play.interop.{JProfile, ProvisionerProfileHelper}
 
 import play.api.Logger
 import com.google.common.cache.CacheLoader
+import scala.collection.immutable.SortedSet
 import java.io.{File => IoFile}
 
 case class ProfileLoader(profiles: Set[ProvisionerProfile])
@@ -13,7 +14,7 @@ case class ProfileLoader(profiles: Set[ProvisionerProfile])
   private[this] val logger = Logger("collins.provisioning.ProfileLoader")
 
   override def load(filename: String): Set[ProvisionerProfile] = {
-    logger.debug("Refreshing profiles from %s".format(filename))
+    logger.info("Refreshing profiles from %s".format(filename))
     try {
       ProfileLoader.fromFile(new IoFile(filename))
     } catch {
@@ -28,7 +29,6 @@ case class ProfileLoader(profiles: Set[ProvisionerProfile])
 
 object ProfileLoader {
   import scala.collection.JavaConverters._
-import scala.collection.immutable.SortedSet
 
   def apply(): ProfileLoader = {
     val profileFile = ProvisionerConfig.profilesFile
@@ -40,21 +40,34 @@ import scala.collection.immutable.SortedSet
   }
   def fromFile(file: IoFile): Set[ProvisionerProfile] = {
     File.requireFileIsReadable(file)
-    val p = ProvisionerProfileHelper.fromFile(file)
+    val classLoader = try {
+      import play.api.Play.current
+      current.classloader
+    } catch {
+      case e =>
+        getClass.getClassLoader
+    }
+    val p = ProvisionerProfileHelper.fromFile(file, classLoader)
     require(p != null, "Invalid yaml file %s".format(file.getAbsolutePath))
-    SortedSet(p.profiles.asScala.map { case(key, profile) =>
+    val seq = p.profiles.asScala.map { case(key, profile) =>
       val roleData = ProvisionerRoleData(
-        Option(profile.primary_role), Option(profile.pool), Option(profile.secondary_role),
-        Option(profile.requires_primary_role).getOrElse(true),
-        Option(profile.requires_pool).getOrElse(true),
-        Option(profile.requires_secondary_role).getOrElse(false)
+        optionalButNonEmpty(profile.getPrimary_role()),
+        optionalButNonEmpty(profile.getPool()),
+        optionalButNonEmpty(profile.getSecondary_role()),
+        Option(profile.getRequires_primary_role()).map(_.booleanValue()).getOrElse(true),
+        Option(profile.getRequires_pool()).map(_.booleanValue()).getOrElse(true),
+        Option(profile.getRequires_secondary_role()).map(_.booleanValue()).getOrElse(false)
       )
-      val label = requireNonNullNonEmpty("label", profile.label)
-      val prefix = requireNonNullNonEmpty("prefix", profile.prefix)
-      ProvisionerProfile(key, label, prefix, profile.allow_suffix, roleData)
-    }.toSeq:_*)
+      val label = requireNonNullNonEmpty("label", profile.getLabel())
+      val prefix = requireNonNullNonEmpty("prefix", profile.getPrefix())
+      ProvisionerProfile(key, label, prefix, profile.getAllow_suffix().booleanValue(), roleData)
+    }.toSeq
+    SortedSet(seq:_*)
   }
 
+  protected def optionalButNonEmpty(v: String): Option[String] = {
+    Option(v).filter(_.nonEmpty)
+  }
   protected def requireNonNullNonEmpty(name: String, v: String): String = {
     Option(v).filter(_.nonEmpty).getOrElse {
       throw new Exception("%s must not be null/empty".format(name))

@@ -2,6 +2,7 @@ package util
 package security
 
 import models.{User, UserImpl}
+import collins.cache.ConfigCache
 import collins.validation.File
 
 import play.api.Logger
@@ -49,10 +50,8 @@ object AuthenticationProvider {
 
   private val logger = Logger("util.security.AuthenticationProvider")
 
-  lazy private val permissionsCache: LoadingCache[String,Privileges] = CacheBuilder.newBuilder()
-                                      .maximumSize(1)
-                                      .expireAfterWrite(AuthenticationProviderConfig.cachePermissionsTimeout, TimeUnit.MILLISECONDS)
-                                      .build(PermissionsLoader())
+  lazy private val permissionsCache =
+    ConfigCache.create(AuthenticationProviderConfig.cachePermissionsTimeout, PermissionsLoader())
 
   def get(name: String): AuthenticationProvider = {
     name match {
@@ -83,7 +82,7 @@ object AuthenticationProvider {
     if (concern == SecuritySpec.LegacyMarker) {
       logger.debug("Found legacy security spec, defaulting to basic roles")
       loggedAuth {
-        user.roles.intersect(spec.requiredCredentials).size > 0
+        user.roles.map(_.toLowerCase).intersect(spec.requiredCredentials.map(_.toLowerCase)).size > 0
       }
     } else {
       logger.trace("Have concern '%s'".format(concern))

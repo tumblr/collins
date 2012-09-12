@@ -1,0 +1,35 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import helper._
+
+@container("power-server", "powerServerLabel") {
+  @header("Asset Power Management", Some("Warning"))
+  @form(app.routes.CookieApi.powerManagement(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "powerError", Symbol("data-modal") -> "power-server", Symbol("data-refresh") -> ".window") {
+  <div class="modal-body">
+    <p>This is a disruptive action</p>
+    <ul>
+      <li><strong>Hard Reboot</strong> - This is equivalent to pressing the reset button</li>
+      <li><strong>Soft Reboot</strong> - Graceful reboot via IPMI, uses ACPI to notify OS</li>
+      <li><strong>Power Off</strong> - Power off the server, without grace (like pressing the power button)</li>
+      <li><strong>Power On</strong> - Power up chassis</li>
+      <li><strong>Power Off Graceful</strong> - Initiate soft-shutdown of OS via ACPI</li>
+    </ul>
+    <p>If that all sounds good, pick a reboot type and then click the button below</p>
+    <select name="action" id="action">
+      <option value="" selected="selected"></option>
+      <option value="rebootSoft">Soft Reboot</option>
+      <option value="rebootHard">Hard Reboot</option>
+      <option value="powerOff">Power Off</option>
+      <option value="powerOn">Power On</option>
+      <option value="powerSoft">Power Off Graceful</option>
+    </select>
+    <div id="powerError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn">Potentially Mess Up Server</button>
+    @resetButton("Go back to browsing tumblr")
+  </div>
+  }
+}
+
+

@@ -1,7 +1,7 @@
 package collins.provisioning
 
 import collins.validation.File
-import models.Status
+import models.{AssetType, Status}
 import util.concurrent.RateLimit
 import util.config.{Configurable, ConfigValue}
 
@@ -12,6 +12,10 @@ object ProvisionerConfig extends Configurable {
   def allowedStatus: Set[Int] = getStringSet("allowedStatus", Status.statusNames).map { s =>
     Status.Enum.withName(s).id
   }
+  def allowedType: Set[Int] = getStringSet("allowedType", AssetType.Enum.values.map(_.toString)).map { s =>
+    AssetType.Enum.withName(s).id
+  }
+  def cacheTimeout = getMilliseconds("cacheTimeout").getOrElse(30000L)
   def checkCommand = getString("checkCommand").filter(_.nonEmpty)
   def command = getString("command").filter(_.nonEmpty)
   def enabled = getBoolean("enabled", false)

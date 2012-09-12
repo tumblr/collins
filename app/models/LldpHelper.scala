@@ -1,6 +1,7 @@
 package models
 
-import util._
+import lldp._
+import util.LldpRepresentation
 
 object LldpHelper extends CommonHelper[LldpRepresentation] {
   import AssetMeta.Enum._

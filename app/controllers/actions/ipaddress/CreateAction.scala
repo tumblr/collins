@@ -39,7 +39,8 @@ case class CreateAction(
         val addressConfig = IpAddresses.AddressConfig.get
         poolName.filter(_.nonEmpty).foreach { p =>
           if (!addressConfig.hasPool(p)) {
-            return Left(RequestDataHolder.error400("Pool %s does not exist".format(p)))
+            val ps = addressConfig.poolNames.mkString(", ")
+            return Left(RequestDataHolder.error400("Pool %s does not exist. Valid pools are: %s".format(p,ps)))
           }
         }
         Right(ActionDataHolder(asset, poolName.getOrElse(""), count.getOrElse(1)))

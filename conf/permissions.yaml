@@ -95,6 +95,8 @@ permissions:
     - "g=sre"
     - "u=admins"
     - "u=tools"
+  controllers.AssetWebApi.deleteAsset:
+    - "u=admins"
   controllers.IpAddressApi:
     - "g=infra"
     - "g=ops"

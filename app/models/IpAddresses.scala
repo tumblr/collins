@@ -1,5 +1,6 @@
 package models
 
+import asset.AssetView
 import shared.{AddressPool, IpAddressConfig}
 
 import play.api.libs.json._
@@ -15,18 +16,9 @@ case class IpAddresses(
   pool: String,
   id: Long = 0) extends IpAddressable
 {
-  override def asJson: String = {
-    Json.stringify(JsObject(forJsonObject))
-  }
-  def toJsonObject() = JsObject(forJsonObject)
-  def forJsonObject(): Seq[(String,JsValue)] = Seq(
-    "ID" -> JsNumber(getId()),
-    "ASSET_ID" -> JsNumber(getAssetId()),
-    "ADDRESS" -> JsString(dottedAddress),
-    "GATEWAY" -> JsString(dottedGateway),
-    "NETMASK" -> JsString(dottedNetmask),
-    "POOL" -> JsString(pool)
-  )
+  import conversions._
+  override def asJson: String = toJsValue.toString
+  def toJsValue = Json.toJson(this)
 }
 
 object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheManagement {
@@ -161,10 +153,11 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
       AddressConfig.flatMap(_.pool(pool)).foreach { ap =>
         if (!ap.hasAddressCache || force) {
           logger.trace("populating address cache for pool %s".format(ap.name))
+          ap.clearAddresses
           findInPool(pool).foreach { address =>
             try ap.useAddress(address.address) catch {
               case e =>
-                logger.info("Error using address %s in pool %s".format(address.dottedAddress, pool))
+                logger.info("Error using address %s in pool %s: %s".format(address.dottedAddress, pool, e.getMessage))
             }
           }
         }
@@ -245,9 +238,10 @@ trait IpAddressCacheManagement { self: IpAddressStorage[IpAddresses] =>
     val oldAddress = pce.getOldValue.asInstanceOf[IpAddresses]
     IpAddresses.AddressConfig.flatMap(_.pool(oldAddress.pool)).foreach { ap =>
       logger.debug("Purging address %s from pool %s".format(oldAddress.dottedAddress, ap.name))
-      ap.unuseAddress(oldAddress.address)
+      try ap.unuseAddress(oldAddress.address) catch {
+        case e =>
+          logger.info("Exception unusing old address %s: %s".format(oldAddress.address, e.getMessage))
+      }
     }
   }
 }
-
-

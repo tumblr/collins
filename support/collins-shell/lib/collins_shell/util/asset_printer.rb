@@ -49,6 +49,18 @@ module CollinsShell
       table << get_row(header, true, header.length)
       table << :separator
       table << get_row(header.map{|s| asset.send(s)}, false, header.length)
+      if asset.state && !asset.state.empty? then
+        state = asset.state
+        state_headers = [
+          title_text("State Name"),
+          title_text("State Label"),
+          {:value => title_text("State Description"), :colspan => 4}
+        ]
+        table << :separator
+        table << state_headers
+        table << :separator
+        table << [state.name, state.label, {:value => state.description, :colspan => 4}]
+      end
       @col_size = table.number_of_columns
     end
 

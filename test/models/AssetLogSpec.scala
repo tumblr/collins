@@ -1,5 +1,6 @@
 package models
 
+import models.logs._
 import test.ApplicationSpecification
 
 import org.specs2._

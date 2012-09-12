@@ -1,0 +1,260 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import _root_.util.config.Feature
+@import _root_.util.plugins.SoftLayer
+@import _root_.util.views.TagDecorator
+
+<div class="active tab-pane" id="overview">
+<!--
+  <div class="navbar">
+    <div class="navbar-inner">
+      <ul class="nav">
+        <li class="active"><a href="#overview-section">Overview</a></li>
+        <li><a href="#hardware-summary-section">Hardware Summary</a></li>
+        <li><a href="#user-log-section">User Logs</a></li>
+      </ul>
+    </div>
+  </div>
+-->
+  <section id="overview-section" class="sectional">
+    <h3>Asset Overview</h3>
+    <table id="basicDataTable" class="table table-hover table-condensed">
+      <thead>
+        <tr>
+          <th></th><th></th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @aa.asset.getMetaAttribute("HOSTNAME").map { hostname =>
+          <tr>
+            <th>Hostname</th>
+            <td>@hostname</td>
+            <td>Hostname</td>
+          </tr>
+        }
+        @if(aa.addresses.size > 0) {
+        <tr>
+          <th>Ip Addresses</th>
+          <td>@TagDecorator.decorate("IP_ADDRESS", aa.addresses.map(_.dottedAddress).toList, ", ")</td>
+          <td>Primary IP Addresses</td>
+        </tr>
+        }
+        <tr>
+          <th>Asset Tag</th>
+          @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
+  	          @slLink(aa.asset, aa.asset.tag)
+  	        }.getOrElse{<td>@aa.asset.tag</td>}
+          <td>Find Similar Assets: <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>, <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a></td>
+        </tr>
+        <tr>
+          <th>Asset Type</th>
+          <td>@aa.asset.getType().name</td>
+          <td></td>
+        </tr>
+        <tr class="@if(aa.asset.isMaintenance){error}">
+          <td><strong>Asset Status</strong></td>
+          <td>@aa.asset.getStatus().name</td>
+          @if(aa.asset.isMaintenance) {
+            <td><span class="label label-important">See Notes</span> @aa.asset.getStatus().description</td>
+          } else {
+            <td>@aa.asset.getStatus().description</td>
+          }
+        </tr>
+@if(aa.asset.state != 0) {
+  @State.findById(aa.asset.state).map { state =>
+        <tr>
+          <th>Asset State</th>
+          <td>@state.label</td>
+          <td>@state.description</td>
+        </tr>
+  }
+}
+        <tr>
+          <th>Created On</th>
+          <td>@aa.asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
+          <td></td>
+        </tr>
+        <tr>
+          <th>Last Updated</th>
+          <td>@aa.asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse {<em>Never</em>}</td>
+          <td></td>
+        </tr>
+        @aa.mvs.filter(_.getName() != "HOSTNAME").map { mv =>
+        <tr>
+          <th>@mv.getLabel</th>
+          <td>
+          @{
+            mv.getName match {
+              case "CANCEL_TICKET" => optionDisplay(0, SoftLayer.ticketLink(mv.getValue), mv.getValue)
+              case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
+              case encrypted if Feature.encryptedTags.map(_.name).contains(encrypted) => if(user.canSeePasswords) { TagDecorator.decorate(mv) } else { "********" }
+              case _ => TagDecorator.decorate(mv)
+            }
+          }
+          </td>
+          <td>@mv.getDescription</td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <script type="text/javascript">
+    var userNotesCols = [
+      {"mDataProp": "CREATED", "sWidth": "20%"},
+      {"mDataProp": "TYPE", "sWidth": "15%", "bSortable": false},
+      {"mDataProp": "MESSAGE", "sWidth": "65%", "bSortable": false}
+    ];
+    var userNotesLevels = [
+      "NOTE", "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING"
+    ];
+    var userNotesUri = "/asset/@aa.asset.tag/logs?filter=" + escape(userNotesLevels.join(';'));
+  </script>
+  <section id="user-log-section" class="sectional">
+    <h3>User Notes <small>Important Notes</small></h3>
+    <div id="log_data_note_container">
+      <table id="log_data_note" data-size="25" class="table log-data table-hover table-condensed" data-cols='userNotesCols' data-source="javascript://userNotesUri">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Level</th>
+            <th>Message</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+        <tfoot>
+          <tr>
+            <th>Date</th>
+            <th>Level</th>
+            <th>Message</th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  @if(aa.asset.getType().name == "Server Node") {
+  <section id="hardware-summary-section" class="sectional">
+    <h3>Hardware Summary</h3>
+    @if(aa.lshw.cpuCount > 0) {
+    <table class="table table-hover table-condensed" id="hardwareSummary">
+      <thead>
+        <tr>
+          <th></th><th></th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th colspan="3">CPU</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total CPUs</td>
+          <td>@aa.lshw.cpuCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total CPU Cores</td>
+          <td>@aa.lshw.cpuCoreCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total CPU Threads</td>
+          <td>@aa.lshw.cpuThreadCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Hyperthreading Enabled</td>
+          <td>@{if (aa.lshw.hasHyperthreadingEnabled) "Yes" else "No"}</td>
+        </tr>
+  
+        <tr>
+          <th colspan="3">Memory</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Memory</td>
+          <td>@aa.lshw.totalMemory.toHuman</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Memory Banks</td>
+          <td>@aa.lshw.memoryBanksTotal</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Used Memory Banks</td>
+          <td>@aa.lshw.memoryBanksUsed</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Unused Memory Banks</td>
+          <td>@aa.lshw.memoryBanksUnused</td>
+        </tr>
+  
+        <tr>
+          <th colspan="3">Disks</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Disks</td>
+          <td>@aa.lshw.diskCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>SCSI Storage</td>
+          <td>@aa.lshw.totalStorage.toHuman</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Storage</td>
+          <td>@aa.lshw.totalUsableStorage.toHuman</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Has PCIe Flash Disk</td>
+          <td>@{if (aa.lshw.hasFlashStorage) "Yes" else "No"}</td>
+        </tr>
+  
+        <tr>
+          <th colspan="3">Network</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Interfaces</td>
+          <td>@aa.lshw.nicCount</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Has 10Gb Interface</td>
+          <td>@{if (aa.lshw.has10GbNic) "Yes" else "No"}</td>
+        </tr>
+  
+        <tr>
+          <th colspan="3">Power</th>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Units</td>
+          <td>@aa.power.size</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Components per Unit</td>
+          <td>@aa.power.headOption.map(_.components.size).getOrElse(0)</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>Total Components</td>
+          <td>@{aa.power.headOption.map(_.components.size).getOrElse(0) * aa.power.size}</td>
+        </tr>
+      </tbody>
+    </table>
+    } else {
+    <div>None Available</div>
+    }
+  </section>
+
+}
+</div> <!-- overview -->

@@ -2,7 +2,8 @@ package controllers
 package actions
 package asset
 
-import models.{Asset, RemoteCollinsHost}
+import models.Asset
+import util.RemoteCollinsHost
 import util.security.SecuritySpecification
 import views.html
 import play.api.mvc.Result
@@ -62,7 +63,7 @@ case class GetAction(
       case true =>
         Status.Ok(html.asset.show(display, user)(flash, request))
       case false =>
-        ResponseData(Status.Ok, display.toJsonObject)
+        ResponseData(Status.Ok, display.toJsValue)
     }
   }
 

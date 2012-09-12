@@ -3,6 +3,7 @@ package actions
 package logs
 
 import models.{Asset, AssetLog, Page, PageParams}
+import models.conversions.AssetLogFormat
 import util.security.SecuritySpecification
 import play.api.libs.json._
 
@@ -29,7 +30,7 @@ case class FindAction(
       val logs = getLogs(adh)
       val pageMap = getPaginationMap(logs)
       ResponseData(Status.Ok, JsObject(pageMap ++ Seq(
-        "Data" -> JsArray(logs.items.map(_.toJsonObject).toList)
+        "Data" -> Json.toJson(logs.items)
       )), logs.getPaginationHeaders)
   }
 

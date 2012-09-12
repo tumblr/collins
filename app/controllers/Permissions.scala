@@ -62,6 +62,7 @@ object Permissions {
   object AssetWebApi extends PermSpec("controllers.AssetWebApi") {
     def Spec = spec(AdminSpec)
     def CancelAsset = spec("cancelAsset", Spec)
+    def DeleteAsset = spec("deleteAsset", Spec)
   }
 
   object Help extends PermSpec("controllers.Help") {

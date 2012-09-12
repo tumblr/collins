@@ -10,14 +10,14 @@
   <h1>Asset Intake Step 2 <small>Verify Chassis Tag for @asset.tag</small></h1>
 </div>
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     @notice("error")
     @notice("warning")
-    @form(app.routes.Resources.intake(asset.getId, 2), 'class -> "form-stacked") {
+    @form(app.routes.Resources.intake(asset.getId, 2)) {
     @inputText(f(ChassisTag.toString), '_label -> "Scan the Chassis Tag", 'class -> "focus", 'autocomplete -> "off")
     <input type="hidden" name="stage" value="2">
     <div class="actions">
-      <input type="submit" class="btn primary" value="Next &rarr;">
+      <input type="submit" class="btn btn-primary" value="Next &rarr;">
     </div>
     }
   </div>

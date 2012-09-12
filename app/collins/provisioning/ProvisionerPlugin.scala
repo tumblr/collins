@@ -1,27 +1,18 @@
 package collins.provisioning
 
-import com.google.common.util.concurrent.UncheckedExecutionException
-import com.twitter.util.{Future, FuturePool}
-import org.yaml.snakeyaml.Yaml
-import play.api.{Application, Configuration, Logger, PlayException, Plugin}
-
-import java.io.{File, FileInputStream, InputStream}
-import java.util.concurrent.Executors
-
-import scala.collection.JavaConverters._
-import scala.collection.immutable.SortedSet
-import scala.collection.mutable.{Map => MutableMap, StringBuilder}
-import com.google.common.cache.{CacheBuilder, LoadingCache}
-import scala.sys.process._
-import models.Asset
+import collins.cache.ConfigCache
 import collins.shell.{Command, CommandResult}
+import models.Asset
+
+import play.api.{Application, Plugin}
+
+import com.twitter.util.{Future, FuturePool}
+import java.util.concurrent.Executors
 
 class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
-  lazy protected[this] val profileCache: LoadingCache[String, Set[ProvisionerProfile]] =
-      CacheBuilder.newBuilder()
-        .maximumSize(1)
-        .build(ProfileLoader())
+  lazy protected[this] val profileCache =
+    ConfigCache.create(ProvisionerConfig.cacheTimeout, ProfileLoader())
 
   protected[this] val executor = Executors.newCachedThreadPool()
   protected[this] val pool = FuturePool(executor)
@@ -53,7 +44,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   // overrides ProvisionerInterface.canProvision
   override def canProvision(asset: Asset): Boolean = {
-    ProvisionerConfig.allowedStatus(asset.status)
+    ProvisionerConfig.allowedStatus(asset.status) && ProvisionerConfig.allowedType(asset.asset_type)
   }
 
   // overrides ProvisionerInterface.provision

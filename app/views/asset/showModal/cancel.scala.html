@@ -1,0 +1,26 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import helper._
+
+@container("cancel-server", "cancelServerLabel") {
+  @header("Cancel Server", Some("Warning"))
+  @form(app.routes.CookieApi.cancelAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "cancelError", Symbol("data-modal") -> "cancel-server", Symbol("data-refresh") -> ".window") {
+  <div class="modal-body">
+    <p>Cancelling this server will</p>
+    <ul>
+      <li>File a ticket with SoftLayer</li>
+      <li>Mark it as cancelled in collins</li>
+      <li>24 hours later - Shut down the machine</li>
+      <li>48 hours later - Erase the hard disks</li>
+    </ul>
+    <p>If that all sounds good, provide a reason and then click the button below</p>
+    <textarea name="reason" id="cancelReason" class="input-xxlarge" rows="3" placeholder="Reason"></textarea>
+    <div id="cancelError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-warning">Cancel Server</button>
+    @resetButton("Go back to browsing tumblr")
+  </div>
+  }
+}
+

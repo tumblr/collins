@@ -9,7 +9,7 @@ function elId(e) {
 };
 
 function getLabelSpan(msg, label) {
-  return '<span class="label ' + label + '">' + msg + '</span>';
+  return '<span class="label label-' + label + '">' + msg + '</span>';
 };
  
 $(document).ready(function() {
@@ -27,11 +27,23 @@ $(document).ready(function() {
   $("input.focus").focus();
 
   // attach a date handler to appropriate inputs
-  $("input[data-type=date]").dateinput({
-    format: 'yyyy-mm-dd',
-    change: function() {
-      var isoDate = this.getValue('yyyy-mm-dd') + 'T00:00:00'
-      this.getInput().val(isoDate);
+  $("[data-type=date]").datepicker({
+    format: 'yyyy-mm-dd'
+  }).on('changeDate', function(ev) {
+    $(this).datepicker('hide');
+  }).on('hide', function(ev) {
+    var isoDate = ev.date.toISOString();
+    $(this).find('input').val(isoDate.replace(/Z/, ''));
+  });
+
+  $("[data-rel=tooltip]").tooltip();
+  $("[data-rel=popover]").each(function() {
+    var jsFn = $(this).attr('data-source');
+    if (jsFn && jsFn.search("javascript://") === 0) {
+      jsFn = window[jsFn.slice(13)];
+      $(this).popover({content: jsFn});
+    } else {
+      $(this).popover();
     }
   });
 
@@ -141,15 +153,6 @@ $(document).ready(function() {
     });
   });
 
-  // if this is clicked it should close a modal
-  $("[data-closes-modal]").each(function() {
-    var e = $(this);
-    var toClose = $(elId(e.attr('data-closes-modal')));
-    e.click(function() {
-      toClose.modal('hide');
-    });
-  });
-
   // Bind to a modals hide event, resetting a form if it exists, and cleaning up
   // the referenced element.
   $('.modal').each(function() {
@@ -224,7 +227,12 @@ $(document).ready(function() {
           if (classes) { $(elId(errorEl)).removeClass(classes); }
           var html = "";
           if (classes) { html += '<div class="' + classes + '">Error</div>'; }
-          html += '<span style="font-family: monaco">' + response.data.message + '</span>';
+          var details = response.data.details;
+          var message = response.data.message;
+          html += '<div style="font-family: monaco">' + message + '</div>';
+          if (details && typeof(details) === "object" && details.message) {
+            html += '<br><div style="font-family: monaco">' + details.message + '</div>';
+          }
           $(elId(errorEl)).empty().append(html).show();
         } else {
           alert(response.message);
@@ -317,7 +325,7 @@ $(document).ready(function() {
       if (that && that.fnPagingInfo) {
         return that.fnPagingInfo();
       } else {
-	return oTable().fnPagingInfo();
+	      return oTable().fnPagingInfo();
       }
     };
     return function (sSource, aoData, fnCallback) {
@@ -408,7 +416,7 @@ $(document).ready(function() {
       "sAjaxSource": dataSrc,
       "aaSorting": [[0, "desc"]],
       "sPaginationType": "bootstrap",
-      "sDom": "<'row'<'span7'l><'span7'f>r>t<'row'<'span7'i><'span7'p>>",
+      "sDom": "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6 pull-right'p>>",
       "iDisplayLength": rows,
       // Need late binding for oTable since it's not assigned yet
       "fnServerData": fnLogProcessing(function() { return oTable; }),

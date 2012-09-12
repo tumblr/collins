@@ -3,11 +3,11 @@ GEM
   remote: http://repo.tumblr.net:9929/
   specs:
     coderay (1.0.7)
-    collins_client (0.2.1)
+    collins_client (0.2.3)
       httparty (~> 0.8.3)
     diff-lcs (1.1.3)
     git (1.2.5)
-    highline (1.6.13)
+    highline (1.6.14)
     httparty (0.8.3)
       multi_json (~> 1.0)
       multi_xml
@@ -16,7 +16,7 @@ GEM
       git (>= 1.2.5)
       rake
       rdoc
-    json (1.7.3)
+    json (1.7.5)
     method_source (0.7.1)
     multi_json (1.3.6)
     multi_xml (0.5.1)
@@ -47,7 +47,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  collins_client (~> 0.2.1)
+  collins_client (~> 0.2.3)
   highline (~> 1.6.13)
   jeweler (~> 1.8.3)
   mustache (~> 0.99.4)
