@@ -347,6 +347,11 @@ object Asset extends Schema with AnormAdapter[Asset] {
         where(a.id === asset.id)
         set(a.updated := updated, a.status := status.get, a.state := state.get.id)
       )
+    } else if(updated.isDefined && status.isDefined) {
+      tableDef.update(a =>
+        where(a.id === asset.id)
+        set(a.updated := updated, a.status := status.get)
+      )
     } else if (updated.isDefined) {
       tableDef.update (a =>
         where(a.id === asset.id)
