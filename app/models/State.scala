@@ -13,6 +13,7 @@ object State extends Schema with AnormAdapter[State] {
 
   /** Status value that can apply to any asset, regardless of status **/
   val ANY_STATUS = 0
+  val ANY_NAME = "Any"
 
   def New = State.findByName("NEW")
   def Running = State.findByName("RUNNING")
@@ -100,7 +101,7 @@ case class State(
   def getId(): Int = id
   def getDisplayLabel(): String = "%s - %s".format(getStatusName, label)
   def getStatusName(): String = status match {
-    case 0 => "Any"
+    case 0 => State.ANY_NAME
     case n => Status.findById(n).map(_.name).getOrElse("Unknown")
   }
   override def validate() {

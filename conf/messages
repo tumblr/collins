@@ -44,6 +44,10 @@ assetlog.create.error.messageSourceInvalid=specified source is invalid, valid so
 
 attributeresolver.notfound=Invalid search field ''{0}''. Not found as asset tag, IPMI field or IP Address field.
 
+controllers.AssetStateApi.createState.invalidName=The specified name is invalid. A name must be between 2 and 32 characters and be unique.
+controllers.AssetStateApi.createState.invalidDescription=The specified description is invalid. A description must be between 2 and 255 characters.
+controllers.AssetStateApi.createState.invalidLabel=The specified label is invalid. A label must be between 2 and 32 characters.
+
 controllers.updateForMaintenance.missingDescriptionAndStatus=A problem/solution description and status must both be specified
 controllers.updateForMaintenance.missingStatus=Asset status must be specified
 controllers.updateForMaintenance.missingDescription=A problem/solution description for the maintenance operation must be specified

@@ -13,7 +13,12 @@ import play.api.data.Form
 import play.api.data.Forms._
 
 object CreateAction {
-  object Messages extends MessageHelper("controllers.assetStateApi.createState") {
+  object Messages extends MessageHelper("controllers.AssetStateApi.createState") {
+    def invalidName = messageWithDefault("invalidName", "The specified name is invalid")
+    def invalidDescription = messageWithDefault("invalidDescription",
+      "The specified description is invalid")
+    def invalidStatus = rootMessage("asset.status.invalid")
+    def invalidLabel = messageWithDefault("invalidLabel", "The specified label is invalid")
   }
 }
 
@@ -31,7 +36,7 @@ object CreateAction {
  * @apirespond 400 invalid input
  * @apirespond 409 name already in use
  * @apirespond 500 error saving state
- * @apiperm controllers.assetStateApi.createState
+ * @apiperm controllers.AssetStateApi.createState
  * @collinsshell {{{
  *  collins-shell state create --name=NAME --label=LABEL --description='DESCRIPTION' [--status=Status]
  * }}}
@@ -48,6 +53,10 @@ case class CreateAction(
   handler: SecureController
 ) extends SecureAction(spec, handler) with ParamValidation {
 
+  import CreateAction.Messages._
+
+  case class ActionDataHolder(state: State) extends RequestDataHolder
+
   val stateForm = Form(tuple(
     "id" -> ignored(0:Int),
     "status" -> validatedOptionalText(1),
@@ -56,22 +65,49 @@ case class CreateAction(
     "description" -> validatedText(2, 255)
   ))
 
-  override def validate(): Validation = {
-    null
-  }
+  override def validate(): Validation = stateForm.bindFromRequest()(request).fold(
+    err => Left(RequestDataHolder.error400(fieldError(err))),
+    form => {
+      val (id, statusOpt, name, label, description) = form
+      val statusId = statusOpt.flatMap { s =>
+        if (s.toUpperCase == State.ANY_NAME.toUpperCase) {
+          Some(State.ANY_STATUS)
+        } else {
+          AStatus.findByName(s).map(_.id)
+        }
+      }
+      if (statusOpt.isDefined && !statusId.isDefined) {
+        Left(RequestDataHolder.error400(invalidStatus))
+      } else if (State.findByName(name).isDefined) {
+        Left(RequestDataHolder.error409(invalidName))
+      } else {
+        Right(
+          ActionDataHolder(State(0, statusId.getOrElse(State.ANY_STATUS), name, label, description))
+        )
+      }
+    }
+  )
 
   override def execute(rdh: RequestDataHolder) = rdh match {
-    case any =>
-      null
+    case ActionDataHolder(state) => try {
+      State.create(state) match {
+        case ok if ok.id > 0 =>
+          Api.statusResponse(true, Status.Created)
+        case bad =>
+          Api.statusResponse(false, Status.InternalServerError)
+      }
+    } catch {
+      case e =>
+        Api.errorResponse("Failed to add state", Status.InternalServerError, Some(e))
+    }
   }
 
-  /*
   protected def fieldError(f: Form[_]) = f match {
     case e if e.error("name").isDefined => invalidName
     case e if e.error("label").isDefined => invalidLabel
     case e if e.error("description").isDefined => invalidDescription
+    case e if e.error("status").isDefined => invalidStatus
     case n => fuck
   }
-  */
 
 }
