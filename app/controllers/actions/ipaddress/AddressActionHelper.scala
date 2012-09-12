@@ -9,7 +9,8 @@ import play.api.libs.json._
 
 trait AddressActionHelper { self: SecureAction =>
   class AddressDecorator(addresses: Seq[IpAddresses]) {
-    def toJson = JsObject(Seq("ADDRESSES" -> JsArray(addresses.toList.map(_.toJsonObject))))
+    import models.conversions._
+    def toJson = JsObject(Seq("ADDRESSES" -> Json.toJson(addresses)))
   }
 
   implicit def seq2json(addresses: Seq[IpAddresses]): AddressDecorator =

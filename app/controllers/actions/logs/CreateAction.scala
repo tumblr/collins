@@ -3,7 +3,7 @@ package actions
 package logs
 
 import models.{Asset, AssetLog}
-import models.{LogMessageType, LogFormat, LogSource}
+import models.logs.{LogMessageType, LogFormat, LogSource}
 import util.{MessageHelper, TattlerHelper}
 import util.config.Feature
 import util.security.SecuritySpecification

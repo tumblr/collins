@@ -3,6 +3,7 @@ package actions
 package asset
 
 import models.Asset
+import util.config.AppConfig
 import util.security.SecuritySpecification
 
 import play.api.libs.json._
@@ -22,6 +23,11 @@ case class PowerStatusAction(
   override protected def actionAllowed(asset: Asset, pa: PowerAction): Boolean = true
   override protected def assetStateAllowed(asset: Asset): Boolean = true
 
+  override protected def onNoResult(): ResponseData = if (AppConfig.isDev) {
+     ResponseData(Status.Ok, JsObject(Seq("MESSAGE" -> JsString("on - fake for dev"))))
+  } else {
+    super.onNoResult()
+  }
   override protected def onSuccess(s: CommandResult): ResponseData = {
     logSuccessfulPowerEvent()
     val status = s.stdout.contains("on") match {

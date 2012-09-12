@@ -1,68 +1,69 @@
-@(aa: Asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
+@import _root_.util.AssetStateMachine
 @import _root_.util.plugins.{Maintenance, PowerManagement, Provisioner, SoftLayer}
 @import _root_.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
+@import _root_.collins.provisioning.ProvisionerConfig
 @import _root_.controllers.Permissions
 
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     @Summary(aa.asset)
   </div>
+</div>
 
-  <div class="span14">
+<div class="row">
+  <div class="span12">
 
-    <ul class="tabs" data-tabs="tabs">
-      <li class="active"><a href="#overview">Overview</a></li>
+    <ul class="nav nav-pills">
+      <li class="active"><a href="#overview" data-toggle="pill">Overview</a></li>
       @if(aa.ipmi.nonEmpty || PowerManagement.powerAllowed(aa.asset)) {
-      <li><a href="#ipmi-info">IPMI Info</a></li>
+      <li><a href="#ipmi-info" data-toggle="pill">IPMI Info</a></li>
       }
-      <li><a href="#log-data">Logs</a></li>
+      <li><a href="#log-data" data-toggle="pill">Logs</a></li>
       @if(aa.lshw.cpuCount > 0) {
-      <li><a href="#hardware-details">Hardware Details</a></li>
+      <li><a href="#hardware-details" data-toggle="pill">Hardware Details</a></li>
       }
       @if(aa.lldp.interfaceCount > 0) {
-      <li><a href="#lldp-info">LLDP Info</a></li>
+      <li><a href="#lldp-info" data-toggle="pill">LLDP Info</a></li>
       }
       <li class="dropdown" data-dropdown="dropdown">
-      <a href="#" class="dropdown-toggle"><strong>Actions</strong></a>
+        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><strong>Actions</strong> <b class="caret"></b></a>
         <ul class="dropdown-menu">
-          <li><a href="#" data-keyboard="true" data-controls-modal="asset-note">Create Note</a></li>
+          <li>@modalLink("#asset-note", "Create Note", icon = Some("icon-comment"))</li>
           <li class="divider"></li>
-          @if(Permissions.please(user, Permissions.AssetWebApi.CancelAsset)) {
-            @SoftLayer.pluginEnabled.map { p =>
-              @if(p.isSoftLayerAsset(aa.asset) && SoftLayer.cancelAllowed(aa.asset) ) {
-                <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="cancel-server">Cancel Server</a></li>
-              }
-            }
+          @if(Permissions.please(user, Permissions.AssetWebApi.CancelAsset) && SoftLayer.canCancel(aa.asset)) {
+            <li>@modalLink("#cancel-server", "Cancel Server", icon = Some("icon-warning-sign"))</li>
+          }
+          @if(Permissions.please(user, Permissions.AssetWebApi.DeleteAsset) && AssetStateMachine(aa.asset).canDecommission) {
+            <li>@modalLink("#delete-asset", "Delete Asset", icon = Some("icon-trash"))</li>
           }
           @if(Permissions.please(user, Permissions.AssetApi.UpdateAssetForMaintenance)) {
             @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
-              <li><a href="#" data-keyboard="true" data-backdrop="static" data-controls-modal="asset-maintenance">Maintenance Start</a></li>
+              <li>@modalLink("#asset-maintenance", "Maintenance Start", icon = Some("icon-wrench"))</li>
             }
             @if(Maintenance.canTransitionFromMaintenance(aa.asset)) {
-              <li><a href="#" data-keyboard="true" data-backdrop="static" data-controls-modal="asset-maintenance">Maintenance End</a></li>
+              <li>@modalLink("#asset-maintenance", "Maintenance End", icon = Some("icon-wrench"))</li>
             }
           }
           @if(Permissions.please(user, Permissions.AssetManagementApi.PowerManagement)) {
             @PowerManagement.pluginEnabled.map { p =>
               @if(PowerManagement.powerAllowed(aa.asset)) {
-                <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="power-server">Power Management</a></li>
+                <li>@modalLink("#power-server", "Power Management", icon = Some("icon-fire"))</li> 
               }
             }
           }
-	  @if(Permissions.please(user, Permissions.AssetManagementApi.ProvisionAsset)) {
-	    @Provisioner.pluginEnabled.map { p =>
-              @if(p.canProvision(aa.asset) && Status.Enum(aa.asset.status) != Status.Enum.Incomplete && aa.asset.getType().name == "Server Node") {
-                <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Provision Server</a></li>
+	        @if(Permissions.please(user, Permissions.AssetManagementApi.ProvisionAsset)) {
+	          @Provisioner.pluginEnabled.map { p =>
+              @if(p.canProvision(aa.asset)) {
+                <li>@modalLink("#provision-server", "Provision Server", icon = Some("icon-play"))</li>
               } else {
-                @SoftLayer.pluginEnabled.map { p =>
-                  @if(Status.Enum(aa.asset.status) == Status.Enum.Incomplete) {
-                    <li><a href="#" class="danger" data-keyboard="true" data-backdrop="static" data-controls-modal="provision-server">Activate Server</a></li>
-                  }
+                @if(SoftLayer.canActivate(aa.asset)) {
+                  <li>@modalLink("#provision-server", "Activate Server", icon = Some("icon-play"))</li>
                 }
               }
-	    }
-	  }
+	          }
+	        }
         </ul>
       </li>
     </ul>

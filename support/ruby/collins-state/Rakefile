@@ -24,7 +24,7 @@ jeweler = Jeweler::Tasks.new do |gem|
   gem.files.exclude '.gitignore'
   gem.files.exclude '.rspec'
   gem.files.exclude '.rvmrc'
-  gem.add_runtime_dependency 'collins_client',  '~> 0.2.0'
+  gem.add_runtime_dependency 'collins_client',  '~> 0.2.3'
   gem.add_runtime_dependency 'escape',          '~> 0.0.4'
 end
 

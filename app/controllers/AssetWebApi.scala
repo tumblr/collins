@@ -1,22 +1,20 @@
 package controllers
 
-import actors._
-import collins.provisioning.{ProvisionerProfile, ProvisionerRequest}
-import collins.shell.CommandResult
-import forms._
-import models.{Status => AStatus}
-import models._
-import util._
+import actions.asset.DeleteAction
+import actors.AssetCancelProcessor
+import models.Asset
+import util.UserTattler
 import util.config.AppConfig
 import util.concurrent.BackgroundProcessor
 
 import play.api.mvc._
 import play.api.libs.json._
-import play.api.data._
-import play.api.data.Forms._
 
 trait AssetWebApi {
   this: Api with SecureController =>
+
+  def realDeleteAsset(tag: String) =
+    DeleteAction(tag, true, Permissions.AssetWebApi.DeleteAsset, this)
 
   // POST /asset/:tag/cancel
   def cancelAsset(tag: String) = Authenticated { user => Action { implicit req =>

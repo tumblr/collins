@@ -1,0 +1,112 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import _root_.util.views.{ListHelper, TagDecorator}
+
+<!-- Start Hardware Details -->
+<div class="tab-pane" id="hardware-details">
+  @if(aa.lshw.cpuCount > 0) {
+  <h4>Network Interfaces <small>Collected NIC Information</small></h4>
+  <table class="table table-bordered table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Id</th><th>Speed</th><th>MAC Address</th><th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+    @aa.lshw.nics.zipWithIndex.map { case(nic,id) =>
+      <tr>
+        <th>@id</th>
+        <td>@{nic.speed.toHuman}/s</td>
+        <td>@nic.macAddress</td>
+        <td>@nic.description</td>
+      </tr>
+    }
+    </tbody>
+  </table>
+
+  <h4>CPU <small>Collected CPU Information</small></h4>
+  <table class="table table-bordered table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Id</th><th>Cores</th><th>Threads</th><th>Speed</th><th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+    @aa.lshw.cpus.zipWithIndex.map { case(cpu,id) =>
+      <tr>
+        <th>@id</th>
+        <td>@cpu.cores</td>
+        <td>@cpu.threads</td>
+        <td>@cpu.speedGhz</td>
+        <td>@cpu.description</td> <!-- vendor? -->
+      </tr>
+    }
+    </tbody>
+  </table>
+
+  <h4>Memory <small>Collected Memory Information</small></h4>
+  <table class="table table-bordered table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Bank Id</th><th>Size</th><th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+    @aa.lshw.memory.map { mem =>
+      <tr>
+        <th>@mem.bank</th>
+        <td>@mem.size.toHuman</td>
+        <td>@mem.description</td>
+      </tr>
+    }
+    </tbody>
+  </table>
+
+  <h4>Disks <small>Collected Disk Information</small></h4>
+  <table class="table table-bordered table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Id</th><th>Size</th><th>Type</th><th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+    @aa.lshw.disks.zipWithIndex.map { case(disk,id) =>
+      <tr>
+        <th>@id</th>
+        <td>@disk.size.toHuman</td>
+        <td>@disk.diskType</td>
+        <td>@disk.description</td>
+      </tr>
+    }
+    </tbody>
+  </table>
+
+  <h4>Power <small>Submitted Power Information</small></h4>
+  <table class="table table-bordered table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Unit ID</th><th>Priority</th><th>Label</th><th>Type</th><th>Value</th><th>API Key</th>
+      </tr>
+    </thead>
+    <tbody>
+      @ListHelper.getPowerComponentsInOrder(aa.power).map { component =>
+        <tr>
+          <td>@component.id</td>
+          <td>@component.position</td>
+          <td>@component.label</td>
+          <td>@component.identifier</td>
+          <td>@TagDecorator.decorate(component.identifier, component.value.getOrElse("Unspecified"))</td>
+          <td>@component.key</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+  } else {
+  <div class="row">
+    <div class="span12">
+      None Available
+    </div>
+  </div>
+  }
+</div>
+<!-- End Hardware Details -->

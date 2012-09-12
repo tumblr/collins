@@ -1,0 +1,67 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+<!-- Start LLDP Info -->
+<div class="tab-pane" id="lldp-info">
+  @if(aa.lldp.interfaceCount > 0) {
+  <table class="table table-bordered table-hover table-condensed" id="lldpSummary">
+    <thead>
+      <tr>
+        <th></th>
+        @aa.lldp.interfaces.map { interface =>
+        <th>@interface.name</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Chassis Name</th>
+        @aa.lldp.interfaces.map { interface =>
+        <td>@interface.chassis.name</td>
+        }
+      </tr>
+      <tr>
+        <th>Chassis Description</th>
+        @aa.lldp.interfaces.map { interface =>
+        <td>@interface.chassis.description</td>
+        }
+      </tr>
+      <tr>
+        <th>Chassis ID</th>
+        @aa.lldp.interfaces.map { interface =>
+        <td>@interface.chassis.id.idType / @interface.chassis.id.value</td>
+        }
+      </tr>
+
+      <tr>
+        <th>Port ID</th>
+        @aa.lldp.interfaces.map { interface =>
+        <td>@interface.port.id.idType / @interface.port.id.value</td>
+        }
+      </tr>
+      <tr>
+        <th>Port Description</th>
+        @aa.lldp.interfaces.map { interface =>
+        <td>@interface.port.description</td>
+        }
+      </tr>
+
+      <tr>
+        <th>VLAN ID</th>
+        @aa.lldp.interfaces.map { interface =>
+        <td>@interface.vlans.map(_.id).mkString(",")</td>
+        }
+      </tr>
+      <tr>
+        <th>VLAN Name</th>
+        @aa.lldp.interfaces.map { interface =>
+        <td>@interface.vlans.map(_.name).mkString(",")</td>
+        }
+      </tr>
+    </tbody>
+  </table>
+  } else {
+  <div>None Available</div>
+  }
+</div>
+<!-- END LLDP Info -->
+

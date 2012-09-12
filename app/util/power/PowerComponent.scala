@@ -2,6 +2,7 @@ package util
 package power
 
 import models.AssetMeta
+import play.api.libs.json._
 
 /** A power related component (distribution unit, strip, outlet, etc) */
 sealed trait PowerComponent extends Ordered[PowerComponent] {
@@ -42,5 +43,37 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
 }
 
 case class PowerComponentValue(
-  componentType: Symbol, config: PowerConfiguration, id: Int, position: Int, value: Option[String] = None
+  componentType: Symbol,
+  config: PowerConfiguration,
+  id: Int,
+  position: Int,
+  value: Option[String] = None
 ) extends PowerComponent
+
+object PowerComponent {
+  private def unidentify(s: String): String = s.replaceAll("^POWER_", "")
+  private def unkey(s: String): Int = PowerConfiguration.get().useAlphabeticNames match {
+    case true => s.split("_").last.charAt(0).toInt - 65
+    case false => s.split("_").last.charAt(0).toInt
+  }
+  implicit object PowerComponentFormat extends Format[PowerComponent] {
+    import Json.toJson
+    override def reads(json: JsValue) = PowerComponentValue(
+      Symbol(unidentify((json \ "TYPE").as[String])),
+      PowerConfiguration.get(),
+      unkey((json \ "KEY").as[String]),
+      (json \ "POSITION").as[Int],
+      (json \ "VALUE").asOpt[String]
+    )
+
+    override def writes(pc: PowerComponent) = JsObject(Seq(
+      "KEY" -> toJson(pc.key),
+      "VALUE" -> toJson(pc.value.getOrElse("Unspecified")),
+      "TYPE" -> toJson(pc.identifier),
+      "LABEL" -> toJson(pc.label),
+      "POSITION" -> toJson(pc.position),
+      "IS_REQUIRED" -> toJson(pc.isRequired),
+      "UNIQUE" -> toJson(pc.isUnique)
+    ))
+  }
+}

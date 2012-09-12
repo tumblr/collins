@@ -1,43 +1,12 @@
 package models
 
+import asset.AssetView
 import shared.{AddressPool,IpAddressConfig}
 import util._
-import util.config.{Configurable, SimpleAddressConfig}
+import util.config.{Configurable, IpmiConfig, SimpleAddressConfig}
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import play.api.libs.json._
-
-object IpmiConfig extends Configurable {
-  import util.config.TypesafeConfiguration
-
-  override val namespace = "ipmi"
-  override val referenceConfigFilename = "ipmi_reference.conf"
-
-  def overwriteConfig(config: TypesafeConfiguration) {
-    underlying_=(Some(config))
-  }
-
-  def passwordLength = getInt("passwordLength", 12)
-  def randomUsername = getBoolean("randomUsername", false)
-  def username = getString("username").filter(_.nonEmpty)
-
-  def genUsername(asset: Asset): String = {
-    if (randomUsername) {
-      CryptoCodec.randomString(8)
-    } else if (username.isDefined) {
-      username.get
-    } else {
-      "%s-ipmi".format(asset.tag)
-    }
-  }
-
-  def get(): Option[IpAddressConfig] = underlying.map { cfg =>
-    new IpAddressConfig(new SimpleAddressConfig(cfg))
-  }
-  override protected def validateConfig() {
-    require(passwordLength > 0 && passwordLength <= 16, "ipmi.passwordLength must be between 1 and 16")
-  }
-}
 
 case class IpmiInfo(
   asset_id: Long,
@@ -48,8 +17,7 @@ case class IpmiInfo(
   netmask: Long,
   id: Long = 0) extends IpAddressable
 {
-  import IpmiInfo.Enum._
-
+  import conversions._
   override def validate() {
     super.validate()
     List(username, password).foreach { s =>
@@ -57,9 +25,8 @@ case class IpmiInfo(
     }
   }
 
-  override def asJson: String = {
-    Json.stringify(JsObject(forJsonObject))
-  }
+  def toJsValue() = Json.toJson(this)
+  override def asJson: String = toJsValue.toString
 
   def decryptedPassword(): String = IpmiInfo.decrypt(password)
   def withExposedCredentials(exposeCredentials: Boolean = false) = {
@@ -69,18 +36,6 @@ case class IpmiInfo(
       this.copy(username = "********", password = "********")
     }
   }
-  def toJsonObject(): JsObject = {
-    JsObject(forJsonObject)
-  }
-  def forJsonObject(): Seq[(String,JsValue)] = Seq(
-    "ID" -> JsNumber(getId()),
-    "ASSET_ID" -> JsNumber(getAssetId()),
-    IpmiAddress.toString -> JsString(dottedAddress),
-    IpmiGateway.toString -> JsString(dottedGateway),
-    IpmiNetmask.toString -> JsString(dottedNetmask),
-    IpmiUsername.toString -> JsString(username),
-    IpmiPassword.toString -> JsString(password)
-  )
 }
 
 object IpmiInfo extends IpAddressStorage[IpmiInfo] {

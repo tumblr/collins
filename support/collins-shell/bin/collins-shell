@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-if ARGV.include?("--trace") then
+if ENV.key?('COLLINS_DEBUG') && ENV['COLLINS_DEBUG'] then
 HTTP_DEBUG = true
 end
 
