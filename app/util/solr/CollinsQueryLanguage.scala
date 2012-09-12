@@ -77,7 +77,7 @@ case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
 }
 
 case class SolrStringValue(value: String) extends SolrSingleValue(String) {
-  def toSolrQueryString(toplevel: Boolean) = "\"" + value + "\""
+  def toSolrQueryString(toplevel: Boolean) = if ((value startsWith "*") || (value endsWith "*")) value else "\"" + value + "\""
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
