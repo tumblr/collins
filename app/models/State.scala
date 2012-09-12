@@ -87,6 +87,7 @@ object State extends Schema with AnormAdapter[State] {
       ).toList
     }
   override def get(state: State): State = findById(state.id).get
+  def isSystemState(state: State): Boolean = state.id < 7
 }
 
 case class State(

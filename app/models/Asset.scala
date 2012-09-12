@@ -322,6 +322,18 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
+  def resetState(state: State, newId: Int): Int = inTransaction {
+    import util.plugins.solr.Solr
+    val count = tableDef.update(a =>
+      where(a.state === state.id)
+      set(a.state := newId)
+    )
+    // We repopulate solr because the alternative is to do some complex state tracking
+    // The above update operation also will not trigger callbacks
+    Solr.populate()
+    count
+  }
+
   def setState(asset: Asset, state: State): Int = inTransaction {
     val oldAsset = Asset.findById(asset.id).get
     val res = tableDef.update(a =>

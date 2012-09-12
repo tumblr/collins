@@ -62,6 +62,7 @@ object Permissions {
   object AssetStateApi extends PermSpec("controllers.AssetStateApi") {
     def Spec = spec(AdminSpec)
     def Create = spec("createState", Spec)
+    def Delete = spec("deleteState", Spec)
   }
 
   object AssetWebApi extends PermSpec("controllers.AssetWebApi") {
