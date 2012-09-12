@@ -107,6 +107,7 @@ case class State(
     require(status >= 0, "status must be >= 0")
     require(isAlphaNumericString(name), "State name must be alphanumeric")
     require(name.length > 1 && name.length <=32, "length of name must between 1 and 32")
+    require(name == name.toUpperCase, "name must be uppercase")
     require(isNonEmptyString(label), "label must be specified")
     require(label.length > 1 && label.length <= 32, "length of label must be between 1 and 32 characters")
     require(isNonEmptyString(description), "Description must be specified")

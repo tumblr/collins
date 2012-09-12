@@ -20,6 +20,8 @@ trait MessageHelperI {
     Messages(key, args:_*)
   }
   def keyFor(k: String) = "%s.%s".format(parentKey, k)
+  def fuck(msg: Option[String])(implicit lang: Lang): String =
+    msg.getOrElse(rootMessage("error.unknown"))
 }
 
 abstract class MessageHelper(override val parentKey: String) extends MessageHelperI

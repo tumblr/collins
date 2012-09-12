@@ -59,6 +59,11 @@ object Permissions {
     def GetProvisioningProfiles = spec("getProvisioningProfiles", AdminSpec)
   }
 
+  object AssetStateApi extends PermSpec("controllers.AssetStateApi") {
+    def Spec = spec(AdminSpec)
+    def Create = spec("createState", Spec)
+  }
+
   object AssetWebApi extends PermSpec("controllers.AssetWebApi") {
     def Spec = spec(AdminSpec)
     def CancelAsset = spec("cancelAsset", Spec)
