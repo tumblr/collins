@@ -24,22 +24,15 @@ describe "Asset Find" do
       "details"     => "false",
       "operation"   => "and"
     }
-    checkQuery p, 2
+    checkQuery p, 1
   end
 
 
-  it "attribute=SECONDARY_ROLE;UNDERLORD&details=false:2" do
+  it "attribute=HOSTNAME;service-wentworth&details=false:1" do
     p = {
-      "SECONDARY_ROLE" => "UNDERLORD"
+      "hostname" => "service-bustworth"
     }
-    checkQuery p, 2
-  end
-
-  it "attribute=HOSTNAME;service-wentworth-a2233e73.ewr01.tumblr.net&details=false:1" do
-    p = {
-      "hostname" => "service-wentworth-a2233e73.ewr01.tumblr.net"
-    }
-    checkQuery p,1
+    checkQuery p,10
   end
 
   it "attribute=POOL;API_POOL&attribute=PRIMARY_ROLE;PROXY&status=Allocated&type=SERVER_NODE&details=false&operation=and:1" do
@@ -49,7 +42,7 @@ describe "Asset Find" do
       "status" => "Allocated",
       "type" => "SERVER_NODE"
     }
-    checkQuery p,1
+    checkQuery p,6
   end
 
   it "attribute=HOSTNAME;%5EMAIL.*&attribute=POOL;MAILPARSER_POOL&attribute=PRIMARY_ROLE;TUMBLR_APP&status=Allocated&type=SERVER_NODE&details=false&operation=and:0" do
@@ -61,7 +54,16 @@ describe "Asset Find" do
       "type" => "SERVER_NODE",
       
     }
-    checkQuery p,0
+    checkQuery p,2
+  end
+
+  it "operation=and&ASSET_TAG=&status=Allocated&state=&type=SERVER_NODE" do
+    p = {
+      "status" => "allocated",
+      "type" => "SERVER_NODE",
+      "primary_role" => "TUMBLR_APP"
+    }
+    checkQuery p,2
   end
 
 

@@ -8,6 +8,11 @@ describe "Asset Search" do
     tags = assets.map {|a| a.tag}
     tags.should include(*expectedTags)
   end
+
+  def checkSize query, expected_size
+    assets = @client.search query, 500
+    assets.size.should eql expected_size
+  end
     
   
   before :all do
@@ -16,7 +21,7 @@ describe "Asset Search" do
   end
 
   it "simple tag query" do
-    checkTags "tag = tumblrtag1", ["tumblrtag1"]
+    checkTags "tag = local", ["local"]
   end
 
   it "hostname exact match" do
@@ -32,40 +37,17 @@ describe "Asset Search" do
   end
 
   it "asset type" do
-    checkTags  'type = configuration', [
-      "Tumblr",
-      "dns_ewr01_tumblr_net",
-      "ewr01haproxy_generation",
-      "ewr01nginx_generation",
-      "ewr01varnish_generation",
-      "nagios_generation",
-      "nodeclassifer_web_10g",
-      "nodeclassifier_compute",
-      "nodeclassifier_io",
-      "nodeclassifier_queue",
-      "nodeclassifier_web",
-      "nodeclassifier_web_10g"
-    ]
+    checkSize  'type = configuration', 12
   end
 
   it "asset status" do
-    assets_1 = @client.search 'status = allocated AND hostname=web-a*', 1000
-    assets_1.size.should eq 37
+    checkSize "status = allocated AND hostname = service-*", 14
+    checkSize "status = unallocated and hostname = db-*", 35
 
-    assets_1 = @client.search 'status = new', 1000
-    assets_1.size.should eq 53
   end
 
   it "with type and negated status" do
-    res = @client.search 'type = configuration AND NOT status = incomplete'
-    checkTags  'type = configuration AND NOT status = incomplete', [
-      "nodeclassifer_web_10g",
-      "nodeclassifier_compute",
-      "nodeclassifier_io",
-      "nodeclassifier_queue",
-      "nodeclassifier_web",
-      "nodeclassifier_web_10g"
-    ]
+    checkSize  'type = configuration AND NOT status = incomplete', 7
   end 
 
 end
