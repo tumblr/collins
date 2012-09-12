@@ -22,6 +22,8 @@ object DeleteAction {
 }
 
 /**
+ * @include DeleteAction.desc
+ *
  * Delete an asset state
  *
  * @apigroup AssetState
@@ -35,7 +37,7 @@ object DeleteAction {
  * @apirespond 500 error deleting state
  * @apiperm controllers.AssetStateApi.deleteState
  * @collinsshell {{{
- *  collins-shell state delete --name=NAME
+ *  collins-shell state delete NAME
  * }}}
  * @curlexample {{{
  *  curl -v -u blake:admin:first --basic \
