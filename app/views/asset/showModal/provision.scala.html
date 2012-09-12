@@ -1,0 +1,98 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import helper._
+@import _root_.util.plugins.Provisioner
+@import _root_.util.views.ProvisionerHelper
+
+@container("provision-server", "Provision Server", true) {
+  @if(aa.asset.isIncomplete) {
+    @header("Activate Server", Some("Warning"))
+  } else {
+    @header("Provision Server", Some("Warning"))
+  }
+  @form(app.routes.CookieApi.provisionAsset(aa.asset.tag), 'class -> "form-horizontal", Symbol("data-form") -> "true", Symbol("data-error") -> "provisionError", Symbol("data-modal") -> "provision-server", Symbol("data-refresh") -> ".window") {
+  <div class="modal-body">
+    @if(aa.asset.isIncomplete) {
+      <p>
+        Activating a server takes a couple of days. When the server has been activated out of the softlayer spare pool, it will be allocated during the reconciler run automatically. Once allocated, we will begin getting billed.
+      </p>
+    } else {
+      <p>Provisioning a server is a destructive process. Be certain that you want to do this. The provisioner will:</p>
+      <ul>
+        <li>Verify the server is sane</li>
+        <li>Power it off</li>
+        <li>Reinstall the operating system</li>
+        <li>Come back online without old data on disks</li>
+      </ul>
+    }
+    <p>If that all sounds good, choose an appropriate profile below and provide your hipchat username for notification</p>
+    <div class="control-group">
+      <label for="profile" class="control-label">Profile</label>
+      <div class="controls">
+        <select name="profile" id="profile" data-show="suffix-container,hostname-container" data-triggers="PROVISIONER_TRIGGERS">
+          <option value="" selected="selected"></option>
+          @Provisioner.pluginEnabled.map { p =>
+            @p.profiles.toSeq.map { v =>
+            <option value="@v.identifier" data-show-display="@v.allow_suffix.toString" data-aggregate-value="@v.prefix">@v.label</option>
+            }
+          }
+        </select>
+      </div>
+    </div>
+    @if(aa.asset.isIncomplete) {
+    <input type="hidden" name="activate" value="true">
+    }
+    <script type="text/javascript">
+      var PROVISIONER_TRIGGERS = {
+        "profiles": @ProvisionerHelper.profilesAsJson(),
+        "primary_roles": @ProvisionerHelper.primaryRolesAsJson(),
+        "pools": @ProvisionerHelper.poolsAsJson(),
+        "secondary_roles": @ProvisionerHelper.secondaryRolesAsJson()
+      };
+    </script>
+    <div class="control-group hide hideAfterClose" id="primary-role-container">
+      <label for="primary_role" class="control-label">Primary Role</label>
+      <div class="controls" data-purge="true">
+      </div>
+    </div>
+    <div class="control-group haveChoice hide hideAfterClose" id="pool-container">
+      <label for="pool" class="control-label">Pool</label>
+      <div class="controls" data-purge="true">
+      </div>
+    </div>
+    <div class="control-group haveChoice hide hideAfterClose" id="secondary-role-container">
+      <label for="secondary_role" class="control-label">Secondary Role</label>
+      <div class="controls" data-purge="true">
+      </div>
+    </div>
+    <div class="control-group hide hideAfterClose" id="suffix-container">
+      <label for="suffix" class="control-label">Hostname Suffix</label>
+      <div class="controls">
+        <input type="text" name="suffix" id="suffix" data-purge="true">
+	      <span class="help-block">Optional suffix for hostname. If you provisioned a dev machine and picked mackenzie as your suffix, the hostname would be dev-mackenzie-HASH</span>
+      </div>
+    </div>
+    <div class="control-group hide hideAfterClose" id="hostname-container">
+      <label class="control-label">Hostname</label>
+      <div class="controls">
+        <span class="uneditable-input" data-purge="true" data-aggregate="profile,suffix"></span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label for="contact" class="control-label">Hipchat User</label>
+      <div class="controls">
+        <input type="text" name="contact" id="contact" value="@user.username">
+      </div>
+    </div>
+    <div id="provisionError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+  </div>
+  <div class="modal-footer">
+    @if(aa.asset.isIncomplete) {
+      <button type="submit" class="btn">Activate Server</button>
+    } else {
+      <button type="submit" class="btn">Provision Server</button>
+    }
+    @resetButton("Go back to browsing tumblr")
+  </div>
+  }
+}

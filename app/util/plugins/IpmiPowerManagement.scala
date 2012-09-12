@@ -5,10 +5,10 @@ import models.{Asset, IpmiInfo}
 
 import akka.util.Duration
 import akka.util.duration._
-import play.api.{Application, PlayException, Plugin}
+import play.api.{Application, Plugin}
 
-import com.tumblr.play.{AssetWithTag, PowerManagement, Power, PowerAction, PowerOff}
-import com.tumblr.play.{PowerOn, PowerSoft, PowerState, RebootSoft, RebootHard, Verify, Identify}
+import collins.power._
+import collins.power.management._
 import com.twitter.util.{Future, FuturePool}
 import java.util.concurrent.{Executors, TimeUnit}
 
@@ -67,34 +67,28 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
     }
   }
 
-  def powerOff(e: AssetWithTag): PowerStatus = run(e, PowerOff)
-  def powerOn(e: AssetWithTag): PowerStatus = run(e, PowerOn)
-  def powerSoft(e: AssetWithTag): PowerStatus = run(e, PowerSoft)
-  def powerState(e: AssetWithTag): PowerStatus = run(e, PowerState)
-  def rebootHard(e: AssetWithTag): PowerStatus = run(e, RebootHard)
-  def rebootSoft(e: AssetWithTag): PowerStatus = run(e, RebootSoft)
-  def identify(e: AssetWithTag): PowerStatus = run(e, Identify)
-  def verify(e: AssetWithTag): PowerStatus = run(e, Verify)
+  def powerOff(e: Asset): PowerStatus = run(e, PowerOff)
+  def powerOn(e: Asset): PowerStatus = run(e, PowerOn)
+  def powerSoft(e: Asset): PowerStatus = run(e, PowerSoft)
+  def powerState(e: Asset): PowerStatus = run(e, PowerState)
+  def rebootHard(e: Asset): PowerStatus = run(e, RebootHard)
+  def rebootSoft(e: Asset): PowerStatus = run(e, RebootSoft)
+  def identify(e: Asset): PowerStatus = run(e, Identify)
+  def verify(e: Asset): PowerStatus = run(e, Verify)
 
-  protected[this] def run(e: AssetWithTag, action: PowerAction): PowerStatus = pool {
+  protected[this] def run(e: Asset, action: PowerAction): PowerStatus = pool {
     IpmiPowerCommand.fromPowerAction(getAsset(e), action).run() match {
       case None => Failure("powermanagement not enabled or available in environment")
       case Some(status) => status.isSuccess match {
-        case true => Success(status.output)
+        case true => Success(status.stdout)
         case false => Failure(status.stderr.getOrElse("Error running command for %s".format(action)))
       }
     }
   }
-  protected[this] def getAsset(e: AssetWithTag): Asset = Asset.findByTag(e.tag) match {
+  protected[this] def getAsset(e: Asset): Asset = Asset.findByTag(e.tag) match {
     case Some(a) => a
     case None => throw new IllegalArgumentException(
       "Could not find asset with tag %s".format(e.tag)
     )
   }
-  protected[this] def InvalidConfig(s: Option[String] = None): Exception = PlayException(
-    "Invalid Configuration",
-    s.getOrElse("powermanagement.enabled is true missing configurations"),
-    None
-  )
-  protected[this] def InvalidConfig(s: String): Exception = InvalidConfig(Some(s))
 }

@@ -1,8 +1,7 @@
 
-@(assets: Page[AssetView], sortDirection: SortDirection = SortDirection.SortAsc, sortField: Option[String] = None, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
+@(assets: Page[models.asset.AssetView], sortDirection: SortDirection = SortDirection.SortAsc, sortField: Option[String] = None, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.SoftLayer
 @import _root_.util.views.{ListHelper, Formatter, Pagination}
 @import util.notice
 @import models.SortDirection._
@@ -19,17 +18,26 @@
   val prefix = app.routes.Resources.find(0, 50, sortDir.toString, "and", sort).toString
   Pagination.paginate(prefix, req.queryString)
 }
+@rowClassFromAsset(a: models.asset.AssetView) = @{
+  a match {
+    case warn if warn.isIncomplete || warn.isNew => "warning"
+    case info if info.isProvisioning || info.isProvisioned => "info"
+    case ok if ok.isCancelled || ok.isDecommissioned => "success"
+    case err if err.isMaintenance => "error"
+    case default => ""
+  }
+}
 
 @main("Asset Search Results") {
 <div class="page-header">
-  <h1>Asset Search Results <small>@assets.items.size of @assets.total results</small></h1>
+  <h1>Asset Search Results <small>Displaying @(assets.offset + 1) to @(assets.offset + assets.size) of @assets.total results</small></h1>
 </div>
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     @notice("message", Some("notice"))
     @notice("error")
     @notice("warning")
-    <table class="condensed-table zebra-striped" data-size="50">
+    <table class="table table-bordered table-hover" data-size="50">
       <thead>
         <tr>
           <th><a href="@sortLink("TAG")">Asset Tag</a></th>
@@ -47,13 +55,13 @@
       </thead>
       <tbody>
         @assets.items.map { asset =>
-        <tr>
+        <tr class="@rowClassFromAsset(asset)">
           <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
           @if(ListHelper.showHostname(assets)) {
           <td>@asset.getHostnameMetaValue.map(v => Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>
           }
-	  <td>@asset.getPrimaryRoleMetaValue().getOrElse { <em>Unknown</em> }</td>
-	  <td>@Formatter.elipse(asset.getStatusName(), 12)</td>
+          <td>@asset.getPrimaryRoleMetaValue().getOrElse { <em>Unknown</em> }</td>
+          <td>@Formatter.elipse(asset.getStatusName(), 12)</td>
           <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
           <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
           @if(ListHelper.showSoftLayerLink(assets)) {

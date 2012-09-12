@@ -6,17 +6,18 @@ import actors._
 import forms._
 import models.{Asset, AssetLifecycle, Truthy}
 import models.Status.Enum.{New => NewAsset}
-import util.{ApiTattler, SoftLayer, UserTattler}
+import util.{ApiTattler, UserTattler}
 import util.concurrent.BackgroundProcessor
 import util.config.Feature
+import util.plugins.SoftLayer
 
 import play.api.data._
 import play.api.data.Forms._
 import play.api.libs.concurrent.{Akka, Promise}
 import play.api.mvc._
 
-import com.tumblr.play.{ProvisionerPlugin, ProvisionerProfile, ProvisionerRequest}
-import com.tumblr.play.{ProvisionerRoleData => ProvisionerRole}
+import collins.provisioning.{ProvisionerPlugin, ProvisionerProfile, ProvisionerRequest}
+import collins.provisioning.{ProvisionerRoleData => ProvisionerRole}
 
 trait ProvisionUtil { self: SecureAction =>
 

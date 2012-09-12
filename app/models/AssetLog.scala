@@ -1,9 +1,14 @@
 package models
 
 import conversions._
+import logs._
+import LogFormat.LogFormat
+import LogMessageType.LogMessageType
+import LogSource.LogSource
 import util.views.Formatter.dateFormat
 
 import play.api.libs.json._
+import Json.toJson
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
@@ -11,34 +16,6 @@ import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
 
 import java.sql.Timestamp
 import java.util.Date
-
-object LogFormat extends Enumeration {
-  type LogFormat = LogFormat.Value
-  val PlainText = Value(0, "text/plain")
-  val Json = Value(1, "application/json")
-}
-object LogMessageType extends Enumeration {
-  type LogMessageType = Value
-  val Emergency = Value(0, "EMERGENCY")
-  val Alert = Value(1, "ALERT")
-  val Critical = Value(2, "CRITICAL")
-  val Error = Value(3, "ERROR")
-  val Warning = Value(4, "WARNING")
-  val Notice = Value(5, "NOTICE")
-  val Informational = Value(6, "INFORMATIONAL")
-  val Debug = Value(7, "DEBUG")
-  val Note = Value(8, "NOTE")
-}
-object LogSource extends Enumeration {
-  type LogSource = Value
-  val Internal = Value(0, "INTERNAL")
-  val Api = Value(1, "API")
-  val User = Value(2, "USER")
-  val System = Value(3, "SYSTEM")
-}
-import LogFormat.LogFormat
-import LogMessageType.LogMessageType
-import LogSource.LogSource
 
 case class AssetLog(
   asset_id: Long,
@@ -55,27 +32,8 @@ case class AssetLog(
   override def validate() {
     require(message != null && message.length > 0)
   }
-  override def asJson: String = {
-    Json.stringify(JsObject(forJsonObject))
-  }
-
-  def toJsonObject(): JsObject = JsObject(forJsonObject)
-  def forJsonObject(): Seq[(String,JsValue)] = Seq(
-    "ID" -> JsNumber(getId()),
-    "ASSET_TAG" -> JsString(Asset.findById(getAssetId()).get.tag),
-    "CREATED" -> JsString(dateFormat(created)),
-    "FORMAT" -> JsString(getFormat().toString()),
-    "SOURCE" -> JsString(getSource().toString()),
-    "TYPE" -> JsString(getMessageType().toString()),
-    "MESSAGE" -> (isJson() match {
-      case true => try {
-        Json.parse(message)
-      } catch {
-        case e => JsString("Error parsing JSON: " + e.getMessage)
-      }
-      case false => JsString(message)
-    })
-  )
+  override def asJson: String = toJsValue.toString
+  def toJsValue() = toJson(this)
 
   def getFormat(): LogFormat = format
   def isJson(): Boolean = getFormat() == LogFormat.Json
@@ -144,7 +102,6 @@ case class AssetLog(
       throw new IllegalStateException("Can't create log entry, already created")
     }
   }
-
 }
 
 object AssetLog extends Schema with AnormAdapter[AssetLog] {

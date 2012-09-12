@@ -3,35 +3,9 @@ package config
 
 import play.api.Logger
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject}
-import java.io.File
 import scala.collection.JavaConverters._
-import java.util.{Timer, TimerTask}
-import java.util.concurrent.ConcurrentHashMap
-
-class ConfigWatchTask(watchedFiles: Map[File,Long]) extends TimerTask {
-  private val logger = Logger("ConfigWatchTask")
-  private val map = new ConcurrentHashMap[File,Long](watchedFiles.asJava)
-  override def run() {
-    logger.debug("Reviewing map file file changes")
-    val changeCount = map.entrySet.asScala.foldLeft(0) { case (count, mapEntry) =>
-      val file = mapEntry.getKey.asInstanceOf[File]
-      val modTime = mapEntry.getValue.asInstanceOf[Long]
-      if (file.lastModified > modTime) {
-        logger.info("File %s changed modTime from %s to %s".format(
-          file.toString, modTime.toString, file.lastModified
-        ))
-        map.replace(file, file.lastModified)
-        count + 1
-      } else {
-        logger.trace("File %s has not changed".format(file.toString))
-        count
-      }
-    }
-    if (changeCount > 0) {
-      ConfigWatch.onChange()
-    }
-  }
-}
+import java.io.File
+import java.util.Timer
 
 object ConfigWatch extends AppConfig {
 
@@ -76,9 +50,11 @@ object ConfigWatch extends AppConfig {
 
   def start() {
     logger.info("Scheduling ConfigWatch timer")
+    val startAfter = if (AppConfig.isDev) 10000L else 30000L
+    val runEvery = if (AppConfig.isDev) 10000L else 30000L
     try {
       // start a timer task in 30 seconds that checks the file times every 30 seconds
-      timer.schedule(new ConfigWatchTask(allWatches), 30000L, 30000L)
+      timer.schedule(new ConfigWatchTask(allWatches), startAfter, runEvery)
     } catch {
       case e =>
         logger.warn("Error scheduling timer: %s".format(e.getMessage))

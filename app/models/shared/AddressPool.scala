@@ -78,6 +78,13 @@ case class AddressPool(
   }
   override def hashCode = name.toUpperCase.hashCode
 
+  def strictEquals(that: AddressPool): Boolean = {
+    that.name.equalsIgnoreCase(this.name) &&
+      that.network == this.network && 
+      that.startAddress == this.startAddress &&
+      that.gateway == this.gateway
+  }
+
   def isMagic: Boolean = network == AddressPool.MagicNetwork // valid dummy value
 
   protected def addressIndex(address: Long): Int = {

@@ -2,12 +2,13 @@ package util
 package security
 
 import models.{User, UserImpl}
+import collins.cache.ConfigCache
+import collins.validation.File
 
 import play.api.Logger
 import com.google.common.cache._
 import java.util.concurrent.TimeUnit
-import com.tumblr.play.{PermissionsHelper, Privileges}
-
+import collins.permissions.{PermissionsHelper, Privileges}
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger
@@ -47,11 +48,10 @@ object AuthenticationProvider {
   val Types = Set("ldap", "file", "default")
   def filename = AuthenticationProviderConfig.permissionsFile 
 
-  private val logger = Logger(getClass)
+  private val logger = Logger("util.security.AuthenticationProvider")
 
-  lazy private val watcher = FileWatcher.watchWithResults(filename, Privileges.empty) { f =>
-    PermissionsHelper.fromFile(f.getAbsolutePath)
-  }
+  lazy private val permissionsCache =
+    ConfigCache.create(AuthenticationProviderConfig.cachePermissionsTimeout, PermissionsLoader())
 
   def get(name: String): AuthenticationProvider = {
     name match {
@@ -82,7 +82,7 @@ object AuthenticationProvider {
     if (concern == SecuritySpec.LegacyMarker) {
       logger.debug("Found legacy security spec, defaulting to basic roles")
       loggedAuth {
-        user.roles.intersect(spec.requiredCredentials).size > 0
+        user.roles.map(_.toLowerCase).intersect(spec.requiredCredentials.map(_.toLowerCase)).size > 0
       }
     } else {
       logger.trace("Have concern '%s'".format(concern))
@@ -112,7 +112,7 @@ object AuthenticationProvider {
   }
 
   protected[util] def privileges: Privileges = {
-    val p = watcher.getFileContents()
+    val p = permissionsCache.get(filename)
     logger.trace("Privileges - %s".format(p))
     p
   }

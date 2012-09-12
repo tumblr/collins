@@ -3,7 +3,7 @@ package solr
 
 import Solr._
 import org.specs2._
-import models.{Asset, AssetFinder, AssetType, AssetMeta, AssetSearchParameters, IpAddresses, IpmiInfo, Status, AssetMetaValue}
+import models.{Asset, AssetFinder, AssetType, AssetMeta, AssetSearchParameters, IpAddresses, IpmiInfo, State, Status, AssetMetaValue}
 import test.ApplicationSpecification
 import util.solr.SolrConfig
 import util.views.Formatter
@@ -20,6 +20,7 @@ class SolrSpec extends ApplicationSpecification {
       val assetTag = "solr%d".format(scala.util.Random.nextInt)
       val assetType = AssetType.Enum.ServerNode
       val status = Status.Enum.Allocated
+      val state = State.Running.get
       val meta = List(
         ("A",String, 0,"a"),
         ("B",String, 0,"b"),
@@ -29,11 +30,12 @@ class SolrSpec extends ApplicationSpecification {
         ("bool", Boolean, 0, "false"),
         ("HOSTNAME", String, 0, "my_hostname")
       )
-      val asset = generateAsset(assetTag, assetType, status, meta)
+      val asset = generateAsset(assetTag, assetType, status, meta, state)
       val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
       val almostExpected = Map(
         SolrKey("TAG", String, false) -> SolrStringValue(assetTag),
         SolrKey("STATUS", Integer, false) -> SolrIntValue(status.id),
+        SolrKey("STATE", Integer, false) -> SolrIntValue(state.id),
         SolrKey("TYPE", Integer, false) -> SolrIntValue(assetType.id),
         SolrKey("CREATED", String, false) -> SolrStringValue(Formatter.solrDateFormat(asset.created)),
         SolrKey("A", String, true) -> SolrMultiValue(SolrStringValue("a") :: SolrStringValue("a1") :: Nil),
@@ -60,8 +62,9 @@ class SolrSpec extends ApplicationSpecification {
     }
   }
 
-  def generateAsset(tag: String, assetType: AssetType.Enum, status: Status.Enum, metaValues: Seq[(String, ValueType, Int, String)]) = {
+  def generateAsset(tag: String, assetType: AssetType.Enum, status: Status.Enum, metaValues: Seq[(String, ValueType, Int, String)], state: State) = {
     val asset = Asset.create(Asset(tag, status, assetType))
+    Asset.setState(asset, state)
     metaValues.foreach{case (name, value_type, group_id, value) =>
       AssetMeta.findOrCreateFromName(name, value_type)
       val meta = AssetMeta.findByName(name).get
@@ -73,7 +76,7 @@ class SolrSpec extends ApplicationSpecification {
           AssetMetaValue.create(AssetMetaValue(asset.id, meta.id, group_id, value))
       }
     }
-    asset
+    Asset.findById(asset.id).get
   }
 
 }
@@ -274,14 +277,16 @@ class SolrQuerySpec extends ApplicationSpecification {
         Some(somedate),
         Some(somedate),
         Some(somedate),
-        Some(somedate)
+        Some(somedate),
+        Some(State.Running.get)
       )
       val expected = List(
         SolrKeyVal("tag", SolrStringValue("foosolrtag")),
         SolrKeyVal("status", SolrIntValue(Status.Enum.Allocated.id)),
         SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id)),
         SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
-        SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString)))
+        SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
+        SolrKeyVal("state", SolrIntValue(State.Running.get.id))
       )
       afinder.toSolrKeyVals.toSet must_== expected.toSet
 
@@ -296,6 +301,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         None,
         Some(somedate),
         Some(somedate),
+        None,
         None
       )
       val expected = List(
@@ -320,7 +326,8 @@ class SolrQuerySpec extends ApplicationSpecification {
         Some(somedate),
         Some(somedate),
         Some(somedate),
-        Some(somedate)
+        Some(somedate),
+        None
       )
       val ipmiTuples = (IpmiInfo.Enum.IpmiAddress -> "ipmi_address") :: (IpmiInfo.Enum.IpmiUsername -> "ipmi_username") :: Nil
       val metaTuples = (AssetMeta("meta1", 0, "meta1", "meta1") -> "meta1_value") :: (AssetMeta("meta2", 0, "meta2", "meta2") -> "meta2_value") :: Nil

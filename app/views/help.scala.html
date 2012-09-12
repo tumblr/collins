@@ -3,20 +3,180 @@
 @import helper._
 @import util.notice
 
-@main("Intake Help") {
-<div class="page-header">
-  <h1>Asset Intake Help Page</h1>
-</div>
+@main("Collins Help") {
+<header class="jumbotron subhead" id="help">
+  <div class="container">
+    <h1>Collins Help Page</h1>
+    <p class="lead">Collins support links, help for runtime errors, and FAQ.</p>
+  </div>
+</header>
+
 <div class="row">
-  <div class="span14">
+  <div class="span12">
     @notice("message", Some("notice"))
     @notice("success")
     @notice("error")
-
-    You're here because something is broken, it's a @Help.getMessage(htype, args:_*).getOrElse("Unknown message")
-
-    Until we have real content here, you might check out the
-    <a href="http://tumblr.github.com/platform/collinsTutorial/out/index.html">Collins Tutorial</a>
   </div>
 </div>
+
+<div class="row">
+  <div id="sidebar" class="span3">
+    <ul id="sidenav" class="nav nav-list">
+      <li><a href="#support"><i class="icon-chevron-right"></i><strong>Support</strong></a></li>
+      <li><a href="#documentation">Collins Documentation</a></li>
+      <li><a href="#mailingList">Mailing List</a></li>
+      <li><a href="#supportTicket">Github Issues</a></li>
+      <li><a href="#ipmi"><i class="icon-chevron-right"></i><strong>IPMI</strong></a></li>
+      <li @if(htype == Help.IpmiError){class="active"}><a href="#ipmiError">General Error</a></li>
+      <li @if(htype == Help.IpmiNoLight){class="active"}><a href="#ipmiNoLight">No IPMI Light</a></li>
+      <li @if(htype == Help.IpmiUnreachable){class="active"}><a href="#ipmiUnreachable">IPMI Unreachable</a></li>
+      <li @if(htype == Help.PowerManagementDisabled){class="active"}><a href="#powerManagementDisabled">Power Management Disabled</a></li>
+      <li><a href="#faq"><i class="icon-chevron-right"></i><strong>FAQ</strong></a></li>
+      <li><a href="#assetState">Asset State</a></li>
+    </ul>
+  </div>
+
+  <div class="span9">
+
+    <section id="support" class="subsection">
+      <div class="page-header">
+        <h1>Support</h1>
+      </div>
+
+      <div id="documentation" class="subsection">
+        <h3>Collins Documentation</h3>
+
+        <p>
+          There is comprehensive API, Configuration, and other documentation available at <a href="http://tumblr.github.com/collins/">http://tumblr.github.com/collins/</a>
+        </p>
+      </div>
+
+      <div id="mailingList" class="subsection">
+        <h3>Mailing List</h3>
+
+        <p>
+          The mailing list is the best way to get support. Email <a href="mailto:collins-sm@@googlegroups.com">collins-sm@@googlegroups.com</a>
+          or see the mailing list archive at <a href="https://groups.google.com/forum/#!forum/collins-sm">https://groups.google.com/forum/#!forum/collins-sm"</a>.
+        </p>
+      </div>
+
+      <div id="supportTicket" class="subsection">
+        <h3>Github Issues</h3>
+        <p>
+          You can find open issues at <a href="https://github.com/tumblr/collins/issues?state=open">https://github.com/tumblr/collins/issues</a>. If you have found
+          an actual bug and there isn't already an issue open for it, please create one.
+        </p>
+      </div>
+    </section>
+
+    <section id="ipmi" class="subsection">
+      <div class="page-header">
+        <h1>IPMI Issues</h1>
+      </div>
+
+      <div id="ipmiError" class="subsection">
+        <h3>General Error</h3>
+        @if(htype == Help.IpmiError) {
+        <p>
+          It appears that you have run into a 'generic' IPMI problem. Below is some additional
+          information you may be able to use for troubleshooting.
+        </p>
+
+        <pre>
+          @Help.getMessage(htype, args:_*)
+        </pre>
+        } else {
+        <p>
+          If a general error occurs you will end up here with additional information for
+          troubleshooting.
+        </p>
+        }
+      </div>
+
+      <div id="ipmiNoLight" class="subsection">
+        <h3>No IPMI Light</h3>
+        <p>
+        If no IPMI light comes on that means one of the following things:
+        </p>
+        <ul>
+          <li>The IPMI IP address information in collins is incorrect (most likely)</li>
+          <li>The IPMI IP address information in collins is correct, but the host has a different IPMI address programmed on it. Yes, this is the same as the previous possibility.</li>
+          <li>The IPMI credentials are invalid</li>
+        </ul>
+        <p>
+          If the host was simply not net accessible you likely would have ended up with a different issue. You will probably have to cable attach to the host to determine what is happening.
+        </p>
+      </div>
+
+      <div id="ipmiUnreachable" class="subsection">
+        <h3>IPMI Unreachable</h3>
+        <p>
+        This means that collins could not reach the asset on its IPMI address. This means one of the following:
+        </p>
+        <ul>
+          <li>The IPMI IP address information in collins is incorrect</li>
+          <li>There is a cabling issue</li>
+          <li>There is an IPMI configuration problem</li>
+        </ul>
+        <p>
+          You can try doing a BMC cold reset, you can also try reseating the card.
+        </p>
+      </div>
+
+      <div id="powerManagementDisabled" class="subsection">
+        <h3>Power Management Disabled</h3>
+        <p>
+        The system has not been configured to use power management. The administrator will need to configure this before intake can be performed.
+        </p>
+      </div>
+
+    </section>
+
+    <section id="faq" class="subsection">
+      <div class="page-header">
+        <h1>Frequently Asked Questions</h1>
+      </div>
+
+      <div id="assetState" class="subsection">
+        <h3>Asset States</h3>
+
+        <p>
+          A state represents the current operational state of an asset. The state may be
+          status specific (e.g. 'Hardware Problem' is associated only with the Maintenance
+          status), or available for any state (e.g. Running). While a status represents
+          the lifecycle of an asset, the state represents the discrete states within a
+          status. For instance, a machine that is Allocated may be Running or Terminated
+          but in both cases still allocated.
+        </p>
+
+        <p>
+          The primary driver for this feature is to support discrete states within
+          Maintenance, so that techs can determine easily why a machine is in maintenance.
+          Additionally being able to hook ticket creation into changing the maintenance
+          state is ideal. For instance if something is having a hardware problem you may
+          want to create a hardware ticket in the datacenter queue, but if the asset is
+          having a network problem you may want to create a ticket in the network queue.
+        </p>
+
+        <table class="table table-bordered table-hover table-condensed">
+          <thead>
+            <td>Status</td><td>State Label</td><td>State Name</td><td>State Description</td>
+          </thead>
+          <tbody>
+          @State.find().sorted(State.StateOrdering).map { state =>
+            <tr>
+              <td><strong>@state.getStatusName</strong></td>
+              <td>@state.label</td>
+              <td>@state.name</td>
+              <td>@state.description</td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+</div>
+<script src="@routes.Assets.at("javascripts/helpscroll.js")" type="text/javascript"></script>
 }

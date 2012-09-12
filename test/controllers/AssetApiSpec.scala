@@ -110,6 +110,10 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
       }
     } // Support multi-step intake
 
+    /*
+     * NOTE (DS) - If these tests suddenly start failing, try clearing the Solr index by shutting down solr and deleting the SOLR_HOME/data
+     * directory
+     */
     "Support find" in {
       "by custom attribute" in new asset {
         val req = FakeRequest("GET", findUrl + "?attribute=foo;bar")

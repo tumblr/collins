@@ -1,6 +1,7 @@
 package util.plugins.solr
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, AssetView, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, State, Status, Truthy}
+import models.asset.AssetView
 import models.IpmiInfo.Enum._
 
 import scala.util.parsing.combinator._
@@ -187,7 +188,6 @@ object SolrKeyResolver {
     SolrKey(IpmiNetmask.toString, String, true)
   ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
 
-
   val typeKey = new SolrKey("TYPE",Integer,false) with KeyLookup {
     def lookupValue(value: String) = try Some(AssetType.Enum.withName(value.toUpperCase).id) catch {case _ => None}
     override def isAliasOf(a: String) = a == "ASSETTYPE"
@@ -197,7 +197,11 @@ object SolrKeyResolver {
     def lookupValue(value: String) = Status.findByName(value).map{_.id}
   }
 
-  val enumKeys = typeKey :: statusKey :: Nil
+  val stateKey = new SolrKey("STATE", Integer, false) with KeyLookup {
+    def lookupValue(value: String) = State.findByName(value).map{_.id}
+  }
+
+  val enumKeys = typeKey :: statusKey :: stateKey :: Nil
 
   def apply(_rawkey: String): Option[SolrKey] = {
     val ukey = _rawkey.toUpperCase

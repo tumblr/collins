@@ -1,7 +1,9 @@
 package util
 package views
 
-import models.{Asset, AssetView, Page}
+import models.{Asset, Page}
+import models.asset.AssetView
+import util.plugins.SoftLayer
 import util.power.{PowerComponent, PowerUnits}
 
 // Mostly used with views/asset/list, also for comprehensions

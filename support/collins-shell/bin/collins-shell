@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
-if ENV['COLLINS_DEBUG'] then
-  HTTP_DEBUG = true
+if ENV.key?('COLLINS_DEBUG') && ENV['COLLINS_DEBUG'] then
+HTTP_DEBUG = true
 end
 
 # Make sure we're running a valid version of ruby

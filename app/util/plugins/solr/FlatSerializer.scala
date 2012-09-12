@@ -37,6 +37,7 @@ class FlatSerializer extends AssetSolrSerializer {
     opt ++ Map[SolrKey, SolrValue](
       SolrKey("TAG", String, false) -> SolrStringValue(asset.tag),
       SolrKey("STATUS", Integer, false) -> SolrIntValue(asset.status),
+      SolrKey("STATE", Integer, false) -> SolrIntValue(asset.state),
       SolrKey("TYPE", Integer, false) -> SolrIntValue(asset.getType.id),
       SolrKey("CREATED", String, false) -> SolrStringValue(Formatter.solrDateFormat(asset.created))
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset, false))

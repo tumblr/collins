@@ -1,6 +1,7 @@
 package util
 package parsers
 
+import models.lldp._
 import scala.xml.{Elem, MalformedAttributeException, Node, NodeSeq, XML}
 
 class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {

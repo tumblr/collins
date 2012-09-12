@@ -2,7 +2,8 @@ package controllers
 package actions
 
 import asset.AssetFinderDataHolder
-import models.{Asset, AssetType, AssetView, Page, RemoteAsset}
+import models.{Asset, AssetType, Page}
+import models.asset.{AssetView, RemoteAsset}
 import util.config.Feature
 
 import java.util.concurrent.atomic.AtomicReference
@@ -81,11 +82,11 @@ trait AssetResultsAction {
   protected def handleApiSuccess(p: Page[AssetView], details: Boolean): Result = {
     val items = p.items.map { 
       case a: Asset => if (details){
-        a.getAllAttributes.exposeCredentials(user.canSeePasswords).toJsonObject
+        a.getAllAttributes.exposeCredentials(user.canSeePasswords).toJsValue
       } else {
-        a.toJsonObject
+        a.toJsValue
       }
-      case v: RemoteAsset => v.toJsonObject 
+      case v: RemoteAsset => v.toJsValue
     }.toList
     ResponseData(Status.Ok, JsObject(p.getPaginationJsObject() ++ Seq(
       "Data" -> JsArray(items)
