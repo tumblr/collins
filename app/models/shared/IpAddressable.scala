@@ -98,10 +98,10 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
         res = Some(f(i)) 
       } catch {
         case e: SQLException =>
-          logger.info("createAddressWithRetry attempt %d".format(i + 1))
+          logger.info("createAddressWithRetry attempt %d: %s".format((i + 1), e.getMessage))
           res = None
         case e: RuntimeException =>
-          logger.info("createAddressWithRetry attempt %d".format(i + 1))
+          logger.info("createAddressWithRetry attempt %d: %s".format((i + 1), e.getMessage))
           res = None
         case e =>
           logger.warn("Uncaught exception %s".format(e.getMessage), e)

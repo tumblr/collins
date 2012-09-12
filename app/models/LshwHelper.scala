@@ -1,6 +1,7 @@
 package models
 
 import util._
+import lshw._
 
 object LshwHelper extends CommonHelper[LshwRepresentation] {
   import AssetMeta.Enum._

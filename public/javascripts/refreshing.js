@@ -57,7 +57,9 @@ $(document).ready(function() {
   // hack so data-refresh can be "window"
   $("body").append("<div class='hide window' id='window'></div>");
   $('#window,.window').bind('refresh', function() {
-    window.location.reload();
+    setTimeout(function() {
+      window.location.reload();
+    }, 2000);
   });
 
 });

@@ -4,7 +4,8 @@ package resources
 
 import asset.{AssetFinderDataHolder, FindAction => AssetFindAction}
 
-import models.{Asset, AssetView, Page, PageParams}
+import models.{Asset, Page, PageParams}
+import models.asset.AssetView
 import util.security.SecuritySpecification
 
 import play.api.data.Form

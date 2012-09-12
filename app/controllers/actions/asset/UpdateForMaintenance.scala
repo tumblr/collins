@@ -2,7 +2,9 @@ package controllers
 package actions
 package asset
 
-import models.{Asset, Status => AssetStatus}
+import forms._
+import models.{Asset, State, Status => AssetStatus}
+import util.MessageHelper
 import util.security.SecuritySpecification
 import util.plugins.Maintenance
 import validators.StringUtil
@@ -10,52 +12,72 @@ import validators.StringUtil
 import play.api.data.Form
 import play.api.data.Forms._
 
+object UpdateForMaintenance {
+  object Messages extends MessageHelper("controllers.updateForMaintenance") {
+    def missingDescriptionAndStatus = messageWithDefault("missingDescriptionAndStatus", "A description and status must be specified")
+    def missingStatus = messageWithDefault("missingStatus", "Asset status must be specified")
+    def missingState = messageWithDefault("missingState", "Asset state must be specified")
+    def missingDescription = messageWithDefault("missingDescription", "A problem description must be specified")
+  }
+}
+
 case class UpdateForMaintenanceAction(
   assetTag: String,
   spec: SecuritySpecification,
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction {
 
-  case class ActionDataHolder(statusString: String, reason: String) extends RequestDataHolder {
-    lazy val assetStatus: Option[AssetStatus] = AssetStatus.findByName(statusString)
-    lazy val isError = !assetStatus.isDefined
-    lazy val assetStatusName: String = assetStatus.map(_.name).getOrElse("Unknown")
+  import UpdateForMaintenance.Messages._
+
+  case class ActionDataHolder(aStatus: AssetStatus.Enum, description: String, state: State) extends RequestDataHolder {
+    def assetStatusName: String = aStatus.toString
   }
 
-  lazy val params: Option[ActionDataHolder] = Form(tuple(
-    "status" -> text(1),
-    "reason" -> text(1)
+  lazy val params: Either[String,ActionDataHolder] = Form(tuple(
+    "status" -> of[AssetStatus.Enum],
+    "description" -> text(1),
+    "state"  -> of[State]
   )).bindFromRequest()(request).fold(
-    err => None,
+    err => {
+      err.error("status").map { e =>
+        Left(missingStatus)
+      }.orElse {
+        err.error("description").map { e =>
+          Left(missingDescription)
+        }
+      }.orElse {
+        err.error("state").map { e =>
+          Left(missingState)
+        }
+      }.getOrElse {
+        Left(missingDescriptionAndStatus)
+      }
+    },
     suc => {
-      val status = StringUtil.trim(suc._1)
-      val reason = StringUtil.trim(suc._2)
-      if (!status.isDefined || !reason.isDefined) {
-        None
-      } else {
-        Some(ActionDataHolder(status.get, reason.get))
+      val status = suc._1
+      val description = StringUtil.trim(suc._2)
+      val state = suc._3
+      description match {
+        case None =>
+          Left(missingDescription)
+        case Some(r) =>
+          Right(ActionDataHolder(status, r, state))
       }
     }
   )
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
     withValidAsset(assetTag) { asset =>
-      if (!params.isDefined) {
-        Left(RequestDataHolder.error400("status and reason parameters must be specified"))
-      } else if (params.get.isError) {
-        Left(RequestDataHolder.error400("invalid status specified"))
-      } else {
-        Right(params.get)
-      }
+      params.left.map(e => RequestDataHolder.error400(e))
     }
   }
 
   override def execute(rd: RequestDataHolder) = rd match {
-    case adh@ActionDataHolder(status, reason) =>
-      val success = if (adh.assetStatus.get.id == AssetStatus.Enum.Maintenance.id) {
-        Maintenance.toMaintenance(definedAsset, reason)
+    case adh@ActionDataHolder(status, description, state) =>
+      val success = if (status.id == AssetStatus.Enum.Maintenance.id) {
+        Maintenance.toMaintenance(definedAsset, description, state)
       } else {
-        Maintenance.fromMaintenance(definedAsset, reason, status)
+        Maintenance.fromMaintenance(definedAsset, description, status.toString, state)
       }
       success match {
         case true => Api.statusResponse(true)

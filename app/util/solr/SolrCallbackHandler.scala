@@ -32,6 +32,9 @@ case class SolrCallbackHandler(server: SolrServer, updater: ActorRef) extends Ca
       updater ! v.getAsset
     case i: IpAddresses =>
       updater ! i.getAsset
+    case s: String =>
+      logger.warn("Got purge event for %s".format(s))
+      removeAssetByTag(s)
     case o =>
       logger.error("Unknown value in update callback %s".format(maybeNullString(o)))
   }

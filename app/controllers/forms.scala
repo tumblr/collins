@@ -1,9 +1,9 @@
 package controllers
 
-import models.{AssetType,Status,Truthy}
+import models.{AssetType,State,Status,Truthy}
 import util.views.Formatter.camelCase
 
-import com.tumblr.play.{Power, PowerAction}
+import collins.power.PowerAction
 
 import play.api.data.FormError
 import play.api.data.format._
@@ -26,6 +26,17 @@ package object forms {
     def unbind(key: String, value: Status.Enum) = Map(key -> value.toString)
   }
 
+  implicit def stateFormat = new Formatter[State] {
+    def bind(key: String, data: Map[String, String]) = {
+      Formats.stringFormat.bind(key, data).right.flatMap { s =>
+        allCatch[State]
+          .either(State.findByName(s).get)
+          .left.map(e => Seq(FormError(key, "error.state", Nil)))
+      }
+    }
+    def unbind(key: String, value: State) = Map(key -> value.name)
+  }
+
   implicit def typeFormat = new Formatter[AssetType.Enum] {
     def bind(key: String, data: Map[String, String]) = {
       Formats.stringFormat.bind(key, data).right.flatMap { s =>
@@ -41,7 +52,7 @@ package object forms {
     def bind(key: String, data: Map[String, String]) = {
       Formats.stringFormat.bind(key, data).right.flatMap { s =>
         allCatch[PowerAction]
-          .either(Power(s))
+          .either(PowerAction(s))
           .left.map(e => Seq(FormError(key, "error.power", Nil)))
       }
     }

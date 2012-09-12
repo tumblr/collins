@@ -1,9 +1,9 @@
 3800:collins.logging.LoggingPlugin
 3900:collins.database.DatabasePlugin
 4000:collins.config.ConfigPlugin
-4100:com.tumblr.play.CachePlugin
+4100:collins.cache.CachePlugin
 4200:collins.callbacks.CallbackManagerPlugin
 4300:util.plugins.solr.SolrPlugin
 4400:util.plugins.IpmiPowerManagement
-4500:com.tumblr.play.SoftLayerPlugin
-4600:com.tumblr.play.ProvisionerPlugin
+4500:collins.softlayer.SoftLayerPlugin
+4600:collins.provisioning.ProvisionerPlugin

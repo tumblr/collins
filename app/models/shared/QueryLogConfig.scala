@@ -10,6 +10,7 @@ object QueryLogConfig extends Configurable {
   def enabled = getBoolean("enabled", false)
   def includeResults = getBoolean("includeResults", false)
   def prefix = getString("prefix", "")
+  def frontendLogging = getBoolean("frontendLogging", false)
 
   override protected def validateConfig() {
     if (enabled) {

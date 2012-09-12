@@ -13,7 +13,7 @@ import play.api.mvc._
 import java.io.File
 import java.util.Date
 
-private[controllers] case class ResponseData(status: Results.Status, data: JsObject, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
+private[controllers] case class ResponseData(status: Results.Status, data: JsValue, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
   def asResult(implicit req: Request[AnyContent]): Result =
     ApiResponse.formatResponseData(this)(req)
 }

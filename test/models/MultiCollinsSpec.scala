@@ -8,7 +8,7 @@ class MultiCollinsSpec extends mutable.Specification {
 
   //TODO, same thing exists in AssetSearchParameterSpec, unify
   val EMPTY_RESULT_TUPLE = (Nil, Nil, Nil)
-  val EMPTY_FINDER = AssetFinder(None, None, None, None, None, None, None)
+  val EMPTY_FINDER = AssetFinder(None, None, None, None, None, None, None, None)
 
   val params = new AssetSearchParameters(EMPTY_RESULT_TUPLE, EMPTY_FINDER)
 

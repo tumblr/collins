@@ -5,12 +5,13 @@ package resources
 import forms._
 
 import models.Truthy
-import util.{IpmiCommand, PowerManagement, PowerManagementConfig}
+import util.IpmiCommand
 import util.concurrent.BackgroundProcessor
-import util.plugins.IpmiPowerCommand
+import util.plugins.{IpmiPowerCommand, PowerManagement}
 import util.security.SecuritySpecification
 
-import com.tumblr.play.{PowerManagement, Identify}
+import collins.power.Identify
+import collins.power.management.{PowerManagement, PowerManagementConfig}
 
 import play.api.data.Form
 import play.api.data.Forms._

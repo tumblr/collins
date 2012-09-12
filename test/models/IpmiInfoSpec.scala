@@ -2,6 +2,7 @@ package models
 
 import test.ApplicationSpecification
 import util.IpAddress
+import util.config.IpmiConfig
 
 import play.api.Configuration
 

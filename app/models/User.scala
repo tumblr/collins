@@ -25,7 +25,7 @@ abstract class User(val username: String, val password: String) {
     User.USERNAME -> username,
     User.IS_AUTHENTICATED -> isAuthenticated().toString,
     User.ROLES -> roles().mkString(",")
-    )
+  )
 }
 case class UserImpl(_username: String, _password: String, _roles: Set[String], _id: Int, _authenticated: Boolean)
   extends User(_username, _password)

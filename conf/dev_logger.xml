@@ -5,21 +5,23 @@
       <pattern>%date - [%level] - %logger{15} - %C{5}:%M:%L - %message%n%xException{5}</pattern>
     </encoder>
   </appender>
+  <appender name="MULTIPLEX" class="ch.qos.logback.classic.net.SocketAppender">
+    <ReconnectionDelay>10000</ReconnectionDelay>
+    <IncludeCallerData>true</IncludeCallerData>
+    <RemoteHost>localhost</RemoteHost>
+  </appender>
 
   <logger name="play" level="INFO" />
-  <logger name="application" level="DEBUG" />
-  
+  <logger name="application" level="TRACE" />
+
+  <logger name="configurable" level="DEBUG" />
+
   <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
   <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
-  <logger name="util.AuthenticationProvider" level="INFO" />
-  <logger name="util.FileWatcher" level="INFO" />
-  <logger name="com.tumblr.play.Privileges" level="INFO" />
+  <logger name="util.security.AuthenticationProvider" level="INFO" />
+  <logger name="Privileges" level="INFO" />
   <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
   <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
-
-  <root level="DEBUG">
-    <appender-ref ref="STDOUT" />
-  </root>
 
   <!-- the httpclient debug logging is ridiculously chatty -->
   <logger name="httpclient.wire.content" level="WARN" />
@@ -40,5 +42,10 @@
   <logger name="org.apache.impl.client.DefaultClientConnection" level="WARN" />
   <logger name="javax.management" level="WARN" />
   <logger name="org.apache.solr" level="WARN" />
-  
+
+  <root level="TRACE">
+    <appender-ref ref="MULTIPLEX" />
+    <appender-ref ref="STDOUT" />
+  </root>
+ 
 </configuration>

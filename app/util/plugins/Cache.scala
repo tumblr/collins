@@ -1,16 +1,26 @@
 package util
 package plugins
 
-import com.tumblr.play.CachePlugin
-import play.api.{Application, Mode}
+import collins.cache.{Cache => CacheInterface, CachePlugin}
+import play.api.{Application, Mode, Play}
 import java.io.File
 
 object Cache {
-  private[this] def getCachePlugin =
-    new CachePlugin(new Application(new File("."), this.getClass.getClassLoader, None, Mode.Dev))
-  private[this] val cachePlugin = play.api.Play.maybeApplication.map { app =>
-    app.plugin[CachePlugin].getOrElse(getCachePlugin)
-  }.getOrElse(getCachePlugin)
+
+  private[this] val cachePlugin: CacheInterface = play.api.Play.maybeApplication.map { app =>
+    app.plugin[CachePlugin].getOrElse(createInstance(-1))
+  }.getOrElse(createInstance(-1))
+
+  def createInstance(timeoutInSeconds: Int): CacheInterface = {
+    val app = try {
+      import play.api.Play.current
+      current
+    } catch {
+      case e =>
+        new Application(new File("."), this.getClass.getClassLoader, None, Mode.Dev)
+    }
+    CachePlugin.getInstance(app, timeoutInSeconds)
+  }
 
   def set(key: String, value: AnyRef) {
     cachePlugin.set(key, value)

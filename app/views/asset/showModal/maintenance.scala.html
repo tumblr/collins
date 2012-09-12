@@ -1,0 +1,33 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import helper._
+@import util._
+@import _root_.models.State
+@import _root_.util.plugins.Maintenance
+@import _root_.util.views.OptionSorter
+
+<!-- start asset maintenance modal -->
+@if(Maintenance.canTransitionToMaintenance(aa.asset)) {
+  @maintenanceBody(aa, "Asset in Maintenance Mode", false, Some("Maintenance")) {
+    <p>Asset is <em>not</em> currently in maintenance mode. Putting an asset in maintenance mode will:</p>
+    <ul>
+      <li>Change the asset status</li>
+      <li>Cause it to be pulled from relavent configurations</li>
+      <li>Stop getting production traffic</li>
+    </ul>
+    <p>If that all sounds good select a maintenance type, provide a description, and then click the appropriate button</p>
+    <input type="hidden" name="status" value="Maintenance">
+  }
+} else {
+  @maintenanceBody(aa, "Asset ouf of Maintenance Mode", true, None, State.Running) {
+    <p>Asset is currently in maintenance mode. Taking an asset out of maintenance mode will:</p>
+    <ul>
+      <li>Change the asset status</li>
+      <li>Cause it to be added back to relavent configurations</li>
+      <li>Start getting production traffic</li>
+    </ul>
+    <p>If that all sounds good, provide a description of the problem resolution and then click the button below. Be certain that you are putting the asset into an approprite status. For instance, if prior to maintenance an asset was Incomplete, you should probably move it back to Incomplete.</p>
+  }
+}
+<!-- end asset maintenance modal -->
+
