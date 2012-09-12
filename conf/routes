@@ -77,7 +77,7 @@ GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0,
 
 PUT     /api/state/:name            app.Api.createState(name: String)
 #POST    /api/state/:name            app.Api.updateState(name: String)
-#DELETE  /api/state/:name            app.Api.deleteState(name: String)
+DELETE  /api/state/:name            app.Api.deleteState(name: String)
 #GET     /api/state/:name            app.Api.getState(name: String)
 #GET     /api/states                 app.Api.getStates
 

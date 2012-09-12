@@ -3,7 +3,7 @@ package actions
 package state
 
 import forms._
-import validators.ParamValidation
+import validators.{ParamValidation, StringUtil}
 
 import models.{State, Status => AStatus}
 import util.MessageHelper
@@ -60,7 +60,6 @@ case class CreateAction(
   val stateForm = Form(tuple(
     "id" -> ignored(0:Int),
     "status" -> validatedOptionalText(1),
-    "name" -> validatedText(2, 32),
     "label" -> validatedText(2, 32),
     "description" -> validatedText(2, 255)
   ))
@@ -68,21 +67,16 @@ case class CreateAction(
   override def validate(): Validation = stateForm.bindFromRequest()(request).fold(
     err => Left(RequestDataHolder.error400(fieldError(err))),
     form => {
-      val (id, statusOpt, name, label, description) = form
-      val statusId = statusOpt.flatMap { s =>
-        if (s.toUpperCase == State.ANY_NAME.toUpperCase) {
-          Some(State.ANY_STATUS)
-        } else {
-          AStatus.findByName(s).map(_.id)
-        }
-      }
+      val (id, statusOpt, label, description) = form
+      val validatedName = StringUtil.trim(name).filter(s => s.length > 1 && s.length <= 32)
+      val statusId = getStatusId(statusOpt)
       if (statusOpt.isDefined && !statusId.isDefined) {
         Left(RequestDataHolder.error400(invalidStatus))
-      } else if (State.findByName(name).isDefined) {
+      } else if (!validatedName.isDefined || State.findByName(validatedName.get).isDefined) {
         Left(RequestDataHolder.error409(invalidName))
       } else {
         Right(
-          ActionDataHolder(State(0, statusId.getOrElse(State.ANY_STATUS), name, label, description))
+          ActionDataHolder(State(0, statusId.getOrElse(State.ANY_STATUS), validatedName.get, label, description))
         )
       }
     }
@@ -108,6 +102,13 @@ case class CreateAction(
     case e if e.error("description").isDefined => invalidDescription
     case e if e.error("status").isDefined => invalidStatus
     case n => fuck
+  }
+
+  protected def getStatusId(status: Option[String]): Option[Int] = status.flatMap { s =>
+    (s.toUpperCase == State.ANY_NAME.toUpperCase) match {
+      case true => Some(State.ANY_STATUS)
+      case false => AStatus.findByName(s).map(_.id)
+    }
   }
 
 }
