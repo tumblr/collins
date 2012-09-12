@@ -6,8 +6,10 @@ import models.MetaWrapper
 
 import play.api.mvc.Content
 
+
 case class DecoratorConfigException(source: String, key: String)
   extends Exception("Didn't find key %s in decorator configuration for %s".format(key, source))
+
 
 case class Decorator(config: DecoratorConfig, parser: DecoratorParser) {
   def format(key: String, value: String): String = {

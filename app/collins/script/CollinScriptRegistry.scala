@@ -36,6 +36,7 @@ sealed trait ScriptEngine {
       outputDir)) with FromClasspathFirst {
         val recheckEveryMillis: Long = CollinScriptConfig.refreshPeriod
       }
+  engine.refresh
 
   /**
    * Calls a CollinScript method specified on an Object as a string,

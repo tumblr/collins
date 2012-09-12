@@ -1,6 +1,7 @@
 package collins
 package action
 
+import java.beans.PropertyChangeEvent
 import play.api.Logger
 import scala.collection.SeqProxy
 
@@ -39,7 +40,7 @@ trait ActionExecutor {
    */
   def commandString = command.mkString(" ")
 
-  def apply[T >: AnyRef](onObj: T): Unit = {
+  def apply(pce: PropertyChangeEvent): Unit = {
     throw new ActionExecutorException("apply(onObj) is undefined!")
   }
 

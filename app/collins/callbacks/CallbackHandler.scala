@@ -5,7 +5,7 @@ import java.beans.PropertyChangeEvent
 
 
 trait CallbackHandler {
-  def apply(pce: PropertyChangeEvent)
+  def apply(pce: PropertyChangeEvent): Unit
 
   protected def getValue(pce: PropertyChangeEvent): AnyRef =
     Option(pce.getNewValue).getOrElse(pce.getOldValue)

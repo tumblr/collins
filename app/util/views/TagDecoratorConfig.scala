@@ -1,8 +1,7 @@
 package util
 package views
 
-import collins.action.ActionConfig
-import config.{Configurable, ConfigAccessor, ConfigSource, TypesafeConfiguration}
+import config.{ActionConfig, Configurable, ConfigAccessor, ConfigSource, TypesafeConfiguration}
 
 import com.typesafe.config.{ConfigObject, ConfigValue}
 
@@ -12,15 +11,15 @@ case class DecoratorConfig(val name: String, override val source: TypesafeConfig
 {
   def between = getString("between","")
   def decorator = getString("decorator", "")
-  /*def decoratorAction: Option[ActionConfig] = getObjectMap("decoratorAction").map {
-    case(name, o) => return Some(ActionConfig(o.toConfig))
+  def decoratorAction: Option[ActionConfig] = getObject("decoratorAction") match {
+    case cfg => return Some(ActionConfig(cfg))
     case None => None
-  }*/
+  }
   def delimiter = getString("delimiter")
   def valueParser = getString("valueParser")
   def getIndex(i: Int): Map[String,String] = getStringMap(i.toString)
   def validateConfig() {
-    if (decorator == None ) { //&& decoratorAction == None) {
+    if (decorator == None && decoratorAction == None) {
       throw DecoratorConfigException(name, "decorator or decoratorAction")
     }
   }

@@ -3,7 +3,6 @@ package script
 
 import play.api.{Application, Plugin}
 
-
 class CollinScriptPlugin(app: Application) extends Plugin {
 
   override def enabled = CollinScriptConfig.enabled

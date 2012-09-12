@@ -1,8 +1,7 @@
 package collins
 package callbacks
 
-import action.{ActionConfig, ActionType}
-import util.config.{ConfigAccessor, ConfigSource, Configurable, ConfigValue, TypesafeConfiguration}
+import util.config.{ActionConfig, ConfigAccessor, ConfigSource, Configurable, ConfigValue, TypesafeConfiguration}
 
 import com.typesafe.config.ConfigValueType
 import play.api.Logger
@@ -19,12 +18,11 @@ case class CallbackDescriptor(name: String, override val source: TypesafeConfigu
   def on = getString("on")(ConfigValue.Required).get
   def matchCondition = CallbackConditional(previous.get("state"), current.get("state"))
   def matchAction: ActionConfig = {
-    val cfg = getObjectMap("action")
+    val cfg = getConfig("action")
     if (cfg.isEmpty) {
       throw CallbackConfigException("action", name)
     }
-    cfg.map { case(name, o) => return ActionConfig(o.toConfig) }
-    throw CallbackConfigException("action", name)
+    ActionConfig(cfg)
   }
 
   def validateConfig() {

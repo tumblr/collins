@@ -2,9 +2,8 @@ package collins
 package action
 package handler
 
-import action.ActionExecutor
-import action.FormattedValues
-import models.AssetView
+import action.{ActionExecutor, FormattedValues}
+import models.asset.AssetView
 
 import play.api.Logger
 
@@ -16,7 +15,7 @@ trait AssetActionHandler extends ActionExecutor {
   }
 
   def checkAsset(asset: AssetView): Boolean = {
-    runCommandBoolean(getTemplatedCommand(asset)).asInstanceOf[Boolean]
+    runCommandBoolean(getTemplatedCommand(asset))
   }
 
   def executeAsset(asset: AssetView): String = {
