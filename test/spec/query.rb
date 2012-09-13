@@ -1,5 +1,6 @@
 #require 'spec_helper'
 require 'collins_client'
+require 'lib/collins_integration'
 
 describe "Asset Search" do
 
@@ -18,6 +19,11 @@ describe "Asset Search" do
   before :all do
     config = {:username => "blake", :password => "admin:first", :host => "http://127.0.0.1:9000"}
     @client = Collins::Client.new config
+
+    #putting this here means the fixtures are loaded once for all tests.  This
+    #is ok for now, but if we start doing writes we have to make this execute
+    #before each test
+    @int = CollinsIntegration.new 'default.yaml'
   end
 
   it "simple tag query" do
