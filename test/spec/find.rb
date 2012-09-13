@@ -42,19 +42,18 @@ describe "Asset Find" do
       "status" => "Allocated",
       "type" => "SERVER_NODE"
     }
-    checkQuery p,6
+    checkQuery p,1
   end
 
   it "attribute=HOSTNAME;%5EMAIL.*&attribute=POOL;MAILPARSER_POOL&attribute=PRIMARY_ROLE;TUMBLR_APP&status=Allocated&type=SERVER_NODE&details=false&operation=and:0" do
     p = {
-      "hostname" => "EMAIL*",
-      "pool" => "MAILPARSER_POOL",
-      "primary_role" => "TUMBLR_APP",
+      "hostname" => "dev-*",
+      "pool" => "DEVEL",
       "status" => "Allocated",
       "type" => "SERVER_NODE",
       
     }
-    checkQuery p,2
+    checkQuery p,5
   end
 
   it "operation=and&ASSET_TAG=&status=Allocated&state=&type=SERVER_NODE" do
