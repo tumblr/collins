@@ -56,7 +56,7 @@ case class DeleteAction(
   case class ActionDataHolder(state: State) extends RequestDataHolder
 
   override def validate(): Validation = {
-    StringUtil.trim(name).filter(s => s.size > 1 && s.size <= 32) match {
+    StringUtil.trim(name).filter(s => s.size > 1 && s.size <= 32).map(_.toUpperCase) match {
       case None => Left(RequestDataHolder.error400(invalidName))
       case Some(vname) => State.findByName(vname) match {
         case None =>
@@ -75,7 +75,7 @@ case class DeleteAction(
     case ActionDataHolder(state) => try {
       val deletes = Asset.resetState(state, 0)
       State.delete(state)
-      ResponseData(Status.Ok, JsObject(Seq("DELETED" -> JsNumber(deletes))))
+      ResponseData(Status.Accepted, JsObject(Seq("DELETED" -> JsNumber(deletes + 1))))
     } catch {
       case e =>
         Api.errorResponse(

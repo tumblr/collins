@@ -59,7 +59,7 @@ case class CreateAction(
 
   val stateForm = Form(tuple(
     "id" -> ignored(0:Int),
-    "status" -> validatedOptionalText(1),
+    "status" -> validatedOptionalText(2),
     "label" -> validatedText(2, 32),
     "description" -> validatedText(2, 255)
   ))
@@ -68,11 +68,15 @@ case class CreateAction(
     err => Left(RequestDataHolder.error400(fieldError(err))),
     form => {
       val (id, statusOpt, label, description) = form
-      val validatedName = StringUtil.trim(name).filter(s => s.length > 1 && s.length <= 32)
+      val validatedName = StringUtil.trim(name)
+                            .filter(s => s.length > 1 && s.length <= 32)
+                            .map(_.toUpperCase)
       val statusId = getStatusId(statusOpt)
       if (statusOpt.isDefined && !statusId.isDefined) {
         Left(RequestDataHolder.error400(invalidStatus))
-      } else if (!validatedName.isDefined || State.findByName(validatedName.get).isDefined) {
+      } else if (!validatedName.isDefined) {
+        Left(RequestDataHolder.error400(invalidName))
+      } else if (State.findByName(validatedName.get).isDefined) {
         Left(RequestDataHolder.error409(invalidName))
       } else {
         Right(
