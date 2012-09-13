@@ -25,7 +25,7 @@ import play.api.data.Forms._
  * @apirespond 200 success
  * @apirespond 400 invalid input
  * @apirespond 404 invalid state name
- * @apirespond 409 name already in use
+ * @apirespond 409 name already in use or trying to modify system name
  * @apirespond 500 error saving state
  * @apiperm controllers.AssetStateApi.updateState
  * @collinsshell {{{
@@ -44,11 +44,12 @@ case class UpdateAction(
 ) extends SecureAction(spec, handler) with ParamValidation {
 
   import CreateAction.Messages._
+  import DeleteAction.Messages.systemName
 
   case class ActionDataHolder(state: State) extends RequestDataHolder
 
   val stateForm = Form(tuple(
-    "status" -> validatedOptionalText(1),
+    "status" -> validatedOptionalText(2),
     "name" -> validatedOptionalText(2, 32),
     "label" -> validatedOptionalText(2, 32),
     "description" -> validatedOptionalText(2, 255)
@@ -62,7 +63,9 @@ case class UpdateAction(
         State.findByName(s)
       }.map { state =>
         val statusId = getStatusId(statusOpt)
-        if (statusOpt.isDefined && !statusId.isDefined) {
+        if (State.isSystemState(state)) {
+          Left(RequestDataHolder.error409(systemName))
+        } else if (statusOpt.isDefined && !statusId.isDefined) {
           Left(RequestDataHolder.error400(invalidStatus))
         } else {
           validateName(nameOpt)
