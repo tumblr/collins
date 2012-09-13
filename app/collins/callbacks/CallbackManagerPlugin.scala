@@ -2,7 +2,6 @@ package collins
 package callbacks
 
 import action.Action
-import action.handler.CallbackActionHandler
 
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
 import java.util.concurrent.Executors
@@ -47,8 +46,8 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
     val matchCondition = descriptor.matchCondition
     val currentConfigMatches = CallbackMatcher(matchCondition.current, _.getNewValue)
     val previousConfigMatches = CallbackMatcher(matchCondition.previous, _.getOldValue)
-    val handlesMatch = Action.getExecutor(descriptor.matchAction)
-    on(eventName, new CallbackActionHandler {
+    val handlesMatch = Action.getExecutor(descriptor.matchAction.get)
+    on(eventName, new CallbackHandler {
       override def apply(pce: PropertyChangeEvent) {
         if (previousConfigMatches(pce) && currentConfigMatches(pce)) {
           handlesMatch(pce)

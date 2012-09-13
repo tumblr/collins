@@ -2,4 +2,4 @@ package collins
 package script
 
 
-trait CollinScript
+abstract class CollinScript

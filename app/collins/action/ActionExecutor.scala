@@ -1,8 +1,13 @@
 package collins
 package action
 
+import callbacks.CallbackHandler
+import models.asset.AssetView
+import models.Page
+
 import java.beans.PropertyChangeEvent
 import play.api.Logger
+import scala.collection.mutable.ListBuffer
 import scala.collection.SeqProxy
 
 
@@ -20,7 +25,7 @@ case class FormattedValues(_stringSeq: Seq[String]) extends SeqProxy[String] {
  * of object which stores the command to execute, such as Seq[String], while R
  * should be the type of result returned by executing the command.
  */
-trait ActionExecutor {
+trait ActionExecutor extends CallbackHandler {
 
   protected val logger = Logger("ActionExecutor") 
 
@@ -40,9 +45,14 @@ trait ActionExecutor {
    */
   def commandString = command.mkString(" ")
 
-  def apply(pce: PropertyChangeEvent): Unit = {
-    throw new ActionExecutorException("apply(onObj) is undefined!")
-  }
+  /**
+   * Executes the command specified by this Collins action, returning an AnyRef,
+   * typically overridden in an ActionExecutor subclass.
+   *
+   * @param cmd a command of the specified type
+   * @return the result from running the command as a String.
+   */
+  protected def runCommand(cmd: AnyRef*): AnyRef
 
   /**
    * Executes the command specified by this Collins action, returning a String,
@@ -51,9 +61,7 @@ trait ActionExecutor {
    * @param cmd a command of the specified type
    * @return the result from running the command as a String.
    */
-  protected def runCommandString(cmd: FormattedValues): String = {
-    throw new ActionExecutorException("runCommandString(cmd) is undefined!")
-  }
+  protected def runCommandString(cmd: FormattedValues): String
 
   /**
    * Executes the command specified by this Collins action, returning a
@@ -62,8 +70,46 @@ trait ActionExecutor {
    * @param cmd a command of the specified type
    * @return the result from running the command as a Boolean.
    */
-  protected def runCommandBoolean(cmd: FormattedValues): Boolean = {
-    throw new ActionExecutorException("runCommandBoolean(cmd) is undefined!")
+  protected def runCommandBoolean(cmd: FormattedValues): Boolean
+
+  // TODO(steve): take these out of ActionExecutor and put into Handler traits.
+  override def apply(pce: PropertyChangeEvent): Unit = {
+    val value = getValue(pce.asInstanceOf[PropertyChangeEvent])
+    if (value == null) {
+      logger.warn("Got no value back to use with command %s"
+          .format(commandString))
+    }
+    runCommandBoolean(templateCommand(value))
+  }
+
+  def checkAssetAction(asset: AssetView): Boolean = {
+    runCommand(buildCommandWithObject(asset): _*).asInstanceOf[Boolean]
+  }
+
+  def checkAssetsAction(assets: Page[AssetView]): Boolean = {
+    runCommand(buildCommandWithObject(assets): _*).asInstanceOf[Boolean]
+  }
+
+  def executeAssetAction(asset: AssetView): String = {
+    val retVal = runCommand(buildCommandWithObject(asset) : _*)
+    if (retVal == None) {
+      return ""
+    } else {
+      retVal.asInstanceOf[String]
+    }
+  }
+
+  def formatValue(value: AnyRef): String = {
+    runCommand(buildCommandWithObject(value): _*).asInstanceOf[String]
+  }
+
+  protected def buildCommandWithObject(withObj: AnyRef): Seq[AnyRef] = {
+    val templatedCommand = templateCommand(withObj)
+    var commandWithValue = new ListBuffer[AnyRef]()
+    commandWithValue += templatedCommand(0)
+    commandWithValue += withObj
+    commandWithValue += templatedCommand.slice(1, command.length - 1)
+    commandWithValue
   }
 
   /**
@@ -76,24 +122,7 @@ trait ActionExecutor {
    * the command
    * @return a command suitable for execution.
    */
-   protected def templateCommand(v: AnyRef,
-      replacements: Set[MethodReplacement]): Seq[String] = {
-     command.map { cmd =>
-       replacements.foldLeft(cmd) { case(string, replacement) =>
-          string.replaceAllLiterally(replacement.originalValue,
-              replacement.newValue)
-       }
-     }
-   }
-
-  /**
-   * Runs all user-specified method replacements against the supplied value
-   * object, returning a command suitable for execution.
-   *
-   * @param value the value to apply method replacements against.
-   * @return a command suitable for execution.
-   */
-  protected def getTemplatedCommand(value: AnyRef): FormattedValues = {
+  protected def templateCommand(value: AnyRef): FormattedValues = {
     val replacements = getMethodReplacements()
     logger.debug("Got replacements for command %s: %s".format(commandString,
       replacements.map(_.toString).mkString(", ")
@@ -102,7 +131,12 @@ trait ActionExecutor {
     logger.debug("Got replacements (with values) for command %s: %s".format(commandString,
       replacementsWithValues.map(_.toString).mkString(", ")
     ))
-    val cmdValue = templateCommand(value, replacementsWithValues)
+    val cmdValue = command.map { cmd =>
+      replacementsWithValues.foldLeft(cmd) { case(string, replacement) =>
+         string.replaceAllLiterally(replacement.originalValue,
+             replacement.newValue)
+      }
+    }
     logger.debug("Got new command with replacements: %s".format(cmdValue))
     FormattedValues(cmdValue)
   }

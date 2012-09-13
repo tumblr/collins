@@ -17,13 +17,8 @@ case class CallbackDescriptor(name: String, override val source: TypesafeConfigu
 
   def on = getString("on")(ConfigValue.Required).get
   def matchCondition = CallbackConditional(previous.get("state"), current.get("state"))
-  def matchAction: ActionConfig = {
-    val cfg = getConfig("action")
-    if (cfg.isEmpty) {
-      throw CallbackConfigException("action", name)
-    }
-    ActionConfig(cfg)
-  }
+  def matchAction: Option[ActionConfig] = ActionConfig.getActionConfig(
+      getConfig("action"))
 
   def validateConfig() {
     logger.debug("validateConfig - event - %s".format(getString("on","NONE")))

@@ -1,7 +1,7 @@
 @(assets: Page[models.asset.AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.views.{ListHelper, Formatter, Pagination}
+@import _root_.util.views.{ListHelper, Formatter, Pagination, TagDecorator}
 @import util.notice
 
 @link(newPage: Int) = @{
@@ -29,32 +29,20 @@
     <table class="table table-bordered table-hover @(if(clientSort) "sortable" else "")" data-size="50">
       <thead>
         <tr>
-          <th>Asset Tag</th>
-          @if(ListHelper.showHostname(assets)) {
-          <th>Hostname</th>
-          }
-	        <th>Primary Role</th>
-          <th>Status</th>
-          <th>Created</th>
-          <th>Last Updated</th>
-          @if(ListHelper.showSoftLayerLink(assets)) {
-          <th>SL Link</th>
+          @ListHelper.getListHeaderTags.map { tag =>
+            @if(ListHelper.showColumnForTag(tag, assets)) {
+              <th>@ListHelper.getColumnHeader(tag)</th>              
+            }
           }
         </tr>
       </thead>
       <tbody>
         @assets.items.map { asset =>
-        <tr class="@rowClassFromAsset(asset)">
-          <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
-          @if(ListHelper.showHostname(assets)) {
-          <td>@asset.getHostnameMetaValue.map(v => Formatter.ellipsis(v)).getOrElse { <em>Unknown</em> }</td>
-          }
-	  <td>@asset.getPrimaryRoleMetaValue().getOrElse { <em>Unknown</em> }</td>
-	  <td>@Formatter.ellipsis(asset.getStatusName(), 12)</td>
-          <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
-          <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
-          @if(ListHelper.showSoftLayerLink(assets)) {
-            @slLink(asset)
+        <tr>
+          @ListHelper.getListHeaderTags.map { tag =>
+            @if(ListHelper.showColumnForTag(tag, assets)) {
+              <td>@TagDecorator.decorate(tag, asset)</td>
+            }
           }
         </tr>
         }

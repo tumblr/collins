@@ -2,13 +2,9 @@ package collins
 package action
 package executor
 
-import action.handler.CallbackActionHandler
-import action.handler.AssetActionHandler
 import shell.{Command, CommandResult}
 
 import play.api.Logger
-import scala.collection.mutable.StringBuilder
-import scala.sys.process._
 
 
 /**
@@ -16,21 +12,23 @@ import scala.sys.process._
  *
  * @param command the command to execute via system call.
  */
-case class ExecActionExecutor(override val command: Seq[String])
-  extends ActionExecutor with AssetActionHandler with CallbackActionHandler {
+case class ExecActionExecutor(override val command: Seq[String]) extends ActionExecutor {
 
   override protected val logger = Logger("ExecActionExecutor")
 
   override protected def runCommandString(cmd: FormattedValues): String = {
-    runCommand(cmd).stdout
+    Command(cmd, logger).run().stdout
   }
 
   override protected def runCommandBoolean(cmd: FormattedValues): Boolean = {
-    runCommand(cmd).exitCode == 0
+    Command(cmd, logger).run().exitCode == 0
   }
 
-  protected def runCommand(cmd: FormattedValues): CommandResult = {
-    Command(cmd, logger).run()
+  override protected def runCommand(cmd: AnyRef*): AnyRef = {
+    val stringCommand: Seq[String] = cmd.map{ cmdPart =>
+      cmdPart.toString
+    }
+    Command(stringCommand, logger).run()
   }
 
 }

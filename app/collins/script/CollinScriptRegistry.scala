@@ -22,21 +22,22 @@ case class CollinScriptCompileException(script: String, msg: String)
  * A trait which provides for compiling and executing arbitrary Scala scripts,
  * providing access to the Collins namespace at runtime.
  */
-sealed trait ScriptEngine {
+sealed trait CollinScriptEngine {
 
-  val enabled = CollinScriptConfig.enabled
+  protected val logger = Logger("ScriptEngine")
+
   val compileClasspath = getAppClasspath
   val outputDir = new File(System.getProperty("java.io.tmpdir"),
       "collinscript-classes")
   val runtimeClasspath = getAppClasspath
   val sourceDir = new File(CollinScriptConfig.scriptDir)
 
-  val engine = new ScalaScriptEngine(Config(
-      Set(sourceDir), compileClasspath, runtimeClasspath,
-      outputDir)) with FromClasspathFirst {
+  var enabled = CollinScriptConfig.enabled
+  val engine = new ScalaScriptEngine(
+      Config(Set(sourceDir), compileClasspath, runtimeClasspath, outputDir))
+      with FromClasspathFirst {
         val recheckEveryMillis: Long = CollinScriptConfig.refreshPeriod
       }
-  engine.refresh
 
   /**
    * Calls a CollinScript method specified on an Object as a string,
@@ -48,29 +49,41 @@ sealed trait ScriptEngine {
    * @return the results of the method call.
    */
   def callMethod(method: String, args: AnyRef*): AnyRef = {
+    logger.debug("CollinScript method call: %s, args: %s".format(method,
+        args.mkString(", ")))
     if (!enabled) {
       Logger.logger.warn("CollinScript is not enabled but callMethod(%s) called."
           .format(method))
       return None
     }
-    // Refreshes changed code, catches and logs compilation errors,
-    // defaulting to latest successfully-compiled code version if this is so.
-    try {
-      engine.refresh
-    } catch {
-      case e => {
-        Logger.logger.error("CollinScript compilation error:\n%s"
-            .format(e.getTraceAsString))
-      }
-    }
+    tryRefresh
     // Derives argument classes and calls method on the specified Object.
     val parameterClasses = args.map{ arg => arg.getClass }
     val methodSplit = method.split("\\.")
     val objectClass = methodSplit.slice(0, methodSplit.length - 1)
       .mkString(".")
     val classMethod = methodSplit(methodSplit.length - 1)
-    engine.get[AnyRef](objectClass).getMethod(classMethod,
-        parameterClasses : _*).invoke(this, args : _*)
+    try {
+      engine.get[AnyRef](objectClass).getMethods.foreach{ meth =>
+        logger.debug("METHOD NAME: %s".format(meth.getName))
+        logger.debug("PARAMS: %s".format(meth.getTypeParameters.map{param => param.getName}.toSet))
+      }
+      val retVal = engine.get[AnyRef](objectClass).getMethod(classMethod,
+          parameterClasses : _*).invoke(this, args : _*)
+      if (retVal != None) {
+        logger.debug("CollinScript return value: %s".format(retVal.toString))
+      } else {
+        logger.debug("CollinScript returned None.")
+      }
+      retVal
+    } catch {
+      case e => {
+        logger.error("COLLINSCRIPT EXECUTION ERROR:\n%s".format(
+            e.getTraceAsString))
+        None
+      }
+    }
+
   }
 
   /**
@@ -84,14 +97,33 @@ sealed trait ScriptEngine {
       .map{ url => new File(url.getPath) }.toSet
   }
 
+  /**
+   * Attempts to refresh code that has been changed on the filesystem,
+   * defaulting to the latest successfully-compiled code version if an error
+   * occurs.
+   */
+  protected def tryRefresh: Unit = {
+    try {
+      logger.debug("Refreshing CollinScript engine...")
+      engine.refresh
+    } catch {
+      case e => {
+        Logger.logger.error("COLLINSCRIPT COMPILATION ERROR:\n%s"
+            .format(e.getTraceAsString))
+        return
+      }
+    }
+  }
+
 }
 
 
-object CollinScriptRegistry extends ScriptEngine {
+object CollinScriptRegistry extends CollinScriptEngine {
 
   def initializeAll(app: Application): Unit = {
     outputDir.mkdir
     engine.deleteAllClassesInOutputDirectory
+    tryRefresh
   }
 
   def shutdown = {

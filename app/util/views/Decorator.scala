@@ -1,7 +1,8 @@
 package util
 package views
 
-import collins.script.CollinScriptRegistry
+import collins.action.Action
+import models.asset.AssetView
 import models.MetaWrapper
 
 import play.api.mvc.Content
@@ -13,6 +14,9 @@ case class DecoratorConfigException(source: String, key: String)
 
 case class Decorator(config: DecoratorConfig, parser: DecoratorParser) {
   def format(key: String, value: String): String = {
+    if (value.isEmpty) {
+      return config.default
+    }
     parser.parse(value).zipWithIndex.map { case(v, i) =>
       newString(key, v, i)
     }.mkString(config.between)
@@ -23,6 +27,26 @@ case class Decorator(config: DecoratorConfig, parser: DecoratorParser) {
         newString(key, v, i)
       }.mkString(config.between)
     }.mkString(config.between)
+  }
+  def format(tag: String, asset: AssetView): String = {
+    val tagValue = config.decoratorAction match {
+      case None => format(tag,
+          ListHelper.getTagValueForAsset(tag, asset).toString)
+      case Some(actionCfg) => {
+        val executor = Action.getExecutor(actionCfg)
+        executor.executeAssetAction(asset)
+      }
+    }
+    if (tagValue.isEmpty) {
+      return config.default
+    }
+    config.formatterAction match {
+      case None => tagValue
+      case Some(formatActionCfg) => {
+        val executor = Action.getExecutor(formatActionCfg)
+        executor.formatValue(tagValue)
+      }
+    }
   }
   def format(meta: MetaWrapper): String = {
     parser.parse(meta.getValue).zipWithIndex.map { case(v, i) =>

@@ -47,3 +47,16 @@ case class ActionConfig(override val source: TypesafeConfiguration)
   }
 
 }
+
+
+object ActionConfig {
+
+  def getActionConfig(cfg: TypesafeConfiguration): Option[ActionConfig] = {
+    if (!cfg.isEmpty) {
+      Some(ActionConfig(cfg))
+    } else {
+      None
+    }
+  }
+
+}
