@@ -68,23 +68,10 @@ case class UpdateAction(
         } else {
           validateName(nameOpt)
             .right.map { validatedNameOpt =>
-              val named = validatedNameOpt match {
-                case Some(s) => state.copy(name = s)
-                case None => state
-              }
-              val stati = statusId match {
-                case Some(id) => named.copy(status = id)
-                case None => named
-              }
-              val labeled = labelOpt match {
-                case Some(label) => stati.copy(label = label)
-                case None => stati
-              }
-              val described = descriptionOpt match {
-                case Some(description) => labeled.copy(description = description)
-                case None => labeled
-              }
-              ActionDataHolder(described)
+              val named = stateWithName(state, validatedNameOpt)
+              val stated = stateWithStatus(named, statusId)
+              val labeled = stateWithLabel(stated, labelOpt)
+              ActionDataHolder(stateWithDescription(labeled, descriptionOpt))
             }
         }
       }.getOrElse {
@@ -107,6 +94,15 @@ case class UpdateAction(
     case e if e.error("status").isDefined => invalidStatus
     case n => fuck
   }
+
+  protected def stateWithName(state: State, name: Option[String]): State =
+    name.map(s => state.copy(name = s)).getOrElse(state)
+  protected def stateWithStatus(state: State, status: Option[Int]): State =
+    status.map(id => state.copy(status = id)).getOrElse(state)
+  protected def stateWithLabel(state: State, label: Option[String]): State =
+    label.map(l => state.copy(label = l)).getOrElse(state)
+  protected def stateWithDescription(state: State, desc: Option[String]): State =
+    desc.map(d => state.copy(description = d)).getOrElse(state)
 
   protected def validateName(nameOpt: Option[String]): Either[RequestDataHolder,Option[String]] = {
     val validatedName: Either[String,Option[String]] = nameOpt match {
