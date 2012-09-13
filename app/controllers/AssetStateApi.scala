@@ -1,6 +1,6 @@
 package controllers
 
-import actions.state.{CreateAction, DeleteAction, GetAction}
+import actions.state.{CreateAction, DeleteAction, GetAction, UpdateAction}
 
 trait AssetStateApi {
   this: Api with SecureController =>
@@ -12,5 +12,11 @@ trait AssetStateApi {
     DeleteAction(name, Permissions.AssetStateApi.Delete, this)
 
   def getState(name: String) =
-    GetAction(name, Permissions.AssetStateApi.Get, this)
+    GetAction(Some(name), Permissions.AssetStateApi.Get, this)
+
+  def getStates() =
+    GetAction(None, Permissions.AssetStateApi.Get, this)
+
+  def updateState(name: String) =
+    UpdateAction(name, Permissions.AssetStateApi.Update, this)
 }

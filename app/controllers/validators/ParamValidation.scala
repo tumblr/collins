@@ -12,7 +12,7 @@ trait ParamValidation {
       case Some(v) => v.length >= minLen && v.length <= maxLen
     }
   }
-  protected def validatedOptionalText(len: Int) = optional(
-    validatedText(len)
+  protected def validatedOptionalText(minLen: Int, maxLen: Int = Int.MaxValue) = optional(
+    validatedText(minLen, maxLen)
   )
 }

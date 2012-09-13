@@ -76,10 +76,10 @@ GET     /api/assets/search          app.Api.search(query: String, page: Int ?=0,
 GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
 
 PUT     /api/state/:name            app.Api.createState(name: String)
-#POST    /api/state/:name            app.Api.updateState(name: String)
+POST    /api/state/:name            app.Api.updateState(name: String)
 DELETE  /api/state/:name            app.Api.deleteState(name: String)
 GET     /api/state/:name            app.Api.getState(name: String)
-#GET     /api/states                 app.Api.getStates
+GET     /api/states                 app.Api.getStates
 
 GET     /api/tags                   app.Api.getTags
 GET     /api/tag/:tag               app.Api.getTagValues(tag: String)
