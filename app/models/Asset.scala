@@ -353,38 +353,18 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int], state: Option[State] = None) = inTransaction {
     val oldAsset = Asset.findById(asset.id).get
-    val res = if (updated.isDefined && status.isDefined && state.isDefined) {
-      logger.info("Got update for all states")
-      tableDef.update (a =>
-        where(a.id === asset.id)
-        set(a.updated := updated, a.status := status.get, a.state := state.get.id)
-      )
-    } else if (updated.isDefined) {
-      tableDef.update (a =>
-        where(a.id === asset.id)
-        set(a.updated := updated)
-      )
-    } else if (status.isDefined) {
-      tableDef.update (a =>
-        where(a.id === asset.id)
-        set(a.status := status.get)
-      )
-    } else if (state.isDefined) {
-      tableDef.update (a =>
-        where(a.id === asset.id)
-        set(a.status := state.get.id)
-      )
-    } else {
-      throw new Exception("Invalid usage of partialUpdate")
-    }
-    loggedInvalidation("partialUpdate", asset)
+    val assetWUpdate = updated.map(u => oldAsset.copy(updated = Some(u))).getOrElse(oldAsset)
+    val assetWStatus = status.map(s => assetWUpdate.copy(status = s)).getOrElse(assetWUpdate)
+    val assetWState = state.map(s => assetWStatus.copy(state = s.id)).getOrElse(assetWStatus)
+    val res = Asset.update(assetWState)
+    Asset.flushCache(asset)
     val newAsset = Asset.findById(asset.id).get
     updateEventName.foreach { name =>
       oldAsset.forComparison
       newAsset.forComparison
       util.plugins.Callback.fire(name, oldAsset, newAsset)
     }
-    loggedInvalidation("partialUpdate", asset)
+    Asset.flushCache(asset)
     res
   }
 

@@ -171,6 +171,7 @@ module CollinsShell
     use_tag_option
     use_selector_option
     method_option :reason, :type => :string, :required => true, :desc => 'Reason for changing status'
+    method_option :state, :type => :string, :required => false, :desc => 'Set state of asset as well'
     def set_status status
       batch_selector_operation Hash[
         :remote => options.remote,
@@ -181,7 +182,7 @@ module CollinsShell
           "You are about to set status to #{status} on #{assets.length} hosts. ARE YOU SURE?"
         end
       ] do |client,asset|
-        client.set_status!(asset, status, options.reason)
+        client.set_status!(asset, status, options.reason, options.state)
       end
     end
 

@@ -2,7 +2,7 @@ package controllers
 package actions
 package asset
 
-import models.{AssetLifecycle, Status => AStatus}
+import models.{AssetLifecycle, Status => AStatus, State}
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
 import util.MessageHelperI
 import util.power.PowerUnits
@@ -40,7 +40,7 @@ case class UpdateAction(
 
     def onlyStatus: Boolean = contains("status") match {
       case true =>
-        size == 1 || (size == 2 && contains("reason"))
+        size == 1 || (size == 2 && contains("reason")) || (size == 3 && contains("reason") && contains("state"))
       case false => false
     }
   }
@@ -62,7 +62,9 @@ case class UpdateAction(
     ChassisTag.toString -> validatedOptionalText(1),
     RackPosition.toString -> validatedOptionalText(1),
     "status" -> optional(of[AStatus.Enum]),
-    "groupId" -> optional(longNumber)
+    "groupId" -> optional(longNumber),
+    "state" -> optional(of[State]),
+    "reason" -> validatedOptionalText(1)
   ))
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
@@ -73,7 +75,7 @@ case class UpdateAction(
         success => {
           // drop in attributes first, these have the lowest priority
           val results = new HashMap[String,String]() ++ getAttributeMap
-          val (lshw, lldp, chassisTag, rackPosition, status, groupId) = success
+          val (lshw, lldp, chassisTag, rackPosition, status, groupId, state, reason) = success
           // all 'known' parameters now, overwrite attributes possibly
           if (lshw.isDefined) results("lshw") = lshw.get
           if (lldp.isDefined) results("lldp") = lldp.get
@@ -81,6 +83,8 @@ case class UpdateAction(
           if (rackPosition.isDefined) results(RackPosition.toString) = rackPosition.get
           if (status.isDefined) results("status") = status.get.toString
           if (groupId.isDefined) results("groupId") = groupId.get.toString
+          state.foreach(s => results("state") = s.name)
+          reason.foreach(r => results("reason") = r)
           // powerMap has dynamic keys based on configuration
           val powerMap = PowerUnits.unitMapFromMap(getInputMap)
           // FIXME we should merge the power map with existing power values and rerun power validation
@@ -118,6 +122,7 @@ case class UpdateAction(
     case e if e.error(ChassisTag.toString).isDefined => message("chassisTag.invalid")
     case e if e.error(RackPosition.toString).isDefined => message("rackPosition.invalid")
     case e if e.error("status").isDefined => rootMessage("asset.status.invalid")
+    case e if e.error("state").isDefined => message("asset.state.invalid")
     case e if e.error("groupId").isDefined => message("groupId.invalid")
     case n => "Unexpected error occurred"
   }

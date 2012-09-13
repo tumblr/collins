@@ -24,11 +24,12 @@ module Collins; module Api
         parse_response response, :expects => 200, :as => :status, :raise => strict?, :default => false
       end
     end
-    def set_status! asset_or_tag, status, reason = nil
+    def set_status! asset_or_tag, status, reason = nil, state = nil
       asset = get_asset_or_tag asset_or_tag
       parameters = {
         :status => status,
-        :reason => reason
+        :reason => reason,
+        :state => state
       }
       parameters = select_non_empty_parameters parameters
       logger.debug("Setting status to #{status} on #{asset.tag}")

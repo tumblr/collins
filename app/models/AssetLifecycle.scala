@@ -120,7 +120,9 @@ object AssetLifecycle {
   protected def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String]): Status[Boolean] = {
     allCatch[Boolean].either {
       val groupId = options.get("groupId").map(_.toInt)
-      val opts = options - "groupId"
+      val state = options.get("state").flatMap(s => State.findByName(s))
+      val status = options.get("status").flatMap(s => AStatus.findByName(s)).map(_.id)
+      val opts = options - "state" - "groupId" - "status"
       logger.debug(restricted.toString)
       if (!asset.isConfiguration) {
         opts.find(kv => restricted(kv._1)).map(kv =>
@@ -129,7 +131,7 @@ object AssetLifecycle {
       }
       Asset.inTransaction {
         MetaWrapper.createMeta(asset, opts, groupId)
-        Asset.partialUpdate(asset, Some(new Date().asTimestamp), None)
+        Asset.partialUpdate(asset, Some(new Date().asTimestamp), status, state)
         true
       }
     }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
@@ -143,7 +145,7 @@ object AssetLifecycle {
     val state = options.get("state").flatMap(s => State.findByName(s))
     allCatch[Boolean].either {
       val status = AStatus.Enum.withName(stat)
-      if (status.id == asset.status) {
+      if (status.id == asset.status && Option(asset.state) == state.map(_.id)) {
         logger.debug("Old status %d is same as new, returning".format(status.id))
         return Right(true)
       }
