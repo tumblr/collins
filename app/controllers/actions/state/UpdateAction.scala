@@ -33,9 +33,8 @@ import play.api.data.Forms._
  * }}}
  * @curlexample {{{
  *  curl -v -u blake:admin:first --basic \
- *    -d label='Test Label' \
- *    -d description='This is for testing' \
- *    http://localhost:9000/api/state/TESTING
+ *    -d name='NEW_NAME' \
+ *    http://localhost:9000/api/state/OLD_NAME
  * }}}
  */
 case class UpdateAction(
