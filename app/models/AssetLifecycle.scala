@@ -46,10 +46,10 @@ object AssetLifecycle {
   type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
   type Status[T] = Either[Throwable,T]
 
-  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum]): Status[AssetIpmi] = {
+  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[AStatus]): Status[AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
-      val _status = status.getOrElse(Status.Enum.Incomplete)
+      val _status = status.getOrElse(Status.Incomplete.get)
       val res = Asset.inTransaction {
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
@@ -182,7 +182,7 @@ object AssetLifecycle {
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
 
-    val res = allCatch[Boolean].either {
+    allCatch[Boolean].either {
       val values = Seq(AssetMetaValue(asset, RackPosition, rackpos)) ++
                    PowerUnits.toMetaValues(units, asset, options)
       val unallocatedAsset = Asset.inTransaction {
@@ -196,8 +196,7 @@ object AssetLifecycle {
       }
       ApiTattler.informational(unallocatedAsset, None, "Intake now complete, asset Unallocated")
       true
-    }
-    res.left.map(e => handleException(asset, "Exception updating asset", e))
+    }.left.map(e => handleException(asset, "Exception updating asset", e))
   }
 
   protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {

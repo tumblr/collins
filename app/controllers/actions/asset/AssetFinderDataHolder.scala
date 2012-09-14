@@ -6,9 +6,8 @@ import validators.StringUtil
 
 import forms._
 
-import models.{AssetFinder, State, Truthy}
+import models.{AssetFinder, State, Status => AssetStatus, Truthy}
 import models.AssetType.{Enum => AssetTypeEnum}
-import models.Status.{Enum => AssetStatusEnum}
 
 import util.{AttributeResolver, MessageHelper}
 import util.AttributeResolver.{ResultTuple => ResolvedAttributes}
@@ -39,7 +38,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     Option[String],           // tag
     Option[List[String]],     // attribute
     Option[String],           // operation
-    Option[AssetStatusEnum],  // asset status
+    Option[AssetStatus],      // asset status
     Option[AssetTypeEnum],    // asset type
     Option[Truthy],           // details
     Option[Date],             // createdAfter
@@ -62,7 +61,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     "operation" -> optional(
       text(2).verifying { txt => isValidOperation(txt) }
     ),
-    "status" -> optional(of[AssetStatusEnum]),
+    "status" -> optional(of[AssetStatus]),
     "type" -> optional(of[AssetTypeEnum]),
     "details" -> optional(of[Truthy]),
     "createdAfter" -> optional(date(ISO_8601_FORMAT)),

@@ -61,7 +61,7 @@ case class UpdateAction(
     "lldp" -> validatedOptionalText(1),
     ChassisTag.toString -> validatedOptionalText(1),
     RackPosition.toString -> validatedOptionalText(1),
-    "status" -> optional(of[AStatus.Enum]),
+    "status" -> optional(of[AStatus]),
     "groupId" -> optional(longNumber),
     "state" -> optional(of[State]),
     "reason" -> validatedOptionalText(1)
@@ -81,7 +81,7 @@ case class UpdateAction(
           if (lldp.isDefined) results("lldp") = lldp.get
           if (chassisTag.isDefined) results(ChassisTag.toString) = chassisTag.get
           if (rackPosition.isDefined) results(RackPosition.toString) = rackPosition.get
-          if (status.isDefined) results("status") = status.get.toString
+          status.foreach { stat => results("status") = stat.name }
           if (groupId.isDefined) results("groupId") = groupId.get.toString
           state.foreach(s => results("state") = s.name)
           reason.foreach(r => results("reason") = r)
