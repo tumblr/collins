@@ -3,12 +3,14 @@ package callbacks
 
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
 import play.api.{Application, Configuration, Logger, Plugin}
-import com.twitter.util.{Future, FuturePool}
-import java.util.concurrent.Executors
+import play.api.Play.current
+import play.api.libs.concurrent._
+import akka.actor.Props
 
-class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManager {
-  protected[this] val executor = Executors.newCachedThreadPool()
-  protected[this] val pool = FuturePool(executor)
+class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackManager {
+
+  //this must be lazy so it gets called after the system exists
+  override lazy val changeQueue = Akka.system.actorOf(Props(CallbackMessageQueue(pcs)), name = "change_queue_processor")
 
   override def enabled: Boolean = {
     CallbackConfig.pluginInitialize(app.configuration)
@@ -25,9 +27,6 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
   // overrides Plugin.onStop
   override def onStop() {
     removeListeners()
-    try executor.shutdown() catch {
-      case _ => // swallow this
-    }
   }
 
   override protected def loadListeners(): Unit = {

@@ -334,29 +334,14 @@ object Asset extends Schema with AnormAdapter[Asset] {
     count
   }
 
-  def setState(asset: Asset, state: State): Int = inTransaction {
-    val oldAsset = Asset.findById(asset.id).get
-    val res = tableDef.update(a =>
-      where(a.id === asset.id)
-      set(a.state := state.id)
-    )
-    loggedInvalidation("setState", asset)
-    val newAsset = Asset.findById(asset.id).get
-    updateEventName.foreach { name =>
-      oldAsset.forComparison
-      newAsset.forComparison
-      util.plugins.Callback.fire(name, oldAsset, newAsset)
-    }
-    loggedInvalidation("setState", asset)
-    res
-  }
-
-  def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int], state: Option[State] = None) = inTransaction {
+  def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int], state: Option[State] = None) = {
     val oldAsset = Asset.findById(asset.id).get
     val assetWUpdate = updated.map(u => oldAsset.copy(updated = Some(u))).getOrElse(oldAsset)
     val assetWStatus = status.map(s => assetWUpdate.copy(status = s)).getOrElse(assetWUpdate)
     val assetWState = state.map(s => assetWStatus.copy(state = s.id)).getOrElse(assetWStatus)
-    val res = Asset.update(assetWState)
+    val res = inTransaction {
+      Asset.update(assetWState)
+    }
     Asset.flushCache(asset)
     val newAsset = Asset.findById(asset.id).get
     updateEventName.foreach { name =>
