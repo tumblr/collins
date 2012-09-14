@@ -1,18 +1,17 @@
 
 require 'collins_client'
+require 'lib/collins_integration'
 
 describe "Asset Update and Search" do
 
   before :all do
-    config = {:username => "blake", :password => "admin:first", :host => "http://127.0.0.1:9000"}
-    @client = Collins::Client.new config
+    @integration = CollinsIntegration.new('default.yaml')
+    @client = @integration.getCollinsClient
   end
 
   it "should put an asset in maintenance mode" do
-    assets = @client.search 'tag = "001016"'
+    assets = @client.search 'tag = "001016" AND status= unallocated'
     assets.size.should eql 1
-    #the asset should be in allocated mode, but might not if a previous test failed
-    @client.set_status!(assets[0], "Allocated").should eql true
     @client.set_status!(assets[0], "Maintenance").should eql true
     sleep(0.2)
     assets = @client.search 'tag = "001016" AND status = maintenance'
@@ -21,19 +20,6 @@ describe "Asset Update and Search" do
     sleep(0.2)
     assets = @client.search 'tag = "001016" AND status = allocated'
     assets.size.should eql 1
-  end
-
-  it "should create and delete asset" do
-    newtag = "ceate_test_%s" % Random.rand(1000000)
-    @client.create!(newtag)
-    sleep(10)
-    assets = @client.search "tag = #{newtag}", 50
-    assets.size.should eql 1
-    @client.set_status!(newtag, "decommissioned").should eql true
-    sleep(1)
-    @client.delete!(newtag).should eql true
-    assets = @client.search "tag = #{newtag}", 50
-    assets.size.should eql 0
   end
 
 end

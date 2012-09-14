@@ -1,11 +1,12 @@
 
 require 'collins_client'
+require 'lib/collins_integration'
 
 describe "Asset Find" do
 
   before :all do
-    config = {:username => "blake", :password => "admin:first", :host => "http://127.0.0.1:9000"}
-    @client = Collins::Client.new config
+    @integration = CollinsIntegration.new('default.yaml')
+    @client = @integration.getCollinsClient
   end
 
   def checkQuery(params, expected_size)
