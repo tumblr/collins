@@ -1,3 +1,4 @@
+require 'collins/api/admin'
 require 'collins/api/asset'
 require 'collins/api/attributes'
 require 'collins/api/ip_address'
@@ -74,6 +75,7 @@ module Collins
       end
     end
 
+    include Collins::Api::Admin
     include Collins::Api::Asset
     include Collins::Api::Attributes
     include Collins::Api::IpAddress

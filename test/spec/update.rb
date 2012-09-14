@@ -6,7 +6,7 @@ describe "Asset Update and Search" do
 
   before :all do
     @integration = CollinsIntegration.new('default.yaml')
-    @client = @integration.getCollinsClient
+    @client = @integration.collinsClient
   end
 
   it "should put an asset in maintenance mode" do

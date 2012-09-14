@@ -44,6 +44,9 @@ GET   /solrsearch                   app.Resources.searchSolr(query: String, deta
 # Generic Functionality
 GET     /api/timestamp                       app.Api.timestamp
 
+# Admin API
+GET     /api/admin/solr                      app.Api.repopulateSolr(waitForCompletion: String ?= "true")
+
 # IP Address API
 GET     /api/address/pools                   app.Api.getAddressPools(all: String ?= "true")
 GET     /api/asset/:tag/addresses            app.Api.getForAsset(tag: String)
