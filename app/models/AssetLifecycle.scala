@@ -56,16 +56,15 @@ object AssetLifecycle {
           case true => Some(IpmiInfo.createForAsset(asset))
           case false => None
         }
-        InternalTattler.informational(asset, None,
-          "Initial intake successful, status now %s".format(_status.toString))
         Tuple2(asset, ipmi)
       }
+      InternalTattler.informational(res._1, None,
+        "Initial intake successful, status now %s".format(_status.toString))
       Asset.flushCache(res._1)
       Right(res)
     } catch {
       case e =>
-        // FIXME once we have logging for non-assets
-        logger.warn("Caught exception creating asset: %s".format(e.getMessage), e)
+        SystemTattler.safeError("Failed to create asset %s: %s".format(tag, e.getMessage))
         Left(e)
     }
   }
@@ -137,6 +136,17 @@ object AssetLifecycle {
     }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
   }
 
+  def updateAssetStatus(asset: Asset, status: Option[AStatus], state: Option[State], reason: String): Status[Boolean] = {
+    if (!Feature.sloppyStatus) {
+      return Left(new Exception("features.sloppyStatus is not enabled"))
+    }
+    allCatch[Boolean].either {
+      Asset.partialUpdate(asset, Some(new Date().asTimestamp), status.map(_.id), state)
+      ApiTattler.informational(asset, None, reason)
+      true
+    }.left.map(e => handleException(asset, "Error updating status/state for asset", e))
+  }
+
   def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     if (!Feature.sloppyStatus) {
         return Left(new Exception("sloppyStatus not enabled"))
@@ -152,11 +162,8 @@ object AssetLifecycle {
       val old = AStatus.Enum(asset.status).toString
       val defaultReason = "Asset state updated from %s to %s".format(old, stat)
       val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
-      Asset.inTransaction {
-        Asset.partialUpdate(asset, Some(new Date().asTimestamp), Some(status.id), state)
-        ApiTattler.informational(asset, None, reason)
-      }
-      Asset.flushCache(asset)
+      Asset.partialUpdate(asset, Some(new Date().asTimestamp), Some(status.id), state)
+      ApiTattler.informational(asset, None, reason)
       true
     }.left.map(e => handleException(asset, "Error updating status for asset", e))
   }
@@ -178,16 +185,17 @@ object AssetLifecycle {
     val res = allCatch[Boolean].either {
       val values = Seq(AssetMetaValue(asset, RackPosition, rackpos)) ++
                    PowerUnits.toMetaValues(units, asset, options)
-      Asset.inTransaction {
+      val unallocatedAsset = Asset.inTransaction {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
         val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
-        ApiTattler.informational(newAsset, None, "Intake now complete, asset Unallocated")
         Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.Starting)
-        true
+        newAsset
       }
+      ApiTattler.informational(unallocatedAsset, None, "Intake now complete, asset Unallocated")
+      true
     }
     res.left.map(e => handleException(asset, "Exception updating asset", e))
   }

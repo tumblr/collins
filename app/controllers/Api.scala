@@ -4,6 +4,7 @@ import actors._
 import models.Asset
 import util._
 import util.concurrent.BackgroundProcessor
+import util.plugins.Callback
 import util.views.Formatter.dateFormat
 
 import play.api._

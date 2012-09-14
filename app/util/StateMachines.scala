@@ -16,7 +16,9 @@ case class AssetStateMachine(asset: Asset) {
 
   def decommission(): Option[Asset] = Status.Enum(asset.status) match {
     case Cancelled | Decommissioned | Maintenance | Unallocated =>
-      val newAsset = asset.copy(status = Decommissioned.id, deleted = Some(new Date().asTimestamp))
+      val sid = State.Terminated.map(_.id).getOrElse(0)
+      // FIXME change to partial update
+      val newAsset = asset.copy(status = Decommissioned.id, deleted = Some(new Date().asTimestamp), state = sid)
       val res = Asset.update(newAsset) match {
         case 1 => Some(newAsset)
         case n => None
@@ -32,9 +34,6 @@ case class AssetStateMachine(asset: Asset) {
       } else if (Feature.deleteSomeMetaOnRepurpose.size > 0) {
         val deleteAttributes: Set[Long] = Feature.deleteSomeMetaOnRepurpose.map(_.id)
         AssetMetaValue.deleteByAssetAndMetaId(asset, deleteAttributes)
-      }
-      State.Terminated.foreach { state =>
-        Asset.setState(asset, state)
       }
       res
     case _ =>
