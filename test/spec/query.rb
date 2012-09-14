@@ -1,29 +1,29 @@
 #require 'spec_helper'
+gem 'collins_client', "=0.2.3"
 require 'collins_client'
 require 'lib/collins_integration'
 
 describe "Asset Search" do
 
   def checkTags query, expectedTags
-    assets = @client.search query, 500
+    assets = @client.search query, 50
     tags = assets.map {|a| a.tag}
     tags.should include(*expectedTags)
   end
 
   def checkSize query, expected_size
-    assets = @client.search query, 500
+    assets = @client.search query, 50
     assets.size.should eql expected_size
   end
     
   
   before :all do
-    config = {:username => "blake", :password => "admin:first", :host => "http://127.0.0.1:9000"}
-    @client = Collins::Client.new config
 
     #putting this here means the fixtures are loaded once for all tests.  This
     #is ok for now, but if we start doing writes we have to make this execute
     #before each test
-    @int = CollinsIntegration.new 'default.yaml'
+    @integration = CollinsIntegration.new 'default.yaml'
+    @client = @integration.getCollinsClient
   end
 
   it "simple tag query" do

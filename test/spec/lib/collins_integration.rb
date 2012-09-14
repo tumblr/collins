@@ -44,6 +44,10 @@ class CollinsIntegration
   def collinsRunning?
   end
 
+  def getCollinsClient
+    Collins::Client.new @config['collins_client']
+  end
+
   def checkDatabase
     current_sums = getChecksums
     ok = true
