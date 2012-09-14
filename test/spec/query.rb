@@ -23,7 +23,7 @@ describe "Asset Search" do
     #is ok for now, but if we start doing writes we have to make this execute
     #before each test
     @integration = CollinsIntegration.new 'default.yaml'
-    @client = @integration.getCollinsClient
+    @client = @integration.collinsClient
   end
 
   it "simple tag query" do

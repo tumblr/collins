@@ -4,7 +4,7 @@ require 'mysql2'
 # NOTE - this assumes that MySQL is running and that the collins_fixture
 # database exists and is accessable to the db user
 class CollinsIntegration
-  
+  attr_reader :collinsClient
 
   def initialize(config_path)
     if ! File.exists? config_path
@@ -29,6 +29,8 @@ class CollinsIntegration
       exit(1)
     end
 
+    @collinsClient = Collins::Client.new @config['collins_client']
+
     checkDatabase
   end
 
@@ -42,10 +44,6 @@ class CollinsIntegration
 
   #check that collins is running
   def collinsRunning?
-  end
-
-  def getCollinsClient
-    Collins::Client.new @config['collins_client']
   end
 
   def checkDatabase
@@ -100,6 +98,8 @@ class CollinsIntegration
       puts "Error with import: #{out}"
       exit(1)
     end
+
+    @collinsClient.repopulate_solr!
   end
 
   #helper method for generating configs
