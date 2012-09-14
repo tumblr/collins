@@ -7,16 +7,23 @@ import com.typesafe.config.ConfigValueType
 import play.api.Logger
 
 
-case class CallbackConditional(previous: Option[String], current: Option[String])
+case class MatchConditional(name: String, state: Option[String], states: List[String])
+
+
+case class CallbackConditional(previous: MatchConditional, current: MatchConditional)
 
 
 case class CallbackDescriptor(name: String, override val source: TypesafeConfiguration)
   extends ConfigAccessor with ConfigSource
 {
+
   private[this] val logger = Logger("CallbackDescriptor.%s".format(name))
 
   def on = getString("on")(ConfigValue.Required).get
-  def matchCondition = CallbackConditional(previous.get("state"), current.get("state"))
+  def matchCondition = CallbackConditional(
+    MatchConditional(name, previousState, previousStates),
+    MatchConditional(name, currentState, currentStates)
+  )
   def matchAction: Option[ActionConfig] = ActionConfig.getActionConfig(
       getConfig("action"))
 
@@ -29,7 +36,10 @@ case class CallbackDescriptor(name: String, override val source: TypesafeConfigu
     matchAction
   }
 
-  protected def current = getStringMap("when.current")
-  protected def previous = getStringMap("when.previous")
+  protected def currentState = getString("when.current.state")
+  protected def currentStates = getStringList("when.current.states")
+  protected def previousState = getString("when.previous.state")
+  protected def previousStates = getStringList("when.previous.states")
 
 }
+

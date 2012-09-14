@@ -23,7 +23,7 @@ jeweler = Jeweler::Tasks.new do |gem|
   gem.files.exclude "spec/**/*"
   gem.files.exclude '.gitignore'
   gem.files.exclude '.rspec'
-  gem.add_runtime_dependency 'collins_client',  '~> 0.2.1'
+  gem.add_runtime_dependency 'collins_client',  '~> 0.2.3'
   gem.add_runtime_dependency 'highline',        '~> 1.6.13'
   gem.add_runtime_dependency 'mustache',        '~> 0.99.4'
   gem.add_runtime_dependency 'pry',             '~> 0.9.9.6'

@@ -10,7 +10,8 @@ case class MockRemoteAsset(
   hostTag: String = "localhost", 
   json: JsObject = JsObject(Seq.empty),  
   remoteUrl: String = "http://localhost",
-  id: Long = 42L
+  id: Long = 42L,
+  state: Int = 0
 ) extends RemoteAsset { 
 
   import asset.conversions._

@@ -5,18 +5,22 @@
 
 Gem::Specification.new do |s|
   s.name = "collins_shell"
-  s.version = "0.2.11"
+  s.version = "0.2.12"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Blake Matheny"]
-  s.date = "2012-07-18"
+  s.date = "2012-09-12"
   s.description = "Provides basic CLI for interacting with Collins API"
   s.email = "bmatheny@tumblr.com"
   s.executables = ["collins-shell"]
+  s.extra_rdoc_files = [
+    "README.md"
+  ]
   s.files = [
     ".pryrc",
     ".rvmrc",
     "Gemfile",
+    "Gemfile.lock",
     "README.md",
     "Rakefile",
     "VERSION",
@@ -61,7 +65,7 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<collins_client>, ["~> 0.2.1"])
+      s.add_runtime_dependency(%q<collins_client>, ["~> 0.2.3"])
       s.add_runtime_dependency(%q<highline>, ["~> 1.6.13"])
       s.add_runtime_dependency(%q<mustache>, ["~> 0.99.4"])
       s.add_runtime_dependency(%q<pry>, ["~> 0.9.9.6"])
@@ -69,7 +73,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<terminal-table>, ["~> 1.4.5"])
       s.add_runtime_dependency(%q<thor>, ["~> 0.15.2"])
     else
-      s.add_dependency(%q<collins_client>, ["~> 0.2.1"])
+      s.add_dependency(%q<collins_client>, ["~> 0.2.3"])
       s.add_dependency(%q<highline>, ["~> 1.6.13"])
       s.add_dependency(%q<mustache>, ["~> 0.99.4"])
       s.add_dependency(%q<pry>, ["~> 0.9.9.6"])
@@ -78,7 +82,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<thor>, ["~> 0.15.2"])
     end
   else
-    s.add_dependency(%q<collins_client>, ["~> 0.2.1"])
+    s.add_dependency(%q<collins_client>, ["~> 0.2.3"])
     s.add_dependency(%q<highline>, ["~> 1.6.13"])
     s.add_dependency(%q<mustache>, ["~> 0.99.4"])
     s.add_dependency(%q<pry>, ["~> 0.9.9.6"])

@@ -2,7 +2,7 @@ package util
 
 import config.Feature
 
-import models.{Asset, AssetMeta, AssetMetaValue, IpAddresses, IpmiInfo, Status}
+import models.{Asset, AssetMeta, AssetMetaValue, IpAddresses, IpmiInfo, State, Status}
 import models.conversions._
 
 import java.util.Date
@@ -32,6 +32,9 @@ case class AssetStateMachine(asset: Asset) {
       } else if (Feature.deleteSomeMetaOnRepurpose.size > 0) {
         val deleteAttributes: Set[Long] = Feature.deleteSomeMetaOnRepurpose.map(_.id)
         AssetMetaValue.deleteByAssetAndMetaId(asset, deleteAttributes)
+      }
+      State.Terminated.foreach { state =>
+        Asset.setState(asset, state)
       }
       res
     case _ =>

@@ -9,6 +9,7 @@ abstract class RemoteAssetProxy(jsonAsset: JsValue) extends RemoteAsset {
 
   def id = asset.id
   def tag = asset.tag
+  def state = asset.state
   def status = asset.status
   def asset_type = asset.asset_type
   def created = asset.created
