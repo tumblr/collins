@@ -8,7 +8,10 @@ mysql:
   db_dump_gz: collins_fixtures.dump.gz
 collins_server:
   config: dan.conf
-collins_client_config: /home/dan/collins.yaml
+collins_client:
+  :host: http://127.0.0.1:9000
+  :username: blake
+  :password: admin:first
 checksums:
   asset: 3437715468
   asset_log: 344071939
