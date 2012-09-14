@@ -1,4 +1,5 @@
 require 'yaml'
+require 'mysql2'
 
 # NOTE - this assumes that MySQL is running and that the collins_fixture
 # database exists and is accessable to the db user
@@ -21,13 +22,14 @@ class CollinsIntegration
     @mysqlPass      = @config['mysql']['password']
     @database       = @config['mysql']['database']
 
-    @upString = "-u #{@mysqlUser}"
-    if @mysqlPass != nil
-      @upString += " -p#{@mysqlPass}"
+
+    @mysqlClient = Mysql2::Client.new(:host => "localhost", :username => @mysqlUser, :password => @mysqlPass, :database => @database)
+    if @mysqlClient == nil
+      puts "Error connecting to MySQL"
+      exit(1)
     end
 
-    reloadMySQL
-    getChecksums
+    checkDatabase
   end
 
   #starts up collins server
@@ -41,6 +43,23 @@ class CollinsIntegration
   #check that collins is running
   def collinsRunning?
   end
+
+  def checkDatabase
+    current_sums = getChecksums
+    ok = true
+    @config['checksums'].each do |key, expected|
+      if expected != current_sums[key]
+        ok = false
+      end
+    end
+    if !ok
+      puts "Detected dirty db, refreshing"
+      reloadMySQL
+    else
+      puts "db is clean :)"
+    end
+  end
+
 
   #loads the specified sql dump into database
   def reloadMySQL
@@ -66,29 +85,38 @@ class CollinsIntegration
         exit(1)
       end
     end
+
     puts "Importing #{dump_file} to database #{@database}"
-    out = system "cd #{d}; #{@mysqlCommand} #{@upString} #{@database} < #{dump_file}"
+    upString = "-u #{@mysqlUser}"
+    if @mysqlPass != nil
+      upString += " -p#{@mysqlPass}"
+    end
+    out = system "cd #{d}; #{@mysqlCommand} #{upString} #{@database} < #{dump_file}"
     if ! out
       puts "Error with import: #{out}"
       exit(1)
     end
   end
 
-  def verifyMySQL
-
-
+  #helper method for generating configs
+  def outputChecksums
+    puts "checksums:"
+    getChecksums.each do |k,v|
+      puts "  #{k}: #{v}"
+    end
   end
 
   #returns a hash of TABLE_NAME => checksum
   def getChecksums
-    tables = (runMysqlQuery "show tables").split("\n")
-    puts tables
-
-  end
-
-  def runMysqlQuery query
-    cmd = "#{@mysqlCommand} #{@upString} --column-names=FALSE --raw=TRUE #{@database} -e '#{query}'"
-    system cmd
+    checksums = {}
+    results = @mysqlClient.query("show tables;")
+    col = results.fields[0]
+    results.each do |row|
+      table = row[col]
+      r = @mysqlClient.query("CHECKSUM TABLE #{table}").first['Checksum']
+      checksums[table] = r
+    end
+    checksums
   end
 
 end
