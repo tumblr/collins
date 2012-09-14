@@ -162,6 +162,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
   def apply(tag: String, status: Status.Enum, asset_type: AssetType.Enum) = {
     new Asset(tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
   }
+  def apply(tag: String, status: Status, asset_type: AssetType) = {
+    new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
+  }
   def apply(tag: String, status: Status.Enum, asset_type: AssetType) = {
     new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
   }
@@ -339,9 +342,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     val assetWUpdate = updated.map(u => oldAsset.copy(updated = Some(u))).getOrElse(oldAsset)
     val assetWStatus = status.map(s => assetWUpdate.copy(status = s)).getOrElse(assetWUpdate)
     val assetWState = state.map(s => assetWStatus.copy(state = s.id)).getOrElse(assetWStatus)
-    val res = inTransaction {
-      Asset.update(assetWState)
-    }
+    val res = Asset.update(assetWState)
     Asset.flushCache(asset)
     val newAsset = Asset.findById(asset.id).get
     updateEventName.foreach { name =>

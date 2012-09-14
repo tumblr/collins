@@ -16,6 +16,11 @@ case class Status(name: String, description: String, id: Int = 0) extends Valida
 
 object Status extends Schema with AnormAdapter[Status] {
 
+  def Allocated = Status.findByName("Allocated")
+  def Incomplete = Status.findByName("Incomplete")
+  def Maintenance = Status.findByName("Maintenance")
+  def Unallocated = Status.findByName("Unallocated")
+
   implicit object StatusFormat extends Format[Status] {
     override def reads(json: JsValue) = Status(
       (json \ "NAME").as[String],

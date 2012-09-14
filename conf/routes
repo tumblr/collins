@@ -67,6 +67,7 @@ GET     /api/asset/:tag/power       app.Api.powerStatus(tag: String)
 POST    /api/provision/:tag         app.Api.provisionAsset(tag: String)
 GET     /api/provision/profiles     app.Api.getProvisioningProfiles
 
+#POST    /api/asset/:tag/status      app.Api.updateAssetStatus(tag: String)
 PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
 DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)

@@ -15,15 +15,15 @@ import models.AssetSortType._
 
 package object forms {
 
-  implicit def statusFormat = new Formatter[Status.Enum] {
+  implicit def statusFormat = new Formatter[Status] {
     def bind(key: String, data: Map[String, String]) = {
       Formats.stringFormat.bind(key, data).right.flatMap { s =>
-        allCatch[Status.Enum]
-          .either(Status.Enum.withName(camelCase(s)))
+        allCatch[Status]
+          .either(Status.findByName(s).get)
           .left.map(e => Seq(FormError(key, "error.status", Nil)))
       }
     }
-    def unbind(key: String, value: Status.Enum) = Map(key -> value.toString)
+    def unbind(key: String, value: Status) = Map(key -> value.toString)
   }
 
   implicit def stateFormat = new Formatter[State] {

@@ -55,7 +55,7 @@ class AssetSpec extends ApplicationSpecification {
           asset
         }}
         val finder = AssetFinder.empty.copy(
-          status = Some(Status.Enum.Unallocated),
+          status = Status.Unallocated,
           assetType = Some(AssetType.Enum.ServerNode)
         )
         val expected = assets.filter{_.tag == similarAssetTag}
