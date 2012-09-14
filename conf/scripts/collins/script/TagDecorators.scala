@@ -2,6 +2,7 @@ package collins
 package script
 
 import models.Asset
+import util.plugins.SoftLayer
 
 
 
@@ -18,7 +19,12 @@ object TagDecorators extends CollinScript {
    * @return the date of creation of an Asset.
    */
   def decorateCreated(asset: Asset): String = {
-    return asset.created.toString
+    val created = asset.created
+    if (created == None) {
+      ""
+    } else {
+      created.toString
+    }
   }
 
   /**
@@ -28,7 +34,12 @@ object TagDecorators extends CollinScript {
    * @return a String containing the hostname of an Asset.
    */
   def decorateHostname(asset: Asset): String = {
-    return asset.getHostnameMetaValue.toString
+    val hostname = asset.getHostnameMetaValue
+    if (hostname == None) {
+      ""
+    } else {
+      hostname.toString
+    }
   }
 
   /**
@@ -39,9 +50,12 @@ object TagDecorators extends CollinScript {
    * @return a String containing a SoftLayer link.
    */
   def decorateSLLink(asset: Asset): String = {
-    this.getClass.getClassLoader.loadClass("views.html.asset.slLink")
-      .getMethod("render", classOf[Asset], classOf[String])
-      .invoke(this, asset, "").toString
+    return SoftLayer.assetLink(asset).map{ url => 
+        "<a href=\"%s\" target=\"_blank\">SL</a>".format(url)
+    } match {
+      case Some(url) => url
+      case None => ""
+    }
   }
 
   /**
@@ -51,7 +65,12 @@ object TagDecorators extends CollinScript {
    * @return a String containing the status of an Asset.
    */
   def decorateStatus(asset: Asset): String = {
-    return asset.getStatusName.toString
+    val status = asset.getStatusName
+    if (status == None) {
+      ""
+    } else {
+      status.toString
+    }
   }
 
   /**
@@ -73,7 +92,12 @@ object TagDecorators extends CollinScript {
    * @return a String containing the date of last update.
    */
   def decorateUpdated(asset: Asset): String = {
-    return asset.updated.toString
+    val updated = asset.updated
+    if (updated == None) {
+      ""
+    } else {
+      updated.toString
+    }
   }
 
   /**

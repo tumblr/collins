@@ -54,12 +54,11 @@ object ListHelper {
    * @param tag a String containing an asset metadata tag or asset method call
    * @return the value of the asset metadata tag or asset method call.
    */
-  def getTagValueForAsset(tag: String, asset: AssetView) = {
-    val metaValue = Asset.findByTag(asset.tag).get.getMetaAttribute(tag)
-    if (metaValue != None) {
-      metaValue.get.getValue
-    } else {
-      None
+  def getTagValueForAsset(tag: String, asset: AssetView): String = {
+    val value = Asset.findByTag(asset.tag).get.getMetaAttribute(tag)
+    value match {
+      case Some(tagValue) => tagValue.toString
+      case None => ""
     }
   }
 
@@ -88,7 +87,8 @@ object ListHelper {
             actionConfig.actionType, actionConfig.command.mkString(", ")))
         val handler = Action.getHandler[AssetsActionHandler] (actionConfig)
         handler match {
-          case Some(showIfHandler) => showIfHandler.checkAssetsAction(assets)
+          case Some(showIfHandler) =>
+            return showIfHandler.checkAssetsAction(assets)
           case None => {
             logger.error("No showIf action handler found for action %s."
               .format(actionConfig))

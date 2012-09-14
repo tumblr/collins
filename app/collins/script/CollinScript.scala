@@ -2,4 +2,7 @@ package collins
 package script
 
 
-abstract class CollinScript
+/**
+ * A base trait from which all CollinScripts are derived.
+ */
+trait CollinScript

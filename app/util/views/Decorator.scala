@@ -55,7 +55,6 @@ case class Decorator(config: DecoratorConfig, parser: DecoratorParser) {
     if (tagValue.isEmpty) {
       return config.default
     }
-    Logger.logger.info("TAG VALUE: %s".format(tagValue))
     // If a formatter action is defined, calls it with the String value of the
     // specified asset metadata tag; otherwise, returns the raw value.
     config.formatterAction match {

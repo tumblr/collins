@@ -64,10 +64,6 @@ sealed trait CollinScriptEngine {
       .mkString(".")
     val classMethod = methodSplit(methodSplit.length - 1)
     try {
-      engine.get[AnyRef](objectClass).getMethods.foreach{ meth =>
-        logger.debug("METHOD NAME: %s".format(meth.getName))
-        logger.debug("PARAMS: %s".format(meth.getTypeParameters.map{param => param.getName}.toSet))
-      }
       val retVal = engine.get[AnyRef](objectClass).getMethod(classMethod,
           parameterClasses : _*).invoke(this, args : _*)
       retVal

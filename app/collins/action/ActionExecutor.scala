@@ -93,9 +93,9 @@ trait ActionExecutor {
     var commandWithString = new ListBuffer[String]()
     commandWithString += command(0)
     commandWithString += withString
-    command.slice(1, command.length - 1).foreach{ cmdPart => logger.error("CMDPART: %s".format(cmdPart))
-      commandWithString += cmdPart }
-    logger.error("COMMAND WITH STRING: %s".format(commandWithString))
+    command.slice(1, command.length).foreach{ cmdPart =>
+      commandWithString += cmdPart
+    }
     FormattedValues(commandWithString)
   }
 
@@ -157,9 +157,9 @@ trait ActionExecutor {
     var commandWithValue = new ListBuffer[AnyRef]()
     commandWithValue += templatedCommand(0)
     commandWithValue += withObj
-    templatedCommand.slice(1, command.length - 1).foreach{ cmdPart => logger.error("CMDPART: %s".format(cmdPart))
-    commandWithValue += cmdPart }
-    logger.error("COMMAND WITH OBJ: %s".format(commandWithValue))
+    templatedCommand.slice(1, command.length).foreach{ cmdPart =>
+      commandWithValue += cmdPart
+    }
     commandWithValue
   }
 
