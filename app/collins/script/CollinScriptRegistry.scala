@@ -24,7 +24,7 @@ case class CollinScriptCompileException(script: String, msg: String)
  */
 sealed trait CollinScriptEngine {
 
-  protected val logger = Logger("ScriptEngine")
+  protected val logger = Logger("CollinScriptEngine")
 
   val compileClasspath = getAppClasspath
   val outputDir = new File(System.getProperty("java.io.tmpdir"),
@@ -70,11 +70,6 @@ sealed trait CollinScriptEngine {
       }
       val retVal = engine.get[AnyRef](objectClass).getMethod(classMethod,
           parameterClasses : _*).invoke(this, args : _*)
-      if (retVal != None) {
-        logger.debug("CollinScript return value: %s".format(retVal.toString))
-      } else {
-        logger.debug("CollinScript returned None.")
-      }
       retVal
     } catch {
       case e => {

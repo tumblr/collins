@@ -1,11 +1,6 @@
 package collins
 package action
 
-import callbacks.CallbackHandler
-import models.asset.AssetView
-import models.Page
-
-import java.beans.PropertyChangeEvent
 import play.api.Logger
 import scala.collection.mutable.ListBuffer
 import scala.collection.SeqProxy
@@ -25,9 +20,9 @@ case class FormattedValues(_stringSeq: Seq[String]) extends SeqProxy[String] {
  * of object which stores the command to execute, such as Seq[String], while R
  * should be the type of result returned by executing the command.
  */
-trait ActionExecutor extends CallbackHandler {
+trait ActionExecutor {
 
-  protected val logger = Logger("ActionExecutor") 
+  protected val logger = Logger(getClass) 
 
   val METHOD_CALL_REGEX = """\<(.*?)\>""".r
 
@@ -72,45 +67,49 @@ trait ActionExecutor extends CallbackHandler {
    */
   protected def runCommandBoolean(cmd: FormattedValues): Boolean
 
-  // TODO(steve): take these out of ActionExecutor and put into Handler traits.
-  override def apply(pce: PropertyChangeEvent): Unit = {
-    val value = getValue(pce.asInstanceOf[PropertyChangeEvent])
-    if (value == null) {
-      logger.warn("Got no value back to use with command %s"
-          .format(commandString))
-    }
-    runCommandBoolean(templateCommand(value))
+  /**
+   * Formats the value contained in a string by running a Collins Action,
+   * returning the formatted String.
+   *
+   * @param value the String to format.
+   * @return the formatted String.
+   */
+  def formatValue(value: String): String = {
+    runCommandString(buildCommandWithString(value))
   }
 
-  def checkAssetAction(asset: AssetView): Boolean = {
-    runCommand(buildCommandWithObject(asset): _*).asInstanceOf[Boolean]
+  /**
+   * Builds a command suitable for sending to a generic Collins Action,
+   * beginning with the first element of the command, followed by the object
+   * upon which the Action will be predicated, followed by any other
+   * user-specified arguments as Strings.
+   *
+   * @param withObj the Collins object upon which the Action will be
+   * predicated.
+   * @return a Sequence of values suitable for passing to a Collins Action.
+   */
+  protected def buildCommandWithString(
+      withString: String): FormattedValues = {
+    var commandWithString = new ListBuffer[String]()
+    commandWithString += command(0)
+    commandWithString += withString
+    command.slice(1, command.length - 1).foreach{ cmdPart => logger.error("CMDPART: %s".format(cmdPart))
+      commandWithString += cmdPart }
+    logger.error("COMMAND WITH STRING: %s".format(commandWithString))
+    FormattedValues(commandWithString)
   }
 
-  def checkAssetsAction(assets: Page[AssetView]): Boolean = {
-    runCommand(buildCommandWithObject(assets): _*).asInstanceOf[Boolean]
-  }
-
-  def executeAssetAction(asset: AssetView): String = {
-    val retVal = runCommand(buildCommandWithObject(asset) : _*)
-    if (retVal == None) {
-      return ""
-    } else {
-      retVal.asInstanceOf[String]
-    }
-  }
-
-  def formatValue(value: AnyRef): String = {
-    runCommand(buildCommandWithObject(value): _*).asInstanceOf[String]
-  }
-
-  protected def buildCommandWithObject(withObj: AnyRef): Seq[AnyRef] = {
-    val templatedCommand = templateCommand(withObj)
-    var commandWithValue = new ListBuffer[AnyRef]()
-    commandWithValue += templatedCommand(0)
-    commandWithValue += withObj
-    commandWithValue += templatedCommand.slice(1, command.length - 1)
-    commandWithValue
-  }
+  /**
+   * Obtains all desired method replacements found in the user-supplied
+   * command.
+   *
+   * @return a Set of MethodReplacement objects suitable for running method
+   * calls with.
+   */
+  protected def getMethodReplacements(): Set[MethodReplacement] =
+    METHOD_CALL_REGEX.findAllIn(commandString).matchData.map { md =>
+      MethodReplacement(md.group(0), md.group(1))
+    }.toSet
 
   /**
    * Formats a command suitable for execution with the results of running a
@@ -128,8 +127,8 @@ trait ActionExecutor extends CallbackHandler {
       replacements.map(_.toString).mkString(", ")
     ))
     val replacementsWithValues = replacements.map(_.runMethod(value))
-    logger.debug("Got replacements (with values) for command %s: %s".format(commandString,
-      replacementsWithValues.map(_.toString).mkString(", ")
+    logger.debug("Got replacements (with values) for command %s: %s".format(
+        commandString, replacementsWithValues.map(_.toString).mkString(", ")
     ))
     val cmdValue = command.map { cmd =>
       replacementsWithValues.foldLeft(cmd) { case(string, replacement) =>
@@ -142,15 +141,26 @@ trait ActionExecutor extends CallbackHandler {
   }
 
   /**
-   * Obtains all desired method replacements found in the user-supplied
-   * command.
+   * Templates a command suitable for sending to a generic Collins Action,
+   * beginning with the first element of the command, followed by the object
+   * upon which the Action will be predicated, followed by any other
+   * user-specified arguments as Strings, templated against the supplied
+   * object.
    *
-   * @return a Set of MethodReplacement objects suitable for running method
-   * calls with.
+   * @param withObj the Collins object upon which the Action will be
+   * predicated.
+   * @return a Sequence of values suitable for passing to a generic Collins
+   * Action.
    */
-  protected def getMethodReplacements(): Set[MethodReplacement] =
-    METHOD_CALL_REGEX.findAllIn(commandString).matchData.map { md =>
-      MethodReplacement(md.group(0), md.group(1))
-    }.toSet
+  protected def templateCommandWithObject(withObj: AnyRef): Seq[AnyRef] = {
+    val templatedCommand = templateCommand(withObj)
+    var commandWithValue = new ListBuffer[AnyRef]()
+    commandWithValue += templatedCommand(0)
+    commandWithValue += withObj
+    templatedCommand.slice(1, command.length - 1).foreach{ cmdPart => logger.error("CMDPART: %s".format(cmdPart))
+    commandWithValue += cmdPart }
+    logger.error("COMMAND WITH OBJ: %s".format(commandWithValue))
+    commandWithValue
+  }
 
 }

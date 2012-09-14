@@ -2,9 +2,11 @@ package util
 package views
 
 import collins.action.Action
+import collins.action.handler.AssetActionHandler
 import models.asset.AssetView
 import models.MetaWrapper
 
+import play.api.Logger
 import play.api.mvc.Content
 
 
@@ -13,6 +15,9 @@ case class DecoratorConfigException(source: String, key: String)
 
 
 case class Decorator(config: DecoratorConfig, parser: DecoratorParser) {
+
+  protected val logger = Logger("Decorator")
+
   def format(key: String, value: String): String = {
     if (value.isEmpty) {
       return config.default
@@ -29,22 +34,42 @@ case class Decorator(config: DecoratorConfig, parser: DecoratorParser) {
     }.mkString(config.between)
   }
   def format(tag: String, asset: AssetView): String = {
-    val tagValue = config.decoratorAction match {
-      case None => format(tag,
-          ListHelper.getTagValueForAsset(tag, asset).toString)
+    // Executes decorator Collins Action if defined; otherwise, queries for tag
+    // value from asset.
+    val tagValue: String = config.decoratorAction match {
+      case None =>
+        ListHelper.getTagValueForAsset(tag, asset).toString
       case Some(actionCfg) => {
-        val executor = Action.getExecutor(actionCfg)
-        executor.executeAssetAction(asset)
+        val handler = Action.getHandler[AssetActionHandler] (actionCfg)
+        handler match {
+          case Some(handler) => handler.executeAssetAction(asset)
+          case None => {
+            logger.warn("No decorate action handler found for action: %s"
+                .format(actionCfg))
+            return config.default
+          }
+        }
       }
     }
+    // If no tag value defined, returns configured default value for this tag.
     if (tagValue.isEmpty) {
       return config.default
     }
+    Logger.logger.info("TAG VALUE: %s".format(tagValue))
+    // If a formatter action is defined, calls it with the String value of the
+    // specified asset metadata tag; otherwise, returns the raw value.
     config.formatterAction match {
       case None => tagValue
       case Some(formatActionCfg) => {
-        val executor = Action.getExecutor(formatActionCfg)
-        executor.formatValue(tagValue)
+        val handler = Action.getHandler[AssetActionHandler] (formatActionCfg)
+        handler match {
+          case Some(handler) => handler.formatValue(tagValue)
+          case None => {
+            logger.warn("No formatter action handler found for action: %s"
+                .format(formatActionCfg))
+            tagValue
+          }
+        }
       }
     }
   }

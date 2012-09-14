@@ -2,6 +2,7 @@ package util
 package views
 
 import collins.action.Action
+import collins.action.handler.AssetsActionHandler
 import models.{Asset, AssetMeta, Page}
 import models.asset.AssetView
 import util.plugins.SoftLayer
@@ -84,9 +85,15 @@ object ListHelper {
     TagDecoratorConfig.getShowIf(tag) match {
       case Some(actionConfig) => {
         logger.debug("Found showIf for %s; type: %s, command: %s".format(tag,
-          actionConfig.actionType, actionConfig.command.mkString(", ")))
-        val executor = Action.getExecutor(actionConfig)
-        return executor.checkAssetsAction(assets)
+            actionConfig.actionType, actionConfig.command.mkString(", ")))
+        val handler = Action.getHandler[AssetsActionHandler] (actionConfig)
+        handler match {
+          case Some(showIfHandler) => showIfHandler.checkAssetsAction(assets)
+          case None => {
+            logger.error("No showIf action handler found for action %s."
+              .format(actionConfig))
+          }
+        }
       }
       case None => {
         // If the tag is not present within the db/cache, don't display column.
