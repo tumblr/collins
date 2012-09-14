@@ -27,6 +27,7 @@ class CollinsIntegration
     end
 
     reloadMySQL
+    getChecksums
   end
 
   #starts up collins server
@@ -44,25 +45,29 @@ class CollinsIntegration
   #loads the specified sql dump into database
   def reloadMySQL
     
-    dump_file = "collins_fixture.dump.gz"
+    dump_file = "collins_fixture.dump"
+    dump_zip = dump_file + ".gz"
+
     full_dump_path = @collinsPath + "/test/spec/#{dump_file}"
     d = File.dirname full_dump_path
 
     if ! File.exists? full_dump_path
-      system "cd #{d};git checkout #{dump_file}"
-      if ! File.exists? full_dump_path
-        puts "Unable to find database dump #{dump_file}"
+      full_zip_path = full_dump_path + ".gz"
+      if ! File.exists? full_zip_path
+        system "cd #{d};git checkout #{dump_zip}"
+        if ! File.exists? full_zip_path
+          puts "Unable to find database dump #{dump_zip}"
+          exit(1)
+        end
+      end
+      system "cd #{d}; gunzip #{dump_zip}"
+      if ! File.exists? dump_file
+        puts "Error inflating dump file #{dump_zip}"
         exit(1)
       end
     end
-    system "cd #{d}; gunzip #{dump_file}"
-    inflated_dump = File.basename dump_file, ".gz"
-    if ! File.exists? inflated_dump
-      puts "Error inflating dump file #{dump_file}"
-      exit(1)
-    end
     puts "Importing #{dump_file} to database #{@database}"
-    out = system "cd #{d}; #{@mysqlCommand} #{@upString} #{@database} < #{inflated_dump}"
+    out = system "cd #{d}; #{@mysqlCommand} #{@upString} #{@database} < #{dump_file}"
     if ! out
       puts "Error with import: #{out}"
       exit(1)
@@ -76,11 +81,13 @@ class CollinsIntegration
 
   #returns a hash of TABLE_NAME => checksum
   def getChecksums
+    tables = (runMysqlQuery "show tables").split("\n")
+    puts tables
 
   end
 
   def runMysqlQuery query
-    cmd = "#{@mysqlCommand} #{@upString} #{@database} <<<MYSQLEOF\n#{@query}\nMYSQLEOF"
+    cmd = "#{@mysqlCommand} #{@upString} --column-names=FALSE --raw=TRUE #{@database} -e '#{query}'"
     system cmd
   end
 

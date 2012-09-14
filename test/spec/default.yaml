@@ -9,8 +9,5 @@ mysql:
 collins_server:
   config: dan.conf
 collins_client_config: /home/dan/collins.yaml
-db_checks:
-  num_assets: 630
-  num_meta_values: 37648
-  exist_asset_tag: local
+checksums:
 
