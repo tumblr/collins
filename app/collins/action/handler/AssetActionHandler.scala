@@ -68,8 +68,6 @@ case class AssetScriptActionHandler(override val command: Seq[String])
 
   override def checkAssetAction(asset: AssetView): Boolean = {
     val retVal = runCommand(templateCommandWithObject(asset) : _*)
-    logger.error("BOOLEAN RETVAL: %s".format(retVal))
-    logger.error("EQUALS NONE: %s".format(retVal.isInstanceOf[None.type]))
     if (retVal == None) {
       false
     } else {
@@ -79,9 +77,6 @@ case class AssetScriptActionHandler(override val command: Seq[String])
 
   override def executeAssetAction(asset: AssetView): String = {
     val retVal = runCommand(templateCommandWithObject(asset) : _*)
-    logger.error("EXECUTE RETVAL: %s".format(retVal))
-    logger.error("RETVAL TYPE: %s".format(retVal.getClass))
-    logger.error("EQUALS NONE: %s".format(retVal.isInstanceOf[None.type]))
     if (retVal == None) {
       ""
     } else {
