@@ -6,7 +6,7 @@ describe "Asset Find" do
 
   before :all do
     @integration = CollinsIntegration.new('default.yaml')
-    @client = @integration.getCollinsClient
+    @client = @integration.collinsClient
   end
 
   def checkQuery(params, expected_size)
