@@ -85,36 +85,12 @@ case class UpdateStatusAction(
   protected def checkStateConflict(
     asset: Asset, statusOpt: Option[AssetStatus], stateOpt: Option[State]
   ): Tuple2[Option[AssetStatus],Option[State]] = {
-    if (stateOpt.isDefined && stateOpt.get.status == State.ANY_STATUS) {
-      println("specified state has ANY_STATUS")
-      (None, None)
-    } else if (asset.state == 0) {
-      println("asset state is not set")
+    val status = statusOpt.getOrElse(asset.getStatus())
+    val state = stateOpt.getOrElse(State.findById(asset.state).getOrElse(State.empty))
+    if (state.status == State.ANY_STATUS || state.status == status.id) {
       (None, None)
     } else {
-      (statusOpt, stateOpt) match {
-        case (Some(status), Some(state)) =>
-          if (state.status == status.id) {
-            (None, None)
-          } else {
-            (Some(status), Some(state))
-          }
-        case (Some(status), None) =>
-          if (isStatusCompatible(asset, status)) {
-            println("Found %d compatible with %s".format(asset.state, status.toString))
-            (None, None)
-          } else {
-            (Some(status), Some(State.findById(asset.state).getOrElse(State.empty)))
-          }
-        case (None, Some(state)) =>
-          if (isStateCompatible(asset, state)) {
-            (None, None)
-          } else {
-            (AssetStatus.findById(asset.status), Some(state))
-          }
-        case (None, None) =>
-          throw new Exception(invalidInvocation)
-      }
+      (Some(status), Some(state))
     }
   }
 
@@ -130,15 +106,5 @@ case class UpdateStatusAction(
     case e if e.error("reason").isDefined =>
       rootMessage("controllers.AssetApi.updateStatus.invalidReason")
     case n => fuck
-  }
-
-  private def isStatusCompatible(asset: Asset, status: AssetStatus): Boolean = {
-    val set = Set(status.id, State.ANY_STATUS) // ensure existing state is one of these
-    val state = State.findById(asset.state).map(_.status).getOrElse(State.ANY_STATUS)
-    println("isStatusCompatible %s %s".format(set, state))
-    set.contains(state)
-  }
-  private def isStateCompatible(asset: Asset, state: State): Boolean = {
-    asset.status == state.status
   }
 }
