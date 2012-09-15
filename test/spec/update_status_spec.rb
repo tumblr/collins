@@ -3,7 +3,7 @@ require 'collins_client'
 
 HTTP_DEBUG=true
 
-describe "Asset State Management" do
+describe "Asset Status Management" do
 
   before :all do
     config = {:username => "blake", :password => "admin:first", :host => "http://127.0.0.1:9000", :strict => true, :trace => false}

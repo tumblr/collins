@@ -62,6 +62,8 @@ object State extends Schema with AnormAdapter[State] {
     }
   }
 
+  def empty = new State(0, ANY_STATUS, "INVALID", "Invalid Label", "Invalid Description")
+
   def find(): List[State] = getOrElseUpdate("State.find") {
     from(tableDef)(s => select(s)).toList
   }
@@ -88,7 +90,6 @@ object State extends Schema with AnormAdapter[State] {
     }
   override def get(state: State): State = findById(state.id).get
   def isSystemState(state: State): Boolean = state.id < 7
-  def empty = new State(0, 0, "INVALID", "Invalid Label", "Invalid Description")
 }
 
 case class State(

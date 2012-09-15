@@ -41,8 +41,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   def getId(): Long = id
 
   def getStatus(): Status = Status.findById(status).get
-
   override def getStatusName(): String = getStatus().name
+
+  def getState(): Option[State] = State.findById(state)
 
   def getType(): AssetType = {
     AssetType.findById(asset_type).get
@@ -125,6 +126,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     a.id is(autoIncremented,primaryKey),
     a.tag is(unique),
     a.status is(indexed),
+    a.state is(indexed),
     a.asset_type is(indexed),
     a.created is(indexed),
     a.updated is(indexed)
