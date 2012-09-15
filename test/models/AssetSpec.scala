@@ -24,9 +24,9 @@ class AssetSpec extends ApplicationSpecification {
         val maybeAsset = Asset.findByTag(assetTag)
         maybeAsset must beSome[Asset]
         val realAsset = maybeAsset.get
-        Asset.update(realAsset.copy(status = Status.Enum.New.id))
+        Asset.update(realAsset.copy(status = Status.New.get.id))
         Asset.findByTag(assetTag).map { a =>
-          a.getStatus().getId mustEqual(Status.Enum.New.id)
+          a.getStatus().getId mustEqual(Status.New.get.id)
         }.getOrElse(failure("Couldn't find asset but expected to"))
       }
 
@@ -101,14 +101,14 @@ class AssetSpec extends ApplicationSpecification {
 
   trait mockasset extends Scope {
     val assetTag = "tumblrtag2"
-    val assetStatus = Status.Enum.Incomplete
+    val assetStatus = Status.Incomplete.get
     val assetType = AssetType.Enum.ServerNode
     val newAsset = Asset(assetTag, assetStatus, assetType)
   }
 
   trait concreteasset extends Scope {
     val assetTag = "tumblrtag1"
-    val assetStatus = Status.Enum.Incomplete
+    val assetStatus = Status.Incomplete.get
     val assetType = AssetType.Enum.ServerNode
     val assetId = 1
   }
@@ -119,18 +119,18 @@ class AssetSpec extends ApplicationSpecification {
         AssetMetaValue.create(AssetMetaValue(asset.id, AssetMeta.findOrCreateFromName(k).id, 0, v))
       }
     val nodeclassTag = "test_nodeclass"
-    val nodeclassStatus = Status.Enum.Allocated
+    val nodeclassStatus = Status.Allocated.get
     val nodeclassType = AssetType.Enum.Config
     val nodeclassIdentifierTag = ("IS_NODECLASS" -> "true")
     val nodeclassMetaTags = Map("FOOT1" -> "BAR", "BAZT1" -> "BAAAAZ")
     val assetTag = "nodeclasstest"
-    val assetStatus = Status.Enum.Allocated
+    val assetStatus = Status.Allocated.get
     val assetType = AssetType.Enum.ServerNode
     val similarAssetTag = "similar_asset"
-    val similarAssetData = List[(String, Status.Enum, Map[String,String])](
-      (similarAssetTag,Status.Enum.Unallocated,nodeclassMetaTags),
-      ("not_similar",Status.Enum.Unallocated,Map[String,String]()),
-      ("similar_not_unallocated", Status.Enum.Provisioned,nodeclassMetaTags)
+    val similarAssetData = List[(String, Status, Map[String,String])](
+      (similarAssetTag,Status.Unallocated.get,nodeclassMetaTags),
+      ("not_similar",Status.Unallocated.get,Map[String,String]()),
+      ("similar_not_unallocated", Status.Provisioned.get,nodeclassMetaTags)
     )
   }
 

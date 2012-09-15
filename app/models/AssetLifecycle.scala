@@ -17,7 +17,7 @@ import java.util.Date
 
 object AssetLifecycleConfig {
   // Don't want people trying to set status/tag/etc via attribute
-  private val PossibleAssetKeys = Set("STATUS", "TAG", "TYPE", "IP_ADDRESS")
+  private val PossibleAssetKeys = Set("STATUS", "STATE", "TAG", "TYPE", "IP_ADDRESS")
   // A few keys we generally want changable after intake
   private val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
   // User configured excludes, only applied to non-servers
@@ -97,15 +97,14 @@ object AssetLifecycle {
   }
 
   protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    Status.Enum(asset.status) match {
-      case Status.Enum.Incomplete =>
-        updateIncompleteServer(asset, options)
-      case Status.Enum.New =>
-        updateNewServer(asset, options)
-      case Status.Enum.Maintenance =>
-        updateMaintenanceServer(asset, options)
-      case _ =>
-        Left(new Exception("Only updates for Incomplete, New, and Maintenance servers are currently supported"))
+    if (asset.isIncomplete) {
+      updateIncompleteServer(asset, options)
+    } else if (asset.isNew) {
+      updateNewServer(asset, options)
+    } else if (asset.isMaintenance) {
+      updateMaintenanceServer(asset, options)
+    } else {
+      Left(new Exception("Only updates for Incomplete, New, and Maintenance servers are currently supported"))
     }
   }
 
@@ -147,27 +146,6 @@ object AssetLifecycle {
     }.left.map(e => handleException(asset, "Error updating status/state for asset", e))
   }
 
-  def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    if (!Feature.sloppyStatus) {
-        return Left(new Exception("sloppyStatus not enabled"))
-    }
-    val stat = options.get("status").getOrElse("none")
-    val state = options.get("state").flatMap(s => State.findByName(s))
-    allCatch[Boolean].either {
-      val status = AStatus.Enum.withName(stat)
-      if (status.id == asset.status && Option(asset.state) == state.map(_.id)) {
-        logger.debug("Old status %d is same as new, returning".format(status.id))
-        return Right(true)
-      }
-      val old = AStatus.Enum(asset.status).toString
-      val defaultReason = "Asset state updated from %s to %s".format(old, stat)
-      val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
-      Asset.partialUpdate(asset, Some(new Date().asTimestamp), Some(status.id), state)
-      ApiTattler.informational(asset, None, reason)
-      true
-    }.left.map(e => handleException(asset, "Error updating status for asset", e))
-  }
-
   protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     val units = PowerUnits()
     val requiredKeys = Set(RackPosition.toString) ++ PowerUnits.keys(units)
@@ -189,7 +167,7 @@ object AssetLifecycle {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
-        val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
+        val newAsset = asset.copy(status = Status.Unallocated.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
         Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.Starting)
         newAsset
@@ -227,7 +205,7 @@ object AssetLifecycle {
           throw lldpParsingResults.left.get
         }
         MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
-        val newAsset = asset.copy(status = Status.Enum.New.id, updated = Some(new Date().asTimestamp))
+        val newAsset = asset.copy(status = Status.New.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
         Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.New)
         InternalTattler.informational(newAsset, None, "Parsing and storing LSHW data succeeded")
         true
