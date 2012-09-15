@@ -136,9 +136,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     "Asset.findByTag(%s)".format(asset.tag.toLowerCase),
     "Asset.findById(%d)".format(asset.id)
   )
-  def flushCache(asset: Asset) = cacheKeys(asset).foreach { k =>
-    Cache.invalidate(k)
-  }
+  def flushCache(asset: Asset) = loggedInvalidation("flushCache", asset)
   object Messages extends MessageHelper("asset") {
     def intakeError(t: String, a: Asset) = "intake.error.%s".format(t.toLowerCase) match {
       case msg if msg == "intake.error.new" =>
