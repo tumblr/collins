@@ -1,7 +1,7 @@
 package controllers
 
 import actions.asset.{CreateAction, DeleteAction, DeleteAttributeAction, FindAction, FindSimilarAction, GetAction, SolrFindAction}
-import actions.asset.{UpdateAction, UpdateForMaintenanceAction}
+import actions.asset.{UpdateAction, UpdateForMaintenanceAction, UpdateStatusAction}
 
 import views.html
 import models.{Status => AStatus}
@@ -37,6 +37,10 @@ trait AssetApi {
 
   // POST /api/asset/:tag
   def updateAsset(tag: String) = UpdateAction(tag, Permissions.AssetApi.UpdateAsset, this)
+
+  // POST /api/asset/:tag/status
+  def updateAssetStatus(tag: String) =
+    UpdateStatusAction(tag, Permissions.AssetApi.UpdateAssetStatus, this)
 
   def updateAssetForMaintenance(tag: String) = UpdateForMaintenanceAction(
     tag, Permissions.AssetApi.UpdateAssetForMaintenance, this

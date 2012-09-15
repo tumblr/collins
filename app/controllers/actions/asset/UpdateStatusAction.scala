@@ -1,0 +1,144 @@
+package controllers
+package actions
+package asset
+
+import forms._
+import validators.ParamValidation
+
+import models.{Asset, AssetLifecycle, State, Status => AssetStatus}
+import util.security.SecuritySpecification
+
+import play.api.data.Form
+import play.api.data.Forms._
+
+/**
+ * Update the status or state of an asset
+ *
+ * @apigroup Asset
+ * @apimethod POST
+ * @apiurl /api/asset/:tag/status
+ * @apiparam :tag String asset tag
+ * @apiparam status Option[Status] new status of asset
+ * @apiparam state Option[State] new state of asset
+ * @apiparam reason String reason for maintenance
+ * @apirespond 200 success
+ * @apirespond 400 invalid status or state, missing reason, neither state nor status specified
+ * @apirespond 409 state conflicts with status
+ * @apirespond 500 error saving status
+ * @apiperm controllers.AssetApi.updateAssetStatus
+ * @collinsshell {{{
+ *  collins-shell asset set_status [STATUS --state=STATE --reason='REASON' --tag=TAG]
+ * }}}
+ * @curlexample {{{
+ *  curl -v -u blake:admin:first --basic \
+ *    -d status=Unallocated \
+ *    -d state=Running \
+ *    -d reason='Ready for action' \
+ *    http://localhost:9000/api/asset/TAG/status
+ * }}}
+ */
+case class UpdateStatusAction(
+  assetTag: String,
+  spec: SecuritySpecification,
+  handler: SecureController
+) extends SecureAction(spec, handler) with AssetAction with ParamValidation {
+
+  import UpdateAction.Messages._
+
+  case class ActionDataHolder(
+    astatus: Option[AssetStatus], state: Option[State], reason: String
+  ) extends RequestDataHolder
+
+  val updateForm = Form(tuple(
+    "status" -> optional(of[AssetStatus]),
+    "state" -> optional(of[State]),
+    "reason" -> validatedText(2)
+  ))
+
+  override def validate(): Validation = updateForm.bindFromRequest()(request).fold(
+    err => Left(RequestDataHolder.error400(fieldError(err))),
+    form => {
+      withValidAsset(assetTag) { asset =>
+        val (statusOpt, stateOpt, reason) = form
+        if (List(statusOpt,stateOpt).filter(_.isDefined).size == 0) {
+          Left(RequestDataHolder.error400(invalidInvocation))
+        } else {
+          checkStateConflict(asset, statusOpt, stateOpt) match {
+            case (Some(status), Some(state)) =>
+              Left(RequestDataHolder.error409(stateConflictError(status, state)))
+            case _ =>
+              Right(ActionDataHolder(statusOpt, stateOpt, reason))
+          }
+        }
+      }
+    }
+  )
+
+  override def execute(rd: RequestDataHolder) = rd match {
+    case ActionDataHolder(status, state, reason) =>
+      AssetLifecycle.updateAssetStatus(definedAsset, status, state, reason).fold(
+        e => Api.errorResponse("Error updating status", Status.InternalServerError, Some(e)),
+        b => Api.statusResponse(b)
+      )
+  }
+
+  protected def checkStateConflict(
+    asset: Asset, statusOpt: Option[AssetStatus], stateOpt: Option[State]
+  ): Tuple2[Option[AssetStatus],Option[State]] = {
+    if (stateOpt.isDefined && stateOpt.get.status == State.ANY_STATUS) {
+      println("specified state has ANY_STATUS")
+      (None, None)
+    } else if (asset.state == 0) {
+      println("asset state is not set")
+      (None, None)
+    } else {
+      (statusOpt, stateOpt) match {
+        case (Some(status), Some(state)) =>
+          if (state.status == status.id) {
+            (None, None)
+          } else {
+            (Some(status), Some(state))
+          }
+        case (Some(status), None) =>
+          if (isStatusCompatible(asset, status)) {
+            println("Found %d compatible with %s".format(asset.state, status.toString))
+            (None, None)
+          } else {
+            (Some(status), Some(State.findById(asset.state).getOrElse(State.empty)))
+          }
+        case (None, Some(state)) =>
+          if (isStateCompatible(asset, state)) {
+            (None, None)
+          } else {
+            (AssetStatus.findById(asset.status), Some(state))
+          }
+        case (None, None) =>
+          throw new Exception(invalidInvocation)
+      }
+    }
+  }
+
+  protected def invalidInvocation =
+    rootMessage("controllers.AssetApi.updateStatus.invalidInvocation")
+
+  protected def stateConflictError(status: AssetStatus, state: State) =
+    rootMessage("controllers.AssetApi.updateStatus.stateConflict", status.name, state.name)
+
+  protected def fieldError(f: Form[_]) = f match {
+    case e if e.error("status").isDefined => invalidStatus
+    case e if e.error("state").isDefined => invalidState
+    case e if e.error("reason").isDefined =>
+      rootMessage("controllers.AssetApi.updateStatus.invalidReason")
+    case n => fuck
+  }
+
+  private def isStatusCompatible(asset: Asset, status: AssetStatus): Boolean = {
+    val set = Set(status.id, State.ANY_STATUS) // ensure existing state is one of these
+    val state = State.findById(asset.state).map(_.status).getOrElse(State.ANY_STATUS)
+    println("isStatusCompatible %s %s".format(set, state))
+    set.contains(state)
+  }
+  private def isStateCompatible(asset: Asset, state: State): Boolean = {
+    asset.status == state.status
+  }
+}

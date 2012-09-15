@@ -120,7 +120,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     case e if e.error("operation").isDefined => message("operation.invalid")
     case e if e.error("details").isDefined => rootMessage("error.truthy", "details")
     case e if e.error("remoteLookup").isDefined => rootMessage("error.truthy", "remoteLookup")
-    case e if e.error("state").isDefined => rootMessage("error.state")
+    case e if e.error("state").isDefined => rootMessage("asset.state.invalid")
     case n => "Unexpected error occurred"
   }
 

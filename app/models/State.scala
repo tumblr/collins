@@ -88,6 +88,7 @@ object State extends Schema with AnormAdapter[State] {
     }
   override def get(state: State): State = findById(state.id).get
   def isSystemState(state: State): Boolean = state.id < 7
+  def empty = new State(0, 0, "INVALID", "Invalid Label", "Invalid Description")
 }
 
 case class State(

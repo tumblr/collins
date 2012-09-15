@@ -31,7 +31,7 @@ package object forms {
       Formats.stringFormat.bind(key, data).right.flatMap { s =>
         allCatch[State]
           .either(State.findByName(s).get)
-          .left.map(e => Seq(FormError(key, "error.state", Nil)))
+          .left.map(e => Seq(FormError(key, "asset.state.invalid", Nil)))
       }
     }
     def unbind(key: String, value: State) = Map(key -> value.name)
