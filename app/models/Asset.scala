@@ -120,6 +120,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
   private[this] val logger = Logger("Asset")
   override protected val createEventName = Some("asset_create")
   override protected val updateEventName = Some("asset_update")
+  override protected val deleteEventName = Some("asset_delete")
 
   override val tableDef = table[Asset]("asset")
   on(tableDef)(a => declare(
@@ -337,20 +338,10 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }
 
   def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int], state: Option[State] = None) = {
-    val oldAsset = Asset.findById(asset.id).get
-    val assetWUpdate = updated.map(u => oldAsset.copy(updated = Some(u))).getOrElse(oldAsset)
+    val assetWUpdate = updated.map(u => asset.copy(updated = Some(u))).getOrElse(asset)
     val assetWStatus = status.map(s => assetWUpdate.copy(status = s)).getOrElse(assetWUpdate)
     val assetWState = state.map(s => assetWStatus.copy(state = s.id)).getOrElse(assetWStatus)
-    val res = Asset.update(assetWState)
-    Asset.flushCache(asset)
-    val newAsset = Asset.findById(asset.id).get
-    updateEventName.foreach { name =>
-      oldAsset.forComparison
-      newAsset.forComparison
-      util.plugins.Callback.fire(name, oldAsset, newAsset)
-    }
-    Asset.flushCache(asset)
-    res
+    Asset.update(assetWState)
   }
 
 }

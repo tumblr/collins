@@ -8,6 +8,7 @@ import play.api.libs.concurrent._
 import akka.actor.Props
 
 class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackManager {
+  override protected val logger = Logger("CallbackManagerPlugin")
 
   //this must be lazy so it gets called after the system exists
   override lazy val changeQueue = Akka.system.actorOf(Props(CallbackMessageQueue(pcs)), name = "change_queue_processor")
@@ -20,6 +21,7 @@ class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackM
   // overrides Plugin.onStart
   override def onStart() {
     if (enabled) {
+      logger.debug("Loading listeners")
       loadListeners()
     }
   }
@@ -31,6 +33,7 @@ class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackM
 
   override protected def loadListeners(): Unit = {
     CallbackConfig.registry.foreach { callback =>
+      logger.debug("Loading callback %s".format(callback.name))
       setupCallback(callback)
     }
   }
@@ -41,6 +44,7 @@ class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackM
     val currentConfigMatches = CallbackMatcher(matchCondition.current, _.getNewValue)
     val previousConfigMatches = CallbackMatcher(matchCondition.previous, _.getOldValue)
     val handlesMatch = createMatchHandler(descriptor.matchAction)
+    logger.debug("Setting up callback %s - %s %s".format(descriptor.name, eventName, handlesMatch))
     on(eventName, new CallbackActionHandler {
       override def apply(pce: PropertyChangeEvent) {
         val prevMatch = previousConfigMatches(pce)
