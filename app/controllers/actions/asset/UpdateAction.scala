@@ -4,7 +4,7 @@ package asset
 
 import models.{AssetLifecycle, Status => AStatus, State}
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
-import util.MessageHelperI
+import util.MessageHelper
 import util.power.PowerUnits
 import util.security.SecuritySpecification
 import validators.ParamValidation
@@ -18,6 +18,18 @@ import play.api.data.validation.Constraints._
 import collection.immutable.DefaultMap
 import collection.mutable.HashMap
 
+object UpdateAction {
+  object Messages extends MessageHelper("asset.update") {
+    def invalidLshw = message("lshw.invalid")
+    def invalidLldp = message("lldp.invalid")
+    def invalidChassisTag = message("chassisTag.invalid")
+    def invalidRackPosition = message("rackPosition.invalid")
+    def invalidStatus = rootMessage("asset.status.invalid")
+    def invalidState = rootMessage("asset.state.invalid")
+    def invalidGroupId = message("groupId.invalid")
+  }
+}
+
 case class UpdateAction(
   assetTag: String,
   spec: SecuritySpecification,
@@ -25,11 +37,12 @@ case class UpdateAction(
 ) extends SecureAction(spec, handler)
     with AssetAction
     with ActionAttributeHelper
-    with MessageHelperI
     with ParamValidation
 {
 
-  override val parentKey: String = "asset.update"
+  import UpdateAction.Messages._
+
+  override def invalidAttributeMessage(s: String) = message("attribute.invalid")
 
   case class ActionDataHolder(underlying: Map[String,String])
     extends RequestDataHolder
@@ -53,8 +66,6 @@ case class UpdateAction(
       case n => false
     }
   }
-
-  override def invalidAttributeMessage(s: String) = message("attribute.invalid")
 
   lazy val dataForm = Form(tuple(
     "lshw" -> validatedOptionalText(1),
@@ -117,13 +128,13 @@ case class UpdateAction(
   }
 
   protected def fieldError(f: Form[_]) = f match {
-    case e if e.error("lshw").isDefined => message("lshw.invalid")
-    case e if e.error("lldp").isDefined => message("lldp.invalid")
-    case e if e.error(ChassisTag.toString).isDefined => message("chassisTag.invalid")
-    case e if e.error(RackPosition.toString).isDefined => message("rackPosition.invalid")
-    case e if e.error("status").isDefined => rootMessage("asset.status.invalid")
-    case e if e.error("state").isDefined => message("asset.state.invalid")
-    case e if e.error("groupId").isDefined => message("groupId.invalid")
+    case e if e.error("lshw").isDefined => invalidLshw
+    case e if e.error("lldp").isDefined => invalidLldp
+    case e if e.error(ChassisTag.toString).isDefined => invalidChassisTag
+    case e if e.error(RackPosition.toString).isDefined => invalidRackPosition
+    case e if e.error("status").isDefined => invalidStatus
+    case e if e.error("state").isDefined => invalidState
+    case e if e.error("groupId").isDefined => invalidGroupId
     case n => "Unexpected error occurred"
   }
 

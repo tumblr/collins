@@ -42,6 +42,7 @@ object Permissions {
     def GetAssets = spec("getAssets", Spec)
     def UpdateAsset = spec("updateAsset", AdminSpec)
     def UpdateAssetForMaintenance = spec("updateAssetForMaintenance", AdminSpec)
+    def UpdateAssetStatus = spec("updateAssetStatus", AdminSpec)
   }
 
   object AssetLogApi extends PermSpec("controllers.AssetLogApi") {
