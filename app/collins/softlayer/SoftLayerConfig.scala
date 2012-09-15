@@ -11,7 +11,7 @@ object SoftLayerConfig extends Configurable {
   def username = getString("username", "")
   def password = getString("password", "")
   def allowedCancelStatus = getStringSet("allowedCancelStatus", Status.statusNames).map { s =>
-    Status.Enum.withName(s).id
+    Status.findByName(s).get.id
   }
 
   override def validateConfig() {

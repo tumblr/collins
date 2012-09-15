@@ -11,6 +11,14 @@ import util.security.SecuritySpecification
 import play.api.data.Form
 import play.api.data.Forms._
 
+object UpdateStatusAction extends ParamValidation {
+  val UpdateForm = Form(tuple(
+    "status" -> optional(of[AssetStatus]),
+    "state" -> optional(of[State]),
+    "reason" -> validatedText(2)
+  ))
+}
+
 /**
  * Update the status or state of an asset
  *
@@ -41,21 +49,16 @@ case class UpdateStatusAction(
   assetTag: String,
   spec: SecuritySpecification,
   handler: SecureController
-) extends SecureAction(spec, handler) with AssetAction with ParamValidation {
+) extends SecureAction(spec, handler) with AssetAction {
 
   import UpdateAction.Messages._
+  import UpdateStatusAction._
 
   case class ActionDataHolder(
     astatus: Option[AssetStatus], state: Option[State], reason: String
   ) extends RequestDataHolder
 
-  val updateForm = Form(tuple(
-    "status" -> optional(of[AssetStatus]),
-    "state" -> optional(of[State]),
-    "reason" -> validatedText(2)
-  ))
-
-  override def validate(): Validation = updateForm.bindFromRequest()(request).fold(
+  override def validate(): Validation = UpdateForm.bindFromRequest()(request).fold(
     err => Left(RequestDataHolder.error400(fieldError(err))),
     form => {
       withValidAsset(assetTag) { asset =>
