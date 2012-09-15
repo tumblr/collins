@@ -4,7 +4,7 @@ package views
 import config.Configurable
 
 
-object ListConfig extends Configurable {
+object SearchResultsConfig extends Configurable {
 
   override val namespace = "list"
   override val referenceConfigFilename = "list_reference.conf"
@@ -19,6 +19,8 @@ object ListConfig extends Configurable {
     }
   }
 
-  override def validateConfig() {}
+  override def validateConfig() {
+    defaultTagOrder
+  }
 
 }

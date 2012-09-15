@@ -14,7 +14,8 @@ object CollinScriptConfig extends Configurable {
   override val referenceConfigFilename = "collinscript_reference.conf"
 
   def enabled = getBoolean("enabled", false)
-  def refreshPeriod = getLong("refreshPeriod", 1000)
+  def refreshPeriodMillis: Long = getMilliseconds("refreshPeriodMillis")
+    .getOrElse(1000)
   def scriptDir = getString("scriptDir").getOrElse{
     throw CollinScriptConfigException("scriptDir")
   }

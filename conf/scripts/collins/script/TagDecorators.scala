@@ -2,8 +2,8 @@ package collins
 package script
 
 import models.Asset
+import models.asset.AssetView
 import util.plugins.SoftLayer
-
 
 
 /**
@@ -98,6 +98,14 @@ object TagDecorators extends CollinScript {
     } else {
       updated.toString
     }
+  }
+
+  def myButt(aString: String): String = {
+    return Asset.findByTag("tumblrtag1").get.toString
+  }
+
+  def myAss(asset: models.Asset): String = {
+    return asset.toString
   }
 
   /**

@@ -23,7 +23,6 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-compiler" % "2.9.1",
   "org.slf4j" % "slf4j-api" % "1.6.1",
   "javax.servlet" % "servlet-api" % "2.5",
-  "org.apache.httpcomponents" % "httpmime" % "4.2.1", 
   "javax.servlet" % "servlet-api" % "2.5",
   "commons-net" % "commons-net" % "3.1",
   "org.apache.commons" % "commons-lang3" % "3.1",

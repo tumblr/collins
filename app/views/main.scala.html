@@ -1,6 +1,7 @@
 @(title: String, loggedIn: Boolean = true)(content: Html)(implicit req: Request[AnyContent])
 
 @import helper._
+@import _root_.models.Asset
 @import _root_.collins.script.CollinScriptRegistry
 @import _root_.util.views.Formatter
 @import _root_.controllers.Permissions
@@ -25,6 +26,8 @@
 
     <link rel="shortcut icon" type="image/gif" href="@routes.Assets.at("images/favicon.ico")">
   </head>
+
+  <h1>COLLINSCRIPT: @CollinScriptRegistry.callMethod("collins.script.TagDecorators.myAss", Asset.findByTag("tumblrtag1").get)</h1>
 
   <body>
     @if(loggedIn) {

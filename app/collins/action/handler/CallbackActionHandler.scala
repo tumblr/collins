@@ -25,7 +25,7 @@ trait CallbackActionHandler extends ActionHandler with CallbackHandler {
    *
    * @param pce the PropertyChangeEvent to execute the Collins Action against.
    */
-  override def apply(pce: PropertyChangeEvent): Unit = {
+  override def apply(pce: PropertyChangeEvent) = {
     val value = getValue(pce.asInstanceOf[PropertyChangeEvent])
     if (value == null) {
       logger.warn("Got no value back to use with command %s"

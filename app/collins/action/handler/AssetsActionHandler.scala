@@ -68,20 +68,16 @@ case class AssetsScriptActionHandler(override val command: Seq[String])
   extends ScriptActionExecutor with AssetsActionHandler {
 
   override def checkAssetsAction(assets: Page[AssetView]): Boolean = {
-    val retVal = runCommand(templateCommandWithObject(assets) : _*)
-    if (retVal == None) {
-      false
-    } else {
-      retVal.asInstanceOf[Boolean]
+    runCommand(templateCommandWithObject(assets) : _*) match {
+      case None => false
+      case (b: java.lang.Boolean) => b
     }
   }
 
   override def executeAssetsAction(assets: Page[AssetView]): String = {
-    val retVal = runCommand(templateCommandWithObject(assets) : _*)
-    if (retVal == None) {
-      ""
-    } else {
-      retVal.toString
+    runCommand(templateCommandWithObject(assets) : _*) match {
+      case None => ""
+      case (s: String) => s
     }
   }
 

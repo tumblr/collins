@@ -44,7 +44,7 @@ object ListHelper {
    * @return an ordered list of Strings containing tags from assets
    */
   def getListHeaderTags(): Seq[String] = {
-    ListConfig.defaultTagOrder
+    SearchResultsConfig.defaultTagOrder
   }
 
   /**

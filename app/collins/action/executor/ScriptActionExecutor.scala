@@ -5,6 +5,7 @@ package executor
 import script.CollinScriptExecutor
 
 import play.api.Logger
+import scala.collection.JavaConversions._
 
 
 /**
@@ -37,11 +38,9 @@ trait ScriptActionExecutor extends ActionExecutor {
    * call.
    */
   override protected def runCommandBoolean(cmd: FormattedValues): Boolean = {
-    val retVal = runCommand(cmd : _*)
-    if (retVal == None) {
-      false
-    } else{
-      retVal.asInstanceOf[Boolean]
+    runCommand(cmd : _*) match {
+      case None => false
+      case (b: java.lang.Boolean) => b
     }
   }
 
@@ -55,11 +54,9 @@ trait ScriptActionExecutor extends ActionExecutor {
    * call.
    */
   override protected def runCommandString(cmd: FormattedValues): String = {
-    val retVal = runCommand(cmd : _*)
-    if (retVal == None) {
-      ""
-    } else{
-      retVal.toString
+    runCommand(cmd : _*) match {
+      case None => ""
+      case (b: String) => b
     }
   }
 

@@ -1,6 +1,8 @@
 package collins
 package script
 
+import models.Asset
+import models.asset.AssetView
 import util.conversions._
 
 import java.io.File
@@ -11,7 +13,7 @@ import scala.collection.JavaConversions._
 import scala.tools.nsc.io.AbstractFile
 
 import com.googlecode.scalascriptengine.{Config, FromClasspathFirst, ScalaScriptEngine}
-
+import com.googlecode.scalascriptengine.RefreshAsynchronously
 
 
 case class CollinScriptCompileException(script: String, msg: String)
@@ -35,9 +37,15 @@ sealed trait CollinScriptEngine {
   var enabled = CollinScriptConfig.enabled
   val engine = new ScalaScriptEngine(
       Config(Set(sourceDir), compileClasspath, runtimeClasspath, outputDir))
-      with FromClasspathFirst {
-        val recheckEveryMillis: Long = CollinScriptConfig.refreshPeriod
+      with RefreshAsynchronously with FromClasspathFirst {
+        val recheckEveryMillis: Long = CollinScriptConfig.refreshPeriodMillis
       }
+
+  def toList[a](array: Array[a]): List[a] = {
+    if (array == null || array.length == 0) Nil
+    else if (array.length == 1) List(array(0))
+    else array(0) :: toList(array.slice(1, array.length))
+  }
 
   /**
    * Calls a CollinScript method specified on an Object as a string,
@@ -52,20 +60,27 @@ sealed trait CollinScriptEngine {
     logger.debug("CollinScript method call: %s, args: %s".format(method,
         args.mkString(", ")))
     if (!enabled) {
-      Logger.logger.warn("CollinScript is not enabled but callMethod(%s) called."
+      logger.warn("CollinScript is not enabled but callMethod(%s) called."
           .format(method))
       return None
     }
     tryRefresh
     // Derives argument classes and calls method on the specified Object.
+    // AssetView objects will be typed as Assets, and only AssetView
+    // objects may be passed to scripts, so cast appropriately.
     val parameterClasses = args.map{ arg => arg.getClass }
     val methodSplit = method.split("\\.")
     val objectClass = methodSplit.slice(0, methodSplit.length - 1)
       .mkString(".")
     val classMethod = methodSplit(methodSplit.length - 1)
+    logger.error("OBJECT CLASS: %s".format(objectClass))
+    logger.error("CLASS METHOD: %s".format(classMethod))
+    logger.error("OBJECT METHODS: %s".format(toList(engine.get[AnyRef](objectClass).getMethods)))
     try {
-      val retVal = engine.get[AnyRef](objectClass).getMethod(classMethod,
-          parameterClasses : _*).invoke(this, args : _*)
+      val retVal = engine.get[AnyRef](objectClass).getMethod("decorateTag", models.Asset.getClass).invoke(this, args: _*)
+
+      //engine.get[CollinScript](objectClass).getMethod(classMethod,
+          //classOf[Asset]).invoke(engine, args : _*)
       retVal
     } catch {
       case e => {
@@ -84,7 +99,7 @@ sealed trait CollinScriptEngine {
    *   classpath
    */
   protected def getAppClasspath: Set[File] = {
-    classOf[CollinScript].getClassLoader.asInstanceOf[URLClassLoader].getURLs()
+    classOf[Asset].getClassLoader.asInstanceOf[URLClassLoader].getURLs()
       .map{ url => new File(url.getPath) }.toSet
   }
 
@@ -93,15 +108,14 @@ sealed trait CollinScriptEngine {
    * defaulting to the latest successfully-compiled code version if an error
    * occurs.
    */
-  protected def tryRefresh: Unit = {
+  def tryRefresh: Unit = {
     try {
       logger.debug("Refreshing CollinScript engine...")
       engine.refresh
     } catch {
       case e => {
-        Logger.logger.error("COLLINSCRIPT COMPILATION ERROR:\n%s"
-            .format(e.getTraceAsString))
-        return
+        logger.error("COLLINSCRIPT COMPILATION ERROR:\n%s".format(
+           e.getTraceAsString))
       }
     }
   }

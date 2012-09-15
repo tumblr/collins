@@ -21,9 +21,14 @@ object CollinScriptExecutor {
    * @return the results of the CollinScript method call.
    */
   def runScriptCommand(cmd: Seq[AnyRef]): AnyRef = {
-    val methodCall = cmd(0).asInstanceOf[String]
-    val methodCallParams = cmd.slice(1, cmd.length)
-    CollinScriptRegistry.callMethod(methodCall, methodCallParams : _*)
+    cmd match {
+      case Nil => None
+      case Seq(methodCall, methodCallParams@_*) => methodCall match {
+        case (method: String) => CollinScriptRegistry.callMethod(method,
+            methodCallParams : _*)
+        case _ => None
+      }
+    }
   }
 
 }

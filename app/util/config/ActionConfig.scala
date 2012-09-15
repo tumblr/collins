@@ -6,11 +6,6 @@ import collins.action.ActionType
 import com.typesafe.config.{ConfigValue => TypesafeConfigValue, ConfigValueType}
 
 
-case class ActionConfigException(component: String)
-  extends Exception("Didn't find %s in configuration for action"
-      .format(component))
-
-
 case class ActionConfig(override val source: TypesafeConfiguration)
   extends ConfigAccessor with ConfigSource {
 
@@ -31,7 +26,7 @@ case class ActionConfig(override val source: TypesafeConfiguration)
   protected def getCommand(): Seq[String] = {
     val cmd = getConfigValue("command") match {
       case None =>
-        throw ActionConfigException("command")
+        Seq.empty[String]
       case Some(v) => v.valueType match {
         case ConfigValueType.LIST =>
           getStringList("command")
@@ -40,10 +35,10 @@ case class ActionConfig(override val source: TypesafeConfiguration)
       }
     }
     val filtered = cmd.filter(_.nonEmpty)
-    if (filtered.isEmpty) {
-      throw ActionConfigException("command")
+    filtered match {
+      case Nil => Seq.empty[String]
+      case (filteredList) => filteredList
     }
-    filtered
   }
 
 }
