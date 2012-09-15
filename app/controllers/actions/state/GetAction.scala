@@ -27,9 +27,11 @@ object GetAction {
  * @apiperm controllers.AssetStateApi.getState
  * @collinsshell {{{
  *  collins-shell state get NAME
+ *  collins-shell state list
  * }}}
  * @curlexample {{{
  *  curl -v -u blake:admin:first --basic http://localhost:9000/api/state/TESTING
+ *  curl -v -u blake:admin:first --basic http://localhost:9000/api/states
  * }}}
  */
 case class GetAction(

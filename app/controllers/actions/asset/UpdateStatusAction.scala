@@ -35,7 +35,7 @@ object UpdateStatusAction extends ParamValidation {
  * @apirespond 500 error saving status
  * @apiperm controllers.AssetApi.updateAssetStatus
  * @collinsshell {{{
- *  collins-shell asset set_status [STATUS --state=STATE --reason='REASON' --tag=TAG]
+ *  collins-shell asset set_status [--status=STATUS --state=STATE --reason='REASON' --tag=TAG]
  * }}}
  * @curlexample {{{
  *  curl -v -u blake:admin:first --basic \

@@ -2,7 +2,6 @@ package models
 
 import collins.validation.Pattern.{isAlphaNumericString, isNonEmptyString}
 
-import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.json.Json.toJson
 import org.squeryl.PrimitiveTypeMode._
@@ -99,8 +98,6 @@ case class State(
   label: String,      // A visual (short) label to accompany the state
   description: String // A longer description of the state
 ) extends ValidatedEntity[Int] {
-  private[this] val logger = Logger("State")
-
   def getId(): Int = id
   def getDisplayLabel(): String = "%s - %s".format(getStatusName, label)
   def getStatusName(): String = status match {

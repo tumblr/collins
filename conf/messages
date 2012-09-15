@@ -54,7 +54,7 @@ controllers.AssetStateApi.createState.invalidLabel=The specified label is invali
 
 controllers.AssetStateApi.deleteState.invalidName=The specified name is invalid. A name must be between 2 and 32 characters.
 controllers.AssetStateApi.deleteState.noSuchName=The specified state name does not exist and can not be deleted.
-controllers.AssetStateApi.deleteState.systemName=The specified state is a system name and can not be deleted.
+controllers.AssetStateApi.deleteState.systemName=The specified state is a system name and can not be modified.
 
 controllers.updateForMaintenance.missingDescriptionAndStatus=A problem/solution description and status must both be specified
 controllers.updateForMaintenance.missingStatus=Asset status must be specified

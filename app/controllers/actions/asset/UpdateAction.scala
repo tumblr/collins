@@ -78,11 +78,11 @@ case class UpdateAction(
           val results = new HashMap[String,String]() ++ getAttributeMap
           val (lshw, lldp, chassisTag, rackPosition, groupId) = success
           // all 'known' parameters now, overwrite attributes possibly
-          if (lshw.isDefined) results("lshw") = lshw.get
-          if (lldp.isDefined) results("lldp") = lldp.get
-          if (chassisTag.isDefined) results(ChassisTag.toString) = chassisTag.get
-          if (rackPosition.isDefined) results(RackPosition.toString) = rackPosition.get
-          if (groupId.isDefined) results("groupId") = groupId.get.toString
+          lshw.foreach { l => results("lshw") = l }
+          lldp.foreach { l => results("lldp") = l }
+          chassisTag.foreach { c => results(ChassisTag.toString) = c }
+          rackPosition.foreach { r => results(RackPosition.toString) = r }
+          groupId.foreach { g => results("groupId") = g.toString }
           // powerMap has dynamic keys based on configuration
           val powerMap = PowerUnits.unitMapFromMap(getInputMap)
           // FIXME we should merge the power map with existing power values and rerun power validation
