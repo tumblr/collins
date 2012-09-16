@@ -19,7 +19,7 @@ class SolrSpec extends ApplicationSpecification {
     "serialize an asset" in {
       val assetTag = "solr%d".format(scala.util.Random.nextInt)
       val assetType = AssetType.Enum.ServerNode
-      val status = Status.Enum.Allocated
+      val status = Status.Allocated.get
       val state = State.Running.get
       val meta = List(
         ("A",String, 0,"a"),
@@ -60,9 +60,9 @@ class SolrSpec extends ApplicationSpecification {
     }
   }
 
-  def generateAsset(tag: String, assetType: AssetType.Enum, status: Status.Enum, metaValues: Seq[(String, ValueType, Int, String)], state: State) = {
+  def generateAsset(tag: String, assetType: AssetType.Enum, status: Status, metaValues: Seq[(String, ValueType, Int, String)], state: State) = {
     val asset = Asset.create(Asset(tag, status, assetType))
-    Asset.setState(asset, state)
+    Asset.partialUpdate(asset, None, None, Some(state))
     metaValues.foreach{case (name, value_type, group_id, value) =>
       AssetMeta.findOrCreateFromName(name, value_type)
       val meta = AssetMeta.findByName(name).get
@@ -264,7 +264,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       val dateString = util.views.Formatter.dateFormat(somedate)
       val afinder = AssetFinder(
         Some("foosolrtag"), 
-        Some(Status.Enum.Allocated), 
+        Status.Allocated, 
         Some(AssetType.Enum.ServerNode),
         Some(somedate),
         Some(somedate),
@@ -274,7 +274,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       )
       val expected = List(
         SolrKeyVal("tag", SolrStringValue("foosolrtag")),
-        SolrKeyVal("status", SolrIntValue(Status.Enum.Allocated.id)),
+        SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
         SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id)),
         SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
         SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),

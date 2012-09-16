@@ -4,18 +4,16 @@ package callbacks
 import action.Action
 import action.handler.CallbackActionHandler
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
-import java.util.concurrent.Executors
-
-import com.twitter.util.{Future, FuturePool}
 import play.api.{Application, Configuration, Logger, Plugin}
+import play.api.Play.current
+import play.api.libs.concurrent._
+import akka.actor.Props
 
-
-class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManager {
-
+class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackManager {
   override protected val logger = Logger("CallbackManagerPlugin")
 
-  protected[this] val executor = Executors.newCachedThreadPool()
-  protected[this] val pool = FuturePool(executor)
+  //this must be lazy so it gets called after the system exists
+  override lazy val changeQueue = Akka.system.actorOf(Props(CallbackMessageQueue(pcs)), name = "change_queue_processor")
 
   override def enabled: Boolean = {
     CallbackConfig.pluginInitialize(app.configuration)
@@ -25,6 +23,7 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
   // overrides Plugin.onStart
   override def onStart() {
     if (enabled) {
+      logger.debug("Loading listeners")
       loadListeners()
     }
   }
@@ -32,13 +31,11 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
   // overrides Plugin.onStop
   override def onStop() {
     removeListeners()
-    try executor.shutdown() catch {
-      case _ => // swallow this
-    }
   }
 
   override protected def loadListeners(): Unit = {
     CallbackConfig.registry.foreach { callback =>
+      logger.debug("Loading callback %s".format(callback.name))
       setupCallback(callback)
     }
   }
@@ -57,6 +54,7 @@ class CallbackManagerPlugin(app: Application) extends Plugin with CallbackManage
         return
       }
     }
+    logger.debug("Setting up callback %s - %s %s".format(descriptor.name, eventName, handlesMatch))
     on(eventName, new CallbackHandler {
       override def apply(pce: PropertyChangeEvent) {
         val prevMatch = previousConfigMatches(pce)

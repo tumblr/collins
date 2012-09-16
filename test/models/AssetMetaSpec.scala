@@ -80,7 +80,7 @@ class AssetMetaSpec extends ApplicationSpecification {
         val maybeMeta = AssetMeta.findByName(metaName)
         maybeMeta must beSome[AssetMeta]
         val realMeta = maybeMeta.get
-        val whateverAsset = Asset("foo",Status.Enum.Allocated,AssetType.Enum.ServerNode)
+        val whateverAsset = Asset("foo",Status.Allocated.get,AssetType.Enum.ServerNode)
         AssetMetaValue(whateverAsset, realMeta.id, "123") 
         success
       }
@@ -88,7 +88,7 @@ class AssetMetaSpec extends ApplicationSpecification {
         val maybeMeta = AssetMeta.findByName(metaName)
         maybeMeta must beSome[AssetMeta]
         val realMeta = maybeMeta.get
-        val whateverAsset = Asset("foo",Status.Enum.Allocated,AssetType.Enum.ServerNode)
+        val whateverAsset = Asset("foo",Status.Allocated.get,AssetType.Enum.ServerNode)
         AssetMetaValue(whateverAsset, realMeta.id, "a123") must throwA[IllegalArgumentException]
       }
     }
