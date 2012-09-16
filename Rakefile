@@ -9,7 +9,7 @@ end
 
 task :serve do
   # This is how github serves it: https://help.github.com/articles/using-jekyll-with-pages
-  `jekyll --pygments --no-lsi --safe --serve`
+  `jekyll --auto --pygments --no-lsi --safe --serve`
 end
 
 task :default => :help

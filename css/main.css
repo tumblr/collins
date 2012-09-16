@@ -1,0 +1,173 @@
+/*
+pre code {
+  background-color: transparent;
+}
+*/
+
+section {
+  padding-top: 30px;
+}
+section > ul li {
+  margin-bottom: 5px;
+}
+
+.inlinecode {
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-weight: normal;
+  font-size: 12px;
+  color: #333333;
+  -webkit-border-radius: 3px;
+     -moz-border-radius: 3px;
+          border-radius: 3px;
+}
+
+/* Base class
+------------------------- */
+.jumbotron {
+  position: relative;
+  padding: 40px 0;
+  color: #fff;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0,0,0,.4), 0 0 30px rgba(0,0,0,.075);
+  background: #acb3bb; /* Old browsers */
+  background: -moz-linear-gradient(top,  #acb3bb 0%, #898f98 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#acb3bb), color-stop(100%,#898f98)); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(top,  #acb3bb 0%,#898f98 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(top,  #acb3bb 0%,#898f98 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(top,  #acb3bb 0%,#898f98 100%); /* IE10+ */
+  background: linear-gradient(top,  #acb3bb 0%,#898f98 100%); /* W3C */
+}
+.jumbotron h1 {
+  font-size: 80px;
+  font-weight: bold;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.jumbotron p {
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 30px;
+  margin-bottom: 30px;
+}
+.jumbotron .container {
+  margin-top: 30px;
+}
+
+.subhead {
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+.subhead h1 {
+  font-size: 60px;
+}
+.subhead p {
+  margin-bottom: 20px;
+}
+.subhead .navbar {
+  display: none;
+}
+
+/* Sidenav for Docs
+-------------------------------------------------- */
+
+.sidenav {
+  width: 228px;
+  margin: 30px -10px 0;
+  padding: 0;
+  background-color: #fff;
+  -webkit-border-radius: 6px;
+     -moz-border-radius: 6px;
+          border-radius: 6px;
+  -webkit-box-shadow: 0 1px 4px rgba(0,0,0,.065);
+     -moz-box-shadow: 0 1px 4px rgba(0,0,0,.065);
+          box-shadow: 0 1px 4px rgba(0,0,0,.065);
+}
+.sidenav > li > a {
+  display: block;
+  *width: 190px;
+  margin: 0 0 -1px;
+  padding: 8px 14px;
+  border: 1px solid #e5e5e5;
+}
+.sidenav > li:first-child > a {
+  -webkit-border-radius: 6px 6px 0 0;
+     -moz-border-radius: 6px 6px 0 0;
+          border-radius: 6px 6px 0 0;
+}
+.sidenav > li:last-child > a {
+  -webkit-border-radius: 0 0 6px 6px;
+     -moz-border-radius: 0 0 6px 6px;
+          border-radius: 0 0 6px 6px;
+}
+.sidenav > .active > a {
+  position: relative;
+  z-index: 2;
+  padding: 9px 15px;
+  border: 0;
+  text-shadow: 0 1px 0 rgba(0,0,0,.15);
+  -webkit-box-shadow: inset 1px 0 0 rgba(0,0,0,.1), inset -1px 0 0 rgba(0,0,0,.1);
+     -moz-box-shadow: inset 1px 0 0 rgba(0,0,0,.1), inset -1px 0 0 rgba(0,0,0,.1);
+          box-shadow: inset 1px 0 0 rgba(0,0,0,.1), inset -1px 0 0 rgba(0,0,0,.1);
+}
+/* Chevrons */
+.sidenav .icon-chevron-right {
+  float: right;
+  margin-top: 2px;
+  margin-right: -6px;
+  opacity: .25;
+}
+.sidenav > li > a:hover {
+  background-color: #f5f5f5;
+}
+.sidenav a:hover .icon-chevron-right {
+  opacity: .5;
+}
+.sidenav .active .icon-chevron-right,
+.sidenav .active a:hover .icon-chevron-right {
+  background-image: url(../img/glyphicons-halflings-white.png);
+  opacity: 1;
+}
+.sidenav.affix {
+  top: 40px;
+}
+.sidenav.affix-bottom {
+  position: absolute;
+  top: auto;
+  bottom: 270px;
+}
+
+.sidenav .icon-chevron-right.cr-dim {
+  float: right;
+  margin-top: 2px;
+  margin-right: -6px;
+  opacity: .12;
+}
+.sidenav a:hover .icon-chevron-right.cr-dim {
+  opacity: .25;
+}
+.sidenav .active .icon-chevron-right.cr-dim,
+.sidenav .active a:hover .icon-chevron-right.cr-dim {
+  background-image: url(../img/glyphicons-halflings-white.png);
+  opacity: .5;
+}
+
+/* Footer
+-------------------------------------------------- */
+
+.footer {
+  padding: 70px 0;
+  margin-top: 70px;
+  border-top: 1px solid #e5e5e5;
+  background-color: #f5f5f5;
+}
+.footer p {
+  margin-bottom: 0;
+  color: #777;
+}
+.footer-links {
+  margin: 10px 0;
+}
+.footer-links li {
+  display: inline;
+  margin-right: 10px;
+}

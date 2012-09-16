@@ -1,107 +1,193 @@
 ---
 layout: default
-title: Collins Infrastructure Management
+title: Infrastructure Management for Engineers
+permalink: index.html
 ---
 
-      <div class="hero-unit">
-     	<h1>Collins</h1>
-      	<p>Asset management for engineers</p>
-      </div>
+<header class="jumbotron subhead" id="overview">
+  <div class="container">
+    <h1>
+      Collins
+    </h1>
+    <p class="lead">Infrastructure management for engineers</p>
+  </div>
+</header>
 
-      <!-- Example row of columns -->
-      <div class="row">
-        <div class="span8">
-          <h2>About</h2>
-	  <p>
-	  Collins started as a system to manage all of the physical servers, switches,
-	  racks, etc in Tumblr production environments. As we started to
-	  inventory hardware, IP addresses, software, and so on, we found the API and
-	  data gave us an excellent way to drive automation processes. Today Collins can
-	  do push button cluster (HBase, Hadoop, web, etc) deployment, drive configuration
-	  generation when hardware cluster topologies change, drive infrastructure updates
-	  when software configuration changes, and help manage software deploys.
-	  </p>
-	  
-	  <p>
-	  Because of the loosely coupled design of Collins, consistently applied
-	  conventions are a system requirement. This document serves as a guide
-	  to those conventions as well as the basic core concepts of the collins system.
-	  If you're just interested in the basic howto or screenshots, click
-	  <a href="functions.html">here</a>.
-          </p>
+<div class="container">
 
-          <h2>Approach</h2>
-	  <p>Collins is extremely dumb. It knows about assets, their
-	  meta-data and asset logs. You can think of collins as a key/value
-	  store where each asset has its own set of key/value pairs. There are
-	  no relationships between assets other than the ones you, through
-	  convention, derive. The API makes it trivial to create and manage
-	  the tags (meta-data, key/value pairs) associated with an asset, and
-	  to query based on those tags.
-	  </p>
-	  <p>Collins is intentionally dumb. It worries about basic
-	  authentication, clean API interactions, and data persistence. If you
-	  start thinking, "Hey, I should build X into Collins", you probably
-	  shouldn't. Collins supports both a plugins architecture (for things
-	  that actually in some way change the behavior of collins) as well as
-	  a very usable API (including clients in Python, Ruby and Bash).
-	  Nearly everything you might want to do can be accomplished via the
-	  API and anything that can't is doable as a plugin.
-	  </p>
+  <div class="row">
+    <div class="span3 sidebar">
+      <ul class="nav nav-list sidenav">
+        <li><a href="#about"><i class="icon-chevron-right"></i> About</a></li>
+        <li><a href="#design"><i class="icon-chevron-right"></i> Design</a></li>
+        <li><a href="#features"><i class="icon-chevron-right"></i> Features</a></li>
+        <li><a href="#motivations"><i class="icon-chevron-right"></i> Motivations</a></li>
+        <li><a href="#quickstart"><i class="icon-chevron-right"></i> Quickstart</a></li>
+        <li><a href="#thanks"><i class="icon-chevron-right"></i> Thanks</a></li>
+      </ul>
+    </div>
+
+    <div class="span9">
+      <section id="about">
+        <div class="page-header">
+          <h1>About</h1>
         </div>
-        <div class="span6">
-          <h2>Pages</h2>
-            <dl>
-              {% for post in site.posts reversed %}
-                <dt><a href="{{ post.url }}">{{ post.title }}</a></dt>
-                <dd>{{ post.desc }}</dd>
-              {% endfor %}
-            </dl>
-       </div>
-      </div>
-      <div class="row">
-        <div class="span14">
-	  <h2>Features</h2>
-	  <ul>
-	    <li>Documented REST API</li>
-	    <li>Client libraries in Ruby, Python and Bash</li>
-	    <li>A collins command line shell for scripting and automation</li>
-	    <li>A callback system for hooking into asset lifecycle events</li>
-	    <li>Multiple authentication backends (LDAP, files, etc)</li>
-	    <li>Per-feature and per-endpoint configurable permissions</li>
-	    <li>Flexible Web and API based provisioning (PXE, SSH/grub/kickstart, API (e.g. AWS))</li>
-	    <li>Power management support</li>
-	    <li>IP Address allocation and management support</li>
-	    <li>Support for running collins in distributed mode across multiple datacenters</li>
-	  </ul>
-          <h2>Motivations</h2>
-          <p>
-	  We looked at a dozen or so open source and commercial products before coding began.
-	  Having an API and workflow flexibility were requirements. The intake support for our
-	  specific hardware intake process also needed to be accounted for. We also needed
-	  something that would support not just virtualized systems, but was more tailored
-	  towards physical hardware. We found nothing that met the requirements we had.
-	  Things we looked at included:
-	  </p>
-	    <ul>
-	      <li><a href="http://openstack.org/">openstack</a></li>
-	      <li><a href="https://wiki.ubuntu.com/ServerTeam/Orchestra">Ubuntu Orchestra</a></li>
-	      <li><a href="https://forms.raritan.com/products/data-center-infrastructure-management/dctrack/">dcTrack</a></li>
-	      <li><a href="http://iptrack.sourceforge.net/">IPplan</a></li>
-	      <li><a href="http://opennetadmin.com/">OpenNetAdmin</a></li>
-	      <li><a href="http://code.google.com/p/openipam/">openIPAM</a></li>
-	      <li><a href="http://code.google.com/p/spoiled/">Spoled</a></li>
-	    </ul>
-	  <p>
-	    Some of these are strictly for IPAM, some handled parts of what collins does. None of these were good fits for the
-	    initial problems we were trying to solve.
-	  </p>
-	  <h2>Thanks</h2>
-	  <p>Thanks to Joshua Hoffman, John Bunting, Evan Elias, and Mackenzie Kosut for valuable feedback and testing.  </p>
-    <p>Thanks to Dan Simon for excellent code contributions.</p>
-        </div>
-      </div>
+        <p class="lead">
+          Collins exists to drive infrastructure automation.
+        </p>
+	      <p>
+	        Collins started as a system to manage all of the physical servers, switches,
+	        racks, etc in Tumblr production environments. As we started to
+	        inventory hardware, IP addresses, software, and so on, we found the API and
+	        data gave us an excellent way to drive automation processes. Today Collins can
+	        do push button cluster (HBase, Hadoop, web, etc) deployment, drive configuration
+	        generation when hardware cluster topologies change, drive infrastructure updates
+	        when software configuration changes, and help manage software deploys.
+	      </p>
+        <p>
+          Because of the loosely coupled design of Collins, consistently applied
+	        conventions are a system requirement. This document serves as a guide
+	        to those conventions as well as the basic core concepts of the collins system.
+	        If you're just interested in the basic howto or screenshots, click
+	        <a href="functions.html">here</a>.
+        </p>
+      </section> <!-- about -->
 
-    </div> <!-- /container -->
-  </body>
-</html>
+      <section id="design">
+        <div class="page-header">
+          <h1>Design</h1>
+        </div>
+        <p class="lead">
+          Collins provides an easy to use API on top of a simple data model. You can extend
+          collins through callbacks, plugins, and light-weight collins scripts.
+        </p>
+	      <p>
+          Collins is extremely dumb. It knows about assets, their
+	        meta-data and asset logs. You can think of collins as a key/value
+	        store where each asset has its own set of key/value pairs. There are
+	        no relationships between assets other than the ones you, through
+	        convention, derive. The API makes it trivial to create and manage
+	        the tags (meta-data, key/value pairs) associated with an asset, and
+	        to query based on those tags.
+	      </p>
+	      <p>
+          Collins is intentionally dumb. It worries about basic
+	        authentication, clean API interactions, and data persistence. If you
+	        start thinking, "Hey, I should build X into Collins", you probably
+	        shouldn't. Collins supports both a plugins architecture (for things
+	        that actually in some way change the behavior of collins) as well as
+	        a very usable API (including clients in Python, Ruby and Bash).
+	        Nearly everything you might want to do can be accomplished via the
+	        API and anything that can't is doable as a plugin.
+	      </p>
+      </section>
+
+      <section id="features">
+        <div class="page-header">
+          <h1>Features</h1>
+        </div>
+        <p class="lead">
+          Collins consists of the core application, a set of client libraries, the collins-shell,
+          and an automation toolchain. Nothing but collins core is required.
+        </p>
+	      <ul>
+	        <li>Documented, consistent REST API</li>
+	        <li>Client API libraries in Ruby, Python and Bash</li>
+	        <li>A collins command line shell for scripting and automation</li>
+	        <li>A callback system for hooking into asset lifecycle events</li>
+	        <li>Multiple authentication backends (LDAP, files, etc)</li>
+	        <li>Per-feature and per-endpoint configurable permissions</li>
+	        <li>Flexible Web and API based provisioning (PXE, SSH/grub/kickstart, API (e.g. AWS))</li>
+	        <li>Power management support</li>
+	        <li>IP Address allocation and management support</li>
+	        <li>Support for running collins in distributed mode across multiple datacenters</li>
+          <li>Flexible data-model supporting multi-dimensional keys/values per asset</li>
+          <li>Simple key/value queries as well as a more advanced query language</li>
+          <li>A script engine for modifying collins behavior</li>
+          <li>Internationalized language support</li>
+	      </ul>
+      </section>
+
+      <section id="motivations">
+        <div class="page-header">
+          <h1>Motivations</h1>
+        </div>
+        <p class="lead">
+          By infrastructure engineers, for infrastructure engineers.
+        </p>
+        <p>
+          We looked at a dozen or so open source and commercial products before coding began.
+	        Having an API and flexible workflow were requirements. The intake support for our
+	        specific hardware intake process also needed to be accounted for. We also needed
+	        something that would support not just virtualized systems, but was more tailored
+	        towards physical hardware. We found nothing that met the requirements we had.
+	        Things we looked at included:
+	      </p>
+	      <ul>
+	        <li><a href="http://openstack.org/">openstack</a></li>
+	        <li><a href="https://wiki.ubuntu.com/ServerTeam/Orchestra">Ubuntu Orchestra</a></li>
+	        <li><a href="https://forms.raritan.com/products/data-center-infrastructure-management/dctrack/">dcTrack</a></li>
+	        <li><a href="http://iptrack.sourceforge.net/">IPplan</a></li>
+	        <li><a href="http://opennetadmin.com/">OpenNetAdmin</a></li>
+	        <li><a href="http://code.google.com/p/openipam/">openIPAM</a></li>
+	        <li><a href="http://code.google.com/p/spoiled/">Spoled</a></li>
+	      </ul>
+	      <p>
+	        Some of these are strictly for IPAM, some handled parts of what collins does. None of these were good fits for the
+	        initial problems we were trying to solve.
+	      </p>
+        <p>
+          Collins can sit on top of existing asset management systems (we have done this at Tumblr with both SoftLayer and Amazon)
+          or be the infrastructure source of truth for your entire environment. I personally found openstack to be the closest fit for
+          what we were looking for but the number of changes required to make it work for Tumblr were substantial.
+        </p>
+      </section>
+
+      <section id="quickstart">
+        <div class="page-header">
+          <h1>Quickstart</h1>
+        </div>
+        <p class="lead">
+          Up and running in 5 minutes.
+        </p>
+        <p>
+          Collins has 1 software requirement, Java (with the <a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">unlimited strength JCE</a>).
+          If you would like your data to persist between restarts, you should also have MySQL 5.5 (5.1 may work but is untested).
+        </p>
+        <p>
+          Collins is currently in beta, once released it will also be available as a downloadable zip.
+        </p>
+        <ol>
+          <li>Download the <a href="http://download.playframework.org/releases/play-2.0.3.zip">Play Framework</a></li>
+          <li>Unpack the zip into <code>$HOME/src/play-2.0.3</code></li>
+          <li>Check out the collins code from <a href="https://github.com/tumblr/collins">here</a> into <code>~/src/collins</code></li>
+          <li>In <code>~/src/collins</code> type <code>~/src/play-2.0.3/play</code> and hit enter (this will take a minute the first time)</li>
+          <li>Once you are in the console type <code>compile</code> and hit enter, you should see no errors. We're just testing your environment, you normally won't do this. Now break out of the play console (<code>ctrl-d</code> or <code>quit</code>)</li>
+          <li>Run <code>./scripts/package.sh</code>. This will create a fat zip with all the requirements and dependencies</li>
+        </ol>
+        <p>
+          There is a supplied init script at <code>scripts/collins.sh</code>. This is a useful starting point for running the app. Note that the supplied
+          init script requires <a href="http://libslack.org/daemon/">daemon</a>.
+        </p>
+      </section>
+
+      <section id="thanks">
+        <div class="page-header">
+          <h1>Thanks</h1>
+        </div>
+        <p>
+          A number of people were responsible for Collins growing into the useful tool that it hash.
+        </p>
+        <ul>
+          <li>Dan Simon for being the only other collins contributor for months</li>
+          <li>Steve Salevan for jumping in at the last minute to help get collins into shape to open-source</li>
+          <li>Joshua Hoffman for working with me on the initial specs</li>
+          <li>Dallas Marlow for figuring out all the ways to use the API that I didn't anticipate</li>
+          <li>Brad McDuffie for providing feedback on collins-shell (and making it usable)</li>
+          <li>Everyone else who helped with testing or provided feedback</li>
+        </ul>
+      </section>
+
+    </div> <!-- span9 -->
+  </div> <!-- row -->
+</div> <!-- container -->

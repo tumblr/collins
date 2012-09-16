@@ -1,0 +1,120 @@
+<section id="automated-tags" class="tag-container">
+  <h3>Automated Tags</h3>
+
+  <p>
+    This data should be populated by largely automated processes. The list below is going to be fairly Tumblr specific
+    with some exceptions. I have tried to denote tags that are likely Tumblr specific. If you use Collins as a fact/node
+    terminus with puppet (or whatever system you use), this data can be useful for driving automation. I have tried
+    to denote what Tumblr processes populate this data, but this is likely not very meaningful outside of Tumblr.
+  </p>
+
+  <h4>General Automated Tags</h4>
+  <p>Non-tumblr specific automated tags, although some of the tools may be TUmblr specific.</p>
+  <table class="table-hover table-condensed">
+    <thead>
+      <td>Tag</td><td>Type</td><td>Populated By</td><td>Description</td>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="inlinecode">HOSTNAME</td>
+        <td>String</td>
+        <td>visioner</td>
+        <td>Populated when an asset successfully starts the provisioning process</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">NODECLASS</td>
+        <td>String</td>
+        <td>visioner</td>
+        <td>Populated when an asset successfully starts the provisioning process. This is used by the puppet master to resolve the nodeclass for a host.</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">CONTACT</td>
+        <td>String</td>
+        <td>collins</td>
+        <td>When a user provisions an asset the specified <code>CONTACT</code> is populated. This is used for notification of maintenance, provisioning being done, etc.</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">PRIMARY_ROLE</td>
+        <td>String</td>
+        <td>collins</td>
+        <td>When a user provisions an asset the chosen <code>PRIMARY_ROLE</code> is populated. This is used to communicate the intended purpose of the asset (CACHE, DATABASE, HADOOP, PROXY, WEB, etc)</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">POOL</td>
+        <td>String</td>
+        <td>collins</td>
+        <td>Populated along with <code>PRIMARY_ROLE</code>, this tag is used to communicate the functional pool the asset should participate in, e.g. MEMCACHE_POST_POOL</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">SECONDARY_ROLE</td>
+        <td>String</td>
+        <td>collins</td>
+        <td>Populated along with <code>PRIMARY_ROLE</code>, this tag is used to communicate some secondary role such as MASTER, SLAVE, or a deployment group (such as WEB_A, WEB_B).</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">SYSTEM_USERNAME</td>
+        <td>String</td>
+        <td>visioner</td>
+        <td>Set by visioner when a host is provisioned. In SoftLayer, reconciler populates this data as we pull it from the SL API. Typically 'root'.</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">SYSTEM_PASSWORD</td>
+        <td>String</td>
+        <td>visioner</td>
+        <td>Set by visioner when a host is provisioned. In SoftLayer, reconciler populates this data as we pull it from the SL API. Typically 'root'.</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">DATACENTER_NAME</td>
+        <td>Enum</td>
+        <td>Invisible Touch</td>
+        <td>Set invisible touch when a host goes through intake. Largely unused since we use multicollins deployments.</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">SYSTEM_COST</td>
+        <td>Integer</td>
+        <td>reconciler</td>
+        <td>Populated by reconciler in SoftLayer, populated by hand in EWR</td>
+      </tr>
+
+      <tr>
+        <td class="inlinecode">CANCEL_TICKET</td>
+        <td>Long</td>
+        <td>collins</td>
+        <td>If the SoftLayer plugin is configured and an asset is cancelled, this value is populated</td>
+      </tr>
+
+    </tbody>
+  </table>
+
+  <h4>Tumblr Automated Tags</h4>
+  <p>Tumblr specific automated tags</p>
+  <table class="table-hover table-condensed">
+    <thead>
+      <td>Tag</td><td>Type</td><td>Populated By</td><td>Description</td>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="inlinecode">POWER_STATUS</td>
+        <td>String</td>
+        <td>decommissioner</td>
+        <td>Tracks decommission state as an asset is wiped before being returned</td>
+      </tr>
+      <tr>
+        <td class="inlinecode">{APP}_SHA</td>
+        <td>String</td>
+        <td>deploytool</td>
+        <td>The deploytool updates the SHA on the asset when an application (tumblr, config, etc) is deployed to it. Only assets with the current SHA take production traffic.</td>
+      </tr>
+    </tbody>
+  </table>
+
+</section>

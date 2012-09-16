@@ -1,0 +1,99 @@
+<table class="table table-bordered table-hover table-condensed">
+  <thead>
+    <td>Status</td><td>State Label</td><td>State Name</td><td>State Description</td>
+  </thead>
+  <tbody>
+
+    <tr>
+      <td><strong>Any</strong></td>
+      <td>Failed</td>
+      <td>FAILED</td>
+      <td>A service in this state has encountered a problem and may not be operational. It cannot be started nor stopped.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Any</strong></td>
+      <td>New</td>
+      <td>NEW</td>
+      <td>A service in this state is inactive. It does minimal work and consumes minimal resources.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Any</strong></td>
+      <td>Running</td>
+      <td>RUNNING</td>
+      <td>A service in this state is operational.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Any</strong></td>
+      <td>Starting</td>
+      <td>STARTING</td>
+      <td>A service in this state is transitioning to Running.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Any</strong></td>
+      <td>Stopping</td>
+      <td>STOPPING</td>
+      <td>A service in this state is transitioning to Terminated.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Any</strong></td>
+      <td>Terminated</td>
+      <td>TERMINATED</td>
+      <td>A service in this state has completed execution normally. It does minimal work and consumes minimal resources.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Maintenance</strong></td>
+      <td>Hardware Problem</td>
+      <td>HARDWARE_PROBLEM</td>
+      <td>An asset is experiencing a non-IPMI issue and needs to be examined. It needs investigation.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Maintenance</strong></td>
+      <td>Hardware Testing</td>
+      <td>HW_TESTING</td>
+      <td>Performing some testing that requires putting the asset into a maintenance state.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Maintenance</strong></td>
+      <td>Hardware Upgrade</td>
+      <td>HARDWARE_UPGRADE</td>
+      <td>An asset is in need or in process of having hardware upgraded.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Maintenance</strong></td>
+      <td>IPMI Problem</td>
+      <td>IPMI_PROBLEM</td>
+      <td>An asset is experiencing IPMI issues and needs to be examined. It needs investigation.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Maintenance</strong></td>
+      <td>Maintenance NOOP</td>
+      <td>MAINT_NOOP</td>
+      <td>Doing nothing, bouncing this through maintenance for my own selfish reasons.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Maintenance</strong></td>
+      <td>Network Problem</td>
+      <td>NETWORK_PROBLEM</td>
+      <td>An asset is experiencing a network problem that may or may not be hardware related. It needs investigation.</td>
+    </tr>
+
+    <tr>
+      <td><strong>Maintenance</strong></td>
+      <td>Relocation</td>
+      <td>RELOCATION</td>
+      <td>An asset is being physically relocated.</td>
+    </tr>
+
+  </tbody>
+</table>

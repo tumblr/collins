@@ -1,1 +1,8 @@
 permalink: none
+exclude:
+  - '.gitignore'
+  - CHANGELOG.md
+  - cleanup.sh
+  - Gemfile
+  - Gemfile.lock
+  - Rakefile
