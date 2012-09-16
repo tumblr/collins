@@ -19,7 +19,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
       ms.assetValues.foreach { case(assetTag, metaList) =>
         Asset.findByTag(assetTag.toString.toLowerCase).getOrElse {
           val asset =
-            Asset.create(Asset(assetTag.toString.toLowerCase, Status.Enum.Unallocated, AssetType.Enum.ServerNode))
+            Asset.create(Asset(assetTag.toString.toLowerCase, Status.Unallocated.get, AssetType.Enum.ServerNode))
           metaList.foreach { case (value, assetMetaTag) =>
             AssetMeta.findOrCreateFromName(assetMetaTag)
             val meta = AssetMeta.findByName(assetMetaTag).get

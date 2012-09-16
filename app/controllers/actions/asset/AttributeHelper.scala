@@ -3,6 +3,7 @@ package actions
 package asset
 
 import collection.immutable.DefaultMap
+import play.api.mvc._
 
 case class AttributeMap(underlying: Map[String,String]) extends DefaultMap[String,String] {
   override def get(key: String): Option[String] = underlying.get(key)
@@ -36,6 +37,15 @@ trait AttributeHelper {
   }
 }
 
+object ActionAttributeHelper {
+  def getInputMapFromRequest(request: Request[AnyContent]): Map[String,Seq[String]] = request.queryString ++ (request.body match {
+    case b: play.api.mvc.AnyContent if b.asFormUrlEncoded.isDefined => b.asFormUrlEncoded.get
+    case b: play.api.mvc.AnyContent if b.asMultipartFormData.isDefined => b.asMultipartFormData.get.asFormUrlEncoded
+    case b: Map[_, _] => b.asInstanceOf[Map[String, Seq[String]]]
+    case _ => Map.empty[String, Seq[String]]
+  })
+}
+
 trait ActionAttributeHelper extends AttributeHelper {
   self: SecureAction =>
 
@@ -47,10 +57,6 @@ trait ActionAttributeHelper extends AttributeHelper {
     AttributeMap(map)
   }
 
-  protected def getInputMap: Map[String,Seq[String]] = request.queryString ++ (request.body match {
-    case b: play.api.mvc.AnyContent if b.asFormUrlEncoded.isDefined => b.asFormUrlEncoded.get
-    case b: play.api.mvc.AnyContent if b.asMultipartFormData.isDefined => b.asMultipartFormData.get.asFormUrlEncoded
-    case b: Map[_, _] => b.asInstanceOf[Map[String, Seq[String]]]
-    case _ => Map.empty[String, Seq[String]]
-  })
+  protected def getInputMap: Map[String,Seq[String]] =
+    ActionAttributeHelper.getInputMapFromRequest(request)
 }
