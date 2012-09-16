@@ -19,12 +19,10 @@ object TagDecorators extends CollinScript {
    * @param asset an Asset whose date of creation will be returned.
    * @return the date of creation of an Asset.
    */
-  def decorateCreated(assetString: String): String = {
-    val created = asset.created
-    if (created == None) {
-      ""
-    } else {
-      created.toString
+  def decorateCreated(asset: Asset): String = {
+    asset.created match {
+      case null => ""
+      case (value) => value.toString
     }
   }
 
@@ -35,11 +33,9 @@ object TagDecorators extends CollinScript {
    * @return a String containing the hostname of an Asset.
    */
   def decorateHostname(asset: Asset): String = {
-    val hostname = asset.getHostnameMetaValue
-    if (hostname == None) {
-      ""
-    } else {
-      hostname.toString
+    asset.getHostnameMetaValue match {
+      case null => ""
+      case (value) => value.toString
     }
   }
 
@@ -66,11 +62,9 @@ object TagDecorators extends CollinScript {
    * @return a String containing the status of an Asset.
    */
   def decorateStatus(asset: Asset): String = {
-    val status = asset.getStatusName
-    if (status == None) {
-      ""
-    } else {
-      status.toString
+    asset.getStatusName match {
+      case null => ""
+      case (value) => value.toString
     }
   }
 
@@ -93,11 +87,9 @@ object TagDecorators extends CollinScript {
    * @return a String containing the date of last update.
    */
   def decorateUpdated(asset: Asset): String = {
-    val updated = asset.updated
-    if (updated == None) {
-      ""
-    } else {
-      updated.toString
+    asset.updated match {
+      case None => ""
+      case (value) => value.toString
     }
   }
 

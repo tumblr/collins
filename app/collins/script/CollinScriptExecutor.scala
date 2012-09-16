@@ -11,8 +11,6 @@ import play.api.Logger
  */
 object CollinScriptExecutor {
 
-  protected val logger = Logger("CollinScriptExecutor")
-
   /**
    * Executes a command stored as a sequence of objects, casting the first
    * argument as a String and passing the rest to the CollinScript verbatim.

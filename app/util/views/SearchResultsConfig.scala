@@ -6,8 +6,8 @@ import config.Configurable
 
 object SearchResultsConfig extends Configurable {
 
-  override val namespace = "list"
-  override val referenceConfigFilename = "list_reference.conf"
+  override val namespace = "searchresults"
+  override val referenceConfigFilename = "searchresults_reference.conf"
 
   def defaultTagOrder = {
     val tagList = getStringList("default_tag_order")

@@ -1,7 +1,8 @@
 package collins
 package script
 
-import util.config.Configurable
+import collins.validation.File
+import util.config.{Configurable, ConfigValue}
 
 
 case class CollinScriptConfigException(source: String)
@@ -15,10 +16,8 @@ object CollinScriptConfig extends Configurable {
 
   def enabled = getBoolean("enabled", false)
   def refreshPeriodMillis: Long = getMilliseconds("refreshPeriodMillis")
-    .getOrElse(1000)
-  def scriptDir = getString("scriptDir").getOrElse{
-    throw CollinScriptConfigException("scriptDir")
-  }
+    .getOrElse(5000)
+  def scriptDir = getString("scriptDir")(ConfigValue.Required).filter(_.nonEmpty).get
 
   override protected def validateConfig() {
     if (!enabled) {

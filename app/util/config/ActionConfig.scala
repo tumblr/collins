@@ -15,6 +15,10 @@ case class ActionConfig(override val source: TypesafeConfiguration)
 
   def validateConfig() {
     command
+    require(
+      command.length > 0,
+      "A command must be specified for this action."
+    )
   }
 
   /**
