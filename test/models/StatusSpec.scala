@@ -30,7 +30,7 @@ class StatusSpec extends ApplicationSpecification {
         Status.findById(0) must beNone
       }
       "findByName" in {
-        Status.findByName(Status.Enum.New.toString) must beSome[Status]
+        Status.findByName("New") must beSome[Status]
         Status.findByName("fizzbuzz") must beNone
       }
     }

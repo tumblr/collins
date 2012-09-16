@@ -27,7 +27,7 @@ trait ValidatedEntity[T] extends KeyedEntity[T] {
 }
 
 trait BasicModel[T <: AnyRef] { self: Schema =>
-  private[this] val logger = Logger.logger
+  private[this] val logger = Logger(getClass)
 
   import org.squeryl.PrimitiveTypeMode
 
@@ -77,7 +77,7 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
     }
 
   protected def loggedInvalidation(s: String, t: T) {
-    logger.trace("Callback triggered: %s".format(s))
+    logger.trace("Callback triggered: %s - %s".format(getClass.getName, s))
     cacheKeys(t).map { k =>
       logger.trace("Invalidating key %s".format(k))
       Cache.invalidate(k)
@@ -114,6 +114,7 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
     try {
       val oldValue = get(t)
       tableDef.update(t)
+      loggedInvalidation("updateOldValue", oldValue)
       updateEventName.map { name =>
         oldValue.forComparison
         t.forComparison

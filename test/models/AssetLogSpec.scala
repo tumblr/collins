@@ -81,7 +81,7 @@ class AssetLogSpec extends ApplicationSpecification {
   trait mocklog extends Scope {
     val tag = "tumblrtag15"
     def createAsset = {
-      Asset.create(Asset(tag, Status.Enum.Incomplete, AssetType.Enum.ServerNode))
+      Asset.create(Asset(tag, Status.Incomplete.get, AssetType.Enum.ServerNode))
       Asset.findByTag(tag).get
     }
     val asset = Asset.findByTag(tag) match {

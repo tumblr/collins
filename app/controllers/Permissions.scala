@@ -42,6 +42,7 @@ object Permissions {
     def GetAssets = spec("getAssets", Spec)
     def UpdateAsset = spec("updateAsset", AdminSpec)
     def UpdateAssetForMaintenance = spec("updateAssetForMaintenance", AdminSpec)
+    def UpdateAssetStatus = spec("updateAssetStatus", AdminSpec)
   }
 
   object AssetLogApi extends PermSpec("controllers.AssetLogApi") {
@@ -57,6 +58,14 @@ object Permissions {
     def PowerManagement = spec("powerManagement", AdminSpec)
     def ProvisionAsset = spec("provisionAsset", AdminSpec)
     def GetProvisioningProfiles = spec("getProvisioningProfiles", AdminSpec)
+  }
+
+  object AssetStateApi extends PermSpec("controllers.AssetStateApi") {
+    def Spec = spec(AdminSpec)
+    def Create = spec("createState", Spec)
+    def Delete = spec("deleteState", Spec)
+    def Get = spec("getState", LoggedIn)
+    def Update = spec("updateState", Spec)
   }
 
   object AssetWebApi extends PermSpec("controllers.AssetWebApi") {

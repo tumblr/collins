@@ -2,9 +2,9 @@ package controllers
 package actions
 package asset
 
-import models.{AssetLifecycle, Status => AStatus}
+import models.AssetLifecycle
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
-import util.MessageHelperI
+import util.MessageHelper
 import util.power.PowerUnits
 import util.security.SecuritySpecification
 import validators.ParamValidation
@@ -18,6 +18,25 @@ import play.api.data.validation.Constraints._
 import collection.immutable.DefaultMap
 import collection.mutable.HashMap
 
+object UpdateAction extends ParamValidation {
+  object Messages extends MessageHelper("asset.update") {
+    def invalidLshw = message("lshw.invalid")
+    def invalidLldp = message("lldp.invalid")
+    def invalidChassisTag = message("chassisTag.invalid")
+    def invalidRackPosition = message("rackPosition.invalid")
+    def invalidStatus = rootMessage("asset.status.invalid")
+    def invalidState = rootMessage("asset.state.invalid")
+    def invalidGroupId = message("groupId.invalid")
+  }
+  val UpdateForm = Form(tuple(
+    "lshw" -> validatedOptionalText(1),
+    "lldp" -> validatedOptionalText(1),
+    ChassisTag.toString -> validatedOptionalText(1),
+    RackPosition.toString -> validatedOptionalText(1),
+    "groupId" -> optional(longNumber)
+  ))
+}
+
 case class UpdateAction(
   assetTag: String,
   spec: SecuritySpecification,
@@ -25,11 +44,12 @@ case class UpdateAction(
 ) extends SecureAction(spec, handler)
     with AssetAction
     with ActionAttributeHelper
-    with MessageHelperI
-    with ParamValidation
 {
 
-  override val parentKey: String = "asset.update"
+  import UpdateAction.Messages._
+  import UpdateAction.UpdateForm
+
+  override def invalidAttributeMessage(s: String) = message("attribute.invalid")
 
   case class ActionDataHolder(underlying: Map[String,String])
     extends RequestDataHolder
@@ -37,12 +57,6 @@ case class UpdateAction(
   {
     override def get(key: String) = underlying.get(key)
     override def iterator = underlying.iterator
-
-    def onlyStatus: Boolean = contains("status") match {
-      case true =>
-        size == 1 || (size == 2 && contains("reason"))
-      case false => false
-    }
   }
 
   protected def onlyAttributes: Boolean = {
@@ -54,33 +68,21 @@ case class UpdateAction(
     }
   }
 
-  override def invalidAttributeMessage(s: String) = message("attribute.invalid")
-
-  lazy val dataForm = Form(tuple(
-    "lshw" -> validatedOptionalText(1),
-    "lldp" -> validatedOptionalText(1),
-    ChassisTag.toString -> validatedOptionalText(1),
-    RackPosition.toString -> validatedOptionalText(1),
-    "status" -> optional(of[AStatus.Enum]),
-    "groupId" -> optional(longNumber)
-  ))
-
-  override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
+  override def validate(): Validation = {
     withValidAsset(assetTag) { asset =>
-      val form = dataForm.bindFromRequest()(request)
+      val form = UpdateForm.bindFromRequest()(request)
       form.fold(
         error => Left(RequestDataHolder.error400(fieldError(error))),
         success => {
           // drop in attributes first, these have the lowest priority
           val results = new HashMap[String,String]() ++ getAttributeMap
-          val (lshw, lldp, chassisTag, rackPosition, status, groupId) = success
+          val (lshw, lldp, chassisTag, rackPosition, groupId) = success
           // all 'known' parameters now, overwrite attributes possibly
-          if (lshw.isDefined) results("lshw") = lshw.get
-          if (lldp.isDefined) results("lldp") = lldp.get
-          if (chassisTag.isDefined) results(ChassisTag.toString) = chassisTag.get
-          if (rackPosition.isDefined) results(RackPosition.toString) = rackPosition.get
-          if (status.isDefined) results("status") = status.get.toString
-          if (groupId.isDefined) results("groupId") = groupId.get.toString
+          lshw.foreach { l => results("lshw") = l }
+          lldp.foreach { l => results("lldp") = l }
+          chassisTag.foreach { c => results(ChassisTag.toString) = c }
+          rackPosition.foreach { r => results(RackPosition.toString) = r }
+          groupId.foreach { g => results("groupId") = g.toString }
           // powerMap has dynamic keys based on configuration
           val powerMap = PowerUnits.unitMapFromMap(getInputMap)
           // FIXME we should merge the power map with existing power values and rerun power validation
@@ -96,8 +98,6 @@ case class UpdateAction(
       val results: models.AssetLifecycle.Status[Boolean] =
         if (onlyAttributes)
           AssetLifecycle.updateAssetAttributes(definedAsset, map)
-        else if (adh.onlyStatus)
-          AssetLifecycle.updateAssetStatus(definedAsset, map)
         else
           AssetLifecycle.updateAsset(definedAsset, map)
       results match {
@@ -113,12 +113,11 @@ case class UpdateAction(
   }
 
   protected def fieldError(f: Form[_]) = f match {
-    case e if e.error("lshw").isDefined => message("lshw.invalid")
-    case e if e.error("lldp").isDefined => message("lldp.invalid")
-    case e if e.error(ChassisTag.toString).isDefined => message("chassisTag.invalid")
-    case e if e.error(RackPosition.toString).isDefined => message("rackPosition.invalid")
-    case e if e.error("status").isDefined => rootMessage("asset.status.invalid")
-    case e if e.error("groupId").isDefined => message("groupId.invalid")
+    case e if e.error("lshw").isDefined => invalidLshw
+    case e if e.error("lldp").isDefined => invalidLldp
+    case e if e.error(ChassisTag.toString).isDefined => invalidChassisTag
+    case e if e.error(RackPosition.toString).isDefined => invalidRackPosition
+    case e if e.error("groupId").isDefined => invalidGroupId
     case n => "Unexpected error occurred"
   }
 
