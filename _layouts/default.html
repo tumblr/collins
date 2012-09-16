@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ page.desc }}">
 
     <title>Collins - {{ page.title }}</title>
 
@@ -28,9 +29,9 @@
             <ul class="nav">
               <li class="{% if page.permalink == "index.html" %}active{% endif %}"><a href="index.html">Home</a></li>
               <li class="{% if page.permalink == "concepts.html" %}active{% endif %}"><a href="concepts.html">Concepts</a></li>
-              <li class=""><a href="">Overview</a></li>
+              <li class="{% if page.permalink == "overview.html" %}active{% endif %}"><a href="overview.html">Overview</a></li>
               <li class=""><a href="">Integrations</a></li>
-              <li class=""><a href="">API</a></li>
+              <li class="{% if page.permalink == "api.html" %}active{% endif %}"><a href="api.html">API</a></li>
               <li class=""><a href="">Configuration</a></li>
               <li class=""><a href="">Tools</a></li>
             </ul>
@@ -46,7 +47,7 @@
         <p class="pull-right"><a href="#">Back to top</a></p>
 	      <p>Built at <a href="http://www.tumblr.com" target="_blank">Tumblr</a></p>
         <p>Code licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License v2.0</a>. Documentation licensed under <a href="http://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>.</p>
-        <p>Documentation inspired (stolen) by <a href="http://twitter.github.com/bootstrap">bootstrap</a></p>
+        <p>Documentation inspired (stolen) by (from) <a href="http://twitter.github.com/bootstrap">bootstrap</a></p>
 
         <ul class="footer-links">
           <li><a href="https://github.com/tumblr/collins/issues?state=open">Submit issues</a></li>

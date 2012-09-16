@@ -6,3 +6,4 @@ exclude:
   - Gemfile
   - Gemfile.lock
   - Rakefile
+  - template.html

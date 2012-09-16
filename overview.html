@@ -1,0 +1,505 @@
+---
+permalink: overview.html
+title: Overview
+layout: default
+desc: An overview and walkthrough of collins
+---
+
+<header class="jumbotron subhead" id="page-overview">
+  <div class="container">
+    <h1>
+      Collins Overview
+    </h1>
+    <p class="lead">A screenshot tour of the basics</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="row">
+
+    <div class="span3 sidebar">
+      <ul class="nav nav-list sidenav">
+        <li><a href="#basics"><i class="icon-chevron-right"></i> Basics</a></li>
+        <li><a href="#login"><i class="icon-chevron-right"></i> Login</a></li>
+        <li><a href="#search"><i class="icon-chevron-right"></i> Search</a></li>
+        <li><a href="#asset-details"><i class="icon-chevron-right"></i> Asset Details</a></li>
+        <li><a href="#asset-actions"><i class="icon-chevron-right"></i> Asset Actions</a>
+          <ul class="nav nav-list">
+            <li><a href="#asset-provisioning"><i class="icon-chevron-right cr-dim"></i> Provisioning</a></li>
+            <li><a href="#asset-maintenance"><i class="icon-chevron-right cr-dim"></i> Maintenance</a></li>
+            <li><a href="#asset-cancel"><i class="icon-chevron-right cr-dim"></i> Cancellation</a></li>
+            <li><a href="#asset-delete"><i class="icon-chevron-right cr-dim"></i> Deletion</a></li>
+            <li><a href="#asset-powermanagement"><i class="icon-chevron-right cr-dim"></i> Power Management</a></li>
+            <li><a href="#asset-logs"><i class="icon-chevron-right cr-dim"></i> Logs</a></li>
+            <li><a href="#asset-activation"><i class="icon-chevron-right cr-dim"></i> Activation</a></li>
+          </ul>
+        </li>
+        <li><a href="#admin"><i class="icon-chevron-right"></i> Admin</a>
+          <ul class="nav nav-list">
+            <li><a href="#admin-logs"><i class="icon-chevron-right cr-dim"></i> Logs</a></li>
+            <li><a href="#stats"><i class="icon-chevron-right cr-dim"></i> Stats</a></li>
+            <li><a href="#create"><i class="icon-chevron-right cr-dim"></i> Create</a></li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+
+    <div class="span9">
+      <section id="basics">
+        <div class="page-header">
+          <h1>Basics</h1>
+        </div>
+        <p class="lead">Collins in 60 seconds</p>
+        <p>
+          The Collins web UI is very simple, only providing a small subset of the functionality available via the API.
+          This document should be considered a user guide to Collins where a user is someone who provisions machines or
+          occasionally needs to look up asset data. The information here will not be particularly useful for Collins
+          API developers or Collins administrators. This is as close to a walkthrough or tour as you will get.
+        </p>
+        <p>
+          During the tour we'll walk through the process of provisioning a server, as well as highlight some of the
+          additional functionality available in the web UI. You can mostly just follow the screenshots unless you want
+          additional information.
+        </p>
+        <p>
+          <span class="label label-info">Heads up!</span> Most actions outside of logging in, searching, or viewing an
+          asset will result in some action being taken. For instance, putting an asset in maintenance may generate a JIRA
+          ticket for the datacenter team. Power cycling a host will cause it to be rebooted, and log the fact that you
+          rebooted it. Be responsible.
+        </p>
+      </section>
+
+      <section id="login">
+        <div class="page-header">
+          <h1>Login</h1>
+        </div>
+        <p class="lead">Getting into Collins</p>
+        <p>
+          At Tumblr you will use your LDAP credentials to authenticate to Collins. Your LDAP groups will determine the level
+          of functionality you have available to you in collins. If you are not at Tumblr your administrator may be using
+          flat-files or some other authentication mechanism. See your Collins administrator for login details.
+        </p>
+        <p>
+          When you first go to collins you will be presented with an interface like the following.
+        </p>
+        <ul class="thumbnails">
+          <li class="span9">
+            <a href="img/collins_login.png" target="_blank" class="thumbnail">
+              <img src="img/collins_login.png" alt="Account Login">
+            </a>
+          </li>
+        </ul>
+        <p>
+          Enter in your account credentials and hit the enter key or click sign-in to authenticate.
+        </p>
+        <p>
+          <span class="label label-info">Heads up!</span> Authentication is required to do anything in collins. The only functionality
+            available anonymously in Collins is the login page, the help page, and the timestamp API endpoint.
+        </p>
+      </section>
+
+      <section id="search">
+        <div class="page-header">
+          <h1>Search</h1>
+        </div>
+        <p class="lead">Find the stuff you're looking for, fast</p>
+        <p>
+          Once you have authenticated to collins you should be presented with a search UI. The elements on the left in this interface
+          are asset attributes (e.g. status, tag, etc) while the elements on the right are tags (e.g. hostname, pool, etc). The search
+          fields on the left are fixed, the search fields on the right can be configured by your collins administrator.
+        </p>
+        <ul class="thumbnails">
+          <li class="span9">
+            <a href="img/collins_search.png" target="_blank" class="thumbnail">
+              <img src="img/collins_search.png" alt="Search Page">
+            </a>
+          </li>
+        </ul>
+        <p>
+          In this interface you can search for assets that match the criteria you specify. Since we're looking for a server to provision,
+          we're going to look for unallocated server nodes. Due to the current collins configuration, you can only provision Unallocated hosts.
+          A sample search results page is below.
+        </p>
+        <ul class="thumbnails">
+          <li class="span9">
+            <a href="img/collins_search_results.png" target="_blank" class="thumbnail">
+              <img src="img/collins_search_results.png" alt="Search Page">
+            </a>
+          </li>
+        </ul>
+        <p>
+          The search results page is color coded to reflect the status of the asset. Incomplete and new assets are <span class="text-warning">yellow</span>,
+          provisioning and provisioned assets are <span class="text-info">blue</span>, cancelled and decommissioned assets are <span class="text-success">green</span>,
+          and maintenance assets are <span class="text-error">red</span>. People usually ask why allocated/unallocated assets aren't green. Since allocated and
+          unallocated are the default states, using green resulted in an all green search results page. No color was just better.
+        </p>
+      </section>
+
+      <section id="asset-details">
+        <div class="page-header">
+          <h1>Asset Details</h1>
+        </div>
+        <p class="lead">Dig into your equipment and configurations</p>
+        <p>
+          Once you click through from the search results to an asset, you are presented with the details page.
+          The asset details page provides all known asset information to you in an easy to digest format.
+        </p>
+        <div id="asset-carousel" class="carousel slide">
+          <div class="carousel-inner">
+            <div class="active item">
+              <img src="img/collins_asset.png" alt="Asset Overview">
+              <div class="carousel-caption">
+                <h4>Asset Overview</h4>
+                <p>
+                  The overview tab provides general details about the asset such as the hostname, status, any user supplied notes as well
+                  as a hardware overview which includes information such as amount of RAM or number of CPU's. The formatting of each
+                  tag is declared in the application configuration as a decorator. Decorators are available for links, images, and many other
+                  formats.
+                </p>
+              </div>
+            </div>
+            <div class="item">
+              <img src="img/asset_ipmi.png" alt="IPMI Info">
+              <div class="carousel-caption">
+                <h4>IPMI Info</h4>
+                <p>
+                  The IPMI info tab provides remote console access to the asset if it's enabled.
+                </p>
+              </div>
+            </div>
+            <div class="item">
+              <img src="img/asset_logs.png" alt="Log Data">
+              <div class="carousel-caption">
+                <h4>Log Data</h4>
+                <p>
+                  The logs tab shows all historical log information for that asset.
+                </p>
+              </div>
+            </div>
+            <div class="item">
+              <img src="img/asset_hw_details.png" alt="Hardware Details">
+              <div class="carousel-caption">
+                <h4>Hardware Details</h4>
+                <p>
+                  The hardware details tab shows you detailed information about the hardware configuration of the asset.
+                </p>
+              </div>
+            </div>
+            <div class="item">
+              <img src="img/asset_lldp.png" alt="LLDP Info">
+              <div class="carousel-caption">
+                <h4>LLDP Info</h4>
+                <p>
+                  The LLDP tab shows you known LLDP data for each interface reporting it.
+                </p>
+              </div>
+            </div>
+          </div> <!-- carousel-inner -->
+          <a class="left carousel-control asset" href="#asset-carousel" data-slide="prev">&lsaquo;</a>
+          <a class="right carousel-control asset" href="#asset-carousel" data-slide="next">&rsaquo;</a>
+        </div>
+     </section>
+
+      <section id="asset-actions">
+        <div class="page-header">
+          <h1>Asset Actions</h1>
+        </div>
+        <p class="lead">Ways you can break some stuff</p>
+        <div class="row">
+          <div class="span6">
+            <p>
+              The collins web UI tries to expose most of the actions you can take on an asset. Things like host provisioning, maintenance,
+              logging and power management are all available to you. Which actions are available depends on the asset type, the asset status,
+              the collins configuration, and your privileges. For instance, you can not provision an asset that is already allocated. You can
+              not put an asset in maintenance mode that is already in maintenance mode. For the most part application actions are available
+              only when they are applicable.
+            </p>
+            <p>
+              <span class="label label-info">Note</span> Everything below the divider line
+              in the drop down is a potentially destructive or disruptive action and will be 
+              called out as such in the UI. 
+            </p>
+          </div>
+          <ul class="thumbnails">
+            <li class="span3">
+              <div class="thumbnail">
+                <img src="img/asset_actions.png" alt="Asset Actions">
+                <div class="caption">
+                  <h3>Asset Actions</h3>
+                  <p>You can find the available actions for an asset in the actions drop down.</p>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <section id="asset-provisioning">
+          <div class="page-header">
+            <h2>Provisioning</h2>
+          </div>
+          <p>
+          For provisioning purposes you'll want to search for hosts that are unallocated. Do not allocate hosts in any other state.
+          </p>
+          <p>
+          To provision a host just click the 'Provision Server' link in the actions drop down. You will be presented with a dialog
+          like the following:
+          </p>
+          <ul class="thumbnails">
+            <li class="span6">
+              <a href="img/asset_provision.png" target="_blank" class="thumbnail">
+                <img src="img/asset_provision.png" alt="Host Provisioning">
+              </a>
+            </li>
+          </ul>
+          <p>
+          Depending on the profile you choose (web, database, etc) you will have a different set of configurable options made
+          available to you. The profile and options you specify will dictate what role in the environment the host will eventually
+          play. If something is optional (such as secondary role in this dialog) and you're unsure, just leave it unspecified.
+          </p>
+          <p>
+          When you're ready just click the 'Provision Server' button. This takes 30-60 seconds to return. During this process we
+          verify any required settings for the specified host and reboot it onto a reinstall image. Once control is returned to
+          you, the dialog will close and you should notice that the primary role, pool, nodeclass, contact and some other options
+          have been changed to reflect the settings you specified. Also note that the status has changed from Incomplete to Provisioning.
+          </p>
+          <p>
+          Once the initial provisioning has successfully completed (the remaining steps, such as puppet and func cleanup), you'll
+          see a hipchat notification in the builds room. Once the machine is fully provisioned, the status will change automatically
+          to provisioned. In the near future we'll use the contact tag to again notify you that the machine has finished the
+          provisioning process.
+          </p>
+        </section>
+
+        <section id="asset-maintenance">
+          <div class="page-header">
+            <h2>Maintenance</h2>
+          </div>
+          <p>
+          On occasion you will need to put an asset into maintenance. In our environment, once you do that this triggers a few events
+          such as pulling the host out of any upstream proxy configurations or potentially re-generating DNS. This should generally
+          be something performed by people on the operations team, however there may be times when you need a machine that has had some
+          kind of provisioning problem occur go into maintenance so you can reprovision it. In that case, again in the actions drop down,
+          you can just click the start maintenance button to change the status of the machine to maintenance mode. Once in maintenance
+          mode you can reprovision the host if needed. If you're unsure, ask the person listed under the contact tag.
+          </p>
+          <ul class="thumbnails">
+            <li class="span6">
+              <a href="img/asset_maintenance.png" target="_blank" class="thumbnail">
+                <img src="img/asset_maintenance.png" alt="Asset Maintenance">
+              </a>
+            </li>
+          </ul>
+          <p>
+          In EWR, putting a host into maintenance mode will cause a JIRA ticket to be generated if the maintenance type you select is
+          HARDWARE_PROBLEM, IPMI_PROBLEM, or NETWORK_PROBLEM so choose a state accordingly.
+          </p>
+        </section>
+
+        <section id="asset-cancel">
+          <div class="page-header">
+            <h2>Cancellation</h2>
+          </div>
+          <p>
+            Cancelling a server will cause it to be handed back to any neccesary hosting providers, and will shred the filesystem data before
+            doing so. This process takes 3-5 days to complete. Server cancellations should generally only be done by people on the SRE or operations
+            teams.
+          </p>
+          <ul class="thumbnails">
+            <li class="span6">
+              <a href="img/asset_cancel.png" target="_blank" class="thumbnail">
+                <img src="img/asset_cancel.png" alt="Asset Cancellation">
+              </a>
+            </li>
+          </ul>
+          <p>
+            Only assets that are not owned by Tumblr can be cancelled.
+          </p>
+        </section>
+
+        <section id="asset-delete">
+          <div class="page-header">
+            <h2>Deletion</h2>
+          </div>
+          <p>
+            There are rare occasions, particularly if an asset went through intake with bad data (e.g. the wrong tag), where you may
+            want to actually delete an asset. At Tumblr this can be performed by the datacenter team or Blake. This is an absolutely
+            destructive act and should generally not be done.
+          </p>
+          <ul class="thumbnails">
+            <li class="span6">
+              <a href="img/asset_delete.png" target="_blank" class="thumbnail">
+                <img src="img/asset_delete.png" alt="Asset Deletion">
+              </a>
+            </li>
+          </ul>
+          <p>
+            If you have appropriate permissions you can delete an asset via the web UI. This option is not available via the API.
+          </p>
+        </section>
+
+        <section id="asset-powermanagement">
+          <div class="page-header">
+            <h2>Power Management</h2>
+          </div>
+          <p>
+            A variety of power management functions are available in the UI. In fact, some of these are only available in the UI. These allow
+            you to perform actions like soft reboots, hard reboots, powering off a machine, etc. Note that what power actions are available
+            when an asset is allocated is configurable, so some power actions may not be available.
+          </p>
+          <ul class="thumbnails">
+            <li class="span6">
+              <a href="img/asset_powermanagement.png" target="_blank" class="thumbnail">
+                <img src="img/asset_powermanagement.png" alt="Power Management">
+              </a>
+            </li>
+          </ul>
+          <p>
+            With great power comes great responsibility.
+          </p>
+          <p>
+            It is also possible to check power status or perform an IPMI identify via the 'IPMI Info' tab.
+          </p>
+        </section>
+
+        <section id="asset-logs">
+          <div class="page-header">
+            <h2>Log Creation</h2>
+          </div>
+          <p>
+            The logs for an asset are created by both internal and external processes. There is an API available for creating new log
+            entries and querying existing ones, but log entries are immutable and permanent, there is no delete support, even once an asset
+            is decommissioned. These logs give you a permanent historical view of lifecycle related events such as provisions and cancellations
+            as well as changes in tag values.
+          </p>
+          <ul class="thumbnails">
+            <li class="span6">
+              <a href="img/asset_note.png" target="_blank" class="thumbnail">
+                <img src="img/asset_note.png" alt="Asset Notes">
+              </a>
+            </li>
+          </ul>
+          <p>
+            Although in the UI you will see a few entries that say "User unknown", the user account record is actually stored and this is a UI
+            bug. By design, no changes or updates to an asset can happen without leaving some kind of an audit trail.
+          </p>
+          <p>
+            The create a note web UI action allows you to create a log entry for an asset.
+          </p>
+        </section>
+
+        <section id="asset-activation">
+          <div class="page-header">
+            <h2>Activation</h2>
+          </div>
+          <div class="row">
+            <div class="span6">
+              <p>
+              If an activation plugin has been configured you will be able to provision virtual assets.
+              These hosts will have a status of Incomplete. Activation will move the host into New until
+              it is ready for use. The UI for this is nearly identical to provisioning because the
+              provisioning process will run once the host is available.
+              </p>
+            </div>
+            <ul class="thumbnails">
+              <li class="span3">
+                <div class="thumbnail">
+                  <img src="img/asset_activate.png" alt="Asset Activation">
+                  <div class="caption">
+                    <h3>Asset Activation</h3>
+                    <p>The asset activation drop down item</p>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+      </section> <!-- end asset actions section -->
+
+      <section id="admin">
+        <div class="page-header">
+          <h1>Admin</h1>
+        </div>
+        <p class="lead">Administrative functionality</p>
+        <p>
+          There are a few features that are for admins only. You have to be in a configured
+          admin group in order to see or use them.
+        </p>
+
+        <section id="admin-logs">
+          <div class="page-header">
+            <h2>Logs</h2>
+          </div>
+          <p>
+            If you are an administrator you should find a link named 'Logging'. This will show you
+            an up to date view of all logged activity in the system. Clicking the auto refresh button
+            will cause the UI to refresh periodically and display any new log entries.
+          </p>
+        </section>
+
+        <section id="stats">
+          <div class="page-header">
+            <h2>Stats</h2>
+          </div>
+          <p>
+            There is no link to this page but if you are an administrator you can get to it at
+            <code>/admin/stats</code> This will show you various stat information and also allow
+            you to clear the cache. The clear cache button only exists in case you manually modify
+            something in the DB and want the cache to refresh.
+          </p>
+          <ul class="thumbnails">
+            <li class="span9">
+              <a href="img/admin_stats.png" target="_blank" class="thumbnail">
+                <img src="img/admin_stats.png" alt="Statistics">
+              </a>
+            </li>
+          </ul>
+          <p>
+            This page displays the server start time, API and web stats for requests and latency,
+            authentication related statistics, and cache statistics.
+          </p>
+        </section>
+
+        <section id="create">
+          <div class="page-header">
+            <h2>Create</h2>
+          </div>
+          <div class="row">
+            <div class="span6">
+              <p>
+                It is possible as an adminstrator to create assets (not servers) from the web UI. Really this
+                is pretty much only useful for configuration assets, but the functionality is there.
+              </p>
+              <ul class="thumbnails">
+                <li class="span6">
+                  <a href="img/admin_create.png" target="_blank" class="thumbnail">
+                    <img src="img/admin_create.png" alt="Asset Creation">
+                  </a>
+                </li>
+              </ul>
+              <p>
+                The creation interface requires that you specify a tag, whether IPMI information
+                should be generated or not, and the asset status. It is not possible to specify
+                any additional information via this interface.
+              </p>
+            </div>
+            <ul class="thumbnails">
+              <li class="span3">
+              <div class="thumbnail">
+                <img src="img/admin_create_menu.png" alt="Asset Create">
+                <div class="caption">
+                  <h3>Asset Create</h3>
+                  <p>You can find the list of asset types that can be created in the create drop down</p>
+                </div>
+              </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+      </section>
+
+    </div> <!-- span9 -->
+
+  </div> <!-- row -->
+</div> <!-- container -->

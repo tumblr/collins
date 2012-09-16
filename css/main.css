@@ -11,6 +11,11 @@ section > ul li {
   margin-bottom: 5px;
 }
 
+a.carousel-control.asset {
+  position: absolute;
+  top: 100px !important;
+}
+
 .inlinecode {
   font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
   font-weight: normal;

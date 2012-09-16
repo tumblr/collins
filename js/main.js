@@ -8,4 +8,10 @@ $(document).ready(function() {
       bottom: 270
     }
   })
+
+  // turn off auto cycling
+  $('.carousel').carousel({
+    interval: false
+  })
+
 });
