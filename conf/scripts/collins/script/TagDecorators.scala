@@ -3,6 +3,7 @@ package script
 
 import models.Asset
 import models.asset.AssetView
+import util.config.ActionConfig
 import util.plugins.SoftLayer
 
 
@@ -18,7 +19,7 @@ object TagDecorators extends CollinScript {
    * @param asset an Asset whose date of creation will be returned.
    * @return the date of creation of an Asset.
    */
-  def decorateCreated(asset: Asset): String = {
+  def decorateCreated(assetString: String): String = {
     val created = asset.created
     if (created == None) {
       ""
@@ -98,14 +99,6 @@ object TagDecorators extends CollinScript {
     } else {
       updated.toString
     }
-  }
-
-  def myButt(aString: String): String = {
-    return Asset.findByTag("tumblrtag1").get.toString
-  }
-
-  def myAss(asset: models.Asset): String = {
-    return asset.toString
   }
 
   /**
