@@ -4,9 +4,8 @@ package asset
 
 import forms._
 
-import models.{Asset, AssetFinder, AssetType, Page, PageParams, SortDirection, Truthy}
+import models.{Asset, AssetFinder, AssetType, Page, PageParams, SortDirection, Status => AssetStatus, Truthy}
 import models.asset.AssetView
-import models.Status.{Enum => AssetStatusEnum}
 import models.AssetSortType._
 import models.SortDirection._
 
@@ -71,7 +70,7 @@ case class FindSimilarAction(
     case SimilarDataHolder(asset, details, only, sortType) => {
       Logger.logger.debug(only.toString)
       val finder = AssetFinder.empty.copy(
-        status = if(only.map{_.isTruthy}.getOrElse(true)) Some(AssetStatusEnum.Unallocated) else None,
+        status = if(only.map{_.isTruthy}.getOrElse(true)) AssetStatus.Unallocated else None,
         assetType = Some(AssetType.Enum.ServerNode)
       )
       Logger.logger.debug(finder.status.toString)

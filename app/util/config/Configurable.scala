@@ -6,11 +6,6 @@ import play.api.Logger
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * TODO
- *  - Deprecate old Config class
- *  - Deprecate old Feature class
- */
 trait Configurable extends ConfigAccessor with AppConfig { self =>
 
   protected val logger = Logger("configurable")
