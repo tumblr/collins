@@ -1,12 +1,13 @@
 package collins
 package script
 
-import models.Asset
+import models.{Asset, Page}
 import models.asset.AssetView
 import util.conversions._
 
 import java.io.File
 import java.net.URLClassLoader
+import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 import play.api.Application
 import play.api.Logger
 import scala.collection.JavaConversions._
@@ -26,19 +27,12 @@ case class CollinScriptCompileException(script: String, msg: String)
  */
 sealed trait CollinScriptEngine {
 
+  private val NUM_ENGINE_REFRESHES = 2
+
   protected val logger = Logger("CollinScriptEngine")
 
-  protected val compileClasspath = getAppClasspath
-  protected val outputDir = new File(System.getProperty("java.io.tmpdir"),
-      "collinscript-classes")
-  protected val refreshPeriodMillis = CollinScriptConfig.refreshPeriodMillis
-  protected val runtimeClasspath = getAppClasspath
-  protected val sourceDir = new File(CollinScriptConfig.scriptDir)
-
-  protected var classPathHash = getAppClasspath.hashCode
-  protected var enabled = CollinScriptConfig.enabled
-  protected var lastRefreshMillis: Long = 0
-  protected var numRefreshes = 0
+  protected var lastRefreshMillis: AtomicLong = new AtomicLong(0)
+  protected var numRefreshes: AtomicInteger = new AtomicInteger(0)
 
   protected var engine = new ScalaScriptEngine(
       Config(Set(sourceDir), getAppClasspath, getAppClasspath, outputDir))
@@ -65,14 +59,14 @@ sealed trait CollinScriptEngine {
     // Derives argument classes and calls method on the specified Object.
     // AssetView objects will be typed as Assets, and only AssetView
     // objects may be passed to scripts, so cast appropriately.
-    val parameterClasses = args.map{ arg => arg.getClass }
+    val argumentClasses = args.map{ arg => arg.getClass }
     val methodSplit = method.split("\\.")
     val objectClass = methodSplit.slice(0, methodSplit.length - 1)
       .mkString(".")
     val classMethod = methodSplit(methodSplit.length - 1)
     try {
       engine.get[CollinScript](objectClass).getMethod(classMethod,
-          parameterClasses : _*).invoke(engine, args : _*)
+          argumentClasses : _*).invoke(engine, args : _*)
     } catch {
       case e => {
         logger.error("COLLINSCRIPT EXECUTION ERROR:\n%s".format(
@@ -80,8 +74,9 @@ sealed trait CollinScriptEngine {
         None
       }
     }
-
   }
+
+  protected def enabled = CollinScriptConfig.enabled
 
   /**
    * Returns the classpath used by the Collins application.
@@ -100,6 +95,12 @@ sealed trait CollinScriptEngine {
     }
   }
 
+  protected def outputDir = new File(CollinScriptConfig.outputDir)
+
+  protected def refreshPeriodMillis = CollinScriptConfig.refreshPeriodMillis
+
+  protected def sourceDir = new File(CollinScriptConfig.scriptDir)
+
   /**
    * Attempts to refresh code that has been changed on the filesystem,
    * defaulting to the latest successfully-compiled code version if an error
@@ -109,26 +110,21 @@ sealed trait CollinScriptEngine {
     try {
       // If the time of last refresh is less than the refresh threshold, don't
       // refresh the code unless we're in a startup state.
-      if (System.currentTimeMillis - lastRefreshMillis < refreshPeriodMillis
-          && numRefreshes >= 2) {
+      if (System.currentTimeMillis - lastRefreshMillis.get < refreshPeriodMillis
+          && numRefreshes.get >= NUM_ENGINE_REFRESHES) {
         return
       }
-      // Checks for classpath changes; if so, instantiates a new engine to
-      // force a recompilation against new Collins code.  This must be done
-      // twice at startup to preclude linking issues against any
-      // partially-compiled sources.
-      val currentClassPath = getAppClasspath
-      val currentClassPathHash = currentClassPath.hashCode
-      if (currentClassPathHash != classPathHash || numRefreshes < 2) {
+      // The engine must be instantiated twice at startup to preclude linking
+      // issues against any partially-compiled sources.
+      if (numRefreshes.get < NUM_ENGINE_REFRESHES) {
         engine = new ScalaScriptEngine(
             Config(Set(sourceDir), getAppClasspath, getAppClasspath, outputDir))
             with FromClasspathFirst {}
-        classPathHash = currentClassPathHash
-        numRefreshes += 1
+        numRefreshes.getAndIncrement
       }
       logger.debug("Refreshing CollinScript engine...")
       engine.refresh
-      lastRefreshMillis = System.currentTimeMillis
+      lastRefreshMillis.set(System.currentTimeMillis)
     } catch {
       case e => {
         logger.error("COLLINSCRIPT COMPILATION ERROR:\n%s".format(
@@ -142,7 +138,7 @@ sealed trait CollinScriptEngine {
 
 object CollinScriptRegistry extends CollinScriptEngine {
 
-  def initializeAll(app: Application): Unit = {
+  def initializeAll(app: Application) = {
     outputDir.mkdir
     engine.deleteAllClassesInOutputDirectory
     tryRefresh

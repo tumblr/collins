@@ -7,4 +7,4 @@
 4400:util.plugins.IpmiPowerManagement
 4500:collins.softlayer.SoftLayerPlugin
 4600:collins.provisioning.ProvisionerPlugin
-4700:collins.script.CollinScriptPlugin
+11000:collins.script.CollinScriptPlugin

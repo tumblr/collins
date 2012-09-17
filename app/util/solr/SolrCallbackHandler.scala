@@ -16,11 +16,13 @@ case class SolrCallbackHandler(server: SolrServer, updater: ActorRef) extends Ca
 
   private[this] val logger = Logger("SolrCallbackHandler")
 
-  override def apply(pce: PropertyChangeEvent) = getValueOption(pce) match {
+  override def apply(pce: PropertyChangeEvent) = {}
+
+  /*override def apply(pce: PropertyChangeEvent) = getValueOption(pce) match {
     case None =>
     case Some(v) =>
       processValue(v)
-  }
+  }*/
 
   protected def processValue(v: AnyRef) = v match {
     case a: Asset => if (a.deleted.isDefined && a.isDecommissioned) {
