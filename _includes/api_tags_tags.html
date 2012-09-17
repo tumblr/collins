@@ -1,0 +1,233 @@
+<h2>List Tags</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>List all tags that are in use</td></tr>
+    <tr><th>Request</th><td><code>GET /api/tags</code></td></tr>
+    <tr><th>Permission</th><td>controllers.TagApi.getTags</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Zero or more tags successfully found</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell tag list
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first http://localhost:9000/api/tags 
+</div>
+<div class="accordion" id="api-tag-tags-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#api-tag-tags-response" href="#api-tag-tags-json-response">JSON Response</a>
+    </div>
+    <div id="api-tag-tags-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "tags": [
+      {
+        "name": "CHASSIS_TAG",
+        "label": "Chassis Tag",
+        "description": "Tag for asset chassis"
+      },
+      {
+        "name": "CPU_CORES",
+        "label": "CPU Cores",
+        "description": "Number of cores per physical CPU"
+      },
+      {
+        "name": "CPU_COUNT",
+        "label": "CPU Count",
+        "description": "Number of physical CPUs in asset"
+      },
+      {
+        "name": "CPU_DESCRIPTION",
+        "label": "CPU Description",
+        "description": "CPU description, vendor labels"
+      },
+      {
+        "name": "CPU_SPEED_GHZ",
+        "label": "CPU Speed",
+        "description": "CPU Speed in GHz"
+      },
+      {
+        "name": "CPU_THREADS",
+        "label": "CPU Threads",
+        "description": "Number of threads per CPU core"
+      },
+      {
+        "name": "DISK_DESCRIPTION",
+        "label": "Disk Description",
+        "description": "Vendor labels for disk"
+      },
+      {
+        "name": "DISK_SIZE_BYTES",
+        "label": "Disk Size",
+        "description": "Disk size in bytes"
+      },
+      {
+        "name": "DISK_STORAGE_TOTAL",
+        "label": "Total disk storage",
+        "description": "Total amount of available storage"
+      },
+      {
+        "name": "DISK_TYPE",
+        "label": "Inferred disk type",
+        "description": "Inferred disk type: SCSI, IDE or FLASH"
+      },
+      {
+        "name": "INTERFACE_ADDRESS",
+        "label": "IP Address",
+        "description": "Address on interface, e.g. 10.0.0.1"
+      },
+      {
+        "name": "INTERFACE_NAME",
+        "label": "Interface Name",
+        "description": "Name of physical interface, e.g. eth0"
+      },
+      {
+        "name": "LLDP_CHASSIS_DESCRIPTION",
+        "label": "LLDP Chassis Description",
+        "description": "Chassis Description reported by lldpctl"
+      },
+      {
+        "name": "LLDP_CHASSIS_ID_TYPE",
+        "label": "LLDP Chassis ID Type",
+        "description": "Chassis ID Type reported by lldpctl"
+      },
+      {
+        "name": "LLDP_CHASSIS_ID_VALUE",
+        "label": "LLDP Chassis ID Value",
+        "description": "Chassis ID Value reported by lldpctl"
+      },
+      {
+        "name": "LLDP_CHASSIS_NAME",
+        "label": "LLDP Chassis Name",
+        "description": "Chassis name reported by lldpctl"
+      },
+      {
+        "name": "LLDP_INTERFACE_NAME",
+        "label": "LLDP Interface Name",
+        "description": "Interface name reported by lldpctl"
+      },
+      {
+        "name": "LLDP_PORT_DESCRIPTION",
+        "label": "LLDP Port Description",
+        "description": "Port Description reported by lldpctl"
+      },
+      {
+        "name": "LLDP_PORT_ID_TYPE",
+        "label": "LLDP Port ID Type",
+        "description": "Port ID Type reported by lldpctl"
+      },
+      {
+        "name": "LLDP_PORT_ID_VALUE",
+        "label": "LLDP Port ID Value",
+        "description": "Port ID Value reported by lldpctl"
+      },
+      {
+        "name": "LLDP_VLAN_ID",
+        "label": "LLDP VLAN ID",
+        "description": "VLAN ID reported by lldpctl"
+      },
+      {
+        "name": "LLDP_VLAN_NAME",
+        "label": "LLDP VLANE Name",
+        "description": "VLAN name reported by lldpctl"
+      },
+      {
+        "name": "MAC_ADDRESS",
+        "label": "MAC Address",
+        "description": "MAC Address of NIC"
+      },
+      {
+        "name": "MEMORY_BANKS_TOTAL",
+        "label": "Memory Banks",
+        "description": "Total number of memory banks"
+      },
+      {
+        "name": "MEMORY_DESCRIPTION",
+        "label": "Memory Description",
+        "description": "Memory description, vendor label"
+      },
+      {
+        "name": "MEMORY_SIZE_BYTES",
+        "label": "Memory",
+        "description": "Size of Memory Stick"
+      },
+      {
+        "name": "MEMORY_SIZE_TOTAL",
+        "label": "Memory Total",
+        "description": "Total amount of available memory in bytes"
+      },
+      {
+        "name": "NIC_DESCRIPTION",
+        "label": "NIC Description",
+        "description": "Vendor labels for NIC"
+      },
+      {
+        "name": "NIC_SPEED",
+        "label": "NIC Speed",
+        "description": "Speed of nic, stored as bits per second"
+      },
+      {
+        "name": "POWER_OUTLET",
+        "label": "Power_outlet",
+        "description": "POWER_OUTLET"
+      },
+      {
+        "name": "POWER_PORT",
+        "label": "Power Port",
+        "description": "Power port of asset"
+      },
+      {
+        "name": "RACK_POSITION",
+        "label": "Rack Position",
+        "description": "Position of asset in rack"
+      },
+      {
+        "name": "SERVICE_TAG",
+        "label": "Service Tag",
+        "description": "Vendor supplied service tag"
+      },
+      {
+        "name": "SWITCH_PORT",
+        "label": "Switch Port",
+        "description": "Switch port that asset is connected to"
+      },
+      {
+        "name": "SYSTEM_PASSWORD",
+        "label": "System_password",
+        "description": "SYSTEM_PASSWORD"
+      }
+    ]
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

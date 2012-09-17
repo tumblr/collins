@@ -1,0 +1,99 @@
+<h2>Asset Create</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Create a new asset</td></tr>
+    <tr><th>Request</th><td><code>PUT /api/asset/:tag</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetApi.createAsset</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">tag</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes) and unique</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">generate_ipmi</th>
+              <td>Option[Boolean]</td>
+              <td>True or false. Defaults to true if <code>asset_type</code> is <code>SERVER_NODE</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">201</th>
+              <td>Asset was successfully created</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">400</th>
+              <td>Invalid parameter</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell asset create --tag=TAG [--ipmi=(true|false) --status=STATUS --type=TYPE]
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first -X PUT http://localhost:9000/api/asset/tumblrtag30
+</div>
+<div class="accordion" id="asset-update-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-update-response" href="#asset-update-json-response">JSON Response</a>
+    </div>
+    <div id="asset-update-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "SUCCESS": true
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-update-response" href="#asset-update-bash-response">Bash Response</a>
+    </div>
+    <div id="asset-update-bash-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>SUCCESS=true;</pre>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-update-response" href="#asset-update-text-response">Text Response</a>
+    </div>
+    <div id="asset-update-text-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>SUCCESS true</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

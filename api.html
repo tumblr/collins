@@ -51,8 +51,8 @@ layout: default
         </li>
         <li><a href="#tag"><i class="icon-chevron-right"></i> Tag API</a>
           <ul class="nav nav-list">
-            <li><a href="#api-tag-tags-section"><i class="icon-chevron-right cr-dim"></i> Tags</a></li>
-            <li><a href="#api-tag-values-section"><i class="icon-chevron-right cr-dim"></i> Values</a></li>
+            <li><a href="#api-tag-tags-section"><i class="icon-chevron-right cr-dim"></i> List Tags</a></li>
+            <li><a href="#api-tag-values-section"><i class="icon-chevron-right cr-dim"></i> List Values</a></li>
           </ul>
         </li>
         <li><a href="#ipam"><i class="icon-chevron-right"></i> IPAM API</a>
@@ -117,10 +117,8 @@ layout: default
         <div class="page-header">
           <h1>Tag API</h1>
         </div>
-        <p class="lead">Stuff</p>
-        <p>
-          Content
-        </p>
+        <p class="lead">System tag management</p>
+        {% include api_tags.html %}
       </section>
 
       <section id="ipam">
