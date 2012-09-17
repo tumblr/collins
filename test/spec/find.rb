@@ -54,7 +54,7 @@ describe "Asset Find" do
       "pool" => "DEVEL",
       "status" => "Allocated",
       "type" => "SERVER_NODE",
-      "operation" => "or"
+      "operation" => "and"
       
     }
     checkQuery p,5
@@ -83,7 +83,7 @@ describe "Asset Find" do
     p = {
       "status" => "Unallocated",
       "primary_role" => "CACHE",
-      "pool" => "MEMCACHE",
+      "pool" => "MEMCACHE*",
       "memory_size_total" => "103079215104",
       "operation" => "and"
     }
