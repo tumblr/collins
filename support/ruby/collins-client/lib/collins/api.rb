@@ -97,14 +97,11 @@ module Collins
       end
     end
 
-<<<<<<< HEAD
     def use_api_version version
       set_header "Accept", "application/json,#{version_string(version)}"
     end
 
-=======
     include Collins::Api::Admin
->>>>>>> finder-tests
     include Collins::Api::Asset
     include Collins::Api::AssetState
     include Collins::Api::Attributes
