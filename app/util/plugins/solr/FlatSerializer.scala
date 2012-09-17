@@ -21,9 +21,9 @@ class FlatSerializer extends AssetSolrSerializer {
 
   def serialize(asset: Asset) = postProcess {
     val opt = Map[SolrKey, Option[SolrValue]](
-      SolrKey("UPDATED", String, false) -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
-      SolrKey("DELETED", String, false) -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
-      SolrKey("IP_ADDRESS", String, false) -> {
+      SolrKeyResolver("UPDATED").get -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
+      SolrKeyResolver("DELETED").get -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
+      SolrKeyResolver("IP_ADDRESS").get -> {
         val a = IpAddresses.findAllByAsset(asset, false)
         if (a.size > 0) {
           val addresses = SolrMultiValue(a.map{a => SolrStringValue(a.dottedAddress)})
@@ -35,11 +35,11 @@ class FlatSerializer extends AssetSolrSerializer {
     ).collect{case(k, Some(v)) => (k,v)}
       
     opt ++ Map[SolrKey, SolrValue](
-      SolrKey("TAG", String, false) -> SolrStringValue(asset.tag),
-      SolrKey("STATUS", Integer, false) -> SolrIntValue(asset.status),
-      SolrKey("STATE", Integer, false) -> SolrIntValue(asset.state),
-      SolrKey("TYPE", Integer, false) -> SolrIntValue(asset.getType.id),
-      SolrKey("CREATED", String, false) -> SolrStringValue(Formatter.solrDateFormat(asset.created))
+      SolrKeyResolver("TAG").get -> SolrStringValue(asset.tag),
+      SolrKeyResolver("STATUS").get -> SolrIntValue(asset.status),
+      SolrKeyResolver("STATE").get -> SolrIntValue(asset.state),
+      SolrKeyResolver("TYPE").get -> SolrIntValue(asset.getType.id),
+      SolrKeyResolver("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(asset.created))
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset, false))
   }
 

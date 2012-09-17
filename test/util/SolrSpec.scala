@@ -193,13 +193,13 @@ class SolrQuerySpec extends ApplicationSpecification {
         "foosolr = 3".query.toSolrQueryString must_== """foosolr:3"""
       }
       "quoted dash" in {
-        """tag:-""".query.toSolrQueryString must_== """tag:"-""""
+        """tag=-""".query.toSolrQueryString must_== """tag:"-""""
       }
       "leading wildcard" in {
-        """hostname:*foo""".query.toSolrQueryString must_== """hostname:*foo"""
+        """hostname=*foo""".query.toSolrQueryString must_== """hostname:*foo"""
       }
       "trailing wildcard" in {
-        """hostname:foo*""".query.toSolrQueryString must_== """hostname:foo*"""
+        """hostname=foo*""".query.toSolrQueryString must_== """hostname:foo*"""
       }
       "ANDs" in {
          """foosolr = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== """foosolr:3 AND bar:"abcdef" AND baz:true"""

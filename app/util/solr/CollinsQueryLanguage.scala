@@ -306,7 +306,10 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
  */
 object CollinsQueryDSL {
   class CollinsQueryString(val s: String) {
-    lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s).right.get
+    lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s).fold(
+      err => throw new Exception("CQL error: " + err),
+      expr => expr
+    )
   }
   implicit def str2collins(s: String): CollinsQueryString = new CollinsQueryString(s)
   implicit def collins2str(c: CollinsQueryString): String = c.s
