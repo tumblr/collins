@@ -4,6 +4,7 @@ import actors._
 import models.Asset
 import util._
 import util.concurrent.BackgroundProcessor
+import util.plugins.Callback
 import util.views.Formatter.dateFormat
 
 import play.api._
@@ -18,7 +19,8 @@ private[controllers] case class ResponseData(status: Results.Status, data: JsVal
     ApiResponse.formatResponseData(this)(req)
 }
 
-trait Api extends ApiResponse with AssetApi with AssetManagementApi with AdminApi with AssetWebApi with AssetLogApi with IpmiApi with TagApi with IpAddressApi {
+trait Api extends ApiResponse with AssetApi with AssetManagementApi with AssetWebApi with AssetLogApi with IpmiApi with TagApi with
+IpAddressApi with AssetStateApi with AdminApi {
   this: SecureController =>
 
   lazy protected implicit val securitySpec = Permissions.LoggedIn

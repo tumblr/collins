@@ -29,12 +29,12 @@ case class UpdateForMaintenanceAction(
 
   import UpdateForMaintenance.Messages._
 
-  case class ActionDataHolder(aStatus: AssetStatus.Enum, description: String, state: State) extends RequestDataHolder {
-    def assetStatusName: String = aStatus.toString
+  case class ActionDataHolder(aStatus: AssetStatus, description: String, state: State) extends RequestDataHolder {
+    def assetStatusName: String = aStatus.name
   }
 
   lazy val params: Either[String,ActionDataHolder] = Form(tuple(
-    "status" -> of[AssetStatus.Enum],
+    "status" -> of[AssetStatus],
     "description" -> text(1),
     "state"  -> of[State]
   )).bindFromRequest()(request).fold(
@@ -74,10 +74,10 @@ case class UpdateForMaintenanceAction(
 
   override def execute(rd: RequestDataHolder) = rd match {
     case adh@ActionDataHolder(status, description, state) =>
-      val success = if (status.id == AssetStatus.Enum.Maintenance.id) {
+      val success = if (status.id == AssetStatus.Maintenance.get.id) {
         Maintenance.toMaintenance(definedAsset, description, state)
       } else {
-        Maintenance.fromMaintenance(definedAsset, description, status.toString, state)
+        Maintenance.fromMaintenance(definedAsset, description, status.name, state)
       }
       success match {
         case true => Api.statusResponse(true)

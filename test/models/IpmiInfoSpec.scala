@@ -17,7 +17,7 @@ class IpmiInfoSpec extends ApplicationSpecification {
 
   def ipmiAsset(tag: String = "tumblrtag1") = Asset.findByTag(tag).get
   def newIpmiAsset(tag: String) = {
-    val asset = Asset(tag, Status.Enum.Incomplete, AssetType.Enum.ServerNode)
+    val asset = Asset(tag, Status.Incomplete.get, AssetType.Enum.ServerNode)
     try {
       Asset.create(asset)
     } catch {

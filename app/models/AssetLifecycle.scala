@@ -17,7 +17,7 @@ import java.util.Date
 
 object AssetLifecycleConfig {
   // Don't want people trying to set status/tag/etc via attribute
-  private val PossibleAssetKeys = Set("STATUS", "TAG", "TYPE", "IP_ADDRESS")
+  private val PossibleAssetKeys = Set("STATUS", "STATE", "TAG", "TYPE", "IP_ADDRESS")
   // A few keys we generally want changable after intake
   private val ExcludedKeys = Set(AssetMeta.Enum.ChassisTag.toString)
   // User configured excludes, only applied to non-servers
@@ -46,26 +46,25 @@ object AssetLifecycle {
   type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
   type Status[T] = Either[Throwable,T]
 
-  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status.Enum]): Status[AssetIpmi] = {
+  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[AStatus]): Status[AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
-      val _status = status.getOrElse(Status.Enum.Incomplete)
+      val _status = status.getOrElse(Status.Incomplete.get)
       val res = Asset.inTransaction {
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
           case true => Some(IpmiInfo.createForAsset(asset))
           case false => None
         }
-        InternalTattler.informational(asset, None,
-          "Initial intake successful, status now %s".format(_status.toString))
         Tuple2(asset, ipmi)
       }
+      InternalTattler.informational(res._1, None,
+        "Initial intake successful, status now %s".format(_status.toString))
       Asset.flushCache(res._1)
       Right(res)
     } catch {
       case e =>
-        // FIXME once we have logging for non-assets
-        logger.warn("Caught exception creating asset: %s".format(e.getMessage), e)
+        SystemTattler.safeError("Failed to create asset %s: %s".format(tag, e.getMessage))
         Left(e)
     }
   }
@@ -98,15 +97,14 @@ object AssetLifecycle {
   }
 
   protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    Status.Enum(asset.status) match {
-      case Status.Enum.Incomplete =>
-        updateIncompleteServer(asset, options)
-      case Status.Enum.New =>
-        updateNewServer(asset, options)
-      case Status.Enum.Maintenance =>
-        updateMaintenanceServer(asset, options)
-      case _ =>
-        Left(new Exception("Only updates for Incomplete, New, and Maintenance servers are currently supported"))
+    if (asset.isIncomplete) {
+      updateIncompleteServer(asset, options)
+    } else if (asset.isNew) {
+      updateNewServer(asset, options)
+    } else if (asset.isMaintenance) {
+      updateMaintenanceServer(asset, options)
+    } else {
+      Left(new Exception("Only updates for Incomplete, New, and Maintenance servers are currently supported"))
     }
   }
 
@@ -120,7 +118,9 @@ object AssetLifecycle {
   protected def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String]): Status[Boolean] = {
     allCatch[Boolean].either {
       val groupId = options.get("groupId").map(_.toInt)
-      val opts = options - "groupId"
+      val state = options.get("state").flatMap(s => State.findByName(s))
+      val status = options.get("status").flatMap(s => AStatus.findByName(s)).map(_.id)
+      val opts = options - "state" - "groupId" - "status"
       logger.debug(restricted.toString)
       if (!asset.isConfiguration) {
         opts.find(kv => restricted(kv._1)).map(kv =>
@@ -129,34 +129,21 @@ object AssetLifecycle {
       }
       Asset.inTransaction {
         MetaWrapper.createMeta(asset, opts, groupId)
-        Asset.partialUpdate(asset, Some(new Date().asTimestamp), None)
+        Asset.partialUpdate(asset, Some(new Date().asTimestamp), status, state)
         true
       }
     }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
   }
 
-  def updateAssetStatus(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  def updateAssetStatus(asset: Asset, status: Option[AStatus], state: Option[State], reason: String): Status[Boolean] = {
     if (!Feature.sloppyStatus) {
-        return Left(new Exception("sloppyStatus not enabled"))
+      return Left(new Exception("features.sloppyStatus is not enabled"))
     }
-    val stat = options.get("status").getOrElse("none")
-    val state = options.get("state").flatMap(s => State.findByName(s))
     allCatch[Boolean].either {
-      val status = AStatus.Enum.withName(stat)
-      if (status.id == asset.status) {
-        logger.debug("Old status %d is same as new, returning".format(status.id))
-        return Right(true)
-      }
-      val old = AStatus.Enum(asset.status).toString
-      val defaultReason = "Asset state updated from %s to %s".format(old, stat)
-      val reason = options.get("reason").map(r => defaultReason + ": " + r).getOrElse(defaultReason)
-      Asset.inTransaction {
-        Asset.partialUpdate(asset, Some(new Date().asTimestamp), Some(status.id), state)
-        ApiTattler.informational(asset, None, reason)
-      }
-      Asset.flushCache(asset)
+      Asset.partialUpdate(asset, Some(new Date().asTimestamp), status.map(_.id), state)
+      ApiTattler.informational(asset, None, reason)
       true
-    }.left.map(e => handleException(asset, "Error updating status for asset", e))
+    }.left.map(e => handleException(asset, "Error updating status/state for asset", e))
   }
 
   protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -173,21 +160,21 @@ object AssetLifecycle {
       return Left(new Exception("Attribute %s is restricted".format(kv._1)))
     )
 
-    val res = allCatch[Boolean].either {
+    allCatch[Boolean].either {
       val values = Seq(AssetMetaValue(asset, RackPosition, rackpos)) ++
                    PowerUnits.toMetaValues(units, asset, options)
-      Asset.inTransaction {
+      val unallocatedAsset = Asset.inTransaction {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
-        val newAsset = asset.copy(status = Status.Enum.Unallocated.id, updated = Some(new Date().asTimestamp))
+        val newAsset = asset.copy(status = Status.Unallocated.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
-        ApiTattler.informational(newAsset, None, "Intake now complete, asset Unallocated")
         Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.Starting)
-        true
+        newAsset
       }
-    }
-    res.left.map(e => handleException(asset, "Exception updating asset", e))
+      ApiTattler.informational(unallocatedAsset, None, "Intake now complete, asset Unallocated")
+      true
+    }.left.map(e => handleException(asset, "Exception updating asset", e))
   }
 
   protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -218,7 +205,7 @@ object AssetLifecycle {
           throw lldpParsingResults.left.get
         }
         MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
-        val newAsset = asset.copy(status = Status.Enum.New.id, updated = Some(new Date().asTimestamp))
+        val newAsset = asset.copy(status = Status.New.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
         Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.New)
         InternalTattler.informational(newAsset, None, "Parsing and storing LSHW data succeeded")
         true

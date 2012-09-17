@@ -1,8 +1,10 @@
+require 'ostruct'
+
 module Collins
   class AssetState
     include Collins::Util
 
-    attr_accessor :description, :id, :label, :name
+    attr_accessor :description, :id, :label, :name, :status
 
     def self.from_json json
       Collins::AssetState.new json
@@ -18,6 +20,7 @@ module Collins
       @id = hash[:id].to_s.to_i
       @label = hash[:label].to_s
       @name = hash[:name].to_s
+      @status = get_status hash[:status]
     end
 
     def empty?
@@ -30,6 +33,17 @@ module Collins
       else
         "State(id = #{id}, name = '#{name}', label = '#{label}', description = '#{description}')"
       end
+    end
+
+    private
+    def get_status opt
+      opts = opt || {}
+      hash = symbolize_hash(opts).inject({}) do |result, (k,v)|
+        key = k.to_s.downcase.to_sym
+        result[key] = v
+        result
+      end
+      OpenStruct.new(hash)
     end
 
   end

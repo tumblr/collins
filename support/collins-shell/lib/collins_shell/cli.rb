@@ -3,6 +3,7 @@ require 'collins_shell/console'
 require 'collins_shell/ip_address'
 require 'collins_shell/ipmi'
 require 'collins_shell/provision'
+require 'collins_shell/state'
 require 'collins_shell/tag'
 require 'collins_shell/thor'
 require 'collins_shell/util'
@@ -26,6 +27,7 @@ module CollinsShell
     register(CollinsShell::IpAddress, 'ip_address', 'ip_address <command>', 'IP address related commands')
     register(CollinsShell::Ipmi, 'ipmi', 'ipmi <command>', 'IPMI related commands')
     register(CollinsShell::Provision, 'provision', 'provision <command>', 'Provisioning related commands')
+    register(CollinsShell::State, 'state', 'state <command>', 'State management related commands - use with care')
 
     desc 'latest', 'check if there is a newer version of collins-shell'
     def latest

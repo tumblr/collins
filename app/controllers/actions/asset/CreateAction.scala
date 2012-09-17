@@ -6,7 +6,6 @@ import forms._
 
 import models.{Asset, AssetLifecycle, AssetType, IpmiInfo, Status => AssetStatus, Truthy}
 import models.AssetType.{Enum => AssetTypeEnum}
-import models.Status.{Enum => AssetStatusEnum}
 import util.OutputType
 import util.security.SecuritySpecification
 import validators.StringUtil
@@ -28,13 +27,13 @@ case class CreateAction(
     assetTag: String,
     generateIpmi: Boolean,
     assetType: AssetType,
-    assetStatus: Option[AssetStatusEnum]
+    assetStatus: Option[AssetStatus]
   ) extends RequestDataHolder
 
   lazy val dataHolder: Either[RequestDataHolder,ActionDataHolder] = Form(tuple(
     "generate_ipmi" -> optional(of[Truthy]),
     "type" -> optional(of[AssetTypeEnum]),
-    "status" -> optional(of[AssetStatusEnum]),
+    "status" -> optional(of[AssetStatus]),
     "tag" -> optional(text(1))
   )).bindFromRequest()(request).fold(
     err => Left(RequestDataHolder.error400(fieldError(err))),

@@ -40,7 +40,7 @@
         @formInput {
           <select name="status" id="status">
             <option value="" selected="selected"></option>
-            @Status.Enum.values.toSeq.map { v =>
+            @Status.statusNames.toSeq.map { v =>
             <option value="@v.toString">@camelCase(v.toString, " ")</option>
             }
           </select>
