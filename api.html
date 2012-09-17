@@ -36,7 +36,7 @@ layout: default
         <li><a href="#asset-management"><i class="icon-chevron-right"></i> Asset Management API</a>
           <ul class="nav nav-list">
             <li><a href="#api-mgmt-ipmi-section"><i class="icon-chevron-right cr-dim"></i> IPMI Info</a></li>
-            <li><a href="#api-mgmt-power-do-section"><i class="icon-chevron-right cr-dim"></i> Power Action</a></li>
+            <li><a href="#api-mgmt-power-do-section"><i class="icon-chevron-right cr-dim"></i> Power Management</a></li>
             <li><a href="#api-mgmt-power-status-section"><i class="icon-chevron-right cr-dim"></i> Power Status</a></li>
             <li><a href="#api-mgmt-provision-section"><i class="icon-chevron-right cr-dim"></i> Provision</a></li>
             <li><a href="#api-mgmt-provision-prof-section"><i class="icon-chevron-right cr-dim"></i> Provision Profiles</a></li>
@@ -101,10 +101,8 @@ layout: default
         <div class="page-header">
           <h1>Asset Management API</h1>
         </div>
-        <p class="lead">Stuff</p>
-        <p>
-          Content
-        </p>
+        <p class="lead">Provisioning, power management, IPMI data</p>
+        {% include api_assetmgmt.html %}
       </section>
 
       <section id="asset-log">

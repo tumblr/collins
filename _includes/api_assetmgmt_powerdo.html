@@ -1,0 +1,141 @@
+<h2>Power Management</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Send a power management event to an asset.</td></tr>
+    <tr><th>Request</th><td><code>POST /api/asset/:tag/power</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetManagementApi.powerManagement</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">tag</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes)</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">action</th>
+              <td>String</td>
+              <td>One of powerOff, powerOn, powerSoft, powerState, rebootHard, rebootSoft, identify, verify. Described below.</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Power Actions</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Action</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">powerOff</th>
+              <td>Power off the asset, without grace (like pressing the power button)</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">powerOn</th>
+              <td>Power up the asset</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">powerSoft</th>
+              <td>Initiate soft shutdown of OS via ACPI</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">powerState</th>
+              <td>Status of power (on, off, unknown)</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">rebootSoft</th>
+              <td>Graceful reboot via IPMI, uses ACPI to notify OS</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">rebootHard</th>
+              <td>This is equivalent to pressing the reset button</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">identify</th>
+              <td>Turn on the IPMI light</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">verify</th>
+              <td>Detect whether the IPMI interface is reachable</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Successfully performed power operation</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">403</th>
+              <td>
+                Forbidden by configuration
+                <ul>
+                  <li><code>features.ignoreDangerousCommands</code> - forbids managing power state</li>
+                  <li><code>powermanagement.allowAssetTypes</code> - forbids power managing this asset type</li>
+                  <li><code>powermanagement.disallowStatus</code> - forbids managing power state of asset with this status</li>
+                  <li><code>powermanagement.disallowWhenAllocated</code> - forbids using this power action when asset is Allocated</li>
+                </ul>
+              </td>
+            </tr>
+            <tr>
+              <th class="inlinecode">404</th>
+              <td>Asset not found</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">501</th>
+              <td>Plugin not enabled</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell power rebootSoft --reason='Need to restart for maintenance' --tag=tumblrtag1
+</div>
+
+<div class="example curl">
+curl -v -u blake:admin:first --basic \<br>
+<span class="tab4"></span>-d action=rebootSoft \<br>
+<span class="tab4"></span>http://localhost:9000/api/asset/tumblrtag1/power<br>
+</div>
+<div class="accordion" id="assetmgmt-powerdo-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#assetmgmt-powerdo-response" href="#assetmgmt-powerdo-json-response">JSON Response</a>
+    </div>
+    <div id="assetmgmt-powerdo-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "SUCCESS": true
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

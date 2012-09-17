@@ -1,0 +1,31 @@
+<h2>Overview</h2>
+<p>
+Most of the API endpoints that are part of the asset management API are
+provisioning, power, or IPMI related. All of the asset management endpoints are
+going to depend somewhat on how you have configured collins. While the API
+remains consistent, the under the hood behavior of Collins will depend greatly
+on configuration. For more details in provisioning, IPMI, and power
+configurations see the <a href="configuration.html">configuration</a>
+documentation.
+</p>
+
+<section id="api-mgmt-ipmi-section">
+{% include api_assetmgmt_ipmi.html %}
+</section>
+
+<section id="api-mgmt-power-do-section">
+{% include api_assetmgmt_powerdo.html %}
+</section>
+
+<section id="api-mgmt-power-status-section">
+{% include api_assetmgmt_powerstatus.html %}
+</section>
+
+<section id="api-mgmt-provision-section">
+{% include api_assetmgmt_provision.html %}
+</section>
+
+<section id="api-mgmt-provision-prof-section">
+{% include api_assetmgmt_provision_profiles.html %}
+</section>
+
