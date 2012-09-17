@@ -327,7 +327,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       val dateString = util.views.Formatter.solrDateFormat(somedate)
       val afinder = AssetFinder(
         Some("footag"), 
-        Some(Status.Enum.Allocated), 
+        Some(Status.Allocated.get), 
         Some(AssetType.Enum.ServerNode),
         Some(somedate),
         Some(somedate),
@@ -349,7 +349,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
         SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
         SolrKeyVal("tag", SolrStringValue("footag")),
-        SolrKeyVal("status", SolrIntValue(Status.Enum.Allocated.id)),
+        SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
         SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id))
       ))
       val p = AssetSearchParameters(resultTuple, afinder)
