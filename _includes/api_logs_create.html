@@ -1,0 +1,95 @@
+<h2>Log Create</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Create a new log entry for the specified asset</td></tr>
+    <tr><th>Request</th><td><code>PUT /api/asset/:tag/log</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetLogApi.submitLogData</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">tag</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes)</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">message</th>
+              <td>String</td>
+              <td>The message to log</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">type</th>
+              <td>Option[String]</td>
+              <td>The default is <code>INFORMATIONAL</code></td>
+            </tr>
+            <tr>
+              <td colspan="3">
+                <span class="label label-info">Note</span> It is also possible to specify these parameters as the body of the PUT request
+                with a <code>Content-Type</code> header of <code>application/json</code>. In this case, the body is a JSON encoded object
+                with the keys <code>Message</code> (arbitrary JSON value) and <code>Type</code> (one of the strings specified above). This
+                is useful for logging structured data.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">201</th>
+              <td>Log entry was successfully created</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">404</th>
+              <td>Asset not found</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell log 'Hello World' --severity=DEBUG --tag=tumblrtag1
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first -X PUT \<br>
+<span class="tab4"></span>-d message='Hello World' \<br>
+<span class="tab4"></span>-d type=DEBUG \<br>
+<span class="tab4"></span>http://localhost:9000/api/asset/tumblrtag1/log
+</div>
+<div class="accordion" id="asset-log-create-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-log-create-response" href="#asset-log-create-json-response">JSON Response</a>
+    </div>
+    <div id="asset-log-create-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:created",
+  "data": {
+    "SUCCESS": true
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->
