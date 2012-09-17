@@ -8,6 +8,7 @@ import util.conversions._
 import java.io.File
 import java.net.URLClassLoader
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
+import java.util.concurrent.locks.ReentrantReadWriteLock
 import play.api.Application
 import play.api.Logger
 import scala.collection.JavaConversions._
@@ -27,14 +28,13 @@ case class CollinScriptCompileException(script: String, msg: String)
  */
 sealed trait CollinScriptEngine {
 
-  private val NUM_ENGINE_REFRESHES = 2
-
   protected val logger = Logger("CollinScriptEngine")
 
   protected var lastRefreshMillis: AtomicLong = new AtomicLong(0)
-  protected var numRefreshes: AtomicInteger = new AtomicInteger(0)
+  protected var refreshLock: ReentrantReadWriteLock =
+    new ReentrantReadWriteLock()
 
-  protected var engine = new ScalaScriptEngine(
+  protected val engine = new ScalaScriptEngine(
       Config(Set(sourceDir), getAppClasspath, getAppClasspath, outputDir))
       with FromClasspathFirst {}
 
@@ -110,20 +110,16 @@ sealed trait CollinScriptEngine {
     try {
       // If the time of last refresh is less than the refresh threshold, don't
       // refresh the code unless we're in a startup state.
-      if (System.currentTimeMillis - lastRefreshMillis.get < refreshPeriodMillis
-          && numRefreshes.get >= NUM_ENGINE_REFRESHES) {
+      if (System.currentTimeMillis - lastRefreshMillis.get <
+          refreshPeriodMillis) {
         return
       }
       // The engine must be instantiated twice at startup to preclude linking
       // issues against any partially-compiled sources.
-      if (numRefreshes.get < NUM_ENGINE_REFRESHES) {
-        engine = new ScalaScriptEngine(
-            Config(Set(sourceDir), getAppClasspath, getAppClasspath, outputDir))
-            with FromClasspathFirst {}
-        numRefreshes.getAndIncrement
-      }
       logger.debug("Refreshing CollinScript engine...")
+      refreshLock.writeLock().lock()
       engine.refresh
+      refreshLock.writeLock().unlock()
       lastRefreshMillis.set(System.currentTimeMillis)
     } catch {
       case e => {
