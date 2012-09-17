@@ -1,0 +1,116 @@
+<h2>Get Address Pools</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Return pools that are in use or configured</td></tr>
+    <tr><th>Request</th><td><code>GET /api/address/pools</code></td></tr>
+    <tr><th>Permission</th><td>controllers.IpAddressApi.getAddressPools</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">all</th>
+              <td>Option[Boolean]</td>
+              <td>If false, only return pools with allocated assets. Defaults to true.</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Pools found</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell ip_address pools
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first http://localhost:9000/api/address/pools
+</div>
+<div class="accordion" id="ipam-pools-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#ipam-pools-response" href="#ipam-pools-json-response">JSON Response</a>
+    </div>
+    <div id="ipam-pools-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "POOLS": [
+      {
+        "NAME": "ADMIN-OPS",
+        "NETWORK": "172.16.56.0\/24",
+        "START_ADDRESS": "172.16.56.5",
+        "SPECIFIED_GATEWAY": "Unspecified",
+        "GATEWAY": "172.16.56.1",
+        "BROADCAST": "172.16.56.255",
+        "POSSIBLE_ADDRESSES": 254
+      },
+      {
+        "NAME": "WEB-EDIT",
+        "NETWORK": "172.16.64.0\/24",
+        "START_ADDRESS": "172.16.64.5",
+        "SPECIFIED_GATEWAY": "Unspecified",
+        "GATEWAY": "172.16.64.1",
+        "BROADCAST": "172.16.64.255",
+        "POSSIBLE_ADDRESSES": 254
+      },
+      {
+        "NAME": "DEV",
+        "NETWORK": "172.16.5.0\/24",
+        "START_ADDRESS": "172.16.5.4",
+        "SPECIFIED_GATEWAY": "Unspecified",
+        "GATEWAY": "172.16.5.1",
+        "BROADCAST": "172.16.5.255",
+        "POSSIBLE_ADDRESSES": 254
+      },
+      {
+        "NAME": "WEB-SECURE",
+        "NETWORK": "172.16.73.0\/28",
+        "START_ADDRESS": "172.16.73.5",
+        "SPECIFIED_GATEWAY": "Unspecified",
+        "GATEWAY": "172.16.73.1",
+        "BROADCAST": "172.16.73.15",
+        "POSSIBLE_ADDRESSES": 14
+      },
+      {
+        "NAME": "AAA",
+        "NETWORK": "172.16.4.0\/28",
+        "START_ADDRESS": "172.16.4.4",
+        "SPECIFIED_GATEWAY": "Unspecified",
+        "GATEWAY": "172.16.4.1",
+        "BROADCAST": "172.16.4.15",
+        "POSSIBLE_ADDRESSES": 14
+      }
+    ]
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

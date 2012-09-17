@@ -1,0 +1,81 @@
+<h2>Delete an Address</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Delete all addresses associated with a given tag, optionally associated with a pool</td></tr>
+    <tr><th>Request</th><td><code>DELETE /api/asset/:tag/addresses</code></td></tr>
+    <tr><th>Permission</th><td>controllers.IpAddressApi.purgeAddresses</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">tag</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes)</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">pool</th>
+              <td>Option[String]</td>
+              <td>If specified, only addresses associated with the given pool are deleted. Otherwise, all addresses are deleted.</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Address deleted</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">404</th>
+              <td>Invalid asset specified</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell ip_address delete DEV --tag=tumblrtag1
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first -X DELETE \<br>
+<span class="tab4"></span>-d pool=DEV \<br>
+<span class="tab4"></span>http://localhost:9000/api/asset/tumblrtag1/addresses
+</div>
+<div class="accordion" id="ipam-delete-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#ipam-delete-response" href="#ipam-delete-json-response">JSON Response</a>
+    </div>
+    <div id="ipam-delete-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "DELETED": 1
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

@@ -262,6 +262,16 @@ desc: Basic Collins Concepts
           switch provisioning. We also use this data for generating kickstart files with the correct address information.
         </p>
         <p>
+          The fundamental idea with Collins IPAM is that of a pool.
+          A pool is a named group of addresses. A pool definition will specify the network
+          address range (specified in CIDR notation), an optional start address (e.g. the
+          IP to start allocating from in the specified range), an optional gateway (if
+          it's not the one you would infer from the CIDR range), and a name.
+          Once a pool is configured it is possible to allocate addresses in that
+          pool. If you don't manage your own address space, no worries. You can
+          operate in a a 'pool-less' mode where you can specify any address.
+        </p>
+        <p>
           There is more information available in the API section as well as in the configuration section.
         </p>
       </section>

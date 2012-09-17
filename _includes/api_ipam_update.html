@@ -1,0 +1,109 @@
+<h2>Update an Address</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Update IP address information</td></tr>
+    <tr><th>Request</th><td><code>POST /api/asset/:tag/address</code></td></tr>
+    <tr><th>Permission</th><td>controllers.IpAddressApi.updateAddress</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">tag</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes)</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">old_address</th>
+              <td>Option[String]</td>
+              <td>Optional for creating an address and required for updating an address</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">address</th>
+              <td>Option[String]</td>
+              <td>Optional for update and required for create</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">gateway</th>
+              <td>Option[String]</td>
+              <td>Optional for update and required for create</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">netmask</th>
+              <td>Option[String]</td>
+              <td>Optional for update and required for create</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">pool</th>
+              <td>Option[String]</td>
+              <td>Optional for update and required for create</td>
+            </tr>
+            <tr>
+              <td colspan="3"><span class="label label-info">Note</span> If all address information is supplied (address, gateway, and netmask), but no <code>old_address</code> is specified, Collins will attempt to create the address.</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Address updated</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">201</th>
+              <td>Address created</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">404</th>
+              <td>Invalid asset specified</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell ip_address update 172.16.5.4 --tag=tumblrtag1 --address=172.16.5.5
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first -X POST \<br>
+<span class="tab4"></span>-d address=172.16.5.5 \<br>
+<span class="tab4"></span>-d old_address=172.16.5.4 \<br>
+<span class="tab4"></span>http://localhost:9000/api/asset/tumblrtag1/address
+</div>
+<div class="accordion" id="ipam-update-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#ipam-update-response" href="#ipam-update-json-response">JSON Response</a>
+    </div>
+    <div id="ipam-update-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "SUCCESS": true
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

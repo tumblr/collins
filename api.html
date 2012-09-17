@@ -57,12 +57,12 @@ layout: default
         </li>
         <li><a href="#ipam"><i class="icon-chevron-right"></i> IPAM API</a>
           <ul class="nav nav-list">
-            <li><a href="#api-ipam-allocate-section"><i class="icon-chevron-right cr-dim"></i> Create</a></li>
+            <li><a href="#api-ipam-allocate-section"><i class="icon-chevron-right cr-dim"></i> Allocate</a></li>
             <li><a href="#api-ipam-update-section"><i class="icon-chevron-right cr-dim"></i> Update</a></li>
             <li><a href="#api-ipam-delete-section"><i class="icon-chevron-right cr-dim"></i> Delete</a></li>
             <li><a href="#api-ipam-pools-section"><i class="icon-chevron-right cr-dim"></i> Pools</a></li>
             <li><a href="#api-ipam-asset-addresses-section"><i class="icon-chevron-right cr-dim"></i> Asset Addresses</a></li>
-            <li><a href="#api-ipam-asset-from-address-section"><i class="icon-chevron-right cr-dim"></i> Find by Address</a></li>
+            <li><a href="#api-ipam-asset-from-address-section"><i class="icon-chevron-right cr-dim"></i> Asset from Address</a></li>
             <li><a href="#api-ipam-assets-in-pool-section"><i class="icon-chevron-right cr-dim"></i> Assets in Pool</a></li>
           </ul>
         </li>
@@ -125,10 +125,8 @@ layout: default
         <div class="page-header">
           <h1>IPAM API</h1>
         </div>
-        <p class="lead">Stuff</p>
-        <p>
-          Content
-        </p>
+        <p class="lead">IP Address Management</p>
+        {% include api_ipam.html %}
       </section>
 
       <section id="state">
