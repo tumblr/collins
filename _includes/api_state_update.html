@@ -1,13 +1,13 @@
-<h2>State Create</h2>
+<h2>State Update</h2>
 
 <table class="table table-condensed">
   <thead>
     <tr><td></td><td></td></tr>
   </thead>
   <tbody>
-    <tr><th>Description</th><td>Create a new asset state</td></tr>
-    <tr><th>Request</th><td><code>PUT /api/state/:name</code></td></tr>
-    <tr><th>Permission</th><td>controllers.AssetStateApi.createState</td></tr>
+    <tr><th>Description</th><td>Update a state</td></tr>
+    <tr><th>Request</th><td><code>POST /api/state/:old_name</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetStateApi.updateState</td></tr>
     <tr>
       <th>Parameters</th>
       <td>
@@ -17,24 +17,29 @@
           </thead>
           <tbody>
             <tr>
-              <th class="inlinecode">name</th>
+              <th class="inlinecode">old_name</th>
               <td>String</td>
-              <td>A unique name between 2 and 32 characters, must be upper case</td>
+              <td>The old name of the state</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">name</th>
+              <td>Option[String]</td>
+              <td>A new name, must be unique and between 2 and 32 characters</td>
             </tr>
             <tr>
               <th class="inlinecode">label</th>
-              <td>String</td>
+              <td>Option[String]</td>
               <td>A friendly display label between 2 and 32 characters</td>
             </tr>
             <tr>
               <th class="inlinecode">description</th>
-              <td>String</td>
+              <td>Option[String]</td>
               <td>A longer description of the state between 2 and 255 characters</td>
             </tr>
             <tr>
               <th class="inlinecode">status</th>
               <td>Option[String]</td>
-              <td>Name of the status to bind this state to (e.g. Incomplete, Maintenance, etc), or Any to bind to all status. Any is the default.</td>
+              <td>Name of the status to bind this state to (e.g. Incomplete, Maintenance, etc), or Any to bind to all status.</td>
             </tr>
           </tbody>
         </table>
@@ -49,12 +54,16 @@
           </thead>
           <tbody>
             <tr>
-              <th class="inlinecode">201</th>
-              <td>State was successfully created</td>
+              <th class="inlinecode">200</th>
+              <td>State successfully updated</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">404</th>
+              <td>Invalid old_name specified</td>
             </tr>
             <tr>
               <th class="inlinecode">409</th>
-              <td>State name already in use</td>
+              <td>Name already in use or trying to modify a system name</td>
             </tr>
           </tbody>
         </table>
@@ -64,29 +73,22 @@
 </table>
 
 <div class="example collins-shell">
-collins-shell state create --name=HW_ON_FIRE \<br>
-<span class="tab4"></span>--label='Hardware on Fire' \<br>
-<span class="tab4"></span>--description='Use this state if hardware has caught on fire' \<br>
-<span class="tab4"></span>--status=Maintenance
+collins-shell state update HW_ON_FIRE --label='Hardware on Fire!'
 </div>
 
 <div class="example curl">
-curl --basic -u blake:admin:first \<br>
-<span class="tab4"></span>-X PUT \<br>
-<span class="tab4"></span>-d label='Hardware on Fire' \<br>
-<span class="tab4"></span>-d description='Use this state if hardware has caught on fire' \<br>
-<span class="tab4"></span>-d status=Maintenance \<br>
+curl -v --basic -u blake:admin:first -d label='Hardware on Fire!' \<br>
 <span class="tab4"></span>http://localhost:9000/api/state/HW_ON_FIRE
 </div>
-<div class="accordion" id="state-create-response">
+<div class="accordion" id="state-update-response">
   <div class="accordion-group">
     <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#state-create-response" href="#state-create-json-response">JSON Response</a>
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#state-update-response" href="#state-update-json-response">JSON Response</a>
     </div>
-    <div id="state-create-json-response" class="accordion-body collapse">
+    <div id="state-update-json-response" class="accordion-body collapse">
       <div class="accordion-inner">
         <pre>{
-  "status": "success:created",
+  "status": "success:ok",
   "data": {
     "SUCCESS": true
   }

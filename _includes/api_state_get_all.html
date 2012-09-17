@@ -1,0 +1,186 @@
+<h2>State Get All</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Get all available states</td></tr>
+    <tr><th>Request</th><td><code>GET /api/states</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetStateApi.getState</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Found some states</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell state list
+</div>
+
+<div class="example curl">
+curl -v --basic -u blake:admin:first http://localhost:9000/api/states
+</div>
+<div class="accordion" id="state-get-all-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#state-get-all-response" href="#state-get-all-json-response">JSON Response</a>
+    </div>
+    <div id="state-get-all-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": [
+    {
+      "ID": 1,
+      "STATUS": null,
+      "NAME": "NEW",
+      "LABEL": "New",
+      "DESCRIPTION": "A service in this state is inactive. It does minimal work and consumes minimal resources."
+    },
+    {
+      "ID": 2,
+      "STATUS": null,
+      "NAME": "STARTING",
+      "LABEL": "Starting",
+      "DESCRIPTION": "A service in this state is transitioning to Running."
+    },
+    {
+      "ID": 3,
+      "STATUS": null,
+      "NAME": "RUNNING",
+      "LABEL": "Running",
+      "DESCRIPTION": "A service in this state is operational."
+    },
+    {
+      "ID": 4,
+      "STATUS": null,
+      "NAME": "STOPPING",
+      "LABEL": "Stopping",
+      "DESCRIPTION": "A service in this state is transitioning to Terminated."
+    },
+    {
+      "ID": 5,
+      "STATUS": null,
+      "NAME": "TERMINATED",
+      "LABEL": "Terminated",
+      "DESCRIPTION": "A service in this state has completed execution normally. It does minimal work and consumes minimal resources."
+    },
+    {
+      "ID": 6,
+      "STATUS": null,
+      "NAME": "FAILED",
+      "LABEL": "Failed",
+      "DESCRIPTION": "A service in this state has encountered a problem and may not be operational. It cannot be started nor stopped."
+    },
+    {
+      "ID": 7,
+      "STATUS": {
+        "ID": 5,
+        "NAME": "Maintenance",
+        "DESCRIPTION": "Asset is scheduled for maintenance"
+      },
+      "NAME": "RELOCATION",
+      "LABEL": "Relocation",
+      "DESCRIPTION": "An asset is being physically relocated."
+    },
+    {
+      "ID": 8,
+      "STATUS": {
+        "ID": 5,
+        "NAME": "Maintenance",
+        "DESCRIPTION": "Asset is scheduled for maintenance"
+      },
+      "NAME": "IPMI_PROBLEM",
+      "LABEL": "IPMI Problem",
+      "DESCRIPTION": "An asset is experiencing IPMI issues and needs to be examined. It needs investigation."
+    },
+    {
+      "ID": 9,
+      "STATUS": {
+        "ID": 5,
+        "NAME": "Maintenance",
+        "DESCRIPTION": "Asset is scheduled for maintenance"
+      },
+      "NAME": "HARDWARE_PROBLEM",
+      "LABEL": "Hardware Problem",
+      "DESCRIPTION": "An asset is experiencing a non-IPMI issue and needs to be examined. It needs investigation."
+    },
+    {
+      "ID": 10,
+      "STATUS": {
+        "ID": 5,
+        "NAME": "Maintenance",
+        "DESCRIPTION": "Asset is scheduled for maintenance"
+      },
+      "NAME": "NETWORK_PROBLEM",
+      "LABEL": "Network Problem",
+      "DESCRIPTION": "An asset is experiencing a network problem that may or may not be hardware related. It needs investigation."
+    },
+    {
+      "ID": 11,
+      "STATUS": {
+        "ID": 5,
+        "NAME": "Maintenance",
+        "DESCRIPTION": "Asset is scheduled for maintenance"
+      },
+      "NAME": "HARDWARE_UPGRADE",
+      "LABEL": "Hardware Upgrade",
+      "DESCRIPTION": "An asset is in need or in process of having hardware upgraded."
+    },
+    {
+      "ID": 12,
+      "STATUS": {
+        "ID": 5,
+        "NAME": "Maintenance",
+        "DESCRIPTION": "Asset is scheduled for maintenance"
+      },
+      "NAME": "HW_TESTING",
+      "LABEL": "Hardware Testing",
+      "DESCRIPTION": "Performing some testing that requires putting the asset into a maintenance state."
+    },
+    {
+      "ID": 13,
+      "STATUS": {
+        "ID": 5,
+        "NAME": "Maintenance",
+        "DESCRIPTION": "Asset is scheduled for maintenance"
+      },
+      "NAME": "MAINT_NOOP",
+      "LABEL": "Maintenance NOOP",
+      "DESCRIPTION": "Doing nothing, bouncing this through maintenance for my own selfish reasons."
+    },
+    {
+      "ID": 15,
+      "STATUS": {
+        "ID": 5,
+        "NAME": "Maintenance",
+        "DESCRIPTION": "Asset is scheduled for maintenance"
+      },
+      "NAME": "HW_ON_FIRE",
+      "LABEL": "Hardware on Fire",
+      "DESCRIPTION": "Use this state if hardware has caught on fire"
+    }
+  ]
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->
