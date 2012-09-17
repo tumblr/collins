@@ -58,8 +58,6 @@ PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 GET     /api/assets/logs            app.Api.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
 
-DELETE  /api/asset/:tag/attribute/:attribute   app.Api.deleteAssetAttribute(tag: String, attribute: String)
-
 # Asset management API
 POST    /api/asset/:tag/ipmi        app.Api.updateIpmi(tag: String)
 POST    /api/asset/:tag/power       app.Api.powerManagement(tag: String)
@@ -67,6 +65,8 @@ GET     /api/asset/:tag/power       app.Api.powerStatus(tag: String)
 POST    /api/provision/:tag         app.Api.provisionAsset(tag: String)
 GET     /api/provision/profiles     app.Api.getProvisioningProfiles
 
+# Asset API
+DELETE  /api/asset/:tag/attribute/:attribute   app.Api.deleteAssetAttribute(tag: String, attribute: String)
 POST    /api/asset/:tag/status      app.Api.updateAssetStatus(tag: String)
 PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
@@ -75,12 +75,14 @@ GET     /api/asset/:tag             app.Api.getAsset(tag: String, location: Opti
 GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", sortField: String ?= "TAG", query: String ?= "", details: String ?= "true")
 GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
 
+# State Management API
 PUT     /api/state/:name            app.Api.createState(name: String)
 POST    /api/state/:name            app.Api.updateState(name: String)
 DELETE  /api/state/:name            app.Api.deleteState(name: String)
 GET     /api/state/:name            app.Api.getState(name: String)
 GET     /api/states                 app.Api.getStates
 
+# Tag management API
 GET     /api/tags                   app.Api.getTags
 GET     /api/tag/:tag               app.Api.getTagValues(tag: String)
 
