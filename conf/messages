@@ -7,7 +7,6 @@ constraint.minLength=The minimum length is {0}
 # --- Errors
 error.minLength=The minimum length is {0}
 error.truthy={0} is not truthy. Must be a value like ''true'' or ''false''.
-error.state=Specified state is invalid.
 error.unknown=An unknown error occurred
 
 asset.id.notfound=No asset with ID {0} could be found
@@ -24,6 +23,7 @@ asset.intake.success=Intake of asset ''{0}'' was successful.
 asset.missing=Asset with tag ''{0}'' does not exist
 asset.nomatch=Could not find any assets matching your query
 asset.status.invalid=Invalid asset status specified. Valid values are Incomplete, New, Unallocated, Provisioning, Provisioned, Allocated, Cancelled, Decommissioned or Maintenance.
+asset.state.invalid=Specified state is invalid.
 asset.tag.invalid=Specified asset tag ''{0}'' is invalid
 asset.update.attribute.invalid=Attribute specification is not valid. Must be of form key;value where key is the name of the attribute and value is the new value to set.
 asset.update.lshw.invalid=LSHW data should be XML.
@@ -43,6 +43,18 @@ assetlog.create.error.messageTypeInvalid=specified log type is invalid, valid ty
 assetlog.create.error.messageSourceInvalid=specified source is invalid, valid sources are: {0}
 
 attributeresolver.notfound=Invalid search field ''{0}''. Not found as asset tag, IPMI field or IP Address field.
+
+controllers.AssetApi.updateStatus.invalidReason=No reason for the status change was specified.
+controllers.AssetApi.updateStatus.invalidInvocation=Either state or status must be specified but neither were found.
+controllers.AssetApi.updateStatus.stateConflict=State ''{1}'' can not be used with status ''{0}''
+
+controllers.AssetStateApi.createState.invalidName=The specified name is invalid. A name must be between 2 and 32 characters and be unique.
+controllers.AssetStateApi.createState.invalidDescription=The specified description is invalid. A description must be between 2 and 255 characters.
+controllers.AssetStateApi.createState.invalidLabel=The specified label is invalid. A label must be between 2 and 32 characters.
+
+controllers.AssetStateApi.deleteState.invalidName=The specified name is invalid. A name must be between 2 and 32 characters.
+controllers.AssetStateApi.deleteState.noSuchName=The specified state name does not exist and can not be deleted.
+controllers.AssetStateApi.deleteState.systemName=The specified state is a system name and can not be modified.
 
 controllers.updateForMaintenance.missingDescriptionAndStatus=A problem/solution description and status must both be specified
 controllers.updateForMaintenance.missingStatus=Asset status must be specified

@@ -20,6 +20,7 @@ object Callback extends CallbackManager {
 
   override def fire(propertyName: String, oldValue: AnyRef, newValue: AnyRef) {
     pluginEnabled { plugin =>
+      logger.debug("app.util.plugins.Callback.fire(%s)".format(propertyName))
       plugin.fire(propertyName, oldValue, newValue)
     }
   }

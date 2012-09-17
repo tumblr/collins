@@ -3,13 +3,13 @@ source "http://repo.tumblr.net:9929/"
 
 Encoding.default_external = Encoding::UTF_8
 
-gem 'collins_client', '~> 0.2.3'
-gem 'highline',       '~> 1.6.13'
+gem 'collins_client', '~> 0.2.5'
+gem 'highline',       '~> 1.6.15'
 gem 'mustache',       '~> 0.99.4'
 gem 'pry',            '~> 0.9.9.6'
 gem 'rubygems-update','~> 1.8.24'
 gem 'terminal-table', '~> 1.4.5'
-gem 'thor',           '~> 0.15.2'
+gem 'thor',           '~> 0.16.0'
 
 group :development do
     gem 'jeweler',      '~> 1.8.3'

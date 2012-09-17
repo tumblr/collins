@@ -12,9 +12,22 @@ case class Status(name: String, description: String, id: Int = 0) extends Valida
   }
   override def asJson: String =
     Json.stringify(Status.StatusFormat.writes(this))
+
+  // We do this to mock the former Enum stuff
+  override def toString(): String = name
 }
 
 object Status extends Schema with AnormAdapter[Status] {
+
+  def Allocated = Status.findByName("Allocated")
+  def Cancelled = Status.findByName("Cancelled")
+  def Decommissioned = Status.findByName("Decommissioned")
+  def Incomplete = Status.findByName("Incomplete")
+  def Maintenance = Status.findByName("Maintenance")
+  def New = Status.findByName("New")
+  def Provisioning = Status.findByName("Provisioning")
+  def Provisioned = Status.findByName("Provisioned")
+  def Unallocated = Status.findByName("Unallocated")
 
   implicit object StatusFormat extends Format[Status] {
     override def reads(json: JsValue) = Status(
@@ -64,11 +77,6 @@ object Status extends Schema with AnormAdapter[Status] {
     }
   }
 
-  def statusNames: Set[String] = Enum.values.map(_.toString)
-
-  type Enum = Enum.Value
-  object Enum extends Enumeration(1) {
-    val New, Unallocated, Allocated, Cancelled, Maintenance, Decommissioned, Incomplete, Provisioning, Provisioned = Value
-  }
+  def statusNames: Set[String] = find().map(_.name).toSet
 
 }
