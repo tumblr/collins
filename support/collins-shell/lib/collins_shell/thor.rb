@@ -131,7 +131,7 @@ module CollinsShell
     def ensure_password opts = {}
       me = CollinsShell::ThorHelper
       if me.password.nil? then
-        me.password = get_password(get_collins_config.merge(opts).merge(:struct => true))
+        me.password = get_password(get_collins_config.merge(opts).merge(:strict => true))
       end
       me.password
     end

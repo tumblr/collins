@@ -13,7 +13,7 @@ import java.util.Date
 
 case class AssetFinder(
   tag: Option[String],
-  status: Option[Status.Enum],
+  status: Option[Status],
   assetType: Option[AssetType.Enum],
   createdAfter: Option[Date],
   createdBefore: Option[Date],
@@ -42,7 +42,7 @@ case class AssetFinder(
   def toSeq: Seq[(String, String)] = {
     val items:Seq[Option[(String, String)]] = (
       tag.map{"tag" -> _} ::
-      status.map{"status" -> _.toString} ::
+      status.map{"status" -> _.name} ::
       assetType.map{"type" -> _.toString} ::
       createdAfter.map{t => "createdAfter" -> Formatter.dateFormat(t)} ::
       createdBefore.map{t => "createdBefore" -> Formatter.dateFormat(t)} ::

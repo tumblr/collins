@@ -1,7 +1,8 @@
 package controllers
 
 import actions.asset.{CreateAction, DeleteAction, DeleteAttributeAction, FindAction, FindSimilarAction, GetAction, SolrFindAction}
-import actions.asset.{UpdateAction, UpdateForMaintenanceAction}
+import actions.asset.{UpdateAction, UpdateForMaintenanceAction, UpdateRequestRouter, UpdateStatusAction}
+import actions.asset.UpdateRequestRouter.Matcher._
 
 import views.html
 import models.{Status => AStatus}
@@ -35,7 +36,16 @@ trait AssetApi {
   def createAsset(tag: String) = CreateAction(Some(tag), None, Permissions.AssetApi.CreateAsset, this)
 
   // POST /api/asset/:tag
-  def updateAsset(tag: String) = UpdateAction(tag, Permissions.AssetApi.UpdateAsset, this)
+  def updateAsset(tag: String) = UpdateRequestRouter {
+    case StatusOnly =>
+      UpdateStatusAction(tag, Permissions.AssetApi.UpdateAssetStatus, this)
+    case _ =>
+      UpdateAction(tag, Permissions.AssetApi.UpdateAsset, this)
+  }
+
+  // POST /api/asset/:tag/status
+  def updateAssetStatus(tag: String) =
+    UpdateStatusAction(tag, Permissions.AssetApi.UpdateAssetStatus, this)
 
   def updateAssetForMaintenance(tag: String) = UpdateForMaintenanceAction(
     tag, Permissions.AssetApi.UpdateAssetForMaintenance, this

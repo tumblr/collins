@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "collins_shell"
-  s.version = "0.2.12"
+  s.version = "0.2.13"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Blake Matheny"]
-  s.date = "2012-09-12"
+  s.date = "2012-09-15"
   s.description = "Provides basic CLI for interacting with Collins API"
   s.email = "bmatheny@tumblr.com"
   s.executables = ["collins-shell"]
@@ -47,6 +47,7 @@ Gem::Specification.new do |s|
     "lib/collins_shell/ipmi.rb",
     "lib/collins_shell/monkeypatch.rb",
     "lib/collins_shell/provision.rb",
+    "lib/collins_shell/state.rb",
     "lib/collins_shell/tag.rb",
     "lib/collins_shell/thor.rb",
     "lib/collins_shell/util.rb",
@@ -65,30 +66,30 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<collins_client>, ["~> 0.2.3"])
-      s.add_runtime_dependency(%q<highline>, ["~> 1.6.13"])
+      s.add_runtime_dependency(%q<collins_client>, ["~> 0.2.5"])
+      s.add_runtime_dependency(%q<highline>, ["~> 1.6.15"])
       s.add_runtime_dependency(%q<mustache>, ["~> 0.99.4"])
       s.add_runtime_dependency(%q<pry>, ["~> 0.9.9.6"])
       s.add_runtime_dependency(%q<rubygems-update>, ["~> 1.8.24"])
       s.add_runtime_dependency(%q<terminal-table>, ["~> 1.4.5"])
-      s.add_runtime_dependency(%q<thor>, ["~> 0.15.2"])
+      s.add_runtime_dependency(%q<thor>, ["~> 0.16.0"])
     else
-      s.add_dependency(%q<collins_client>, ["~> 0.2.3"])
-      s.add_dependency(%q<highline>, ["~> 1.6.13"])
+      s.add_dependency(%q<collins_client>, ["~> 0.2.5"])
+      s.add_dependency(%q<highline>, ["~> 1.6.15"])
       s.add_dependency(%q<mustache>, ["~> 0.99.4"])
       s.add_dependency(%q<pry>, ["~> 0.9.9.6"])
       s.add_dependency(%q<rubygems-update>, ["~> 1.8.24"])
       s.add_dependency(%q<terminal-table>, ["~> 1.4.5"])
-      s.add_dependency(%q<thor>, ["~> 0.15.2"])
+      s.add_dependency(%q<thor>, ["~> 0.16.0"])
     end
   else
-    s.add_dependency(%q<collins_client>, ["~> 0.2.3"])
-    s.add_dependency(%q<highline>, ["~> 1.6.13"])
+    s.add_dependency(%q<collins_client>, ["~> 0.2.5"])
+    s.add_dependency(%q<highline>, ["~> 1.6.15"])
     s.add_dependency(%q<mustache>, ["~> 0.99.4"])
     s.add_dependency(%q<pry>, ["~> 0.9.9.6"])
     s.add_dependency(%q<rubygems-update>, ["~> 1.8.24"])
     s.add_dependency(%q<terminal-table>, ["~> 1.4.5"])
-    s.add_dependency(%q<thor>, ["~> 0.15.2"])
+    s.add_dependency(%q<thor>, ["~> 0.16.0"])
   end
 end
 

@@ -2,7 +2,6 @@ package models
 
 import collins.validation.Pattern.{isAlphaNumericString, isNonEmptyString}
 
-import play.api.Logger
 import play.api.libs.json._
 import play.api.libs.json.Json.toJson
 import org.squeryl.PrimitiveTypeMode._
@@ -13,6 +12,7 @@ object State extends Schema with AnormAdapter[State] {
 
   /** Status value that can apply to any asset, regardless of status **/
   val ANY_STATUS = 0
+  val ANY_NAME = "Any"
 
   def New = State.findByName("NEW")
   def Running = State.findByName("RUNNING")
@@ -61,6 +61,8 @@ object State extends Schema with AnormAdapter[State] {
     }
   }
 
+  def empty = new State(0, ANY_STATUS, "INVALID", "Invalid Label", "Invalid Description")
+
   def find(): List[State] = getOrElseUpdate("State.find") {
     from(tableDef)(s => select(s)).toList
   }
@@ -86,6 +88,7 @@ object State extends Schema with AnormAdapter[State] {
       ).toList
     }
   override def get(state: State): State = findById(state.id).get
+  def isSystemState(state: State): Boolean = state.id < 7
 }
 
 case class State(
@@ -95,18 +98,17 @@ case class State(
   label: String,      // A visual (short) label to accompany the state
   description: String // A longer description of the state
 ) extends ValidatedEntity[Int] {
-  private[this] val logger = Logger("State")
-
   def getId(): Int = id
   def getDisplayLabel(): String = "%s - %s".format(getStatusName, label)
   def getStatusName(): String = status match {
-    case 0 => "Any"
+    case 0 => State.ANY_NAME
     case n => Status.findById(n).map(_.name).getOrElse("Unknown")
   }
   override def validate() {
     require(status >= 0, "status must be >= 0")
     require(isAlphaNumericString(name), "State name must be alphanumeric")
     require(name.length > 1 && name.length <=32, "length of name must between 1 and 32")
+    require(name == name.toUpperCase, "name must be uppercase")
     require(isNonEmptyString(label), "label must be specified")
     require(label.length > 1 && label.length <= 32, "length of label must be between 1 and 32 characters")
     require(isNonEmptyString(description), "Description must be specified")

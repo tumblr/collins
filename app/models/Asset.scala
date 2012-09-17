@@ -47,8 +47,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   def getId(): Long = id
 
   def getStatus(): Status = Status.findById(status).get
-
   override def getStatusName(): String = getStatus().name
+
+  def getState(): Option[State] = State.findById(state)
 
   def getType(): AssetType = {
     AssetType.findById(asset_type).get
@@ -125,12 +126,14 @@ object Asset extends Schema with AnormAdapter[Asset] {
   private[this] val logger = Logger("Asset")
   override protected val createEventName = Some("asset_create")
   override protected val updateEventName = Some("asset_update")
+  override protected val deleteEventName = Some("asset_delete")
 
   override val tableDef = table[Asset]("asset")
   on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
     a.tag is(unique),
     a.status is(indexed),
+    a.state is(indexed),
     a.asset_type is(indexed),
     a.created is(indexed),
     a.updated is(indexed)
@@ -139,9 +142,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     "Asset.findByTag(%s)".format(asset.tag.toLowerCase),
     "Asset.findById(%d)".format(asset.id)
   )
-  def flushCache(asset: Asset) = cacheKeys(asset).foreach { k =>
-    Cache.invalidate(k)
-  }
+  def flushCache(asset: Asset) = loggedInvalidation("flushCache", asset)
   object Messages extends MessageHelper("asset") {
     def intakeError(t: String, a: Asset) = "intake.error.%s".format(t.toLowerCase) match {
       case msg if msg == "intake.error.new" =>
@@ -165,10 +166,10 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def isValidTag(tag: String): Boolean = isAlphaNumericString(tag)
 
-  def apply(tag: String, status: Status.Enum, asset_type: AssetType.Enum) = {
+  def apply(tag: String, status: Status, asset_type: AssetType.Enum) = {
     new Asset(tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
   }
-  def apply(tag: String, status: Status.Enum, asset_type: AssetType) = {
+  def apply(tag: String, status: Status, asset_type: AssetType) = {
     new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
   }
 
@@ -299,63 +300,23 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }.toList
   }}
 
-  def setState(asset: Asset, state: State): Int = inTransaction {
-    val oldAsset = Asset.findById(asset.id).get
-    val res = tableDef.update(a =>
-      where(a.id === asset.id)
-      set(a.state := state.id)
+  def resetState(state: State, newId: Int): Int = inTransaction {
+    import util.plugins.solr.Solr
+    val count = tableDef.update(a =>
+      where(a.state === state.id)
+      set(a.state := newId)
     )
-    loggedInvalidation("setState", asset)
-    val newAsset = Asset.findById(asset.id).get
-    updateEventName.foreach { name =>
-      oldAsset.forComparison
-      newAsset.forComparison
-      util.plugins.Callback.fire(name, oldAsset, newAsset)
-    }
-    loggedInvalidation("setState", asset)
-    res
+    // We repopulate solr because the alternative is to do some complex state tracking
+    // The above update operation also will not trigger callbacks
+    Solr.populate()
+    count
   }
 
-  def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int], state: Option[State] = None) = inTransaction {
-    val oldAsset = Asset.findById(asset.id).get
-    val res = if (updated.isDefined && status.isDefined && state.isDefined) {
-      logger.info("Got update for all states")
-      tableDef.update (a =>
-        where(a.id === asset.id)
-        set(a.updated := updated, a.status := status.get, a.state := state.get.id)
-      )
-    } else if(updated.isDefined && status.isDefined) {
-      tableDef.update(a =>
-        where(a.id === asset.id)
-        set(a.updated := updated, a.status := status.get)
-      )
-    } else if (updated.isDefined) {
-      tableDef.update (a =>
-        where(a.id === asset.id)
-        set(a.updated := updated)
-      )
-    } else if (status.isDefined) {
-      tableDef.update (a =>
-        where(a.id === asset.id)
-        set(a.status := status.get)
-      )
-    } else if (state.isDefined) {
-      tableDef.update (a =>
-        where(a.id === asset.id)
-        set(a.status := state.get.id)
-      )
-    } else {
-      throw new Exception("Invalid usage of partialUpdate")
-    }
-    loggedInvalidation("partialUpdate", asset)
-    val newAsset = Asset.findById(asset.id).get
-    updateEventName.foreach { name =>
-      oldAsset.forComparison
-      newAsset.forComparison
-      util.plugins.Callback.fire(name, oldAsset, newAsset)
-    }
-    loggedInvalidation("partialUpdate", asset)
-    res
+  def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int], state: Option[State] = None) = {
+    val assetWUpdate = updated.map(u => asset.copy(updated = Some(u))).getOrElse(asset)
+    val assetWStatus = status.map(s => assetWUpdate.copy(status = s)).getOrElse(assetWUpdate)
+    val assetWState = state.map(s => assetWStatus.copy(state = s.id)).getOrElse(assetWStatus)
+    Asset.update(assetWState)
   }
 
 }

@@ -166,12 +166,20 @@ module CollinsShell
       end
     end
 
-    desc 'set_status STATUS', 'set status on an asset'
+    desc 'set_status', 'set status, state, or both on an asset'
     use_collins_options
     use_tag_option
     use_selector_option
     method_option :reason, :type => :string, :required => true, :desc => 'Reason for changing status'
-    def set_status status
+    method_option :state, :type => :string, :required => false, :desc => 'Set state of asset as well'
+    method_option :status, :type => :string, :required => false, :desc => 'Set status of asset'
+    def set_status
+      status = options.status
+      state = options.state
+      reason = options.reason
+      if status.nil? && state.nil? then
+        raise ::Collins::ExpectationFailedError.new("set_status requires either a status or a state")
+      end
       batch_selector_operation Hash[
         :remote => options.remote,
         :operation => "set_status",
@@ -181,7 +189,7 @@ module CollinsShell
           "You are about to set status to #{status} on #{assets.length} hosts. ARE YOU SURE?"
         end
       ] do |client,asset|
-        client.set_status!(asset, status, options.reason)
+        client.set_status!(asset, :reason => reason, :status => status, :state => state)
       end
     end
 

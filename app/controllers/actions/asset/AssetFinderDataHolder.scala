@@ -6,9 +6,8 @@ import validators.StringUtil
 
 import forms._
 
-import models.{AssetFinder, State, Truthy}
+import models.{AssetFinder, State, Status => AssetStatus, Truthy}
 import models.AssetType.{Enum => AssetTypeEnum}
-import models.Status.{Enum => AssetStatusEnum}
 
 import util.{AttributeResolver, MessageHelper}
 import util.AttributeResolver.{ResultTuple => ResolvedAttributes}
@@ -39,7 +38,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     Option[String],           // tag
     Option[List[String]],     // attribute
     Option[String],           // operation
-    Option[AssetStatusEnum],  // asset status
+    Option[AssetStatus],      // asset status
     Option[AssetTypeEnum],    // asset type
     Option[Truthy],           // details
     Option[Date],             // createdAfter
@@ -62,7 +61,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     "operation" -> optional(
       text(2).verifying { txt => isValidOperation(txt) }
     ),
-    "status" -> optional(of[AssetStatusEnum]),
+    "status" -> optional(of[AssetStatus]),
     "type" -> optional(of[AssetTypeEnum]),
     "details" -> optional(of[Truthy]),
     "createdAfter" -> optional(date(ISO_8601_FORMAT)),
@@ -121,7 +120,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     case e if e.error("operation").isDefined => message("operation.invalid")
     case e if e.error("details").isDefined => rootMessage("error.truthy", "details")
     case e if e.error("remoteLookup").isDefined => rootMessage("error.truthy", "remoteLookup")
-    case e if e.error("state").isDefined => rootMessage("error.state")
+    case e if e.error("state").isDefined => rootMessage("asset.state.invalid")
     case n => "Unexpected error occurred"
   }
 

@@ -6,7 +6,7 @@ import models.{Asset, AssetLifecycle, State, Status}
 object Maintenance {
   def toMaintenance(asset: Asset, reason: String, state: State): Boolean = {
     if (canTransitionToMaintenance(asset)) {
-      AssetLifecycle.updateAssetStatus(asset, Map("reason" -> reason, "status" -> "Maintenance", "state" -> state.name)) match {
+      AssetLifecycle.updateAssetStatus(asset, Status.Maintenance, Some(state), reason) match {
         case Left(e) => false
         case _ => true
       }
@@ -17,7 +17,7 @@ object Maintenance {
 
   def fromMaintenance(asset: Asset, reason: String, status: String, state: State): Boolean = {
     if (canTransitionFromMaintenance(asset)) {
-      AssetLifecycle.updateAssetStatus(asset, Map("status" -> status, "reason" -> reason, "state" -> state.name)) match {
+      AssetLifecycle.updateAssetStatus(asset, Status.findByName(status), Some(state), reason) match {
         case Left(e) => false
         case _ => true
       }
@@ -26,29 +26,12 @@ object Maintenance {
     }
   }
 
-  def canTransitionFromMaintenance(asset: Asset): Boolean = {
-    import Status.Enum
-
-    try {
-      Status.Enum(asset.status) match {
-        case Enum.Maintenance => true
-        case _ => false
-      }
-    } catch {
-      case e => false
-    }
-  }
-
+  def canTransitionFromMaintenance(asset: Asset): Boolean = asset.isMaintenance
   def canTransitionToMaintenance(asset: Asset): Boolean = {
-    import Status.Enum
-
-    try {
-      Status.Enum(asset.status) match {
-        case Enum.Decommissioned | Enum.Maintenance => false
-        case _ => true
-      }
-    } catch {
-      case e => false
+    if (asset.isDecommissioned || asset.isMaintenance) {
+      false
+    } else {
+      true
     }
   }
 }
