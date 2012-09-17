@@ -1,14 +1,16 @@
 
 require 'collins_client'
+require 'lib/collins_integration'
 
 describe "Asset Find" do
 
   before :all do
-    config = {:username => "blake", :password => "admin:first", :host => "http://127.0.0.1:9000"}
-    @client = Collins::Client.new config
+    @integration = CollinsIntegration.new('default.yaml')
+    @client = @integration.collinsClient
   end
 
   def checkQuery(params, expected_size)
+    params[:size] = 50
     assets = @client.find params
     assets.size.should eql expected_size
   end
@@ -32,7 +34,7 @@ describe "Asset Find" do
     p = {
       "hostname" => "service-bustworth*"
     }
-    checkQuery p,10
+    checkQuery p,11
   end
 
   it "attribute=POOL;API_POOL&attribute=PRIMARY_ROLE;PROXY&status=Allocated&type=SERVER_NODE&details=false&operation=and:1" do
@@ -40,17 +42,19 @@ describe "Asset Find" do
       "pool" => "API_POOL",
       "primary_role" => "PROXY",
       "status" => "Allocated",
-      "type" => "SERVER_NODE"
+      "type" => "SERVER_NODE",
+      "operation" => "and"
     }
     checkQuery p,1
   end
 
-  it "attribute=HOSTNAME;%5EMAIL.*&attribute=POOL;MAILPARSER_POOL&attribute=PRIMARY_ROLE;TUMBLR_APP&status=Allocated&type=SERVER_NODE&details=false&operation=and:0" do
+  it "attribute=HOSTNAME;%5EMAIL.*&attribute=POOL;MAILPARSER_POOL&attribute=PRIMARY_ROLE;TUMBLR_APP&status=Allocated&type=SERVER_NODE&details=false&operation=or:2" do
     p = {
       "hostname" => "dev-*",
       "pool" => "DEVEL",
       "status" => "Allocated",
       "type" => "SERVER_NODE",
+      "operation" => "or"
       
     }
     checkQuery p,5
@@ -60,12 +64,31 @@ describe "Asset Find" do
     p = {
       "status" => "allocated",
       "type" => "SERVER_NODE",
-      "primary_role" => "TUMBLR_APP"
+      "primary_role" => "TUMBLR_APP",
+      "operation" => "and"
     }
     checkQuery p,2
   end
 
+  it "status=Allocated@primary_role=SERVICE" do
+    p = {
+      "primary_role" => "SERVICE",
+      "status" => "Allocated",
+      "operation" => "and"
+    }
+    checkQuery p, 14
+  end
 
+  it "status=Unallocated&type=&PRIMARY_ROLE=CACHE&POOL=MEMCACHE&MEMORY_SIZE_TOTAL=103079215104" do
+    p = {
+      "status" => "Unallocated",
+      "primary_role" => "CACHE",
+      "pool" => "MEMCACHE",
+      "memory_size_total" => "103079215104",
+      "operation" => "and"
+    }
+    checkQuery p, 9
+  end
 
 
 
