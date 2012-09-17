@@ -1,0 +1,108 @@
+<h2>Asset Find Similar</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Find assets similar to another</td></tr>
+    <tr><th>Request</th><td><code>GET /api/asset/:tag/similar</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetApi.getAssets</td></tr>
+    <tr><td colspan="2"><span class="label label-warning">Note</span> This depends on having a proper nodeclassifer setup. See the configuration section.</td></tr>
+    <tr>
+      <th>Parameters <span class="label label-info">Paginated</span></th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">tag</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes) and unique</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Zero or more assets successfully found</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell asset find_similar 001367
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first 'http://localhost:9000/api/asset/001367/similar'
+</div>
+<div class="accordion" id="asset-find-similar-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-find-similar-response" href="#asset-find-similar-json-response">JSON Response</a>
+    </div>
+    <div id="asset-find-similar-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "Pagination": {
+      "PreviousPage": 0,
+      "CurrentPage": 0,
+      "NextPage": 1,
+      "TotalResults": 435
+    },
+    "Data": [
+      {
+        "ID": 388,
+        "TAG": "000915",
+        "STATE": null,
+        "STATUS": "Unallocated",
+        "TYPE": "Server Node",
+        "CREATED": "2012-04-05T23:40:42",
+        "UPDATED": "2012-09-14T16:59:53",
+        "DELETED": null
+      },
+      {
+        "ID": 437,
+        "TAG": "000919",
+        "STATE": null,
+        "STATUS": "Unallocated",
+        "TYPE": "Server Node",
+        "CREATED": "2012-04-05T23:42:33",
+        "UPDATED": "2012-09-14T17:12:22",
+        "DELETED": null
+      },
+      {
+        "ID": 391,
+        "TAG": "000923",
+        "STATE": null,
+        "STATUS": "Unallocated",
+        "TYPE": "Server Node",
+        "CREATED": "2012-04-05T23:41:03",
+        "UPDATED": "2012-09-14T17:09:11",
+        "DELETED": null
+      }
+    ]
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

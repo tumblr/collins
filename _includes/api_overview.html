@@ -1,4 +1,4 @@
-<h3>Design</h3>
+<h2>Design</h2>
 
 <p>
   The initial design goal was that the entire API should be usable from the command line, even
@@ -15,9 +15,9 @@
   the output for any API endpoint as plain text, JSON, or bash (sh compatible).
 </p>
 
-<h3>Conventions</h3>
+<h2>Conventions</h2>
 
-<h4>Basics</h4>
+<h3>Basics</h3>
 <ul>
   <li>Basic auth is used for all HTTP endpoints</li>
   <li>A URI describes a resource</li>
@@ -26,7 +26,16 @@
   <li>DELETE kills a resource</li>
 </ul>
 
-<h4>Status Codes</h4>
+<h3>Status Codes</h3>
+<p>
+  Note that some status codes listed below won't be listed in the documentation.
+  Status codes 400, 401, 405 and 500 will never be documented. You will always
+  get an HTTP 400 if there is a bad parameter, you will always get an HTTP 401
+  if you fail to authenticate, you will always get an HTTP 405 if you use the
+  wrong verb, and you will always get an HTTP 500 if there is an internal server
+  error. I am stating this once to avoid restating it dozens of times in the
+  internal docs.
+</p>
 <table class="table-hover table-condensed">
   <thead>
     <tr><td>Code</td><td>Use</td></tr>
@@ -48,7 +57,7 @@
   </tbody>
 </table>
 
-<h4>Response Formats</h4>
+<h3>Response Formats</h3>
 <p>
 Use the <code>Accept</code> header to specify the output format. JSON is the default output format and in general the best to use. However,
 every API endpoint has support for plain text, bash, and JSON output. The recognized accept headers for the API are:
@@ -59,13 +68,13 @@ every API endpoint has support for plain text, bash, and JSON output. The recogn
   <li><code>text/x-shellscript</code></li>
 </ul>
 
-<h4>API Versioning</h4>
+<h3>API Versioning</h3>
 <p>
 Collins supports API versioning via the accept header. This allows developers to make breaking changes to the API and continue to have old
 clients work. This is implemented but I'll leave this to Dan to document.
 </p>
 
-<h4>Pagination</h4>
+<h3>Pagination</h3>
 <p>
 Paginated result sets always provide results in a standard format. Paginated results also always included a header with the same pagination
 information that can be found in the result set. The headers with pagination information are:
@@ -80,8 +89,34 @@ information that can be found in the result set. The headers with pagination inf
 The JSON output format will return an object with a <code>Pagination</code> key and an object value. The pagination object has the following
 keys: <code>PreviousPage</code>, <code>CurrentPage</code>, <code>NextPage</code>, <code>Total Results</code>.
 </p>
+<p>
+If an API endpoint can be paginated it will be annotated with a <span class="label label-info">Paginated</span> marker. Paginated API endpoints
+accept the following parameters:
+</p>
+<table class="table table-condensed">
+  <thead>
+    <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th class="inlinecode">page</th>
+      <td>Option[Integer]</td>
+      <td>Defaults to zero, indexed from zero. The page of results that you want.</td>
+    </tr>
+    <tr>
+      <th class="inlinecode">size</th>
+      <td>Option[Integer]</td>
+      <td>Number of results to return. Generally defaults to 10.</td>
+    </tr>
+    <tr>
+      <th class="inlinecode">sort</th>
+      <td>Option[String]</td>
+      <td>Valid values are "ASC" or "DESC". Generally defaults to "DESC".</td>
+    </tr>
+  </tbody>
+</table>
 
-<h3>Documentation Conventions</h3>
+<h2>Documentation Conventions</h2>
 <p>
 If a URI contains a colon (:) followed by text, this is a required part of the URI. This is
 typically used for specifying the resource you are interacting with. For instance if a URI is documented

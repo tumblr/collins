@@ -1,0 +1,98 @@
+<h2>Asset Update Status</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Update the status or state of an asset</td></tr>
+    <tr><th>Request</th><td><code>POST /api/asset/:tag/status</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetApi.updateAssetStatus</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">tag</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes) and unique</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">reason</th>
+              <td>String</td>
+              <td>The reason for the status or state change</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">status</th>
+              <td>Option[Status]</td>
+              <td>The new status of the specified asset</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">state</th>
+              <td>Option[State]</td>
+              <td>The new state of the specified asset</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>State and/or status was successfully updated</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">400</th>
+              <td>Neither state nor status specified, missing reason, or invalid status/state</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">409</th>
+              <td>Update would cause a conflict between state and status</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell asset set_status --reason=REASON [--state=STATE --status=STATUS]
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first \<br>
+<span class="tab4"></span>-d status=Unallocated \<br>
+<span class="tab4"></span>-d state=Running \<br>
+<span class="tab4"></span>-d reason='Ready for action' \<br>
+<span class="tab4"></span>http://localhost:9000/api/asset/tumblrtag30/status
+</div>
+
+<div class="accordion" id="asset-update-status-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-update-status-response" href="#asset-update-status-json-response">JSON Response</a>
+    </div>
+    <div id="asset-update-status-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "SUCCESS": true
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

@@ -1,0 +1,136 @@
+<h2>Asset Update</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Update an asset</td></tr>
+    <tr><th>Request</th><td><code>POST /api/asset/:tag</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetApi.updateAsset</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">lshw</th>
+              <td>String</td>
+              <td>Only accepted when the asset is Incomplete. Should be the XML output from running the lshw command on the asset.</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">lldp</th>
+              <td>String</td>
+              <td>Only accepted when the asset is Incomplete. Should be the XML output from running the lldp command on the asset.</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">groupId</th>
+              <td>Option[Int]</td>
+              <td>The dimension of the specified tag. Can only be combined with attribute</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">attribute</th>
+              <td>Option[String]</td>
+              <td>Specified a key/value pair to associated with the asset where the key isn't a managed tag. The key/value pair should be formatted as keyname;valuename</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">CHASSIS_TAG</th>
+              <td>Option[String]</td>
+              <td>Only accepted for Incomplete assets during the intake phase</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">RACK_POSITION</th>
+              <td>Option[String]</td>
+              <td>Only accepted for New assets during the web based intake process</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">POWER_PORT_{S}</th>
+              <td>Option[String]</td>
+              <td>Only accepted for New assets during the web based intake process. The parameters allowed here depend on the power configuration</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Asset updated successfully</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">404</th>
+              <td>The specified asset was not found</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell asset set_attribute TAG_NAME TAG_VALUE --tag=TAG
+</div>
+
+<div class="example curl">
+<pre>
+curl --basic -u blake:admin:first \
+  --data-urlencode "lldp@./test/resources/lldpctl-two-nic.xml" \
+  --data-urlencode "lshw@./test/resources/lshw-basic.xml" \
+  --data-urlencode 'CHASSIS_TAG=chassistag123' \
+  --data-urlencode 'attribute=NODECLASS;web' \
+  http://localhost:9000/api/asset/tumblrtag30
+</pre>
+</div>
+<div class="prettyprint">
+  You should notice if you run the example that the asset status automatically changes from Incomplete to New. This is part
+  of the automatic lifecycle management fro Incomplete and New assets.
+</div>
+<div class="accordion" id="asset-update-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-update-response" href="#asset-update-json-response">JSON Response</a>
+    </div>
+    <div id="asset-update-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "SUCCESS": true
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-update-response" href="#asset-update-bash-response">Bash Response</a>
+    </div>
+    <div id="asset-update-bash-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>SUCCESS=true;</pre>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-update-response" href="#asset-update-text-response">Text Response</a>
+    </div>
+    <div id="asset-update-text-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>SUCCESS true</pre>
+      </div>
+    </div>
+  </div>
+
+</div> <!-- accordion -->

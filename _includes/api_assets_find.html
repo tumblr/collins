@@ -1,0 +1,173 @@
+<h2>Asset Find</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Find specified assets</td></tr>
+    <tr><th>Request</th><td><code>GET /api/assets</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetApi.getAssets</td></tr>
+    <tr>
+      <th>Parameters <span class="label label-info">Paginated</span></th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">details</th>
+              <td>Option[Boolean]</td>
+              <td>True to return full assets, false to return partials. Defaults to false.</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">operation</th>
+              <td>Option[String]</td>
+              <td>"AND" or "OR", defaults to "OR".</td>
+            </tr>
+
+            <tr>
+              <th class="inlinecode">type</th>
+              <td>Option[AssetType]</td>
+              <td>A valid asset type (e.g. SERVER_NODE)</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">status</th>
+              <td>Option[Status]</td>
+              <td>A valid asset status (e.g. Unallocated)</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">state</th>
+              <td>Option[State]</td>
+              <td>A valid asset state (e.g. RUNNING)</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">createdBefore</th>
+              <td>Option[DateTime]</td>
+              <td>ISO8601 formatted</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">createdAfter</th>
+              <td>Option[DateTime]</td>
+              <td>ISO8601 formatted</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">updatedBefore</th>
+              <td>Option[DateTime]</td>
+              <td>ISO8601 formatted</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">updatedAfter</th>
+              <td>Option[DateTime]</td>
+              <td>ISO8601 formatted</td>
+            </tr>
+
+            <tr>
+              <th class="inlinecode">attribute</th>
+              <td>Option[String]</td>
+              <td>Specified as tagname;tagvalue. tagname can be a reserved tag such as CPU_COUNT, MEMORY_SIZE_BYTES, etc. Leave tagvalue blank to find assets missing a particular attribute.</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Zero or more assets successfully found</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell asset find --selector=NODECLASS:web status:Unallocated
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first 'http://localhost:9000/api/assets?attribute=NODECLASS%3Bweb&amp;status=Unallocated'
+</div>
+<div class="accordion" id="asset-find-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-find-response" href="#asset-find-json-response">JSON Response</a>
+    </div>
+    <div id="asset-find-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "Pagination": {
+      "PreviousPage": 0,
+      "CurrentPage": 0,
+      "NextPage": 0,
+      "TotalResults": 3
+    },
+    "Data": [
+      {
+        "ID": 4,
+        "TAG": "tumblrtag32",
+        "STATE": {
+          "ID": 3,
+          "STATUS": null,
+          "NAME": "RUNNING",
+          "LABEL": "Running",
+          "DESCRIPTION": "A service in this state is operational."
+        },
+        "STATUS": "Unallocated",
+        "TYPE": "Server Node",
+        "CREATED": "2012-09-16T19:49:31",
+        "UPDATED": "2012-09-16T19:50:05",
+        "DELETED": null
+      },
+      {
+        "ID": 2,
+        "TAG": "tumblrtag30",
+        "STATE": {
+          "ID": 3,
+          "STATUS": null,
+          "NAME": "RUNNING",
+          "LABEL": "Running",
+          "DESCRIPTION": "A service in this state is operational."
+        },
+        "STATUS": "Unallocated",
+        "TYPE": "Server Node",
+        "CREATED": "2012-09-16T19:49:24",
+        "UPDATED": "2012-09-16T19:49:57",
+        "DELETED": null
+      },
+      {
+        "ID": 3,
+        "TAG": "tumblrtag31",
+        "STATE": {
+          "ID": 3,
+          "STATUS": null,
+          "NAME": "RUNNING",
+          "LABEL": "Running",
+          "DESCRIPTION": "A service in this state is operational."
+        },
+        "STATUS": "Unallocated",
+        "TYPE": "Server Node",
+        "CREATED": "2012-09-16T19:49:28",
+        "UPDATED": "2012-09-16T19:50:02",
+        "DELETED": null
+      }
+    ]
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

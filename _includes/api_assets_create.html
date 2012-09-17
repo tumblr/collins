@@ -1,0 +1,162 @@
+<h2>Asset Create</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Create a new asset</td></tr>
+    <tr><th>Request</th><td><code>PUT /api/asset/:tag</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetApi.createAsset</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">tag</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes) and unique</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">generate_ipmi</th>
+              <td>Option[Boolean]</td>
+              <td>True or false. Defaults to true if <code>asset_type</code> is <code>SERVER_NODE</code></td>
+            </tr>
+            <tr>
+              <th class="inlinecode">status</th>
+              <td>Option[Status]</td>
+              <td>A valid status, if specified. Defaults to Incomplete.</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">type</th>
+              <td>Option[AssetType]</td>
+              <td>One of SERVER_NODE, SERVER_CHASSIS, RACK, SWITCH, ROUTER, POWER_CIRCUIT or POWER_STRIP. Defaults to SERVER_NODE. If additional asset types are added to the database, they can also be specified.</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">201</th>
+              <td>Asset was successfully created</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">409</th>
+              <td>Asset with specified tag already exists</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell asset create --tag=TAG [--ipmi=(true|false) --status=STATUS --type=TYPE]
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first -X PUT http://localhost:9000/api/asset/tumblrtag30
+</div>
+
+<div class="accordion" id="asset-create-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-create-response" href="#asset-create-json-response">JSON Response</a>
+    </div>
+    <div id="asset-create-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:created",
+  "data": {
+    "ASSET": {
+      "ID": 2,
+      "TAG": "tumblrtag30",
+      "STATE": null,
+      "STATUS": "Incomplete",
+      "TYPE": "Server Node",
+      "CREATED": "2012-09-16T18:30:55",
+      "UPDATED": null,
+      "DELETED": null
+    },
+    "IPMI": {
+      "ASSET_ID": 2,
+      "ASSET_TAG": "tumblrtag30",
+      "IPMI_USERNAME": "root",
+      "IPMI_PASSWORD": "WqbXjuqWd5MZ01fD",
+      "IPMI_GATEWAY": "172.16.32.1",
+      "IPMI_ADDRESS": "172.16.32.20",
+      "IPMI_NETMASK": "255.255.240.0",
+      "ID": 2
+    }
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-create-response" href="#asset-create-bash-response">Bash Response</a>
+    </div>
+    <div id="asset-create-bash-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>ASSET_ID=3;
+ASSET_CREATED="2012-09-16T18:42:21";
+ASSET_TAG="tumblrtag31";
+ASSET_STATUS="Incomplete";
+ASSET_DELETED=;
+ASSET_UPDATED=;
+ASSET_STATE=;
+ASSET_TYPE="Server Node";
+IPMI_IPMI_USERNAME="root";
+IPMI_ID=3;
+IPMI_IPMI_ADDRESS="172.16.32.21";
+IPMI_IPMI_NETMASK="255.255.240.0";
+IPMI_ASSET_ID=3;
+IPMI_ASSET_TAG="tumblrtag31";
+IPMI_IPMI_GATEWAY="172.16.32.1";
+IPMI_IPMI_PASSWORD="zqkWfV9baxlrJa5Y";</pre>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-create-response" href="#asset-create-text-response">Text Response</a>
+    </div>
+    <div id="asset-create-text-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>ASSET
+        ID      4
+        CREATED 2012-09-16T18:43:35
+        TAG     tumblrtag32
+        STATUS  Incomplete
+        DELETED null
+        UPDATED null
+        STATE   null
+        TYPE    Server Node
+IPMI
+        IPMI_USERNAME   root
+        ID      4
+        IPMI_ADDRESS    172.16.32.22
+        IPMI_NETMASK    255.255.240.0
+        ASSET_ID        4
+        ASSET_TAG       tumblrtag32
+        IPMI_GATEWAY    172.16.32.1
+        IPMI_PASSWORD   BCGHWinJlme9g9x0</pre>
+      </div>
+    </div>
+  </div>
+
+</div> <!-- accordion -->

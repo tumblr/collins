@@ -1,0 +1,371 @@
+<h2>Asset Get</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Get an asset by tag</td></tr>
+    <tr><th>Request</th><td><code>GET /api/asset/:tag</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetApi.getAsset</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">tag</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes) and unique</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Asset was found</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">404</th>
+              <td>Asset could not be found</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell asset get TAG
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first http://localhost:9000/api/asset/tumblrtag30
+</div>
+
+<div class="accordion" id="asset-get-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-get-response" href="#asset-get-json-response">JSON Response</a>
+    </div>
+    <div id="asset-get-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{
+  "status": "success:ok",
+  "data": {
+    "ASSET": {
+      "ID": 2,
+      "TAG": "tumblrtag30",
+      "STATE": {
+        "ID": 1,
+        "STATUS": null,
+        "NAME": "NEW",
+        "LABEL": "New",
+        "DESCRIPTION": "A service in this state is inactive. It does minimal work and consumes minimal resources."
+      },
+      "STATUS": "New",
+      "TYPE": "Server Node",
+      "CREATED": "2012-09-16T18:30:55",
+      "UPDATED": "2012-09-16T18:46:41",
+      "DELETED": null
+    },
+    "HARDWARE": {
+      "CPU": [
+        {
+          "CORES": 6,
+          "THREADS": 6,
+          "SPEED_GHZ": 2.3,
+          "DESCRIPTION": "AMD Opteron(tm) Processor 4174 HE Hynix Semiconductor (Hyundai Electronics)",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "CORES": 6,
+          "THREADS": 6,
+          "SPEED_GHZ": 2.3,
+          "DESCRIPTION": "AMD Opteron(tm) Processor 4174 HE Hynix Semiconductor (Hyundai Electronics)",
+          "PRODUCT": "",
+          "VENDOR": ""
+        }
+      ],
+      "MEMORY": [
+        {
+          "SIZE": 0,
+          "SIZE_S": "0",
+          "SIZE_HUMAN": "0 Bytes",
+          "BANK": 0,
+          "DESCRIPTION": "Empty Memory Bank",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 0,
+          "SIZE_S": "0",
+          "SIZE_HUMAN": "0 Bytes",
+          "BANK": 1,
+          "DESCRIPTION": "Empty Memory Bank",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 8589934592,
+          "SIZE_S": "8589934592",
+          "SIZE_HUMAN": "8.00 GB",
+          "BANK": 2,
+          "DESCRIPTION": "DIMM DDR3 Synchronous 1333 MHz (0.8 ns) - Hyundai HMT31GR7BFR4A-H9",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 0,
+          "SIZE_S": "0",
+          "SIZE_HUMAN": "0 Bytes",
+          "BANK": 3,
+          "DESCRIPTION": "Empty Memory Bank",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 0,
+          "SIZE_S": "0",
+          "SIZE_HUMAN": "0 Bytes",
+          "BANK": 4,
+          "DESCRIPTION": "Empty Memory Bank",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 8589934592,
+          "SIZE_S": "8589934592",
+          "SIZE_HUMAN": "8.00 GB",
+          "BANK": 5,
+          "DESCRIPTION": "DIMM DDR3 Synchronous 1333 MHz (0.8 ns) - Hyundai HMT31GR7BFR4A-H9",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 0,
+          "SIZE_S": "0",
+          "SIZE_HUMAN": "0 Bytes",
+          "BANK": 6,
+          "DESCRIPTION": "Empty Memory Bank",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 0,
+          "SIZE_S": "0",
+          "SIZE_HUMAN": "0 Bytes",
+          "BANK": 7,
+          "DESCRIPTION": "Empty Memory Bank",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 8589934592,
+          "SIZE_S": "8589934592",
+          "SIZE_HUMAN": "8.00 GB",
+          "BANK": 8,
+          "DESCRIPTION": "DIMM DDR3 Synchronous 1333 MHz (0.8 ns) - Hyundai HMT31GR7BFR4A-H9",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 0,
+          "SIZE_S": "0",
+          "SIZE_HUMAN": "0 Bytes",
+          "BANK": 9,
+          "DESCRIPTION": "Empty Memory Bank",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 0,
+          "SIZE_S": "0",
+          "SIZE_HUMAN": "0 Bytes",
+          "BANK": 10,
+          "DESCRIPTION": "Empty Memory Bank",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 8589934592,
+          "SIZE_S": "8589934592",
+          "SIZE_HUMAN": "8.00 GB",
+          "BANK": 11,
+          "DESCRIPTION": "DIMM DDR3 Synchronous 1333 MHz (0.8 ns) - Hyundai HMT31GR7BFR4A-H9",
+          "PRODUCT": "",
+          "VENDOR": ""
+        }
+      ],
+      "NIC": [
+        {
+          "SPEED": 1000000000,
+          "SPEED_S": "1000000000",
+          "SPEED_HUMAN": "1.00 Gb",
+          "MAC_ADDRESS": "e8:9a:8f:23:15:72",
+          "DESCRIPTION": "82576 Gigabit Network Connection - Intel Corporation",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SPEED": 1000000000,
+          "SPEED_S": "1000000000",
+          "SPEED_HUMAN": "1.00 Gb",
+          "MAC_ADDRESS": "e8:9a:8f:23:15:72",
+          "DESCRIPTION": "82576 Gigabit Network Connection - Intel Corporation",
+          "PRODUCT": "",
+          "VENDOR": ""
+        }
+      ],
+      "DISK": [
+        {
+          "SIZE": 1000204886016,
+          "SIZE_S": "1000204886016",
+          "SIZE_HUMAN": "931.51 GB",
+          "TYPE": "SCSI",
+          "DESCRIPTION": "Seagate ST91000640NS",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 1000204886016,
+          "SIZE_S": "1000204886016",
+          "SIZE_HUMAN": "931.51 GB",
+          "TYPE": "SCSI",
+          "DESCRIPTION": "Seagate ST91000640NS",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 1000204886016,
+          "SIZE_S": "1000204886016",
+          "SIZE_HUMAN": "931.51 GB",
+          "TYPE": "SCSI",
+          "DESCRIPTION": "Seagate ST91000640NS",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 1000204886016,
+          "SIZE_S": "1000204886016",
+          "SIZE_HUMAN": "931.51 GB",
+          "TYPE": "SCSI",
+          "DESCRIPTION": "Seagate ST91000640NS",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 1000204886016,
+          "SIZE_S": "1000204886016",
+          "SIZE_HUMAN": "931.51 GB",
+          "TYPE": "SCSI",
+          "DESCRIPTION": "Seagate ST91000640NS",
+          "PRODUCT": "",
+          "VENDOR": ""
+        },
+        {
+          "SIZE": 1000204886016,
+          "SIZE_S": "1000204886016",
+          "SIZE_HUMAN": "931.51 GB",
+          "TYPE": "SCSI",
+          "DESCRIPTION": "Seagate ST91000640NS",
+          "PRODUCT": "",
+          "VENDOR": ""
+        }
+      ]
+    },
+    "LLDP": {
+      "INTERFACES": [
+        {
+          "NAME": "eth0",
+          "CHASSIS": {
+            "NAME": "core01.dfw01",
+            "ID": {
+              "TYPE": "mac",
+              "VALUE": "78:19:f7:88:60:c0"
+            },
+            "DESCRIPTION": "Juniper Networks, Inc. ex4500-40f , version 11.1S1 Build date: 2011-04-21 08:03:12 UTC "
+          },
+          "PORT": {
+            "ID": {
+              "TYPE": "local",
+              "VALUE": "608"
+            },
+            "DESCRIPTION": "ge-0\/0\/3.0"
+          },
+          "VLANS": [
+            {
+              "ID": 106,
+              "NAME": "DFW-LOGGING"
+            }
+          ]
+        },
+        {
+          "NAME": "eth1",
+          "CHASSIS": {
+            "NAME": "core02.dfw01",
+            "ID": {
+              "TYPE": "mac",
+              "VALUE": "5c:5e:ab:68:a5:80"
+            },
+            "DESCRIPTION": "Juniper Networks, Inc. ex4500-40f , version 11.1R1.10 Build date: 2011-03-16 08:17:03 UTC "
+          },
+          "PORT": {
+            "ID": {
+              "TYPE": "local",
+              "VALUE": "608"
+            },
+            "DESCRIPTION": "ge-0\/0\/3.0"
+          },
+          "VLANS": [
+            {
+              "ID": 106,
+              "NAME": "DFW-LOGGING"
+            }
+          ]
+        }
+      ]
+    },
+    "IPMI": {
+      "ASSET_ID": 2,
+      "ASSET_TAG": "tumblrtag30",
+      "IPMI_USERNAME": "root",
+      "IPMI_PASSWORD": "WqbXjuqWd5MZ01fD",
+      "IPMI_GATEWAY": "172.16.32.1",
+      "IPMI_ADDRESS": "172.16.32.20",
+      "IPMI_NETMASK": "255.255.240.0",
+      "ID": 2
+    },
+    "ADDRESSES": [
+      
+    ],
+    "POWER": [
+      
+    ],
+    "ATTRIBS": {
+      "0": {
+        "DISK_STORAGE_TOTAL": "6001229316096",
+        "NODECLASS": "web",
+        "CHASSIS_TAG": "chassistag123"
+      }
+    }
+  }
+}</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

@@ -10,7 +10,7 @@ layout: default
     <h1>
       The Collins API
     </h1>
-    <p class="lead">Everything you ever wanted to know about using the Collins API</p>
+    <p class="lead">Getting RESTful with your assets</p>
   </div>
 </header>
 
@@ -21,7 +21,18 @@ layout: default
     <div class="span3 sidebar">
       <ul class="nav nav-list sidenav">
         <li><a href="#overview"><i class="icon-chevron-right"></i> API Overview</a></li>
-        <li><a href="#asset"><i class="icon-chevron-right"></i> Asset API</a></li>
+        <li><a href="#asset"><i class="icon-chevron-right"></i> Asset</a>
+          <ul class="nav nav-list">
+            <li><a href="#api-asset-create-section"><i class="icon-chevron-right dr-dim"></i> Create</a></li>
+            <li><a href="#api-asset-update-section"><i class="icon-chevron-right dr-dim"></i> Update</a></li>
+            <li><a href="#api-asset-update-status-section"><i class="icon-chevron-right dr-dim"></i> Update Status</a></li>
+            <li><a href="#api-asset-get-section"><i class="icon-chevron-right dr-dim"></i> Get</a></li>
+            <li><a href="#api-asset-find-section"><i class="icon-chevron-right dr-dim"></i> Find</a></li>
+            <li><a href="#api-asset-find-similar-section"><i class="icon-chevron-right dr-dim"></i> Find Similar</a></li>
+            <li><a href="#api-asset-delete-tag-section"><i class="icon-chevron-right dr-dim"></i> Delete Tag</a></li>
+            <li><a href="#api-asset-delete-section"><i class="icon-chevron-right dr-dim"></i> Delete</a></li>
+          </ul>
+        </li>
         <li><a href="#asset-management"><i class="icon-chevron-right"></i> Asset Management API</a></li>
         <li><a href="#asset-log"><i class="icon-chevron-right"></i> Asset Log API</a></li>
         <li><a href="#tag"><i class="icon-chevron-right"></i> Tag API</a></li>
@@ -37,7 +48,7 @@ layout: default
         <div class="page-header">
           <h1>Overview</h1>
         </div>
-        <p class="lead">Collins API design principles and conventions - getting RESTful with your assets</p>
+        <p class="lead">Collins API design principles and conventions</p>
         {% include api_overview.html %}
       </section>
 
@@ -45,10 +56,8 @@ layout: default
         <div class="page-header">
           <h1>Asset API</h1>
         </div>
-        <p class="lead">Stuff</p>
-        <p>
-          Content
-        </p>
+        <p class="lead">CRUD operations for your assets</p>
+        {% include api_assets.html %}
       </section>
 
       <section id="asset-management">
