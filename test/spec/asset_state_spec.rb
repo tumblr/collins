@@ -1,13 +1,14 @@
 $:.unshift File.join File.dirname(__FILE__), *%w[.. .. support ruby collins-client lib]
 require 'collins_client'
+require 'lib/collins_integration'
 
 HTTP_DEBUG=true
 
 describe "Asset State Management" do
 
   before :all do
-    config = {:username => "blake", :password => "admin:first", :host => "http://127.0.0.1:9000", :strict => true, :trace => false}
-    @client = Collins::Client.new config
+    @integration = CollinsIntegration.new('default.yaml')
+    @client = @integration.collinsClient
   end
 
   it "get_all" do

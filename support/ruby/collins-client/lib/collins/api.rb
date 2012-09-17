@@ -1,3 +1,4 @@
+require 'collins/api/admin'
 require 'collins/api/asset'
 require 'collins/api/asset_state'
 require 'collins/api/attributes'
@@ -96,10 +97,14 @@ module Collins
       end
     end
 
+<<<<<<< HEAD
     def use_api_version version
       set_header "Accept", "application/json,#{version_string(version)}"
     end
 
+=======
+    include Collins::Api::Admin
+>>>>>>> finder-tests
     include Collins::Api::Asset
     include Collins::Api::AssetState
     include Collins::Api::Attributes
