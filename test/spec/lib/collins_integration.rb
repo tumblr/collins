@@ -8,7 +8,6 @@ class CollinsIntegration
 
   def initialize(config_path)
     @out = Output.new
-    @out.warning "test"
 
     if ! File.exists? config_path
       out.error "Cannot find yaml file #{config_path}"
@@ -70,7 +69,7 @@ class CollinsIntegration
       @out.warning "Detected dirty db, refreshing"
       reloadMySQL
     else
-      @out.info "db is clean :)"
+      @out.info "db is clean"
     end
   end
 
@@ -153,7 +152,7 @@ class Output
   end
 
   def info message
-    puts " #{BLUE}* #{message}#{NC}"
+    puts " #{CYAN}* #{message}#{NC}"
   end
 
   def warning message
