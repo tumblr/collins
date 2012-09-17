@@ -1,0 +1,55 @@
+<h2>Ping</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Check if collins is alive</td></tr>
+    <tr><th>Request</th><td><code>GET /api/ping</code></td></tr>
+    <tr><th>Permission</th><td>None</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>None</td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Ping fetched</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2"><span class="label label-info">Note</span> Output from this endpoint is only available as text</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+Not Implemented
+</div>
+
+<div class="example curl">
+curl http://localhost:9000/api/ping
+</div>
+<div class="accordion" id="misc-ping-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#misc-ping-response" href="#misc-ping-json-response">Text Response</a>
+    </div>
+    <div id="misc-ping-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>pong</pre>
+      </div>
+    </div>
+  </div>
+</div>

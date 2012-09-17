@@ -75,7 +75,12 @@ layout: default
             <li><a href="#api-state-get-all-section"><i class="icon-chevron-right cr-dim"></i> Get All</a></li>
           </ul>
         </li>
-        <li><a href="#misc"><i class="icon-chevron-right"></i> Misc. API</a></li>
+        <li><a href="#misc"><i class="icon-chevron-right"></i> Misc. API</a>
+          <ul class="nav nav-list">
+            <li><a href="#api-misc-timestamp-section"><i class="icon-chevron-right cr-dim"></i> Timestamp</a></li>
+            <li><a href="#api-misc-ping-section"><i class="icon-chevron-right cr-dim"></i> Ping</a></li>
+          </ul>
+        </li>
       </ul>
     </div>
 
@@ -141,10 +146,8 @@ layout: default
         <div class="page-header">
           <h1>Misc. API</h1>
         </div>
-        <p class="lead">Stuff</p>
-        <p>
-          Content
-        </p>
+        <p class="lead">Miscellaneous endpoints that don't belong anywhere else</p>
+        {% include api_misc.html %}
       </section>
 
     </div> <!-- span9 -->
