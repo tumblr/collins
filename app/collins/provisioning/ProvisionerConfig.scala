@@ -10,7 +10,7 @@ object ProvisionerConfig extends Configurable {
   override val referenceConfigFilename = "provisioner_reference.conf"
 
   def allowedStatus: Set[Int] = getStringSet("allowedStatus", Status.statusNames).map { s =>
-    Status.Enum.withName(s).id
+    Status.findByName(s).get.id
   }
   def allowedType: Set[Int] = getStringSet("allowedType", AssetType.Enum.values.map(_.toString)).map { s =>
     AssetType.Enum.withName(s).id

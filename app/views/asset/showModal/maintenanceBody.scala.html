@@ -18,7 +18,7 @@
           @formInput {
             <select name="status" id="status">
               <option value="" selected="selected"></option>
-              @OptionSorter.sortStrings(Status.Enum.values.toSeq, Some(" ")).map { v =>
+              @OptionSorter.sortStrings(Status.statusNames.toSeq, Some(" ")).map { v =>
               <option value="@v._1">@v._2</option>
               }
             </select>

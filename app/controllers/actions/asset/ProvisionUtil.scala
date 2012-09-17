@@ -4,8 +4,7 @@ package asset
 
 import actors._
 import forms._
-import models.{Asset, AssetLifecycle, Truthy}
-import models.Status.Enum.{New => NewAsset}
+import models.{Asset, AssetLifecycle, Status => AStatus, Truthy}
 import util.{ApiTattler, UserTattler}
 import util.concurrent.BackgroundProcessor
 import util.config.Feature
@@ -195,7 +194,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
       processProvisionAction(res) {
         case true =>
           val newAsset = Asset.findById(asset.getId).get
-          Asset.partialUpdate(newAsset, None, Some(NewAsset.id))
+          Asset.partialUpdate(newAsset, None, AStatus.New.map(_.id))
           setAsset(newAsset)
           tattle("Asset successfully activated", false)
           None

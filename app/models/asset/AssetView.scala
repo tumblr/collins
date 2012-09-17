@@ -31,22 +31,18 @@ trait AssetView {
   def isServerNode(): Boolean = asset_type == AssetType.Enum.ServerNode.id
   def isConfiguration(): Boolean = asset_type == AssetType.Enum.Config.id
 
-  // yellow
-  def isIncomplete(): Boolean = status == Status.Enum.Incomplete.id
-  def isNew(): Boolean = status == Status.Enum.New.id
+  // Status values
+  def isIncomplete(): Boolean = isStatus(Status.Incomplete)
+  def isNew(): Boolean = isStatus(Status.New)
+  def isUnallocated(): Boolean = isStatus(Status.Unallocated)
+  def isProvisioning(): Boolean = isStatus(Status.Provisioning)
+  def isProvisioned(): Boolean = isStatus(Status.Provisioned)
+  def isAllocated(): Boolean = isStatus(Status.Allocated)
+  def isCancelled(): Boolean = isStatus(Status.Cancelled)
+  def isDecommissioned(): Boolean = isStatus(Status.Decommissioned)
+  def isMaintenance(): Boolean = isStatus(Status.Maintenance)
 
-  def isUnallocated(): Boolean = status == Status.Enum.Unallocated.id
-
-  // blue
-  def isProvisioning(): Boolean = status == Status.Enum.Provisioning.id
-  def isProvisioned(): Boolean = status == Status.Enum.Provisioned.id
-
-  def isAllocated(): Boolean = status == Status.Enum.Allocated.id
-
-  // green
-  def isCancelled(): Boolean = status == Status.Enum.Cancelled.id
-  def isDecommissioned(): Boolean = status == Status.Enum.Decommissioned.id
-
-  // red
-  def isMaintenance(): Boolean = status == Status.Enum.Maintenance.id
+  private def isStatus(statusOpt: Option[Status]): Boolean = {
+    statusOpt.map(_.id).filter(_.equals(status)).isDefined
+  }
 }
