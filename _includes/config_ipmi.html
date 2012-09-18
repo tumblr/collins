@@ -1,0 +1,62 @@
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">ipmi</span></small>
+</p>
+
+<p>
+The IPMI configuration is used to drive generation of IPMI addresses, usernames and passwords. This
+information is used for power management operations such as power cycling an asset or lighting up
+an asset during the intake process.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">passwordLength</td>
+      <td>Integer</td>
+      <td>The length of the generated password. Defaults to 12.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">randomUsername</td>
+      <td>Boolean</td>
+      <td>If false, uses the configured username. If true, generates a username based on the asset tag. Defaults to false.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">username</td>
+      <td>String</td>
+      <td>Used when randomUsername is false. Defaults to root.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">network</td>
+      <td>String</td>
+      <td>The network to use for address allocation in CIDR notation. Defaults to 10.0.0.0/16.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">startAddress</td>
+      <td>Option[String]</td>
+      <td>The IP address to use to start allocating addresses at. Defaults to 10.0.0.10.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">gateway</td>
+      <td>Option[String]</td>
+      <td>If the gateway is not in the network range, specify it here</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>ipmi {
+
+  passwordLength = 12
+  randomUsername = false
+  username = "root"
+  network = "10.0.0.0/255.255.0.0"
+  startAddress = "10.0.0.10"
+
+}</pre>
+</div>
+

@@ -1,0 +1,64 @@
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">multicollins</span></small>
+</p>
+
+<p>
+When Tumblr grew into a second datacenter, we didn't want to bother with having to setup multi-master
+replication across sites or do some kind of master site replication scheme. Instead what we decided is
+that we would make each Collins instance aware of each other, and allow them to query and interact with
+each other. Don't worry, no crazy zookeeper magic going on here.
+</p>
+
+<p>
+If you have multiple independent collins installations setup, to make them aware of each other you have
+to do two things.
+</p>
+
+<ol>
+  <li>Configure multi-collins</li>
+  <li>Create an appropriate asset in each collins instance</li>
+</ol>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">enabled</td>
+      <td>Boolean</td>
+      <td>True to enable, false to disable. False by default.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">instanceAssetType</td>
+      <td>String</td>
+      <td>Name of the asset type that represents a remote datacenter. Defaults to DATA_CENTER</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">locationAttribute</td>
+      <td>String</td>
+      <td>The tag on the instanceAssetType that provides collins with authentication information for the remote collins instance. This should be in URL format including credentials, e.g. <code>http://username:password@remoteHost:remotePort</code>. Don't worry, you can control who can see this with the <code>features.canSeePasswords</code> permission.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">thisInstance</td>
+      <td>String</td>
+      <td>The asset tag that is for this specific instanceAssetType. For instance if the collins instance you are configuring is in EWR01, and the remote instance is in JFK01, you should set <code>thisInstance</code> to EWR01.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>multicollins {
+  enabled = false
+  instanceAssetType = DATA_CENTER
+  locationAttribute = LOCATION
+  thisInstance = NONE
+}</pre>
+</div>
+
+<p>
+Once you have configured multicollins you will now be able to use the <code>remoteLookup</code> API parameter for
+asset finds. The Ruby client automatically handles fetching remote assets when needed. Additionally, you should find a 'Remote Search' checkbox in the search UI.
+</p>

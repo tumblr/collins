@@ -1,5 +1,5 @@
 ---
-permalink: configuration.html
+permalink: configuration_old.html
 title: Configuration
 layout: config 
 desc: Configuration Options in Collins

@@ -1,0 +1,192 @@
+<h2>Authentication <small><span class="label label-info">Namespace</span> <span class="inlinecode">authentication</span></small></h2>
+
+<p>
+Collins supports a variety of authentication backends along with a flexible API endpoint based
+permissions system. Some features also have specific permissions.
+</p>
+
+<p>
+Collins comes bundled with a small in memory authentication mechanism for testing, file based
+authentication, and LDAP based authentication. There is not yet support for LDAPS authentication
+so if you use LDAP we recommend running a slave on the collins host.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">cacheCredentials</td>
+      <td>Boolean</td>
+      <td>Defaults to false. If true, credentials will be cached for a configurable duration.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">cacheTimeout</td>
+      <td>Duration</td>
+      <td>How long to cache a successful authentication for. Defaults to 15 seconds.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">cachePermissionsTimeout</td>
+      <td>Duration</td>
+      <td>Defaults to 30 seconds. The permissions file won't be reparsed for a minimum of this many seconds.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">type</td>
+      <td>String</td>
+      <td>Defaults to default, which is the in-memory database. Other valid values are file or ldap</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">permissionsFile</td>
+      <td>String</td>
+      <td>Path to the YAML file containing the application permissions. There is a sample permissions file below. Every API endpoint has a name associated with it. You can configure per endpoint permissions as well as some feature permissions.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">adminGroup</td>
+      <td>Set[String]</td>
+      <td>A list of groups for administrative users. Users that have one of these groups will be in the admin group. Note that being in the adminGroup doesn't always mean you will have access to something, but by default it will. Using the permissionsFile it is possible to configure permissions such that even someone in the admin group can't access a partilar feature or API endpoint.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+The permissions example below creates two user groups, admins and tools. User groups are just named groups of users
+that are stored in the YAML file. This is useful for people authenticating with flat files or if you want to store
+some group information here. The admins user group has two users, alan and bmatheny. The tools user group has three
+users. There are two feature permissions specified, one for rate limiting and the other for who can see passwords.
+The last permission is for the powerStatus API endpoint and is open to a broader group of users. Every API permission
+name is documented in the API documentation.
+</p>
+
+<div class="accordion" id="permissions">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#permissions" href="#perm-example">Permissions Example</a>
+    </div>
+    <div id="perm-example" class="accordion-body collapse">
+      <div class="accordion-inner">
+<pre>
+users:
+  admins:
+    - "alan"
+    - "bmatheny"
+  tools:
+    - "jetpants"
+    - "itouch"
+    - "phil"
+permissions:
+  feature.noRateLimit:
+    - "u=tools"
+  feature.canSeePasswords:
+    - "u=admins"
+    - "u=tools"
+    - "g=infra"
+  controllers.AssetManagementApi.powerStatus:
+    - "g=infra"
+    - "g=ops"
+    - "u=admins"
+    - "u=tools"
+</pre>
+      </div> <!-- accordion inner -->
+    </div> <!-- accordion-body -->
+  </div> <!-- accordion-group -->
+</div>
+
+<div class="example reference-config">
+<pre>authentication {
+  cacheCredentials = false    
+  cacheTimeout = 15 seconds
+  cachePermissionsTimeout = 30 seconds
+  type = default
+  permissionsFile = "conf/permissions.yaml"
+  adminGroup = [Infra]
+}</pre>
+</div>
+
+<h3>LDAP Authentication <small><span class="label label-info">Namespace</span> <span class="inlinecode">authentication.ldap</span></small></h3>
+
+<p>
+At Tumblr LDAP is the primary authentication mechanism. We have tested that this code works with
+at least RFC 2307, IPA, and the OS X admin server.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">host</td>
+      <td>String</td>
+      <td>The LDAP host to authenticate against</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">groupAttribute</td>
+      <td>String</td>
+      <td>An LDAP schema attribute to use for retrieving group information</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">searchbase</td>
+      <td>String</td>
+      <td>The LDAP search base to use</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">usersub</td>
+      <td>String</td>
+      <td>Where to find users in the LDAP schema</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">groupsub</td>
+      <td>String</td>
+      <td>Where to find groups in the LDAP schema</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>authentication {
+  type = ldap
+  ldap {
+    host = "localhost"
+    groupAttribute = "uniqueMember"
+    searchbase = "dc=example,dc=org"
+    usersub = "ou=people"
+    groupsub = "ou=groups"
+  }
+}</pre>
+</div>
+
+<h3>File Authentication <small><span class="label label-info">Namespace</span> <span class="inlinecode">authentication.ldap</span></small></h3>
+
+<p>
+The file format used is a variation on that used by Apache. You can find a sample script for generating
+users and passwords in <code>scripts/gen_passwords.sh</code>.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">userfile</td>
+      <td>String</td>
+      <td>The file to look in for auth information</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>authentication {
+  type = file
+  file {
+    userfile = "conf/users.conf"
+  }
+}</pre>
+</div>
