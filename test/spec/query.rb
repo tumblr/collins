@@ -1,5 +1,4 @@
 #require 'spec_helper'
-gem 'collins_client', "=0.2.3"
 require 'collins_client'
 require 'lib/collins_integration'
 
