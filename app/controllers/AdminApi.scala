@@ -10,6 +10,8 @@ import views._
 
 import play.api.Play
 import play.api.db._
+import play.api.libs.json._
+import play.api.mvc._
 
 trait AdminApi {
   this: Api with SecureController =>
@@ -22,10 +24,10 @@ trait AdminApi {
   def repopulateSolr(waitForCompletion: String) = SecureAction { implicit req =>
     Solr.populate().map{future => 
       if ((new Truthy(waitForCompletion)).isTruthy) Async {
-        future.map{ _ => Ok("ok")}
+        future.map{ _ => Ok(ApiResponse.formatJsonMessage(Results.Ok, JsString("ok")))}
       }
       else Ok("ok(async)")
-    }.getOrElse(Ok("solr not enabled"))
+    }.getOrElse(Results.NotImplemented(ApiResponse.formatJsonError("Solr plugin not enabled!", None)))
   }(Permissions.Admin.ClearCache)
 
 }
