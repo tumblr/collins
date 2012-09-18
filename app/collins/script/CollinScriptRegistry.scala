@@ -124,9 +124,9 @@ sealed trait CollinScriptEngine {
       }
       logger.debug("Refreshing CollinScript engine...")
       // Engine is not threadsafe, so refresh by way of write locks.
-      refreshLock.writeLock().lock()
+      refreshLock.writeLock.lock
       engine.refresh
-      refreshLock.writeLock().unlock()
+      refreshLock.writeLock.unlock
       lastRefreshMillis.set(System.currentTimeMillis)
     } catch {
       case e => {
