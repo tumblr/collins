@@ -1,0 +1,46 @@
+<h2>Power Status</h2>
+
+<p>
+Occasionally it is useful to perform batch operations on a large number of hosts. In this
+recipe we'll use the collins console, the interactive collins shell interface, to find
+a set of hosts and check the power status on all of them.
+</p>
+
+<p>
+Since the collins console is just a Ruby environment, we can use standard Ruby classes to
+do our bidding. In the example below we fetch all assets matching a particular hostname,
+grab only the ones that are allocated, then check the power status of those assets.
+</p>
+
+{% raw %}
+<div class="example example-command">
+<pre>collins / &gt; ls /HOSTNAME/.*blake.* | {|array| array.map{|a| [a.tag,a.hostname,a.status]}}
+collins / &gt; hosts = _
+collins / &gt; hosts.select do |host|
+collins / *   host[2] == 'Allocated'
+collins / * end.map do |host|  
+collins / *   [host[0], host[1], collins_client.with_asset(host[0]).power_status]
+collins / * end</pre>
+</div>
+{% endraw %}
+
+<p>
+In the first line we fetch all assets with a HOSTNAME matching the regular expression <code>.*blake.*</code>.
+The pipe (|) in the line is pry specific and will just feed the results of the <code>ls</code> command to
+a Ruby block. We map each of the matching assets to an array which contains the tag, hostname, and status of
+the asset.
+</p>
+
+<p>
+In the next line we assign the results of the map to a variable named <code>hosts</code>. Note the use of the
+underscore, this is a pry specific thing.
+</p>
+
+<p>
+After this we select assets with a status of Allocated, then map those assets to their power status.
+</p>
+
+<p>
+<span class="label label-success">Protip</span> You can get a sense for what methods are available to you
+by using tab completion.
+</p>

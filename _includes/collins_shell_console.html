@@ -1,0 +1,62 @@
+<h2>The Console</h2>
+
+<p>
+The collins shell console provides an interactive environment for working with your assets. When
+you're inside the collins console, you're working in a Ruby environment so you have complete access
+to all the language features of Ruby.
+</p>
+
+{% raw %}
+<p>Start a console session</p>
+<div class="example example-command">
+<pre><strong>&gt; collins-shell console</strong></pre>
+</div>
+
+<p>Change your context to a PRIMARY_ROLE. Since PRIMARY_ROLE is a tag, and the console
+knows this, you will get context sensitive information about primary roles</p>
+<div class="example example-command">
+<pre><strong>collins / &gt; cd /PRIMARY_ROLE</strong></pre>
+</div>
+
+<p>Now that you're in the PRIMARY_ROLE context, use <code>ls</code> to see what tag values
+are available.</p>
+<div class="example example-command">
+<pre><strong>collins /PRIMARY_ROLE &gt; ls</strong></pre>
+</div>
+
+<p>We're interested in assets with a PRIMARY_ROLE of DEVEL, so let's change context again.</p>
+<div class="example example-command">
+<pre><strong>collins /PRIMARY_ROLE &gt; cd DEVEL</strong></pre>
+</div>
+
+<p>Now let's again use <code>ls</code> to list items in this context, but since we know these
+are assets, let's also format them so they include the hostname and status and only show
+assets formatted like this that have the phrase 'blake'.</p>
+<div class="example example-command">
+<pre><strong>collins /PRIMARY_ROLE/DEVEL &gt; ls --format='{{hostname}} {{status}} {{tag}}' --grep=blake</strong></pre>
+</div>
+
+<p>We have found the asset we're interested to it, let's change context again</p>
+<div class="example example-command">
+<pre><strong>collins /PRIMARY_ROLE/DEVEL &gt; cd sl-91016</strong></pre>
+</div>
+
+<p>Now that we're finally in an asset context, the prompt tells us this by ending the prompt with an asterisk. Once you're in an asset context you have a number of new commands and methods available to you.</p>
+<div class="example example-command">
+<pre><strong>collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; ls
+collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; cat -b
+collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; cat /var/log/messages
+collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; cat /var/log/NOTE
+collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; asset.created.to_s
+collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; power?
+collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; reboot!
+</strong></pre>
+</div>
+
+<p>Context paths are relative, like in a regular shell. Let's check out another asset and get its status</p>
+<div class="example example-command">
+<pre><strong>collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; cd ../sl-102313
+collins /PRIMARY_ROLE/DEVEL/sl-102313* &gt; stat</strong></pre>
+</div>
+{% endraw %}
+

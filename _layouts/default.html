@@ -28,11 +28,11 @@
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li class="{% if page.permalink == "index.html" %}active{% endif %}"><a href="index.html">Home</a></li>
-              <li class="{% if page.permalink == "concepts.html" %}active{% endif %}"><a href="concepts.html">Concepts</a></li>
               <li class="{% if page.permalink == "overview.html" %}active{% endif %}"><a href="overview.html">Overview</a></li>
+              <li class="{% if page.permalink == "concepts.html" %}active{% endif %}"><a href="concepts.html">Concepts</a></li>
               <li class="{% if page.permalink == "api.html" %}active{% endif %}"><a href="api.html">API</a></li>
               <li class="{% if page.permalink == "configuration.html" %}active{% endif %}"><a href="configuration.html">Configuration</a></li>
-              <li class=""><a href="">Tools</a></li>
+              <li class="{% if page.permalink == "tools.html" %}active{% endif %}"><a href="tools.html">Tools</a></li>
               <li class="{% if page.permalink == "recipes.html" %}active{% endif %}"><a href="recipes.html">Recipes</a></li>
             </ul>
           </div>
