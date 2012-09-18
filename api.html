@@ -21,6 +21,11 @@ layout: default
     <div class="span3 sidebar">
       <ul class="nav nav-list sidenav">
         <li><a href="#overview"><i class="icon-chevron-right"></i> API Overview</a></li>
+        <li><a href="#admin"><i class="icon-chevron-right"></i> Admin</a>
+          <ul class="nav nav-list">
+            <li><a href="#admin-repopulate_solr-section"><i class="icon-chevron-right cr-dim"></i> Repopulate Solr</a></li>
+          </ul>
+        </li>
         <li><a href="#asset"><i class="icon-chevron-right"></i> Asset</a>
           <ul class="nav nav-list">
             <li><a href="#api-asset-create-section"><i class="icon-chevron-right cr-dim"></i> Create</a></li>
@@ -92,6 +97,14 @@ layout: default
         </div>
         <p class="lead">Collins API design principles and conventions</p>
         {% include api_overview.html %}
+      </section>
+
+      <section id="admin">
+        <div class="page-header">
+          <h1>Admin API</h1>
+        </div>
+        <p class="lead">Collins Administrative operations</p>
+        {% include api_admin.html %}
       </section>
 
       <section id="asset">
