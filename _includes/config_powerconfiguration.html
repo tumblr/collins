@@ -1,0 +1,102 @@
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">powerconfiguration</span></small>
+</p>
+
+<h2>Overview</h2>
+
+<p>
+Depending on the environment, each asset may have a different power configuration.
+A power configuration specifies the number of power units required per asset,
+the number of power components required per power unit, and various
+requirements for each power component.
+</p>
+
+<h2>Definitions</h2>
+
+<ul class="unstyled">
+  <li>An asset may have an associated power configuration</li>
+  <li>A power configuration consists of one or more power units</li>
+  <li>A power unit consits of one or more power components (e.g. power strip, power outlet, etc)</li>
+  <li>A set of power units represents a complete power configuration</li>
+</ul>
+
+<p>
+You can think of an asset power configuration as looking something like the following.
+</p>
+
+<ul>
+  <li>
+    PowerConfiguration
+    <ul>
+      <li>
+        Power Unit 1
+        <ul> 
+          <li>Power Component 1</li>
+          <li>Power Component 2</li>
+          <li>Power Component n</li>
+        </ul>
+      </li>
+      <li>Power Unit 2</li>
+      <li>Power Unit n</li>
+    </ul>
+  </li>
+</ul>
+
+<h2>Configuration</h2>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">unitComponents</td>
+      <td>Set[String]</td>
+      <td>A set of components in a power configuration. Defaults to [PORT, OUTLET]</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">uniqueComponents</td>
+      <td>Set[String]</td>
+      <td>Components that must be unique for a single asset. Defaults to [PORT]</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">unitsRequired</td>
+      <td>Integer</td>
+      <td>Number of power units required for intake. Defaults to 1.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">useAlphabeticNames</td>
+      <td>Boolean</td>
+      <td>
+        Whether power units should use alphabetic names or not, defaults to true.
+        The default configuration will result in POWER_PORT_A, POWER_OUTLET_A. If unitsRequired
+        were 2 it would also include POWER_PORT_B and POWER_OUTLET_B. If useAlphabeticNames is
+        false, instead of A/B it would be 1/2.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+Note that this configuration heavily influences the intake process as well as what API parameters
+are available for asset updates. You can get a sample for what the asset looks like in the
+<a href="api.html#api-asset-get-section">Asset Get</a> JSON response.
+</p>
+
+<h2>Messages</h2>
+<p>
+It is possible to customize how the various components are labeled. The default bundled messages defines
+the following messages.
+</p>
+
+<ul>
+  <li><span class="inlinecode">powerconfiguration.unit.port.label</span> - Power Strip {0}</li>
+  <li><span class="inlinecode">powerconfiguration.unit.outlet.label</span> - Outlet {0}</li>
+</ul>
+
+<p>
+Notice that the configured components each get a unit label. This allows you to customize how
+the intake screen looks.
+</p>

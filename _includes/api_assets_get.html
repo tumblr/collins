@@ -354,7 +354,52 @@ curl --basic -u blake:admin:first http://localhost:9000/api/asset/tumblrtag30
       
     ],
     "POWER": [
-      
+      {
+        "UNIT_ID": 0,
+        "UNITS": [
+          {
+            "KEY": "POWER_PORT_A",
+            "VALUE": "plug a",
+            "TYPE": "POWER_PORT",
+            "LABEL": "Plug Strip A",
+            "POSITION": 0,
+            "IS_REQUIRED": true,
+            "UNIQUE": true
+          },
+          {
+            "KEY": "POWER_OUTLET_A",
+            "VALUE": "outlet a",
+            "TYPE": "POWER_OUTLET",
+            "LABEL": "Outlet A",
+            "POSITION": 1,
+            "IS_REQUIRED": true,
+            "UNIQUE": false
+          }
+        ]
+      },
+      {
+        "UNIT_ID": 1,
+        "UNITS": [
+          {
+            "KEY": "POWER_PORT_B",
+            "VALUE": "plug b",
+            "TYPE": "POWER_PORT",
+            "LABEL": "Plug Strip B",
+            "POSITION": 0,
+            "IS_REQUIRED": true,
+            "UNIQUE": true
+          },
+          {
+            "KEY": "POWER_OUTLET_B",
+            "VALUE": "outlet b",
+            "TYPE": "POWER_OUTLET",
+            "LABEL": "Outlet B",
+            "POSITION": 1,
+            "IS_REQUIRED": true,
+            "UNIQUE": false
+          }
+        ]
+      }
     ],
     "ATTRIBS": {
       "0": {
