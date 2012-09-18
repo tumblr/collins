@@ -12,9 +12,8 @@ do our bidding. In the example below we fetch all assets matching a particular h
 grab only the ones that are allocated, then check the power status of those assets.
 </p>
 
-{% raw %}
 <div class="example example-command">
-<pre>collins / &gt; ls /HOSTNAME/.*blake.* | {|array| array.map{|a| [a.tag,a.hostname,a.status]}}
+<pre>collins / &gt; ls /HOSTNAME/.*blake.* | &#123;|array| array.map&#123;|a| [a.tag,a.hostname,a.status]&#125;&#125;
 collins / &gt; hosts = _
 collins / &gt; hosts.select do |host|
 collins / *   host[2] == 'Allocated'
@@ -22,7 +21,6 @@ collins / * end.map do |host|
 collins / *   [host[0], host[1], collins_client.with_asset(host[0]).power_status]
 collins / * end</pre>
 </div>
-{% endraw %}
 
 <p>
 In the first line we fetch all assets with a HOSTNAME matching the regular expression <code>.*blake.*</code>.

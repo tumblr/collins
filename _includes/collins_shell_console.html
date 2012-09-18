@@ -6,7 +6,6 @@ you're inside the collins console, you're working in a Ruby environment so you h
 to all the language features of Ruby.
 </p>
 
-{% raw %}
 <p>Start a console session</p>
 <div class="example example-command">
 <pre><strong>&gt; collins-shell console</strong></pre>
@@ -33,7 +32,7 @@ are available.</p>
 are assets, let's also format them so they include the hostname and status and only show
 assets formatted like this that have the phrase 'blake'.</p>
 <div class="example example-command">
-<pre><strong>collins /PRIMARY_ROLE/DEVEL &gt; ls --format='{{hostname}} {{status}} {{tag}}' --grep=blake</strong></pre>
+<pre><strong>collins /PRIMARY_ROLE/DEVEL &gt; ls --format='&#123;&#123;hostname&#125;&#125; &#123;&#123;status&#125;&#125; &#123;&#123;tag&#125;&#125;' --grep=blake</strong></pre>
 </div>
 
 <p>We have found the asset we're interested to it, let's change context again</p>
@@ -58,5 +57,4 @@ collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; reboot!
 <pre><strong>collins /PRIMARY_ROLE/DEVEL/sl-91016* &gt; cd ../sl-102313
 collins /PRIMARY_ROLE/DEVEL/sl-102313* &gt; stat</strong></pre>
 </div>
-{% endraw %}
 

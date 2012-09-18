@@ -10,12 +10,10 @@ supported via the collins web UI, like attaching to the IPMI console. Collins sh
 option which will execute the specified command for all assets matching the query.
 </p>
 
-{% raw %}
 <div class="example example-command">
 <pre>collins-shell asset get TAG \
-  --exec='IPMI_PASSWORD={{ipmi.password}} ipmitool -I lanplus -E -U {{ipmi.username}} -H {{ipmi.address}} sol activate'</pre>
+  --exec='IPMI_PASSWORD=&#123;&#123;ipmi.password&#125;&#125; ipmitool -I lanplus -E -U &#123;&#123;ipmi.username&#125;&#125; -H &#123;&#123;ipmi.address&#125;&#125; sol activate'</pre>
 </div>
-{% endraw %}
 
 <p>
 Notice the use of mustache templates in the exec option. You can use any available asset tags in the mustache
