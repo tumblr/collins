@@ -17,9 +17,9 @@ object Solr {
 
   def plugin: Option[SolrPlugin] = Play.maybeApplication.flatMap{_.plugin[SolrPlugin]}.filter{_.enabled}
 
-  protected def inPlugin(f: SolrPlugin => Unit): Unit = {
-    Play.maybeApplication.foreach { app =>
-      app.plugin[SolrPlugin].foreach{plugin=>
+  protected def inPlugin[A](f: SolrPlugin => A): Option[A] = {
+    Play.maybeApplication.flatMap { app =>
+      app.plugin[SolrPlugin].map{plugin=>
         f(plugin)
       }
     }

@@ -1,0 +1,16 @@
+collins_root: /Users/dan/projects/collins
+mysql:
+  exec_path: /usr/local/mysql/bin/mysql
+  user: rspec
+  password: IE4b6743CiVYhFFq8U14rNX606SK9N
+  database: collins_fixture
+  db_dump_gz: collins_fixtures.dump.gz
+collins_server:
+  config: dan.conf
+collins_client:
+  :host: http://127.0.0.1:9000
+  :username: blake
+  :password: admin:first
+  :strict: true
+  :trace: false
+  :debug: false
