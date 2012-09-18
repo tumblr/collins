@@ -141,6 +141,42 @@ Collins is extensively tested using both MySQL 5.5 and H2. H2 is used for develo
 
 </div> <!-- accordion -->
 
+<h2>LSHW Parsing</h2>
+
+<p>
+Due to how LSHW handles PCIe flash devices, you have to give the parser a hint
+as to which attribute values indicate that the device is in fact a flash storage
+device. Here you can specify the string to match on and the size to use if the
+match is found.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">lshw.flashProduct</td>
+      <td>String</td>
+      <td>Product string to look for in LSHW output to detect a flash device.  Defaults to flashmax.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">lshw.flashSize</td>
+      <td>Long</td>
+      <td>If the flashProduct matched, the size to use. Defaults to 1400000000000.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>lshw {
+  flashProduct = "flashmax"
+  flashSize = 1400000000000
+}</pre>
+</div>
+
 <h2>Query Log</h2>
 
 <p>
