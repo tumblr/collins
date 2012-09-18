@@ -2,7 +2,7 @@ package util
 package views
 
 import collins.action.Action
-import collins.action.handler.AssetsActionHandler
+import collins.action.handler.{AssetActionHandler, AssetsActionHandler}
 import models.{Asset, AssetMeta, Page}
 import models.asset.AssetView
 import util.plugins.SoftLayer
@@ -71,6 +71,34 @@ object ListHelper {
 
   def getPowerComponentsInOrder(): Seq[PowerComponent] = {
     getPowerComponentsInOrder(PowerUnits())
+  }
+
+  def getRowClassForAsset(asset: AssetView): String = {
+    SearchResultsConfig.rowClassAction match {
+      case Some(actionConfig) => {
+        val handler = Action.getHandler[AssetActionHandler] (actionConfig)
+        handler match {
+          case Some(rowClassHandler) =>
+            rowClassHandler.executeAssetAction(asset)
+          case None => {
+            logger.error("No row class action handler found for action %s."
+              .format(actionConfig))
+            getDefaultRowClassForAsset(asset)
+          }
+        }
+      }
+      case None => getDefaultRowClassForAsset(asset)
+    }
+  }
+
+  def getDefaultRowClassForAsset(asset: AssetView): String = {
+    asset match {
+      case warn if warn.isIncomplete || warn.isNew => "warning"
+      case info if info.isProvisioning || info.isProvisioned => "info"
+      case ok if ok.isCancelled || ok.isDecommissioned => "success"
+      case err if err.isMaintenance => "error"
+      case default => ""
+    }
   }
 
   /**

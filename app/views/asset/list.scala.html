@@ -38,7 +38,7 @@
       </thead>
       <tbody>
         @assets.items.map { asset =>
-        <tr>
+        <tr class="@ListHelper.getRowClassForAsset(asset)">
           @ListHelper.getListHeaderTags.map { tag =>
             @if(ListHelper.showColumnForTag(tag, assets)) {
               <td>@TagDecorator.decorate(tag, asset)</td>

@@ -29,14 +29,13 @@ case class CollinScriptCompileException(script: String, msg: String)
 sealed trait CollinScriptEngine {
 
   protected val logger = Logger("CollinScriptEngine")
-
-  protected var lastRefreshMillis: AtomicLong = new AtomicLong(0)
-  protected var refreshLock: ReentrantReadWriteLock =
+  protected val refreshLock: ReentrantReadWriteLock =
     new ReentrantReadWriteLock()
 
-  protected val engine = new ScalaScriptEngine(
-      Config(Set(sourceDir), getAppClasspath, getAppClasspath, outputDir))
-      with FromClasspathFirst {}
+  protected var engine = createEngine
+
+  protected var lastRefreshMillis: AtomicLong = new AtomicLong(0)
+  protected var numRefreshes: AtomicInteger = new AtomicInteger(0)
 
   /**
    * Calls a CollinScript method specified on an Object as a string,
@@ -66,7 +65,7 @@ sealed trait CollinScriptEngine {
     val classMethod = methodSplit(methodSplit.length - 1)
     try {
       engine.get[CollinScript](objectClass).getMethod(classMethod,
-          argumentClasses : _*).invoke(engine, args : _*)
+          argumentClasses : _*).invoke(this, args : _*)
     } catch {
       case e => {
         logger.error("COLLINSCRIPT EXECUTION ERROR:\n%s".format(
@@ -75,6 +74,10 @@ sealed trait CollinScriptEngine {
       }
     }
   }
+
+  protected def createEngine() = new ScalaScriptEngine(
+      Config(Set(sourceDir), getAppClasspath, getAppClasspath, outputDir))
+      with FromClasspathFirst {}
 
   protected def enabled = CollinScriptConfig.enabled
 
@@ -116,7 +119,11 @@ sealed trait CollinScriptEngine {
       }
       // The engine must be instantiated twice at startup to preclude linking
       // issues against any partially-compiled sources.
+      if (numRefreshes.getAndIncrement <= 2) {
+        engine = createEngine
+      }
       logger.debug("Refreshing CollinScript engine...")
+      // Engine is not threadsafe, so refresh by way of write locks.
       refreshLock.writeLock().lock()
       engine.refresh
       refreshLock.writeLock().unlock()

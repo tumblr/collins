@@ -2,6 +2,7 @@ package util
 package views
 
 import config.Configurable
+import util.config.ActionConfig
 
 
 object SearchResultsConfig extends Configurable {
@@ -18,6 +19,9 @@ object SearchResultsConfig extends Configurable {
       tagList
     }
   }
+
+  def rowClassAction: Option[ActionConfig] =
+    ActionConfig.getActionConfig(getConfig("rowClassAction"))
 
   override def validateConfig() {
     defaultTagOrder
