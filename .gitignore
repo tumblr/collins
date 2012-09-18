@@ -13,3 +13,5 @@ test.rb
 _site
 RUNNING_PID
 conf/solr/data/
+.DS_Store
+Gemfile.lock
