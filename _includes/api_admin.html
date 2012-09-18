@@ -14,7 +14,7 @@ The Admin API contains endpoints for Collins administrative tasks.
   <tbody>
     <tr><th>Description</th><td>Trigger repopulation of the Solr index.  This does not normally need to be manually done, but useful for testing or after any database changes not done through Collins</td></tr>
     <tr><th>Request</th><td><code>GET /api/admin/solr</code></td></tr>
-    <tr><th>Permission</th><td>controllers.AssetApi.createAsset</td></tr>
+    <tr><th>Permission</th><td>controllers.Admin.clearCache</td></tr>
     <tr>
       <th>Parameters</th>
       <td>
@@ -42,7 +42,7 @@ The Admin API contains endpoints for Collins administrative tasks.
           <tbody>
             <tr>
               <th class="inlinecode">200</th>
-              <td>Reindexing complete (if waitForCompletion) or reindexing begun</td>
+              <td>Reindexing complete (if waitForCompletion) or reindexing started</td>
             </tr>
           </tbody>
         </table>
@@ -52,45 +52,24 @@ The Admin API contains endpoints for Collins administrative tasks.
 </table>
 
 <div class="example collins-shell">
-collins-shell admin create --tag=TAG [--ipmi=(true|false) --status=STATUS --type=TYPE]
+Not Implemented
 </div>
 
 <div class="example curl">
 curl --basic -u blake:admin:first http://localhost:9000/api/admin/solr
 </div>
 
-<div class="accordion" id="asset-create-response">
+<div class="accordion" id="admin-solr-repopulate-response">
   <div class="accordion-group">
     <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-create-response" href="#asset-create-json-response">JSON Response</a>
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#admin-solr-repopulate-response" href="#admin-solr-repopulate-json-response">Any Response</a>
     </div>
-    <div id="asset-create-json-response" class="accordion-body collapse">
+    <div id="admin-solr-repopulate-json-response" class="accordion-body collapse">
       <div class="accordion-inner">
         <pre>OK</pre>
       </div>
     </div>
   </div>
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-create-response" href="#asset-create-bash-response">Bash Response</a>
-    </div>
-    <div id="asset-create-bash-response" class="accordion-body collapse">
-      <div class="accordion-inner">
-        <pre>OK</pre>
-      </div>
-    </div>
-  </div>
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-create-response" href="#asset-create-text-response">Text Response</a>
-    </div>
-    <div id="asset-create-text-response" class="accordion-body collapse">
-      <div class="accordion-inner">
-        <pre>OK</pre>
-      </div>
-    </div>
-  </div>
-
 </div> <!-- accordion -->
 
 </section>
