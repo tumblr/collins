@@ -1,0 +1,23 @@
+<h2>IPMI Attach</h2>
+
+<p>
+Collins stores the IPMI data for assets which might be usful for occasionally doing something not
+supported via the collins web UI, like attaching to the IPMI console. Collins shell
+</p>
+
+<p>
+<span class="label label-success">Protip</span> Several collins shell commands support an exec
+option which will execute the specified command for all assets matching the query.
+</p>
+
+{% raw %}
+<div class="example example-command">
+<pre>collins-shell asset get TAG \
+  --exec='IPMI_PASSWORD={{ipmi.password}} ipmitool -I lanplus -E -U {{ipmi.username}} -H {{ipmi.address}} sol activate'</pre>
+</div>
+{% endraw %}
+
+<p>
+Notice the use of mustache templates in the exec option. You can use any available asset tags in the mustache
+template and they will expand to whatever the value happens to be for that particular asset.
+</p>
