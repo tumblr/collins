@@ -11,7 +11,7 @@ object SearchResultsConfig extends Configurable {
   override val referenceConfigFilename = "searchresults_reference.conf"
 
   def defaultTagOrder = {
-    val tagList = getStringList("default_tag_order")
+    val tagList = getStringList("defaultTagOrder")
     if (tagList.isEmpty) {
       List("TAG", "HOSTNAME", "PRIMARY_ROLE", "STATUS", "CREATED_DATE",
           "UPDATED_DATE", "SL_LINK")

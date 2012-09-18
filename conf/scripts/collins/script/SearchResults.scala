@@ -4,8 +4,19 @@ package script
 import models.Asset
 
 
-object RowClass extends CollinScript {
-  
+/**
+ * Contains helpers for decorating and listing asset search results.
+ */
+object SearchResults extends CollinScript {
+
+  /**
+   * Returns the CSS class for an Asset's row to signify the row's Bootstrap
+   * coloration.
+   *
+   * @param asset an Asset whose row's coloration should be determined.
+   * @return a String representing the Bootstrap CSS class by which to shade
+   * an asset's row.
+   */
   def getRowClassForAsset(asset: Asset): String = {
     asset match {
       case warn if warn.isIncomplete || warn.isNew => "warning"
@@ -17,3 +28,4 @@ object RowClass extends CollinScript {
   }
 
 }
+
