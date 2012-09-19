@@ -351,7 +351,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         Some(State.Running.get)
       )
       val expected = List(
-        SolrKeyVal("tag", SolrStringValue("foosolrtag")),
+        SolrKeyVal("tag", SolrStringValue("foosolrtag", LRWildcard)),
         SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
         SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id)),
         SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
@@ -405,18 +405,21 @@ class SolrQuerySpec extends ApplicationSpecification {
       val resultTuple = (ipmiTuples, metaTuples, ipAddresses)
 
       val expected: SolrExpression = SolrAndOp(List(
-        SolrKeyVal("IPMI_ADDRESS", SolrStringValue("ipmi_address")),
-        SolrKeyVal("IPMI_USERNAME", SolrStringValue("ipmi_username")),
-        SolrKeyVal("meta1", SolrStringValue("meta1_value")),
-        SolrKeyVal("meta2", SolrStringValue("meta2_value")),
-        SolrKeyVal("ip_address", SolrStringValue("1.2.3.4")),
+        SolrKeyVal("IPMI_ADDRESS", SolrStringValue("ipmi_address", LRWildcard)),
+        SolrKeyVal("IPMI_USERNAME", SolrStringValue("ipmi_username", LRWildcard)),
+        SolrKeyVal("meta1", SolrStringValue("meta1_value", LRWildcard)),
+        SolrKeyVal("meta2", SolrStringValue("meta2_value", LRWildcard)),
+        SolrKeyVal("ip_address", SolrStringValue("1.2.3.4", LRWildcard)),
         SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
         SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
-        SolrKeyVal("tag", SolrStringValue("footag")),
+        SolrKeyVal("tag", SolrStringValue("footag", LRWildcard)),
         SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
         SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id))
       ))
       val p = AssetSearchParameters(resultTuple, afinder)
+      println(p.toSolrExpression.toSolrQueryString)
+      println("---")
+      println(expected.toSolrQueryString)
       p.toSolrExpression must_== expected
 
 
