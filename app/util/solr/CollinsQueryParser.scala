@@ -42,10 +42,10 @@ class CollinsQueryParser extends JavaTokenParsers {
   } else {
     SolrIntValue(java.lang.Integer.parseInt(n))
   }}
-  def ipAddress  = """^(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}))))$""".r ^^{s => SolrStringValue(s)}
+  def ipAddress  = """^(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}))))$""".r ^^{s => StringValueFormat.createValueFor(s)}
   def stringValue   = quotedString | unquotedString
   def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1))}
-  def unquotedString = "\\*?[a-zA-Z0-9_\\-.]+\\*?".r  ^^ {s => SolrStringValue(s)}
+  def unquotedString = "\\^?\\*?[a-zA-Z0-9_\\-.]+\\*?\\$?".r  ^^ {s => StringValueFormat.createValueFor(s)}
   def booleanValue  = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
 
 }

@@ -76,8 +76,76 @@ case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
 }
 
-case class SolrStringValue(value: String) extends SolrSingleValue(String) {
-  def toSolrQueryString(toplevel: Boolean) = if ((value startsWith "*") || (value endsWith "*")) value else "\"" + value + "\""
+sealed trait StringValueFormat {
+  def format(value: String): String
+}
+case object LWildcard extends StringValueFormat {
+  def format(value:String) = "*" + value
+}
+case object RWildcard extends StringValueFormat {
+  def format(value: String) = value + "*"
+}
+case object LRWildcard extends StringValueFormat {
+  def format(value: String) = "*" + value + "*"
+}
+case object Quoted extends StringValueFormat {
+  def format(value: String) = "\"" + value + "\""
+}
+case object FullWildcard extends StringValueFormat {
+  def format(value: String) = if (value != "*") {
+    throw new IllegalArgumentException("Cannot format non '*' string as full-wildcard")
+  } else {
+    "*"
+  }
+}
+
+object StringValueFormat {
+
+  val fullWildcardValue = SolrStringValue("*", FullWildcard)
+
+  /**
+   * This is some pretty complex logic to handle user queries that include wildcards, 
+   * regex markers ^,$, or some combination.  See the unit
+   * tests for examples
+   */
+  def createValueFor(rawStr: String): SolrStringValue = if (rawStr == "*") fullWildcardValue else {
+    def s(p: String) = rawStr.startsWith(p)
+    def e(p: String) = rawStr.endsWith(p)
+    val s_* = s("*")
+    val e_* = e("*")
+    val s_^ = s("^")
+    val e_$ = e("$")
+    val states = List(
+      (s_*, e_*, 1, 1, LRWildcard),
+      (s_*, e_$, 1, 1, LWildcard),
+      (s_*, true, 1, 0, LWildcard),
+      (s_^, e_*, 1, 1, RWildcard),
+      (s_^, e_$, 1, 1, Quoted),
+      (s_^, true, 1, 0, RWildcard),
+      (true, e_*, 0, 1, RWildcard),
+      (true, e_$, 0, 1, LWildcard),
+      (true, true, 0,0, LRWildcard)
+    )
+    val (_,_, strim, etrim, format) = states.find{x => x._1 && x._2}.get
+    SolrStringValue(rawStr.substring(strim, rawStr.length - (etrim)), format)
+  }
+}
+  
+   
+
+case class SolrStringValue(value: String, format: StringValueFormat = Quoted) extends SolrSingleValue(String) {
+  private def clean(value: String) = {
+    case class SFunctor(s: String) {
+      def map(f: String => String) = SFunctor(f(s))
+    }
+    SFunctor(value)
+      .map{s => if(s startsWith "^") s.substring(1) else s}
+      .map{s => if(s endsWith "$") s.substring(0,s.length - 1) else s}
+      .map{s => if(s startsWith ".*") s.substring(1) else s}
+      .map{s => if(s endsWith ".*") s.substring(0,s.length - 2) + "*" else s}
+      .s
+  }
+  def toSolrQueryString(toplevel: Boolean) = format.format(value)
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
@@ -238,7 +306,7 @@ trait SolrSimpleExpr extends SolrExpression {
 
   def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
     case j: KeyLookup => value match {
-      case SolrStringValue(stringValue) => j.lookupValue(stringValue) match {
+      case SolrStringValue(stringValue, _) => j.lookupValue(stringValue) match {
         case Some(i) => Right(SolrIntValue(i))
         case _ => Left("Invalid %s: %s".format(solrKey.name, stringValue))
       }
