@@ -140,11 +140,11 @@ class SolrQuerySpec extends ApplicationSpecification {
         """ip_address = "192.168.1.1"""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1"))
       }
       "unquoted ip address" in {
-        """ip_address = 192.168.1.1""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1"))
-        """ip_address = 192.168.1.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.*"))
-        """ip_address = 192.168.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.*"))
-        """ip_address = 192.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.*"))
-        """ip_address = *""".query must_== SolrKeyVal("ip_address", SolrStringValue("*"))
+        """ip_address = 192.168.1.1""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1", LRWildcard))
+        """ip_address = 192.168.1.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.", RWildcard))
+        """ip_address = 192.168.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.", RWildcard))
+        """ip_address = 192.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.", RWildcard))
+        """ip_address = *""".query must_== SolrKeyVal("ip_address", SolrStringValue("*", FullWildcard))
       }
     }
 
@@ -183,17 +183,72 @@ class SolrQuerySpec extends ApplicationSpecification {
     }
   }
 
+  "StringValueFormat" should {
+    def s(str: String) = StringValueFormat.createValueFor(str)
+    def S(str: String, format: StringValueFormat) = SolrStringValue(str, format)
+    def LR = LRWildcard
+    def L = LWildcard
+    def R = RWildcard
+    def Q = Quoted
+    "foo" in {
+      s("foo") must_== S("foo", LR)
+    }
+    "*foo" in {
+      s("*foo") must_== S("foo", L)
+    }
+    "*foo*"in {
+      s("*foo*") must_== S("foo", LR)
+    }
+    "foo*"in {
+      s("foo*") must_== S("foo", R)
+    }
+    "^foo"in {
+      s("^foo") must_== S("foo", R)
+    }
+    "^foo*"in {
+      s("^foo*") must_== S("foo", R)
+    }
+    "^foo$"in {
+      s("^foo$") must_== S("foo", Q)
+    }
+    "*foo$"in {
+      s("*foo$") must_== S("foo", L)
+    }
+    "foo$"in {
+      s("foo$") must_== S("foo", L)
+    }
+  } 
+
+
   "CQL abstract syntax-tree" should {
 
     "solr query generation" in {
       "empty query" in {
         "*".query.toSolrQueryString must_== "*:*"
       }
+      "field wildcard" in {
+        "tag = *".query.toSolrQueryString must_== "tag:*"
+      }
       "simple keyval" in {
         "foosolr = 3".query.toSolrQueryString must_== """foosolr:3"""
       }
+      "pad unquoted strings with wildcards" in {
+        "foo = bar".query.toSolrQueryString must_== """foo:*bar*"""
+      }
+      "handle ^" in {
+        "foo = ^bar".query.toSolrQueryString must_== """foo:bar*"""
+      }
+      "handle $" in {
+        "foo = bar$".query.toSolrQueryString must_== """foo:*bar"""
+      }
+      "handle both ^ and $" in {
+        "foo = ^bar$".query.toSolrQueryString must_== """foo:"bar""""
+      }
+      "not handle ^ or $ in quoted string" in {
+        """foo = "^bar$"""".query.toSolrQueryString must_== """foo:"^bar$""""
+      }
       "quoted dash" in {
-        """tag=-""".query.toSolrQueryString must_== """tag:"-""""
+        """tag=-""".query.toSolrQueryString must_== """tag:*-*"""
       }
       "leading wildcard" in {
         """hostname=*foo""".query.toSolrQueryString must_== """hostname:*foo"""
@@ -214,7 +269,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         """(foosolr = 3 OR foosolr = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== "(foosolr:3 OR foosolr:4) AND (bar:true OR (bar:false AND baz:5))"
       }
       "support unquoted one-word strings" in {
-        """foosolr = bar""".query must_== """foosolr = "bar"""".query
+        """foosolr = bar""".query must_== """foosolr = *bar*""".query
       }
     }
 
@@ -265,7 +320,10 @@ class SolrQuerySpec extends ApplicationSpecification {
         "NOT foosolr = 3".query.typeCheck must_== Right(SolrNotOp(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3))))
       }
       "tag search" in {
-        """tag = test""".query.typeCheck must_== Right(SolrKeyVal("TAG", SolrStringValue("test")))
+        """tag = test""".query.typeCheck must_== Right(SolrKeyVal("TAG", SolrStringValue("test", LRWildcard)))
+      }
+      "not allow partial wildcard on numeric values" in {
+        """foosolr = 3*""".query.typeCheck must throwA[Exception]
       }
     }
 
