@@ -103,6 +103,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       "string" in {
         (("foosolr" -> "bar"): SolrKeyVal) must_== SolrKeyVal("foosolr", SolrStringValue("bar"))
       }
+      "quoted string" in {
+        (("foosolr" -> "bar".quoted): SolrKeyVal) must_== SolrKeyVal("foosolr", SolrStringValue("bar", Quoted))
+      }
     }
 
   }
@@ -113,7 +116,7 @@ class SolrQuerySpec extends ApplicationSpecification {
     }
     "key-value" in {
       "string value" in {
-        """foosolr = "bar"""".query must_== (("foosolr" -> "bar"): SolrKeyVal)
+        """foosolr = "bar"""".query must_== SolrKeyVal("foosolr", SolrStringValue("bar", Quoted))
       }
       "int value" in {
         """foosolr = 3""".query must_== (("foosolr" -> 3): SolrKeyVal)
@@ -137,7 +140,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         """foosolr = [*, *]""".query must_== SolrKeyRange("foosolr", None, None)
       }
       "ip address" in {
-        """ip_address = "192.168.1.1"""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1"))
+        """ip_address = "192.168.1.1"""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1", Quoted))
       }
       "unquoted ip address" in {
         """ip_address = 192.168.1.1""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1", LRWildcard))
@@ -177,7 +180,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         """NOT foosolr = 5 OR bar = false""".query must_== (SolrNotOp(("foosolr" -> 5)) OR ("bar" -> false))
       }
       "negate complex expression" in {
-        """NOT (foosolr = 5 AND bar = "baz")""".query must_== SolrNotOp(("foosolr" -> 5) AND ("bar" -> "baz"))
+        """NOT (foosolr = 5 AND bar = "baz")""".query must_== SolrNotOp(("foosolr" -> 5) AND ("bar" -> "baz".quoted))
       }
         
     }
@@ -255,6 +258,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
       "trailing wildcard" in {
         """hostname=foo*""".query.toSolrQueryString must_== """hostname:foo*"""
+      }
+      "not quote ranges" in {
+        """foo = [abc, abd]""".query.toSolrQueryString must_== """foo:[abc TO abd]"""
       }
       "ANDs" in {
          """foosolr = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== """foosolr:3 AND bar:"abcdef" AND baz:true"""

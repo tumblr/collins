@@ -76,6 +76,10 @@ case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
 }
 
+/**
+ * StringValueFormat determines how wildcards are used on string values.  We currently allow leading and/or trailing wildcard characters on
+ * unquoted string values.  If the value is quoted, such as foo = "*bar", the * is not interpreted as a wildcard
+ */
 sealed trait StringValueFormat {
   def format(value: String): String
 }
@@ -90,6 +94,10 @@ case object LRWildcard extends StringValueFormat {
 }
 case object Quoted extends StringValueFormat {
   def format(value: String) = "\"" + value + "\""
+}
+//no wildcard/regex allowed, mostly for range queries
+case object StrictUnquoted extends StringValueFormat {
+  def format(value: String) = value
 }
 case object FullWildcard extends StringValueFormat {
   def format(value: String) = if (value != "*") {
@@ -133,19 +141,12 @@ object StringValueFormat {
   
    
 
-case class SolrStringValue(value: String, format: StringValueFormat = Quoted) extends SolrSingleValue(String) {
-  private def clean(value: String) = {
-    case class SFunctor(s: String) {
-      def map(f: String => String) = SFunctor(f(s))
-    }
-    SFunctor(value)
-      .map{s => if(s startsWith "^") s.substring(1) else s}
-      .map{s => if(s endsWith "$") s.substring(0,s.length - 1) else s}
-      .map{s => if(s startsWith ".*") s.substring(1) else s}
-      .map{s => if(s endsWith ".*") s.substring(0,s.length - 2) + "*" else s}
-      .s
-  }
+case class SolrStringValue(value: String, format: StringValueFormat = StrictUnquoted) extends SolrSingleValue(String) {
   def toSolrQueryString(toplevel: Boolean) = format.format(value)
+
+  def quoted = copy(format = Quoted)
+  def unquoted = copy(format = StrictUnquoted)
+  
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
@@ -379,6 +380,8 @@ object CollinsQueryDSL {
       expr => expr
     )
   }
+  implicit def str2SolrStringValue(s: String) = SolrStringValue(s)
+  implicit def strsolr_tuple2keyval(t: Tuple2[String, SolrSingleValue]): SolrKeyVal = SolrKeyVal(t._1, t._2)
   implicit def str2collins(s: String): CollinsQueryString = new CollinsQueryString(s)
   implicit def collins2str(c: CollinsQueryString): String = c.s
   implicit def int_tuple2keyval(t: Tuple2[String, Int]):SolrKeyVal = SolrKeyVal(t._1, SolrIntValue(t._2))

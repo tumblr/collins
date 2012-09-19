@@ -21,12 +21,12 @@ class FlatSerializer extends AssetSolrSerializer {
 
   def serialize(asset: Asset) = postProcess {
     val opt = Map[SolrKey, Option[SolrValue]](
-      SolrKeyResolver("UPDATED").get -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
-      SolrKeyResolver("DELETED").get -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t))},
+      SolrKeyResolver("UPDATED").get -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
+      SolrKeyResolver("DELETED").get -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
       SolrKeyResolver("IP_ADDRESS").get -> {
         val a = IpAddresses.findAllByAsset(asset, false)
         if (a.size > 0) {
-          val addresses = SolrMultiValue(a.map{a => SolrStringValue(a.dottedAddress)})
+          val addresses = SolrMultiValue(a.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)})
           Some(addresses)
         } else {
           None
@@ -35,11 +35,11 @@ class FlatSerializer extends AssetSolrSerializer {
     ).collect{case(k, Some(v)) => (k,v)}
       
     opt ++ Map[SolrKey, SolrValue](
-      SolrKeyResolver("TAG").get -> SolrStringValue(asset.tag),
+      SolrKeyResolver("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
       SolrKeyResolver("STATUS").get -> SolrIntValue(asset.status),
       SolrKeyResolver("STATE").get -> SolrIntValue(asset.state),
       SolrKeyResolver("TYPE").get -> SolrIntValue(asset.getType.id),
-      SolrKeyResolver("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(asset.created))
+      SolrKeyResolver("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted)
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset, false))
   }
 
@@ -52,7 +52,7 @@ class FlatSerializer extends AssetSolrSerializer {
           case Boolean => SolrBooleanValue((new Truthy(head.getValue())).isTruthy)
           case Integer => SolrIntValue(java.lang.Integer.parseInt(head.getValue()))
           case Double => SolrDoubleValue(java.lang.Double.parseDouble(head.getValue()))
-          case _ => SolrStringValue(head.getValue())
+          case _ => SolrStringValue(head.getValue(), StrictUnquoted)
         }
         val solrKey = SolrKeyResolver(head.getName()).get
         val mergedval = build.get(solrKey) match {
@@ -76,7 +76,7 @@ class FlatSerializer extends AssetSolrSerializer {
     }))}
     val newFields = List(disks).flatten.toMap
     val almostDone = doc ++ newFields
-    val keyList = SolrMultiValue(almostDone.map{case (k,v) => SolrStringValue(k.name)}.toSeq, String)
+    val keyList = SolrMultiValue(almostDone.map{case (k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSeq, String)
     almostDone + (SolrKey("KEYS", String, true) -> keyList)
   }
 
