@@ -12,9 +12,12 @@ object ProvisionerConfig extends Configurable {
   def allowedStatus: Set[Int] = getStringSet("allowedStatus", Status.statusNames).map { s =>
     Status.findByName(s).get.id
   }
-  def allowedType: Set[Int] = getStringSet("allowedType", AssetType.Enum.values.map(_.toString)).map { s =>
-    AssetType.Enum.withName(s).id
-  }
+  def allowedType: Set[Int] = getStringSet("allowedType", AssetType.typeNames).map { name =>
+    AssetType.findByName(name) match {
+      case None => throw globalError("%s is not a valid asset type".format(name))
+      case Some(a) => a.id
+    }
+  }.toSet
   def cacheTimeout = getMilliseconds("cacheTimeout").getOrElse(30000L)
   def checkCommand = getString("checkCommand").filter(_.nonEmpty)
   def command = getString("command").filter(_.nonEmpty)

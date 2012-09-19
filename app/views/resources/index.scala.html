@@ -64,7 +64,7 @@
           @formInput {
             <select name="type" id="type">
               <option value="" selected="selected"></option>
-              @OptionSorter.sortStrings(AssetType.Enum.values.toSeq, Some(" ")).map { v =>
+              @OptionSorter.sortStrings(AssetType.typeNames.toSeq, Some(" ")).map { v =>
               <option value="@v._1">@v._2</option>
               }
             </select>

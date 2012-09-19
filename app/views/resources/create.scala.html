@@ -1,21 +1,21 @@
-@(atype: AssetType.Enum)(implicit flash: Flash, req: Request[AnyContent])
+@(atype: AssetType)(implicit flash: Flash, req: Request[AnyContent])
 
 @import _root_.util.views.Formatter.camelCase
 @import util._
 
 @main("Asset Creator") {
-<div class="page-header"><h1>Asset Creator <small>Create a @camelCase(atype.toString, " ")</small></h1></div>
+<div class="page-header"><h1>Asset Creator <small>Create a @camelCase(atype.name, " ")</small></h1></div>
 <div class="row">
   <div class="span12">
     @notice("error")
     @notice("warning")
 
-    <form action="@app.routes.Resources.createAsset(atype.toString)" method="post" class="form-horizontal">
+    <form action="@app.routes.Resources.createAsset(atype.name)" method="post" class="form-horizontal">
       @formField {
         @formLabel("type", "Asset Type")
         @formInput {
-          <span id="type" class="uneditable-input">@camelCase(atype.toString, " ")</span>
-          <input type="hidden" name="type" value="@atype.toString">
+          <span id="type" class="uneditable-input">@camelCase(atype.name, " ")</span>
+          <input type="hidden" name="type" value="@atype.name">
         }
       }
       @formField {
@@ -49,7 +49,7 @@
       }
       
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Create @camelCase(atype.toString, " ")</button>
+        <button type="submit" class="btn btn-primary">Create @camelCase(atype.name, " ")</button>
         <button type="reset" class="btn">Reset</button>
       </div>
     </form>

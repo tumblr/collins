@@ -4,8 +4,8 @@
 @import _root_.util.views.Formatter
 @import _root_.controllers.Permissions
 
-@createLink(a: AssetType.Enum) = {
-  <a href="@app.routes.Resources.displayCreateForm(a.toString)">@Formatter.camelCase(a.toString, " ")</a>
+@createLink(a: AssetType) = {
+  <a href="@app.routes.Resources.displayCreateForm(a.name)">@Formatter.camelCase(a.toString, " ")</a>
 }
 
 <!DOCTYPE html>
@@ -49,13 +49,9 @@
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Create <b class="caret"></b></a>
                 <ul class="dropdown-menu">
-                  <li>@createLink(AssetType.Enum.Config)</li>
-                  <li>@createLink(AssetType.Enum.DataCenter)</li>
-                  <li>@createLink(AssetType.Enum.PowerCircuit)</li>
-                  <li>@createLink(AssetType.Enum.PowerStrip)</li>
-                  <li>@createLink(AssetType.Enum.Rack)</li>
-                  <li>@createLink(AssetType.Enum.Router)</li>
-                  <li>@createLink(AssetType.Enum.Switch)</li>
+                  @AssetType.typeNames.filterNot(_.equals("SERVER_NODE")).map { t =>
+                    <li>@createLink(AssetType.findByName(t).get)</li>
+                  }
                 </ul>
               </li>
               }}
