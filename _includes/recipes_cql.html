@@ -1,0 +1,110 @@
+<section id="recipes-cql-overview">
+<p>
+Collins Query Language (CQL) is a lightweight DSL similar to the WHERE clause
+of a typical SQL query.  It is designed to allow freeform advanced search
+queries constructed out of arbitary boolean expressions on asset attributes.
+</p>
+
+<section id="recipes-cql-syntax">
+<h2>CQL Syntax</h2>
+<p>CQL's syntax is a mix of standard SQL and Solr's native query format</p>
+(many examples to come soon)
+
+<h3>Data Types</h3>
+
+<p>Asset attribute values follow a simple type system with the following defined types:</p>
+<ul>
+  <li>String (currently includes dates and ip addresses)
+  <li>Integer
+  <li>Double
+  <li>Boolean
+</ul>
+
+<h3>Simple Key/Values</h3>
+
+<p>The fundamental components of CQL queries are key/value matches:</p>
+
+<div class="example example-command">
+<pre>TAG = "my_asset_tag"</pre>
+</div>
+
+<p>You can search on pretty much every piece of data that Collins stores about an asset, including hardware data and unmanaged tags:</p>
+
+<div class="example example-command">
+<pre>
+HOSTNAME = "db.foo.net"
+DISK_STORAGE_TOTAL = 500107862016
+SOME_BOOLEAN_TAG = false
+</pre>
+</div>
+
+<p>When searching on attributes that may contain multiple values, for example
+servers with multiple NIC's will have multiple values for MAC_ADDRESS, Collins
+will return assets that have at least one value that matches the searched
+value.</p>
+
+
+<h4>Fuzzy Searching String Values</h4>
+<p>CQL allows for fuzzy searching via wildcards and (very) limited regex
+support.  Currently full-text searching and other Lucene-style text searching
+is not enabled, but is planned for a future release</p>
+
+<div class="example example-command">
+  <p>Find assets that have any value set for a tag</p>
+  <pre>hostname = *</pre>
+  <p>This will return any asset that has a hostname</p>
+  <pre>NOT hostname = *</pre>
+  <p>and this will return any asset that does not have a hostname</p>
+</div>
+
+<p>When string values are enclosed in double quotes, Collins will search for exact matches.  When single-word values are unquoted, Collins will search for values that contain the search value as a substring</p>
+
+<div class="example example-command">
+  <p>Find an asset with a specific hostname</p>
+  <pre>hostname = "web-a63fe82c.foo.bar.com"</pre>or
+  <pre>hostname = ^web-a63fe82c.foo.bar.com$</pre>
+  <p>Find all assets whose hostname contains "foo"</p>
+  <pre>hostname = foo</pre>or
+  <pre>hostname = *foo*</pre>
+  <p>Find assets whose hostname starts with "web"</p>
+  <pre>hostname = web*</pre>or
+  <pre>hostname = ^web</pre>
+  <p>Find assets whose hostname ends with ".bar.com"</p>
+  <pre>hostname = *.bar.com</pre>or
+  <pre>hostname = .bar.com$</pre>
+</div>
+
+<h3>Range Queries</h3>
+<p>Instead of searching a single value, CQL can search on a range of values by specifying lower and upper bounds:</p>
+
+<div class="example example-command">
+  <p>Find all assets with CPU speed between 0.8 and 2.4Ghz</p>
+  <pre>CPU_SPEED_GHZ = [0.8, 2.4]</pre>
+  <p>Find all assets with at least 250GB of disk storage</p>
+  <pre>DISK_STORAGE_TOTAL = [268435456000, *]</pre>
+  <p>Find all assets with at most 4 memory banks</p>
+  <pre>MEMORY_BANKS_TOTAL = [*, 4]</pre>
+  <p>The following two queries are equivalent</p>
+  <pre>CPU_COUNT = *</pre>
+  <pre>CPU_COUNT = [*, *]</pre>
+</div>
+
+<p>Numeric and date values use their natural ordering.  Ip addresses and other strings use lexicographical ordering.</p>
+
+
+<h3>Logical Operators</h3>
+<p>CQL permits arbitrary boolean expressions of key/values using the standard AND, OR, and NOT operators</p>
+
+<div class="example example-command">
+  <pre>TAG = 10016 OR TAG = 10033</pre>
+  <pre>HOSTNAME = db-* AND (STATUS = unallocated OR STATUS = provisioned)</pre>
+  <pre>NOT (STATUS = allocated OR MAC_ADDRESS = 04:7d:7b:*)</pre>
+</div>
+
+<p>When parentheses are omitted, CQL follows the standard order of operations,
+where NOT is evaluated first, followed by AND and OR.</p>
+
+
+<h3>Sorting and Limiting</h3>
+<p>Any single-valued attribute can be sorted, either ascending or descending.</p>
+
