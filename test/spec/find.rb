@@ -90,6 +90,20 @@ describe "Asset Find" do
     checkQuery p, 9
   end
 
+  it "handles fuzzy hostname" do
+    p = {
+      "hostname" => "bustworth"
+    }
+    checkQuery p,11
+  end
+
+  it "handles regex" do
+    p = {
+      "pool" => "^MEMCACHE$"
+    }
+    checkQuery p,1
+  end
+
 
 
 

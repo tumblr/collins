@@ -33,6 +33,12 @@ describe "Asset Search" do
     checkTags  "hostname = web-6ec32d2e.ewr01.tumblr.net",  ["001016"]
   end
 
+  it "hostname fuzzy match" do
+    checkSize "hostname = bustworth", 11
+    checkSize "hostname = \"bustworth\"", 0
+  end
+
+
   it "simple or" do 
     checkTags  'hostname = web-6ec32d2e.ewr01.tumblr.net OR tag = "000981"', ["000981", "001016"]
   end
