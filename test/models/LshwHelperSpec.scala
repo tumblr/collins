@@ -72,7 +72,7 @@ class LshwHelperSpec extends test.ApplicationSpecification {
 
     "update asset meta tags" in {
       "create asset" in new AssetUpdateHelper("lshw-basic.xml") {
-        val asset = Asset.create(Asset(assetTag, Status.Incomplete.get, AssetType.Enum.ServerNode))
+        val asset = Asset.create(Asset(assetTag, Status.Incomplete.get, AssetType.ServerNode.get))
         LshwHelper.updateAsset(asset, parsed())
         asset.getMetaAttribute(AssetMeta.Enum.DiskType) must beSome
       }
