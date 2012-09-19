@@ -15,6 +15,12 @@ module Collins
     include Collins::Util
 
     # @abstract
+    # @return [Hash<String,String>] hash with header keys/values
+    def headers
+      raise NotImplementedError.new("Classes including the Api module must provide a headers hash")
+    end
+
+    # @abstract
     # @return [String] the collins host
     def host
       raise NotImplementedError.new("Classes including the Api module must provide a host")
@@ -64,6 +70,21 @@ module Collins
       raise NotImplementedError.new("Classes including the Api module must provide a username")
     end
 
+    # Clear out all headers
+    # @return [nil]
+    def clear_headers
+      headers.clear # Yes, this returns an empty hash not nil
+    end
+
+    # Set a key/value in the headers hash
+    #
+    # @param [Symbol,String] key
+    # @param [String] value
+    # @return [nil]
+    def set_header key, value
+      headers.update(key => value)
+    end
+
     # Provides a safe wrapper for our monkeypatched logger
     #
     # If the provided logger responds to a trace method, use that method. Otherwise fallback to
@@ -76,6 +97,10 @@ module Collins
       end
     end
 
+    def use_api_version version
+      set_header "Accept", "application/json,#{version_string(version)}"
+    end
+
     include Collins::Api::Admin
     include Collins::Api::Asset
     include Collins::Api::AssetState
@@ -85,5 +110,10 @@ module Collins
     include Collins::Api::Management
     include Collins::Api::Tag
     include Collins::Api::Util
+
+    protected
+    def version_string version
+      "application/com.tumblr.collins;version=#{version}"
+    end
   end
 end
