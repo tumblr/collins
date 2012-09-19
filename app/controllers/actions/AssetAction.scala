@@ -2,7 +2,7 @@ package controllers
 package actions
 
 import asset.AssetFinderDataHolder
-import models.{Asset, AssetType, Page}
+import models.{Asset, Page}
 import models.asset.{AssetView, RemoteAsset}
 import util.config.Feature
 
@@ -50,7 +50,7 @@ trait AssetAction {
   def assetIntakeAllowed(asset: Asset): Option[String] = {
     if (!asset.isNew)
       Some(AssetMessages.intakeError("new", asset))
-    else if (asset.asset_type != AssetType.Enum.ServerNode.id)
+    else if (!asset.isServerNode)
       Some(AssetMessages.intakeError("type", asset))
     else if (!Feature.intakeSupported)
       Some(AssetMessages.intakeError("disabled", asset))

@@ -28,8 +28,8 @@ trait AssetView {
 
   def getStatusName(): String = Status.findById(status).map(_.name).getOrElse("Unknown")
 
-  def isServerNode(): Boolean = asset_type == AssetType.Enum.ServerNode.id
-  def isConfiguration(): Boolean = asset_type == AssetType.Enum.Config.id
+  def isServerNode(): Boolean = isAssetType(AssetType.ServerNode)
+  def isConfiguration(): Boolean = isAssetType(AssetType.Configuration)
 
   // Status values
   def isIncomplete(): Boolean = isStatus(Status.Incomplete)
@@ -44,5 +44,8 @@ trait AssetView {
 
   private def isStatus(statusOpt: Option[Status]): Boolean = {
     statusOpt.map(_.id).filter(_.equals(status)).isDefined
+  }
+  protected def isAssetType(atOpt: Option[AssetType]): Boolean = {
+    atOpt.map(_.id).filter(_.equals(asset_type)).isDefined
   }
 }

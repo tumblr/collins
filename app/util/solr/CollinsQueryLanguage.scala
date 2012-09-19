@@ -170,8 +170,8 @@ trait SolrSimpleExpr extends SolrExpression {
   ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
 
   val enumKeys = Map[SolrKey, String => Option[Int]](
-    SolrKey("TYPE",Integer,false) -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
-    SolrKey("STATUS",Integer,false) -> ((s: String) => Status.findByName(s).map{_.id}),
+    SolrKey("TYPE",Integer,false) -> ((s: String) => AssetType.findByName(s).map(_.id)),
+    SolrKey("STATUS",Integer,false) -> ((s: String) => Status.findByName(s).map(_.id)),
     SolrKey("STATE",Integer,false) -> ((s: String) => State.findByName(s).map(_.id))
   )
 

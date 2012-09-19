@@ -160,9 +160,6 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def isValidTag(tag: String): Boolean = isAlphaNumericString(tag)
 
-  def apply(tag: String, status: Status, asset_type: AssetType.Enum) = {
-    new Asset(tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
-  }
   def apply(tag: String, status: Status, asset_type: AssetType) = {
     new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
   }
