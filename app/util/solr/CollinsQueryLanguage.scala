@@ -25,6 +25,12 @@ sealed trait SolrQueryComponent {
 
 }
 
+case object EmptySolrQuery extends SolrQueryComponent with SolrExpression{
+  def toSolrQueryString(toplevel: Boolean) = "*:*"
+
+  def typeCheck = Right(EmptySolrQuery)
+}
+
 /** 
  * This class holds data about a solr key, mainly for translating "local" key
  * names to their solr equivalent
@@ -35,6 +41,17 @@ case class SolrKey (
   val isDynamic: Boolean = true
 ) {
   lazy val resolvedName = name.toUpperCase + (if(isDynamic) ValueType.postFix(valueType) else "")
+  def isAliasOf(alias: String) = false //override for aliases
+
+  def matches(k: String) = (k == name) || isAliasOf(k)
+}
+
+/**
+ * Mixin for enum keys, allows us to resolve the solr key and then validate
+ * the enum value by passing it to the valueLookup method.
+ */
+trait KeyLookup{ self: SolrKey =>
+  def lookupValue(value: String): Option[Int]
 }
 
 /**
@@ -59,8 +76,77 @@ case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
 }
 
-case class SolrStringValue(value: String) extends SolrSingleValue(String) {
-  def toSolrQueryString(toplevel: Boolean) = if (value startsWith "-") "\\" + value else value
+/**
+ * StringValueFormat determines how wildcards are used on string values.  We currently allow leading and/or trailing wildcard characters on
+ * unquoted string values.  If the value is quoted, such as foo = "*bar", the * is not interpreted as a wildcard
+ */
+sealed trait StringValueFormat {
+  def format(value: String): String
+}
+case object LWildcard extends StringValueFormat {
+  def format(value:String) = "*" + value
+}
+case object RWildcard extends StringValueFormat {
+  def format(value: String) = value + "*"
+}
+case object LRWildcard extends StringValueFormat {
+  def format(value: String) = "*" + value + "*"
+}
+case object Quoted extends StringValueFormat {
+  def format(value: String) = "\"" + value + "\""
+}
+//no wildcard/regex allowed, mostly for range queries
+case object StrictUnquoted extends StringValueFormat {
+  def format(value: String) = value
+}
+case object FullWildcard extends StringValueFormat {
+  def format(value: String) = if (value != "*") {
+    throw new IllegalArgumentException("Cannot format non '*' string as full-wildcard")
+  } else {
+    "*"
+  }
+}
+
+object StringValueFormat {
+
+  val fullWildcardValue = SolrStringValue("*", FullWildcard)
+
+  /**
+   * This is some pretty complex logic to handle user queries that include wildcards, 
+   * regex markers ^,$, or some combination.  See the unit
+   * tests for examples
+   */
+  def createValueFor(rawStr: String): SolrStringValue = if (rawStr == "*") fullWildcardValue else {
+    def s(p: String) = rawStr.startsWith(p)
+    def e(p: String) = rawStr.endsWith(p)
+    val s_* = s("*")
+    val e_* = e("*")
+    val s_^ = s("^")
+    val e_$ = e("$")
+    val states = List(
+      (s_*, e_*, 1, 1, LRWildcard),
+      (s_*, e_$, 1, 1, LWildcard),
+      (s_*, true, 1, 0, LWildcard),
+      (s_^, e_*, 1, 1, RWildcard),
+      (s_^, e_$, 1, 1, Quoted),
+      (s_^, true, 1, 0, RWildcard),
+      (true, e_*, 0, 1, RWildcard),
+      (true, e_$, 0, 1, LWildcard),
+      (true, true, 0,0, LRWildcard)
+    )
+    val (_,_, strim, etrim, format) = states.find{x => x._1 && x._2}.get
+    SolrStringValue(rawStr.substring(strim, rawStr.length - (etrim)), format)
+  }
+}
+  
+   
+
+case class SolrStringValue(value: String, format: StringValueFormat = StrictUnquoted) extends SolrSingleValue(String) {
+  def toSolrQueryString(toplevel: Boolean) = format.format(value)
+
+  def quoted = copy(format = Quoted)
+  def unquoted = copy(format = StrictUnquoted)
+  
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
@@ -110,6 +196,7 @@ sealed trait SolrExpression extends SolrQueryComponent{
 }
 
 abstract class SolrMultiExpr(exprs: Seq[SolrExpression], op: String) extends SolrExpression {
+  require(exprs.size > 0, "Cannot create empty multi-expression")
 
   def toSolrQueryString(toplevel: Boolean) = {
     val e = exprs.map{_.toSolrQueryString(false)}.mkString(" %s ".format(op))
@@ -146,22 +233,23 @@ case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "OR
 
 }
 
-trait SolrSimpleExpr extends SolrExpression {
-
-  def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
-  def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
+object SolrKeyResolver {
 
   /**
    * each key is an "incoming" field from a query, the ValueType is the
    * expected type of the key, and the Boolean indicates whether the key in
    * Solr is static(false) or dynamic(true)
+   *
+   * NOTE - For now, any single-valued field that needs to be sortable has to be explicitly declared
    */
-  val nonMetaKeys: Seq[SolrKey] = List(
+  lazy val nonMetaKeys: Seq[SolrKey] = List(
     SolrKey("TAG", String,false), 
     SolrKey("CREATED", String,false), 
-    SolrKey("UPDATE", String,false), 
+    SolrKey("UPDATED", String,false), 
     SolrKey("DELETED", String,false),
     SolrKey("IP_ADDRESS", String,false),
+    SolrKey("PRIMARY_ROLE", String,false),
+    SolrKey("HOSTNAME", String,false),
     SolrKey(IpmiAddress.toString, String, true),
     SolrKey(IpmiUsername.toString, String, true),
     SolrKey(IpmiPassword.toString, String, true),
@@ -169,14 +257,42 @@ trait SolrSimpleExpr extends SolrExpression {
     SolrKey(IpmiNetmask.toString, String, true)
   ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
 
-  val enumKeys = Map[SolrKey, String => Option[Int]](
-    SolrKey("TYPE",Integer,false) -> ((s: String) => try Some(AssetType.Enum.withName(s.toUpperCase).id) catch {case _ => None}),
-    SolrKey("STATUS",Integer,false) -> ((s: String) => Status.findByName(s).map{_.id}),
-    SolrKey("STATE",Integer,false) -> ((s: String) => State.findByName(s).map(_.id))
-  )
+  val typeKey = new SolrKey("TYPE",Integer,false) with KeyLookup {
+    def lookupValue(value: String) = try Some(AssetType.Enum.withName(value.toUpperCase).id) catch {case _ => None}
+    override def isAliasOf(a: String) = a == "ASSETTYPE"
+  }
 
-  def typeLeft(key: String, expected: ValueType, actual: ValueType): Either[String, (String, SolrSingleValue)] = 
-    Left("Key %s expects type %s, got %s".format(key, expected.toString, actual.toString))
+  val statusKey = new SolrKey("STATUS",Integer,false) with KeyLookup {
+    def lookupValue(value: String) = Status.findByName(value).map{_.id}
+  }
+
+  val stateKey = new SolrKey("STATE", Integer, false) with KeyLookup {
+    def lookupValue(value: String) = State.findByName(value).map{_.id}
+  }
+
+  val enumKeys = typeKey :: statusKey :: stateKey :: Nil
+
+  def apply(_rawkey: String): Option[SolrKey] = {
+    val ukey = _rawkey.toUpperCase
+    nonMetaKeys.find(_ matches ukey)
+      .orElse(enumKeys.find(_ matches ukey))
+      .orElse(AssetMeta.findByName(ukey).map{_.getSolrKey})
+  }
+
+  def either(_rawkey: String) = apply(_rawkey) match {
+    case Some(k) => Right(k)
+    case None => Left("Unknown key " + _rawkey)
+  }
+
+}
+
+trait SolrSimpleExpr extends SolrExpression {
+
+  def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
+  def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
+
+  def typeError(key: String, expected: ValueType, actual: ValueType) = 
+    "Key %s expects type %s, got %s".format(key, expected.toString, actual.toString)
 
 
   type TypeEither = Either[String, (String, SolrSingleValue)]
@@ -184,32 +300,27 @@ trait SolrSimpleExpr extends SolrExpression {
   /**
    * returns Left(error) or Right(solr_key_name)
    */
-  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = {
-    val ukey = key.toUpperCase
-    val a: Option[TypeEither] = nonMetaKeys.find(_.name == ukey).map {solrKey =>
-      if (solrKey.valueType == value.valueType) {
-        Right(solrKey.resolvedName -> value)
-      } else {
-        typeLeft(key, solrKey.valueType, value.valueType)
-      }
-    } orElse{enumKeys.find(_._1.name == ukey).map{case(solrKey, valueResolver) => value match {
-      case SolrStringValue(e) => valueResolver(e) match {
-        case Some(i) => Right(solrKey.resolvedName -> SolrIntValue(i))
-        case _ => Left("Invalid %s: %s".format(key, e))
-      }
-      case s:SolrIntValue => Right(solrKey.resolvedName -> value) : Either[String, (String, SolrSingleValue)]
-      case other => typeLeft(key, String, other.valueType)
-    }}}
-    a.getOrElse(AssetMeta.findByName(key) match {
-      case Some(meta) => if (meta.valueType == value.valueType) {
-        //FIXME: perhaps centralize asset meta key formatting
-        Right(meta.getSolrKey.resolvedName -> value)
-      } else {
-        typeLeft(key, meta.valueType, value.valueType)
-      }
-      case None => Left("Unknown key \"%s\"".format(key))
-    })
+  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = SolrKeyResolver(key) match {
+    case Some(solrKey) => typeCheckValue(solrKey, value).right.map{cleanValue => (solrKey.resolvedName, cleanValue)}
+    case None => Left("Unknown key \"%s\"".format(key))
   }
+
+  def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
+    case j: KeyLookup => value match {
+      case SolrStringValue(stringValue, _) => j.lookupValue(stringValue) match {
+        case Some(i) => Right(SolrIntValue(i))
+        case _ => Left("Invalid %s: %s".format(solrKey.name, stringValue))
+      }
+      case s:SolrIntValue => Right(value)
+      case other => Left(typeError(solrKey.name, String, other.valueType))
+    }
+    case _ => if (solrKey.valueType == value.valueType) {
+      Right(value)
+    } else {
+      Left(typeError(solrKey.name, solrKey.valueType, value.valueType))
+    }
+  }
+
 
 }
 
@@ -239,23 +350,20 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
     key + ":[" + l + " TO " + h + "]"
   }
 
-  def t(v: Option[SolrSingleValue]): Either[String, (String, Option[SolrSingleValue])] = v match {
-    case None => Right(key, None)
-    case Some(s) => typeCheckValue(key, s) match {
-      case Left(e) => Left(e)
-      case Right((k,v)) => Right((k,Some(v)))
-    }
+  def t(k: SolrKey, v: Option[SolrSingleValue]): Either[String, Option[SolrSingleValue]] = v match {
+    case None => Right(None)
+    case Some(s) => typeCheckValue(k, s).right.map{cleanValue => Some(cleanValue)}
   }
 
   /**
    * When type-checking ranges, we need to account for open ranges, meaning we
    * don't want to treat a missing value as an error
    */
-  def typeCheck = {
-    (t(low), t(high)) match {
-      case (Right((k,l)), Right((_,h))) => Right(SolrKeyRange(k, l, h))
+  def typeCheck = SolrKeyResolver.either(key).right.flatMap{solrKey =>
+    (t(solrKey,low), t(solrKey,high)) match {
       case (Left(e), _) => Left(e)
       case (_, Left(e)) => Left(e)
+      case (Right(l), Right(h)) => Right(SolrKeyRange(solrKey.resolvedName, l,h))
     }
   }
 
@@ -267,8 +375,13 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
  */
 object CollinsQueryDSL {
   class CollinsQueryString(val s: String) {
-    lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s).right.get
+    lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s).fold(
+      err => throw new Exception("CQL error: " + err),
+      expr => expr
+    )
   }
+  implicit def str2SolrStringValue(s: String) = SolrStringValue(s)
+  implicit def strsolr_tuple2keyval(t: Tuple2[String, SolrSingleValue]): SolrKeyVal = SolrKeyVal(t._1, t._2)
   implicit def str2collins(s: String): CollinsQueryString = new CollinsQueryString(s)
   implicit def collins2str(c: CollinsQueryString): String = c.s
   implicit def int_tuple2keyval(t: Tuple2[String, Int]):SolrKeyVal = SolrKeyVal(t._1, SolrIntValue(t._2))

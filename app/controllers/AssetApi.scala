@@ -26,12 +26,11 @@ trait AssetApi {
   )
 
   // GET /api/assets?params
-  def getAssets(page: Int, size: Int, sort: String) = FindAction(
-    PageParams(page, size, sort), Permissions.AssetApi.GetAssets, this
-  )
-
-  def search(query: String, page: Int, size: Int, sortField: String, sort: String, details: String) = 
+  def getAssets(page: Int, size: Int, sort: String, sortField: String, query: String, details: String) = if (query == "") {
+    FindAction(PageParams(page, size, sort), sortField, Permissions.AssetApi.GetAssets, this)
+  } else {
     SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, sortField, Permissions.AssetApi.GetAssets, this)
+  }
 
   // PUT /api/asset/:tag
   def createAsset(tag: String) = CreateAction(Some(tag), None, Permissions.AssetApi.CreateAsset, this)
