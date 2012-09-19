@@ -20,6 +20,9 @@ Looks up the asset by hostname in Collins. If the asset is found, we use the nod
 tag on that asset as the puppet nodeclass. We also merge in all the tags found on that asset
 into a puppet parameter named 'collins'. That is, in puppet there is no a variable you
 can reference as <code>$collins</code>, e.g. <code>if $collins['USE_ALT_LOGGING'] ...</code>.
+Note that the config file referenced as <code>/var/db/collins.yaml</code> expects it to be
+a hash with keys server, username, password, and environment where server/username/password
+are collins specific and environment is the puppet environment.
 </div><pre class="prettyprint"><span class="c1">#!/opt/ruby-1.9.2/bin/ruby</span>
 <span class="nb">require</span> <span class="s1">&#39;collins_client&#39;</span>
 <span class="nb">require</span> <span class="s1">&#39;uri&#39;</span>
