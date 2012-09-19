@@ -18,7 +18,7 @@ class SolrSpec extends ApplicationSpecification {
   "FlatSerializer" should {
     "serialize an asset" in {
       val assetTag = "solr%d".format(scala.util.Random.nextInt)
-      val assetType = AssetType.Enum.ServerNode
+      val assetType = AssetType.ServerNode.get
       val status = Status.Allocated.get
       val state = State.Running.get
       val meta = List(
@@ -60,7 +60,7 @@ class SolrSpec extends ApplicationSpecification {
     }
   }
 
-  def generateAsset(tag: String, assetType: AssetType.Enum, status: Status, metaValues: Seq[(String, ValueType, Int, String)], state: State) = {
+  def generateAsset(tag: String, assetType: AssetType, status: Status, metaValues: Seq[(String, ValueType, Int, String)], state: State) = {
     val asset = Asset.create(Asset(tag, status, assetType))
     Asset.partialUpdate(asset, None, None, Some(state))
     metaValues.foreach{case (name, value_type, group_id, value) =>
@@ -265,7 +265,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       val afinder = AssetFinder(
         Some("foosolrtag"), 
         Status.Allocated, 
-        Some(AssetType.Enum.ServerNode),
+        Some(AssetType.ServerNode.get),
         Some(somedate),
         Some(somedate),
         Some(somedate),
@@ -275,7 +275,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       val expected = List(
         SolrKeyVal("tag", SolrStringValue("foosolrtag")),
         SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
-        SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id)),
+        SolrKeyVal("assetType", SolrIntValue(AssetType.ServerNode.get.id)),
         SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
         SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
         SolrKeyVal("state", SolrIntValue(State.Running.get.id))
