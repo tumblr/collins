@@ -1,0 +1,63 @@
+<p>
+At Tumblr we use <a href="http://puppetlabs.com/">puppet</a> to manage our
+running systems. Typically with puppet you map nodes (hosts) to puppet classes
+by hostname, or by regular expression. Once you have more than a few hosts you
+may want to use a <a href="http://docs.puppetlabs.com/guides/external_nodes.html">node classifier</a>
+instead.
+</p>
+
+<p>
+In this recipe, we'll give you the code to turn Collins into your
+puppet source of truth. In addition to resolving Collins assets into node
+classes for puppet, all collins tags for the specified asset are available in
+your puppet code. This makes it trivial to do things like tag an asset with a
+<code>USE_ALT_LOGGING=true</code> tag and have puppet do something different based on
+it.
+</p>
+
+<div class="docs example-code">
+Looks up the asset by hostname in Collins. If the asset is found, we use the nodeclass
+tag on that asset as the puppet nodeclass. We also merge in all the tags found on that asset
+into a puppet parameter named 'collins'. That is, in puppet there is no a variable you
+can reference as <code>$collins</code>, e.g. <code>if $collins['USE_ALT_LOGGING'] ...</code>.
+</div><pre class="prettyprint"><span class="c1">#!/opt/ruby-1.9.2/bin/ruby</span>
+<span class="nb">require</span> <span class="s1">&#39;collins_client&#39;</span>
+<span class="nb">require</span> <span class="s1">&#39;uri&#39;</span>
+
+<span class="k">class</span> <span class="nc">CollinsTerminus</span>
+  <span class="kp">attr_reader</span> <span class="ss">:config</span><span class="p">,</span> <span class="ss">:collins</span>
+
+  <span class="k">def</span> <span class="nf">initialize</span>
+    <span class="vi">@config</span>  <span class="o">=</span> <span class="no">YAML</span><span class="o">.</span><span class="n">load_file</span> <span class="s1">&#39;/var/db/collins.yaml&#39;</span>
+    <span class="vi">@uri</span> <span class="o">=</span> <span class="no">URI</span><span class="o">::</span><span class="no">HTTP</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="ss">:host</span> <span class="o">=&gt;</span> <span class="vi">@config</span><span class="o">[</span><span class="s1">&#39;server&#39;</span><span class="o">]</span><span class="p">,</span> <span class="ss">:port</span> <span class="o">=&gt;</span> <span class="mi">8080</span><span class="p">)</span>
+    <span class="vi">@collins</span> <span class="o">=</span> <span class="no">Collins</span><span class="o">::</span><span class="no">Client</span><span class="o">.</span><span class="n">new</span> <span class="ss">:host</span>     <span class="o">=&gt;</span> <span class="vi">@uri</span><span class="p">,</span>
+                                   <span class="ss">:username</span> <span class="o">=&gt;</span> <span class="vi">@config</span><span class="o">[</span><span class="s1">&#39;username&#39;</span><span class="o">]</span><span class="p">,</span>
+                                   <span class="ss">:password</span> <span class="o">=&gt;</span> <span class="vi">@config</span><span class="o">[</span><span class="s1">&#39;password&#39;</span><span class="o">]</span><span class="p">,</span>
+                                   <span class="ss">:timeout</span>  <span class="o">=&gt;</span> <span class="mi">300</span><span class="p">,</span>
+                                   <span class="ss">:strict</span>   <span class="o">=&gt;</span> <span class="kp">true</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">manifest</span> <span class="n">fqdn</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">collins</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="ss">:hostname</span> <span class="o">=&gt;</span> <span class="n">fqdn</span><span class="p">,</span> <span class="ss">:details</span> <span class="o">=&gt;</span> <span class="kp">true</span><span class="p">)</span><span class="o">.</span><span class="n">first</span>
+    <span class="n">nodeclass</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">nodeclass</span> <span class="o">||</span> <span class="s1">&#39;basenode2&#39;</span> <span class="k">rescue</span> <span class="s1">&#39;basenode2&#39;</span>
+
+    <span class="n">manifest</span>  <span class="o">=</span> <span class="p">{</span>
+      <span class="s1">&#39;environment&#39;</span> <span class="o">=&gt;</span> <span class="n">config</span><span class="o">[</span><span class="s1">&#39;environment&#39;</span><span class="o">]</span><span class="p">,</span>
+      <span class="s1">&#39;classes&#39;</span>     <span class="o">=&gt;</span> <span class="p">{</span><span class="n">nodeclass</span> <span class="o">=&gt;</span> <span class="kp">nil</span><span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">node</span>
+      <span class="n">manifest</span><span class="o">.</span><span class="n">merge!</span><span class="p">({</span>
+        <span class="s1">&#39;parameters&#39;</span>  <span class="o">=&gt;</span> <span class="p">{</span>
+          <span class="s1">&#39;collins&#39;</span> <span class="o">=&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">extras</span><span class="o">[</span><span class="s1">&#39;ATTRIBS&#39;</span><span class="o">].</span><span class="n">values</span><span class="o">.</span><span class="n">first</span><span class="p">,</span>
+        <span class="p">},</span>      
+      <span class="p">})</span>
+    <span class="k">end</span>
+
+    <span class="n">manifest</span><span class="o">.</span><span class="n">to_yaml</span>
+  <span class="k">end</span>
+
+<span class="k">end</span>
+
+<span class="nb">puts</span> <span class="no">CollinsTerminus</span><span class="o">.</span><span class="n">new</span><span class="o">.</span><span class="n">manifest</span> <span class="no">ARGV</span><span class="o">.</span><span class="n">first</span>
+</pre>
