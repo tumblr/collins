@@ -5,7 +5,7 @@ import play.api.libs.json._
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
 
-case class AssetType(name: String, id: Int = 0) extends ValidatedEntity[Int] {
+case class AssetType(name: String, label: String, id: Int = 0) extends ValidatedEntity[Int] {
   def getId(): Int = id
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
@@ -27,11 +27,13 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
   implicit object AssetTypeFormat extends Format[AssetType] {
     override def reads(json: JsValue) = AssetType(
       (json \ "NAME").as[String],
+      (json \ "LABEL").as[String],
       (json \ "ID").asOpt[Int].getOrElse(0)
     )
     override def writes(at: AssetType) = JsObject(Seq(
       "ID" -> Json.toJson(at.id),
-      "NAME" -> Json.toJson(at.name)
+      "NAME" -> Json.toJson(at.name),
+      "LABEL" -> Json.toJson(at.label)
     ))
   }
 
@@ -72,18 +74,4 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
   def ServerNode = findByName("SERVER_NODE")
   def Configuration = findByName("CONFIGURATION")
 
-  /*
-  type Enum = Enum.Value
-  object Enum extends Enumeration(1) {
-    val ServerNode = Value("SERVER_NODE")
-    val ServerChassis = Value("SERVER_CHASSIS")
-    val Rack = Value("RACK")
-    val Switch = Value("SWITCH")
-    val Router = Value("ROUTER")
-    val PowerCircuit = Value("POWER_CIRCUIT")
-    val PowerStrip = Value("POWER_STRIP")
-    val DataCenter = Value("DATA_CENTER")
-    val Config = Value("CONFIGURATION")
-  }
-  */
 }
