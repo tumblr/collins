@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
     "collins_client.gemspec",
     "lib/collins/address.rb",
     "lib/collins/api.rb",
+    "lib/collins/api/admin.rb",
     "lib/collins/api/asset.rb",
     "lib/collins/api/asset_state.rb",
     "lib/collins/api/attributes.rb",
