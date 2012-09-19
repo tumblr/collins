@@ -32,10 +32,12 @@ class CollinsQueryParser extends JavaTokenParsers {
   def notExpr       = "(?iu)NOT".r ~> simpleExpr ^^ {e => SolrNotOp(e)}
   def simpleExpr:Parser[SolrExpression]    = notExpr | rangeKv | kv | "(" ~> expr <~ ")" 
 
-  //def inKv          = ident ~ "(?iu)IN".r ~> "[" ~>
-  def rangeKv       = ident ~ "=" ~ "[" ~ valueOpt ~ "," ~ valueOpt <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
+  //range values are slightly different from regular values, since we cannot allow quoted strings or strings with regexes
+  def rangeKv       = ident ~ "=" ~ "[" ~ rangeValueOpt ~ "," ~ rangeValueOpt <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
+  def rangeValueOpt: Parser[Option[SolrSingleValue]]      = "*"^^^{None} | rangeValue ^^{other => Some(other)}
+  def rangeValue    = booleanValue | numberValue | strictUnquotedStringValue
+
   def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
-  def valueOpt: Parser[Option[SolrSingleValue]]      = "*"^^^{None} | value ^^{other => Some(other)}
   def value         = booleanValue | ipAddress | numberValue | stringValue
   def numberValue   = decimalNumber ^^{case n => if (n contains ".") {
     SolrDoubleValue(java.lang.Double.parseDouble(n))
@@ -44,8 +46,9 @@ class CollinsQueryParser extends JavaTokenParsers {
   }}
   def ipAddress  = """^(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}))))$""".r ^^{s => StringValueFormat.createValueFor(s)}
   def stringValue   = quotedString | unquotedString
-  def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1))}
+  def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1), Quoted)}
   def unquotedString = "\\^?\\*?[a-zA-Z0-9_\\-.]+\\*?\\$?".r  ^^ {s => StringValueFormat.createValueFor(s)}
+  def strictUnquotedStringValue = "[a-zA-Z0-9_\\-.]+".r ^^{s => SolrStringValue(s, StrictUnquoted)}
   def booleanValue  = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
 
 }

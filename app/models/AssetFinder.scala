@@ -60,11 +60,12 @@ case class AssetFinder(
       assetType.map{t => SolrKeyVal("assetType" , SolrIntValue(t.id))} ::
       state.map(t => SolrKeyVal("state", SolrIntValue(t.id))) ::
       Nil
-    val cOpt = (createdBefore.map{d =>SolrStringValue(Formatter.solrDateFormat(d))}, createdAfter.map{d =>SolrStringValue(Formatter.solrDateFormat(d))}) match {
+    val cOpt = (createdBefore.map{d =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}, createdAfter.map{d =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}) match {
       case (None, None) => None
       case (bOpt, aOpt) => Some(SolrKeyRange("created", aOpt, bOpt))
     }
-    val uOpt = (updatedBefore.map{d =>SolrStringValue(Formatter.solrDateFormat(d))}, updatedAfter.map{d =>SolrStringValue(Formatter.solrDateFormat(d))}) match {
+    val uOpt = (updatedBefore.map{d =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}, updatedAfter.map{d
+      =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}) match {
       case (None, None) => None
       case (bOpt, aOpt) => Some(SolrKeyRange("updated", aOpt, bOpt))
     }
