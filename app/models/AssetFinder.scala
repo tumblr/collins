@@ -55,7 +55,7 @@ case class AssetFinder(
   }
 
   def toSolrKeyVals = {
-    val items = tag.map{t => SolrKeyVal("tag", SolrStringValue(t))} ::
+    val items = tag.map{t => SolrKeyVal("tag", SolrStringValue(t, LRWildcard))} ::
       status.map{t => SolrKeyVal("status" , SolrIntValue(t.id))} ::
       assetType.map{t => SolrKeyVal("assetType" , SolrIntValue(t.id))} ::
       state.map(t => SolrKeyVal("state", SolrIntValue(t.id))) ::
