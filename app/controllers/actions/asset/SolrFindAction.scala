@@ -20,7 +20,7 @@ case class SolrFindAction (
   sortField: String,
   spec: SecuritySpecification,
   handler: SecureController
-) extends AssetFindAction(pageParams, spec, handler) with AssetResultsAction {
+) extends AssetFindAction(pageParams, sortField, spec, handler) with AssetResultsAction {
 
   case class SolrQueryDataHolder(query: CollinsSearchQuery) extends RequestDataHolder
 

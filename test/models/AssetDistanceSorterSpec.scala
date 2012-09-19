@@ -5,6 +5,7 @@ import org.specs2._
 import specification._
 
 import AssetSortType._
+import SortDirection._
 
 import java.sql.Timestamp
 
@@ -44,7 +45,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
       val sortedAssets = AssetDistanceSorter.distributionSort(
         targetAsset, 
         similarAssets, 
-        SortDirection.Asc,
+        SortAsc,
         sortConfig) 
       sortedAssets.map{_.tag} must_== expected
     }
@@ -54,7 +55,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
       val sortedAssets = AssetDistanceSorter.distributionSort(
         targetAsset, 
         similarAssets, 
-        SortDirection.Desc,
+        SortDesc,
         sortConfig) 
       sortedAssets.map{_.tag} must_== expected
     }
@@ -95,7 +96,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
                       new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
                       assets,
                       Name,
-                      SortDirection.Asc
+                      SortAsc
                     )
     }
 
@@ -110,7 +111,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
                                new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
                                (assets1 ++ assets2),
                                Name,
-                               SortDirection.Asc)
+                               SortAsc)
     }
 
     "sort named assets in descending order" in {
@@ -121,7 +122,7 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
                                new Asset("0", 0, 0, new Timestamp(System.currentTimeMillis), None, None),
                                assets,
                                Name,
-                               SortDirection.Desc)
+                               SortDesc)
     }
         
   } // AssetDistanceSorter should

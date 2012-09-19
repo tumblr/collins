@@ -32,7 +32,7 @@ describe "Asset Find" do
 
   it "attribute=HOSTNAME;service-wentworth&details=false:1" do
     p = {
-      "hostname" => "service-bustworth"
+      "hostname" => "service-bustworth*"
     }
     checkQuery p,11
   end
@@ -50,15 +50,14 @@ describe "Asset Find" do
 
   it "attribute=HOSTNAME;%5EMAIL.*&attribute=POOL;MAILPARSER_POOL&attribute=PRIMARY_ROLE;TUMBLR_APP&status=Allocated&type=SERVER_NODE&details=false&operation=or:2" do
     p = {
-      "hostname" => "%5EMAIL.*",
-      "pool" => "MAILPARSER_POOL",
-      "primary_role" => "TUMBLR_APP",
+      "hostname" => "dev-*",
+      "pool" => "DEVEL",
       "status" => "Allocated",
       "type" => "SERVER_NODE",
-      "operation" => "or"
+      "operation" => "and"
       
     }
-    checkQuery p,2
+    checkQuery p,5
   end
 
   it "operation=and&ASSET_TAG=&status=Allocated&state=&type=SERVER_NODE" do
@@ -84,11 +83,25 @@ describe "Asset Find" do
     p = {
       "status" => "Unallocated",
       "primary_role" => "CACHE",
-      "pool" => "MEMCACHE",
+      "pool" => "MEMCACHE*",
       "memory_size_total" => "103079215104",
       "operation" => "and"
     }
     checkQuery p, 9
+  end
+
+  it "handles fuzzy hostname" do
+    p = {
+      "hostname" => "bustworth"
+    }
+    checkQuery p,11
+  end
+
+  it "handles regex" do
+    p = {
+      "pool" => "^MEMCACHE$"
+    }
+    checkQuery p,1
   end
 
 

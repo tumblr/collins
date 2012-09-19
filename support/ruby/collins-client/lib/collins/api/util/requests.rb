@@ -69,6 +69,7 @@ module Collins; module Api; module Util
         base_uri = host
       end
       http_opts = opts.merge!({:basic_auth => auth, :base_uri => base_uri, :timeout => timeout_i})
+      http_opts[:headers] = headers unless headers.empty?
       http_opts[:debug_output] = $stderr if (logger.level < 0 and Module.const_defined?(:HTTP_DEBUG) and HTTP_DEBUG)
       http_opts
     end
