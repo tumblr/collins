@@ -1,5 +1,4 @@
-package util
-package solr
+package collins.solr
 
 import collins.callbacks.CallbackActionHandler
 import models.{Asset, AssetMetaValue, IpAddresses}

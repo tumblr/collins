@@ -1,7 +1,7 @@
-package util
-package solr
+package collins.solr
 
-import config.Configurable
+import util.config.Configurable
+import util.MessageHelper
 import java.io.File
 
 object SolrConfig extends Configurable {

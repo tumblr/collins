@@ -14,7 +14,7 @@ import play.api.Play.current
 import java.net.URLEncoder
 import java.util.concurrent.TimeoutException
 
-import util.plugins.solr._
+import collins.solr._
 
 /**
  * Just a combination of everything needed to do a search.  Probably should
