@@ -6,7 +6,7 @@ import asset.{FindAction => AssetFindAction}
 import models.{Asset, Page, PageParams, Truthy}
 import models.asset.AssetView
 import util.security.SecuritySpecification
-import util.plugins.solr._
+import collins.solr._
 
 
 import play.api.data.Form

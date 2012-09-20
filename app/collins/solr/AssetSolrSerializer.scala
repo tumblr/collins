@@ -1,6 +1,6 @@
-package util.plugins.solr
+package collins.solr
 
-import util.solr._
+import collins.solr._
 import models.Asset
 
 import Solr._

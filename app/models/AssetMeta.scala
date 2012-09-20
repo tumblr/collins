@@ -4,7 +4,7 @@ import play.api.libs.json._
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.{Schema, Table}
-import util.plugins.solr._
+import collins.solr._
 
 
 case class AssetMeta(

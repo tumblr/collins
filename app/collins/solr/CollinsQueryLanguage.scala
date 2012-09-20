@@ -1,4 +1,4 @@
-package util.plugins.solr
+package collins.solr
 
 import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, State, Status, Truthy}
 import models.asset.AssetView

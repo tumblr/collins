@@ -1,4 +1,4 @@
-package util.plugins.solr
+package collins.solr
 
 import akka.actor._
 import akka.util.duration._
@@ -21,7 +21,6 @@ import play.api.Play.current
 
 import util.AttributeResolver
 import util.plugins.Callback
-import util.solr.{SolrCallbackHandler, SolrConfig, SolrUpdater}
 import util.views.Formatter
 
 import AssetMeta.ValueType

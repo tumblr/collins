@@ -8,7 +8,7 @@ import util.config.{Feature, MultiCollinsConfig, NodeclassifierConfig}
 import util.plugins.Cache
 import util.power.PowerUnits
 import util.views.Formatter.dateFormat
-import util.plugins.solr._
+import collins.solr._
 import shared.QueryLogConfig
 import AssetSortType.AssetSortType
 
@@ -301,7 +301,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }}
 
   def resetState(state: State, newId: Int): Int = inTransaction {
-    import util.plugins.solr.Solr
+    import collins.solr.Solr
     val count = tableDef.update(a =>
       where(a.state === state.id)
       set(a.state := newId)

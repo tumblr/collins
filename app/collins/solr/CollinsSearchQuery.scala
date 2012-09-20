@@ -1,8 +1,4 @@
-package util
-package plugins
-package solr
-
-import util.solr._
+package collins.solr
 
 import models.{Asset, Page, PageParams, SortDirection}
 import models.asset.AssetView
