@@ -9,8 +9,7 @@ import java.io.File
 import java.net.URLClassLoader
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 import java.util.concurrent.locks.ReentrantReadWriteLock
-import play.api.Application
-import play.api.Logger
+import play.api.{Application, Logger, Play}
 import scala.collection.JavaConversions._
 import scala.tools.nsc.io.AbstractFile
 
@@ -35,7 +34,6 @@ sealed trait CollinScriptEngine {
   protected var engine = createEngine
 
   protected var lastRefreshMillis: AtomicLong = new AtomicLong(0)
-  protected var numRefreshes: AtomicInteger = new AtomicInteger(0)
 
   /**
    * Calls a CollinScript method specified on an Object as a string,
@@ -55,9 +53,6 @@ sealed trait CollinScriptEngine {
       return None
     }
     tryRefresh
-    // Derives argument classes and calls method on the specified Object.
-    // AssetView objects will be typed as Assets, and only AssetView
-    // objects may be passed to scripts, so cast appropriately.
     val argumentClasses = args.map{ arg => arg.getClass }
     val methodSplit = method.split("\\.")
     val objectClass = methodSplit.slice(0, methodSplit.length - 1)
@@ -76,7 +71,7 @@ sealed trait CollinScriptEngine {
   }
 
   protected def createEngine() = new ScalaScriptEngine(
-      Config(Set(sourceDir), getAppClasspath, getAppClasspath, outputDir))
+      Config(Set(sourceDir), getAppClasspath, Set[File](), outputDir))
       with FromClasspathFirst {}
 
   protected def enabled = CollinScriptConfig.enabled
@@ -89,7 +84,7 @@ sealed trait CollinScriptEngine {
    */
   protected def getAppClasspath: Set[File] = {
     try {
-      import play.api.Play.current
+      import Play.current
       current.classloader.asInstanceOf[URLClassLoader].getURLs()
         .map{ url => new File(url.getPath) }.toSet
     } catch {
@@ -110,17 +105,21 @@ sealed trait CollinScriptEngine {
    * occurs.
    */
   def tryRefresh: Unit = {
+    val oldClassloader = Thread.currentThread().getContextClassLoader
     try {
+      // Sets the current thread's context Classloader to Play's current
+      // classloader, as SSE derives its classloader from this thread's context.
+      Thread.currentThread().setContextClassLoader(Play.current.classloader)
       // If the time of last refresh is less than the refresh threshold, don't
       // refresh the code unless we're in a startup state.
       if (System.currentTimeMillis - lastRefreshMillis.get <
           refreshPeriodMillis) {
         return
       }
-      // The engine must be instantiated twice at startup to preclude linking
-      // issues against any partially-compiled sources.
-      if (numRefreshes.getAndIncrement <= 2) {
-        engine = createEngine
+      // If the refresh lock is locked, we're currently refreshing, so
+      // terminate script refresh attempt.
+      if (refreshLock.isWriteLocked) {
+        return
       }
       logger.debug("Refreshing CollinScript engine...")
       // Engine is not threadsafe, so refresh by way of write locks.
@@ -133,6 +132,10 @@ sealed trait CollinScriptEngine {
         logger.error("COLLINSCRIPT COMPILATION ERROR:\n%s".format(
            e.getTraceAsString))
       }
+    } finally {
+      // Restore this thread's context Classloader to that which it was
+      // previously using.
+      Thread.currentThread().setContextClassLoader(oldClassloader)
     }
   }
 

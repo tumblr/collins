@@ -7,15 +7,6 @@
 @link(newPage: Int) = @{
   Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "DESC", "and").toString), req.queryString)
 }
-@rowClassFromAsset(a: models.asset.AssetView) = @{
-  a match {
-    case warn if warn.isIncomplete || warn.isNew => "warning"
-    case info if info.isProvisioning || info.isProvisioned => "info"
-    case ok if ok.isCancelled || ok.isDecommissioned => "success"
-    case err if err.isMaintenance => "error"
-    case default => ""
-  }
-}
 
 @main("Asset Search Results") {
 <div class="page-header">
