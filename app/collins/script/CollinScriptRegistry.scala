@@ -6,12 +6,14 @@ import models.asset.AssetView
 import util.conversions._
 
 import java.io.File
+import java.lang.reflect.Method
 import java.net.URLClassLoader
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import play.api.{Application, Logger, Play}
 import scala.collection.JavaConversions._
 import scala.tools.nsc.io.AbstractFile
+import scala.util.control.Breaks._
 
 import com.googlecode.scalascriptengine.{CodeVersion, Config, FromClasspathFirst, ScalaScriptEngine}
 import com.googlecode.scalascriptengine.RefreshAsynchronously
@@ -31,7 +33,7 @@ sealed trait CollinScriptEngine {
   protected val refreshLock: ReentrantReadWriteLock =
     new ReentrantReadWriteLock()
 
-  protected var engine = createEngine
+  protected var engine: ScalaScriptEngine with FromClasspathFirst = null
 
   protected var lastRefreshMillis: AtomicLong = new AtomicLong(0)
 
@@ -53,26 +55,61 @@ sealed trait CollinScriptEngine {
       return None
     }
     tryRefresh
+    // Derives method argument classes, CollinScript object, and method to call.
     val argumentClasses = args.map{ arg => arg.getClass }
     val methodSplit = method.split("\\.")
     val objectClass = methodSplit.slice(0, methodSplit.length - 1)
       .mkString(".")
     val classMethod = methodSplit(methodSplit.length - 1)
     try {
-      engine.get[CollinScript](objectClass).getMethod(classMethod,
-          argumentClasses : _*).invoke(this, args : _*)
+      // Iterates through CollinScript methods so polymorphic method signature
+      // variations defined in CollinScripts can be called.
+      var foundMethod: Method = null
+      engine.get[CollinScript](objectClass).getMethods.foreach( method =>
+        if (method.getName == classMethod) {
+          // Zips the CollinScript method parameter classes with those which
+          // were passed into callMethod, checks if the signatures match up.
+          var methodMatches = true
+          method.getParameterTypes.zip(argumentClasses).foreach( paramPair =>
+            paramPair match {
+              case (methodParam, desiredParam) => {
+                if (!methodParam.isAssignableFrom(desiredParam)) {
+                  methodMatches = false
+                }
+              }
+              case _ => {
+                methodMatches = false
+              }
+            }
+          )
+          // If the signatures match polymorphically, denote it for invocation.
+          if (methodMatches) {
+            foundMethod = method
+          }
+        }
+      )
+      // If an appropriate CollinScript method was found, invokes it.
+      if (foundMethod != null) {
+        return foundMethod.invoke(this, args : _*)
+      }
+      logger.error("No CollinScript method found for call: %s, args: %s"
+          .format(method, args.mkString(", ")))
     } catch {
       case e => {
         logger.error("COLLINSCRIPT EXECUTION ERROR:\n%s".format(
             e.getTraceAsString))
-        None
       }
     }
+    None
   }
 
-  protected def createEngine() = new ScalaScriptEngine(
+  protected def createEngine() = {
+    outputDir.mkdir
+    engine = new ScalaScriptEngine(
       Config(Set(sourceDir), getAppClasspath, Set[File](), outputDir))
       with FromClasspathFirst {}
+    engine.deleteAllClassesInOutputDirectory
+  }
 
   protected def enabled = CollinScriptConfig.enabled
 
@@ -107,8 +144,9 @@ sealed trait CollinScriptEngine {
   def tryRefresh: Unit = {
     val oldClassloader = Thread.currentThread().getContextClassLoader
     try {
-      // Sets the current thread's context Classloader to Play's current
-      // classloader, as SSE derives its classloader from this thread's context.
+      // Sets the current thread context's classloader to Play's current
+      // classloader, as SSE naively derives this from the current thread's
+      // context.  Huge thanks to Typesafe's James Roper for this suggestion!
       Thread.currentThread().setContextClassLoader(Play.current.classloader)
       // If the time of last refresh is less than the refresh threshold, don't
       // refresh the code unless we're in a startup state.
@@ -133,7 +171,7 @@ sealed trait CollinScriptEngine {
            e.getTraceAsString))
       }
     } finally {
-      // Restore this thread's context Classloader to that which it was
+      // Restore this thread context's classloader to that which it was
       // previously using.
       Thread.currentThread().setContextClassLoader(oldClassloader)
     }
@@ -145,8 +183,7 @@ sealed trait CollinScriptEngine {
 object CollinScriptRegistry extends CollinScriptEngine {
 
   def initializeAll(app: Application) = {
-    outputDir.mkdir
-    engine.deleteAllClassesInOutputDirectory
+    createEngine
     tryRefresh
   }
 
