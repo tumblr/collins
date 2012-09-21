@@ -115,21 +115,30 @@ object StringValueFormat {
    * This is some pretty complex logic to handle user queries that include wildcards, 
    * regex markers ^,$, or some combination.  See the unit
    * tests for examples
+   *
+   * FIXME: make this more sane
    */
   def createValueFor(rawStr: String): SolrStringValue = if (rawStr == "*") fullWildcardValue else {
     def s(p: String) = rawStr.startsWith(p)
     def e(p: String) = rawStr.endsWith(p)
     val s_* = s("*")
     val e_* = e("*")
+    val s__* = s(".*")
+    val e__* = e(".*")
     val s_^ = s("^")
     val e_$ = e("$")
     val states = List(
-      (s_*, e_*, 1, 1, LRWildcard),
       (s_*, e_$, 1, 1, LWildcard),
+      (s__*, e__*, 2,2, LRWildcard),
+      (s_*, e_*, 1, 1, LRWildcard),
+      (s__*, e_$, 2, 1, LWildcard),
       (s_*, true, 1, 0, LWildcard),
+      (s__*, true, 2, 0, LWildcard),
+      (s_^, e__*, 1, 2, RWildcard),
       (s_^, e_*, 1, 1, RWildcard),
       (s_^, e_$, 1, 1, Quoted),
       (s_^, true, 1, 0, RWildcard),
+      (true, e__*, 0, 2, RWildcard),
       (true, e_*, 0, 1, RWildcard),
       (true, e_$, 0, 1, LWildcard),
       (true, true, 0,0, LRWildcard)

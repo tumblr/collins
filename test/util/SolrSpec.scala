@@ -144,9 +144,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
       "unquoted ip address" in {
         """ip_address = 192.168.1.1""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1", LRWildcard))
-        """ip_address = 192.168.1.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.", RWildcard))
-        """ip_address = 192.168.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.", RWildcard))
-        """ip_address = 192.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.", RWildcard))
+        """ip_address = 192.168.1.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1", RWildcard))
+        """ip_address = 192.168.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168", RWildcard))
+        """ip_address = 192.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192", RWildcard))
         """ip_address = *""".query must_== SolrKeyVal("ip_address", SolrStringValue("*", FullWildcard))
       }
     }
@@ -205,8 +205,14 @@ class SolrQuerySpec extends ApplicationSpecification {
     "foo*"in {
       s("foo*") must_== S("foo", R)
     }
+    "foo.*"in {
+      s("foo.*") must_== S("foo", R)
+    }
     "^foo"in {
       s("^foo") must_== S("foo", R)
+    }
+    "^foo.*"in {
+      s("^foo.*") must_== S("foo", R)
     }
     "^foo*"in {
       s("^foo*") must_== S("foo", R)
