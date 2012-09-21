@@ -267,7 +267,7 @@ object SolrKeyResolver {
   ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
 
   val typeKey = new SolrKey("TYPE",Integer,false) with KeyLookup {
-    def lookupValue(value: String) = try Some(AssetType.Enum.withName(value.toUpperCase).id) catch {case _ => None}
+    def lookupValue(value: String) = AssetType.findByName(value.toUpperCase).map(_.id)
     override def isAliasOf(a: String) = a == "ASSETTYPE"
   }
 

@@ -71,7 +71,7 @@ case class FindSimilarAction(
       Logger.logger.debug(only.toString)
       val finder = AssetFinder.empty.copy(
         status = if(only.map{_.isTruthy}.getOrElse(true)) AssetStatus.Unallocated else None,
-        assetType = Some(AssetType.Enum.ServerNode)
+        assetType = AssetType.ServerNode
       )
       Logger.logger.debug(finder.status.toString)
       handleSuccess(Asset.findSimilar(asset, page, finder, sortType.getOrElse(Distribution)),details.map{_.isTruthy}.getOrElse(false))

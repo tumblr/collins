@@ -31,16 +31,12 @@ object PowerManagementConfig extends Configurable {
   }
 
   def allowAssetTypes: Set[Int] = getStringSet("allowAssetTypes").map { name =>
-    AssetType.findByName(name).map(_.id).orElse {
-      try {
-        Option(AssetType.Enum.withName(name).id)
-      } catch {
-        case e => None
-      }
-    }.flatMap(AssetType.findById(_)).getOrElse {
-      throw globalError("%s is not a valid asset type".format(name))
+    AssetType.findByName(name) match {
+      case None =>
+        throw globalError("%s is not a valid asset type".format(name))
+      case Some(a) => a.id
     }
-  }.map(_.id)
+  }.toSet
   def disallowStatus: Set[Int] = getStringSet("disallowStatus").map { s =>
     Status.findByName(s).getOrElse {
       throw globalError("%s is not a valid status name".format(s))
