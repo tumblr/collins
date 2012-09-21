@@ -15,9 +15,10 @@ import play.api.mvc.Result
 case class FindAction(
   pageParams: PageParams,
   operation: String,
+  sortField: String,
   spec: SecuritySpecification,
   handler: SecureController
-) extends AssetFindAction(pageParams, spec, handler) {
+) extends AssetFindAction(pageParams, sortField, spec, handler) {
 
   case class TagOnlyDataHolder(tag: String) extends RequestDataHolder
 
@@ -48,7 +49,7 @@ case class FindAction(
       case 1 =>
         Status.Redirect(p.items(0).remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(p.items(0).tag))
       case n =>
-        Status.Ok(views.html.asset.list(p)(flash, request))
+        Status.Ok(views.html.asset.list(p, pageParams.sort, Some(sortField))(flash, request))
     }
   }
 
@@ -71,7 +72,7 @@ case class FindAction(
   }
 
   private[FindAction] class RichRequestMap(val underlying: Map[String,Seq[String]]) {
-    val PageParamKeys = Set("page", "sort", "size")
+    val PageParamKeys = Set("page", "sort", "size", "sortfield")
     val FormKeys: Set[String] = AssetFinderDataHolder.finderForm.mapping.mappings.map(_.key).toSet
 
     // Remove any values in the request map that have an empty element

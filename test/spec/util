@@ -1,0 +1,57 @@
+#! /usr/bin/env ruby
+require 'thor'
+require 'collins_client'
+require_relative 'lib/collins_integration'
+
+class App < Thor
+  include Output
+  map "-c" => :config
+
+  no_tasks do
+    def getIntegration options
+      config = 'default.yaml'
+      if options[:config] != nil
+        config = options[:config]
+      end
+      CollinsIntegration.new(config)
+    end
+  end
+
+
+  desc "reload DATABASE", "mysql, solr, or all"
+  def reload(db)
+    integration = getIntegration options
+    db = db.upcase
+    if db == "MYSQL" or db == 'ALL'
+      integration.reloadMySQL
+    end
+    if db == "SOLR" or db == "ALL"
+      integration.reloadSolr
+    end
+  end
+  
+  desc "checkdb", "check MySQL for changes, does not reload"
+  def checkdb
+    integration = getIntegration options
+    if integration.checkDatabase
+      Output.info "Checksums match"
+    else
+      Output.warning "Checksums do not match"
+    end
+  end
+
+  desc "checksums", "gather checksums from db"
+  def checksums
+    integration = getIntegration options
+    integration.outputChecksums
+  end
+
+  desc "checkCollins", "check if collins is running"
+  def checkCollins
+    integration = getIntegration options
+    integration.checkCollins true
+  end
+
+end
+
+App.start

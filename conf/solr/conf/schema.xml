@@ -176,6 +176,17 @@
    <field name="DELETED" type="tdate" indexed="true" stored="true" requred="false"/>
    <field name="IP_ADDRESS" type="string" indexed="true" stored="true" required="false" multiValued="true"/>
 
+   <!-- 
+        these fields were added to allow sorting on them in the web app, since you cannot sort
+        on multivalued fields.  These should be removed if/when we can specify
+        in collins which attributes can be multivalued, which we should do to allow sorting on more fields 
+   -->
+   <field name="PRIMARY_ROLE" type="string" indexed="true" stored="false" required="false" multiValued="false"/>
+   <field name="HOSTNAME" type="string" indexed="true" stored="false" required="false" multiValued="false"/>
+
+
+   <!-- catch-all dynamic fields for attributes -->
+
    <dynamicField name="*_meta_i"  type="tint"    indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_meta_s"  type="string"  indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_meta_b"  type="boolean" indexed="true"  stored="true" multiValued="true"/>
