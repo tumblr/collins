@@ -38,8 +38,8 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   }
   override def asJson: String = toJsValue.toString
 
-  override def getHostnameMetaValue = getMetaAttribute("HOSTNAME").map{_.getValue}
-  override def getPrimaryRoleMetaValue = getMetaAttribute("PRIMARY_ROLE").map{_.getValue}
+  override def getHostnameMetaValue = getMetaAttribute("HOSTNAME").map(_.getValue)
+  override def getPrimaryRoleMetaValue = getMetaAttribute("PRIMARY_ROLE").map(_.getValue)
   override def toJsValue() = {
     Json.toJson[AssetView](this)
   }
@@ -66,9 +66,6 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     AssetMeta.findByName(name).map { meta =>
       AssetMetaValue.findByAssetAndMeta(this, meta, count)
     }.getOrElse(Nil)
-  }
-  def getMetaAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
-    getMetaAttribute(spec.toString)
   }
 
   def getAllAttributes: AllAttributes = AllAttributes.get(this)
@@ -166,9 +163,6 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def isValidTag(tag: String): Boolean = isAlphaNumericString(tag)
 
-  def apply(tag: String, status: Status, asset_type: AssetType.Enum) = {
-    new Asset(tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
-  }
   def apply(tag: String, status: Status, asset_type: AssetType) = {
     new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
   }

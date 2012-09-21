@@ -64,8 +64,8 @@
           @formInput {
             <select name="type" id="type">
               <option value="" selected="selected"></option>
-              @OptionSorter.sortStrings(AssetType.Enum.values.toSeq, Some(" ")).map { v =>
-              <option value="@v._1">@v._2</option>
+              @AssetType.find().sortBy(_.name).map { at =>
+                <option value="@at.name">@at.label</option>
               }
             </select>
             <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Type of Asset (Service Chassis, Server Node, etc)"></i></span>
