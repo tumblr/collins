@@ -74,13 +74,13 @@ class LshwHelperSpec extends test.ApplicationSpecification {
       "create asset" in new AssetUpdateHelper("lshw-basic.xml") {
         val asset = Asset.create(Asset(assetTag, Status.Incomplete.get, AssetType.ServerNode.get))
         LshwHelper.updateAsset(asset, parsed())
-        asset.getMetaAttribute(AssetMeta.Enum.DiskType) must beSome
+        asset.getMetaAttribute(AssetMeta.Enum.DiskType.toString) must beSome
       }
       "update asset LSHW with smaller profile" in new AssetUpdateHelper("lshw-small.xml") {
         //lshw-small.xml has no disks
         Asset.findByTag(assetTag).map{asset =>
           LshwHelper.updateAsset(asset, parsed())
-          asset.getMetaAttribute(AssetMeta.Enum.DiskType) must beNone
+          asset.getMetaAttribute(AssetMeta.Enum.DiskType.toString) must beNone
         }.getOrElse(failure("expected to find asset"))
       }
     }
