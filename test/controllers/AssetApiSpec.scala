@@ -110,69 +110,73 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
       }
     } // Support multi-step intake
 
+    /*
+     * NOTE (DS) - If these tests suddenly start failing, try clearing the Solr index by shutting down solr and deleting the SOLR_HOME/data
+     * directory
+     */
     "Support find" in {
       "by custom attribute" in new asset {
         val req = FakeRequest("GET", findUrl + "?attribute=foo;bar")
-        val result = Extract.from(api.getAssets(0, 10, "").apply(req))
+        val result = Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req))
         result must haveJsonData.which { txt =>
           txt must /("data") */("Data") */("TAG" -> assetTag)
         }
         val req2 = FakeRequest("GET", findUrl + "?attribute=fizz;buzz")
-        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+        Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req2)) must haveJsonData.which { txt =>
           txt must /("data") */("Data") */("TAG" -> assetTag)
         }
       }
       "by type" in new asset {
         val req = FakeRequest("GET", findUrl + "?type=SERVER_NODE")
-        val result = Extract.from(api.getAssets(0, 10, "").apply(req))
+        val result = Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req))
         result must haveJsonData.which { txt =>
           txt must /("data") */("Data") */("TAG" -> assetTag)
         }
       }
       "by status" in new asset {
         val req = FakeRequest("GET", findUrl + "?status=Unallocated")
-        val result = Extract.from(api.getAssets(0, 10, "").apply(req))
+        val result = Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req))
         result must haveJsonData.which { txt =>
           txt must /("data") */("Data") */("TAG" -> assetTag)
         }
       }
       "by createdAfter" in new asset {
         val req = FakeRequest("GET", findUrl + "?createdAfter=2011-12-30T00:00:00")
-        Extract.from(api.getAssets(0, 10, "").apply(req)) must haveJsonData.which { txt =>
+        Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req)) must haveJsonData.which { txt =>
           txt must /("data") */("Data") */("TAG" -> assetTag)
         }
         val req2 = FakeRequest("GET", findUrl + "?createdAfter=2020-12-30T00:00:00")
-        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+        Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req2)) must haveJsonData.which { txt =>
           txt must /("data") */("Pagination") */("TotalResults" -> 0.0)
         }
       }
       "by createdBefore" in new asset {
         val req = FakeRequest("GET", findUrl + "?createdBefore=2020-12-30T00:00:00")
-        Extract.from(api.getAssets(0, 10, "").apply(req)) must haveJsonData.which { txt =>
+        Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req)) must haveJsonData.which { txt =>
           txt must /("data") */("Data") */("TAG" -> assetTag)
         }
         val req2 = FakeRequest("GET", findUrl + "?createdBefore=2011-12-30T00:00:00")
-        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+        Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req2)) must haveJsonData.which { txt =>
           txt must /("data") */("Pagination") */("TotalResults" -> 0.0)
         }
       }
       "by updatedAfter" in new asset {
         val req = FakeRequest("GET", findUrl + "?updatedAfter=2011-12-30T00:00:00")
-        Extract.from(api.getAssets(0, 10, "").apply(req)) must haveJsonData.which { txt =>
+        Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req)) must haveJsonData.which { txt =>
           txt must /("data") */("Data") */("TAG" -> assetTag)
         }
         val req2 = FakeRequest("GET", findUrl + "?updatedAfter=2020-12-30T00:00:00")
-        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+        Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req2)) must haveJsonData.which { txt =>
           txt must /("data") */("Pagination") */("TotalResults" -> 0.0)
         }
       }
       "by updatedBefore" in new asset {
         val req = FakeRequest("GET", findUrl + "?updatedBefore=2020-12-30T00:00:00")
-        Extract.from(api.getAssets(0, 10, "").apply(req)) must haveJsonData.which { txt =>
+        Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req)) must haveJsonData.which { txt =>
           txt must /("data") */("Data") */("TAG" -> assetTag)
         }
         val req2 = FakeRequest("GET", findUrl + "?updatedAfter=2020-12-30T00:00:00")
-        Extract.from(api.getAssets(0, 10, "").apply(req2)) must haveJsonData.which { txt =>
+        Extract.from(api.getAssets(0, 10, "", "TAG", "", "").apply(req2)) must haveJsonData.which { txt =>
           txt must /("data") */("Pagination") */("TotalResults" -> 0.0)
         }
       }

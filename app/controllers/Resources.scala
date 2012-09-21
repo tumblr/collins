@@ -43,8 +43,8 @@ trait Resources extends Controller {
   /**
    * Find assets by query parameters, special care for ASSET_TAG
    */
-  def find(page: Int, size: Int, sort: String, operation: String) = FindAction(
-    PageParams(page, size, sort), operation, Permissions.Resources.Find, this
+  def find(page: Int, size: Int, sort: String, operation: String, sortField: String) = FindAction(
+    PageParams(page, size, sort), operation, sortField, Permissions.Resources.Find, this
   )
 
   def similar(tag: String, page: Int, size: Int, sort: String) = 

@@ -6,7 +6,7 @@
 GET     /                           app.Resources.index
 
 # Resources/Assets
-GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "DESC", operation: String ?= "and")
+GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "ASC", operation: String ?= "and", sortField: String ?= "TAG")
 GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
 
 GET     /asset/create/:assetType    app.Resources.displayCreateForm(assetType: String)
@@ -75,8 +75,7 @@ PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
 DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
 GET     /api/asset/:tag             app.Api.getAsset(tag: String, location: Option[String])
-GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC")
-GET     /api/assets/search          app.Api.search(query: String, page: Int ?=0, size: Int ?= 50, sortField: String ?= "tag", sort: String ?= "ASC", details: String ?= "true")
+GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", sortField: String ?= "TAG", query: String ?= "", details: String ?= "true")
 GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
 
 # State Management API

@@ -6,6 +6,7 @@ import akka.util.duration._
 import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
 import models.asset.AssetView
 import models.IpmiInfo.Enum._
+import models.SortDirection._
 
 import org.apache.solr.client.solrj.{SolrServer, SolrQuery}
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
@@ -18,6 +19,7 @@ import play.api.libs.concurrent._
 import play.api.libs.concurrent.Akka._
 import play.api.Play.current
 
+import util.AttributeResolver
 import util.plugins.Callback
 import util.solr.{SolrCallbackHandler, SolrConfig, SolrUpdater}
 import util.views.Formatter
@@ -95,7 +97,8 @@ class SolrPlugin(app: Application) extends Plugin {
     _server.map{ server => 
       //server.deleteByQuery( "*:*" );
       logger.debug("Populating Solr with Assets")
-      updateAssets(Asset.find(PageParams(0,10000,"asc"), AssetFinder.empty).items.collect{case a: Asset => a})
+      val assets = Asset.findRaw()
+      updateAssets(assets)
     }.getOrElse(logger.warn("attempted to populate solr when no server was initialized"))
   }
 
