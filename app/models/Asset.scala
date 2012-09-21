@@ -89,7 +89,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     val nodeclassParams: ResolvedAttributes = EmptyResolvedAttributes
       .withMeta(NodeclassifierConfig.identifyingMetaTag, "true")
     val nodeclasses = AssetMetaValue
-      .findAssetsByMeta(PageParams(0,50,"ASC"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
+      .findAssetsByMeta(PageParams(0,50,"ASC", "tag"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
       .items
       .collect{case a: Asset => a}
     val myMetaSeq = this.metaSeq
@@ -233,7 +233,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       state = None
     )
     val findLocations = Asset
-      .find(PageParams(0,50,"ASC"), AttributeResolver.emptyResultTuple, instanceFinder)
+      .find(PageParams(0,50,"ASC", "tag"), AttributeResolver.emptyResultTuple, instanceFinder)
       .items
       .collect{case a: Asset => a}
       .filter{_.tag != MultiCollinsConfig.thisInstance}
@@ -271,7 +271,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     asset.nodeClass.map{ nodeclass => 
       logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
       val unsortedItems:Page[AssetView] = find(
-        PageParams(0,10000, "asc"), //TODO: unbounded search
+        PageParams(0,10000, "asc", "tag"), //TODO: unbounded search
         (Nil, nodeclass.filteredMetaSeq, Nil),
         afinder,
         Some("and")

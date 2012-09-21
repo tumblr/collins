@@ -20,8 +20,8 @@ trait Resources extends Controller {
   }(Permissions.Resources.Index)
 
 
-  def searchSolr(query: String, details: String, page: Int, size: Int, sort: String) = 
-    SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, "tag", Permissions.Resources.Find, this)
+  def searchSolr(query: String, details: String, page: Int, size: Int, sort: String, sortField: String) = 
+    SolrFindAction(PageParams(page, size, sort, sortField), query, (new Truthy(details)).isTruthy, "tag", Permissions.Resources.Find, this)
   
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
@@ -50,11 +50,11 @@ trait Resources extends Controller {
    * Find assets by query parameters, special care for ASSET_TAG
    */
   def find(page: Int, size: Int, sort: String, operation: String, sortField: String) = FindAction(
-    PageParams(page, size, sort), operation, sortField, Permissions.Resources.Find, this
+    PageParams(page, size, sort, sortField), operation, sortField, Permissions.Resources.Find, this
   )
 
   def similar(tag: String, page: Int, size: Int, sort: String) = 
-    FindSimilarAction(tag, PageParams(page, size, sort), Permissions.Resources.Find, this)
+    FindSimilarAction(tag, PageParams(page, size, sort, "sparse"), Permissions.Resources.Find, this)
 
   def intake(id: Long, stage: Int = 1) = stage match {
     case 2 => IntakeStage2Action(id, Permissions.Resources.Intake, this)

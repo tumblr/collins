@@ -174,6 +174,7 @@ class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchPar
 
   val PAGE_SIZE = 50
   val SORT = "ASC"
+  val SORT_FIELD = "TAG"
 
   val cachedAssets = new collection.mutable.Queue[AssetView]
   var nextRetrievedPage: Option[Int] = None
@@ -187,7 +188,7 @@ class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchPar
   private[this] def retrieveHead: Option[AssetView] = cachedAssets.headOption match {
     case None if (!eof) => {
       val page = nextRetrievedPage.getOrElse(0)
-      val pageParams = PageParams(page, PAGE_SIZE, SORT)
+      val pageParams = PageParams(page, PAGE_SIZE, SORT, SORT_FIELD)
       val results = client.getRemoteAssets(params, pageParams)
       if (results.size > 0) {
         cachedAssets ++= results

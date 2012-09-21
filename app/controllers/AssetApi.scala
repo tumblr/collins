@@ -27,9 +27,9 @@ trait AssetApi {
 
   // GET /api/assets?params
   def getAssets(page: Int, size: Int, sort: String, sortField: String, query: String, details: String) = if (query == "") {
-    FindAction(PageParams(page, size, sort), sortField, Permissions.AssetApi.GetAssets, this)
+    FindAction(PageParams(page, size, sort, sortField), sortField, Permissions.AssetApi.GetAssets, this)
   } else {
-    SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, sortField, Permissions.AssetApi.GetAssets, this)
+    SolrFindAction(PageParams(page, size, sort, sortField), query, (new Truthy(details)).isTruthy, sortField, Permissions.AssetApi.GetAssets, this)
   }
 
   // PUT /api/asset/:tag
@@ -61,6 +61,6 @@ trait AssetApi {
 
   //GET /api/asset/:tag/similar
   def similar(tag: String, page: Int, size: Int, sort: String) = 
-    FindSimilarAction(tag, PageParams(page, size, sort), Permissions.AssetApi.GetAssets, this)
+    FindSimilarAction(tag, PageParams(page, size, sort, "sparse"), Permissions.AssetApi.GetAssets, this)
 
 }
