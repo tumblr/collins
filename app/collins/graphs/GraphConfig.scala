@@ -15,14 +15,11 @@ object GraphConfig extends Configurable {
   def cacheSize = getInt("queryCacheSize", 2000)
   def cacheTimeout = getMilliseconds("queryCacheTimeout").getOrElse(60000L)
 
-  def getConfigForClass() = {
-    val name = className.split('.').last
-    getConfig(name)
-  }
   override def validateConfig() {
     if (enabled) {
       className
-      getConfigForClass
+      cacheSize
+      cacheTimeout
     }
   }
 }

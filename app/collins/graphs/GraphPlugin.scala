@@ -6,11 +6,9 @@ import util.config.TypesafeConfiguration
 import play.api.{Application, Plugin}
 import play.api.mvc.Content
 
-class GraphPlugin(app: Application) extends Plugin with GraphView {
+class GraphPlugin(override val app: Application) extends GraphView with Plugin {
 
   protected var underlying: Option[GraphView] = None
-  // We don't use this
-  override protected val source: TypesafeConfiguration = null
 
   override def enabled = {
     GraphConfig.pluginInitialize(app.configuration)
@@ -31,8 +29,8 @@ class GraphPlugin(app: Application) extends Plugin with GraphView {
 
   protected def getGraphInstance(): GraphView = {
     this.getClass.getClassLoader.loadClass(GraphConfig.className)
-      .getConstructor(classOf[TypesafeConfiguration])
-      .newInstance(GraphConfig.getConfigForClass())
+      .getConstructor(classOf[Application])
+      .newInstance(app)
       .asInstanceOf[GraphView]
   }
 
