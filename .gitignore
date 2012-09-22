@@ -5,3 +5,4 @@ support
 target
 Gemfile.lock
 .DS_Store
+logs
