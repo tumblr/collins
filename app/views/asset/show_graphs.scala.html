@@ -2,8 +2,8 @@
 
 @import _root_.util.plugins.GraphPlugin
 
+@GraphPlugin.option.map { p =>
 <div class="tab-pane" id="graph-info">
-  @GraphPlugin.option.map { p =>
-    @p.get(aa.asset)
-  }
+  @p.get(aa.asset)
 </div>
+}
