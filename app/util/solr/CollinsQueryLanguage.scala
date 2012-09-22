@@ -10,6 +10,8 @@ import Solr.AssetSolrDocument
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
+import play.api.Logger
+
 /**
  * Any class mixing in this trait is part of the CQL AST that must translate
  * itself into a Solr Query
@@ -109,6 +111,8 @@ case object FullWildcard extends StringValueFormat {
 
 object StringValueFormat {
 
+  private[this] val logger = Logger("Solr-StringValueFormat")
+
   val fullWildcardValue = SolrStringValue("*", FullWildcard)
 
   /**
@@ -144,7 +148,13 @@ object StringValueFormat {
       (true, true, 0,0, LRWildcard)
     )
     val (_,_, strim, etrim, format) = states.find{x => x._1 && x._2}.get
-    SolrStringValue(rawStr.substring(strim, rawStr.length - (etrim)), format)
+    try {
+      SolrStringValue(rawStr.substring(strim, rawStr.length - (etrim)), format)
+    } catch {
+      case e =>
+        logger.error("Error converting %s to SolrString: %s".format(rawStr, e.getMessage), e)
+        throw e
+    }
   }
 }
   
