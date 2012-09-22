@@ -1,10 +1,11 @@
 package collins.graphs
 
-import util.config.{ConfigAccessor, ConfigSource, ConfigValue, TypesafeConfiguration}
+import util.config.{Configurable, ConfigValue}
 
-case class FibrGraphConfig(
-  override val source: TypesafeConfiguration
-) extends ConfigAccessor with ConfigSource {
+object FibrGraphConfig extends Configurable {
+
+  override val namespace = "graph.FibrGraphs"
+  override val referenceConfigFilename = "graph_reference.conf"
 
   def url = getString("url")(ConfigValue.Required).get
 
@@ -33,7 +34,7 @@ case class FibrGraphConfig(
 
   def annotations = getStringSet("annotations", Set("deploy"))
 
-  def validateConfig() {
+  override def validateConfig() {
     url
     annotations
     customMetrics.foreach { case(k,v) =>

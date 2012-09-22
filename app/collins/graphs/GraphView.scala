@@ -1,12 +1,11 @@
 package collins.graphs
 
 import models.asset.AssetView
-import util.config.TypesafeConfiguration
+import play.api.Application
 import play.api.mvc.Content
 
 trait GraphView {
-  protected val source: TypesafeConfiguration
-
+  val app: Application
   def get(asset: AssetView): Option[Content]
   def validateConfig() {
   }

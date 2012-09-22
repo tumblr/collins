@@ -1,11 +1,11 @@
-@(config: collins.graphs.FibrGraphConfig, hostname: String)
+@(hostname: String)
 
 @genURL() = @{
   Seq(
-    "%s#pools=%s".format(config.url, hostname),
-    "annotations=%s".format(config.annotations.mkString(",")),
-    "metrics=%s".format(Set(config.defaultMetrics, config.customMetricsFor(hostname)).flatten.toSeq.sorted.mkString(",")),
-    "rangeSeconds=%d,0".format(config.timeframeSeconds),
+    "%s#pools=%s".format(collins.graphs.FibrGraphConfig.url, hostname),
+    "annotations=%s".format(collins.graphs.FibrGraphConfig.annotations.mkString(",")),
+    "metrics=%s".format(Set(collins.graphs.FibrGraphConfig.defaultMetrics, collins.graphs.FibrGraphConfig.customMetricsFor(hostname)).flatten.toSeq.sorted.mkString(",")),
+    "rangeSeconds=%d,0".format(collins.graphs.FibrGraphConfig.timeframeSeconds),
     "dashboardEnabled=true",
     "customs=0"
   ).mkString("&")

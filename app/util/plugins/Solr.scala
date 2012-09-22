@@ -27,10 +27,13 @@ import util.views.Formatter
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 class SolrPlugin(app: Application) extends Plugin {
 
   private[this] var _server: Option[SolrServer] = None
   private[this] val logger = Logger("SolrPlugin")
+  private[this] val populateInProgress = new AtomicBoolean(false)
 
   def server = _server match {
     case Some(server) => server
@@ -93,28 +96,39 @@ class SolrPlugin(app: Application) extends Plugin {
     Callback.on("ipAddresses_delete", callback)
   }
 
-  def populate() = Akka.future { 
+  def populate() = Akka.future {
     _server.map{ server => 
       //server.deleteByQuery( "*:*" );
-      logger.debug("Populating Solr with Assets")
-      val assets = Asset.findRaw()
-      updateAssets(assets)
+      if (populateInProgress.compareAndSet(false, true)) {
+        try {
+          val assets = Asset.findRaw()
+          logger.debug("Populating Solr with %d Assets".format(assets.size))
+          updateAssets(assets)
+        } catch {
+          case e =>
+            logger.error("Error populating solr index".format(e.getMessage), e)
+        } finally {
+          populateInProgress.compareAndSet(true, false)
+        }
+      } else {
+        logger.debug("Repopulating Solr already in progress")
+      }
     }.getOrElse(logger.warn("attempted to populate solr when no server was initialized"))
-  }
-
-  def updateAsset(asset: Asset) = {
-    logger.debug("updating asset " + asset.toString)
-    //updateAssets(asset :: Nil)
   }
 
   def updateAssets(assets: Seq[Asset]) {
     _server.map{server =>
+      logger.debug("Starting Solr prepForInsertion")
       val docs = assets.map{asset => Solr.prepForInsertion(serializer.serialize(asset))}
       if (docs.size > 0) {
+        logger.debug("Found %d docs after prepForInsertion".format(docs.size))
         val fuckingJava = new java.util.ArrayList[SolrInputDocument]
         docs.foreach{doc => fuckingJava.add(doc)}
+        logger.debug("Finished adding docs to list")
         server.add(fuckingJava)
+        logger.debug("Finished adding list to server")
         server.commit()
+        logger.debug("Finished commit")
         if (assets.size == 1) {
           logger.debug("Re-indexing asset " + assets.head.toString)
         } else {
