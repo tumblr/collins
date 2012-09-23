@@ -1,6 +1,6 @@
 package models.asset
 
-import models.{AssetType, Status}
+import models.{AssetType, State, Status}
 import play.api.libs.json.JsValue
 import java.sql.Timestamp
 
@@ -27,6 +27,7 @@ trait AssetView {
   def toJsValue(): JsValue
 
   def getStatusName(): String = Status.findById(status).map(_.name).getOrElse("Unknown")
+  def getStateName(): String = State.findById(state).map(_.name).getOrElse("Unknown")
 
   def isServerNode(): Boolean = isAssetType(AssetType.ServerNode)
   def isConfiguration(): Boolean = isAssetType(AssetType.Configuration)
