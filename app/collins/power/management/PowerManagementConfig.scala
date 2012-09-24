@@ -25,7 +25,7 @@ object PowerManagementConfig extends Configurable {
   )
 
   object Messages extends MessageHelper(namespace) {
-    def assetStateAllowed(a: Asset) = message("disallowStatus", a.getStatus().name)
+    def assetStateAllowed(a: Asset) = message("disallowStatus", a.getStatusName)
     def actionAllowed(p: PowerAction) = message("disallowWhenAllocated", p.toString)
     def assetTypeAllowed(a: Asset) = message("allowAssetTypes", a.getType().name)
   }

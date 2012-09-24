@@ -31,8 +31,9 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
 
   // Used with plugins that need to use configs before the system is initialized
   def pluginInitialize(config: PlayConfiguration) {
-    once
-    mergeReferenceAndSave(config.underlying, true)
+    if (once) {
+      mergeReferenceAndSave(config.underlying, true)
+    }
   }
 
   // Setup referenceConfig and register self with Registry
@@ -45,9 +46,9 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
   protected def refFilename = "reference/%s".format(referenceConfigFilename)
   protected val alreadyRun = new AtomicBoolean(false)
 
-  def once() {
+  def once(): Boolean = {
     if (!alreadyRun.compareAndSet(false, true)) {
-      return
+      return false
     }
     logger.debug("ReferenceConfig setup for %s on %s".format(getClass.getName, refFilename))
     try {
@@ -68,6 +69,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
         referenceConfig = None
     }
     Registry.add(namespace, this)
+    true
   }
 
   final protected[config] def onChange(newConfig: TypesafeConfiguration) {
