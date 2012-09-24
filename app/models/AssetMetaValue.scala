@@ -82,7 +82,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       mvs.size
     } catch {
       case e =>
-        e.printStackTrace()
+        logger.error("Caught exception trying to insert rows: %s".format(e.getMessage), e)
         0
     }
   }
