@@ -134,7 +134,7 @@
     </div>
   </section>
 
-  @if(aa.asset.getType().name == "Server Node") {
+  @if(aa.asset.isServerNode) {
   <section id="hardware-summary-section" class="sectional">
     <h3>Hardware Summary</h3>
     @if(aa.lshw.cpuCount > 0) {
