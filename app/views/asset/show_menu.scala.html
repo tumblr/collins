@@ -1,7 +1,7 @@
 @(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import _root_.util.AssetStateMachine
-@import _root_.util.plugins.{Maintenance, PowerManagement, Provisioner, SoftLayer}
+@import _root_.util.plugins.{GraphPlugin, Maintenance, PowerManagement, Provisioner, SoftLayer}
 @import _root_.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
 @import _root_.collins.provisioning.ProvisionerConfig
 @import _root_.controllers.Permissions
@@ -66,6 +66,9 @@
 	        }
         </ul>
       </li>
+      @GraphPlugin.option.map { p =>
+        <li><a href="#graph-info" data-toggle="pill">Graphs</a></li>
+      }
     </ul>
   </div>
 </div>

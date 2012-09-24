@@ -11,6 +11,8 @@ module Collins
   #   client.get 'asset_tag'
   class Client
 
+    # @see Collins::Api#headers
+    attr_reader :headers
     # @see Collins::Api#host
     attr_reader :host
     # @see Collins::Api#locations
@@ -42,6 +44,7 @@ module Collins
     def initialize options = {}
       config = symbolize_hash options
       @locations = {}
+      @headers = {}
       @host = fix_hostname(config.fetch(:host, ""))
       @logger = get_logger config.merge(:progname => 'Collins_Client')
       @timeout_i = config.fetch(:timeout, 10).to_i

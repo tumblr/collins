@@ -15,7 +15,7 @@ case class MockRemoteAsset(
 ) extends RemoteAsset { 
 
   import asset.conversions._
-  def asset_type: Int = AssetType.Enum.ServerNode.id
+  def asset_type: Int = AssetType.ServerNode.get.id
   def status: Int = Status.Allocated.get.id
   def created: Timestamp = new Timestamp(System.currentTimeMillis) 
   def updated: Option[Timestamp] =  None 

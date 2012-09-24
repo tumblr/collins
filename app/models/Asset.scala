@@ -3,14 +3,18 @@ package models
 import asset.{AssetView, AllAttributes}
 import asset.conversions._
 import conversions._
+import util.{AttributeResolver, LldpRepresentation, LshwRepresentation, MessageHelper, Stats}
+import util.config.{Feature, MultiCollinsConfig, NodeclassifierConfig}
+import util.plugins.Cache
+import util.power.PowerUnits
+import util.views.Formatter.dateFormat
+import util.plugins.solr._
 import shared.QueryLogConfig
 import AssetSortType.AssetSortType
 
 import collins.validation.Pattern.isAlphaNumericString
 
 import util.{MessageHelper, RemoteCollinsHost, Stats}
-import util.config.{MultiCollinsConfig, NodeclassifierConfig}
-import util.plugins.Cache
 
 import play.api.libs.json.Json
 import play.api.Logger
@@ -20,6 +24,8 @@ import org.squeryl.Schema
 
 import java.sql.Timestamp
 import java.util.Date
+
+import SortDirection._
 
 case class Asset(tag: String, status: Int, asset_type: Int,
     created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp],
@@ -32,8 +38,8 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   }
   override def asJson: String = toJsValue.toString
 
-  override def getHostnameMetaValue = getMetaAttribute("HOSTNAME").map{_.getValue}
-  override def getPrimaryRoleMetaValue = getMetaAttribute("PRIMARY_ROLE").map{_.getValue}
+  override def getHostnameMetaValue = getMetaAttribute("HOSTNAME").map(_.getValue)
+  override def getPrimaryRoleMetaValue = getMetaAttribute("PRIMARY_ROLE").map(_.getValue)
   override def toJsValue() = {
     Json.toJson[AssetView](this)
   }
@@ -60,9 +66,6 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     AssetMeta.findByName(name).map { meta =>
       AssetMetaValue.findByAssetAndMeta(this, meta, count)
     }.getOrElse(Nil)
-  }
-  def getMetaAttribute(spec: AssetMeta.Enum): Option[MetaWrapper] = {
-    getMetaAttribute(spec.toString)
   }
 
   def getAllAttributes: AllAttributes = AllAttributes.get(this)
@@ -160,9 +163,6 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def isValidTag(tag: String): Boolean = isAlphaNumericString(tag)
 
-  def apply(tag: String, status: Status, asset_type: AssetType.Enum) = {
-    new Asset(tag, status.id, asset_type.id, new Date().asTimestamp, None, None)
-  }
   def apply(tag: String, status: Status, asset_type: AssetType) = {
     new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
   }
@@ -173,55 +173,18 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] =
+  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None, sortField: String = "TAG"): Page[AssetView] =
   Stats.time("Asset.find") {
-    val results = (if (params._1.nonEmpty) {
-      IpmiInfo.findAssetsByIpmi(page, params._1, afinder)
-    } else if (params._2.nonEmpty) {
-      AssetMetaValue.findAssetsByMeta(page, params._2, afinder, operation)
-    } else if (params._3.nonEmpty) {
-      IpAddresses.findAssetsByAddress(page, params._3, afinder)
-    } else {
-      Asset.find(page, afinder)
-    })
-    //log the frontend query as a query string with result count
-    if (QueryLogConfig.frontendLogging) {
-      logger.info("API_QUERY:" + AssetSearchParameters(params, afinder, operation).toQueryString.getOrElse("(empty)") + ":" + results.total)
-    }
-    results
+    AssetSearchParameters(params, afinder, operation)
+      .toSolrExpression
+      .typeCheck
+      .right
+      .flatMap{exp => CollinsSearchQuery(exp, page, sortField).getPage()}
+      .fold(
+        err => throw new Exception(err),
+        page => page
+      )
   }
-
-  def find(page: PageParams, afinder: AssetFinder): Page[AssetView] = inTransaction { log {
-    val results = from(tableDef)(a =>
-      where(afinder.asLogicalBoolean(a))
-      select(a)
-    ).page(page.offset, page.size).toList
-    val totalCount = from(tableDef)(a =>
-      where(afinder.asLogicalBoolean(a))
-      compute(count)
-    )
-    Page(results, page.page, page.offset, totalCount)
-  }}
-
-  def find(page: PageParams, finder: AssetFinder, assets: Set[Long]): Page[AssetView] = inTransaction { log {
-    assets.size match {
-      case 0 => Page(Seq(), page.page, page.offset, 0)
-      case n =>
-        logger.debug("Starting Asset.find count")
-        val totalCount: Long = from(tableDef)(asset =>
-          where(asset.id in assets and finder.asLogicalBoolean(asset))
-          compute(count)
-        )
-        logger.debug("Finished Asset.find count")
-        val results = from(tableDef)(asset =>
-          where(asset.id in assets and finder.asLogicalBoolean(asset))
-          select(asset)
-          orderBy(asset.id.withSort(page.sort))
-        ).page(page.offset, page.size).toList
-        logger.debug("Finished Asset.find find")
-        Page(results, page.page, page.offset, totalCount)
-    }
-  }}
 
   def findById(id: Long) = getOrElseUpdate("Asset.findById(%d)".format(id)) {
     tableDef.lookup(id)
@@ -238,7 +201,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     val results = from(tableDef)(a =>
       where(a.tag.withPossibleRegex(tag))
       select(a)
-      orderBy(a.id.withSort(params.sort))
+      orderBy(a.id.withSort(params.sort.toString))
     ).page(params.offset, params.size).toList
     val totalCount = from(tableDef)(a =>
       where(a.tag.withPossibleRegex(tag))
@@ -264,7 +227,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       state = None
     )
     val findLocations = Asset
-      .find(PageParams(0,50,"ASC"), instanceFinder)
+      .find(PageParams(0,50,"ASC"), AttributeResolver.emptyResultTuple, instanceFinder)
       .items
       .collect{case a: Asset => a}
       .filter{_.tag != MultiCollinsConfig.thisInstance}
@@ -295,12 +258,10 @@ object Asset extends Schema with AnormAdapter[Asset] {
    * Finds assets in the same nodeclass as the given asset
    */
   def findSimilar(asset: Asset, page: PageParams, afinder: AssetFinder, sortType: AssetSortType): Page[AssetView] = {
-    val sorter = try SortDirection.withName(page.sort) catch {
-      case _ => {
-        logger.warn("Invalid sort " + page.sort)
-        SortDirection.Desc
-      }
-    }
+    val sorter = SortDirection.withName(page.sort.toString).getOrElse( {
+      logger.warn("Invalid sort " + page.sort)
+      SortDesc
+    })
     asset.nodeClass.map{ nodeclass => 
       logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
       val unsortedItems:Page[AssetView] = find(
@@ -322,6 +283,16 @@ object Asset extends Schema with AnormAdapter[Asset] {
       Page.emptyPage
     }
   }
+
+  /**
+   * Used only when repopulating the solr index, this should not be used anywhere else
+   */
+  def findRaw() = inTransaction { log {
+    from(tableDef){asset => 
+      where(AssetFinder.empty.asLogicalBoolean(asset))
+      select(asset)
+    }.toList
+  }}
 
   def resetState(state: State, newId: Int): Int = inTransaction {
     import util.plugins.solr.Solr

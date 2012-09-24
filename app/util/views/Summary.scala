@@ -33,9 +33,9 @@ case class AssetSummary(template: String) extends Summarizer[Asset] {
   )
 
   def getAssetType(asset: Asset): String = {
-    asset.getType().name match {
-      case "Server Node" => "Server"
-      case name => name
+    asset.isServerNode match {
+      case true => "Server"
+      case false => asset.getType().label
     }
   }
   def getHostname(asset: Asset): String = {
@@ -48,5 +48,4 @@ object Summary {
     val template = "<h1>{assetType} Details <small>{hostname}</small></h1>"
     AssetSummary(template).get(asset)
   }
-
 }

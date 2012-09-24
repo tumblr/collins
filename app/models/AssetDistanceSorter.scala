@@ -55,13 +55,6 @@ class PhysicalDistanceEval(sortkeys: Set[String]) extends AssetDistanceEval {
 
 }
 
-object SortDirection extends Enumeration {
-  type SortDirection  = Value
-  val Asc = Value("ASC") //closest asset first
-  val Desc = Value("DESC") //furthest asset first
-
-  def op(dir: SortDirection): (Int, Int) => Boolean = if (dir == Asc) _ < _ else _ > _ 
-}
 import SortDirection._
 
 object AssetSortType extends Enumeration {

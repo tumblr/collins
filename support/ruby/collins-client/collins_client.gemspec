@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "collins_client"
-  s.version = "0.2.5"
+  s.version = "0.2.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Blake Matheny"]
-  s.date = "2012-09-15"
+  s.date = "2012-09-21"
   s.description = "Provides ruby support for interacting with the Collins API"
   s.email = "bmatheny@tumblr.com"
   s.extra_rdoc_files = [
@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
     "collins_client.gemspec",
     "lib/collins/address.rb",
     "lib/collins/api.rb",
+    "lib/collins/api/admin.rb",
     "lib/collins/api/asset.rb",
     "lib/collins/api/asset_state.rb",
     "lib/collins/api/attributes.rb",

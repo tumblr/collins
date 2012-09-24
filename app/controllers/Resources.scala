@@ -25,20 +25,14 @@ trait Resources extends Controller {
   
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
-    val atype: Option[AssetType.Enum] = try {
-      Some(AssetType.Enum.withName(assetType))
-    } catch {
-      case _ => None
-    }
-    atype match {
-      case Some(t) => t match {
-        case AssetType.Enum.ServerNode =>
-          Redirect(app.routes.Resources.index).flashing("error" -> "Server Node not supported for creation")
-        case _ =>
-          Ok(html.resources.create(t))
-      }
+    AssetType.findByName(assetType) match {
       case None =>
         Redirect(app.routes.Resources.index).flashing("error" -> "Invalid asset type specified")
+      case Some(atype) => AssetType.ServerNode.filter(_.id.equals(atype.id)).isDefined match {
+        case false => Ok(html.resources.create(atype))
+        case true =>
+          Redirect(app.routes.Resources.index).flashing("error" -> "Server Node not supported for creation")
+      }
     }
   }(Permissions.Resources.CreateForm)
 
@@ -49,8 +43,8 @@ trait Resources extends Controller {
   /**
    * Find assets by query parameters, special care for ASSET_TAG
    */
-  def find(page: Int, size: Int, sort: String, operation: String) = FindAction(
-    PageParams(page, size, sort), operation, Permissions.Resources.Find, this
+  def find(page: Int, size: Int, sort: String, operation: String, sortField: String) = FindAction(
+    PageParams(page, size, sort), operation, sortField, Permissions.Resources.Find, this
   )
 
   def similar(tag: String, page: Int, size: Int, sort: String) = 

@@ -15,4 +15,10 @@ object ConfigCache {
       .maximumSize(1)
       .expireAfterWrite(timeoutMs, TimeUnit.MILLISECONDS)
       .build(loader)
+
+  def create[K <: AnyRef, V <: AnyRef](timeoutMs: Long, maximumSize: Int, loader: => CacheLoader[K,V]): LoadingCache[K,V] =
+    CacheBuilder.newBuilder()
+      .maximumSize(maximumSize)
+      .expireAfterWrite(timeoutMs, TimeUnit.MILLISECONDS)
+      .build(loader)
 }

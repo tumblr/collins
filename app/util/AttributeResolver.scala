@@ -15,6 +15,8 @@ object AttributeResolver extends MessageHelper("attributeresolver") {
     def withMetas(metas: Seq[AssetMetaTuple]) = this.copy(assetMeta = assetMeta ++ metas)
   }
 
+  val emptyResultTuple = (Nil, Nil, Nil)
+
   val EmptyResolvedAttributes = ResolvedAttributes(Nil, Nil, None)
 
   //TODO: refactor and get rid of the tuple and conversions
@@ -54,13 +56,7 @@ object AttributeResolver extends MessageHelper("attributeresolver") {
   } catch {
     case _ => None
   }
-  private def asAssetMeta(key: String): Option[AssetMeta] = try {
-    val am = AssetMeta.Enum.withName(key)
-    Some(AssetMeta(am.toString, -1, "label", "description", am.id))
-  } catch {
-    case _ => // If an exception was thrown, try the database
-      AssetMeta.findByName(key)
-  }
+  private def asAssetMeta(key: String): Option[AssetMeta] = AssetMeta.findByName(key)
   private def isIpAddress(key: String): Boolean = {
     val lc = key.toLowerCase
     lc == "ip_address" || lc == "sl_ip_address" || lc == "sl_primary_ip_address"

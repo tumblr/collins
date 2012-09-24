@@ -1,11 +1,13 @@
-@(assets: Page[models.asset.AssetView], clientSort: Boolean = true, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
+
+@(assets: Page[models.asset.AssetView], sortDirection: SortDirection = SortDirection.SortAsc, sortField: Option[String] = None, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import _root_.util.views.{ListHelper, Formatter, Pagination, TagDecorator}
 @import util.notice
+@import models.SortDirection._
 
 @link(newPage: Int) = @{
-  Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "DESC", "and").toString), req.queryString)
+  Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "ASC", "and").toString), req.queryString)
 }
 
 @main("Asset Search Results") {
@@ -17,7 +19,7 @@
     @notice("message", Some("notice"))
     @notice("error")
     @notice("warning")
-    <table class="table table-bordered table-hover @(if(clientSort) "sortable" else "")" data-size="50">
+    <table class="table table-bordered table-hover" data-size="50">
       <thead>
         <tr>
           @ListHelper.getListHeaderTags.map { tag =>

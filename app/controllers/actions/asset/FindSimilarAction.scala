@@ -71,7 +71,7 @@ case class FindSimilarAction(
       Logger.logger.debug(only.toString)
       val finder = AssetFinder.empty.copy(
         status = if(only.map{_.isTruthy}.getOrElse(true)) AssetStatus.Unallocated else None,
-        assetType = Some(AssetType.Enum.ServerNode)
+        assetType = AssetType.ServerNode
       )
       Logger.logger.debug(finder.status.toString)
       handleSuccess(Asset.findSimilar(asset, page, finder, sortType.getOrElse(Distribution)),details.map{_.isTruthy}.getOrElse(false))
@@ -86,7 +86,7 @@ case class FindSimilarAction(
       case 1 =>
         Status.Redirect(p.items(0).remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(p.items(0).tag))
       case n =>
-        Status.Ok(views.html.asset.list(p, false, Some((newPage: Int) => app.routes.Resources.similar(assetTag, newPage, 50).toString))(flash, request))
+        Status.Ok(views.html.asset.list(p, page.sort, None, Some((newPage: Int) => app.routes.Resources.similar(assetTag, newPage, 50).toString))(flash, request))
     }
   }
 

@@ -37,15 +37,15 @@ package object forms {
     def unbind(key: String, value: State) = Map(key -> value.name)
   }
 
-  implicit def typeFormat = new Formatter[AssetType.Enum] {
+  implicit def typeFormat = new Formatter[AssetType] {
     def bind(key: String, data: Map[String, String]) = {
       Formats.stringFormat.bind(key, data).right.flatMap { s =>
-        allCatch[AssetType.Enum]
-          .either(AssetType.Enum.withName(s))
+        allCatch[AssetType]
+          .either(AssetType.findByName(s).get)
           .left.map(e => Seq(FormError(key, "error.assetType", Nil)))
       }
     }
-    def unbind(key: String, value: AssetType.Enum) = Map(key -> value.toString)
+    def unbind(key: String, value: AssetType) = Map(key -> value.name)
   }
 
   implicit def powerFormat = new Formatter[PowerAction] {

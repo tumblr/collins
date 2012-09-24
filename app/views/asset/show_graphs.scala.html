@@ -1,0 +1,9 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import _root_.util.plugins.GraphPlugin
+
+@GraphPlugin.option.map { p =>
+<div class="tab-pane" id="graph-info">
+  @p.get(aa.asset)
+</div>
+}

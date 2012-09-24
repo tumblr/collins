@@ -14,9 +14,6 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getId(): (Long,Long) = (getAssetId(), getMetaId())
   def getName(): String = _meta.name
   def getGroupId(): Int = _value.group_id
-  def getNameEnum(): Option[AssetMeta.Enum] = try {
-    Some(AssetMeta.Enum.withName(getName()))
-  } catch { case _ => None }
   def getPriority(): Int = _meta.priority
   def getLabel(): String = _meta.label
   def getDescription(): String = _meta.description

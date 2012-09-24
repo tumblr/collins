@@ -83,6 +83,7 @@ module Collins; module Api
       if solrquery != nil then
         return search solrquery, options[:size], options.sort
       end
+      use_api_version "1.1"
       query = asset_hash_to_find_query options
       params = query.to_a.map do |param|
         key, val = param
@@ -101,6 +102,7 @@ module Collins; module Api
     end
 
     def search query, size = 50, sort = "ASC", sort_field = "tag"
+      use_api_version "1.2"
       if query.start_with? "\"" and query.end_with? "\"" then
         query = query[1..-2]
       end
@@ -111,7 +113,7 @@ module Collins; module Api
         :sort_field => sort_field
       }
       logger.debug("perform asset search using query #{query}")
-      http_get("/api/assets/search",params) do |response|
+      http_get("/api/assets",params) do |response|
         parse_response response, :expects => 200, :as => :paginated do |json|
           json.map { |j| Collins::Asset.from_json(j) }
         end

@@ -14,7 +14,7 @@ import java.util.Date
 case class AssetFinder(
   tag: Option[String],
   status: Option[Status],
-  assetType: Option[AssetType.Enum],
+  assetType: Option[AssetType],
   createdAfter: Option[Date],
   createdBefore: Option[Date],
   updatedAfter: Option[Date],
@@ -41,13 +41,13 @@ case class AssetFinder(
    */
   def toSeq: Seq[(String, String)] = {
     val items:Seq[Option[(String, String)]] = (
-      tag.map{"tag" -> _} ::
-      status.map{"status" -> _.name} ::
-      assetType.map{"type" -> _.toString} ::
-      createdAfter.map{t => "createdAfter" -> Formatter.dateFormat(t)} ::
-      createdBefore.map{t => "createdBefore" -> Formatter.dateFormat(t)} ::
-      updatedAfter.map{t => "updatedAfter" -> Formatter.dateFormat(t)} ::
-      updatedBefore.map{t => "updatedBefore" -> Formatter.dateFormat(t)} ::
+      tag.map("tag" -> _) ::
+      status.map("status" -> _.name) ::
+      assetType.map("type" -> _.name) ::
+      createdAfter.map(t => "createdAfter" -> Formatter.dateFormat(t)) ::
+      createdBefore.map(t => "createdBefore" -> Formatter.dateFormat(t)) ::
+      updatedAfter.map(t => "updatedAfter" -> Formatter.dateFormat(t)) ::
+      updatedBefore.map(t => "updatedBefore" -> Formatter.dateFormat(t)) ::
       state.map(s => "state" -> s.name) ::
       Nil
     )
@@ -55,22 +55,22 @@ case class AssetFinder(
   }
 
   def toSolrKeyVals = {
-    val items = tag.map{t => SolrKeyVal("tag", SolrStringValue(t))} ::
+    val items = tag.map{t => SolrKeyVal("tag", SolrStringValue(t, LRWildcard))} ::
       status.map{t => SolrKeyVal("status" , SolrIntValue(t.id))} ::
-      assetType.map{t => SolrKeyVal("assetType" , SolrIntValue(t.id))} ::
+      assetType.map(t => SolrKeyVal("assetType" , SolrIntValue(t.id))) ::
       state.map(t => SolrKeyVal("state", SolrIntValue(t.id))) ::
       Nil
-    val cOpt = (createdBefore.map{d =>SolrStringValue(Formatter.dateFormat(d))}, createdAfter.map{d =>SolrStringValue(Formatter.dateFormat(d))}) match {
+    val cOpt = (createdBefore.map{d =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}, createdAfter.map{d =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}) match {
       case (None, None) => None
-      case (bOpt, aOpt) => Some(SolrKeyRange("created", bOpt, aOpt))
+      case (bOpt, aOpt) => Some(SolrKeyRange("created", aOpt, bOpt))
     }
-    val uOpt = (updatedBefore.map{d =>SolrStringValue(Formatter.dateFormat(d))}, updatedAfter.map{d =>SolrStringValue(Formatter.dateFormat(d))}) match {
+    val uOpt = (updatedBefore.map{d =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}, updatedAfter.map{d
+      =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}) match {
       case (None, None) => None
-      case (bOpt, aOpt) => Some(SolrKeyRange("updated", bOpt, aOpt))
+      case (bOpt, aOpt) => Some(SolrKeyRange("updated", aOpt, bOpt))
     }
     (cOpt :: uOpt :: items).flatten
   }
-
 
 }
 

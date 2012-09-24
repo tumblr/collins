@@ -8,7 +8,6 @@ import models.asset.AssetView
 import util.security.SecuritySpecification
 import util.plugins.solr._
 
-
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc.Result
@@ -20,7 +19,7 @@ case class SolrFindAction (
   sortField: String,
   spec: SecuritySpecification,
   handler: SecureController
-) extends AssetFindAction(pageParams, spec, handler) with AssetResultsAction {
+) extends AssetFindAction(pageParams, sortField, spec, handler) with AssetResultsAction {
 
   case class SolrQueryDataHolder(query: CollinsSearchQuery) extends RequestDataHolder
 
