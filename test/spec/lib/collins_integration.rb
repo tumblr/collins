@@ -162,9 +162,8 @@ class CollinsIntegration
 
   #helper method for generating configs
   def outputChecksums
-    puts "checksums:"
     getChecksums.each do |k,v|
-      puts "  #{k}: #{v}"
+      puts "#{k}: #{v}"
     end
   end
 
