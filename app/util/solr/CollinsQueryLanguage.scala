@@ -122,7 +122,7 @@ object StringValueFormat {
    *
    * FIXME: make this more sane
    */
-  def createValueFor(rawStr: String): SolrStringValue = if (rawStr == "*") fullWildcardValue else {
+  def createValueFor(rawStr: String): SolrStringValue = if (rawStr == "*" || rawStr == ".*") fullWildcardValue else {
     def s(p: String) = rawStr.startsWith(p)
     def e(p: String) = rawStr.endsWith(p)
     val s_* = s("*")
