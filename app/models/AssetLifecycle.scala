@@ -71,9 +71,9 @@ object AssetLifecycle {
 
   def decommissionAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     val reason = options.get("reason").map { r =>
-      r + " : status is %s".format(asset.getStatus().name)
+      r + " : status is %s".format(asset.getStatusName)
     }.getOrElse(
-      "Decommission of asset requested, status is %s".format(asset.getStatus().name)
+      "Decommission of asset requested, status is %s".format(asset.getStatusName)
     )
     try {
       Asset.inTransaction {
@@ -140,8 +140,15 @@ object AssetLifecycle {
       return Left(new Exception("features.sloppyStatus is not enabled"))
     }
     allCatch[Boolean].either {
+      val oldStatus = asset.getStatusName
+      val oldState = asset.getStateName
       Asset.partialUpdate(asset, Some(new Date().asTimestamp), status.map(_.id), state)
-      ApiTattler.informational(asset, None, reason)
+      val newStatus = status.map(_.name).getOrElse("NotUpdated")
+      val newState = state.map(_.name).getOrElse("NotUpdated")
+      val message = "Old status:state (%s:%s) -> New status:state (%s:%s) - %s".format(
+        oldStatus, oldState, newStatus, newState, reason
+      )
+      ApiTattler.informational(asset, None, message)
       true
     }.left.map(e => handleException(asset, "Error updating status/state for asset", e))
   }

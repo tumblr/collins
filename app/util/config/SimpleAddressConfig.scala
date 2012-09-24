@@ -11,7 +11,7 @@ case class SimpleAddressConfig(
 
   import AddressPool.poolName
 
-  // Default pool to use, if configured, hidden since we may end up with a nake config which will
+  // Default pool to use, if configured, hidden since we may end up with a naked config which will
   // still end up with the DefaultPoolName
   def defaultPoolName: Option[String] = getString("defaultPoolName").map(poolName(_)).filter(_.nonEmpty)
   def name = getString("name").orElse(orName)

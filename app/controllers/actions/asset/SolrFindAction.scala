@@ -8,7 +8,6 @@ import models.asset.AssetView
 import util.security.SecuritySpecification
 import util.plugins.solr._
 
-
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc.Result

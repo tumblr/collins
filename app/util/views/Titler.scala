@@ -8,7 +8,7 @@ object Titler {
     if (asset.getMetaAttribute("HOSTNAME").isDefined) {
       "Collins | %s - %s".format(asset.getMetaAttribute("HOSTNAME").get.getValue, asset.tag)
     } else {
-      val assetType = asset.getType().name
+      val assetType = asset.getType().label
       "Collins | %s - %s".format(asset.tag, assetType)
     }
   }
