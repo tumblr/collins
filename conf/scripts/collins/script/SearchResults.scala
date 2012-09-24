@@ -28,4 +28,3 @@ object SearchResults extends CollinScript {
   }
 
 }
-
