@@ -13,7 +13,7 @@ class App < Thor
       if options[:config] != nil
         config = options[:config]
       end
-      CollinsIntegration.new(config)
+      CollinsIntegration.new(config, false)
     end
   end
 
