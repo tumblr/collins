@@ -11,7 +11,7 @@ DAEMON="/usr/local/bin/daemon"
 LISTEN_PORT=8080
 FILE_LIMIT=8192
 COLLINS_USER="collins"
-HEAP_OPTS="-XX:MaxPermSize=256m"
+HEAP_OPTS="-XX:MaxPermSize=384m"
 
 # Check for config overrides
 [ -f /etc/sysconfig/collins ] && . /etc/sysconfig/collins
