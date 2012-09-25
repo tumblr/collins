@@ -9,6 +9,15 @@
 @link(newPage: Int) = @{
   Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "ASC", "and").toString), req.queryString)
 }
+@sortLink(sort: String) = @{
+  val sortDir = if (sortField.map{_ != sort}.getOrElse(true)) {
+    SortAsc
+  } else {
+    ! sortDirection
+  }
+  val prefix = app.routes.Resources.find(0, 50, sortDir.toString, "and", sort).toString
+  Pagination.paginate(prefix, req.queryString)
+}
 @getTableHeader(tag: String, assets: Page[models.asset.AssetView]) = @{
   val style = ListHelper.showColumnForTag(tag, assets) match {
     case true => ""

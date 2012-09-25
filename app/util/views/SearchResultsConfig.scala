@@ -13,8 +13,7 @@ object SearchResultsConfig extends Configurable {
   def defaultTagOrder = {
     val tagList = getStringList("defaultTagOrder")
     if (tagList.isEmpty) {
-      List("TAG", "HOSTNAME", "PRIMARY_ROLE", "STATUS", "CREATED_DATE",
-          "UPDATED_DATE", "SL_LINK")
+      List("TAG", "HOSTNAME", "PRIMARY_ROLE", "STATUS", "CREATED", "UPDATED")
     } else {
       tagList
     }
