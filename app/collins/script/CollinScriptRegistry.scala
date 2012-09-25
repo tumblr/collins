@@ -80,7 +80,6 @@ sealed trait CollinScriptEngine {
         logger.error("No CollinScript method found for call: %s, args: %s"
           .format(method, args.mkString(", ")))
       }
-      None
     } catch {
       case e => {
         logger.error("COLLINSCRIPT EXECUTION ERROR:\n%s".format(
@@ -153,23 +152,20 @@ sealed trait CollinScriptEngine {
    * successfully-compiled code version if an error occurs.
    */
   def tryRefresh: Unit = {
+    // If the refresh write lock is locked, we're currently refreshing, so
+    // terminates the script refresh attempt.
+    if (refreshLock.isWriteLocked) {
+      return
+    } else if (System.currentTimeMillis - lastRefreshMillis.get <
+        refreshPeriodMillis) {
+      return
+    }
     val oldClassloader = Thread.currentThread().getContextClassLoader
     try {
       // Sets the current thread context's classloader to Play's current
       // classloader, as SSE derives this from the current thread's context.
       // Huge thanks to Typesafe's James Roper for this suggestion!
       Thread.currentThread().setContextClassLoader(Play.current.classloader)
-      // If the time of last refresh is less than the refresh threshold, does
-      // not refresh.
-      if (System.currentTimeMillis - lastRefreshMillis.get <
-          refreshPeriodMillis) {
-        return
-      }
-      // If the refresh lock is locked, we're currently refreshing, so
-      // terminates the script refresh attempt.
-      if (refreshLock.isWriteLocked) {
-        return
-      }
       logger.debug("Refreshing CollinScript engine...")
       // Engine is not threadsafe, so refresh by way of write locks.
       refreshLock.writeLock.lock
