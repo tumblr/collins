@@ -24,7 +24,7 @@ trait ScriptActionExecutor extends ActionExecutor {
    * @return a Boolean corresponding to the return value of the CollinScript
    * call.
    */
-  override protected def runCommand(cmd: AnyRef*): AnyRef = {
+  override protected def runCommandGeneric(cmd: AnyRef*): Option[AnyRef] = {
     CollinScriptExecutor.runScriptCommand(cmd)
   }
 
@@ -38,9 +38,10 @@ trait ScriptActionExecutor extends ActionExecutor {
    * call.
    */
   override protected def runCommandBoolean(cmd: FormattedValues): Boolean = {
-    runCommand(cmd : _*) match {
+    runCommandGeneric(cmd : _*) match {
       case None => false
-      case (b: java.lang.Boolean) => b
+      case Some(b: java.lang.Boolean) => b
+      case _ => false
     }
   }
 
@@ -54,9 +55,10 @@ trait ScriptActionExecutor extends ActionExecutor {
    * call.
    */
   override protected def runCommandString(cmd: FormattedValues): String = {
-    runCommand(cmd : _*) match {
+    runCommandGeneric(cmd : _*) match {
       case None => ""
-      case (b: String) => b
+      case Some(b: String) => b
+      case _ => ""
     }
   }
 

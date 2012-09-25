@@ -41,20 +41,31 @@ trait ActionExecutor {
   def commandString = command.mkString(" ")
 
   /**
+   * Formats the value contained in a string by executing the specified Collins
+   * Action, returning the String as formatted by the Action.
+   *
+   * @param value the String to format.
+   * @return the formatted String.
+   */
+  def formatValue(value: String): String = {
+    runCommandString(buildFormatCommand(value))
+  }
+
+  /**
    * Executes the command specified by this Collins action, returning an AnyRef,
    * typically overridden in an ActionExecutor subclass.
    *
-   * @param cmd a command of the specified type
-   * @return the result from running the command as a String.
+   * @param cmd a command to be executed.
+   * @return the raw result from executing the command.
    */
-  protected def runCommand(cmd: AnyRef*): AnyRef
+  protected def runCommandGeneric(cmd: AnyRef*): Option[AnyRef]
 
   /**
    * Executes the command specified by this Collins action, returning a String,
    * typically overridden in an ActionExecutor subclass.
    *
-   * @param cmd a command of the specified type
-   * @return the result from running the command as a String.
+   * @param cmd a command to be executed.
+   * @return the result from executing the command, formatted as a String.
    */
   protected def runCommandString(cmd: FormattedValues): String
 
@@ -62,34 +73,22 @@ trait ActionExecutor {
    * Executes the command specified by this Collins action, returning a
    * Boolean, typically overridden in an ActionExecutor subclass.
    *
-   * @param cmd a command of the specified type
-   * @return the result from running the command as a Boolean.
+   * @param cmd a command to be executed.
+   * @return the result from executing the command, formatted as a Boolean.
    */
   protected def runCommandBoolean(cmd: FormattedValues): Boolean
 
   /**
-   * Formats the value contained in a string by running a Collins Action,
-   * returning the formatted String.
-   *
-   * @param value the String to format.
-   * @return the formatted String.
-   */
-  def formatValue(value: String): String = {
-    runCommandString(buildCommandWithString(value))
-  }
-
-  /**
-   * Builds a command suitable for sending to a generic Collins Action,
+   * Builds a command suitable for FormattedValues execution f,
    * beginning with the first element of the command, followed by the object
    * upon which the Action will be predicated, followed by any other
    * user-specified arguments as Strings.
    *
-   * @param withObj the Collins object upon which the Action will be
+   * @param withObj the Collins object upon which the Collins Action will be
    * predicated.
-   * @return a Sequence of values suitable for passing to a Collins Action.
+   * @return a Sequence of values suitable for execution as a Collins Action.
    */
-  protected def buildCommandWithString(
-      withString: String): FormattedValues = {
+  protected def buildFormatCommand(withString: String): FormattedValues = {
     var commandWithString = new ListBuffer[String]()
     commandWithString += command(0)
     commandWithString += withString
@@ -101,7 +100,7 @@ trait ActionExecutor {
 
   /**
    * Obtains all desired method replacements found in the user-supplied
-   * command.
+   * command, 
    *
    * @return a Set of MethodReplacement objects suitable for running method
    * calls with.
@@ -110,6 +109,29 @@ trait ActionExecutor {
     METHOD_CALL_REGEX.findAllIn(commandString).matchData.map { md =>
       MethodReplacement(md.group(0), md.group(1))
     }.toSet
+
+  /**
+   * Templates a command suitable for sending to a generic Collins Action,
+   * beginning with the first element of the command, followed by the object
+   * upon which the Action will be predicated, followed by any other
+   * user-specified arguments as Strings, templated against the supplied
+   * object.
+   *
+   * @param withObj the Collins object upon which the Action will be
+   * predicated.
+   * @return a Sequence of values suitable for passing to a generic Collins
+   * Action.
+   */
+  protected def templateCommandWithObject(withObj: AnyRef): Seq[AnyRef] = {
+    val templatedCommand = templateFormattedValues(withObj)
+    var commandWithValue = new ListBuffer[AnyRef]()
+    commandWithValue += templatedCommand(0)
+    commandWithValue += withObj
+    templatedCommand.slice(1, command.length).foreach{ cmdPart =>
+      commandWithValue += cmdPart
+    }
+    commandWithValue
+  }
 
   /**
    * Formats a command suitable for execution with the results of running a
@@ -121,7 +143,7 @@ trait ActionExecutor {
    * the command
    * @return a command suitable for execution.
    */
-  protected def templateCommand(value: AnyRef): FormattedValues = {
+  protected def templateFormattedValues(value: AnyRef): FormattedValues = {
     val replacements = getMethodReplacements()
     logger.debug("Got replacements for command %s: %s".format(commandString,
       replacements.map(_.toString).mkString(", ")
@@ -138,29 +160,6 @@ trait ActionExecutor {
     }
     logger.debug("Got new command with replacements: %s".format(cmdValue))
     FormattedValues(cmdValue)
-  }
-
-  /**
-   * Templates a command suitable for sending to a generic Collins Action,
-   * beginning with the first element of the command, followed by the object
-   * upon which the Action will be predicated, followed by any other
-   * user-specified arguments as Strings, templated against the supplied
-   * object.
-   *
-   * @param withObj the Collins object upon which the Action will be
-   * predicated.
-   * @return a Sequence of values suitable for passing to a generic Collins
-   * Action.
-   */
-  protected def templateCommandWithObject(withObj: AnyRef): Seq[AnyRef] = {
-    val templatedCommand = templateCommand(withObj)
-    var commandWithValue = new ListBuffer[AnyRef]()
-    commandWithValue += templatedCommand(0)
-    commandWithValue += withObj
-    templatedCommand.slice(1, command.length).foreach{ cmdPart =>
-      commandWithValue += cmdPart
-    }
-    commandWithValue
   }
 
 }

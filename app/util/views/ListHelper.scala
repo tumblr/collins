@@ -109,16 +109,16 @@ object ListHelper {
    * @return a Boolean representing whether this column should be shown.
    */
   def showColumnForTag(tag: String, assets: Page[AssetView]): Boolean = {
-    TagDecoratorConfig.getShowIf(tag) match {
+    TagDecoratorConfig.getShowIfAction(tag) match {
       case Some(actionConfig) => {
-        logger.debug("Found showIf for %s; type: %s, command: %s".format(tag,
-            actionConfig.actionType, actionConfig.command.mkString(", ")))
+        logger.debug("Found showIfAction for %s; type: %s, command: %s".format(
+            tag, actionConfig.actionType, actionConfig.command.mkString(", ")))
         val handler = Action.getHandler[AssetsActionHandler] (actionConfig)
         handler match {
           case Some(showIfHandler) =>
             return showIfHandler.checkAssetsAction(assets)
           case None => {
-            logger.error("No showIf action handler found for action %s."
+            logger.error("No showIfAction handler found for action %s."
               .format(actionConfig))
           }
         }

@@ -31,7 +31,7 @@ trait CallbackActionHandler extends ActionHandler with CallbackHandler {
       logger.warn("Got no value back to use with command %s"
           .format(commandString))
     }
-    runCommandBoolean(templateCommand(value))
+    runCommandBoolean(templateFormattedValues(value))
   }
 
 }
@@ -41,7 +41,7 @@ trait CallbackActionHandler extends ActionHandler with CallbackHandler {
  * A CallbackActionHandler subclass which executes Collins Actions by way of
  * a system call to the shell.
  *
- * @param command: the Collins Action command to execute
+ * @param command the Collins Action command to execute
  */
 case class CallbackExecActionHandler(override val command: Seq[String])
   extends ExecActionExecutor with CallbackActionHandler
@@ -51,7 +51,7 @@ case class CallbackExecActionHandler(override val command: Seq[String])
  * A CallbackActionHandler subclass which executes Collins Actions by way of
  * a CollinScript method call.
  *
- * @param command: the Collins Action command to execute
+ * @param command the Collins Action command to execute
  */
 case class CallbackScriptActionHandler(override val command: Seq[String])
   extends ScriptActionExecutor with CallbackActionHandler

@@ -14,7 +14,6 @@ class CollinScriptPlugin(app: Application) extends Plugin {
 
   override def onStart() {
     if (enabled) {
-      Asset.findById(1).get
       CollinScriptRegistry.initializeAll(app)
     }
   }

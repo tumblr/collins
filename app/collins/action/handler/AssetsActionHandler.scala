@@ -42,17 +42,17 @@ trait AssetsActionHandler extends ActionHandler {
  * An AssetsActionHandler subclass which executes Collins Actions by way of
  * a system call to the shell.
  *
- * @param command: the Collins Action command to execute
+ * @param command the Collins Action command to execute
  */
 case class AssetsExecActionHandler(override val command: Seq[String])
   extends ExecActionExecutor with AssetsActionHandler {
 
   override def checkAssetsAction(assets: Page[AssetView]): Boolean = {
-    runCommandBoolean(templateCommand(assets))
+    runCommandBoolean(templateFormattedValues(assets))
   }
 
   override def executeAssetsAction(assets: Page[AssetView]): String = {
-    runCommandString(templateCommand(assets))
+    runCommandString(templateFormattedValues(assets))
   }
 
 }
@@ -62,22 +62,24 @@ case class AssetsExecActionHandler(override val command: Seq[String])
  * An AssetsActionHandler subclass which executes Collins Actions by way of
  * a CollinScript method call.
  *
- * @param command: the Collins Action command to execute
+ * @param command the Collins Action command to execute
  */
 case class AssetsScriptActionHandler(override val command: Seq[String])
   extends ScriptActionExecutor with AssetsActionHandler {
 
   override def checkAssetsAction(assets: Page[AssetView]): Boolean = {
-    runCommand(templateCommandWithObject(assets) : _*) match {
+    runCommandGeneric(templateCommandWithObject(assets) : _*) match {
       case None => false
-      case (b: java.lang.Boolean) => b
+      case Some(b: java.lang.Boolean) => b
+      case _ => false
     }
   }
 
   override def executeAssetsAction(assets: Page[AssetView]): String = {
-    runCommand(templateCommandWithObject(assets) : _*) match {
+    runCommandGeneric(templateCommandWithObject(assets) : _*) match {
       case None => ""
-      case (s: String) => s
+      case Some(s: String) => s
+      case _ => ""
     }
   }
 

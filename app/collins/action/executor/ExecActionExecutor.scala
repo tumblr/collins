@@ -14,11 +14,11 @@ import play.api.Logger
  */
 trait ExecActionExecutor extends ActionExecutor {
 
-  override protected def runCommand(cmd: AnyRef*): AnyRef = {
+  override protected def runCommandGeneric(cmd: AnyRef*): Option[AnyRef] = {
     val stringCommand: Seq[String] = cmd.map{ cmdPart =>
       cmdPart.toString
     }
-    Command(stringCommand, logger).run()
+    Some(Command(stringCommand, logger).run())
   }
 
   override protected def runCommandBoolean(cmd: FormattedValues): Boolean = {

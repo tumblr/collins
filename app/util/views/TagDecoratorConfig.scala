@@ -19,8 +19,8 @@ case class DecoratorConfig(val name: String, override val source: TypesafeConfig
   def formatterAction: Option[ActionConfig] =
     ActionConfig.getActionConfig(getConfig("formatterAction"))
   def header = getString("header", "")
-  def showIf: Option[ActionConfig] = 
-    ActionConfig.getActionConfig(getConfig("showIf"))
+  def showIfAction: Option[ActionConfig] = 
+    ActionConfig.getActionConfig(getConfig("showIfAction"))
   def valueParser = getString("valueParser")
   def getIndex(i: Int): Map[String,String] = getStringMap(i.toString)
 
@@ -63,9 +63,9 @@ object TagDecoratorConfig extends Configurable {
     }
   }
 
-  def getShowIf(tag: String): Option[ActionConfig] = {
+  def getShowIfAction(tag: String): Option[ActionConfig] = {
     if (decorators.contains(tag)) {
-      return decorators(tag).showIf
+      return decorators(tag).showIfAction
     } else {
       None
     }

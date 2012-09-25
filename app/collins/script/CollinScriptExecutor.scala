@@ -18,7 +18,7 @@ object CollinScriptExecutor {
    * @param cmd a command to execute by a CollinScript method call.
    * @return the results of the CollinScript method call.
    */
-  def runScriptCommand(cmd: Seq[AnyRef]): AnyRef = {
+  def runScriptCommand(cmd: Seq[AnyRef]): Option[AnyRef] = {
     cmd match {
       case Nil => None
       case Seq(methodCall, methodCallParams@_*) => methodCall match {

@@ -17,10 +17,10 @@ object CollinScriptConfig extends Configurable {
   override val referenceConfigFilename = "collinscript_reference.conf"
 
   def enabled = getBoolean("enabled", false)
-  def refreshPeriodMillis: Long = getMilliseconds("refreshPeriodMillis")
-    .getOrElse(5000)
   def outputDir = getString("outputDir").getOrElse("%s/%s".format(
       System.getProperty("java.io.tmpdir"), "collinscript-classes"))
+  def refreshPeriodMillis: Long = getMilliseconds("refreshPeriodMillis")
+    .getOrElse(5000)
   def scriptDir = getString("scriptDir")(ConfigValue.Required).filter(_.nonEmpty).get
 
   override protected def validateConfig() {
