@@ -1,6 +1,8 @@
 package collins
 package callbacks
 
+import action.Action
+import action.handler.CallbackActionHandler
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
 import play.api.{Application, Configuration, Logger, Plugin}
 import play.api.Play.current
@@ -43,9 +45,17 @@ class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackM
     val matchCondition = descriptor.matchCondition
     val currentConfigMatches = CallbackMatcher(matchCondition.current, _.getNewValue)
     val previousConfigMatches = CallbackMatcher(matchCondition.previous, _.getOldValue)
-    val handlesMatch = createMatchHandler(descriptor.matchAction)
+    val handlesMatch = Action.getHandler[CallbackActionHandler] (
+        descriptor.matchAction.get) match {
+      case Some(handler) => handler
+      case None => {
+        logger.error("No callback action handler found for action: %s".format(
+            descriptor.matchAction.get))
+        return
+      }
+    }
     logger.debug("Setting up callback %s - %s %s".format(descriptor.name, eventName, handlesMatch))
-    on(eventName, new CallbackActionHandler {
+    on(eventName, new CallbackHandler {
       override def apply(pce: PropertyChangeEvent) {
         val prevMatch = previousConfigMatches(pce)
         val curMatch = currentConfigMatches(pce)
@@ -54,13 +64,6 @@ class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackM
         }
       }
     })
-  }
-
-  protected def createMatchHandler(cfg: CallbackAction): CallbackActionHandler = {
-    cfg.actionType match {
-      case CallbackActionType.Exec =>
-        runners.ExecActionRunner(cfg.command)
-    }
   }
 
 }

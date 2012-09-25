@@ -1,7 +1,7 @@
 package util
 package solr
 
-import collins.callbacks.CallbackActionHandler
+import collins.callbacks.CallbackHandler
 import models.{Asset, AssetMetaValue, IpAddresses}
 
 import akka.actor._
@@ -12,7 +12,7 @@ import java.beans.PropertyChangeEvent
 // creates fire with null old value, some new value
 // deletes fire with some old value, null new value
 // updates fire with both
-case class SolrCallbackHandler(server: SolrServer, updater: ActorRef) extends CallbackActionHandler {
+case class SolrCallbackHandler(server: SolrServer, updater: ActorRef) extends CallbackHandler {
 
   private[this] val logger = Logger("SolrCallbackHandler")
 

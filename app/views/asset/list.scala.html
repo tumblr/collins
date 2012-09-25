@@ -2,7 +2,7 @@
 @(assets: Page[models.asset.AssetView], sortDirection: SortDirection = SortDirection.SortAsc, sortField: Option[String] = None, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.views.{ListHelper, Formatter, Pagination}
+@import _root_.util.views.{ListHelper, Formatter, Pagination, TagDecorator}
 @import util.notice
 @import models.SortDirection._
 
@@ -18,13 +18,18 @@
   val prefix = app.routes.Resources.find(0, 50, sortDir.toString, "and", sort).toString
   Pagination.paginate(prefix, req.queryString)
 }
-@rowClassFromAsset(a: models.asset.AssetView) = @{
-  a match {
-    case warn if warn.isIncomplete || warn.isNew => "warning"
-    case info if info.isProvisioning || info.isProvisioned => "info"
-    case ok if ok.isCancelled || ok.isDecommissioned => "success"
-    case err if err.isMaintenance => "error"
-    case default => ""
+@getTableHeader(tag: String, assets: Page[models.asset.AssetView]) = @{
+  val style = ListHelper.showColumnForTag(tag, assets) match {
+    case true => ""
+    case false => "display: none"
+  }
+  if (ListHelper.showColumnForTag(tag, assets))
+  if(ListHelper.canSortForTag(tag)) {
+    Html("<th class=\"search-results-header\" id=\"%s\" style=\"%s\"><a href=\"%s\">%s</a></th>"
+      .format(tag, style, sortLink(tag), ListHelper.getColumnHeader(tag)))
+  } else {
+    Html("<th class=\"search-results-header\" id=\"%s\" style=\"%s\">%s</th>"
+      .format(tag, style, ListHelper.getColumnHeader(tag)))
   }
 }
 
@@ -40,32 +45,20 @@
     <table class="table table-bordered table-hover" data-size="50">
       <thead>
         <tr>
-          <th><a href="@sortLink("TAG")">Asset Tag</a></th>
-          @if(ListHelper.showHostname(assets)) {
-          <th><a href="@sortLink("HOSTNAME")">Hostname</a></th>
-          }
-	        <th><a href="@sortLink("PRIMARY_ROLE")">Primary Role</a></th>
-          <th><a href="@sortLink("STATUS")">Status</a></th>
-          <th><a href="@sortLink("CREATED")">Created</a></th>
-          <th><a href="@sortLink("UPDATED")">Last Updated</a></th>
-          @if(ListHelper.showSoftLayerLink(assets)) {
-          <th>SL Link</th>
+          @ListHelper.getListHeaderTags.map { tag =>
+            @getTableHeader(tag, assets)
           }
         </tr>
       </thead>
       <tbody>
         @assets.items.map { asset =>
-        <tr class="@rowClassFromAsset(asset)">
-          <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
-          @if(ListHelper.showHostname(assets)) {
-          <td>@asset.getHostnameMetaValue.map(v => Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>
-          }
-          <td>@asset.getPrimaryRoleMetaValue().getOrElse { <em>Unknown</em> }</td>
-          <td>@Formatter.elipse(asset.getStatusName(), 12)</td>
-          <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
-          <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
-          @if(ListHelper.showSoftLayerLink(assets)) {
-            @slLink(asset)
+        <tr class="@ListHelper.getRowClassForAsset(asset)">
+          @ListHelper.getListHeaderTags.map { tag =>
+            @if(ListHelper.showColumnForTag(tag, assets)) {
+              <td>@TagDecorator.decorate(tag, asset)</td>
+            } else {
+              <td style="display: none"></td>
+            }
           }
         </tr>
         }

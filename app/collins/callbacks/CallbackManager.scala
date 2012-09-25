@@ -1,10 +1,12 @@
 package collins
 package callbacks
 
-import play.api.Logger
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
+import play.api.Logger
+
 
 trait CallbackManager {
+
   protected val logger = Logger(getClass)
   protected val pcs = new PropertyChangeSupport(this)
 
@@ -13,7 +15,7 @@ trait CallbackManager {
     pcs.firePropertyChange(propertyName, oldValue, newValue)
   }
 
-  def on(propertyName: String, f: CallbackActionHandler) {
+  def on(propertyName: String, f: CallbackHandler) {
     logger.debug("Registering %s".format(propertyName))
     pcs.addPropertyChangeListener(propertyName, new PropertyChangeListener {
       override def propertyChange(pce: PropertyChangeEvent): Unit = f(pce)
@@ -25,4 +27,5 @@ trait CallbackManager {
   protected def removeListeners() {
     for (listener <- pcs.getPropertyChangeListeners()) pcs.removePropertyChangeListener(listener)
   }
+
 }

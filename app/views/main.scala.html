@@ -1,6 +1,9 @@
 @(title: String, loggedIn: Boolean = true)(content: Html)(implicit req: Request[AnyContent])
 
 @import helper._
+@import _root_.models.Asset
+@import _root_.models.asset.AssetView
+@import _root_.collins.script.CollinScriptRegistry
 @import _root_.util.views.Formatter
 @import _root_.controllers.Permissions
 
@@ -22,7 +25,6 @@
   </head>
 
   <body>
-
     @if(loggedIn) {
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">

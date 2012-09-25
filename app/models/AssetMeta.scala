@@ -116,6 +116,9 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     }
   }
 
+  def getSystemMeta(): Set[String] =
+    Set("TAG", "PRIMARY_ROLE", "STATUS", "UPDATED", "CREATED")
+
   def getViewable(): Seq[AssetMeta] = getOrElseUpdate("AssetMeta.getViewable") {
     from(tableDef)(a =>
       where(a.priority gt -1)

@@ -1,6 +1,8 @@
 package util
 package views
 
+import models.Asset
+import models.asset.AssetView
 import models.MetaWrapper
 
 import play.api.mvc.Content
@@ -20,6 +22,13 @@ object TagDecorator {
     getDecorator(key) match {
       case None => Html(value)
       case Some(d) => Html(d.format(key, value))
+    }
+  }
+
+  def decorate(tag: String, asset: AssetView): Content = {
+    getDecorator(tag) match {
+      case None => Html(ListHelper.getTagValueForAsset(tag, asset).toString)
+      case Some(d) => Html(d.format(tag, asset))
     }
   }
 

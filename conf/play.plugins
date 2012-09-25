@@ -8,3 +8,4 @@
 4500:collins.softlayer.SoftLayerPlugin
 4600:collins.provisioning.ProvisionerPlugin
 4700:collins.graphs.GraphPlugin
+11000:collins.script.CollinScriptPlugin
