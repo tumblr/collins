@@ -2,12 +2,10 @@ package controllers
 package actions
 package asset
 
-import validators.StringUtil
-
 import forms._
 
+import collins.validation.StringUtil
 import models.{AssetFinder, AssetType, State, Status => AssetStatus, Truthy}
-
 import util.{AttributeResolver, MessageHelper}
 import util.AttributeResolver.{ResultTuple => ResolvedAttributes}
 import util.views.Formatter.ISO_8601_FORMAT

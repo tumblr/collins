@@ -1,5 +1,4 @@
-package controllers
-package validators
+package collins.validation
 
 import org.apache.commons.lang3.StringUtils
 

@@ -1,6 +1,7 @@
 package controllers
 package validators
 
+import collins.validation.StringUtil
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.data.validation.Constraints._
