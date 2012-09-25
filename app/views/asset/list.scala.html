@@ -9,6 +9,19 @@
 @link(newPage: Int) = @{
   Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "ASC", "and").toString), req.queryString)
 }
+@getTableHeader(tag: String, assets: Page[models.asset.AssetView]) = @{
+  val style = ListHelper.showColumnForTag(tag, assets) match {
+    case true => ""
+    case false => "display: none"
+  }
+  if(ListHelper.canSortForTag(tag)) {
+    Html("<th class=\"search-results-header\" id=\"%s\" style=\"%s\"><a href=\"%s\">%s</a></th>"
+      .format(tag, style, sortLink(tag), ListHelper.getColumnHeader(tag)))
+  } else {
+    Html("<th class=\"search-results-header\" id=\"%s\" style=\"%s\">%s</th>"
+      .format(tag, style, ListHelper.getColumnHeader(tag)))
+  }
+}
 
 @main("Asset Search Results") {
 <div class="page-header">
@@ -22,10 +35,8 @@
     <table class="table table-bordered table-hover" data-size="50">
       <thead>
         <tr>
-          @ListHelper.getListHeaderTags.map { tag =>
-            @if(ListHelper.showColumnForTag(tag, assets)) {
-              <th>@ListHelper.getColumnHeader(tag)</th>              
-            }
+          @ListHelper.getListHeaderTags.map { tag => 
+            @getTableHeader(tag, assets)
           }
         </tr>
       </thead>

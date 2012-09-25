@@ -17,6 +17,27 @@ object ListHelper {
   protected val logger = Logger("ListHelper")
 
   /**
+   * Tests whether an asset metatag associated with can be sorted in the UI.
+   * Pseudo-tags cannot be sorted, but system tags and standard asset metatags
+   * can.
+   *
+   * @param tag an asset metatag or pseudo-tag
+   * @return a Boolean representing whether tag can be sorted in the UI.
+   */
+  def canSortForTag(tag: String): Boolean = {
+    logger.warn("CANSORT: %s".format(tag))
+    AssetMeta.findByName(tag) match {
+      case Some(meta) => true
+      case None =>
+        if (AssetMeta.getSystemMeta contains tag) {
+          true
+        } else {
+          false
+        }
+    }
+  }
+
+  /**
    * Returns the header for the column of asset metadata dictated by a metadata
    * tag.  If a metadata tag, retrieves tag's label and returns, otherwise uses
    * the optional header configuration value, specified by the Collins
