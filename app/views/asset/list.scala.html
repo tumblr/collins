@@ -23,6 +23,7 @@
     case true => ""
     case false => "display: none"
   }
+  if (ListHelper.showColumnForTag(tag, assets))
   if(ListHelper.canSortForTag(tag)) {
     Html("<th class=\"search-results-header\" id=\"%s\" style=\"%s\"><a href=\"%s\">%s</a></th>"
       .format(tag, style, sortLink(tag), ListHelper.getColumnHeader(tag)))
@@ -44,7 +45,7 @@
     <table class="table table-bordered table-hover" data-size="50">
       <thead>
         <tr>
-          @ListHelper.getListHeaderTags.map { tag => 
+          @ListHelper.getListHeaderTags.map { tag =>
             @getTableHeader(tag, assets)
           }
         </tr>
@@ -55,6 +56,8 @@
           @ListHelper.getListHeaderTags.map { tag =>
             @if(ListHelper.showColumnForTag(tag, assets)) {
               <td>@TagDecorator.decorate(tag, asset)</td>
+            } else {
+              <td style="display: none"></td>
             }
           }
         </tr>

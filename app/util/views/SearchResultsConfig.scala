@@ -10,14 +10,8 @@ object SearchResultsConfig extends Configurable {
   override val namespace = "searchresults"
   override val referenceConfigFilename = "searchresults_reference.conf"
 
-  def defaultTagOrder = {
-    val tagList = getStringList("defaultTagOrder")
-    if (tagList.isEmpty) {
-      List("TAG", "HOSTNAME", "PRIMARY_ROLE", "STATUS", "CREATED", "UPDATED")
-    } else {
-      tagList
-    }
-  }
+  def defaultTagOrder = getStringList("defaultTagOrder",
+      List("TAG", "HOSTNAME", "PRIMARY_ROLE", "STATUS", "CREATED", "UPDATED"))
 
   def rowClassAction: Option[ActionConfig] =
     ActionConfig.getActionConfig(getConfig("rowClassAction"))
