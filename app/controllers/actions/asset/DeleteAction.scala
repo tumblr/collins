@@ -2,11 +2,11 @@ package controllers
 package actions
 package asset
 
+import collins.validation.StringUtil
 import models.AssetLifecycle
 import models.asset.AssetDeleter
 import util.SystemTattler
 import util.security.SecuritySpecification
-import validators.StringUtil
 
 import play.api.data.Form
 import play.api.data.Forms._

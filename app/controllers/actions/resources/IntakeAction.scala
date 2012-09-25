@@ -2,9 +2,9 @@ package controllers
 package actions
 package resources
 
+import collins.validation.StringUtil
 import models.AssetMeta.Enum.ChassisTag
 import util.MessageHelperI
-import validators.StringUtil
 
 
 trait IntakeAction extends AssetAction with MessageHelperI {

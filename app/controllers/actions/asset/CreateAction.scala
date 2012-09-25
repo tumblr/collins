@@ -4,10 +4,10 @@ package asset
 
 import forms._
 
+import collins.validation.StringUtil
 import models.{Asset, AssetLifecycle, AssetType, IpmiInfo, Status => AssetStatus, Truthy}
 import util.OutputType
 import util.security.SecuritySpecification
-import validators.StringUtil
 
 import play.api.data.Form
 import play.api.data.Forms._

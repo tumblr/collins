@@ -2,7 +2,7 @@ package controllers
 package actions
 package state
 
-import validators.StringUtil
+import collins.validation.StringUtil
 import models.State
 import util.MessageHelper
 import util.security.SecuritySpecification
