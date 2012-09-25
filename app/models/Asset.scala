@@ -276,7 +276,12 @@ object Asset extends Schema with AnormAdapter[Asset] {
         sortType,
         sorter
       )
-      val sortedPage: Page[AssetView] = unsortedItems.copy(items = sortedItems.slice(page.offset, page.offset + page.size), total = sortedItems.size)
+      val sortedPage: Page[AssetView] = Page(
+        page = page.page, 
+        items = sortedItems.slice(page.offset, page.offset + page.size), 
+        total = sortedItems.size, 
+        offset = page.offset
+      )
       sortedPage
     }.getOrElse{
       logger.warn("No Nodeclass for Asset " + asset.tag)
