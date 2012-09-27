@@ -83,27 +83,37 @@ case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
  * unquoted string values.  If the value is quoted, such as foo = "*bar", the * is not interpreted as a wildcard
  */
 sealed trait StringValueFormat {
-  def format(value: String): String
+  def addWildcards(value: String): String
+
+  //if true, chars in charsToEscape will be escaped, eg : becomes \:
+  //only needed for unquoted values
+  def escapeChars: Boolean = true
+
+  val charsToEscape = List(":")
+  def addEscapeChars(value: String) = charsToEscape.foldLeft(value){(newValue, char) => newValue.replace(char, "\\" + char)}
+
+  def format(value: String) = addWildcards(if (escapeChars) addEscapeChars(value) else value)
 }
 case object LWildcard extends StringValueFormat {
-  def format(value:String) = "*" + value
+  def addWildcards(value:String) = "*" + value
 }
 case object RWildcard extends StringValueFormat {
-  def format(value: String) = value + "*"
+  def addWildcards(value: String) = value + "*"
 }
 case object LRWildcard extends StringValueFormat {
-  def format(value: String) = "*" + value + "*"
+  def addWildcards(value: String) = "*" + value + "*"
 }
 case object Quoted extends StringValueFormat {
-  def format(value: String) = "\"" + value + "\""
+  def addWildcards(value: String) = "\"" + value + "\""
+  override val escapeChars = false
 }
 //no wildcard/regex allowed, mostly for range queries
 case object StrictUnquoted extends StringValueFormat {
-  def format(value: String) = value
+  def addWildcards(value: String) = value
 }
 case object FullWildcard extends StringValueFormat {
-  def format(value: String) = if (value != "*") {
-    throw new IllegalArgumentException("Cannot format non '*' string as full-wildcard")
+  def addWildcards(value: String) = if (value != "*") {
+    throw new IllegalArgumentException("Cannot addWildcards non '*' string as full-wildcard")
   } else {
     "*"
   }
