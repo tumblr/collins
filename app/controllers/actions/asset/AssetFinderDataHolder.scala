@@ -2,13 +2,10 @@ package controllers
 package actions
 package asset
 
-import validators.StringUtil
-
 import forms._
 
-import models.{AssetFinder, State, Status => AssetStatus, Truthy}
-import models.AssetType.{Enum => AssetTypeEnum}
-
+import collins.validation.StringUtil
+import models.{AssetFinder, AssetType, State, Status => AssetStatus, Truthy}
 import util.{AttributeResolver, MessageHelper}
 import util.AttributeResolver.{ResultTuple => ResolvedAttributes}
 import util.views.Formatter.ISO_8601_FORMAT
@@ -39,7 +36,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     Option[List[String]],     // attribute
     Option[String],           // operation
     Option[AssetStatus],      // asset status
-    Option[AssetTypeEnum],    // asset type
+    Option[AssetType],        // asset type
     Option[Truthy],           // details
     Option[Date],             // createdAfter
     Option[Date],             // createdBefore
@@ -62,7 +59,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
       text(2).verifying { txt => isValidOperation(txt) }
     ),
     "status" -> optional(of[AssetStatus]),
-    "type" -> optional(of[AssetTypeEnum]),
+    "type" -> optional(of[AssetType]),
     "details" -> optional(of[Truthy]),
     "createdAfter" -> optional(date(ISO_8601_FORMAT)),
     "createdBefore" -> optional(date(ISO_8601_FORMAT)),

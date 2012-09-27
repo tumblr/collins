@@ -82,7 +82,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       mvs.size
     } catch {
       case e =>
-        e.printStackTrace()
+        logger.error("Caught exception trying to insert rows: %s".format(e.getMessage), e)
         0
     }
   }
@@ -244,10 +244,16 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     oldValue match {
       case None =>
       case Some(oValue) =>
-        val msg = "Deleting old %s value '%s', setting to '%s'".format(
+        val metaName = newValue.getMeta().name
+        val newValueS = if (Feature.encryptedTags.map(_.name).contains(metaName)) {
+          val msg = "Value of '%s' was changed".format(metaName)
+          InternalTattler.notice(newValue.getAsset, None, msg)
+        } else {
+          val msg = "Deleting old %s value '%s', setting to '%s'".format(
                     AssetMeta.findById(newValue.asset_meta_id).map(_.name).getOrElse("Unknown"),
                     oValue.value, newValue.value)
-        InternalTattler.notice(newValue.getAsset, None, msg)
+          InternalTattler.notice(newValue.getAsset, None, msg)
+        }
     }
   }
 

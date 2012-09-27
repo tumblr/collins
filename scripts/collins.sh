@@ -11,14 +11,14 @@ DAEMON="/usr/local/bin/daemon"
 LISTEN_PORT=8080
 FILE_LIMIT=8192
 COLLINS_USER="collins"
-HEAP_OPTS="-Xmx8192m -Xms8192m -XX:NewSize=6144m"
+HEAP_OPTS="-XX:MaxPermSize=384m"
 
 # Check for config overrides
 [ -f /etc/sysconfig/collins ] && . /etc/sysconfig/collins
 
 APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
 DNS_OPTS="-Dnetworkaddress.cache.ttl=1 -Dnetworkaddress.cache.negative.ttl=1"
-GC_OPTS="-XX:+UseParallelOldGC -XX:+UseAdaptiveSizePolicy -XX:MaxGCPauseMillis=1000 -XX:GCTimeRatio=99"
+GC_OPTS="-XX:+CMSClassUnloadingEnabled"
 GC_LOG_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintTenuringDistribution -XX:+PrintHeapAtGC"
 GC_LOG="-Xloggc:/var/log/$APP_NAME/gc.log"
 DEBUG_OPTS="-XX:ErrorFile=/var/log/$APP_NAME/java_error%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/collinsDump.hprof"

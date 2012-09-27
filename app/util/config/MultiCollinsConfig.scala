@@ -11,10 +11,9 @@ object MultiCollinsConfig extends Configurable {
   def enabled = getBoolean("enabled", false)
   def instanceAssetType = {
     val itype = getString("instanceAssetType")(ConfigValue.Required).map(_.trim).get
-    try {
-      AssetType.Enum.withName(itype)
-    } catch {
-      case e => 
+    AssetType.findByName(itype) match {
+      case Some(atype) => atype
+      case None =>
         throw globalError("multicollins.instanceAssetType - %s is not a valid asset type".format(itype))
     }
   }

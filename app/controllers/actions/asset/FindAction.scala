@@ -58,7 +58,7 @@ class FindAction(
           ))
         }
         case e =>
-          e.printStackTrace
+          logger.error("Error finding assets: %s".format(e.getMessage), e)
           handleError(RequestDataHolder.error500(
             "Error executing search: " + e.getMessage
           ))

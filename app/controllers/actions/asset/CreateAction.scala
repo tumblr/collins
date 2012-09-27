@@ -4,11 +4,10 @@ package asset
 
 import forms._
 
+import collins.validation.StringUtil
 import models.{Asset, AssetLifecycle, AssetType, IpmiInfo, Status => AssetStatus, Truthy}
-import models.AssetType.{Enum => AssetTypeEnum}
 import util.OutputType
 import util.security.SecuritySpecification
-import validators.StringUtil
 
 import play.api.data.Form
 import play.api.data.Forms._
@@ -21,8 +20,6 @@ case class CreateAction(
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction {
 
-  val ServerNode = AssetTypeEnum.ServerNode
-
   case class ActionDataHolder(
     assetTag: String,
     generateIpmi: Boolean,
@@ -32,15 +29,15 @@ case class CreateAction(
 
   lazy val dataHolder: Either[RequestDataHolder,ActionDataHolder] = Form(tuple(
     "generate_ipmi" -> optional(of[Truthy]),
-    "type" -> optional(of[AssetTypeEnum]),
+    "type" -> optional(of[AssetType]),
     "status" -> optional(of[AssetStatus]),
     "tag" -> optional(text(1))
   )).bindFromRequest()(request).fold(
     err => Left(RequestDataHolder.error400(fieldError(err))),
     tuple => {
       val (generate, atype, astatus, tag) = tuple
-      val atString = getString(_assetType, atype.map(_.toString).orElse(Some(ServerNode.toString)))
-      val assetType = AssetType.fromString(atString)
+      val assetType = _assetType.flatMap(a => AssetType.findByName(a)).orElse(atype).orElse(AssetType.ServerNode)
+      val atString = assetType.map(_.name).getOrElse("Unknown")
       val assetTag = getString(_assetTag, tag)
       if (assetTag.isEmpty) {
         Left(RequestDataHolder.error400("Asset tag not specified").update("assetType", atString))
@@ -49,7 +46,7 @@ case class CreateAction(
       } else {
         Right(ActionDataHolder(
           assetTag,
-          generate.map(_.toBoolean).getOrElse(assetType.get.getId == ServerNode.id),
+          generate.map(_.toBoolean).getOrElse(AssetType.isServerNode(assetType.get)),
           assetType.get,
           astatus
         ))
@@ -63,7 +60,7 @@ case class CreateAction(
       case true =>
         Left(
           RequestDataHolder.error409("Duplicate asset tag '%s'".format(dh.assetTag))
-            .update("assetType", AssetTypeEnum(dh.assetType.id).toString)
+            .update("assetType", dh.assetType.name)
         )
       case false =>
         Right(dh)
@@ -109,11 +106,7 @@ case class CreateAction(
 
   protected def assetTypeString(rd: RequestDataHolder): Option[String] = rd match {
     // FIXME ServerNode not a valid create type via UI
-    case ActionDataHolder(_, _, at, _) => try {
-      Some(AssetTypeEnum.withName(at.name).toString)
-    } catch {
-      case _ => None
-    }
+    case ActionDataHolder(_, _, at, _) => Some(at.name)
     case s if s.string("assetType").isDefined => s.string("assetType")
     case o => None
   }

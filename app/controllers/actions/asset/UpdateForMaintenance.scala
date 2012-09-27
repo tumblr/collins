@@ -3,11 +3,11 @@ package actions
 package asset
 
 import forms._
+import collins.validation.StringUtil
 import models.{Asset, State, Status => AssetStatus}
 import util.MessageHelper
 import util.security.SecuritySpecification
 import util.plugins.Maintenance
-import validators.StringUtil
 
 import play.api.data.Form
 import play.api.data.Forms._
