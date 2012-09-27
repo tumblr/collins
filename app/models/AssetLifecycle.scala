@@ -8,6 +8,7 @@ import models.logs._
 import util.{ApiTattler, AssetStateMachine, InternalTattler, LldpRepresentation, LshwRepresentation, SystemTattler}
 import util.config.{Feature, LshwConfig}
 import util.parsers.{LldpParser, LshwParser}
+import util.plugins.solr.Solr
 import util.power.PowerUnits
 
 import play.api.Logger
@@ -56,6 +57,7 @@ object AssetLifecycle {
           case true => Some(IpmiInfo.createForAsset(asset))
           case false => None
         }
+        Solr.updateAsset(asset)
         Tuple2(asset, ipmi)
       }
       InternalTattler.informational(res._1, None,
