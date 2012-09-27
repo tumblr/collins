@@ -130,6 +130,12 @@ class SolrQuerySpec extends ApplicationSpecification {
       "leading regex wildcard" in {
         """foosolr = .*bar""".query must_== SolrKeyVal("foosolr", SolrStringValue("bar", LWildcard))
       }
+      "number-start string value" in {
+        """foosolr = 03abc.xyz09-wer:10""".query must_== SolrKeyVal("foosolr", SolrStringValue("03abc.xyz09-wer:10", LRWildcard))
+      }
+      "unquoted mac address" in {
+        """foosolr = 04:7d:7b:06:8f:f9""".query must_== SolrKeyVal("foosolr", SolrStringValue("04:7d:7b:06:8f:f9", LRWildcard))
+      }
       "range both" in {
         """foosolr = [3, 5]""".query must_== SolrKeyRange("foosolr", Some(SolrIntValue(3)), Some(SolrIntValue(5)))
       }
@@ -352,7 +358,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         """tag = test""".query.typeCheck must_== Right(SolrKeyVal("TAG", SolrStringValue("test", LRWildcard)))
       }
       "not allow partial wildcard on numeric values" in {
-        """foosolr = 3*""".query.typeCheck must throwA[Exception]
+        """foosolr = 3*""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
     }
 
