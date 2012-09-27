@@ -71,6 +71,10 @@ describe "Asset Search" do
     checkSize "MAC_ADDRESS = 04:7d:7b:06:8*", 3
   end
 
+  it "mac address and hostname parens" do
+    checkTags "MAC_ADDRESS = 04:7d:7b:06:8f:f9 and (hostname=web-485c29e0.ewr01.tumblr.net)", ["001012"]
+  end
+
   it "simple or" do 
     checkTags  'hostname = web-6ec32d2e.ewr01.tumblr.net OR tag = "000981"', ["000981", "001016"]
   end
@@ -80,7 +84,7 @@ describe "Asset Search" do
   end
 
   it "asset type" do
-    checkSize  'type = configuration', 12
+    checkSize  'type = configuration', 13
   end
 
   it "asset status" do
