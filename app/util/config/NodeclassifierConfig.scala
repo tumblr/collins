@@ -11,15 +11,12 @@ object NodeclassifierConfig extends Configurable {
   val SortTypes = AssetSortType.values.map(_.toString)
   val DefaultSortType = AssetSortType.Distance.toString
 
-  def assetType = getString("assetType").orElse(Some("CONFIGURATION")).flatMap { t =>
-    try {
-      Option(AssetType.Enum.withName(t))
-    } catch {
-      case e =>
-        logger.warn("nodeclassifier.assetType - %s is not a valid asset type".format(t))
-        None
+  def assetType = getString("assetType").orElse(Some("CONFIGURATION")).map { t =>
+    AssetType.findByName(t) match {
+      case None => throw globalError("%s is not a valid asset type".format(t))
+      case Some(t) => t
     }
-  }.getOrElse(AssetType.Enum.Config)
+  }.get
 
   def identifyingMetaTag = getString("identifyingMetaTag", "IS_NODECLASS").toUpperCase
   def excludeMetaTags = getStringSet("excludeMetaTags").map(_.toUpperCase)

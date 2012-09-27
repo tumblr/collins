@@ -16,7 +16,7 @@ class SolrSpec extends ApplicationSpecification {
   "FlatSerializer" should {
     "serialize an asset" in {
       val assetTag = "solr%d".format(scala.util.Random.nextInt)
-      val assetType = AssetType.Enum.ServerNode
+      val assetType = AssetType.ServerNode.get
       val status = Status.Allocated.get
       val state = State.Running.get
       val meta = List(
@@ -60,7 +60,7 @@ class SolrSpec extends ApplicationSpecification {
     }
   }
 
-  def generateAsset(tag: String, assetType: AssetType.Enum, status: Status, metaValues: Seq[(String, ValueType, Int, String)], state: State) = {
+  def generateAsset(tag: String, assetType: AssetType, status: Status, metaValues: Seq[(String, ValueType, Int, String)], state: State) = {
     val asset = Asset.create(Asset(tag, status, assetType))
     Asset.partialUpdate(asset, None, None, Some(state))
     metaValues.foreach{case (name, value_type, group_id, value) =>
@@ -125,6 +125,15 @@ class SolrQuerySpec extends ApplicationSpecification {
       "boolean value" in {
         """foosolr = false""".query must_== (("foosolr" -> false): SolrKeyVal)
       }
+      "leading regex wildcard" in {
+        """foosolr = .*bar""".query must_== SolrKeyVal("foosolr", SolrStringValue("bar", LWildcard))
+      }
+      "number-start string value" in {
+        """foosolr = 03abc.xyz09-wer:10""".query must_== SolrKeyVal("foosolr", SolrStringValue("03abc.xyz09-wer:10", LRWildcard))
+      }
+      "unquoted mac address" in {
+        """foosolr = 04:7d:7b:06:8f:f9""".query must_== SolrKeyVal("foosolr", SolrStringValue("04:7d:7b:06:8f:f9", LRWildcard))
+      }
       "range both" in {
         """foosolr = [3, 5]""".query must_== SolrKeyRange("foosolr", Some(SolrIntValue(3)), Some(SolrIntValue(5)))
       }
@@ -142,9 +151,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
       "unquoted ip address" in {
         """ip_address = 192.168.1.1""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1", LRWildcard))
-        """ip_address = 192.168.1.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.", RWildcard))
-        """ip_address = 192.168.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.", RWildcard))
-        """ip_address = 192.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.", RWildcard))
+        """ip_address = 192.168.1.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1", RWildcard))
+        """ip_address = 192.168.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168", RWildcard))
+        """ip_address = 192.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192", RWildcard))
         """ip_address = *""".query must_== SolrKeyVal("ip_address", SolrStringValue("*", FullWildcard))
       }
     }
@@ -191,32 +200,52 @@ class SolrQuerySpec extends ApplicationSpecification {
     def L = LWildcard
     def R = RWildcard
     def Q = Quoted
-    "foo" in {
-      s("foo") must_== S("foo", LR)
+    "handle wildcarding" in {
+      "foo" in {
+        s("foo") must_== S("foo", LR)
+      }
+      "*foo" in {
+        s("*foo") must_== S("foo", L)
+      }
+      "*foo*"in {
+        s("*foo*") must_== S("foo", LR)
+      }
+      "foo*"in {
+        s("foo*") must_== S("foo", R)
+      }
+      "foo.*"in {
+        s("foo.*") must_== S("foo", R)
+      }
+      "^foo"in {
+        s("^foo") must_== S("foo", R)
+      }
+      "^foo.*"in {
+        s("^foo.*") must_== S("foo", R)
+      }
+      "^foo*"in {
+        s("^foo*") must_== S("foo", R)
+      }
+      "^foo$"in {
+        s("^foo$") must_== S("foo", Q)
+      }
+      "*foo$"in {
+        s("*foo$") must_== S("foo", L)
+      }
+      "foo$"in {
+        s("foo$") must_== S("foo", L)
+      }
     }
-    "*foo" in {
-      s("*foo") must_== S("foo", L)
-    }
-    "*foo*"in {
-      s("*foo*") must_== S("foo", LR)
-    }
-    "foo*"in {
-      s("foo*") must_== S("foo", R)
-    }
-    "^foo"in {
-      s("^foo") must_== S("foo", R)
-    }
-    "^foo*"in {
-      s("^foo*") must_== S("foo", R)
-    }
-    "^foo$"in {
-      s("^foo$") must_== S("foo", Q)
-    }
-    "*foo$"in {
-      s("*foo$") must_== S("foo", L)
-    }
-    "foo$"in {
-      s("foo$") must_== S("foo", L)
+
+    "handle character escaping" in {
+      "quoted" in {
+        S("04:7d:7b:06:8f:f9", Q).toSolrQueryString(false) must_== """"04:7d:7b:06:8f:f9""""
+      }
+      "wildcard" in {
+        S("04:7d:7b:06:8",R).toSolrQueryString(false) must_== """04\:7d\:7b\:06\:8*"""
+      }
+      "strict unquoted" in {
+        S("04:7d:7b:06:8f:f9", StrictUnquoted).toSolrQueryString(false) must_== """04\:7d\:7b\:06\:8f\:f9"""
+      }
     }
   } 
 
@@ -327,7 +356,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         """tag = test""".query.typeCheck must_== Right(SolrKeyVal("TAG", SolrStringValue("test", LRWildcard)))
       }
       "not allow partial wildcard on numeric values" in {
-        """foosolr = 3*""".query.typeCheck must throwA[Exception]
+        """foosolr = 3*""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
     }
 
@@ -341,7 +370,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       val afinder = AssetFinder(
         Some("foosolrtag"), 
         Status.Allocated, 
-        Some(AssetType.Enum.ServerNode),
+        Some(AssetType.ServerNode.get),
         Some(somedate),
         Some(somedate),
         Some(somedate),
@@ -351,7 +380,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       val expected = List(
         SolrKeyVal("tag", SolrStringValue("foosolrtag", LRWildcard)),
         SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
-        SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id)),
+        SolrKeyVal("assetType", SolrIntValue(AssetType.ServerNode.get.id)),
         SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
         SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
         SolrKeyVal("state", SolrIntValue(State.Running.get.id))
@@ -390,7 +419,7 @@ class SolrQuerySpec extends ApplicationSpecification {
       val afinder = AssetFinder(
         Some("footag"), 
         Some(Status.Allocated.get), 
-        Some(AssetType.Enum.ServerNode),
+        AssetType.ServerNode,
         Some(somedate),
         Some(somedate),
         Some(somedate),
@@ -412,7 +441,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
         SolrKeyVal("tag", SolrStringValue("footag", LRWildcard)),
         SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
-        SolrKeyVal("assetType", SolrIntValue(AssetType.Enum.ServerNode.id))
+        SolrKeyVal("assetType", SolrIntValue(AssetType.ServerNode.get.id))
       ))
       val p = AssetSearchParameters(resultTuple, afinder)
       println(p.toSolrExpression.toSolrQueryString)

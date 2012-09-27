@@ -25,7 +25,7 @@
       @formLabel(ServiceTag.toString, "Service Tag")
       @formInput {
         <span id="@ServiceTag.toString" class="uneditable-input">
-          @asset.getMetaAttribute(ServiceTag).map{a => @a.getValue()}.getOrElse{<em>-</em>}
+          @asset.getMetaAttribute(ServiceTag.toString).map{a => @a.getValue()}.getOrElse{<em>-</em>}
         </span>
       }
     }

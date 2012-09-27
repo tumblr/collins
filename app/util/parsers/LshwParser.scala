@@ -45,8 +45,7 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
       }
     } catch {
       case e: Throwable =>
-        logger.warn("Caught exception processing LSHW XML: " + e.getMessage)
-        e.printStackTrace()
+        logger.warn("Caught exception processing LSHW XML: %s".format(e.getMessage), e)
         return Left(e)
     }
     Right(rep)
