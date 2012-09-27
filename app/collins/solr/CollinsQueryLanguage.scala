@@ -39,21 +39,35 @@ sealed trait SolrQueryComponent {
 sealed trait SolrValue {
   val value: Any
   val valueType: ValueType
+
 }
 
-abstract class SolrSingleValue(val valueType: ValueType) extends SolrValue with SolrQueryComponent
+abstract class SolrSingleValue(val valueType: ValueType) extends SolrValue with SolrQueryComponent {
+  /**
+   * perform any validation or cleaning on the value, occurrs after the key is
+   * verified to exist and the value is of the correct type.
+   */
+  def validateValue(key: SolrKey): Either[String, SolrSingleValue]
+}
 
 case class SolrIntValue(value: Int) extends SolrSingleValue(Integer) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
+
+  def validateValue(key: SolrKey) = Right(this)
+
 }
 
 case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
+
+  def validateValue(key: SolrKey) = Right(this)
 }
 
 /**
- * StringValueFormat determines how wildcards are used on string values.  We currently allow leading and/or trailing wildcard characters on
- * unquoted string values.  If the value is quoted, such as foo = "*bar", the * is not interpreted as a wildcard
+ * StringValueFormat determines how wildcards are used on string values.  We
+ * currently allow leading and/or trailing wildcard characters on unquoted
+ * string values.  If the value is quoted, such as foo = "*bar", the * is not
+ * interpreted as a wildcard
  */
 sealed trait StringValueFormat {
   def addWildcards(value: String): String
@@ -73,14 +87,17 @@ case object LWildcard extends StringValueFormat {
 case object RWildcard extends StringValueFormat {
   def addWildcards(value: String) = value + "*"
 }
-case object LRWildcard extends StringValueFormat {
+//auto signifies whether the wildcards were specified by the user or
+//automatically added
+case class LRWildcard(auto: Boolean = true) extends StringValueFormat {
   def addWildcards(value: String) = "*" + value + "*"
 }
 case object Quoted extends StringValueFormat {
   def addWildcards(value: String) = "\"" + value + "\""
   override val escapeChars = false
 }
-//no wildcard/regex allowed, mostly for range queries
+
+//no wildcard/regex allowed
 case object StrictUnquoted extends StringValueFormat {
   def addWildcards(value: String) = value
 }
@@ -116,8 +133,8 @@ object StringValueFormat {
     val e_$ = e("$")
     val states = List(
       (s_*, e_$, 1, 1, LWildcard),
-      (s__*, e__*, 2,2, LRWildcard),
-      (s_*, e_*, 1, 1, LRWildcard),
+      (s__*, e__*, 2,2, LRWildcard(false)),
+      (s_*, e_*, 1, 1, LRWildcard(false)),
       (s__*, e_$, 2, 1, LWildcard),
       (s_*, true, 1, 0, LWildcard),
       (s__*, true, 2, 0, LWildcard),
@@ -128,7 +145,7 @@ object StringValueFormat {
       (true, e__*, 0, 2, RWildcard),
       (true, e_*, 0, 1, RWildcard),
       (true, e_$, 0, 1, LWildcard),
-      (true, true, 0,0, LRWildcard)
+      (true, true, 0,0, LRWildcard(true))
     )
     val (_,_, strim, etrim, format) = states.find{x => x._1 && x._2}.get
     try {
@@ -148,11 +165,21 @@ case class SolrStringValue(value: String, format: StringValueFormat = StrictUnqu
 
   def quoted = copy(format = Quoted)
   def unquoted = copy(format = StrictUnquoted)
+
+  def validateValue(key: SolrKey) = if (!key.autoWildcard && format == LRWildcard(true)) {
+    Right(this.copy(format = Quoted))
+  } else {
+    Right(this)
+  }
   
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
   def toSolrQueryString(toplevel: Boolean) = if (value) "true" else "false"
+
+  def validateValue(key: SolrKey) = Right(this)
+  
+
 }
 
 //note, we don't have to bother with checking the types of the contained values
@@ -164,6 +191,7 @@ case class SolrMultiValue(values: Seq[SolrSingleValue], valueType: ValueType) ex
 
   lazy val value = values.map{_.value}.toArray
 
+  
 }
 
 
@@ -260,7 +288,7 @@ trait SolrSimpleExpr extends SolrExpression {
     case None => Left("Unknown key \"%s\"".format(key))
   }
 
-  def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
+  def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = (solrKey match {
     case j: KeyLookup => value match {
       case SolrStringValue(stringValue, _) => j.lookupValue(stringValue) match {
         case Some(i) => Right(SolrIntValue(i))
@@ -274,7 +302,7 @@ trait SolrSimpleExpr extends SolrExpression {
     } else {
       Left(typeError(solrKey.name, solrKey.valueType, value.valueType))
     }
-  }
+  }).right.flatMap{_.validateValue(solrKey)}
 
 
 }
