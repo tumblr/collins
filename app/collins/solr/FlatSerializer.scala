@@ -1,8 +1,6 @@
-package util
-package plugins
-package solr
+package collins.solr
 
-import util.solr._
+import collins.solr._
 import util.views.Formatter
 
 import models.{Asset, AssetMeta, AssetMetaValue, IpAddresses, MetaWrapper, Truthy}

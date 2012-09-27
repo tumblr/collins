@@ -1,11 +1,9 @@
-package util.plugins
-package solr
+package collins.solr
 
 import Solr._
 import org.specs2._
 import models.{Asset, AssetFinder, AssetType, AssetMeta, AssetSearchParameters, IpAddresses, IpmiInfo, State, Status, AssetMetaValue}
 import test.ApplicationSpecification
-import util.solr.SolrConfig
 import util.views.Formatter
 
 class SolrSpec extends ApplicationSpecification {
