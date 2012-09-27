@@ -4,7 +4,7 @@ import conversions._
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.dsl.ast.{BinaryOperatorNodeLogicalBoolean, LogicalBoolean}
-import util.plugins.solr._
+import collins.solr._
 import IpmiInfo.Enum._
 
 import util.views.Formatter

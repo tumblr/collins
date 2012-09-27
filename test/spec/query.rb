@@ -84,7 +84,7 @@ describe "Asset Search" do
   end
 
   it "asset type" do
-    checkSize  'type = configuration', 13
+    checkSize  'type = configuration', 12
   end
 
   it "asset status" do

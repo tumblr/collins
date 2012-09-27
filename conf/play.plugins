@@ -3,7 +3,7 @@
 4000:collins.config.ConfigPlugin
 4100:collins.cache.CachePlugin
 4200:collins.callbacks.CallbackManagerPlugin
-4300:util.plugins.solr.SolrPlugin
+4300:collins.solr.SolrPlugin
 4400:util.plugins.IpmiPowerManagement
 4500:collins.softlayer.SoftLayerPlugin
 4600:collins.provisioning.ProvisionerPlugin

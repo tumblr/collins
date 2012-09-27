@@ -2,7 +2,7 @@ package controllers
 
 import util.Stats
 import util.plugins.Cache
-import util.plugins.solr.Solr
+import collins.solr.Solr
 import util.security.AuthenticationProviderConfig
 import views._
 

@@ -8,7 +8,7 @@ import models.logs._
 import util.{ApiTattler, AssetStateMachine, InternalTattler, LldpRepresentation, LshwRepresentation, SystemTattler}
 import util.config.{Feature, LshwConfig}
 import util.parsers.{LldpParser, LshwParser}
-import util.plugins.solr.Solr
+import collins.solr.Solr
 import util.power.PowerUnits
 
 import play.api.Logger
