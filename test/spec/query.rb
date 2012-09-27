@@ -63,6 +63,13 @@ describe "Asset Search" do
     checkSize "hostname = \"bustworth\"", 0
   end
 
+  it "exact MAC address" do
+    checkTags "MAC_ADDRESS = 04:7d:7b:06:8f:f9", ["001012"]
+  end
+
+  it "mac address with wildcards" do
+    checkSize "MAC_ADDRESS = 04:7d:7b:06:8*", 3
+  end
 
   it "simple or" do 
     checkTags  'hostname = web-6ec32d2e.ewr01.tumblr.net OR tag = "000981"', ["000981", "001016"]

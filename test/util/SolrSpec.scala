@@ -127,6 +127,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       "boolean value" in {
         """foosolr = false""".query must_== (("foosolr" -> false): SolrKeyVal)
       }
+      "leading regex wildcard" in {
+        """foosolr = .*bar""".query must_== SolrKeyVal("foosolr", SolrStringValue("bar", LWildcard))
+      }
       "range both" in {
         """foosolr = [3, 5]""".query must_== SolrKeyRange("foosolr", Some(SolrIntValue(3)), Some(SolrIntValue(5)))
       }
@@ -193,38 +196,52 @@ class SolrQuerySpec extends ApplicationSpecification {
     def L = LWildcard
     def R = RWildcard
     def Q = Quoted
-    "foo" in {
-      s("foo") must_== S("foo", LR)
+    "handle wildcarding" in {
+      "foo" in {
+        s("foo") must_== S("foo", LR)
+      }
+      "*foo" in {
+        s("*foo") must_== S("foo", L)
+      }
+      "*foo*"in {
+        s("*foo*") must_== S("foo", LR)
+      }
+      "foo*"in {
+        s("foo*") must_== S("foo", R)
+      }
+      "foo.*"in {
+        s("foo.*") must_== S("foo", R)
+      }
+      "^foo"in {
+        s("^foo") must_== S("foo", R)
+      }
+      "^foo.*"in {
+        s("^foo.*") must_== S("foo", R)
+      }
+      "^foo*"in {
+        s("^foo*") must_== S("foo", R)
+      }
+      "^foo$"in {
+        s("^foo$") must_== S("foo", Q)
+      }
+      "*foo$"in {
+        s("*foo$") must_== S("foo", L)
+      }
+      "foo$"in {
+        s("foo$") must_== S("foo", L)
+      }
     }
-    "*foo" in {
-      s("*foo") must_== S("foo", L)
-    }
-    "*foo*"in {
-      s("*foo*") must_== S("foo", LR)
-    }
-    "foo*"in {
-      s("foo*") must_== S("foo", R)
-    }
-    "foo.*"in {
-      s("foo.*") must_== S("foo", R)
-    }
-    "^foo"in {
-      s("^foo") must_== S("foo", R)
-    }
-    "^foo.*"in {
-      s("^foo.*") must_== S("foo", R)
-    }
-    "^foo*"in {
-      s("^foo*") must_== S("foo", R)
-    }
-    "^foo$"in {
-      s("^foo$") must_== S("foo", Q)
-    }
-    "*foo$"in {
-      s("*foo$") must_== S("foo", L)
-    }
-    "foo$"in {
-      s("foo$") must_== S("foo", L)
+
+    "handle character escaping" in {
+      "quoted" in {
+        S("04:7d:7b:06:8f:f9", Q).toSolrQueryString(false) must_== """"04:7d:7b:06:8f:f9""""
+      }
+      "wildcard" in {
+        S("04:7d:7b:06:8",R).toSolrQueryString(false) must_== """04\:7d\:7b\:06\:8*"""
+      }
+      "strict unquoted" in {
+        S("04:7d:7b:06:8f:f9", StrictUnquoted).toSolrQueryString(false) must_== """04\:7d\:7b\:06\:8f\:f9"""
+      }
     }
   } 
 

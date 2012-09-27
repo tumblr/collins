@@ -47,7 +47,7 @@ class CollinsQueryParser extends JavaTokenParsers {
   def ipAddress  = """^(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}))))$""".r ^^{s => StringValueFormat.createValueFor(s)}
   def stringValue   = quotedString | unquotedString
   def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1), Quoted)}
-  def unquotedString = "\\^?\\*?[a-zA-Z0-9_\\-.]+\\*?\\$?".r  ^^ {s => StringValueFormat.createValueFor(s)}
+  def unquotedString = """\^?(\*|\.\*)?[a-zA-Z0-9_\-.]+\*?\$?""".r  ^^ {s => StringValueFormat.createValueFor(s)}
   def strictUnquotedStringValue = "[a-zA-Z0-9_\\-.]+".r ^^{s => SolrStringValue(s, StrictUnquoted)}
   def booleanValue  = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
 
