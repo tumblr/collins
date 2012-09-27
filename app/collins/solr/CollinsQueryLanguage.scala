@@ -1,10 +1,9 @@
-package util.plugins.solr
+package collins.solr
 
 import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, State, Status, Truthy}
 import models.asset.AssetView
 import models.IpmiInfo.Enum._
 
-import scala.util.parsing.combinator._
 
 import Solr.AssetSolrDocument
 import AssetMeta.ValueType
@@ -27,34 +26,8 @@ sealed trait SolrQueryComponent {
 
 }
 
-case object EmptySolrQuery extends SolrQueryComponent with SolrExpression{
-  def toSolrQueryString(toplevel: Boolean) = "*:*"
 
-  def typeCheck = Right(EmptySolrQuery)
-}
 
-/** 
- * This class holds data about a solr key, mainly for translating "local" key
- * names to their solr equivalent
- */
-case class SolrKey (
-  val name: String,
-  val valueType: ValueType,
-  val isDynamic: Boolean = true
-) {
-  lazy val resolvedName = name.toUpperCase + (if(isDynamic) ValueType.postFix(valueType) else "")
-  def isAliasOf(alias: String) = false //override for aliases
-
-  def matches(k: String) = (k == name) || isAliasOf(k)
-}
-
-/**
- * Mixin for enum keys, allows us to resolve the solr key and then validate
- * the enum value by passing it to the valueLookup method.
- */
-trait KeyLookup{ self: SolrKey =>
-  def lookupValue(value: String): Option[Int]
-}
 
 /**
  * Base trait of Solr Value ADT
@@ -201,7 +174,6 @@ object SolrMultiValue {
 }
 
 
-
 /*
  * This is the AST and parser for CQL Expressions are basically just
  * primitive-recursive boolean expressions with a few extra operators for
@@ -222,6 +194,12 @@ sealed trait SolrExpression extends SolrQueryComponent{
    * Left(msg) if there's an error somewhere
    */
   def typeCheck: Either[String, SolrExpression]
+}
+
+case object EmptySolrQuery extends SolrQueryComponent with SolrExpression{
+  def toSolrQueryString(toplevel: Boolean) = "*:*"
+
+  def typeCheck = Right(EmptySolrQuery)
 }
 
 abstract class SolrMultiExpr(exprs: Seq[SolrExpression], op: String) extends SolrExpression {
@@ -262,58 +240,6 @@ case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "OR
 
 }
 
-object SolrKeyResolver {
-
-  /**
-   * each key is an "incoming" field from a query, the ValueType is the
-   * expected type of the key, and the Boolean indicates whether the key in
-   * Solr is static(false) or dynamic(true)
-   *
-   * NOTE - For now, any single-valued field that needs to be sortable has to be explicitly declared
-   */
-  lazy val nonMetaKeys: Seq[SolrKey] = List(
-    SolrKey("TAG", String,false), 
-    SolrKey("CREATED", String,false), 
-    SolrKey("UPDATED", String,false), 
-    SolrKey("DELETED", String,false),
-    SolrKey("IP_ADDRESS", String,false),
-    SolrKey("PRIMARY_ROLE", String,false),
-    SolrKey("HOSTNAME", String,false),
-    SolrKey(IpmiAddress.toString, String, true),
-    SolrKey(IpmiUsername.toString, String, true),
-    SolrKey(IpmiPassword.toString, String, true),
-    SolrKey(IpmiGateway.toString, String, true),
-    SolrKey(IpmiNetmask.toString, String, true)
-  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
-
-  val typeKey = new SolrKey("TYPE",Integer,false) with KeyLookup {
-    def lookupValue(value: String) = AssetType.findByName(value.toUpperCase).map(_.id)
-    override def isAliasOf(a: String) = a == "ASSETTYPE"
-  }
-
-  val statusKey = new SolrKey("STATUS",Integer,false) with KeyLookup {
-    def lookupValue(value: String) = Status.findByName(value).map{_.id}
-  }
-
-  val stateKey = new SolrKey("STATE", Integer, false) with KeyLookup {
-    def lookupValue(value: String) = State.findByName(value).map{_.id}
-  }
-
-  val enumKeys = typeKey :: statusKey :: stateKey :: Nil
-
-  def apply(_rawkey: String): Option[SolrKey] = {
-    val ukey = _rawkey.toUpperCase
-    nonMetaKeys.find(_ matches ukey)
-      .orElse(enumKeys.find(_ matches ukey))
-      .orElse(AssetMeta.findByName(ukey).map{_.getSolrKey})
-  }
-
-  def either(_rawkey: String) = apply(_rawkey) match {
-    case Some(k) => Right(k)
-    case None => Left("Unknown key " + _rawkey)
-  }
-
-}
 
 trait SolrSimpleExpr extends SolrExpression {
 
@@ -395,31 +321,6 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
       case (Right(l), Right(h)) => Right(SolrKeyRange(solrKey.resolvedName, l,h))
     }
   }
-
-
-}
-
-/**
- * needs some work, currently only a few tests use this.
- */
-object CollinsQueryDSL {
-  class CollinsQueryString(val s: String) {
-    lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s).fold(
-      err => throw new Exception("CQL error: " + err),
-      expr => expr
-    )
-  }
-  implicit def str2SolrStringValue(s: String) = SolrStringValue(s)
-  implicit def strsolr_tuple2keyval(t: Tuple2[String, SolrSingleValue]): SolrKeyVal = SolrKeyVal(t._1, t._2)
-  implicit def str2collins(s: String): CollinsQueryString = new CollinsQueryString(s)
-  implicit def collins2str(c: CollinsQueryString): String = c.s
-  implicit def int_tuple2keyval(t: Tuple2[String, Int]):SolrKeyVal = SolrKeyVal(t._1, SolrIntValue(t._2))
-  implicit def string_tuple2keyval(t: Tuple2[String, String]):SolrKeyVal = SolrKeyVal(t._1, SolrStringValue(t._2))
-  implicit def double_tuple2keyval(t: Tuple2[String, Double]):SolrKeyVal = SolrKeyVal(t._1, SolrDoubleValue(t._2))
-  implicit def boolean_tuple2keyval(t: Tuple2[String, Boolean]):SolrKeyVal = SolrKeyVal(t._1, SolrBooleanValue(t._2))
-
-  def not(exp: SolrExpression) = SolrNotOp(exp)
-
 
 
 }

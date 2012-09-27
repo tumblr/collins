@@ -1,11 +1,9 @@
-package util
-package solr
+package collins.solr
 
 import akka.actor._
 import akka.util.duration._
 import play.api.Logger
 
-import plugins.solr.Solr 
 import models.Asset
 
 import java.util.Collections

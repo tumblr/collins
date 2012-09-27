@@ -1,4 +1,4 @@
-package util.plugins.solr
+package collins.solr
 
 import play.api.PlayException
 

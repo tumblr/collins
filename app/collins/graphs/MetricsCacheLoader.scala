@@ -1,7 +1,7 @@
 package collins.graphs
 
 import models.{PageParams, SortDirection}
-import util.plugins.solr._
+import collins.solr.{CollinsQueryParser, CollinsSearchQuery}
 
 import play.api.Logger
 import com.google.common.cache.CacheLoader
