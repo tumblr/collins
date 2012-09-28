@@ -37,6 +37,18 @@ describe "Asset Search" do
     checkTags "tag = local", ["local"]
   end
 
+  it "defaults to exact match for tags" do 
+    checkSize "tag = 00", 0
+  end
+
+  it "defaults to exact match on ip address" do 
+    checkTags "ip_address = 172.16.76.6", ["001340"]
+  end
+
+  it "allows ip address wildcard search" do 
+    checkTags "ip_address = 172.16.76.6*", ["001340", "002477"]
+  end
+
   it "hostname exact match" do
     checkTags  "hostname = web-6ec32d2e.ewr01.tumblr.net",  ["001016"]
   end
