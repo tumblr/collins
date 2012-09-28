@@ -76,15 +76,6 @@ class AssetSpec extends ApplicationSpecification {
         Asset.findByTag(assetTag).get.tag mustEqual assetTag
       }
 
-      "findLikeTag" in new concreteasset {
-        val page = PageParams(0, 10, "")
-        val assets = Asset.findLikeTag(assetTag.take(assetTag.size - 1), page)
-        assets.total must beGreaterThan(0L)
-        assets.items must have {_.tag == assetTag}
-      }
-
-      
-
       "getAllAttributes" in new concreteasset {
         val maybeAsset = Asset.findByTag(assetTag)
         maybeAsset must beSome[Asset]

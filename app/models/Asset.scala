@@ -197,19 +197,6 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def findLikeTag(tag: String, params: PageParams): Page[AssetView] = inTransaction { log {
-    val results = from(tableDef)(a =>
-      where(a.tag.withPossibleRegex(tag))
-      select(a)
-      orderBy(a.id.withSort(params.sort.toString))
-    ).page(params.offset, params.size).toList
-    val totalCount = from(tableDef)(a =>
-      where(a.tag.withPossibleRegex(tag))
-      compute(count)
-    )
-    Page(results, params.page, params.offset, totalCount)
-  }}
-
   /**
    * Finds assets across multiple collins instances.  Data for instances are
    * stored as assets themselves, though the asset type and attribute for URI
