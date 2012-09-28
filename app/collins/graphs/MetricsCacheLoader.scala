@@ -38,7 +38,7 @@ case class MetricsCacheLoader() extends CacheLoader[MetricsQuery, Set[String]] {
           false
         },
         expr => {
-          val cq = CollinsSearchQuery(expr, PageParams(0, 1, SortDirection.SortAsc))
+          val cq = CollinsSearchQuery(expr, PageParams(0, 1, SortDirection.SortAsc, "TAG"))
           cq.getPage().fold(
             err => {
               logger.warn("Error executing CQL query: %s".format(err))
