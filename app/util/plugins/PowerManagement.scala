@@ -46,7 +46,7 @@ object PowerManagement {
     isFalse
   }
   def actionAllowed(asset: Asset, action: PowerAction): Boolean = {
-    if (asset.getStatus().name == "Allocated" && PConfig.disallowWhenAllocated.contains(action)) {
+    if (asset.isAllocated && PConfig.disallowWhenAllocated.contains(action)) {
       false
     } else {
       true

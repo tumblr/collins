@@ -6,7 +6,7 @@ import akka.actor._
 import java.beans.PropertyChangeSupport
 
 case class CallbackMessageQueue(pcs: PropertyChangeSupport) extends Actor {
-  private[this] val logger = Logger("SolrCallbackHandler")
+  private[this] val logger = Logger("CallbackMessageQueue")
 
   override def receive = {
     case CallbackMessage(name, oldValue, newValue) =>

@@ -17,7 +17,7 @@ class CollinsQueryParser extends JavaTokenParsers {
     case Success(exp, next) => if (next.atEnd) {
       Right(exp)
     } else {
-      Left("Unexpected stuff after query at position %s: %s".format(next.pos.toString, next.first))
+      Left("Unexpected stuff after query at position %s: %s, parsed %s".format(next.pos.toString, next.first, exp.toString))
     }
     case Failure(wtf, _) => Left("Error parsing query: %s".format(wtf.toString))
   }
@@ -32,23 +32,21 @@ class CollinsQueryParser extends JavaTokenParsers {
   def notExpr       = "(?iu)NOT".r ~> simpleExpr ^^ {e => SolrNotOp(e)}
   def simpleExpr:Parser[SolrExpression]    = notExpr | rangeKv | kv | "(" ~> expr <~ ")" 
 
-  //range values are slightly different from regular values, since we cannot allow quoted strings or strings with regexes
+  //range values are slightly different from regular values, since we cannot
+  //allow quoted strings or strings with regexes
   def rangeKv       = ident ~ "=" ~ "[" ~ rangeValueOpt ~ "," ~ rangeValueOpt <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
   def rangeValueOpt: Parser[Option[SolrSingleValue]]      = "*"^^^{None} | rangeValue ^^{other => Some(other)}
-  def rangeValue    = booleanValue | numberValue | strictUnquotedStringValue
-
-  def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
-  def value         = booleanValue | ipAddress | numberValue | stringValue
-  def numberValue   = decimalNumber ^^{case n => if (n contains ".") {
-    SolrDoubleValue(java.lang.Double.parseDouble(n))
-  } else {
-    SolrIntValue(java.lang.Integer.parseInt(n))
-  }}
-  def ipAddress  = """^(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}\.(\*|[0-9]{1,3}))))$""".r ^^{s => StringValueFormat.createValueFor(s)}
-  def stringValue   = quotedString | unquotedString
-  def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1), Quoted)}
-  def unquotedString = "\\^?\\*?[a-zA-Z0-9_\\-.]+\\*?\\$?".r  ^^ {s => StringValueFormat.createValueFor(s)}
+  def rangeValue    = strictUnquotedStringValue
   def strictUnquotedStringValue = "[a-zA-Z0-9_\\-.]+".r ^^{s => SolrStringValue(s, StrictUnquoted)}
-  def booleanValue  = ("true" | "false") ^^ {case "true" => SolrBooleanValue(true) case _ =>  SolrBooleanValue(false)}
+
+  /**
+   * Notice that all values are parsed as strings, type inference is now
+   * handled in the typeCheck phase.  This is because in some cases we need to
+   * parse numbers as strings, particularly for numeric asset tags.
+   */
+  def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
+  def value   = quotedString | unquotedString
+  def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1), Quoted)}
+  def unquotedString = """[^\s()'"]+""".r  ^^ {s => StringValueFormat.createValueFor(s)}
 
 }

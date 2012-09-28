@@ -2,9 +2,9 @@ package controllers
 package actions
 package asset
 
+import collins.validation.StringUtil
 import models.{Asset, AssetLifecycle, Status => AssetStatus}
 import util.security.SecuritySpecification
-import validators.StringUtil
 
 import play.api.data.Form
 import play.api.data.Forms._

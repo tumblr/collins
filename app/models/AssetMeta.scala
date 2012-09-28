@@ -142,6 +142,8 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     )
   }
 
+  // DO NOT ADD ANYTHING TO THIS
+  // DEPRECATED
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {
     val ServiceTag = Value(1, "SERVICE_TAG")

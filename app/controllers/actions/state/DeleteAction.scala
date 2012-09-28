@@ -2,8 +2,7 @@ package controllers
 package actions
 package state
 
-import validators.StringUtil
-
+import collins.validation.StringUtil
 import models.{Asset, State, Status => AStatus}
 import util.MessageHelper
 import util.security.SecuritySpecification

@@ -23,6 +23,11 @@ case class SolrKey (
   def isAliasOf(alias: String) = false //override for aliases
 
   def matches(k: String) = (k == name) || isAliasOf(k)
+
+  /**
+   * returns true if wildcards should be automatically applied to unquoted values of this key (only relevant for string values)
+   */
+  def autoWildcard = !(SolrKeyResolver.noAutoWildcardKeys contains name)
 }
 
 /**
@@ -34,6 +39,17 @@ trait KeyLookup{ self: SolrKey =>
 }
 
 object SolrKeyResolver {
+
+  /**
+   * This is a list of keys that should not add pre/post wildcards when the value in CQL is unquoted with no modifiers.  For example,
+   * normally if you do foo = bar in CQL, it is translated to foo:*bar*, but we don't want to do that for these keys
+   *
+   * This is extremely important because otherwise if you search for ip_address = 192.168.1.1, which you assume is a specific ip address,
+   * you will actually get all assets 192.168.1.1xx addressess.
+   *
+   * TODO: create config option to specify additional tags (it should be required for these)
+   */
+  val noAutoWildcardKeys = List("TAG", "IP_ADDRESS", "ADDRESS")
 
   /**
    * each key is an "incoming" field from a query, the ValueType is the
@@ -58,7 +74,7 @@ object SolrKeyResolver {
   ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
 
   val typeKey = new SolrKey("TYPE",Integer,false) with KeyLookup {
-    def lookupValue(value: String) = try Some(AssetType.Enum.withName(value.toUpperCase).id) catch {case _ => None}
+    def lookupValue(value: String) = AssetType.findByName(value.toUpperCase).map(_.id)
     override def isAliasOf(a: String) = a == "ASSETTYPE"
   }
 

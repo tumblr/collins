@@ -20,24 +20,10 @@ case class FindAction(
   handler: SecureController
 ) extends AssetFindAction(pageParams, sortField, spec, handler) {
 
-  case class TagOnlyDataHolder(tag: String) extends RequestDataHolder
-
-  def assetTag(): Option[String] = Form(
-    "ASSET_TAG" -> nonEmptyText
-  ).bindFromRequest()(request).fold(
-    noTag => None,
-    tagged => Some(tagged)
-  )
-
-  override def validate(): Either[RequestDataHolder,RequestDataHolder] = assetTag match {
-    case Some(tag) => Right(TagOnlyDataHolder(tag))
-    case None => AssetFinderDataHolder.processRequest(
-      ActionHelper.createRequest(request, requestMap)
-    )
-  }
+  override def validate(): Either[RequestDataHolder,RequestDataHolder] =  
+    AssetFinderDataHolder.processRequest(ActionHelper.createRequest(request, requestMap))
 
   override def execute(rd: RequestDataHolder) = rd match {
-    case adh: TagOnlyDataHolder => findAssetByTag(adh)
     case adh: AssetFinderDataHolder =>
       super.execute(rd)
   }
@@ -56,20 +42,6 @@ case class FindAction(
   override def handleWebError(rd: RequestDataHolder): Option[Result] = Some(
     Redirect(app.routes.Resources.index).flashing("error" -> rd.toString)
   )
-
-  protected def findAssetByTag(rd: TagOnlyDataHolder) = assetFromTag(rd.tag) match {
-    case None => Asset.findLikeTag(rd.tag, pageParams) match {
-      case notFound if notFound.size == 0 =>
-        Redirect(app.routes.Resources.index).flashing("message" -> AssetMessages.noMatch)
-      case found =>
-        Status.Ok(views.html.asset.list(found)(flash, request))
-    }
-    case Some(asset) =>
-      assetIntakeAllowed(asset) match {
-        case None => Redirect(app.routes.Resources.intake(asset.getId, 1))
-        case Some(err) => Redirect(app.routes.CookieApi.getAsset(asset.tag))
-      }
-  }
 
   private[FindAction] class RichRequestMap(val underlying: Map[String,Seq[String]]) {
     val PageParamKeys = Set("page", "sort", "size", "sortfield")

@@ -5,8 +5,8 @@
 @import _root_.util.config.MultiCollinsConfig
 @import util._
 
-@basicFormatter(asset: AssetMeta) = {
-<input type="text" id="@asset.name" name="@asset.name">
+@basicFormatter(asset: AssetMeta, index: Int) = {
+<input type="text" id="@asset.name" name="@asset.name" tabindex="@(index + 2)" @if(index == 0) {accesskey="r"}>
   <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="@asset.description"></i></span>
 }
 
@@ -24,21 +24,21 @@
     <h1>Asset Search</h1>
     <hr>
 
-    <input type="hidden" name="operation" value="and">
+    <input type="hidden" name="operation" value="and" tabindex="-1">
 
     <div class="row">
       <div class="span6">
         @formField {
-          @formLabel("ASSET_TAG", "Asset Tag")
+          @formLabel("tag", "Asset Tag")
           @formInput {
-            <input type="text" class="focus" id="ASSET_TAG" name="ASSET_TAG" autocomplete="off">
+            <input type="text" class="focus" id="tag" name="tag" tabindex="1" autocomplete="off">
             <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Unique identifier for asset"></i></span>
           }
         }
         @formField {
           @formLabel("status", "Status")
           @formInput {
-            <select name="status" id="status">
+            <select name="status" id="status" tabindex="501" accesskey="l">
               <option value="" selected="selected"></option>
               @OptionSorter.sortStrings(Status.statusNames.toSeq, Some(" ")).map { v =>
               <option value="@v._1">@v._2</option>
@@ -50,22 +50,22 @@
         @formField {
           @formLabel("state", "State")
           @formInput {
-            <select name="state" id="state">
+            <select name="state" id="state" tabindex="502">
               <option value="" selected="selected"></option>
               @State.find().sorted(State.StateOrdering).map { state =>
                 <option value="@state.name">@state.getDisplayLabel</option>
               }
             </select>
-            <span class="help-inline"><a target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="icon-question-sign"></i></a></span>
+            <span class="help-inline"><a tabindex="-1" target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="icon-question-sign"></i></a></span>
           }
         }
         @formField {
           @formLabel("type", "Type")
           @formInput {
-            <select name="type" id="type">
+            <select name="type" id="type" tabindex="503">
               <option value="" selected="selected"></option>
-              @OptionSorter.sortStrings(AssetType.Enum.values.toSeq, Some(" ")).map { v =>
-              <option value="@v._1">@v._2</option>
+              @AssetType.find().sortBy(_.name).map { at =>
+                <option value="@at.name">@at.label</option>
               }
             </select>
             <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Type of Asset (Service Chassis, Server Node, etc)"></i></span>
@@ -74,14 +74,14 @@
         @formField {
           @formLabel("IP_ADDRESS", "IP Address")
           @formInput {
-            <input type="text" id="IP_ADDRESS" name="IP_ADDRESS">
+            <input type="text" id="IP_ADDRESS" name="IP_ADDRESS" tabindex="504">
             <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="IP address of the asset. Prefix searches are also supported."></i></span>
           }
         }
         @formField {
           @formLabel("IPMI_ADDRESS", "IPMI Address")
           @formInput {
-            <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS" placeholder="IPMI IP Address">
+            <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS" placeholder="IPMI IP Address" tabindex="505">
           }
         }
         @formField {
@@ -89,12 +89,12 @@
           @formInput {
             <div class="input-prepend date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2011-11-01">
               <span class="add-on"><i class="icon-th"></i></span>
-              <input type="text" id="createdAfter" name="createdAfter" placeholder="Start" readonly>
+              <input type="text" id="createdAfter" name="createdAfter" placeholder="Start" tabindex="516" readonly>
             </div>
             and
             <div class="input-prepend date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2012-09-23">
               <span class="add-on"><i class="icon-th"></i></span>
-              <input type="text" id="createdBefore" name="createdBefore" placeholder="End" readonly>
+              <input type="text" id="createdBefore" name="createdBefore" placeholder="End" tabindex="517" readonly>
             </div>
           }
         }
@@ -103,12 +103,12 @@
           @formInput {
             <div class="input-prepend date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2011-11-01">
               <span class="add-on"><i class="icon-th"></i></span>
-              <input type="text" id="updatedAfter" name="updatedAfter" placeholder="Start" readonly>
+              <input type="text" id="updatedAfter" name="updatedAfter" placeholder="Start" tabindex="518" readonly>
             </div>
             and
             <div class="input-prepend date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2012-09-23">
               <span class="add-on"><i class="icon-th"></i></span>
-              <input type="text" id="updatedBefore" name="updatedBefore" placeholder="End" readonly>
+              <input type="text" id="updatedBefore" name="updatedBefore" placeholder="End" tabindex="519" readonly>
             </div>
           }
         }
@@ -116,29 +116,29 @@
         @if(MultiCollinsConfig.enabled) {
           @formField {
             @formLabel("", "")
-            <input type="checkbox" id="remoteLookup" name="remoteLookup" value="true"> Remote Search <i class="icon-question-sign" data-rel="tooltip" title="Search for assets in other data-centers"></i>
+            <input type="checkbox" id="remoteLookup" name="remoteLookup" value="true" tabindex="506"> Remote Search <i class="icon-question-sign" data-rel="tooltip" title="Search for assets in other data-centers"></i>
           }
         }
       </div>
 
       <div class="span6">
-        @assetMeta.map { case(asset) =>
+        @assetMeta.zipWithIndex.map { case(asset, idx) =>
           @formField {
             @formLabel(asset.name, asset.label)
             @formInput {
               @{
   	            asset.name match {
-                  case "DATACENTER_NAME" => optionDisplay(asset, 0)
-                  case "DISK_TYPE" => optionDisplay(asset, 2)
-                  case "DISK_STORAGE_TOTAL" => optionDisplay(asset, 1)
-                  case "CPU_SPEED_GHZ" => optionDisplay(asset, 3)
-                  case "MEMORY_SIZE_TOTAL" => optionDisplay(asset, 1)
-                  case "NIC_SPEED" => optionDisplay(asset, 4)
-  	              case "NODECLASS" => optionDisplay(asset, 0)
-                  case "POOL" => optionDisplay(asset, 0)
-                  case "PRIMARY_ROLE" => optionDisplay(asset, 0)
-                  case "SECONDARY_ROLE" => optionDisplay(asset, 0)
-                  case _ => basicFormatter(asset)
+                  case "DATACENTER_NAME" => optionDisplay(asset, 0, idx)
+                  case "DISK_TYPE" => optionDisplay(asset, 2, idx)
+                  case "DISK_STORAGE_TOTAL" => optionDisplay(asset, 1, idx)
+                  case "CPU_SPEED_GHZ" => optionDisplay(asset, 3, idx)
+                  case "MEMORY_SIZE_TOTAL" => optionDisplay(asset, 1, idx)
+                  case "NIC_SPEED" => optionDisplay(asset, 4, idx)
+  	              case "NODECLASS" => optionDisplay(asset, 0, idx)
+                  case "POOL" => optionDisplay(asset, 0, idx)
+                  case "PRIMARY_ROLE" => optionDisplay(asset, 0, idx)
+                  case "SECONDARY_ROLE" => optionDisplay(asset, 0, idx)
+                  case _ => basicFormatter(asset, idx)
                 }
               }
             }
@@ -148,8 +148,8 @@
     </div>
     <div class="row">
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Search</button>
-        <button type="reset" class="btn">Reset</button>
+        <button type="submit" class="btn btn-primary" tabindex="507">Search</button>
+        <button type="reset" class="btn" tabindex="508">Reset</button>
       </div>
     </div>
     }

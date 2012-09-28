@@ -3,8 +3,9 @@ package actions
 package state
 
 import forms._
-import validators.{ParamValidation, StringUtil}
+import validators.ParamValidation
 
+import collins.validation.StringUtil
 import models.{State, Status => AStatus}
 import util.security.SecuritySpecification
 

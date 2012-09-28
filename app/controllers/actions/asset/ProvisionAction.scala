@@ -7,7 +7,6 @@ import util.concurrent.RateLimiter
 import util.config.AppConfig
 import util.plugins.Provisioner
 import util.security.SecuritySpecification
-import validators.StringUtil
 
 import play.api.data.Form
 import play.api.data.Forms._

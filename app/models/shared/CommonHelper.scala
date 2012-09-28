@@ -23,7 +23,7 @@ trait CommonHelper[T] {
   def updateAsset(asset: Asset, rep: T): Boolean = {
     val mvs = construct(asset, rep)
     if (!managedTags.isEmpty) {
-      AssetMetaValue.deleteByAssetAndMetaId(asset, managedTags.map{_.id.toLong})
+      AssetMetaValue.deleteByAssetAndMetaId(asset, managedTags.map(_.id.toLong))
     }
 
     mvs.size == AssetMetaValue.create(mvs)

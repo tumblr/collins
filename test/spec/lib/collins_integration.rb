@@ -118,6 +118,7 @@ class CollinsIntegration
   end
 
 
+
   #loads the specified sql dump into database
   def reloadMySQL
     
@@ -136,7 +137,8 @@ class CollinsIntegration
           exit(1)
         end
       end
-      system "cd #{d}; gunzip #{dump_zip}"
+      system "cd #{d}; gunzip -c #{dump_zip} > #{full_dump_file}"
+
       if ! File.exists? dump_file
         Output.error "Error inflating dump file #{dump_zip}"
         exit(1)
@@ -162,9 +164,8 @@ class CollinsIntegration
 
   #helper method for generating configs
   def outputChecksums
-    puts "checksums:"
     getChecksums.each do |k,v|
-      puts "  #{k}: #{v}"
+      puts "#{k}: #{v}"
     end
   end
 
