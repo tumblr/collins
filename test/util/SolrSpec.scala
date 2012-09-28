@@ -114,34 +114,34 @@ class SolrQuerySpec extends ApplicationSpecification {
     }
     "key-value" in {
       "string value" in {
-        """foosolr = "bar"""".query must_== SolrKeyVal("foosolr", SolrStringValue("bar", Quoted))
+        """foosolr = "bar"""".query must_== (("foosolr" -> "bar".quoted): SolrKeyVal)
       }
       "int value" in {
-        """foosolr = 3""".query must_== (("foosolr" -> 3): SolrKeyVal)
+        """foosolr = 3""".query must_== (("foosolr" -> "3"): SolrKeyVal)
       }
       "double value" in {
-        """foosolr = 3.1415""".query must_== (("foosolr" -> 3.1415): SolrKeyVal)
+        """foosolr = 3.1415""".query must_== (("foosolr" -> "3.1415"): SolrKeyVal)
       }
       "boolean value" in {
-        """foosolr = false""".query must_== (("foosolr" -> false): SolrKeyVal)
+        """foosolr = false""".query must_== (("foosolr" -> "false"): SolrKeyVal)
       }
       "leading regex wildcard" in {
         """foosolr = .*bar""".query must_== SolrKeyVal("foosolr", SolrStringValue("bar", LWildcard))
       }
       "number-start string value" in {
-        """foosolr = 03abc.xyz09-wer:10""".query must_== SolrKeyVal("foosolr", SolrStringValue("03abc.xyz09-wer:10", LRWildcard(true)))
+        """foosolr = 03abc.xyz09-wer:10""".query must_== SolrKeyVal("foosolr", SolrStringValue("03abc.xyz09-wer:10", Unquoted))
       }
       "unquoted mac address" in {
-        """foosolr = 04:7d:7b:06:8f:f9""".query must_== SolrKeyVal("foosolr", SolrStringValue("04:7d:7b:06:8f:f9", LRWildcard(true)))
+        """foosolr = 04:7d:7b:06:8f:f9""".query must_== SolrKeyVal("foosolr", SolrStringValue("04:7d:7b:06:8f:f9", Unquoted))
       }
       "range both" in {
-        """foosolr = [3, 5]""".query must_== SolrKeyRange("foosolr", Some(SolrIntValue(3)), Some(SolrIntValue(5)))
+        """foosolr = [3, 5]""".query must_== SolrKeyRange("foosolr", Some(SolrStringValue("3", StrictUnquoted)), Some(SolrStringValue("5", StrictUnquoted)))
       }
       "range opt low" in {
-        """foosolr = [*, 5]""".query must_== SolrKeyRange("foosolr", None, Some(SolrIntValue(5)))
+        """foosolr = [*, 5]""".query must_== SolrKeyRange("foosolr", None, Some(SolrStringValue("5", StrictUnquoted)))
       }
       "range opt high" in {
-        """foosolr = [3, *]""".query must_== SolrKeyRange("foosolr", Some(SolrIntValue(3)), None)
+        """foosolr = [3, *]""".query must_== SolrKeyRange("foosolr", Some(SolrStringValue("3", StrictUnquoted)), None)
       }
       "range opt both" in {
         """foosolr = [*, *]""".query must_== SolrKeyRange("foosolr", None, None)
@@ -150,7 +150,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         """ip_address = "192.168.1.1"""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1", Quoted))
       }
       "unquoted ip address" in {
-        """ip_address = 192.168.1.1""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1", LRWildcard(true)))
+        """ip_address = 192.168.1.1""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1.1", Unquoted))
         """ip_address = 192.168.1.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168.1", RWildcard))
         """ip_address = 192.168.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192.168", RWildcard))
         """ip_address = 192.*""".query must_== SolrKeyVal("ip_address", SolrStringValue("192", RWildcard))
@@ -160,10 +160,10 @@ class SolrQuerySpec extends ApplicationSpecification {
 
     "complex expressions" in {
       "simple AND" in {
-        """foosolr = 3 AND bar = 4""".query must_== (("foosolr" -> 3) AND ("bar" -> 4))
+        """foosolr = 3 AND bar = 4""".query must_== (("foosolr" -> "3") AND ("bar" -> "4"))
       }
       "simple OR" in {
-        """foosolr = 3 OR bar = 4""".query must_== (("foosolr" -> 3) OR ("bar" -> 4))
+        """foosolr = 3 OR bar = 4""".query must_== (("foosolr" -> "3") OR ("bar" -> "4"))
       }
       "case insensitive AND" in {
         """foosolr = 3 and bar = 4""".query must_== """foosolr = 3 AND bar = 4""".query
@@ -172,22 +172,22 @@ class SolrQuerySpec extends ApplicationSpecification {
         """foosolr = 3 or bar = 4""".query must_== """foosolr = 3 OR bar = 4""".query
       }
       "order of operations" in {
-        """foosolr = 4 OR bar = 4 AND baz = false""".query must_== (("foosolr" -> 4) OR ("bar" -> 4 AND "baz" -> false))
+        """foosolr = 4 OR bar = 4 AND baz = false""".query must_== (("foosolr" -> "4") OR ("bar" -> "4" AND "baz" -> "false"))
       }
       "arbitrary parentheses" in {
-        """(((((((foosolr = true)))))))""".query must_== SolrKeyVal("foosolr", SolrBooleanValue(true))
+        """(((((((foosolr = true)))))))""".query must_== SolrKeyVal("foosolr", SolrStringValue("true", Unquoted))
       }
       "simple NOT" in {
-        """NOT foosolr = 5""".query must_== CollinsQueryDSL.not("foosolr" -> 5)
+        """NOT foosolr = 5""".query must_== CollinsQueryDSL.not("foosolr" -> "5")
       }
       "case insensitive NOT" in {
         """not foosolr = 5""".query must_== """NOT foosolr = 5""".query
       }
       "not OOO" in {
-        """NOT foosolr = 5 OR bar = false""".query must_== (SolrNotOp(("foosolr" -> 5)) OR ("bar" -> false))
+        """NOT foosolr = 5 OR bar = false""".query must_== (SolrNotOp(("foosolr" -> "5")) OR ("bar" -> "false"))
       }
       "negate complex expression" in {
-        """NOT (foosolr = 5 AND bar = "baz")""".query must_== SolrNotOp(("foosolr" -> 5) AND ("bar" -> "baz".quoted))
+        """NOT (foosolr = 5 AND bar = "baz")""".query must_== SolrNotOp(("foosolr" -> "5") AND ("bar" -> "baz".quoted))
       }
         
     }
@@ -196,20 +196,20 @@ class SolrQuerySpec extends ApplicationSpecification {
   "StringValueFormat" should {
     def s(str: String) = StringValueFormat.createValueFor(str)
     def S(str: String, format: StringValueFormat) = SolrStringValue(str, format)
-    def LRt = LRWildcard(true)
-    def LRf = LRWildcard(false)
+    def LR = LRWildcard
     def L = LWildcard
     def R = RWildcard
     def Q = Quoted
+    def U = Unquoted
     "handle wildcarding" in {
       "foo" in {
-        s("foo") must_== S("foo", LRt)
+        s("foo") must_== S("foo", U)
       }
       "*foo" in {
         s("*foo") must_== S("foo", L)
       }
       "*foo*"in {
-        s("*foo*") must_== S("foo", LRf)
+        s("*foo*") must_== S("foo", LR)
       }
       "foo*"in {
         s("foo*") must_== S("foo", R)
@@ -261,10 +261,11 @@ class SolrQuerySpec extends ApplicationSpecification {
         "tag = *".query.toSolrQueryString must_== "tag:*"
       }
       "simple keyval" in {
-        "foosolr = 3".query.toSolrQueryString must_== """foosolr:3"""
+        //the quotes are expected since it hasn't type inferred to an int yet
+        "foosolr = 3".query.toSolrQueryString must_== """foosolr:"3""""
       }
-      "pad unquoted strings with wildcards" in {
-        "foo = bar".query.toSolrQueryString must_== """foo:*bar*"""
+      "not pad unquoted unchecked strings with wildcards" in {
+        "foo = bar".query.toSolrQueryString must_== """foo:"bar""""
       }
       "handle ^" in {
         "foo = ^bar".query.toSolrQueryString must_== """foo:bar*"""
@@ -279,7 +280,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         """foo = "^bar$"""".query.toSolrQueryString must_== """foo:"^bar$""""
       }
       "quoted dash" in {
-        """tag=-""".query.toSolrQueryString must_== """tag:*-*"""
+        """tag=-""".query.toSolrQueryString must_== """tag:"-""""
       }
       "leading wildcard" in {
         """hostname=*foo""".query.toSolrQueryString must_== """hostname:*foo"""
@@ -291,35 +292,35 @@ class SolrQuerySpec extends ApplicationSpecification {
         """foo = [abc, abd]""".query.toSolrQueryString must_== """foo:[abc TO abd]"""
       }
       "ANDs" in {
-         """foosolr = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== """foosolr:3 AND bar:"abcdef" AND baz:true"""
+         """foosolr = 3 AND bar = "abcdef" AND baz = true""".query.toSolrQueryString must_== """foosolr:"3" AND bar:"abcdef" AND baz:"true""""
       }
       "ORs" in {
-         """foosolr = 3 OR bar = "abcdef" OR baz = true""".query.toSolrQueryString must_== """foosolr:3 OR bar:"abcdef" OR baz:true"""
+         """foosolr = 3 OR bar = "abcdef" OR baz = true""".query.toSolrQueryString must_== """foosolr:"3" OR bar:"abcdef" OR baz:"true""""
       }
       "NOT" in {
-        """NOT foosolr = 3""".query.toSolrQueryString must_== "NOT foosolr:3"
+        """NOT foosolr = 3""".query.toSolrQueryString must_== """NOT foosolr:"3""""
       }
       "nested exprs" in {
-        """(foosolr = 3 OR foosolr = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== "(foosolr:3 OR foosolr:4) AND (bar:true OR (bar:false AND baz:5))"
+        """(foosolr = 3 OR foosolr = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.toSolrQueryString must_== """(foosolr:"3" OR foosolr:"4") AND (bar:"true" OR (bar:"false" AND baz:"5"))"""
       }
       "support unquoted one-word strings" in {
-        """foosolr = bar""".query.toSolrQueryString must_== """foosolr:*bar*"""
+        """foosolr = bar""".query.toSolrQueryString must_== """foosolr:"bar""""
       }
     }
 
     "type checking" in {
       "keyvals" in {
         val m = AssetMeta.findOrCreateFromName("foosolr", Integer)
-        "foosolr = 3".query.typeCheck must_== Right("FOOSOLR_meta_i = 3".query)
+        "foosolr = 3".query.typeCheck must_== Right(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3)))
         "foosolr = 3.123".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
         "foosolr = true".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
-        """foosolr = "3"""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
+        """foosolr = "3"""".query.typeCheck must_== Right(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3)))
       }
       "case insensitive key" in {
-        "FoOsOlR = 3".query.typeCheck must_== Right("FOOSOLR_meta_i = 3".query)
+        "FoOsOlR = 3".query.typeCheck must_== Right(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3)))
       }
       "valid enum" in {
-        """type = "SERVER_NODE"""".query.typeCheck must_== Right("TYPE = 1".query)
+        """type = "SERVER_NODE"""".query.typeCheck must_== Right(SolrKeyVal("TYPE", SolrIntValue(1)))
       }
       "case insensitive status enum" in {
         """status = unallocated""".query.typeCheck must_== "STATUS = Unallocated".query.typeCheck
@@ -360,7 +361,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         """foosolr = 3*""".query.typeCheck must beAnInstanceOf[Left[String, SolrExpression]]
       }
       "TAG can be explicitly wildcarded" in {
-        """tag = *foo*""".query.typeCheck must_== Right(SolrKeyVal("TAG", SolrStringValue("foo", LRWildcard(false))))
+        """tag = *foo*""".query.typeCheck must_== Right(SolrKeyVal("TAG", SolrStringValue("foo", LRWildcard)))
       }
     }
 
@@ -382,11 +383,11 @@ class SolrQuerySpec extends ApplicationSpecification {
         Some(State.Running.get)
       )
       val expected = List(
-        SolrKeyVal("tag", SolrStringValue("foosolrtag", LRWildcard(true))),
+        SolrKeyVal("tag", SolrStringValue("foosolrtag", Unquoted)),
         SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
         SolrKeyVal("assetType", SolrIntValue(AssetType.ServerNode.get.id)),
-        SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
-        SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
+        SolrKeyRange("created", Some(SolrStringValue(dateString, StrictUnquoted)),Some(SolrStringValue(dateString, StrictUnquoted))),
+        SolrKeyRange("updated", Some(SolrStringValue(dateString, StrictUnquoted)),Some(SolrStringValue(dateString, StrictUnquoted))),
         SolrKeyVal("state", SolrIntValue(State.Running.get.id))
       )
       afinder.toSolrKeyVals.toSet must_== expected.toSet
@@ -406,8 +407,8 @@ class SolrQuerySpec extends ApplicationSpecification {
         None
       )
       val expected = List(
-        SolrKeyRange("updated", Some(SolrStringValue(dateString)),None),
-        SolrKeyRange("created",None,Some(SolrStringValue(dateString)))
+        SolrKeyRange("updated", Some(SolrStringValue(dateString, StrictUnquoted)),None),
+        SolrKeyRange("created",None,Some(SolrStringValue(dateString, StrictUnquoted)))
       )
       afinder.toSolrKeyVals.toSet must_== expected.toSet
 
@@ -436,21 +437,23 @@ class SolrQuerySpec extends ApplicationSpecification {
       val resultTuple = (ipmiTuples, metaTuples, ipAddresses)
 
       val expected: SolrExpression = SolrAndOp(List(
-        SolrKeyVal("IPMI_ADDRESS", SolrStringValue("ipmi_address", LRWildcard(true))),
-        SolrKeyVal("IPMI_USERNAME", SolrStringValue("ipmi_username", LRWildcard(true))),
-        SolrKeyVal("meta1", SolrStringValue("meta1_value", LRWildcard(true))),
-        SolrKeyVal("meta2", SolrStringValue("meta2_value", LRWildcard(true))),
-        SolrKeyVal("ip_address", SolrStringValue("1.2.3.4", LRWildcard(true))),
-        SolrKeyRange("created", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
-        SolrKeyRange("updated", Some(SolrStringValue(dateString)),Some(SolrStringValue(dateString))),
-        SolrKeyVal("tag", SolrStringValue("footag", LRWildcard(true))),
+        SolrKeyVal("IPMI_ADDRESS", SolrStringValue("ipmi_address", Unquoted)),
+        SolrKeyVal("IPMI_USERNAME", SolrStringValue("ipmi_username", Unquoted)),
+        SolrKeyVal("meta1", SolrStringValue("meta1_value", Unquoted)),
+        SolrKeyVal("meta2", SolrStringValue("meta2_value", Unquoted)),
+        SolrKeyVal("ip_address", SolrStringValue("1.2.3.4", Unquoted)),
+        SolrKeyRange("created", Some(SolrStringValue(dateString, StrictUnquoted)),Some(SolrStringValue(dateString, StrictUnquoted))),
+        SolrKeyRange("updated", Some(SolrStringValue(dateString, StrictUnquoted)),Some(SolrStringValue(dateString, StrictUnquoted))),
+        SolrKeyVal("tag", SolrStringValue("footag", Unquoted)),
         SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
         SolrKeyVal("assetType", SolrIntValue(AssetType.ServerNode.get.id))
       ))
       val p = AssetSearchParameters(resultTuple, afinder)
+      /*
       println(p.toSolrExpression.toSolrQueryString)
       println("---")
       println(expected.toSolrQueryString)
+      */
       p.toSolrExpression must_== expected
 
 

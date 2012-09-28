@@ -11,6 +11,12 @@ import AssetMeta.ValueType._
 
 import play.api.Logger
 
+
+/**
+ * TODO: encode checked vs unchecked syntax trees into the type system to
+ * prevent accidental executing of unchecked queries.
+ */
+
 /**
  * Any class mixing in this trait is part of the CQL AST that must translate
  * itself into a Solr Query
@@ -89,12 +95,20 @@ case object RWildcard extends StringValueFormat {
 }
 //auto signifies whether the wildcards were specified by the user or
 //automatically added
-case class LRWildcard(auto: Boolean = true) extends StringValueFormat {
+case object LRWildcard extends StringValueFormat {
   def addWildcards(value: String) = "*" + value + "*"
 }
 case object Quoted extends StringValueFormat {
   def addWildcards(value: String) = "\"" + value + "\""
   override val escapeChars = false
+}
+
+case object Unquoted extends StringValueFormat {
+  //now you might be wondering, if this is unquoted, why are we quoting the
+  //value?  This is because "unqouted" applies to the value as input through
+  //CQL.  If the value is not padded with wildcards (which changes its format
+  //to LRWildcard), then this should be searching for an exact match
+  def addWildcards(value: String) = "\"" + value + "\""
 }
 
 //no wildcard/regex allowed
@@ -133,8 +147,8 @@ object StringValueFormat {
     val e_$ = e("$")
     val states = List(
       (s_*, e_$, 1, 1, LWildcard),
-      (s__*, e__*, 2,2, LRWildcard(false)),
-      (s_*, e_*, 1, 1, LRWildcard(false)),
+      (s__*, e__*, 2,2, LRWildcard),
+      (s_*, e_*, 1, 1, LRWildcard),
       (s__*, e_$, 2, 1, LWildcard),
       (s_*, true, 1, 0, LWildcard),
       (s__*, true, 2, 0, LWildcard),
@@ -145,7 +159,7 @@ object StringValueFormat {
       (true, e__*, 0, 2, RWildcard),
       (true, e_*, 0, 1, RWildcard),
       (true, e_$, 0, 1, LWildcard),
-      (true, true, 0,0, LRWildcard(true))
+      (true, true, 0,0, Unquoted)
     )
     val (_,_, strim, etrim, format) = states.find{x => x._1 && x._2}.get
     try {
@@ -160,16 +174,50 @@ object StringValueFormat {
   
    
 
-case class SolrStringValue(value: String, format: StringValueFormat = StrictUnquoted) extends SolrSingleValue(String) {
+/**
+ * The string value is special becuase all values parsed from CQL are set as
+ * strings, so this class must handle the string parsing into other value types
+ */
+case class SolrStringValue(value: String, format: StringValueFormat = Unquoted) extends SolrSingleValue(String) {
   def toSolrQueryString(toplevel: Boolean) = format.format(value)
 
   def quoted = copy(format = Quoted)
   def unquoted = copy(format = StrictUnquoted)
+  def lr = copy(format = LRWildcard)
 
-  def validateValue(key: SolrKey) = if (!key.autoWildcard && format == LRWildcard(true)) {
-    Right(this.copy(format = Quoted))
-  } else {
-    Right(this)
+  private def noRegexAllowed(f: => Either[String, SolrSingleValue]): Either[String, SolrSingleValue] = {
+    if (Set[StringValueFormat](Quoted, Unquoted, StrictUnquoted) contains format) {
+      f
+    } else {
+      Left("Regex/wildcards not allowed on non-string values")
+    }
+  }
+
+  def validateValue(key: SolrKey) = key.valueType match {
+    case String => if (format == Unquoted) {
+      if (key.autoWildcard) {
+        Right(this.copy(format = LRWildcard))
+      } else {
+        Right(this.copy(format = Quoted))
+      }
+    } else {
+      Right(this)
+    }
+    case Integer =>  noRegexAllowed( try {
+      Right(SolrIntValue(java.lang.Integer.parseInt(value)))
+    } catch {
+      case _: NumberFormatException => Left("Invalid integer value '%s' for key %s".format(value, key.name))
+    })
+    case Double => noRegexAllowed( try {
+      Right(SolrDoubleValue(java.lang.Double.parseDouble(value)))
+    } catch {
+      case _: NumberFormatException => Left("Invalid double value '%s' for key %s".format(value, key.name))
+    })
+    case Boolean => noRegexAllowed( try {
+      Right(SolrBooleanValue((new Truthy(value)).isTruthy))
+    } catch {
+      case t: Truthy.TruthyException => Left(t.getMessage)
+    })
   }
   
 }
@@ -280,6 +328,7 @@ trait SolrSimpleExpr extends SolrExpression {
 
   type TypeEither = Either[String, (String, SolrSingleValue)]
 
+
   /**
    * returns Left(error) or Right(solr_key_name)
    */
@@ -288,21 +337,26 @@ trait SolrSimpleExpr extends SolrExpression {
     case None => Left("Unknown key \"%s\"".format(key))
   }
 
-  def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = (solrKey match {
+  def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
     case j: KeyLookup => value match {
-      case SolrStringValue(stringValue, _) => j.lookupValue(stringValue) match {
+      case SolrStringValue(stringValue, _) => try Right(SolrIntValue(java.lang.Integer.parseInt(stringValue))) catch {case _ => j.lookupValue(stringValue) match {
         case Some(i) => Right(SolrIntValue(i))
         case _ => Left("Invalid %s: %s".format(solrKey.name, stringValue))
-      }
+      }}
       case s:SolrIntValue => Right(value)
       case other => Left(typeError(solrKey.name, String, other.valueType))
     }
-    case _ => if (solrKey.valueType == value.valueType) {
-      Right(value)
-    } else {
-      Left(typeError(solrKey.name, solrKey.valueType, value.valueType))
+    case _ => {
+      value
+        .validateValue(solrKey)
+        .right
+        .flatMap{ cleanValue => if (solrKey.valueType == cleanValue.valueType) {
+          Right(cleanValue)
+        } else {
+          Left(typeError(solrKey.name, solrKey.valueType, cleanValue.valueType))
+        }}
     }
-  }).right.flatMap{_.validateValue(solrKey)}
+  }
 
 
 }
