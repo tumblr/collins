@@ -173,13 +173,13 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None, sortField: String = "TAG"): Page[AssetView] =
+  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] =
   Stats.time("Asset.find") {
     AssetSearchParameters(params, afinder, operation)
       .toSolrExpression
       .typeCheck
       .right
-      .flatMap{exp => CollinsSearchQuery(exp, page, sortField).getPage()}
+      .flatMap{exp => CollinsSearchQuery(exp, page).getPage()}
       .fold(
         err => throw new Exception(err),
         page => page
@@ -211,7 +211,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
       updatedAfter = None,
       updatedBefore = None,
       assetType = Some(MultiCollinsConfig.instanceAssetType),
-      state = None
+      state = None,
+      query = None
     )
     val findLocations = Asset
       .find(PageParams(0,50,"ASC", "tag"), AttributeResolver.emptyResultTuple, instanceFinder)

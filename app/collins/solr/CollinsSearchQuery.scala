@@ -14,7 +14,7 @@ import SortDirection._
  * This class is a full search query, which includes an expression along with
  * sorting and pagination parameters
  */
-case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField: String = "TAG") {
+case class CollinsSearchQuery(query: SolrExpression, page: PageParams) {
 
   private[this] val logger = Logger("CollinsSearchQuery")
 
@@ -22,7 +22,7 @@ case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField
     val q = new SolrQuery
     val queryString = query.toSolrQueryString
     logger.debug("SOLR: " + queryString)
-    SolrKeyResolver.either(sortField).right.flatMap { sortKey =>
+    SolrKeyResolver.either(page.sortField).right.flatMap { sortKey =>
       q.setQuery(queryString)
       q.setStart(page.offset)
       q.setRows(page.size)
@@ -37,8 +37,7 @@ case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField
             None
         }.flatten, results.getNumFound))
       } catch {
-        case s: SolrServerException => Left(s.getMessage + "(query %s)".format(queryString))
-        case e => Left(e.getMessage)
+        case e => Left(e.getMessage + "(query %s)".format(queryString))
       }
     }
   }.getOrElse(Left("Solr Plugin not initialized!"))

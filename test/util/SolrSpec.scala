@@ -380,7 +380,8 @@ class SolrQuerySpec extends ApplicationSpecification {
         Some(somedate),
         Some(somedate),
         Some(somedate),
-        Some(State.Running.get)
+        Some(State.Running.get),
+        None
       )
       val expected = List(
         SolrKeyVal("tag", SolrStringValue("foosolrtag", Unquoted)),
@@ -404,6 +405,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         Some(somedate),
         Some(somedate),
         None,
+        None,
         None
       )
       val expected = List(
@@ -412,6 +414,26 @@ class SolrQuerySpec extends ApplicationSpecification {
       )
       afinder.toSolrKeyVals.toSet must_== expected.toSet
 
+    }
+    "mix with raw cql query" in {
+      val cql = "foo = bar AND (baz = asdf OR abcdef = 3)".query
+      val afinder = AssetFinder(
+        tag = Some("tagvalue"),
+        status = Status.Allocated,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        query = Some(cql)
+      )
+      val expected = List(
+        SolrKeyVal("tag", "tagvalue".unquoted),
+        SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
+        cql
+      )
+      afinder.toSolrKeyVals.toSet must_== expected.toSet
     }
 
   }
@@ -429,6 +451,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         Some(somedate),
         Some(somedate),
         Some(somedate),
+        None,
         None
       )
       val ipmiTuples = (IpmiInfo.Enum.IpmiAddress -> "ipmi_address") :: (IpmiInfo.Enum.IpmiUsername -> "ipmi_username") :: Nil

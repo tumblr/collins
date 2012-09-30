@@ -104,6 +104,14 @@ describe "Asset Find" do
     checkQuery p,1
   end
 
+  it "cql with other stuff" do
+    p = {
+      "pool" => "MEMCACHE",
+      "query" => "status = allocated or (hostname = *default* AND num_disks = 2)"
+    }
+    checkQuery p, 5
+  end
+
 
 
 

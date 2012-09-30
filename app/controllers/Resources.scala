@@ -1,6 +1,6 @@
 package controllers
 
-import actions.asset.{CreateAction, FindSimilarAction,SolrFindAction}
+import actions.asset.{CreateAction, FindSimilarAction}
 import actions.resources.{FindAction, IntakeStage1Action, IntakeStage2Action, IntakeStage3Action}
 
 import models._
@@ -19,10 +19,6 @@ trait Resources extends Controller {
     Ok(html.resources.index(AssetMeta.getViewable())).withHeaders("Content-Language" -> "en")
   }(Permissions.Resources.Index)
 
-
-  def searchSolr(query: String, details: String, page: Int, size: Int, sort: String, sortField: String) = 
-    SolrFindAction(PageParams(page, size, sort, sortField), query, (new Truthy(details)).isTruthy, "tag", Permissions.Resources.Find, this)
-  
 
   def displayCreateForm(assetType: String) = SecureAction { implicit req =>
     AssetType.findByName(assetType) match {
@@ -44,7 +40,7 @@ trait Resources extends Controller {
    * Find assets by query parameters, special care for ASSET_TAG
    */
   def find(page: Int, size: Int, sort: String, operation: String, sortField: String) = FindAction(
-    PageParams(page, size, sort, sortField), operation, sortField, Permissions.Resources.Find, this
+    PageParams(page, size, sort, sortField), operation, Permissions.Resources.Find, this
   )
 
   def similar(tag: String, page: Int, size: Int, sort: String) = 

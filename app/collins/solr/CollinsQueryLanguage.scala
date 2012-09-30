@@ -182,8 +182,11 @@ case class SolrStringValue(value: String, format: StringValueFormat = Unquoted) 
   def toSolrQueryString(toplevel: Boolean) = format.format(value)
 
   def quoted = copy(format = Quoted)
-  def unquoted = copy(format = StrictUnquoted)
+  def unquoted = copy(format = Unquoted)
+  def strict = copy(format = StrictUnquoted)
   def lr = copy(format = LRWildcard)
+  def l = copy(format = LWildcard)
+  def r = copy(format = RWildcard)
 
   private def noRegexAllowed(f: => Either[String, SolrSingleValue]): Either[String, SolrSingleValue] = {
     if (Set[StringValueFormat](Quoted, Unquoted, StrictUnquoted) contains format) {
