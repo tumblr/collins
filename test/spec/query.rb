@@ -109,4 +109,10 @@ describe "Asset Search" do
     checkSize  'type = configuration AND NOT status = incomplete', 7
   end 
 
+  it "ipmi address" do
+    checkSize 'ipmi_address = 172.16.34.113', 1
+  end
+
+
+
 end
