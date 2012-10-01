@@ -30,6 +30,7 @@ class SolrSpec extends ApplicationSpecification {
       )
       val asset = generateAsset(assetTag, assetType, status, meta, state)
       val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
+      val ipmi = IpmiInfo.createForAsset(asset)
       val almostExpected = Map(
         SolrKey("TAG", String, false) -> SolrStringValue(assetTag, StrictUnquoted),
         SolrKey("STATUS", Integer, false) -> SolrIntValue(status.id),
@@ -42,7 +43,8 @@ class SolrSpec extends ApplicationSpecification {
         SolrKey("DOUBLE", Double, true) -> SolrDoubleValue(3.1415),
         SolrKey("BOOL", Boolean, true) -> SolrBooleanValue(false),
         SolrKey("IP_ADDRESS", String, false) -> SolrMultiValue(addresses.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)}),
-        SolrKey("HOSTNAME", String, false) -> SolrStringValue("my_hostname", StrictUnquoted)
+        SolrKey("HOSTNAME", String, false) -> SolrStringValue("my_hostname", StrictUnquoted),
+        SolrKey("IPMI_ADDRESS", String, true) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
       )
       val expected = almostExpected + (SolrKey("KEYS", String, true) -> SolrMultiValue(almostExpected.map{case(k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSeq, String))
       //expected.foreach{e => println(e.toString)}

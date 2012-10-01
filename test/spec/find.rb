@@ -104,7 +104,4 @@ describe "Asset Find" do
     checkQuery p,1
   end
 
-
-
-
 end

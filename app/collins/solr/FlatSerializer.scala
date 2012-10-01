@@ -3,7 +3,7 @@ package collins.solr
 import collins.solr._
 import util.views.Formatter
 
-import models.{Asset, AssetMeta, AssetMetaValue, IpAddresses, MetaWrapper, Truthy}
+import models.{Asset, AssetMeta, AssetMetaValue, IpAddresses, IpmiInfo, MetaWrapper, Truthy}
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
@@ -31,8 +31,12 @@ class FlatSerializer extends AssetSolrSerializer {
         }
       }
     ).collect{case(k, Some(v)) => (k,v)}
+
+    val ipmi: Map[SolrKey, SolrValue] = IpmiInfo.findByAsset(asset).map{ipmi => Map(
+      SolrKeyResolver(IpmiInfo.Enum.IpmiAddress.toString).get -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
+    )}.getOrElse(Map())
       
-    opt ++ Map[SolrKey, SolrValue](
+    opt ++ ipmi ++ Map[SolrKey, SolrValue](
       SolrKeyResolver("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
       SolrKeyResolver("STATUS").get -> SolrIntValue(asset.status),
       SolrKeyResolver("STATE").get -> SolrIntValue(asset.state),
