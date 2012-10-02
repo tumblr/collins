@@ -173,6 +173,7 @@ object AssetLifecycle {
       val values = Seq(AssetMetaValue(asset, RackPosition, rackpos)) ++
                    PowerUnits.toMetaValues(units, asset, options)
       val unallocatedAsset = Asset.inTransaction {
+        AssetMetaValue.purge(values, Some(0))
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
