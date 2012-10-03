@@ -28,6 +28,7 @@ trait AssetView {
 
   def getStatusName(): String = Status.findById(status).map(_.name).getOrElse("Unknown")
   def getStateName(): String = State.findById(state).map(_.name).getOrElse("Unknown")
+  def getTypeName(): String = AssetType.findById(asset_type).map(_.name).getOrElse("Unknown")
 
   def isServerNode(): Boolean = isAssetType(AssetType.ServerNode)
   def isConfiguration(): Boolean = isAssetType(AssetType.Configuration)

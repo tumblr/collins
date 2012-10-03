@@ -13,4 +13,7 @@ case class DetailedRemoteAsset(hostTag: String, remoteUrl: String, json: JsObjec
 {
   def getHostnameMetaValue() = (json \ "ATTRIBS" \ "0" \ "HOSTNAME").asOpt[String]
   def getPrimaryRoleMetaValue() = (json \ "ATTRIBS" \ "0" \ "PRIMARY_ROLE").asOpt[String]
+
+  override def toJsValue = json ++ JsObject(Seq("LOCATION" -> JsString(hostTag)))
+   
 }
