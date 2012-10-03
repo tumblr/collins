@@ -141,11 +141,11 @@ object Asset extends Schema with AnormAdapter[Asset] {
   )
   def flushCache(asset: Asset) = loggedInvalidation("flushCache", asset)
   object Messages extends MessageHelper("asset") {
-    def intakeError(t: String, a: Asset) = "intake.error.%s".format(t.toLowerCase) match {
+    def intakeError[T <: AssetView](t: String, a: T) = "intake.error.%s".format(t.toLowerCase) match {
       case msg if msg == "intake.error.new" =>
-        messageWithDefault(msg, "Invalid asset status", a.getStatus.name)
+        messageWithDefault(msg, "Invalid asset status", a.getStatusName)
       case msg if msg == "intake.error.type" =>
-        messageWithDefault(msg, "Invalid asset type", a.getType.name)
+        messageWithDefault(msg, "Invalid asset type", a.getTypeName)
       case msg if msg == "intake.error.disabled" =>
         messageWithDefault(msg, "Intake is disabled")
       case msg if msg == "intake.error.permissions" =>
