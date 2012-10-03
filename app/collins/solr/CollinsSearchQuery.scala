@@ -21,8 +21,8 @@ case class CollinsSearchQuery(query: SolrExpression, page: PageParams, sortField
   def getResults(): Either[String, (Seq[AssetView], Long)] = Solr.server.map{server =>
     val q = new SolrQuery
     val queryString = query.toSolrQueryString
-    logger.debug("SOLR: " + queryString)
     SolrKeyResolver.either(sortField).right.flatMap { sortKey =>
+      logger.debug("SOLR: " + queryString + "| sort: " + sortKey.name)
       q.setQuery(queryString)
       q.setStart(page.offset)
       q.setRows(page.size)

@@ -10,15 +10,25 @@ import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
 
+sealed trait SolrKey {
+  def name: String
+  def valueType: ValueType
+  
+  def resolvedName: String
+}
+
+
+
 /** 
  * This class holds data about a solr key, mainly for translating "local" key
  * names to their solr equivalent
  */
-case class SolrKey (
+case class SolrValueKey (
   val name: String,
   val valueType: ValueType,
-  val isDynamic: Boolean = true
-) {
+  val isDynamic: Boolean = true,
+  val isMultiValued: Boolean = false
+) extends SolrKey {
   lazy val resolvedName = name.toUpperCase + (if(isDynamic) ValueType.postFix(valueType) else "")
   def isAliasOf(alias: String) = false //override for aliases
 
@@ -28,6 +38,35 @@ case class SolrKey (
    * returns true if wildcards should be automatically applied to unquoted values of this key (only relevant for string values)
    */
   def autoWildcard = !(SolrKeyResolver.noAutoWildcardKeys contains name)
+
+  /**
+   * Only single-valued keys can be used for sorting
+   */
+  lazy val sortKey = Some(SolrSortKey(this)).filter(!isMultiValued)
+
+  /**
+   * override for custom sort key generation
+   *
+   */
+  def sortify(value: SolrSingleValue): SolrStringValue = SolrStringValue(value.value.toString)
+
+  def sortTuple(value: SolrValue): Option[(SolrKey, SolrValue)] = value match {
+    case s: SolrSingleValue => sortKey.map{k => (k,sortify(s))}
+    case _ => throw new IllegalArgumentException("Cannot sortify non-single values")
+  }
+}
+
+case class SolrSortKey(val source: SolrValueKey) extends SolrKey {
+  val valueType = String
+  val name = source.name
+
+  lazy val resolvedName = name.toUpperCase + "_sort"
+}
+
+object SolrKey {
+  def apply(name: String, valueType: ValueType, isDyn: Boolean = true, multi: Boolean = false): SolrValueKey = 
+    SolrValueKey(name, valueType, isDyn, multi)
+  
 }
 
 /**
@@ -41,15 +80,19 @@ trait KeyLookup{ self: SolrKey =>
 object SolrKeyResolver {
 
   /**
-   * This is a list of keys that should not add pre/post wildcards when the value in CQL is unquoted with no modifiers.  For example,
-   * normally if you do foo = bar in CQL, it is translated to foo:*bar*, but we don't want to do that for these keys
+   * This is a list of keys that should not add pre/post wildcards when the
+   * value in CQL is unquoted with no modifiers.  For example, normally if you
+   * do foo = bar in CQL, it is translated to foo:*bar*, but we don't want to
+   * do that for these keys
    *
-   * This is extremely important because otherwise if you search for ip_address = 192.168.1.1, which you assume is a specific ip address,
-   * you will actually get all assets 192.168.1.1xx addressess.
+   * This is extremely important because otherwise if you search for ip_address
+   * = 192.168.1.1, which you assume is a specific ip address, you will
+   * actually get all assets 192.168.1.1xx addressess.
    *
-   * TODO: create config option to specify additional tags (it should be required for these)
+   * TODO: create config option to specify additional tags (it should be
+   * required for these)
    */
-  val noAutoWildcardKeys = List("TAG", "IP_ADDRESS", "ADDRESS")
+  val noAutoWildcardKeys = List("TAG", "IP_ADDRESS", "IPMI_ADDRESS")
 
   /**
    * each key is an "incoming" field from a query, the ValueType is the
@@ -88,7 +131,7 @@ object SolrKeyResolver {
 
   val enumKeys = typeKey :: statusKey :: stateKey :: Nil
 
-  def apply(_rawkey: String): Option[SolrKey] = {
+  def apply(_rawkey: String): Option[SolrValueKey] = {
     val ukey = _rawkey.toUpperCase
     nonMetaKeys.find(_ matches ukey)
       .orElse(enumKeys.find(_ matches ukey))

@@ -53,20 +53,20 @@ abstract class SolrSingleValue(val valueType: ValueType) extends SolrValue with 
    * perform any validation or cleaning on the value, occurrs after the key is
    * verified to exist and the value is of the correct type.
    */
-  def validateValue(key: SolrKey): Either[String, SolrSingleValue]
+  def validateValue(key: SolrValueKey): Either[String, SolrSingleValue]
 }
 
 case class SolrIntValue(value: Int) extends SolrSingleValue(Integer) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
 
-  def validateValue(key: SolrKey) = Right(this)
+  def validateValue(key: SolrValueKey) = Right(this)
 
 }
 
 case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
   def toSolrQueryString(toplevel: Boolean) = value.toString
 
-  def validateValue(key: SolrKey) = Right(this)
+  def validateValue(key: SolrValueKey) = Right(this)
 }
 
 /**
@@ -193,7 +193,7 @@ case class SolrStringValue(value: String, format: StringValueFormat = Unquoted) 
     }
   }
 
-  def validateValue(key: SolrKey) = key.valueType match {
+  def validateValue(key: SolrValueKey) = key.valueType match {
     case String => if (format == Unquoted) {
       if (key.autoWildcard) {
         Right(this.copy(format = LRWildcard))
@@ -225,7 +225,7 @@ case class SolrStringValue(value: String, format: StringValueFormat = Unquoted) 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
   def toSolrQueryString(toplevel: Boolean) = if (value) "true" else "false"
 
-  def validateValue(key: SolrKey) = Right(this)
+  def validateValue(key: SolrValueKey) = Right(this)
   
 
 }
@@ -337,7 +337,7 @@ trait SolrSimpleExpr extends SolrExpression {
     case None => Left("Unknown key \"%s\"".format(key))
   }
 
-  def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
+  def typeCheckValue(solrKey: SolrValueKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
     case j: KeyLookup => value match {
       case SolrStringValue(stringValue, _) => try Right(SolrIntValue(java.lang.Integer.parseInt(stringValue))) catch {case _ => j.lookupValue(stringValue) match {
         case Some(i) => Right(SolrIntValue(i))
@@ -387,7 +387,7 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
     key + ":[" + l + " TO " + h + "]"
   }
 
-  def t(k: SolrKey, v: Option[SolrSingleValue]): Either[String, Option[SolrSingleValue]] = v match {
+  def t(k: SolrValueKey, v: Option[SolrSingleValue]): Either[String, Option[SolrSingleValue]] = v match {
     case None => Right(None)
     case Some(s) => typeCheckValue(k, s).right.map{cleanValue => Some(cleanValue)}
   }
