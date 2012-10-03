@@ -47,7 +47,7 @@ trait AssetAction {
       Left(RequestDataHolder.error400(AssetMessages.invalidTag(t)))
   }
 
-  def assetIntakeAllowed(asset: Asset): Option[String] = {
+  def assetIntakeAllowed[T <: AssetView](asset: T): Option[String] = {
     if (!asset.isNew)
       Some(AssetMessages.intakeError("new", asset))
     else if (!asset.isServerNode)
