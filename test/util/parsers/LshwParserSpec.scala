@@ -118,14 +118,14 @@ class LshwParserSpec extends mutable.Specification {
           rep.memoryBanksUsed mustEqual 4
           rep.memoryBanksUnused mustEqual 8
           rep.memoryBanksTotal mustEqual 12
-    
-          rep.totalStorage.toHuman mustEqual "278.46 GB"
-          rep.diskCount mustEqual 4
-    
+
           rep.hasFlashStorage must beTrue
           rep.totalFlashStorage.toHuman mustEqual "1.27 TB"
           rep.totalUsableStorage.toHuman mustEqual "1.55 TB"
-
+   
+          rep.totalStorage.toHuman mustEqual "278.46 GB"
+          rep.diskCount mustEqual 4
+    
           rep.nicCount mustEqual 2
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
