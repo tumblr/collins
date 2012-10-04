@@ -17,10 +17,9 @@ class FlatSerializer extends AssetSolrSerializer {
 
   val generatedFields = SolrKey("NUM_DISKS", Integer, true) :: SolrKey("KEYS", String, true) :: Nil
 
-  type ValueMap = Map[SolrValueKey, SolrValue]
 
   def serialize(asset: Asset) = postProcess {
-    val opt = Map[SolrValueKey, Option[SolrValue]](
+    val opt = Map[SolrKey, Option[SolrValue]](
       SolrKeyResolver("UPDATED").get -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
       SolrKeyResolver("DELETED").get -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
       SolrKeyResolver("IP_ADDRESS").get -> {
@@ -34,11 +33,11 @@ class FlatSerializer extends AssetSolrSerializer {
       }
     ).collect{case(k, Some(v)) => (k,v)}
 
-    val ipmi: ValueMap = IpmiInfo.findByAsset(asset).map{ipmi => Map(
+    val ipmi: AssetSolrDocument = IpmiInfo.findByAsset(asset).map{ipmi => Map(
       SolrKeyResolver(IpmiInfo.Enum.IpmiAddress.toString).get -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
     )}.getOrElse(Map())
       
-    opt ++ ipmi ++ Map[SolrValueKey, SolrValue](
+    opt ++ ipmi ++ Map[SolrKey, SolrValue](
       SolrKeyResolver("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
       SolrKeyResolver("STATUS").get -> SolrIntValue(asset.status),
       SolrKeyResolver("STATE").get -> SolrIntValue(asset.state),
@@ -49,8 +48,8 @@ class FlatSerializer extends AssetSolrSerializer {
 
   
   //FIXME: The parsing logic here is duplicated in AssetMeta.validateValue
-  def serializeMetaValues(values: Seq[MetaWrapper]): ValueMap = {
-    def process(build: ValueMap, remain: Seq[MetaWrapper]): ValueMap = remain match {
+  def serializeMetaValues(values: Seq[MetaWrapper]): AssetSolrDocument = {
+    def process(build: AssetSolrDocument, remain: Seq[MetaWrapper]): AssetSolrDocument = remain match {
       case head :: tail => {
         val newval = head.getValueType() match {
           case Boolean => SolrBooleanValue((new Truthy(head.getValue())).isTruthy)
@@ -73,8 +72,8 @@ class FlatSerializer extends AssetSolrSerializer {
     process(Map(), values)
   }
 
-  def postProcess(doc: ValueMap): AssetSolrDocument = {
-    val disks:Option[Tuple2[SolrValueKey, SolrValue]] = doc.find{case (k,v) => k.name == "DISK_SIZE_BYTES"}.map{case (k,v) => (SolrKey("NUM_DISKS", Integer, true) -> SolrIntValue(v match {
+  def postProcess(doc: AssetSolrDocument): AssetSolrDocument = {
+    val disks:Option[Tuple2[SolrKey, SolrValue]] = doc.find{case (k,v) => k.name == "DISK_SIZE_BYTES"}.map{case (k,v) => (SolrKey("NUM_DISKS", Integer, true) -> SolrIntValue(v match {
       case s:SolrSingleValue => 1
       case SolrMultiValue(vals, _) => vals.size
     }))}
@@ -82,7 +81,7 @@ class FlatSerializer extends AssetSolrSerializer {
     val almostDone = doc ++ newFields
     val keyList = SolrMultiValue(almostDone.map{case (k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSeq, String)
 
-    val sortKeys = almostDone.map{case(k,v) => k.sortTuple(v)}.flatten
+    val sortKeys = almostDone.map{case(k,v) => k.sortify(v)}.flatten
 
     almostDone ++ sortKeys + (SolrKey("KEYS", String, true) -> keyList)
   }
