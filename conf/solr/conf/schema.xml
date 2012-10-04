@@ -187,7 +187,7 @@
    <field name="TAG" type="string" indexed="true" stored="true" required="true" /> 
    <field name="TYPE" type="string" indexed="true" stored="true" required="true"/>
    <field name="STATUS" type="string" indexed="true" stored="true" required="true"/>
-   <field name="STATE" type="string" indexed="true" stored="true" required="true"/>
+   <field name="STATE" type="string" indexed="true" stored="true" required="false"/>
    <field name="CREATED" type="tdate" indexed="true" stored="true" requred="true"/>
    <field name="UPDATED" type="tdate" indexed="true" stored="true" requred="false"/>
    <field name="DELETED" type="tdate" indexed="true" stored="true" requred="false"/>
@@ -216,7 +216,7 @@
 
    <!-- all sort fields use this dynamic field -->
 
-   <dynamicField name = "*_sort" type="sort" indexed="true" stored="false" multiValued="false"/>
+   <dynamicField name = "*_SORT" type="sort" indexed="true" stored="false" multiValued="false"/>
 
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
