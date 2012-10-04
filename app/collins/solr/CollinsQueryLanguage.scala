@@ -187,10 +187,10 @@ case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
 
 //note, we don't have to bother with checking the types of the contained values
 //since that's implicitly handled by AssetMeta
-case class SolrMultiValue(values: Seq[SolrSingleValue], valueType: ValueType) extends SolrValue {
+case class SolrMultiValue(values: Set[SolrSingleValue], valueType: ValueType) extends SolrValue {
   require (values.size > 0, "Cannot create empty multi-value")
 
-  def +(v: SolrSingleValue) = this.copy(values = values :+ v)
+  def +(v: SolrSingleValue) = this.copy(values = values + v)
 
   lazy val value = values.map{_.value}.toArray
 
@@ -200,7 +200,7 @@ case class SolrMultiValue(values: Seq[SolrSingleValue], valueType: ValueType) ex
 
 object SolrMultiValue {
 
-  def apply(values: Seq[SolrSingleValue]): SolrMultiValue = SolrMultiValue(values, values.headOption.map{_.valueType}.getOrElse(String))
+  def apply(values: Set[SolrSingleValue]): SolrMultiValue = SolrMultiValue(values, values.headOption.map{_.valueType}.getOrElse(String))
 
 }
 
@@ -301,7 +301,7 @@ trait SolrSimpleExpr extends SolrExpression {
       }      
       case SolrIntValue(id) => e.lookupById(id)
     }) match {
-      case Some(v) => Right(SolrStringValue(v))
+      case Some(v) => Right(SolrStringValue(v, StrictUnquoted))
       case None => Left("Invalid value %s for enum key %s".format(value.value.toString, solrKey.name))
     }
     case _ => value match {
