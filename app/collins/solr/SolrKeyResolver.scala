@@ -10,24 +10,15 @@ import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
 
-sealed trait SolrKey {
-  def name: String
-  def valueType: ValueType
-  
-  def resolvedName: String
-}
-
-
-
 /** 
  * This class holds data about a solr key, mainly for translating "local" key
  * names to their solr equivalent
  */
-case class SolrValueKey (
+case class SolrKey (
   val name: String,
   val valueType: ValueType,
   val isDynamic: Boolean = true
-) extends SolrKey {
+) {
   lazy val resolvedName = name.toUpperCase + (if(isDynamic) ValueType.postFix(valueType) else "")
   def isAliasOf(alias: String) = false //override for aliases
 
@@ -38,34 +29,8 @@ case class SolrValueKey (
    */
   def autoWildcard = !(SolrKeyResolver.noAutoWildcardKeys contains name)
 
-  lazy val sortKey = SolrSortKey(this)
+  def sortify(value: SolrValue): Option[(SolrKey, SolrStringValue)] = None
 
-  /**
-   * convert a value into a form that can be sorted
-   *
-   * This is overridden by several keys, such as type and status, to replace the enum id with the string value
-   */
-  def sortify(value: SolrValue): SolrStringValue = SolrStringValue(value.solrValue)
-
-}
-
-/**
- * Why we need Sort keys:
- * - cannot sort on multi-valued fields
- * - need to convert enums to string representation
- * - solr doesn't have dynamic copyfields
-*/
-case class SolrSortKey(val source: SolrValueKey) extends SolrKey {
-  val valueType = String
-  val name = source.name
-
-  lazy val resolvedName = name.toUpperCase + "_sort"
-}
-
-object SolrKey {
-  def apply(name: String, valueType: ValueType, isDyn: Boolean = true): SolrValueKey = 
-    SolrValueKey(name, valueType, isDyn)
-  
 }
 
 /**
@@ -73,8 +38,8 @@ object SolrKey {
  * the enum value by passing it to the valueLookup method.
  */
 trait EnumKey{ self: SolrKey =>
-  def lookupByName(value: String): Option[SolrEnumValue]
-  def lookupById(value: Int): Option[SolrEnumValue]
+  def lookupByName(value: String): Option[String]
+  def lookupById(value: Int): Option[String]
 }
 
 object SolrKeyResolver {
@@ -101,7 +66,7 @@ object SolrKeyResolver {
    *
    * NOTE - For now, any single-valued field that needs to be sortable has to be explicitly declared
    */
-  lazy val nonMetaKeys: Seq[SolrValueKey] = List(
+  lazy val nonMetaKeys: Seq[SolrKey] = List(
     SolrKey("TAG", String,false), 
     SolrKey("CREATED", String,false), 
     SolrKey("UPDATED", String,false), 
@@ -116,26 +81,26 @@ object SolrKeyResolver {
     SolrKey(IpmiNetmask.toString, String, true)
   ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
 
-  val typeKey = new SolrValueKey("TYPE",Integer,false) with EnumKey {
+  val typeKey = new SolrKey("TYPE",Integer,false) with EnumKey {
     def lookupByName(value: String) = AssetType.findByName(value.toUpperCase).map(_.name)
-    def lookupById(value: String) = AssetType.findById(value.toUpperCase).map(_.name)
+    def lookupById(value: Int) = AssetType.findById(value).map(_.name)
     override def isAliasOf(a: String) = a == "ASSETTYPE"
 
   }
 
-  val statusKey = new SolrValueKey("STATUS",Integer,false) with EnumKey {
+  val statusKey = new SolrKey("STATUS",Integer,false) with EnumKey {
     def lookupByName(value: String) = Status.findByName(value).map{_.name}
-    def lookupById(value: String) = Status.findById(value).map{_.name}
+    def lookupById(value: Int) = Status.findById(value).map{_.name}
   }
 
-  val stateKey = new SolrValueKey("STATE", Integer, false) with EnumKey {
+  val stateKey = new SolrKey("STATE", Integer, false) with EnumKey {
     def lookupByName(value: String) = State.findByName(value).map{_.name}
-    def lookupById(value: String) = State.findById(value).map{_.name}
+    def lookupById(value: Int) = State.findById(value).map{_.name}
   }
 
   val enumKeys = typeKey :: statusKey :: stateKey :: Nil
 
-  def apply(_rawkey: String): Option[SolrValueKey] = {
+  def apply(_rawkey: String): Option[SolrKey] = {
     val ukey = _rawkey.toUpperCase
     nonMetaKeys.find(_ matches ukey)
       .orElse(enumKeys.find(_ matches ukey))

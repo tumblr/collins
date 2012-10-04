@@ -292,7 +292,7 @@ trait SolrSimpleExpr extends SolrExpression {
     case None => Left("Unknown key \"%s\"".format(key))
   }
 
-  def typeCheckValue(solrKey: SolrValueKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
+  def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
     case e: EnumKey => (value match {
       case SolrStringValue(stringValue, _) => try {
         e.lookupById(java.lang.Integer.parseInt(stringValue)) 
@@ -301,11 +301,11 @@ trait SolrSimpleExpr extends SolrExpression {
       }      
       case SolrIntValue(id) => e.lookupById(id)
     }) match {
-      case Some(v) => Right(v)
+      case Some(v) => Right(SolrStringValue(v))
       case None => Left("Invalid value %s for enum key %s".format(value.value.toString, solrKey.name))
     }
     case _ => value match {
-      case s: SolrString value => {
+      case s: SolrStringValue => {
         //string values are special because all values parsed from CQL are as strings
         def noRegexAllowed(f: => Either[String, SolrSingleValue]): Either[String, SolrSingleValue] = {
           if (Set[StringValueFormat](Quoted, Unquoted, StrictUnquoted) contains s.format) {
@@ -315,8 +315,8 @@ trait SolrSimpleExpr extends SolrExpression {
           }
         }
         solrKey.valueType match {
-          case String => if (format == Unquoted) {
-            if (key.autoWildcard) {
+          case String => if (s.format == Unquoted) {
+            if (solrKey.autoWildcard) {
               Right(s.copy(format = LRWildcard))
             } else {
               Right(s.copy(format = Quoted))
@@ -325,17 +325,17 @@ trait SolrSimpleExpr extends SolrExpression {
             Right(s)
           }
           case Integer =>  noRegexAllowed( try {
-            Right(SolrIntValue(java.lang.Integer.parseInt(value)))
+            Right(SolrIntValue(java.lang.Integer.parseInt(s.value)))
           } catch {
-            case _: NumberFormatException => Left("Invalid integer value '%s' for key %s".format(value, key.name))
+            case _: NumberFormatException => Left("Invalid integer value '%s' for key %s".format(s.value, solrKey.name))
           })
           case Double => noRegexAllowed( try {
-            Right(SolrDoubleValue(java.lang.Double.parseDouble(value)))
+            Right(SolrDoubleValue(java.lang.Double.parseDouble(s.value)))
           } catch {
-            case _: NumberFormatException => Left("Invalid double value '%s' for key %s".format(value, key.name))
+            case _: NumberFormatException => Left("Invalid double value '%s' for key %s".format(s.value, solrKey.name))
           })
           case Boolean => noRegexAllowed( try {
-            Right(SolrBooleanValue((new Truthy(value)).isTruthy))
+            Right(SolrBooleanValue((new Truthy(s.value)).isTruthy))
           } catch {
             case t: Truthy.TruthyException => Left(t.getMessage)
           })
@@ -378,7 +378,7 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
     key + ":[" + l + " TO " + h + "]"
   }
 
-  def t(k: SolrValueKey, v: Option[SolrSingleValue]): Either[String, Option[SolrSingleValue]] = v match {
+  def t(k: SolrKey, v: Option[SolrSingleValue]): Either[String, Option[SolrSingleValue]] = v match {
     case None => Right(None)
     case Some(s) => typeCheckValue(k, s).right.map{cleanValue => Some(cleanValue)}
   }

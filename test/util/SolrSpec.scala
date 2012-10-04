@@ -54,7 +54,7 @@ class SolrSpec extends ApplicationSpecification {
       actual must_== expected
     }
     "post-process number of disks" in {
-      val m = Map[SolrValueKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true) -> SolrMultiValue(SolrStringValue("123", StrictUnquoted) :: SolrStringValue("456", StrictUnquoted) :: Nil))
+      val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true) -> SolrMultiValue(SolrStringValue("123", StrictUnquoted) :: SolrStringValue("456", StrictUnquoted) :: Nil))
       val expected = m + 
         (SolrKey("NUM_DISKS", Integer, true) -> SolrIntValue(2)) + 
         (SolrKey("KEYS", String, true) -> SolrMultiValue(SolrStringValue("DISK_SIZE_BYTES", StrictUnquoted) :: SolrStringValue("NUM_DISKS", StrictUnquoted) :: Nil))
@@ -322,7 +322,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         "FoOsOlR = 3".query.typeCheck must_== Right(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3)))
       }
       "valid enum" in {
-        """type = "SERVER_NODE"""".query.typeCheck must_== Right(SolrKeyVal("TYPE", SolrIntValue(1)))
+        """type = "SERVER_NODE"""".query.typeCheck must_== Right(SolrKeyVal("TYPE", SolrStringValue("SERVER_NODE")))
       }
       "case insensitive status enum" in {
         """status = unallocated""".query.typeCheck must_== "STATUS = Unallocated".query.typeCheck
