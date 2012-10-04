@@ -184,9 +184,16 @@
 
 
  <fields>
-   <field name="TAG" type="string" indexed="true" stored="true" required="true" /> 
-   <field name="TYPE" type="string" indexed="true" stored="true" required="true"/>
-   <field name="STATUS" type="string" indexed="true" stored="true" required="true"/>
+
+  <!-- ALL-DOC FIELDS -->
+  <field name="DOC_TYPE" type="string" indexed="true" stored="true" required="true"/>
+  <field name="LAST_INDEXED" type="tdate" indexed="true" stored="true" required="true"/>
+
+
+   <!-- ASSET FIELDS -->
+   <field name="TAG" type="string" indexed="true" stored="true" required="false" /> 
+   <field name="TYPE" type="string" indexed="true" stored="true" required="false"/>
+   <field name="STATUS" type="string" indexed="true" stored="true" required="false"/>
    <field name="STATE" type="string" indexed="true" stored="true" required="false"/>
    <field name="CREATED" type="tdate" indexed="true" stored="true" requred="true"/>
    <field name="UPDATED" type="tdate" indexed="true" stored="true" requred="false"/>
@@ -213,6 +220,10 @@
    <dynamicField name="*_meta_s"  type="string"  indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_meta_b"  type="boolean" indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_meta_d"  type="tdouble" indexed="true"  stored="true" multiValued="true"/>
+
+   <!-- ASSET LOG FIELDS -->
+   
+   <field name="LOG_MESSAGE" type="string" indexed="true" stored="false" multiValued = "false"/>
 
    <!-- all sort fields use this dynamic field -->
 

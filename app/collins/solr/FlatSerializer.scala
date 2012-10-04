@@ -3,6 +3,8 @@ package collins.solr
 import collins.solr._
 import util.views.Formatter
 
+import java.util.Date
+
 import models.{Asset, AssetMeta, AssetMetaValue, IpAddresses, IpmiInfo, MetaWrapper, Truthy}
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
@@ -16,6 +18,11 @@ import Solr._
 class FlatSerializer extends AssetSolrSerializer {
 
   val generatedFields = SolrKey("NUM_DISKS", Integer, true) :: SolrKey("KEYS", String, true) :: Nil
+
+  def allDocFields(implicit getDate: () => Date) = Map(
+    SolrKeyResolver("DOC_TYPE").get -> SolrStringValue(AssetDocType.stringName, StrictUnquoted),
+    SolrKeyResolver("LAST_INDEXED").get -> SolrStringValue(Formatter.solrDateFormat(getDate()), StrictUnquoted)
+  )
 
 
   def serialize(asset: Asset) = postProcess {
@@ -86,4 +93,9 @@ class FlatSerializer extends AssetSolrSerializer {
     almostDone ++ sortKeys + (SolrKey("KEYS", String, true) -> keyList)
   }
 
+}
+
+object FlatSerializer {
+  //needed so in testing we can force to use a specific time for last_indexed
+  implicit val getDate = () => new Date
 }

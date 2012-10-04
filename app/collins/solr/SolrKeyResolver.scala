@@ -77,6 +77,11 @@ object SolrKeyResolver {
    */
   val noAutoWildcardKeys = List("TAG", "IP_ADDRESS", "IPMI_ADDRESS")
 
+  val allDocKeys = List(
+    SolrKey("DOC_TYPE", String, false, false),
+    SolrKey("LAST_INDEXED", String, false, false)
+  )
+
   /**
    * each key is an "incoming" field from a query, the ValueType is the
    * expected type of the key, and the Boolean indicates whether the key in
@@ -97,7 +102,7 @@ object SolrKeyResolver {
     SolrKey(IpmiPassword.toString, String, true, false),
     SolrKey(IpmiGateway.toString, String, true, false),
     SolrKey(IpmiNetmask.toString, String, true, false)
-  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
+  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List()) ++ allDocKeys
 
   val typeKey = new SolrKey("TYPE",String,false, false) with EnumKey {
     def lookupByName(value: String) = AssetType.findByName(value.toUpperCase).map(_.name)
