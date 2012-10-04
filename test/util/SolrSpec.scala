@@ -54,7 +54,7 @@ class SolrSpec extends ApplicationSpecification {
       actual must_== expected
     }
     "post-process number of disks" in {
-      val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true) -> SolrMultiValue(SolrStringValue("123", StrictUnquoted) :: SolrStringValue("456", StrictUnquoted) :: Nil))
+      val m = Map[SolrValueKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true) -> SolrMultiValue(SolrStringValue("123", StrictUnquoted) :: SolrStringValue("456", StrictUnquoted) :: Nil))
       val expected = m + 
         (SolrKey("NUM_DISKS", Integer, true) -> SolrIntValue(2)) + 
         (SolrKey("KEYS", String, true) -> SolrMultiValue(SolrStringValue("DISK_SIZE_BYTES", StrictUnquoted) :: SolrStringValue("NUM_DISKS", StrictUnquoted) :: Nil))
