@@ -27,12 +27,20 @@ case class FindAction(
       super.execute(rd)
   }
 
+  // WARNING - Do not change the logic around the Redirect to intake without knowing what it does
   override protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
     p.size match {
       case 0 =>
         Redirect(app.routes.Resources.index).flashing("message" -> AssetMessages.noMatch)
       case 1 =>
-        Status.Redirect(p.items(0).remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(p.items(0).tag))
+        val asset = p.items(0)
+        val ignores = Set("operation")
+        val rmap = requestMap.filterNot(kv => ignores.contains(kv._1))
+        // If the only thing specified was the tag, and intake is allowed, go through intake
+        if (rmap.contains("tag") && rmap.size == 1 && assetIntakeAllowed(asset).isEmpty)
+          Redirect(app.routes.Resources.intake(asset.id, 1))
+        else
+          Status.Redirect(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(p.items(0).tag))
       case n =>
         Status.Ok(views.html.asset.list(p, pageParams.sort, Some(pageParams.sortField))(flash, request))
     }

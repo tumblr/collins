@@ -61,7 +61,7 @@ case class LshwRepresentation(
   def hasCdRom: Boolean = disks.find { _.isCdRom }.isDefined
   def hasFlashStorage: Boolean = disks.find { _.isFlash }.isDefined
   def totalFlashStorage: ByteStorageUnit = {
-    disks.filter { _.isFlash }.foldLeft(ByteStorageUnit(0)) { case (sum,disk) =>
+    disks.filter(_.isFlash).foldLeft(ByteStorageUnit(0)) { case (sum,disk) =>
       new ByteStorageUnit(sum.bytes + disk.size.bytes)
     }
   }
