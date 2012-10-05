@@ -59,6 +59,7 @@ object SolrKeyResolver {
    * NOTE - For now, any single-valued field that needs to be sortable has to be explicitly declared
    */
   lazy val nonMetaKeys: Seq[SolrKey] = List(
+    SolrKey("ID", Integer, false),
     SolrKey("TAG", String,false), 
     SolrKey("CREATED", String,false), 
     SolrKey("UPDATED", String,false), 
