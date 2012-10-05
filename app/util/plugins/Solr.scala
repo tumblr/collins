@@ -36,6 +36,9 @@ object Solr {
   type AssetSolrDocument = Map[SolrKey, SolrValue]
 
   def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {
+    if (typedMap(SolrKeyResolver("TAG").get) == SolrStringValue("Tumblr", StrictUnquoted)) {
+      println(typedMap.toString)
+    }
     val input = new SolrInputDocument
     typedMap.foreach{case(key,value) => input.addField(key.resolvedName,value.value)}
     input
