@@ -58,7 +58,7 @@
 
     <!-- Basic string field type that allows for pre/post wildcaards -->
     <fieldType name="string" class="solr.TextField" sortMissingLast="true">
-      <analyzer type="index">
+      <analyzer>
         <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
         <filter class="solr.ReversedWildcardFilterFactory" withOriginal="true"/>
@@ -184,6 +184,7 @@
 
 
  <fields>
+   <field name="ID" type="int" indexed="true" stored="true" required="true" />
    <field name="TAG" type="string" indexed="true" stored="true" required="true" /> 
    <field name="TYPE" type="string" indexed="true" stored="true" required="true"/>
    <field name="STATUS" type="string" indexed="true" stored="true" required="true"/>
@@ -224,7 +225,7 @@
 
  </fields>
 
- <uniqueKey>TAG</uniqueKey>
+ <uniqueKey>ID</uniqueKey>
 
 
 </schema>
