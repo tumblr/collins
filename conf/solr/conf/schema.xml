@@ -58,7 +58,7 @@
 
     <!-- The StrField type is not analyzed, but indexed/stored verbatim. -->
     <fieldType name="string" class="solr.TextField" sortMissingLast="true">
-      <analyzer type="index">
+      <analyzer>
         <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
         <filter class="solr.ReversedWildcardFilterFactory" withOriginal="true"/>
@@ -173,6 +173,7 @@
 
 
  <fields>
+   <field name="ID" type="int" indexed="true" stored="true" required="true" />
    <field name="TAG" type="string" indexed="true" stored="true" required="true" /> 
    <field name="TYPE" type="int" indexed="true" stored="true" required="true"/>
    <field name="STATUS" type="int" indexed="true" stored="true" required="true"/>
@@ -204,7 +205,7 @@
 
  </fields>
 
- <uniqueKey>TAG</uniqueKey>
+ <uniqueKey>ID</uniqueKey>
 
 
 </schema>
