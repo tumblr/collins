@@ -32,6 +32,7 @@ class SolrSpec extends ApplicationSpecification {
       val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
       val ipmi = IpmiInfo.createForAsset(asset)
       val almostExpected = Map(
+        SolrKey("ID", Integer, false, false) -> SolrIntValue(asset.id.toInt),
         SolrKey("TAG", String, false, false) -> SolrStringValue(assetTag, StrictUnquoted),
         SolrKey("STATUS", String, false, false) -> SolrStringValue(status.name, StrictUnquoted),
         SolrKey("STATE", String, false, false) -> SolrStringValue(state.name, StrictUnquoted),
@@ -48,6 +49,7 @@ class SolrSpec extends ApplicationSpecification {
       )
 
       val sortKeys = Map(
+        SolrKey("ID_SORT", String, false) -> SolrStringValue(asset.id.toString, StrictUnquoted),
         SolrKey("TAG_SORT", String, false) -> SolrStringValue(assetTag, StrictUnquoted),
         SolrKey("STATUS_SORT", String, false) -> SolrStringValue(status.name, StrictUnquoted),
         SolrKey("STATE_SORT", String, false) -> SolrStringValue(state.name, StrictUnquoted),
