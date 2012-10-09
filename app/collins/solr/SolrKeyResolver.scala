@@ -9,15 +9,6 @@ import Solr.AssetSolrDocument
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
-sealed trait SortFieldType
-
-object SortFieldType {
-  case object NotSortable //value cannot be sorted (mostly for multi-value fields and sort fields themselves
-  case object Unprocessed //value can be sorted
-  case object Processed //value is processed and stored in <NAME>_sort field
-}
-
-
 /** 
  * This class holds data about a solr key, mainly for translating "local" key
  * names to their solr equivalent
