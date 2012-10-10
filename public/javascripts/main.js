@@ -432,4 +432,9 @@ $(document).ready(function() {
 
   });
 
+  $(".expand_content").hide();
+  $(".expand_header").click(function() {
+    $(this).next(".expand_content").slideToggle(300);
+  });
+
 })
