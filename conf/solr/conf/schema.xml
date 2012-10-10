@@ -56,12 +56,23 @@
        org.apache.solr.analysis package.
     -->
 
-    <!-- The StrField type is not analyzed, but indexed/stored verbatim. -->
+    <!-- Basic string field type that allows for pre/post wildcaards -->
     <fieldType name="string" class="solr.TextField" sortMissingLast="true">
-      <analyzer type="index">
+      <analyzer>
         <tokenizer class="solr.KeywordTokenizerFactory"/>
         <filter class="solr.LowerCaseFilterFactory"/>
         <filter class="solr.ReversedWildcardFilterFactory" withOriginal="true"/>
+      </analyzer>
+    </fieldType>
+
+    <!-- field for sort keys, removes all non-alphanum characters -->
+    <fieldType name="sort" class="solr.TextField" sortMissingLast="true">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.PatternReplaceFilterFactory"
+          pattern="([^a-z0-9])" replacement="" replace="all"
+        />
       </analyzer>
     </fieldType>
 
@@ -173,10 +184,11 @@
 
 
  <fields>
+   <field name="ID" type="int" indexed="true" stored="true" required="true" />
    <field name="TAG" type="string" indexed="true" stored="true" required="true" /> 
-   <field name="TYPE" type="int" indexed="true" stored="true" required="true"/>
-   <field name="STATUS" type="int" indexed="true" stored="true" required="true"/>
-   <field name="STATE" type="int" indexed="true" stored="true" required="true"/>
+   <field name="TYPE" type="string" indexed="true" stored="true" required="true"/>
+   <field name="STATUS" type="string" indexed="true" stored="true" required="true"/>
+   <field name="STATE" type="string" indexed="true" stored="true" required="false"/>
    <field name="CREATED" type="tdate" indexed="true" stored="true" requred="true"/>
    <field name="UPDATED" type="tdate" indexed="true" stored="true" requred="false"/>
    <field name="DELETED" type="tdate" indexed="true" stored="true" requred="false"/>
@@ -191,12 +203,21 @@
    <field name="HOSTNAME" type="string" indexed="true" stored="false" required="false" multiValued="false"/>
 
 
-   <!-- catch-all dynamic fields for attributes -->
+   <!-- catch-all dynamic fields for attributes
+        
+        Notice that these are all multivalued, even though we store
+        single-valued attributes in these, but this doesn't matter since we use
+        the *_sort fields for sorting
+   -->
 
    <dynamicField name="*_meta_i"  type="tint"    indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_meta_s"  type="string"  indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_meta_b"  type="boolean" indexed="true"  stored="true" multiValued="true"/>
    <dynamicField name="*_meta_d"  type="tdouble" indexed="true"  stored="true" multiValued="true"/>
+
+   <!-- all sort fields use this dynamic field -->
+
+   <dynamicField name = "*_SORT" type="sort" indexed="true" stored="false" multiValued="false"/>
 
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
@@ -204,7 +225,7 @@
 
  </fields>
 
- <uniqueKey>TAG</uniqueKey>
+ <uniqueKey>ID</uniqueKey>
 
 
 </schema>

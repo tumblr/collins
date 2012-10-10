@@ -94,7 +94,7 @@ class SolrPlugin(app: Application) extends Plugin {
 
   def populate() = Akka.future { 
     _server.map{ server => 
-      //server.deleteByQuery( "*:*" );
+      server.deleteByQuery( "*:*" );
       logger.debug("Populating Solr with Assets")
       val assets = Asset.findRaw()
       updateAssets(assets)

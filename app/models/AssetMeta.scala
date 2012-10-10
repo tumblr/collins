@@ -37,7 +37,7 @@ case class AssetMeta(
 
   def valueType = getValueType
 
-  def getSolrKey() = SolrKey(name, valueType, true)
+  def getSolrKey(): SolrKey = SolrKey(name, valueType, true)
 
   def validateValue(value: String): Boolean = typeStringValue(value).isDefined
 
