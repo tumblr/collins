@@ -46,6 +46,7 @@ class FlatSerializer extends AssetSolrSerializer {
     )}.getOrElse(Map())
       
     opt ++ ipmi ++ Map[SolrKey, SolrValue](
+      SolrKeyResolver("ID").get -> SolrIntValue(asset.id.toInt),
       SolrKeyResolver("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
       SolrKeyResolver("STATUS").get -> SolrStringValue(asset.getStatus.name, StrictUnquoted),
       SolrKeyResolver("TYPE").get -> SolrStringValue(asset.getType.name, StrictUnquoted),
