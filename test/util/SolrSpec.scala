@@ -32,32 +32,55 @@ class SolrSpec extends ApplicationSpecification {
       val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
       val ipmi = IpmiInfo.createForAsset(asset)
       val almostExpected = Map(
-        SolrKey("TAG", String, false) -> SolrStringValue(assetTag, StrictUnquoted),
-        SolrKey("STATUS", Integer, false) -> SolrIntValue(status.id),
-        SolrKey("STATE", Integer, false) -> SolrIntValue(state.id),
-        SolrKey("TYPE", Integer, false) -> SolrIntValue(assetType.id),
-        SolrKey("CREATED", String, false) -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted),
-        SolrKey("A", String, true) -> SolrMultiValue(SolrStringValue("a", StrictUnquoted) :: SolrStringValue("a1", StrictUnquoted) :: Nil),
-        SolrKey("B", String, true) -> SolrStringValue("b", StrictUnquoted),
-        SolrKey("INT", Integer, true) -> SolrIntValue(1135),
-        SolrKey("DOUBLE", Double, true) -> SolrDoubleValue(3.1415),
-        SolrKey("BOOL", Boolean, true) -> SolrBooleanValue(false),
-        SolrKey("IP_ADDRESS", String, false) -> SolrMultiValue(addresses.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)}),
-        SolrKey("HOSTNAME", String, false) -> SolrStringValue("my_hostname", StrictUnquoted),
-        SolrKey("IPMI_ADDRESS", String, true) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
+        SolrKey("ID", Integer, false, false) -> SolrIntValue(asset.id.toInt),
+        SolrKey("TAG", String, false, false) -> SolrStringValue(assetTag, StrictUnquoted),
+        SolrKey("STATUS", String, false, false) -> SolrStringValue(status.name, StrictUnquoted),
+        SolrKey("STATE", String, false, false) -> SolrStringValue(state.name, StrictUnquoted),
+        SolrKey("TYPE", String, false, false) -> SolrStringValue(assetType.name, StrictUnquoted),
+        SolrKey("CREATED", String, false, false) -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted),
+        SolrKey("A", String, true, true) -> SolrMultiValue(Set(SolrStringValue("a", StrictUnquoted), SolrStringValue("a1", StrictUnquoted))),
+        SolrKey("B", String, true, true) -> SolrStringValue("b", StrictUnquoted),
+        SolrKey("INT", Integer, true, true) -> SolrIntValue(1135),
+        SolrKey("DOUBLE", Double, true, true) -> SolrDoubleValue(3.1415),
+        SolrKey("BOOL", Boolean, true, true) -> SolrBooleanValue(false),
+        SolrKey("IP_ADDRESS", String, false, true) -> SolrMultiValue(addresses.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)}.toSet),
+        SolrKey("HOSTNAME", String, false, false) -> SolrStringValue("my_hostname", StrictUnquoted),
+        SolrKey("IPMI_ADDRESS", String, true, false) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
       )
-      val expected = almostExpected + (SolrKey("KEYS", String, true) -> SolrMultiValue(almostExpected.map{case(k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSeq, String))
-      //expected.foreach{e => println(e.toString)}
-      //println("---")
+
+      val sortKeys = Map(
+        SolrKey("ID_SORT", String, false) -> SolrStringValue(asset.id.toString, StrictUnquoted),
+        SolrKey("TAG_SORT", String, false) -> SolrStringValue(assetTag, StrictUnquoted),
+        SolrKey("STATUS_SORT", String, false) -> SolrStringValue(status.name, StrictUnquoted),
+        SolrKey("STATE_SORT", String, false) -> SolrStringValue(state.name, StrictUnquoted),
+        SolrKey("TYPE_SORT", String, false) -> SolrStringValue(assetType.name, StrictUnquoted),
+        SolrKey("CREATED_SORT", String, false) -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted),
+        SolrKey("HOSTNAME_SORT", String, false) -> SolrStringValue("my_hostname", StrictUnquoted),
+        SolrKey("IPMI_ADDRESS_SORT", String, false) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
+      )
+
+      val expected = almostExpected 
+        .++(sortKeys)
+        .+((SolrKey("KEYS", String, true) -> SolrMultiValue(almostExpected.map{case(k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSet, String)))
       val actual = (new FlatSerializer).serialize(asset) 
-      //actual.foreach{a => println(a.toString)}
-      actual must_== expected
+      val actualSet: Set[(SolrKey, SolrValue)] = actual.toSet
+      val expectedSet: Set[(SolrKey, SolrValue)] = expected.toSet
+      /*
+      expected.foreach{e => println(e.toString)}
+      println("---")
+      actual.foreach{a => println(a.toString)}
+      println("---")
+      (expectedSet diff actualSet).foreach{e => println(e.toString)}
+      println("---")
+      (actualSet diff expectedSet).foreach{e => println(e.toString)}
+      */
+      actualSet must_== expectedSet
     }
     "post-process number of disks" in {
-      val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true) -> SolrMultiValue(SolrStringValue("123", StrictUnquoted) :: SolrStringValue("456", StrictUnquoted) :: Nil))
+      val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true) -> SolrMultiValue(Set(SolrStringValue("123", StrictUnquoted), SolrStringValue("456", StrictUnquoted))))
       val expected = m + 
         (SolrKey("NUM_DISKS", Integer, true) -> SolrIntValue(2)) + 
-        (SolrKey("KEYS", String, true) -> SolrMultiValue(SolrStringValue("DISK_SIZE_BYTES", StrictUnquoted) :: SolrStringValue("NUM_DISKS", StrictUnquoted) :: Nil))
+        (SolrKey("KEYS", String, true) -> SolrMultiValue(Set(SolrStringValue("DISK_SIZE_BYTES", StrictUnquoted), SolrStringValue("NUM_DISKS", StrictUnquoted))))
       (new FlatSerializer).postProcess(m) must_== expected
     }
   }
@@ -322,7 +345,7 @@ class SolrQuerySpec extends ApplicationSpecification {
         "FoOsOlR = 3".query.typeCheck must_== Right(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3)))
       }
       "valid enum" in {
-        """type = "SERVER_NODE"""".query.typeCheck must_== Right(SolrKeyVal("TYPE", SolrIntValue(1)))
+        """type = "SERVER_NODE"""".query.typeCheck must_== Right(SolrKeyVal("TYPE", SolrStringValue("SERVER_NODE", StrictUnquoted)))
       }
       "case insensitive status enum" in {
         """status = unallocated""".query.typeCheck must_== "STATUS = Unallocated".query.typeCheck
