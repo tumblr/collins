@@ -8,6 +8,10 @@ documentation below is for developers or people setting up a new instance.
 There is currently no 'production' build of collins. By that I mean no
 prepackaged version. You must build yourself from source.
 
+## Quickstart - Screencast
+
+http://www.youtube.com/watch?v=rEyoS-iofK8
+
 ## Quickstart - Building Collins
 
  1. Download play from here: http://download.playframework.org/releases/play-2.0.3.zip
