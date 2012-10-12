@@ -19,7 +19,7 @@ class CollinsQueryException(m: String) extends PlayException("CQL", m)
  */
 class CollinsQueryParser private(val nowTime: () => Date) extends JavaTokenParsers {
 
-  def parseQuery(input: String): Either[String, SolrExpression] = parse(topExpr, input.trim) match {
+  def parseQuery(input: String): Either[String, SolrExpression] = parse(whereExpr, input.trim) match {
     case Success(exp, next) => if (next.atEnd) {
       Right(exp)
     } else {
@@ -28,7 +28,13 @@ class CollinsQueryParser private(val nowTime: () => Date) extends JavaTokenParse
     case Failure(wtf, _) => Left("Error parsing query: %s".format(wtf.toString))
   }
 
-  def topExpr = emptyExpr | expr
+  /*
+  def topExpr = withSelect | withoutSelect
+  def withSelect = "(?iu)SELECT".r ~> ident ~ "(?ui)".r ~ whereExpr
+  def withoutSelect = 
+  */
+
+  def whereExpr = emptyExpr | expr
 
   def emptyExpr = "*" ^^^{EmptySolrQuery}
   def expr: Parser[SolrExpression] = orOp

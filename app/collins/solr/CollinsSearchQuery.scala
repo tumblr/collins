@@ -14,7 +14,7 @@ import SortDirection._
  * This class is a full search query, which includes an expression along with
  * sorting and pagination parameters
  */
-case class CollinsSearchQuery(query: SolrExpression, page: PageParams) {
+case class CollinsSearchQuery(query: TypedSolrExpression, page: PageParams) {
 
   private[this] val logger = Logger("CollinsSearchQuery")
 

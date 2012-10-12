@@ -7,6 +7,7 @@ import play.api.Logger
 import models.Asset
 
 import java.util.Collections
+import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.JavaConverters._
@@ -51,9 +52,10 @@ class SolrUpdater extends Actor {
     case Reindex =>
       if (scheduled.get == true) {
         val toRemove = set.asScala.toSeq
+        val indexTime = new Date
         val assets = toRemove.map(t => Asset.findByTag(t)).filter(_.isDefined).map(_.get)
         logger.debug("Got Reindex task, working on %d assets, set is %d".format(toRemove.size, set.size))
-        Solr.plugin.foreach(_.updateAssets(assets))
+        Solr.plugin.foreach(_.updateAssets(assets, indexTime))
         set.removeAll(toRemove.asJava)
         logger.debug("Set size now %d".format(set.size))
         scheduled.set(false)

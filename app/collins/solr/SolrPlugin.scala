@@ -28,6 +28,8 @@ import util.views.Formatter
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
+import CollinsQueryDSL._
+
 class SolrPlugin(app: Application) extends Plugin {
 
   private[this] var _server: Option[SolrServer] = None
@@ -96,10 +98,12 @@ class SolrPlugin(app: Application) extends Plugin {
 
   def populate() = Akka.future { 
     _server.map{ server => 
-      server.deleteByQuery( "*:*" );
+      val indexTime = new Date
       logger.debug("Populating Solr with Assets")
       val assets = Asset.findRaw()
-      updateAssets(assets)
+      updateAssets(assets, indexTime)
+      //TODO: restrict to only deleting assets!!!
+      server.deleteByQuery( "last_indexed < %s".format(Formatter.solrDateFormat(indexTime)).solr );
     }.getOrElse(logger.warn("attempted to populate solr when no server was initialized"))
   }
 
@@ -108,8 +112,7 @@ class SolrPlugin(app: Application) extends Plugin {
     //updateAssets(asset :: Nil)
   }
 
-  def updateAssets(assets: Seq[Asset]) {
-    val indexTime = new Date
+  def updateAssets(assets: Seq[Asset], indexTime: Date) {
     _server.map{server =>
       val docs = assets.map{asset => Solr.prepForInsertion(serializer.serialize(asset, indexTime))}
       if (docs.size > 0) {

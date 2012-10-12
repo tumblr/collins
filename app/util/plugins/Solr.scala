@@ -1,5 +1,7 @@
 package collins.solr
 
+import java.util.Date
+
 import models.Asset
 
 import org.apache.solr.client.solrj.SolrServer
@@ -27,7 +29,7 @@ object Solr {
 
   def populate() = inPlugin {_.populate()}
 
-  def updateAssets(assets: Seq[Asset]) = inPlugin {_.updateAssets(assets)}
+  def updateAssets(assets: Seq[Asset]) = inPlugin {_.updateAssets(assets, new Date)}
 
   def updateAsset(asset: Asset){updateAssets(asset :: Nil)}
 

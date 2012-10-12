@@ -227,10 +227,15 @@ sealed trait SolrExpression extends SolrQueryComponent{
    * foo_meta_i.  Returns Right(expr) with the new resolved expression or
    * Left(msg) if there's an error somewhere
    */
-  def typeCheck: Either[String, SolrExpression]
+  def typeCheck: Either[String, TypedSolrExpression]
 }
 
-case object EmptySolrQuery extends SolrQueryComponent with SolrExpression{
+/**
+ * This mixin ensures that expressions are type checked before they are sent into solr
+ */
+sealed trait TypedSolrExpression extends SolrExpression
+
+case object EmptySolrQuery extends SolrQueryComponent with TypedSolrExpression{
   def toSolrQueryString(toplevel: Boolean) = "*:*"
 
   def typeCheck = Right(EmptySolrQuery)
@@ -244,7 +249,7 @@ abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends Sol
     if (toplevel) e else "(%s)".format(e)
   }
 
-  def create(exprs: Set[SolrExpression]): SolrMultiExpr
+  def create(exprs: Set[SolrExpression]): SolrMultiExpr with TypedSolrExpression
 
   def typeCheck = {
     val r = exprs.map{_.typeCheck}.foldLeft(Right(Set()): Either[String, Set[SolrExpression]]){(build, next) => build match {
@@ -262,7 +267,7 @@ abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends Sol
 case class SolrAndOp(exprs: Set[SolrExpression]) extends SolrMultiExpr(exprs, "AND") {
   def AND(k: SolrExpression) = SolrAndOp(Set(this, k))
 
-  def create(exprs: Set[SolrExpression]) = SolrAndOp(exprs)
+  def create(exprs: Set[SolrExpression]) = new SolrAndOp(exprs) with TypedSolrExpression
 
 
 }
@@ -270,7 +275,7 @@ case class SolrAndOp(exprs: Set[SolrExpression]) extends SolrMultiExpr(exprs, "A
 case class SolrOrOp(exprs: Set[SolrExpression]) extends SolrMultiExpr(exprs, "OR") {
   def OR(k: SolrExpression) = SolrOrOp(Set(this,k))
 
-  def create(exprs: Set[SolrExpression]) = SolrOrOp(exprs)
+  def create(exprs: Set[SolrExpression]) = new SolrOrOp(exprs) with TypedSolrExpression
 
 }
 
@@ -359,7 +364,7 @@ trait SolrSimpleExpr extends SolrExpression {
 
 case class SolrNotOp(expr: SolrExpression) extends SolrSimpleExpr {
 
-  def typeCheck = expr.typeCheck.right.map{e => SolrNotOp(e)}
+  def typeCheck = expr.typeCheck.right.map{e => new SolrNotOp(e) with TypedSolrExpression}
 
   def toSolrQueryString(toplevel: Boolean) = "NOT " + expr.toSolrQueryString
 
@@ -369,7 +374,7 @@ case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExp
 
   def toSolrQueryString(toplevel: Boolean) = key + ":" + value.toSolrQueryString(false)
 
-  def typeCheck = typeCheckValue(key, value).right.map{case (solrKey, cleanValue) => SolrKeyVal(solrKey, cleanValue)}
+  def typeCheck = typeCheckValue(key, value).right.map{case (solrKey, cleanValue) => new SolrKeyVal(solrKey, cleanValue) with TypedSolrExpression}
 
 }
 
@@ -398,7 +403,7 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
     (t(solrKey,low), t(solrKey,high)) match {
       case (Left(e), _) => Left(e)
       case (_, Left(e)) => Left(e)
-      case (Right(l), Right(h)) => Right(SolrKeyRange(solrKey.resolvedName, l,h, inclusive))
+      case (Right(l), Right(h)) => Right(new SolrKeyRange(solrKey.resolvedName, l,h, inclusive) with TypedSolrExpression)
     }
   }
 
