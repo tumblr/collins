@@ -3,6 +3,8 @@ package collins.solr
 import akka.actor._
 import akka.util.duration._
 
+import java.util.Date
+
 import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
 import models.asset.AssetView
 import models.IpmiInfo.Enum._
@@ -107,8 +109,9 @@ class SolrPlugin(app: Application) extends Plugin {
   }
 
   def updateAssets(assets: Seq[Asset]) {
+    val indexTime = new Date
     _server.map{server =>
-      val docs = assets.map{asset => Solr.prepForInsertion(serializer.serialize(asset))}
+      val docs = assets.map{asset => Solr.prepForInsertion(serializer.serialize(asset, indexTime))}
       if (docs.size > 0) {
         val fuckingJava = new java.util.ArrayList[SolrInputDocument]
         docs.foreach{doc => fuckingJava.add(doc)}

@@ -1,6 +1,9 @@
 package collins.solr
 
 import collins.solr._
+
+import java.util.Date
+
 import models.Asset
 
 import Solr._
@@ -16,7 +19,7 @@ case object AssetLogDocType extends SolrDocType {
 }
 
 trait AssetSolrSerializer {
-  def serialize(asset: Asset): AssetSolrDocument
+  def serialize(asset: Asset, indexTime: Date): AssetSolrDocument
 
   val generatedFields: Seq[SolrKey]
 }

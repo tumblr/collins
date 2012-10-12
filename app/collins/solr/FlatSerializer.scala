@@ -10,6 +10,7 @@ import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
 import Solr._
+import SolrKeyFlag._
 
 /**
  * asset meta values are all converted into strings with the meta name as the
@@ -17,15 +18,16 @@ import Solr._
  */
 class FlatSerializer extends AssetSolrSerializer {
 
-  val generatedFields = SolrKey("NUM_DISKS", Integer, true) :: SolrKey("KEYS", String, true) :: Nil
+  val generatedFields = SolrKey("NUM_DISKS", Integer, Dynamic, SingleValued, Sortable) :: SolrKey("KEYS", String, Dynamic, MultiValued, NotSortable) :: Nil
 
-  def allDocFields(implicit getDate: () => Date) = Map(
+  def allDocFields(id: Long, indexTime: Date): AssetSolrDocument = Map(
     SolrKeyResolver("DOC_TYPE").get -> SolrStringValue(AssetDocType.stringName, StrictUnquoted),
-    SolrKeyResolver("LAST_INDEXED").get -> SolrStringValue(Formatter.solrDateFormat(getDate()), StrictUnquoted)
+    SolrKeyResolver("LAST_INDEXED").get -> SolrStringValue(Formatter.solrDateFormat(indexTime), StrictUnquoted),
+    SolrKeyResolver("UUID").get -> SolrStringValue(AssetDocType.stringName + "_" + id.toString)
   )
 
 
-  def serialize(asset: Asset) = postProcess {
+  def serialize(asset: Asset, indexTime: Date) = postProcess {
     val opt = Map[SolrKey, Option[SolrValue]](
       SolrKeyResolver("UPDATED").get -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
       SolrKeyResolver("DELETED").get -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
@@ -45,7 +47,7 @@ class FlatSerializer extends AssetSolrSerializer {
       SolrKeyResolver(IpmiInfo.Enum.IpmiAddress.toString).get -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
     )}.getOrElse(Map())
       
-    opt ++ ipmi ++ Map[SolrKey, SolrValue](
+    allDocFields(asset.id, indexTime) ++ opt ++ ipmi ++ Map[SolrKey, SolrValue](
       SolrKeyResolver("ID").get -> SolrIntValue(asset.id.toInt),
       SolrKeyResolver("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
       SolrKeyResolver("STATUS").get -> SolrStringValue(asset.getStatus.name, StrictUnquoted),
@@ -81,7 +83,7 @@ class FlatSerializer extends AssetSolrSerializer {
   }
 
   def postProcess(doc: AssetSolrDocument): AssetSolrDocument = {
-    val disks:Option[Tuple2[SolrKey, SolrValue]] = doc.find{case (k,v) => k.name == "DISK_SIZE_BYTES"}.map{case (k,v) => (SolrKey("NUM_DISKS", Integer, true) -> SolrIntValue(v match {
+    val disks:Option[Tuple2[SolrKey, SolrValue]] = doc.find{case (k,v) => k.name == "DISK_SIZE_BYTES"}.map{case (k,v) => (SolrKeyResolver("NUM_DISKS").get -> SolrIntValue(v match {
       case s:SolrSingleValue => 1
       case SolrMultiValue(vals, _) => vals.size
     }))}
@@ -91,12 +93,7 @@ class FlatSerializer extends AssetSolrSerializer {
 
     val sortKeys = almostDone.map{case(k,v) => k.sortify(v)}.flatten
 
-    almostDone ++ sortKeys + (SolrKey("KEYS", String, true) -> keyList)
+    almostDone ++ sortKeys + (SolrKeyResolver("KEYS").get -> keyList)
   }
 
-}
-
-object FlatSerializer {
-  //needed so in testing we can force to use a specific time for last_indexed
-  implicit val getDate = () => new Date
 }

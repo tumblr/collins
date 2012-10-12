@@ -236,7 +236,7 @@ case object EmptySolrQuery extends SolrQueryComponent with SolrExpression{
   def typeCheck = Right(EmptySolrQuery)
 }
 
-abstract class SolrMultiExpr(exprs: Seq[SolrExpression], op: String) extends SolrExpression {
+abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends SolrExpression {
   require(exprs.size > 0, "Cannot create empty multi-expression")
 
   def toSolrQueryString(toplevel: Boolean) = {
@@ -244,14 +244,14 @@ abstract class SolrMultiExpr(exprs: Seq[SolrExpression], op: String) extends Sol
     if (toplevel) e else "(%s)".format(e)
   }
 
-  def create(exprs: Seq[SolrExpression]): SolrMultiExpr
+  def create(exprs: Set[SolrExpression]): SolrMultiExpr
 
   def typeCheck = {
-    val r = exprs.map{_.typeCheck}.foldLeft(Right(Nil): Either[String, Seq[SolrExpression]]){(build, next) => build match {
+    val r = exprs.map{_.typeCheck}.foldLeft(Right(Set()): Either[String, Set[SolrExpression]]){(build, next) => build match {
       case l@Left(error) => l
-      case Right(seq) => next match {
+      case Right(set) => next match {
         case Left(error) => Left(error)
-        case Right(expr) => Right(expr +: seq)
+        case Right(expr) => Right(set + expr)
       }
     }}
     r.right.map{s => create(s)}
@@ -259,26 +259,26 @@ abstract class SolrMultiExpr(exprs: Seq[SolrExpression], op: String) extends Sol
 
 }
 
-case class SolrAndOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "AND") {
-  def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
+case class SolrAndOp(exprs: Set[SolrExpression]) extends SolrMultiExpr(exprs, "AND") {
+  def AND(k: SolrExpression) = SolrAndOp(Set(this, k))
 
-  def create(exprs: Seq[SolrExpression]) = SolrAndOp(exprs)
+  def create(exprs: Set[SolrExpression]) = SolrAndOp(exprs)
 
 
 }
 
-case class SolrOrOp(exprs: Seq[SolrExpression]) extends SolrMultiExpr(exprs, "OR") {
-  def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
+case class SolrOrOp(exprs: Set[SolrExpression]) extends SolrMultiExpr(exprs, "OR") {
+  def OR(k: SolrExpression) = SolrOrOp(Set(this,k))
 
-  def create(exprs: Seq[SolrExpression]) = SolrOrOp(exprs)
+  def create(exprs: Set[SolrExpression]) = SolrOrOp(exprs)
 
 }
 
 
 trait SolrSimpleExpr extends SolrExpression {
 
-  def AND(k: SolrExpression) = SolrAndOp(this :: k :: Nil)
-  def OR(k: SolrExpression) = SolrOrOp(this :: k :: Nil)
+  def AND(k: SolrExpression) = SolrAndOp(Set(this,k))
+  def OR(k: SolrExpression) = SolrOrOp(Set(this ,k))
 
   def typeError(key: String, expected: ValueType, actual: ValueType) = 
     "Key %s expects type %s, got %s".format(key, expected.toString, actual.toString)
@@ -373,12 +373,16 @@ case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExp
 
 }
 
-case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[SolrSingleValue]) extends SolrSimpleExpr {
+case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[SolrSingleValue], inclusive: Boolean) extends SolrSimpleExpr {
 
   def toSolrQueryString(toplevel: Boolean) = {
     val l = low.map{_.toSolrQueryString}.getOrElse("*")
     val h = high.map{_.toSolrQueryString}.getOrElse("*")
-    key + ":[" + l + " TO " + h + "]"
+    if (inclusive) {
+      key + ":[" + l + " TO " + h + "]"
+    } else {
+      key + ":{" + l + " TO " + h + "}"
+    }
   }
 
   def t(k: SolrKey, v: Option[SolrSingleValue]): Either[String, Option[SolrSingleValue]] = v match {
@@ -394,7 +398,7 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
     (t(solrKey,low), t(solrKey,high)) match {
       case (Left(e), _) => Left(e)
       case (_, Left(e)) => Left(e)
-      case (Right(l), Right(h)) => Right(SolrKeyRange(solrKey.resolvedName, l,h))
+      case (Right(l), Right(h)) => Right(SolrKeyRange(solrKey.resolvedName, l,h, inclusive))
     }
   }
 

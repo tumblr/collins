@@ -86,7 +86,7 @@ package object forms {
     def bind(key: String, data: Map[String, String]) = {
       Formats.stringFormat.bind(key, data).right.flatMap { s =>
         allCatch[SolrExpression]
-          .either((new CollinsQueryParser).parseQuery(s).right.get)
+          .either(CollinsQueryParser().parseQuery(s).right.get)
           .left.map(e => Seq(FormError(key, "query.invalid", Nil)))
       }
     }

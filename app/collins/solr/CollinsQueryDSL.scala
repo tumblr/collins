@@ -6,7 +6,7 @@ package collins.solr
  */
 object CollinsQueryDSL {
   class CollinsQueryString(val s: String) {
-    lazy val query: SolrExpression = (new CollinsQueryParser).parseQuery(s).fold(
+    lazy val query: SolrExpression = CollinsQueryParser().parseQuery(s).fold(
       err => throw new Exception("CQL error: " + err),
       expr => expr
     )

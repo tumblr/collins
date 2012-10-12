@@ -28,7 +28,7 @@ case class MetricsCacheLoader() extends CacheLoader[MetricsQuery, Set[String]] {
   }
 
   protected def solrQueryMatches(query: String): Boolean = {
-    (new CollinsQueryParser)
+    CollinsQueryParser()
       .parseQuery(query)
       .right
       .flatMap(_.typeCheck)

@@ -1,17 +1,23 @@
 package collins.solr
 
+import java.util.Date
+
 import play.api.PlayException
 
 import scala.util.parsing.combinator._
 
+import util.views.Formatter
+
 import Solr.AssetSolrDocument
+
+
 
 class CollinsQueryException(m: String) extends PlayException("CQL", m)
 
 /** 
  * Parses CQL strings into a SolrExpression AST
  */
-class CollinsQueryParser extends JavaTokenParsers {
+class CollinsQueryParser private(val nowTime: () => Date) extends JavaTokenParsers {
 
   def parseQuery(input: String): Either[String, SolrExpression] = parse(topExpr, input.trim) match {
     case Success(exp, next) => if (next.atEnd) {
@@ -27,14 +33,26 @@ class CollinsQueryParser extends JavaTokenParsers {
   def emptyExpr = "*" ^^^{EmptySolrQuery}
   def expr: Parser[SolrExpression] = orOp
 
-  def orOp          = rep1sep(andOp , "(?iu)OR".r) ^^ {i => if (i.tail == Nil) i.head else SolrOrOp(i)}
-  def andOp         = rep1sep(simpleExpr , "(?iu)AND".r)  ^^ {i => if (i.tail == Nil) i.head else SolrAndOp(i)}
+  def orOp          = rep1sep(andOp , "(?iu)OR".r) ^^ {i => if (i.tail == Nil) i.head else SolrOrOp(i.toSet)}
+  def andOp         = rep1sep(simpleExpr , "(?iu)AND".r)  ^^ {i => if (i.tail == Nil) i.head else SolrAndOp(i.toSet)}
   def notExpr       = "(?iu)NOT".r ~> simpleExpr ^^ {e => SolrNotOp(e)}
   def simpleExpr:Parser[SolrExpression]    = notExpr | rangeKv | kv | "(" ~> expr <~ ")" 
 
   //range values are slightly different from regular values, since we cannot
   //allow quoted strings or strings with regexes
-  def rangeKv       = ident ~ "=" ~ "[" ~ rangeValueOpt ~ "," ~ rangeValueOpt <~ "]" ^^ {case key ~ "=" ~ "[" ~ low ~ "," ~ high => SolrKeyRange(key,low,high)}
+  def rangeKv       = range | compareOp
+  def range = ident ~ "=" ~ "\\[|\\(".r ~ rangeValueOpt ~ "," ~ rangeValueOpt ~ "\\]|\\)".r ^^ {case key ~ "=" ~ open ~ low ~ "," ~ high ~ close => (open, close) match {
+    case ("(",")") => SolrKeyRange(key,low,high,false)
+    case ("[","]") => SolrKeyRange(key,low,high,true)
+    case ("[",")") => SolrKeyRange(key,None,high,false) AND SolrKeyRange(key,low,None,true)
+    case ("(","]") => SolrKeyRange(key,None,high,true) AND SolrKeyRange(key,low,None,false)
+  }}
+  def compareOp = ident ~ "<=|>=|<|>".r ~ rangeValue ^^ { case key ~ op ~ value => op match {
+    case "<" => SolrKeyRange(key, None, Some(value), false)
+    case "<=" => SolrKeyRange(key, None, Some(value), true)
+    case ">" => SolrKeyRange(key, Some(value), None, false)
+    case ">=" => SolrKeyRange(key, Some(value), None, true)
+  }}
   def rangeValueOpt: Parser[Option[SolrSingleValue]]      = "*"^^^{None} | rangeValue ^^{other => Some(other)}
   def rangeValue    = strictUnquotedStringValue
   def strictUnquotedStringValue = "[a-zA-Z0-9_\\-.]+".r ^^{s => SolrStringValue(s, StrictUnquoted)}
@@ -48,5 +66,12 @@ class CollinsQueryParser extends JavaTokenParsers {
   def value   = quotedString | unquotedString
   def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1), Quoted)}
   def unquotedString = """[^\s()'"]+""".r  ^^ {s => StringValueFormat.createValueFor(s)}
+  def now = "(?iu)#NOW".r ^^^{SolrStringValue(Formatter.solrDateFormat(nowTime()), StrictUnquoted)}
 
+}
+
+object CollinsQueryParser {
+  val nowTime: () => Date = () => new Date
+  
+  def apply(t: () => Date = nowTime) = new CollinsQueryParser(t)
 }
