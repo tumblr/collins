@@ -45,7 +45,7 @@ class SolrPlugin(app: Application) extends Plugin {
     SolrConfig.enabled
   }
 
-  val serializer = new FlatSerializer
+  val serializer = new AssetSerializer
 
   //this must be lazy so it gets called after the system exists
   lazy val updater = Akka.system.actorOf(Props[SolrUpdater], name = "solr_updater")
@@ -103,7 +103,7 @@ class SolrPlugin(app: Application) extends Plugin {
       val assets = Asset.findRaw()
       updateAssets(assets, indexTime)
       //TODO: restrict to only deleting assets!!!
-      server.deleteByQuery( "last_indexed < %s".format(Formatter.solrDateFormat(indexTime)).solr );
+      server.deleteByQuery( """last_indexed < %s""".format(Formatter.solrDateFormat(indexTime)).solr );
     }.getOrElse(logger.warn("attempted to populate solr when no server was initialized"))
   }
 

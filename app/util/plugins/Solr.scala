@@ -35,6 +35,7 @@ object Solr {
 
   def updateAssetByTag(tag: String) = Asset.findByTag(tag).foreach{updateAsset}
 
+  //TODO: Rename
   type AssetSolrDocument = Map[SolrKey, SolrValue]
 
   def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {

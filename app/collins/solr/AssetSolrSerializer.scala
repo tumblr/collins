@@ -6,20 +6,19 @@ import java.util.Date
 
 import models.Asset
 
+import util.views.Formatter
+
 import Solr._
 
-sealed trait SolrDocType {
-  def stringName: String
-}
-case object AssetDocType extends SolrDocType {
-  val stringName = "ASSET"
-}
-case object AssetLogDocType extends SolrDocType {
-  val stringName = "ASSET_LOG"
-}
 
-trait AssetSolrSerializer {
-  def serialize(asset: Asset, indexTime: Date): AssetSolrDocument
+abstract class SolrSerializer[T](docType: SolrDocType) {
+  def serialize(item: T, indexTime: Date): AssetSolrDocument
 
   val generatedFields: Seq[SolrKey]
+
+  def allDocFields(id: Long, indexTime: Date): AssetSolrDocument = Map(
+    docType.keyResolver("DOC_TYPE").get -> SolrStringValue(AssetDocType.stringName, StrictUnquoted),
+    docType.keyResolver("LAST_INDEXED").get -> SolrStringValue(Formatter.solrDateFormat(indexTime), StrictUnquoted),
+    docType.keyResolver("UUID").get -> SolrStringValue(AssetDocType.stringName + "_" + id.toString, StrictUnquoted)
+  )
 }

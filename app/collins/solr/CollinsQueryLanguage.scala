@@ -11,36 +11,42 @@ import AssetMeta.ValueType._
 
 import play.api.Logger
 
+sealed trait SolrDocType {
+  def stringName: String
+  def keyResolver: SolrKeyResolver
+  
+  lazy val keyVal = new SolrKeyVal(AllDocKeyResolver("DOC_TYPE").get.resolvedName, SolrStringValue(stringName)) with TypedSolrExpression
+}
+case object AssetDocType extends SolrDocType {
+  val stringName = "ASSET"
+  val keyResolver = AssetKeyResolver
+}
+case object AssetLogDocType extends SolrDocType {
+  val stringName = "ASSET_LOG"
+  val keyResolver = AssetKeyResolver
+}
+
 
 /**
- * TODO: encode checked vs unchecked syntax trees into the type system to
- * prevent accidental executing of unchecked queries.
+ * The top-level object parsed from a CQL expression
  */
+case class CQLQuery(select: SolrDocType, where: SolrExpression) {
+  def typeCheck: Either[String,TypedSolrExpression] = where.typeCheck(select).right.map{expr=>
+    new SolrAndOp(Set(expr, select.keyVal)) with TypedSolrExpression
+  }    
+}
 
 /**
  * Any class mixing in this trait is part of the CQL AST that must translate
  * itself into a Solr Query
- *
- * This is a super-trait of SolrExpression becuase SolrValues are
- * QueryComponents, but should not require the typeCheck method of
- * SolrExpression (probably ways to refactor this but whatevah)
  */
 sealed trait SolrQueryComponent {
   def toSolrQueryString(): String = toSolrQueryString(true)
-
   def toSolrQueryString(toplevel: Boolean): String
-
 }
-
-
-
 
 /**
  * Base trait of Solr Value ADT
- *
- * A solr value can either be a typed single value, or a multival containing a
- * seq of single values.  At the moment the Solr schema allows all meta values
- * to be multi-valued
  */
 sealed trait SolrValue {
   val value: Any
@@ -200,11 +206,8 @@ case class SolrMultiValue(values: Set[SolrSingleValue], valueType: ValueType) ex
   
 }
 
-
 object SolrMultiValue {
-
   def apply(values: Set[SolrSingleValue]): SolrMultiValue = SolrMultiValue(values, values.headOption.map{_.valueType}.getOrElse(String))
-
 }
 
 
@@ -227,7 +230,7 @@ sealed trait SolrExpression extends SolrQueryComponent{
    * foo_meta_i.  Returns Right(expr) with the new resolved expression or
    * Left(msg) if there's an error somewhere
    */
-  def typeCheck: Either[String, TypedSolrExpression]
+  def typeCheck(docType: SolrDocType): Either[String, TypedSolrExpression]
 }
 
 /**
@@ -238,7 +241,7 @@ sealed trait TypedSolrExpression extends SolrExpression
 case object EmptySolrQuery extends SolrQueryComponent with TypedSolrExpression{
   def toSolrQueryString(toplevel: Boolean) = "*:*"
 
-  def typeCheck = Right(EmptySolrQuery)
+  def typeCheck(t: SolrDocType) = Right(EmptySolrQuery)
 }
 
 abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends SolrExpression {
@@ -249,10 +252,10 @@ abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends Sol
     if (toplevel) e else "(%s)".format(e)
   }
 
-  def create(exprs: Set[SolrExpression]): SolrMultiExpr with TypedSolrExpression
+  def create(exprs: Set[SolrExpression]): TypedSolrExpression
 
-  def typeCheck = {
-    val r = exprs.map{_.typeCheck}.foldLeft(Right(Set()): Either[String, Set[SolrExpression]]){(build, next) => build match {
+  def typeCheck(t: SolrDocType) = {
+    val r = exprs.map{_.typeCheck(t)}.foldLeft(Right(Set()): Either[String, Set[SolrExpression]]){(build, next) => build match {
       case l@Left(error) => l
       case Right(set) => next match {
         case Left(error) => Left(error)
@@ -295,7 +298,7 @@ trait SolrSimpleExpr extends SolrExpression {
   /**
    * returns Left(error) or Right(solr_key_name)
    */
-  def typeCheckValue(key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = SolrKeyResolver(key) match {
+  def typeCheckValue(docType: SolrDocType, key: String, value: SolrSingleValue):Either[String, (String, SolrSingleValue)] = docType.keyResolver(key) match {
     case Some(solrKey) => typeCheckValue(solrKey, value).right.map{cleanValue => (solrKey.resolvedName, cleanValue)}
     case None => Left("Unknown key \"%s\"".format(key))
   }
@@ -364,7 +367,7 @@ trait SolrSimpleExpr extends SolrExpression {
 
 case class SolrNotOp(expr: SolrExpression) extends SolrSimpleExpr {
 
-  def typeCheck = expr.typeCheck.right.map{e => new SolrNotOp(e) with TypedSolrExpression}
+  def typeCheck(t: SolrDocType) = expr.typeCheck(t).right.map{e => new SolrNotOp(e) with TypedSolrExpression}
 
   def toSolrQueryString(toplevel: Boolean) = "NOT " + expr.toSolrQueryString
 
@@ -374,7 +377,7 @@ case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExp
 
   def toSolrQueryString(toplevel: Boolean) = key + ":" + value.toSolrQueryString(false)
 
-  def typeCheck = typeCheckValue(key, value).right.map{case (solrKey, cleanValue) => new SolrKeyVal(solrKey, cleanValue) with TypedSolrExpression}
+  def typeCheck(t: SolrDocType) = typeCheckValue(t, key, value).right.map{case (solrKey, cleanValue) => new SolrKeyVal(solrKey, cleanValue) with TypedSolrExpression}
 
 }
 
@@ -390,17 +393,17 @@ case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[
     }
   }
 
-  def t(k: SolrKey, v: Option[SolrSingleValue]): Either[String, Option[SolrSingleValue]] = v match {
-    case None => Right(None)
-    case Some(s) => typeCheckValue(k, s).right.map{cleanValue => Some(cleanValue)}
-  }
 
   /**
    * When type-checking ranges, we need to account for open ranges, meaning we
    * don't want to treat a missing value as an error
    */
-  def typeCheck = SolrKeyResolver.either(key).right.flatMap{solrKey =>
-    (t(solrKey,low), t(solrKey,high)) match {
+  def typeCheck(t: SolrDocType) = t.keyResolver.either(key).right.flatMap{solrKey =>
+    def check(v: Option[SolrSingleValue]): Either[String, Option[SolrSingleValue]] = v match {
+      case None => Right(None)
+      case Some(s) => typeCheckValue(solrKey, s).right.map{cleanValue => Some(cleanValue)}
+    }
+    (check(low), check(high)) match {
       case (Left(e), _) => Left(e)
       case (_, Left(e)) => Left(e)
       case (Right(l), Right(h)) => Right(new SolrKeyRange(solrKey.resolvedName, l,h, inclusive) with TypedSolrExpression)

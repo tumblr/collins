@@ -59,11 +59,12 @@ case class SolrKey (
   val isSortable: Boolean
 ) {
   require(!(isMultiValued && isSortable), "Cannot create sortable multivalue keys (yet)")
+  require(name.toUpperCase == name, "Name must be ALL CAPS")
 
-  lazy val resolvedName = name.toUpperCase + (if(isDynamic) ValueType.postFix(valueType) else "")
+  lazy val resolvedName = name + (if(isDynamic) ValueType.postFix(valueType) else "")
   def isAliasOf(alias: String) = false //override for aliases
 
-  def matches(k: String) = (k == name) || isAliasOf(k)
+  def matches(k: String) = (k.toUpperCase == name) || isAliasOf(k)
 
   /**
    * returns true if wildcards should be automatically applied to unquoted values of this key (only relevant for string values)
@@ -90,8 +91,20 @@ trait EnumKey{ self: SolrKey =>
   def lookupById(value: Int): Option[String]
 }
 
-object SolrKeyResolver {
+trait SolrKeyResolver {
+  import SolrKeyResolver._
+  def apply(rawKey: String): Option[SolrKey] = allDocKeys.find{_ matches rawKey.toUpperCase} orElse docSpecificKey(rawKey)
 
+  def either(_rawkey: String) = apply(_rawkey) match {
+    case Some(k) => Right(k)
+    case None => Left("Unknown key " + _rawkey)
+  }
+
+  def docSpecificKey(rawKey: String): Option[SolrKey]
+
+}
+
+object SolrKeyResolver {
   /**
    * This is a list of keys that should not add pre/post wildcards when the
    * value in CQL is unquoted with no modifiers.  For example, normally if you
@@ -112,6 +125,11 @@ object SolrKeyResolver {
     SolrKey("LAST_INDEXED", String, Static, SingleValued, Sortable),
     SolrKey("UUID", String, Static, SingleValued, Sortable)
   )
+
+
+}
+
+object AssetKeyResolver extends SolrKeyResolver{
 
   /**
    * each key is an "incoming" field from a query, the ValueType is the
@@ -134,7 +152,7 @@ object SolrKeyResolver {
     SolrKey(IpmiPassword.toString, String, Dynamic, SingleValued, Sortable),
     SolrKey(IpmiGateway.toString, String, Dynamic, SingleValued, Sortable),
     SolrKey(IpmiNetmask.toString, String, Dynamic, SingleValued, Sortable)
-  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List()) ++ allDocKeys
+  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
 
   val typeKey = new SolrKey("TYPE",String,Static, SingleValued, Sortable) with EnumKey {
     def lookupByName(value: String) = AssetType.findByName(value.toUpperCase).map(_.name)
@@ -155,16 +173,27 @@ object SolrKeyResolver {
 
   val enumKeys = typeKey :: statusKey :: stateKey :: Nil
 
-  def apply(_rawkey: String): Option[SolrKey] = {
+  def docSpecificKey(_rawkey: String): Option[SolrKey] = {
     val ukey = _rawkey.toUpperCase
     nonMetaKeys.find(_ matches ukey)
       .orElse(enumKeys.find(_ matches ukey))
       .orElse(AssetMeta.findByName(ukey).map{_.getSolrKey})
   }
 
-  def either(_rawkey: String) = apply(_rawkey) match {
-    case Some(k) => Right(k)
-    case None => Left("Unknown key " + _rawkey)
-  }
 
+}
+
+object AssetLogKeyResolver extends SolrKeyResolver {
+  val keys = List(
+    SolrKey("MESSAGE", String, Static, SingleValued, NotSortable),
+    SolrKey("CREATED", String, Static, SingleValued, Sortable)
+  )
+
+  def docSpecificKey(rawKey: String): Option[SolrKey] = {
+    keys.find{_ matches rawKey}
+  }
+}
+
+object AllDocKeyResolver extends SolrKeyResolver {
+  def docSpecificKey(nope: String) = None
 }

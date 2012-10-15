@@ -14,25 +14,28 @@ import Solr.AssetSolrDocument
 
 class CollinsQueryException(m: String) extends PlayException("CQL", m)
 
+
+
 /** 
  * Parses CQL strings into a SolrExpression AST
  */
-class CollinsQueryParser private(val nowTime: () => Date) extends JavaTokenParsers {
+class CollinsQueryParser private(val docTypes: List[SolrDocType], val nowTime: () => Date) extends JavaTokenParsers {
 
-  def parseQuery(input: String): Either[String, SolrExpression] = parse(whereExpr, input.trim) match {
-    case Success(exp, next) => if (next.atEnd) {
-      Right(exp)
+  def parseQuery(input: String): Either[String, CQLQuery] = parse(topExpr, input.trim) match {
+    case Success((docType, exp), next) => if (next.atEnd) {
+      docTypes.find{_.stringName == docType.toUpperCase} match {
+        case Some(t) => Right(CQLQuery(t,exp))
+        case None => Left("Invalid SELECT type " + docType)
+      }
     } else {
       Left("Unexpected stuff after query at position %s: %s, parsed %s".format(next.pos.toString, next.first, exp.toString))
     }
     case Failure(wtf, _) => Left("Error parsing query: %s".format(wtf.toString))
   }
 
-  /*
-  def topExpr = withSelect | withoutSelect
-  def withSelect = "(?iu)SELECT".r ~> ident ~ "(?ui)".r ~ whereExpr
-  def withoutSelect = 
-  */
+  def topExpr: Parser[(String, SolrExpression)] = withSelect | withoutSelect
+  def withSelect = "(?iu)SELECT".r ~> ident ~ "(?ui)WHERE".r ~ whereExpr ^^ {case docType ~ where ~ expr => (docType, expr)}
+  def withoutSelect = whereExpr ^^ {case expr => (docTypes.head.stringName, expr)}
 
   def whereExpr = emptyExpr | expr
 
@@ -61,7 +64,7 @@ class CollinsQueryParser private(val nowTime: () => Date) extends JavaTokenParse
   }}
   def rangeValueOpt: Parser[Option[SolrSingleValue]]      = "*"^^^{None} | rangeValue ^^{other => Some(other)}
   def rangeValue    = strictUnquotedStringValue
-  def strictUnquotedStringValue = "[a-zA-Z0-9_\\-.]+".r ^^{s => SolrStringValue(s, StrictUnquoted)}
+  def strictUnquotedStringValue = "[a-zA-Z0-9_\\-.:]+".r ^^{s => SolrStringValue(s, StrictUnquoted)}
 
   /**
    * Notice that all values are parsed as strings, type inference is now
@@ -72,12 +75,11 @@ class CollinsQueryParser private(val nowTime: () => Date) extends JavaTokenParse
   def value   = quotedString | unquotedString
   def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1), Quoted)}
   def unquotedString = """[^\s()'"]+""".r  ^^ {s => StringValueFormat.createValueFor(s)}
-  def now = "(?iu)#NOW".r ^^^{SolrStringValue(Formatter.solrDateFormat(nowTime()), StrictUnquoted)}
 
 }
 
 object CollinsQueryParser {
   val nowTime: () => Date = () => new Date
   
-  def apply(t: () => Date = nowTime) = new CollinsQueryParser(t)
+  def apply(types: List[SolrDocType] = List(AssetDocType), t: () => Date = nowTime) = new CollinsQueryParser(types, t)
 }

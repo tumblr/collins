@@ -16,23 +16,18 @@ import SolrKeyFlag._
  * asset meta values are all converted into strings with the meta name as the
  * solr key, using group_id to group values in to multi-valued keys
  */
-class FlatSerializer extends AssetSolrSerializer {
+class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
 
   val generatedFields = SolrKey("NUM_DISKS", Integer, Dynamic, SingleValued, Sortable) :: SolrKey("KEYS", String, Dynamic, MultiValued, NotSortable) :: Nil
 
-  def allDocFields(id: Long, indexTime: Date): AssetSolrDocument = Map(
-    SolrKeyResolver("DOC_TYPE").get -> SolrStringValue(AssetDocType.stringName, StrictUnquoted),
-    SolrKeyResolver("LAST_INDEXED").get -> SolrStringValue(Formatter.solrDateFormat(indexTime), StrictUnquoted),
-    SolrKeyResolver("UUID").get -> SolrStringValue(AssetDocType.stringName + "_" + id.toString)
-  )
-
+  val res = AssetDocType.keyResolver
 
   def serialize(asset: Asset, indexTime: Date) = postProcess {
     val opt = Map[SolrKey, Option[SolrValue]](
-      SolrKeyResolver("UPDATED").get -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
-      SolrKeyResolver("DELETED").get -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
-      SolrKeyResolver("STATE").get -> asset.getState.map{s => SolrStringValue(s.name, StrictUnquoted)},
-      SolrKeyResolver("IP_ADDRESS").get -> {
+      res("UPDATED").get -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
+      res("DELETED").get -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
+      res("STATE").get -> asset.getState.map{s => SolrStringValue(s.name, StrictUnquoted)},
+      res("IP_ADDRESS").get -> {
         val a = IpAddresses.findAllByAsset(asset, false)
         if (a.size > 0) {
           val addresses = SolrMultiValue(a.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)}.toSet)
@@ -44,15 +39,15 @@ class FlatSerializer extends AssetSolrSerializer {
     ).collect{case(k, Some(v)) => (k,v)}
 
     val ipmi: AssetSolrDocument = IpmiInfo.findByAsset(asset).map{ipmi => Map(
-      SolrKeyResolver(IpmiInfo.Enum.IpmiAddress.toString).get -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
+      res(IpmiInfo.Enum.IpmiAddress.toString).get -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
     )}.getOrElse(Map())
       
     allDocFields(asset.id, indexTime) ++ opt ++ ipmi ++ Map[SolrKey, SolrValue](
-      SolrKeyResolver("ID").get -> SolrIntValue(asset.id.toInt),
-      SolrKeyResolver("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
-      SolrKeyResolver("STATUS").get -> SolrStringValue(asset.getStatus.name, StrictUnquoted),
-      SolrKeyResolver("TYPE").get -> SolrStringValue(asset.getType.name, StrictUnquoted),
-      SolrKeyResolver("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted)
+      res("ID").get -> SolrIntValue(asset.id.toInt),
+      res("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
+      res("STATUS").get -> SolrStringValue(asset.getStatus.name, StrictUnquoted),
+      res("TYPE").get -> SolrStringValue(asset.getType.name, StrictUnquoted),
+      res("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted)
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset, false))
   }
 
@@ -67,7 +62,7 @@ class FlatSerializer extends AssetSolrSerializer {
           case Double => SolrDoubleValue(java.lang.Double.parseDouble(head.getValue()))
           case _ => SolrStringValue(head.getValue(), StrictUnquoted)
         }
-        val solrKey = SolrKeyResolver(head.getName()).get
+        val solrKey = res(head.getName()).get
         val mergedval = build.get(solrKey) match {
           case Some(exist) => exist match {
             case s: SolrSingleValue => SolrMultiValue(Set(s, newval), newval.valueType)
@@ -83,7 +78,7 @@ class FlatSerializer extends AssetSolrSerializer {
   }
 
   def postProcess(doc: AssetSolrDocument): AssetSolrDocument = {
-    val disks:Option[Tuple2[SolrKey, SolrValue]] = doc.find{case (k,v) => k.name == "DISK_SIZE_BYTES"}.map{case (k,v) => (SolrKeyResolver("NUM_DISKS").get -> SolrIntValue(v match {
+    val disks:Option[Tuple2[SolrKey, SolrValue]] = doc.find{case (k,v) => k.name == "DISK_SIZE_BYTES"}.map{case (k,v) => (res("NUM_DISKS").get -> SolrIntValue(v match {
       case s:SolrSingleValue => 1
       case SolrMultiValue(vals, _) => vals.size
     }))}
@@ -93,7 +88,7 @@ class FlatSerializer extends AssetSolrSerializer {
 
     val sortKeys = almostDone.map{case(k,v) => k.sortify(v)}.flatten
 
-    almostDone ++ sortKeys + (SolrKeyResolver("KEYS").get -> keyList)
+    almostDone ++ sortKeys + (res("KEYS").get -> keyList)
   }
 
 }

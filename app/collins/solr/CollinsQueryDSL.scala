@@ -6,7 +6,7 @@ package collins.solr
  */
 object CollinsQueryDSL {
   class CollinsQueryString(val s: String) {
-    lazy val query: SolrExpression = CollinsQueryParser().parseQuery(s).fold(
+    lazy val query: CQLQuery = CollinsQueryParser().parseQuery(s).fold(
       err => throw new Exception("CQL error: " + err),
       expr => expr
     )
@@ -17,8 +17,9 @@ object CollinsQueryDSL {
     )
 
     lazy val solr: String = typedQuery.toSolrQueryString
+
   }
-  implicit def str2SolrStringValue(s: String) = SolrStringValue(s)
+  implicit def str2SolrStringValue(s: String): SolrStringValue = SolrStringValue(s)
   implicit def strsolr_tuple2keyval(t: Tuple2[String, SolrSingleValue]): SolrKeyVal = SolrKeyVal(t._1, t._2)
   implicit def str2collins(s: String): CollinsQueryString = new CollinsQueryString(s)
   implicit def collins2str(c: CollinsQueryString): String = c.s

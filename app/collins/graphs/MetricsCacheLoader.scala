@@ -1,7 +1,7 @@
 package collins.graphs
 
 import models.{PageParams, SortDirection}
-import collins.solr.{CollinsQueryParser, CollinsSearchQuery}
+import collins.solr.{CollinsQueryParser, CollinsSearchQuery, AssetDocType}
 
 import play.api.Logger
 import com.google.common.cache.CacheLoader
@@ -28,7 +28,7 @@ case class MetricsCacheLoader() extends CacheLoader[MetricsQuery, Set[String]] {
   }
 
   protected def solrQueryMatches(query: String): Boolean = {
-    CollinsQueryParser()
+    CollinsQueryParser(List(AssetDocType))
       .parseQuery(query)
       .right
       .flatMap(_.typeCheck)
@@ -38,7 +38,7 @@ case class MetricsCacheLoader() extends CacheLoader[MetricsQuery, Set[String]] {
           false
         },
         expr => {
-          val cq = CollinsSearchQuery(expr, PageParams(0, 1, SortDirection.SortAsc, "TAG"))
+          val cq = CollinsSearchQuery(AssetDocType.keyResolver, expr, PageParams(0, 1, SortDirection.SortAsc, "TAG"))
           cq.getPage().fold(
             err => {
               logger.warn("Error executing CQL query: %s".format(err))

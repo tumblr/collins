@@ -14,14 +14,14 @@ import SortDirection._
  * This class is a full search query, which includes an expression along with
  * sorting and pagination parameters
  */
-case class CollinsSearchQuery(query: TypedSolrExpression, page: PageParams) {
+case class CollinsSearchQuery(keyResolver: SolrKeyResolver, query: TypedSolrExpression, page: PageParams) {
 
   private[this] val logger = Logger("CollinsSearchQuery")
 
   def getResults(): Either[String, (Seq[AssetView], Long)] = Solr.server.map{server =>
     val q = new SolrQuery
     val queryString = query.toSolrQueryString
-    SolrKeyResolver.either(page.sortField).right.flatMap{k => if (k.isSortable) Right(k.sortKey) else Left("Cannot sort on " + k.name)}.right.flatMap { sortKey =>
+    keyResolver.either(page.sortField).right.flatMap{k => if (k.isSortable) Right(k.sortKey) else Left("Cannot sort on " + k.name)}.right.flatMap { sortKey =>
       logger.debug("SOLR: " + queryString + "| sort: " + sortKey.name)
       q.setQuery(queryString)
       q.setStart(page.offset)
