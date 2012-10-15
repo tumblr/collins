@@ -152,7 +152,7 @@ object AssetKeyResolver extends SolrKeyResolver{
     SolrKey(IpmiPassword.toString, String, Dynamic, SingleValued, Sortable),
     SolrKey(IpmiGateway.toString, String, Dynamic, SingleValued, Sortable),
     SolrKey(IpmiNetmask.toString, String, Dynamic, SingleValued, Sortable)
-  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
+  ) ++ Solr.plugin.map{_.assetSerializer.generatedFields}.getOrElse(List())
 
   val typeKey = new SolrKey("TYPE",String,Static, SingleValued, Sortable) with EnumKey {
     def lookupByName(value: String) = AssetType.findByName(value.toUpperCase).map(_.name)
@@ -186,6 +186,7 @@ object AssetKeyResolver extends SolrKeyResolver{
 object AssetLogKeyResolver extends SolrKeyResolver {
   val keys = List(
     SolrKey("MESSAGE", String, Static, SingleValued, NotSortable),
+    SolrKey("LEVEL", String, Dynamic, SingleValued, Sortable),
     SolrKey("CREATED", String, Static, SingleValued, Sortable)
   )
 

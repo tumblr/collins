@@ -4,13 +4,15 @@ import akka.actor._
 import akka.util.duration._
 import play.api.Logger
 
-import models.Asset
+import models.{Asset, AssetLog}
 
 import java.util.Collections
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.JavaConverters._
+
+//TODO: refactor all this
 
 /**
  * The SolrUpdater queues asset updates for batch updating.  Most importantly,
@@ -19,7 +21,7 @@ import scala.collection.JavaConverters._
  * during large updates (such as updating lshw/lldp, which triggers dozens of
  * callbacks)
  */
-class SolrUpdater extends Actor {
+class AssetSolrUpdater extends Actor {
 
   private[this] val set = Collections.newSetFromMap[String](
     new ConcurrentHashMap[String,java.lang.Boolean]()
@@ -69,4 +71,12 @@ class SolrUpdater extends Actor {
       else
         true
     }.getOrElse(false)
+}
+
+class AssetLogSolrUpdater extends Actor {
+
+  def receive = {
+    case log: AssetLog => Solr.plugin.foreach{_.updateAssetLogs(List(log), new Date)}
+  }
+
 }

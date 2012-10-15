@@ -5,7 +5,7 @@ import util.views.Formatter
 
 import java.util.Date
 
-import models.{Asset, AssetMeta, AssetMetaValue, IpAddresses, IpmiInfo, MetaWrapper, Truthy}
+import models.{Asset, AssetMeta, AssetMetaValue, AssetLog, IpAddresses, IpmiInfo, MetaWrapper, Truthy}
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
@@ -90,5 +90,19 @@ class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
 
     almostDone ++ sortKeys + (res("KEYS").get -> keyList)
   }
+
+}
+
+class AssetLogSerializer extends SolrSerializer[AssetLog](AssetLogDocType) {
+
+  val generatedFields = Nil
+
+  val res = AssetLogDocType.keyResolver
+
+  def serialize(log: AssetLog, indexTime: Date): AssetSolrDocument = Map[SolrKey, SolrValue](
+    res("MESSAGE").get -> SolrStringValue(log.message, StrictUnquoted),
+    res("MESSAGE_TYPE").get -> SolrStringValue(log.message_type.toString, StrictUnquoted)
+  )
+
 
 }

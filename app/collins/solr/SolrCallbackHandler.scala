@@ -1,17 +1,19 @@
 package collins.solr
 
 import collins.callbacks.CallbackActionHandler
-import models.{Asset, AssetMetaValue, IpAddresses}
+import models.{Asset, AssetMetaValue, AssetLog, IpAddresses}
 
 import akka.actor._
 import play.api.Logger
 import org.apache.solr.client.solrj.SolrServer
 import java.beans.PropertyChangeEvent
 
+//TODO: refactor, combine functionality
+
 // creates fire with null old value, some new value
 // deletes fire with some old value, null new value
 // updates fire with both
-case class SolrCallbackHandler(server: SolrServer, updater: ActorRef) extends CallbackActionHandler {
+case class SolrAssetCallbackHandler(server: SolrServer, updater: ActorRef) extends CallbackActionHandler {
 
   private[this] val logger = Logger("SolrCallbackHandler")
 
@@ -53,3 +55,32 @@ case class SolrCallbackHandler(server: SolrServer, updater: ActorRef) extends Ca
   }
 
 }
+
+case class SolrAssetLogCallbackHandler(server: SolrServer, updater: ActorRef) extends CallbackActionHandler {
+
+  private[this] val logger = Logger("SolrAssetLogCallbackHandler")
+
+  override def apply(pce: PropertyChangeEvent) = getValueOption(pce) match {
+    case None =>
+    case Some(v) =>
+      processValue(v)
+  }
+
+  protected def processValue(v: AnyRef) = v match {
+    case l: AssetLog => {
+      updater ! l
+    }
+    case o =>
+      logger.error("Unknown value in update callback %s".format(maybeNullString(o)))
+  }
+
+  private def maybeNullString(s: AnyRef): String = if (s == null) {
+    "null"
+  } else {
+    s.toString
+  }
+
+
+}
+
+

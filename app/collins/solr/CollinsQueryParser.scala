@@ -23,7 +23,7 @@ class CollinsQueryParser private(val docTypes: List[SolrDocType], val nowTime: (
 
   def parseQuery(input: String): Either[String, CQLQuery] = parse(topExpr, input.trim) match {
     case Success((docType, exp), next) => if (next.atEnd) {
-      docTypes.find{_.stringName == docType.toUpperCase} match {
+      docTypes.find{_.name == docType.toUpperCase} match {
         case Some(t) => Right(CQLQuery(t,exp))
         case None => Left("Invalid SELECT type " + docType)
       }
@@ -35,7 +35,7 @@ class CollinsQueryParser private(val docTypes: List[SolrDocType], val nowTime: (
 
   def topExpr: Parser[(String, SolrExpression)] = withSelect | withoutSelect
   def withSelect = "(?iu)SELECT".r ~> ident ~ "(?ui)WHERE".r ~ whereExpr ^^ {case docType ~ where ~ expr => (docType, expr)}
-  def withoutSelect = whereExpr ^^ {case expr => (docTypes.head.stringName, expr)}
+  def withoutSelect = whereExpr ^^ {case expr => (docTypes.head.name, expr)}
 
   def whereExpr = emptyExpr | expr
 

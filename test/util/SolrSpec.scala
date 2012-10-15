@@ -155,6 +155,23 @@ class SolrQuerySpec extends ApplicationSpecification {
     "empty.query.where" in {
       "*".query.where must_== EmptySolrQuery
     }
+
+    "selects" in {
+      "defaults to asset" in {
+        "foo = bar".query.select must_== AssetDocType
+      }
+      "select assets" in {
+        "SELECT asset WHERE foo = bar".query.select must_== AssetDocType
+      }
+      "select logs" in {
+        val p = CollinsQueryParser(List(AssetDocType, AssetLogDocType))
+        p.parseQuery("SELECT asset_log WHERE foo = bar").right.get.select must_== AssetLogDocType
+      }
+      "Reject unknown select type" in {
+        CollinsQueryParser().parseQuery("SELECT omgwtfbbq WHERE foo = bar") must beAnInstanceOf[Left[String, CQLQuery]]
+      }
+    }
+
     "key-value" in {
       "string value" in {
         """foosolr = "bar"""".query.where must_== (("foosolr" -> "bar".quoted): SolrKeyVal)

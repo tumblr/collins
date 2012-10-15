@@ -12,17 +12,17 @@ import AssetMeta.ValueType._
 import play.api.Logger
 
 sealed trait SolrDocType {
-  def stringName: String
+  def name: String
   def keyResolver: SolrKeyResolver
   
-  lazy val keyVal = new SolrKeyVal(AllDocKeyResolver("DOC_TYPE").get.resolvedName, SolrStringValue(stringName)) with TypedSolrExpression
+  lazy val keyVal = new SolrKeyVal(AllDocKeyResolver("DOC_TYPE").get.resolvedName, SolrStringValue(name)) with TypedSolrExpression
 }
 case object AssetDocType extends SolrDocType {
-  val stringName = "ASSET"
+  val name = "ASSET"
   val keyResolver = AssetKeyResolver
 }
 case object AssetLogDocType extends SolrDocType {
-  val stringName = "ASSET_LOG"
+  val name = "ASSET_LOG"
   val keyResolver = AssetKeyResolver
 }
 
@@ -177,15 +177,15 @@ object StringValueFormat {
  * The string value is special becuase all values parsed from CQL are set as
  * strings, so this class must handle the string parsing into other value types
  */
-case class SolrStringValue(value: String, format: StringValueFormat = Unquoted) extends SolrSingleValue(String) {
-  def toSolrQueryString(toplevel: Boolean) = format.format(value)
+case class SolrStringValue(value: String, quoteFormat: StringValueFormat = Unquoted) extends SolrSingleValue(String) {
+  def toSolrQueryString(toplevel: Boolean) = quoteFormat.format(value)
 
-  def quoted = copy(format = Quoted)
-  def unquoted = copy(format = Unquoted)
-  def strict = copy(format = StrictUnquoted)
-  def lr = copy(format = LRWildcard)
-  def l = copy(format = LWildcard)
-  def r = copy(format = RWildcard)
+  def quoted = copy(quoteFormat = Quoted)
+  def unquoted = copy(quoteFormat = Unquoted)
+  def strict = copy(quoteFormat = StrictUnquoted)
+  def lr = copy(quoteFormat = LRWildcard)
+  def l = copy(quoteFormat = LWildcard)
+  def r = copy(quoteFormat = RWildcard)
 
 }
 
@@ -319,18 +319,18 @@ trait SolrSimpleExpr extends SolrExpression {
       case s: SolrStringValue => {
         //string values are special because all values parsed from CQL are as strings
         def noRegexAllowed(f: => Either[String, SolrSingleValue]): Either[String, SolrSingleValue] = {
-          if (Set[StringValueFormat](Quoted, Unquoted, StrictUnquoted) contains s.format) {
+          if (Set[StringValueFormat](Quoted, Unquoted, StrictUnquoted) contains s.quoteFormat) {
             f
           } else {
             Left("Regex/wildcards not allowed on non-string values")
           }
         }
         solrKey.valueType match {
-          case String => if (s.format == Unquoted) {
+          case String => if (s.quoteFormat == Unquoted) {
             if (solrKey.autoWildcard) {
-              Right(s.copy(format = LRWildcard))
+              Right(s.copy(quoteFormat = LRWildcard))
             } else {
-              Right(s.copy(format = Quoted))
+              Right(s.copy(quoteFormat = Quoted))
             }
           } else {
             Right(s)

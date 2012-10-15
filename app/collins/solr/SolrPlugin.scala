@@ -5,7 +5,7 @@ import akka.util.duration._
 
 import java.util.Date
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
+import models.{Asset, AssetFinder, AssetLog, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
 import models.asset.AssetView
 import models.IpmiInfo.Enum._
 import models.SortDirection._
@@ -45,10 +45,12 @@ class SolrPlugin(app: Application) extends Plugin {
     SolrConfig.enabled
   }
 
-  val serializer = new AssetSerializer
+  val assetSerializer = new AssetSerializer
+  val assetLogSerializer = new AssetLogSerializer
 
   //this must be lazy so it gets called after the system exists
-  lazy val updater = Akka.system.actorOf(Props[SolrUpdater], name = "solr_updater")
+  lazy val updater = Akka.system.actorOf(Props[AssetSolrUpdater], name = "solr_asset_updater")
+  lazy val logUpdater = Akka.system.actorOf(Props[AssetLogSolrUpdater], name = "solr_asset_log_updater")
 
   override def onStart() {
     if (enabled) {
@@ -84,7 +86,7 @@ class SolrPlugin(app: Application) extends Plugin {
    * properly reindex the updated asset in Solr
    */
   private def initializeCallbacks() {
-    val callback = SolrCallbackHandler(server, updater)
+    val callback = SolrAssetCallbackHandler(server, updater)
     Callback.on("asset_update", callback)
     Callback.on("asset_create", callback)
     Callback.on("asset_delete", callback)
@@ -94,6 +96,10 @@ class SolrPlugin(app: Application) extends Plugin {
     Callback.on("ipAddresses_create", callback)
     Callback.on("ipAddresses_update", callback)
     Callback.on("ipAddresses_delete", callback)
+
+    val logCallback = new SolrAssetLogCallbackHandler(server, logUpdater)
+    Callback.on("asset_log_create", logCallback)
+    Callback.on("asset_log_update", logCallback)
   }
 
   def populate() = Akka.future { 
@@ -102,33 +108,36 @@ class SolrPlugin(app: Application) extends Plugin {
       logger.debug("Populating Solr with Assets")
       val assets = Asset.findRaw()
       updateAssets(assets, indexTime)
-      //TODO: restrict to only deleting assets!!!
-      server.deleteByQuery( """last_indexed < %s""".format(Formatter.solrDateFormat(indexTime)).solr );
+      server.deleteByQuery( """SELECT asset WHERE last_indexed < %s""".format(Formatter.solrDateFormat(indexTime)).solr );
     }.getOrElse(logger.warn("attempted to populate solr when no server was initialized"))
   }
 
-  def updateAsset(asset: Asset) = {
-    logger.debug("updating asset " + asset.toString)
-    //updateAssets(asset :: Nil)
-  }
-
-  def updateAssets(assets: Seq[Asset], indexTime: Date) {
+  def updateItems[T](items: Seq[T], serializer: SolrSerializer[T], indexTime: Date) {
     _server.map{server =>
-      val docs = assets.map{asset => Solr.prepForInsertion(serializer.serialize(asset, indexTime))}
+      val docs = items.map{item => Solr.prepForInsertion(serializer.serialize(item, indexTime))}
       if (docs.size > 0) {
         val fuckingJava = new java.util.ArrayList[SolrInputDocument]
         docs.foreach{doc => fuckingJava.add(doc)}
         server.add(fuckingJava)
         server.commit()
-        if (assets.size == 1) {
-          logger.debug("Re-indexing asset " + assets.head.toString)
+        if (items.size == 1) {
+          logger.debug(("Re-indexing %s, %s".format(serializer.docType.name, items.head.toString)))
         } else {
-          logger.info("Indexed %d assets".format(docs.size))
+          logger.info("Indexed %d %ss".format(docs.size, serializer.docType.name))
         }
       } else {
-        logger.warn("No assets to index!")
+        logger.warn("No items to index!")
       }
     }
+
+  }
+
+  def updateAssets(assets: Seq[Asset], indexTime: Date) {
+    updateItems[Asset](assets, assetSerializer, indexTime)
+  }
+
+  def updateAssetLogs(logs: Seq[AssetLog], indexTime: Date) {
+    updateItems[AssetLog](logs, assetLogSerializer, indexTime)
   }
 
   override def onStop() {
