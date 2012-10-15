@@ -186,7 +186,7 @@ object AssetKeyResolver extends SolrKeyResolver{
 object AssetLogKeyResolver extends SolrKeyResolver {
   val keys = List(
     SolrKey("MESSAGE", String, Static, SingleValued, NotSortable),
-    SolrKey("LEVEL", String, Dynamic, SingleValued, Sortable),
+    SolrKey("MESSAGE_TYPE", String, Static, SingleValued, Sortable),
     SolrKey("CREATED", String, Static, SingleValued, Sortable)
   )
 

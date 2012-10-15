@@ -69,8 +69,6 @@
     <fieldType name="strict_string" class="solr.TextField" sortMissingLast="true">
       <analyzer type="index">
         <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="solr.LowerCaseFilterFactory"/>
-        />
       </analyzer>
     </fieldType>
 
@@ -227,7 +225,7 @@
 
   <!-- ALL-DOC FIELDS -->
   <field name="DOC_TYPE" type="string" indexed="true" stored="true" required="true"/>
-  <field name="UUID" type="strict_string" indexed="trye" stored="true" required="true"/>
+  <field name="UUID" type="strict_string" indexed="true" stored="true" required="true"/>
   <field name="LAST_INDEXED" type="tdate" indexed="true" stored="true" required="true"/>
 
 
@@ -265,7 +263,8 @@
 
    <!-- ASSET LOG FIELDS -->
    
-   <field name="LOG_MESSAGE" type="text_en_splitting" indexed="true" stored="false" multiValued = "false"/>
+   <field name="MESSAGE" type="text_en_splitting" indexed="true" stored="false" multiValued = "false"/>
+   <field name="MESSAGE_TYPE" type="string" indexed="true" stored="false" multiValued = "false"/>
 
    <!-- all sort fields use this dynamic field -->
 
@@ -277,7 +276,7 @@
 
  </fields>
 
- <uniqueKey>ID</uniqueKey>
+ <uniqueKey>UUID</uniqueKey>
 
 
 </schema>

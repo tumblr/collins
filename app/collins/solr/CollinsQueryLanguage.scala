@@ -23,7 +23,7 @@ case object AssetDocType extends SolrDocType {
 }
 case object AssetLogDocType extends SolrDocType {
   val name = "ASSET_LOG"
-  val keyResolver = AssetKeyResolver
+  val keyResolver = AssetLogKeyResolver
 }
 
 
