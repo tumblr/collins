@@ -14,14 +14,14 @@ import SortDirection._
  * This class is a full search query, which includes an expression along with
  * sorting and pagination parameters
  */
-case class CollinsSearchQuery(keyResolver: SolrKeyResolver, query: TypedSolrExpression, page: PageParams) {
+abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpression, page: PageParams) {
 
   private[this] val logger = Logger("CollinsSearchQuery")
 
-  def getResults(): Either[String, (Seq[AssetView], Long)] = Solr.server.map{server =>
+  def getResults(): Either[String, (Seq[T], Long)] = Solr.server.map{server =>
     val q = new SolrQuery
     val queryString = query.toSolrQueryString
-    keyResolver.either(page.sortField).right.flatMap{k => if (k.isSortable) Right(k.sortKey) else Left("Cannot sort on " + k.name)}.right.flatMap { sortKey =>
+    docType.keyResolver.either(page.sortField).right.flatMap{k => if (k.isSortable) Right(k.sortKey) else Left("Cannot sort on " + k.name)}.right.flatMap { sortKey =>
       logger.debug("SOLR: " + queryString + "| sort: " + sortKey.name)
       q.setQuery(queryString)
       q.setStart(page.offset)
@@ -31,7 +31,7 @@ case class CollinsSearchQuery(keyResolver: SolrKeyResolver, query: TypedSolrExpr
         val response = server.query(q)
         val results = response.getResults
         Right((results.toArray.toSeq.map {
-          case doc: SolrDocument => Asset.findByTag(doc.getFieldValue("TAG").toString)
+          case doc: SolrDocument => parseDocument(doc)
           case other =>
             logger.warn("Got something weird back from Solr %s".format(other.toString))
             None
@@ -42,7 +42,7 @@ case class CollinsSearchQuery(keyResolver: SolrKeyResolver, query: TypedSolrExpr
     }
   }.getOrElse(Left("Solr Plugin not initialized!"))
 
-  def getPage(): Either[String, Page[AssetView]] = getResults().right.map{case (results, total) =>
+  def getPage(): Either[String, Page[T]] = getResults().right.map{case (results, total) =>
     Page(results, page.page, page.page * page.size, total)
   }
 
@@ -52,5 +52,13 @@ case class CollinsSearchQuery(keyResolver: SolrKeyResolver, query: TypedSolrExpr
     else
       SolrQuery.ORDER.desc
   }
+
+  def parseDocument(doc: SolrDocument): Option[T]
+
+}
+
+case class AssetSearchQuery(query: TypedSolrExpression, page: PageParams) extends CollinsSearchQuery[Asset](AssetDocType, query, page) {
+
+  def parseDocument(doc: SolrDocument) = Asset.findByTag(doc.getFieldValue("TAG").toString)
 
 }
