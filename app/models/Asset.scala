@@ -177,9 +177,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
   Stats.time("Asset.find") {
     AssetSearchParameters(params, afinder, operation)
       .toSolrExpression
-      .typeCheck
+      .typeCheck(AssetDocType)
       .right
-      .flatMap{exp => CollinsSearchQuery(exp, page).getPage()}
+      .flatMap{exp => AssetSearchQuery(exp, page).getPage()}
       .fold(
         err => throw new Exception(err),
         page => page

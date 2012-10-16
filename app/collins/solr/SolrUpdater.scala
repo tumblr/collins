@@ -4,12 +4,15 @@ import akka.actor._
 import akka.util.duration._
 import play.api.Logger
 
-import models.Asset
+import models.{Asset, AssetLog}
 
 import java.util.Collections
+import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.JavaConverters._
+
+//TODO: refactor all this
 
 /**
  * The SolrUpdater queues asset updates for batch updating.  Most importantly,
@@ -18,7 +21,7 @@ import scala.collection.JavaConverters._
  * during large updates (such as updating lshw/lldp, which triggers dozens of
  * callbacks)
  */
-class SolrUpdater extends Actor {
+class AssetSolrUpdater extends Actor {
 
   private[this] val set = Collections.newSetFromMap[String](
     new ConcurrentHashMap[String,java.lang.Boolean]()
@@ -51,9 +54,10 @@ class SolrUpdater extends Actor {
     case Reindex =>
       if (scheduled.get == true) {
         val toRemove = set.asScala.toSeq
+        val indexTime = new Date
         val assets = toRemove.map(t => Asset.findByTag(t)).filter(_.isDefined).map(_.get)
         logger.debug("Got Reindex task, working on %d assets, set is %d".format(toRemove.size, set.size))
-        Solr.plugin.foreach(_.updateAssets(assets))
+        Solr.plugin.foreach(_.updateAssets(assets, indexTime))
         set.removeAll(toRemove.asJava)
         logger.debug("Set size now %d".format(set.size))
         scheduled.set(false)
@@ -67,4 +71,12 @@ class SolrUpdater extends Actor {
       else
         true
     }.getOrElse(false)
+}
+
+class AssetLogSolrUpdater extends Actor {
+
+  def receive = {
+    case log: AssetLog => Solr.plugin.foreach{_.updateAssetLogs(List(log), new Date)}
+  }
+
 }

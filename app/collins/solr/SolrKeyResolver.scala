@@ -9,6 +9,44 @@ import Solr.AssetSolrDocument
 import AssetMeta.ValueType
 import AssetMeta.ValueType._
 
+//some light DSL's for making solr key flags easier to read
+
+trait SolrKeyFlag {
+  def boolValue: Boolean
+}
+
+object SolrKeyFlag {
+
+  implicit def namedboolean2boolean(n: SolrKeyFlag): Boolean = n.boolValue
+
+  sealed trait IsDynamic extends SolrKeyFlag
+  case object Dynamic extends SolrKeyFlag {
+    val boolValue = true
+  }
+  case object Static extends SolrKeyFlag {
+    val boolValue = false
+  }
+
+  sealed trait IsMultiValued extends SolrKeyFlag
+  case object MultiValued extends SolrKeyFlag {
+    val boolValue = true
+  }
+  case object SingleValued extends SolrKeyFlag {
+    val boolValue = false
+  }
+
+  sealed trait IsSortable extends SolrKeyFlag
+  case object Sortable extends SolrKeyFlag {
+    val boolValue = true
+  }
+  case object NotSortable extends SolrKeyFlag {
+    val boolValue = false
+  }
+}
+import SolrKeyFlag._
+
+
+
 /** 
  * This class holds data about a solr key, mainly for translating "local" key
  * names to their solr equivalent
@@ -16,13 +54,17 @@ import AssetMeta.ValueType._
 case class SolrKey (
   val name: String,
   val valueType: ValueType,
-  val isDynamic: Boolean = true,
-  val multiValued: Boolean = true //could use "sortable" instead, for now we'll only sort single-valued keys
+  val isDynamic: Boolean,
+  val isMultiValued: Boolean,
+  val isSortable: Boolean
 ) {
-  lazy val resolvedName = name.toUpperCase + (if(isDynamic) ValueType.postFix(valueType) else "")
+  require(!(isMultiValued && isSortable), "Cannot create sortable multivalue keys (yet)")
+  require(name.toUpperCase == name, "Name must be ALL CAPS")
+
+  lazy val resolvedName = name + (if(isDynamic) ValueType.postFix(valueType) else "")
   def isAliasOf(alias: String) = false //override for aliases
 
-  def matches(k: String) = (k == name) || isAliasOf(k)
+  def matches(k: String) = (k.toUpperCase == name) || isAliasOf(k)
 
   /**
    * returns true if wildcards should be automatically applied to unquoted values of this key (only relevant for string values)
@@ -31,14 +73,12 @@ case class SolrKey (
 
   def sortName = name.toUpperCase + "_SORT"
 
-  def sortKey = SolrKey(sortName, String, false)
+  def sortKey = SolrKey(sortName, String, Static, SingleValued, Sortable)
 
   def sortify(value: SolrValue): Option[(SolrKey, SolrStringValue)] = value match {
     case s:SolrSingleValue if (isSortable) => Some(sortKey, SolrStringValue(s.value.toString, StrictUnquoted))
     case _ => None
   }
-
-  def isSortable = !multiValued
 
 }
 
@@ -51,8 +91,20 @@ trait EnumKey{ self: SolrKey =>
   def lookupById(value: Int): Option[String]
 }
 
-object SolrKeyResolver {
+trait SolrKeyResolver {
+  import SolrKeyResolver._
+  def apply(rawKey: String): Option[SolrKey] = allDocKeys.find{_ matches rawKey.toUpperCase} orElse docSpecificKey(rawKey)
 
+  def either(_rawkey: String) = apply(_rawkey) match {
+    case Some(k) => Right(k)
+    case None => Left("Unknown key " + _rawkey)
+  }
+
+  def docSpecificKey(rawKey: String): Option[SolrKey]
+
+}
+
+object SolrKeyResolver {
   /**
    * This is a list of keys that should not add pre/post wildcards when the
    * value in CQL is unquoted with no modifiers.  For example, normally if you
@@ -68,6 +120,17 @@ object SolrKeyResolver {
    */
   val noAutoWildcardKeys = List("TAG", "IP_ADDRESS", "IPMI_ADDRESS")
 
+  val allDocKeys = List(
+    SolrKey("DOC_TYPE", String, Static, SingleValued, Sortable),
+    SolrKey("LAST_INDEXED", String, Static, SingleValued, Sortable),
+    SolrKey("UUID", String, Static, SingleValued, Sortable)
+  )
+
+
+}
+
+object AssetKeyResolver extends SolrKeyResolver{
+
   /**
    * each key is an "incoming" field from a query, the ValueType is the
    * expected type of the key, and the Boolean indicates whether the key in
@@ -76,50 +139,62 @@ object SolrKeyResolver {
    * NOTE - For now, any single-valued field that needs to be sortable has to be explicitly declared
    */
   lazy val nonMetaKeys: Seq[SolrKey] = List(
-    SolrKey("ID", Integer, false, false),
-    SolrKey("TAG", String,false, false), 
-    SolrKey("CREATED", String,false, false), 
-    SolrKey("UPDATED", String,false, false), 
-    SolrKey("DELETED", String,false, false),
-    SolrKey("IP_ADDRESS", String,false, true),
-    SolrKey("PRIMARY_ROLE", String,false, false),
-    SolrKey("HOSTNAME", String,false, false),
-    SolrKey(IpmiAddress.toString, String, true, false),
-    SolrKey(IpmiUsername.toString, String, true, false),
-    SolrKey(IpmiPassword.toString, String, true, false),
-    SolrKey(IpmiGateway.toString, String, true, false),
-    SolrKey(IpmiNetmask.toString, String, true, false)
-  ) ++ Solr.plugin.map{_.serializer.generatedFields}.getOrElse(List())
+    SolrKey("ID", Integer, Static, SingleValued, Sortable),
+    SolrKey("TAG", String, Static, SingleValued, Sortable), 
+    SolrKey("CREATED", String, Static, SingleValued, Sortable), 
+    SolrKey("UPDATED", String, Static, SingleValued, Sortable), 
+    SolrKey("DELETED", String, Static, SingleValued, Sortable),
+    SolrKey("IP_ADDRESS", String, Static, MultiValued, NotSortable),
+    SolrKey("PRIMARY_ROLE", String, Static, SingleValued, Sortable),
+    SolrKey("HOSTNAME", String, Static, SingleValued, Sortable),
+    SolrKey(IpmiAddress.toString, String, Dynamic, SingleValued, Sortable),
+    SolrKey(IpmiUsername.toString, String, Dynamic, SingleValued, Sortable),
+    SolrKey(IpmiPassword.toString, String, Dynamic, SingleValued, Sortable),
+    SolrKey(IpmiGateway.toString, String, Dynamic, SingleValued, Sortable),
+    SolrKey(IpmiNetmask.toString, String, Dynamic, SingleValued, Sortable)
+  ) ++ Solr.plugin.map{_.assetSerializer.generatedFields}.getOrElse(List())
 
-  val typeKey = new SolrKey("TYPE",String,false, false) with EnumKey {
+  val typeKey = new SolrKey("TYPE",String,Static, SingleValued, Sortable) with EnumKey {
     def lookupByName(value: String) = AssetType.findByName(value.toUpperCase).map(_.name)
     def lookupById(value: Int) = AssetType.findById(value).map(_.name)
     override def isAliasOf(a: String) = a == "ASSETTYPE"
 
   }
 
-  val statusKey = new SolrKey("STATUS",String,false, false) with EnumKey {
+  val statusKey = new SolrKey("STATUS", String, Static, SingleValued, Sortable) with EnumKey {
     def lookupByName(value: String) = Status.findByName(value).map{_.name}
     def lookupById(value: Int) = Status.findById(value).map{_.name}
   }
 
-  val stateKey = new SolrKey("STATE", String, false, false) with EnumKey {
+  val stateKey = new SolrKey("STATE", String, Static, SingleValued, Sortable) with EnumKey {
     def lookupByName(value: String) = State.findByName(value).map{_.name}
     def lookupById(value: Int) = State.findById(value).map{_.name}
   }
 
   val enumKeys = typeKey :: statusKey :: stateKey :: Nil
 
-  def apply(_rawkey: String): Option[SolrKey] = {
+  def docSpecificKey(_rawkey: String): Option[SolrKey] = {
     val ukey = _rawkey.toUpperCase
     nonMetaKeys.find(_ matches ukey)
       .orElse(enumKeys.find(_ matches ukey))
       .orElse(AssetMeta.findByName(ukey).map{_.getSolrKey})
   }
 
-  def either(_rawkey: String) = apply(_rawkey) match {
-    case Some(k) => Right(k)
-    case None => Left("Unknown key " + _rawkey)
-  }
 
+}
+
+object AssetLogKeyResolver extends SolrKeyResolver {
+  val keys = List(
+    SolrKey("MESSAGE", String, Static, SingleValued, NotSortable),
+    SolrKey("MESSAGE_TYPE", String, Static, SingleValued, Sortable),
+    SolrKey("CREATED", String, Static, SingleValued, Sortable)
+  )
+
+  def docSpecificKey(rawKey: String): Option[SolrKey] = {
+    keys.find{_ matches rawKey}
+  }
+}
+
+object AllDocKeyResolver extends SolrKeyResolver {
+  def docSpecificKey(nope: String) = None
 }

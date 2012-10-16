@@ -43,7 +43,8 @@ GET     /logout                     controllers.Application.logout
 GET     /api/timestamp                       app.Api.timestamp
 
 # Admin API
-GET     /api/admin/solr                      app.Api.repopulateSolr(waitForCompletion: String ?= "true")
+GET     /api/admin/solr                          app.Api.repopulateSolr(waitForCompletion: String ?= "true")
+GET     /api/admin/solr/asset/:tag               app.Api.reindexAsset(tag: String)
 
 # IP Address API
 GET     /api/address/pools                   app.Api.getAddressPools(all: String ?= "true")

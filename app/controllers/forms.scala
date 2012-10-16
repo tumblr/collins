@@ -4,7 +4,7 @@ import models.{AssetType,State,Status,Truthy}
 import util.views.Formatter.camelCase
 
 import collins.power.PowerAction
-import collins.solr.{CollinsQueryParser, SolrExpression}
+import collins.solr.{AssetDocType, CollinsQueryParser, SolrExpression}
 
 import play.api.data.FormError
 import play.api.data.format._
@@ -86,7 +86,7 @@ package object forms {
     def bind(key: String, data: Map[String, String]) = {
       Formats.stringFormat.bind(key, data).right.flatMap { s =>
         allCatch[SolrExpression]
-          .either((new CollinsQueryParser).parseQuery(s).right.get)
+          .either(CollinsQueryParser(List(AssetDocType)).parseQuery(s).right.get.where)
           .left.map(e => Seq(FormError(key, "query.invalid", Nil)))
       }
     }
