@@ -105,25 +105,40 @@ class SolrPlugin(app: Application) extends Plugin {
   def populate() = Akka.future { 
     _server.map{ server => 
       val indexTime = new Date
+
+      //Assets
       logger.debug("Populating Solr with Assets")
       val assets = Asset.findRaw()
       updateAssets(assets, indexTime)
-      server.deleteByQuery( """SELECT asset WHERE last_indexed < %s""".format(Formatter.solrDateFormat(indexTime)).solr );
+      server.deleteByQuery( """SELECT asset WHERE last_indexed < %s""".format(Formatter.solrDateFormat(indexTime)).solr )
+
+      //logs
+      logger.debug("Populating Asset Logs")
+      val num = assets.map{asset =>
+        val logs = AssetLog.findByAsset(asset)
+        updateAssetLogs(logs, indexTime, false)
+        logs.size
+      }.sum
+      _server.foreach{_.commit()}
+      logger.info("Indexed %d logs".format(num))
+      server.deleteByQuery("""SELECT asset_log WHERE last_indexed < %s""".format(Formatter.solrDateFormat(indexTime)).solr)
     }.getOrElse(logger.warn("attempted to populate solr when no server was initialized"))
   }
 
-  def updateItems[T](items: Seq[T], serializer: SolrSerializer[T], indexTime: Date) {
+  def updateItems[T](items: Seq[T], serializer: SolrSerializer[T], indexTime: Date, commit: Boolean = true) {
     _server.map{server =>
       val docs = items.map{item => Solr.prepForInsertion(serializer.serialize(item, indexTime))}
       if (docs.size > 0) {
         val fuckingJava = new java.util.ArrayList[SolrInputDocument]
         docs.foreach{doc => fuckingJava.add(doc)}
         server.add(fuckingJava)
-        server.commit()
-        if (items.size == 1) {
-          logger.debug(("Re-indexing %s, %s".format(serializer.docType.name, items.head.toString)))
-        } else {
-          logger.info("Indexed %d %ss".format(docs.size, serializer.docType.name))
+        if (commit) {
+          server.commit()
+          if (items.size == 1) {
+            logger.debug(("Re-indexing %s, %s".format(serializer.docType.name, items.head.toString)))
+          } else {
+            logger.info("Indexed %d %ss".format(docs.size, serializer.docType.name))
+          }
         }
       } else {
         logger.warn("No items to index!")
@@ -132,12 +147,12 @@ class SolrPlugin(app: Application) extends Plugin {
 
   }
 
-  def updateAssets(assets: Seq[Asset], indexTime: Date) {
-    updateItems[Asset](assets, assetSerializer, indexTime)
+  def updateAssets(assets: Seq[Asset], indexTime: Date, commit: Boolean = true) {
+    updateItems[Asset](assets, assetSerializer, indexTime, commit)
   }
 
-  def updateAssetLogs(logs: Seq[AssetLog], indexTime: Date) {
-    updateItems[AssetLog](logs, assetLogSerializer, indexTime)
+  def updateAssetLogs(logs: Seq[AssetLog], indexTime: Date, commit: Boolean = true) {
+    updateItems[AssetLog](logs, assetLogSerializer, indexTime,commit)
   }
 
   override def onStop() {
