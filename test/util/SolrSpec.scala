@@ -428,7 +428,7 @@ class SolrQuerySpec extends ApplicationSpecification {
 
     "type checking" in {
 
-      def A(s: SolrExpression) = ("DOC_TYPE" -> "ASSET") AND s
+      def A(s: SolrExpression) = ("DOC_TYPE" -> "ASSET".strictUnquoted) AND s
       "keyvals" in {
         val m = AssetMeta.findOrCreateFromName("foosolr", Integer)
         "foosolr = 3".query.typeCheck must_== Right(A(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3))))

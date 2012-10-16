@@ -63,7 +63,7 @@ case class SolrStringValue(value: String, quoteFormat: StringValueFormat = Unquo
 
   def quoted = copy(quoteFormat = Quoted)
   def unquoted = copy(quoteFormat = Unquoted)
-  def strict = copy(quoteFormat = StrictUnquoted)
+  def strictUnquoted = copy(quoteFormat = StrictUnquoted)
   def lr = copy(quoteFormat = LRWildcard)
   def l = copy(quoteFormat = LWildcard)
   def r = copy(quoteFormat = RWildcard)
