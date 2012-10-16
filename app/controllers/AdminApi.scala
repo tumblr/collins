@@ -1,6 +1,6 @@
 package controllers
 
-import models.Truthy
+import models.{Asset, Truthy}
 
 import util.Stats
 import util.plugins.Cache
@@ -29,5 +29,12 @@ trait AdminApi {
       else Ok("ok(async)")
     }.getOrElse(Results.NotImplemented(ApiResponse.formatJsonError("Solr plugin not enabled!", None)))
   }(Permissions.Admin.ClearCache)
+
+  def reindexAsset(tag: String) = SecureAction { implicit req => 
+    Asset.findByTag(tag).map{asset => 
+      Solr.updateAssets(List(asset))
+      Ok(ApiResponse.formatJsonMessage(Results.Ok, JsString("ok")))
+    }.getOrElse(Results.BadRequest(ApiResponse.formatJsonError("Asset %s not found".format(tag), None)))
+  }
 
 }

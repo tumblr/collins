@@ -30,7 +30,7 @@ class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
       res("IP_ADDRESS").get -> {
         val a = IpAddresses.findAllByAsset(asset, false)
         if (a.size > 0) {
-          val addresses = SolrMultiValue(a.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)}.toSet)
+          val addresses = SolrMultiValue(MultiSet.fromSeq(a.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)}))
           Some(addresses)
         } else {
           None
@@ -65,7 +65,7 @@ class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
         val solrKey = res(head.getName()).get
         val mergedval = build.get(solrKey) match {
           case Some(exist) => exist match {
-            case s: SolrSingleValue => SolrMultiValue(Set(s, newval), newval.valueType)
+            case s: SolrSingleValue => SolrMultiValue(MultiSet(s, newval), newval.valueType)
             case m: SolrMultiValue => m + newval
           }
           case None => newval
@@ -80,11 +80,11 @@ class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
   def postProcess(doc: AssetSolrDocument): AssetSolrDocument = {
     val disks:Option[Tuple2[SolrKey, SolrValue]] = doc.find{case (k,v) => k.name == "DISK_SIZE_BYTES"}.map{case (k,v) => (res("NUM_DISKS").get -> SolrIntValue(v match {
       case s:SolrSingleValue => 1
-      case SolrMultiValue(vals, _) => vals.size
+      case SolrMultiValue(vals, _) => vals.size.toInt
     }))}
     val newFields = List(disks).flatten.toMap
     val almostDone = doc ++ newFields
-    val keyList = SolrMultiValue(almostDone.map{case (k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSet, String)
+    val keyList = SolrMultiValue(MultiSet.fromSeq(almostDone.map{case (k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSeq), String)
 
     val sortKeys = almostDone.map{case(k,v) => k.sortify(v)}.flatten
 

@@ -7,6 +7,35 @@ import models.{Asset, AssetFinder, AssetType, AssetMeta, AssetSearchParameters, 
 import test.ApplicationSpecification
 import util.views.Formatter
 
+
+class MultiSetSpec extends mutable.Specification {
+
+  "MultiSet" should {
+    "add a new element" in {
+      (MultiSet[Int]() + 3).items must_== Map(3 -> 1)
+    }
+    "vararg constructor" in {
+      MultiSet(1,2,2,3).items must_== Map(1 -> 1, 2 -> 2, 3 -> 1)
+    }
+    "add an existing element" in {
+      (MultiSet(1,1,1) + 1).items must_== Map(1 -> 4)
+    }
+    "size" in {
+      MultiSet(1, 2, 2, 3, 4, 5).size must_== 6
+    }
+    "headOption" in {
+      MultiSet().headOption must_== None
+      MultiSet(1,2,3,4).headOption must_== Some(1)
+    }
+    "toSeq" in { 
+      MultiSet(1, 2, 2, 3).toSeq must_== Seq(1,2,2,3)
+    }
+    "equals" in {
+      MultiSet(1,2, 3, 2) must_== MultiSet(1, 2, 2, 3)
+    }
+  }
+}
+
 class SolrSpec extends ApplicationSpecification {
 
   import AssetMeta.ValueType._
@@ -56,12 +85,12 @@ class SolrSpec extends ApplicationSpecification {
         SolrKey("STATE", String, false, false, true) -> SolrStringValue(state.name, StrictUnquoted),
         SolrKey("TYPE", String, false, false, true) -> SolrStringValue(assetType.name, StrictUnquoted),
         SolrKey("CREATED", String, false, false, true) -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted),
-        SolrKey("A", String, true, true, false) -> SolrMultiValue(Set(SolrStringValue("a", StrictUnquoted), SolrStringValue("a1", StrictUnquoted))),
+        SolrKey("A", String, true, true, false) -> SolrMultiValue(MultiSet(SolrStringValue("a", StrictUnquoted), SolrStringValue("a1", StrictUnquoted))),
         SolrKey("B", String, true, true, false) -> SolrStringValue("b", StrictUnquoted),
         SolrKey("INT", Integer, true, true, false) -> SolrIntValue(1135),
         SolrKey("DOUBLE", Double, true, true, false) -> SolrDoubleValue(3.1415),
         SolrKey("BOOL", Boolean, true, true, false) -> SolrBooleanValue(false),
-        SolrKey("IP_ADDRESS", String, false, true, false) -> SolrMultiValue(addresses.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)}.toSet),
+        SolrKey("IP_ADDRESS", String, false, true, false) -> SolrMultiValue(MultiSet.fromSeq(addresses.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)})),
         SolrKey("HOSTNAME", String, false, false, true) -> SolrStringValue("my_hostname", StrictUnquoted),
         SolrKey("IPMI_ADDRESS", String, true, false, true) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
       )
@@ -82,7 +111,7 @@ class SolrSpec extends ApplicationSpecification {
 
       val expected = almostExpected 
         .++(sortKeys)
-        .+((SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(almostExpected.map{case(k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSet, String)))
+        .+((SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(MultiSet.fromSeq(almostExpected.map{case(k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSeq), String)))
       val actual = (new AssetSerializer).serialize(asset, indexTime) 
       val actualSet: Set[(SolrKey, SolrValue)] = actual.toSet
       val expectedSet: Set[(SolrKey, SolrValue)] = expected.toSet
@@ -90,11 +119,11 @@ class SolrSpec extends ApplicationSpecification {
       actualSet must_== expectedSet
     }
     "post-process number of disks" in {
-      val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true, true,false) -> SolrMultiValue(Set(SolrStringValue("123", StrictUnquoted), SolrStringValue("456", StrictUnquoted))))
+      val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true, true,false) -> SolrMultiValue(MultiSet(SolrStringValue("123", StrictUnquoted), SolrStringValue("123", StrictUnquoted))))
       val expected = m + 
         (SolrKey("NUM_DISKS", Integer, true, false, true) -> SolrIntValue(2)) + 
         (SolrKey("NUM_DISKS_SORT", String, false, false, true) -> SolrStringValue("2", StrictUnquoted)) + 
-        (SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(Set(SolrStringValue("DISK_SIZE_BYTES", StrictUnquoted), SolrStringValue("NUM_DISKS", StrictUnquoted))))
+        (SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(MultiSet(SolrStringValue("DISK_SIZE_BYTES", StrictUnquoted), SolrStringValue("NUM_DISKS", StrictUnquoted))))
       val actual = (new AssetSerializer).postProcess(m)
       val actualSet = actual.toSet
       val expectedSet = expected.toSet
