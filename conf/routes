@@ -59,6 +59,7 @@ DELETE  /api/asset/:tag/addresses            app.Api.purgeAddresses(tag: String)
 PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 GET     /api/assets/logs            app.Api.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
+GET     /api/assets/logs/search     app.Api.searchLogs(page: Int ?=0, size: Int ?= 100, sortField: String ?="DATE", sort: String ?= "DESC", query: String ?= "*")
 
 # Asset management API
 POST    /api/asset/:tag/ipmi        app.Api.updateIpmi(tag: String)

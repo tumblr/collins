@@ -1,6 +1,6 @@
 package collins.solr
 
-import models.{Asset, Page, PageParams, SortDirection}
+import models.{Asset, AssetLog, Page, PageParams, SortDirection}
 import models.asset.AssetView
 
 import play.api.Logger
@@ -60,5 +60,11 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
 case class AssetSearchQuery(query: TypedSolrExpression, page: PageParams) extends CollinsSearchQuery[Asset](AssetDocType, query, page) {
 
   def parseDocument(doc: SolrDocument) = Asset.findByTag(doc.getFieldValue("TAG").toString)
+
+}
+
+case class AssetLogSearchQuery(query: TypedSolrExpression, page: PageParams) extends CollinsSearchQuery[AssetLog](AssetLogDocType, query, page) {
+
+  def parseDocument(doc: SolrDocument) = AssetLog.findById(Integer.parseInt(doc.getFieldValue("ID").toString))
 
 }
