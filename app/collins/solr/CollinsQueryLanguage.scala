@@ -18,7 +18,11 @@ import play.api.Logger
  */
 case class CQLQuery(select: SolrDocType, where: SolrExpression) {
   def typeCheck: Either[String,TypedSolrExpression] = where.typeCheck(select).right.map{expr=>
-    new SolrAndOp(Set(expr, SolrKeyVal("DOC_TYPE", SolrStringValue(select.name, StrictUnquoted)))) with TypedSolrExpression
+    val docKeyVal = new SolrKeyVal("DOC_TYPE", SolrStringValue(select.name, StrictUnquoted)) with TypedSolrExpression
+    expr match {
+      case EmptySolrQuery => docKeyVal
+      case _ => new SolrAndOp(Set(expr,docKeyVal )) with TypedSolrExpression
+    }
   }    
 }
 

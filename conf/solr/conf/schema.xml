@@ -265,6 +265,7 @@
    
    <field name="MESSAGE" type="text_en_splitting" indexed="true" stored="false" multiValued = "false"/>
    <field name="MESSAGE_TYPE" type="string" indexed="true" stored="false" multiValued = "false"/>
+   <field name="ASSET_TAG" type="string" indexed="true" stored="false" multiValued="false"/>
 
    <!-- all sort fields use this dynamic field -->
 

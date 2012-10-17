@@ -56,13 +56,15 @@ case class SolrKey (
   val valueType: ValueType,
   val isDynamic: Boolean,
   val isMultiValued: Boolean,
-  val isSortable: Boolean
+  val isSortable: Boolean,
+  val aliases: Set[String] = Set()
 ) {
   require(!(isMultiValued && isSortable), "Cannot create sortable multivalue keys (yet)")
   require(name.toUpperCase == name, "Name must be ALL CAPS")
+  require(aliases.foldLeft(true){(b, al) => b && al == al.toUpperCase}, "Aliases must be ALL CAPS")
 
   lazy val resolvedName = name + (if(isDynamic) ValueType.postFix(valueType) else "")
-  def isAliasOf(alias: String) = false //override for aliases
+  def isAliasOf(alias: String) = aliases(alias.toUpperCase)
 
   def matches(k: String) = (k.toUpperCase == name) || isAliasOf(k)
 
@@ -81,6 +83,7 @@ case class SolrKey (
   }
 
 }
+
 
 /**
  * Mixin for enum keys, allows us to resolve the solr key and then validate

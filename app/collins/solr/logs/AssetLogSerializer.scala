@@ -21,8 +21,11 @@ class AssetLogSerializer extends SolrSerializer[AssetLog](AssetLogDocType) {
   val res = AssetLogDocType.keyResolver
 
   def serialize(log: AssetLog, indexTime: Date): AssetSolrDocument = allDocFields(log.id, indexTime) ++ Map[SolrKey, SolrValue](
+    res("ID").get -> SolrIntValue(log.id.toInt),
     res("MESSAGE").get -> SolrStringValue(log.message, StrictUnquoted),
-    res("MESSAGE_TYPE").get -> SolrStringValue(log.message_type.toString, StrictUnquoted)
+    res("MESSAGE_TYPE").get -> SolrStringValue(log.message_type.toString, StrictUnquoted),
+    res("ASSET_TAG").get -> SolrStringValue(log.getAssetTag()),
+    res("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(log.created))
   )
 
 

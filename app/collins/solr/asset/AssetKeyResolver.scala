@@ -34,10 +34,9 @@ object AssetKeyResolver extends SolrKeyResolver{
     SolrKey(IpmiNetmask.toString, String, Dynamic, SingleValued, Sortable)
   ) ++ Solr.plugin.map{_.assetSerializer.generatedFields}.getOrElse(List())
 
-  val typeKey = new SolrKey("TYPE",String,Static, SingleValued, Sortable) with EnumKey {
+  val typeKey = new SolrKey("TYPE",String,Static, SingleValued, Sortable, Set("ASSETTYPE")) with EnumKey {
     def lookupByName(value: String) = AssetType.findByName(value.toUpperCase).map(_.name)
     def lookupById(value: Int) = AssetType.findById(value).map(_.name)
-    override def isAliasOf(a: String) = a == "ASSETTYPE"
 
   }
 
