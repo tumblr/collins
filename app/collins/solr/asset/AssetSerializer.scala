@@ -1,3 +1,4 @@
+
 package collins.solr
 
 import collins.solr._
@@ -11,6 +12,7 @@ import AssetMeta.ValueType._
 
 import Solr._
 import SolrKeyFlag._
+
 
 /**
  * asset meta values are all converted into strings with the meta name as the
@@ -90,19 +92,5 @@ class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
 
     almostDone ++ sortKeys + (res("KEYS").get -> keyList)
   }
-
-}
-
-class AssetLogSerializer extends SolrSerializer[AssetLog](AssetLogDocType) {
-
-  val generatedFields = Nil
-
-  val res = AssetLogDocType.keyResolver
-
-  def serialize(log: AssetLog, indexTime: Date): AssetSolrDocument = allDocFields(log.id, indexTime) ++ Map[SolrKey, SolrValue](
-    res("MESSAGE").get -> SolrStringValue(log.message, StrictUnquoted),
-    res("MESSAGE_TYPE").get -> SolrStringValue(log.message_type.toString, StrictUnquoted)
-  )
-
 
 }
