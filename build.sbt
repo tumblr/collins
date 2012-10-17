@@ -27,7 +27,7 @@ libraryDependencies ++= Seq(
   "com.twitter" %% "finagle-http" % "1.10.0",
   "org.jsoup" % "jsoup" % "1.6.1",
   "org.squeryl" %% "squeryl" % "0.9.5",
-  "org.yaml" % "snakeyaml" % "1.11-SNAPSHOT" 
+  "org.yaml" % "snakeyaml" % "1.11" 
 )
 
 
