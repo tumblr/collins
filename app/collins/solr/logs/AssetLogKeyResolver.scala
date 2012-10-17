@@ -17,7 +17,7 @@ object AssetLogKeyResolver extends SolrKeyResolver {
     }
 
     def lookupByName(name: String) = try {
-      Some(LogMessageType.withName(name).toString)
+      Some(LogMessageType.withName(name.toUpperCase).toString)
     } catch {
       case _ => None
     }
@@ -28,7 +28,7 @@ object AssetLogKeyResolver extends SolrKeyResolver {
     SolrKey("MESSAGE", String, Static, SingleValued, NotSortable),
     SolrKey("CREATED", String, Static, SingleValued, Sortable, Set("DATE")),
     SolrKey("ASSET_ID", Integer, Static, SingleValued, Sortable),
-    SolrKey("ASSET_TAG", Integer, Static, SingleValued, Sortable), 
+    SolrKey("ASSET_TAG", String, Static, SingleValued, Sortable), 
     messageTypeKey
   )
 
