@@ -175,9 +175,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] =
   Stats.time("Asset.find") {
-    AssetSearchParameters(params, afinder, operation)
-      .toSolrExpression
-      .typeCheck(AssetDocType)
+    CQLQuery(AssetDocType, AssetSearchParameters(params, afinder, operation).toSolrExpression)
+      .typeCheck
       .right
       .flatMap{exp => AssetSearchQuery(exp, page).getPage()}
       .fold(
