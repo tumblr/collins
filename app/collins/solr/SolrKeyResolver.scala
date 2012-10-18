@@ -121,7 +121,7 @@ object SolrKeyResolver {
    * TODO: create config option to specify additional tags (it should be
    * required for these)
    */
-  val noAutoWildcardKeys = List("TAG", "IP_ADDRESS", "IPMI_ADDRESS")
+  val noAutoWildcardKeys = List("TAG", "IP_ADDRESS", "IPMI_ADDRESS", "MESSAGE")
 
   val allDocKeys = List(
     SolrKey("DOC_TYPE", String, Static, SingleValued, Sortable),
