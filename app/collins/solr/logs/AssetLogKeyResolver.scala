@@ -9,7 +9,7 @@ import models.logs.LogMessageType
 
 object AssetLogKeyResolver extends SolrKeyResolver {
 
-  val messageTypeKey = new SolrKey("MESSAGE_TYPE", String, Static, SingleValued, Sortable) with EnumKey {
+  val messageTypeKey = new SolrKey("MESSAGE_TYPE", String, Static, SingleValued, Sortable, Set("SEVERITY")) with EnumKey {
     def lookupById(id: Int) = try {
       Some(LogMessageType(id).toString)
     } catch {
