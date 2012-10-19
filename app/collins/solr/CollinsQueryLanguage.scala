@@ -32,8 +32,8 @@ case class CQLQuery(select: SolrDocType, where: SolrExpression) {
  * itself into a Solr Query
  */
 sealed trait SolrQueryComponent {
-  protected[solr] def _toSolrQueryStirng(): String = _toSolrQueryStirng(true)
-  protected[solr] def _toSolrQueryStirng(toplevel: Boolean): String
+  protected[solr] def _toSolrQueryString(): String = _toSolrQueryString(true)
+  protected[solr] def _toSolrQueryString(toplevel: Boolean): String
 }
 
 /**
@@ -51,11 +51,11 @@ sealed trait SolrValue {
 abstract class SolrSingleValue(val valueType: ValueType) extends SolrValue with SolrQueryComponent
 
 case class SolrIntValue(value: Int) extends SolrSingleValue(Integer) {
-  def _toSolrQueryStirng(toplevel: Boolean) = value.toString
+  def _toSolrQueryString(toplevel: Boolean) = value.toString
 }
 
 case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
-  def _toSolrQueryStirng(toplevel: Boolean) = value.toString
+  def _toSolrQueryString(toplevel: Boolean) = value.toString
 }
 
 
@@ -64,7 +64,7 @@ case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
  * strings, so this class must handle the string parsing into other value types
  */
 case class SolrStringValue(value: String, quoteFormat: StringValueFormat = Unquoted) extends SolrSingleValue(String) {
-  def _toSolrQueryStirng(toplevel: Boolean) = quoteFormat.format(value)
+  def _toSolrQueryString(toplevel: Boolean) = quoteFormat.format(value)
 
   def quoted = copy(quoteFormat = Quoted)
   def unquoted = copy(quoteFormat = Unquoted)
@@ -76,7 +76,7 @@ case class SolrStringValue(value: String, quoteFormat: StringValueFormat = Unquo
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
-  def _toSolrQueryStirng(toplevel: Boolean) = if (value) "true" else "false"
+  def _toSolrQueryString(toplevel: Boolean) = if (value) "true" else "false"
 
 }
 
@@ -124,12 +124,12 @@ sealed trait SolrExpression extends SolrQueryComponent{
  */
 sealed trait TypedSolrExpression extends SolrExpression {
   //only type-checked expressions can be turned into solr queries
-  def toSolrQueryString: String = _toSolrQueryStirng(true)
+  def toSolrQueryString: String = _toSolrQueryString(true)
 }
 
 sealed trait _EmptySolrQuery extends SolrExpression{
   def typeCheck(t: SolrDocType) = Right(TypedEmptySolrQuery)
-  def _toSolrQueryStirng(toplevel: Boolean) = "*:*"
+  def _toSolrQueryString(toplevel: Boolean) = "*:*"
 }
 
 case object EmptySolrQuery extends _EmptySolrQuery
@@ -141,8 +141,8 @@ abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends Sol
 
   def create(exprs: Set[SolrExpression]): TypedSolrExpression
 
-  def _toSolrQueryStirng(toplevel: Boolean) = {
-    val e = exprs.map{_._toSolrQueryStirng(false)}.mkString(" %s ".format(op))
+  def _toSolrQueryString(toplevel: Boolean) = {
+    val e = exprs.map{_._toSolrQueryString(false)}.mkString(" %s ".format(op))
     if (toplevel) e else "(%s)".format(e)
   }
 
@@ -267,13 +267,13 @@ case class SolrNotOp(expr: SolrExpression) extends SolrSimpleExpr {
 
   def typeCheck(t: SolrDocType) = expr.typeCheck(t).right.map{e => new SolrNotOp(e) with TypedSolrExpression}
 
-  def _toSolrQueryStirng(toplevel: Boolean) = "NOT " + expr._toSolrQueryStirng
+  def _toSolrQueryString(toplevel: Boolean) = "NOT " + expr._toSolrQueryString
 
 }
 
 case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExpr {
 
-  def _toSolrQueryStirng(toplevel: Boolean) = key + ":" + value._toSolrQueryStirng(false)
+  def _toSolrQueryString(toplevel: Boolean) = key + ":" + value._toSolrQueryString(false)
 
   def typeCheck(t: SolrDocType) = typeCheckValue(t, key, value).right.map{case (solrKey, cleanValue) => new SolrKeyVal(solrKey, cleanValue) with TypedSolrExpression}
 
@@ -281,9 +281,9 @@ case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExp
 
 case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[SolrSingleValue], inclusive: Boolean) extends SolrSimpleExpr {
 
-  def _toSolrQueryStirng(toplevel: Boolean) = {
-    val l = low.map{_._toSolrQueryStirng}.getOrElse("*")
-    val h = high.map{_._toSolrQueryStirng}.getOrElse("*")
+  def _toSolrQueryString(toplevel: Boolean) = {
+    val l = low.map{_._toSolrQueryString}.getOrElse("*")
+    val h = high.map{_._toSolrQueryString}.getOrElse("*")
     if (inclusive) {
       key + ":[" + l + " TO " + h + "]"
     } else {
