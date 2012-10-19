@@ -120,6 +120,22 @@ module CollinsShell
       end
     end
 
+    desc 'search_logs QUERY', 'search for asset logs'
+    use_collins_options
+    use_page_options(5000)
+    def search_logs query
+      call_collins get_collins_client, "logs" do |client|
+        params = Hash[
+          :query => query,
+          :size => options[:size].to_i,
+          :sort => options[:sort],
+        ]
+        logs = client.search_logs params
+        printer = CollinsShell::LogPrinter.new("all assets", logs)
+        puts printer.render
+      end
+    end
+
     desc 'console', 'drop into the interactive collins shell'
     use_collins_options
     def console

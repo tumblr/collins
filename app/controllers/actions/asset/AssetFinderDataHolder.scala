@@ -5,6 +5,7 @@ package asset
 import forms._
 
 import collins.validation.StringUtil
+import collins.solr.SolrExpression
 import models.{AssetFinder, AssetType, State, Status => AssetStatus, Truthy}
 import util.{AttributeResolver, MessageHelper}
 import util.AttributeResolver.{ResultTuple => ResolvedAttributes}
@@ -31,7 +32,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
 
   val Operations = Set("and","or")
 
-  type DataForm = Tuple12[
+  type DataForm = Tuple13[
     Option[String],           // tag
     Option[List[String]],     // attribute
     Option[String],           // operation
@@ -43,7 +44,8 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     Option[Date],             // updatedAfter
     Option[Date],             // updatedBefore
     Option[Truthy],           // remoteLookup,
-    Option[State]             // state
+    Option[State],            // state
+    Option[SolrExpression]    // query
   ]
 
   def finderForm = Form(tuple(
@@ -66,7 +68,8 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     "updatedAfter" -> optional(date(ISO_8601_FORMAT)),
     "updatedBefore" -> optional(date(ISO_8601_FORMAT)),
     "remoteLookup" -> optional(of[Truthy]),
-    "state" -> optional(of[State])
+    "state" -> optional(of[State]),
+    "query" -> optional(of[SolrExpression])
   ))
 
   def processRequest(req: Request[AnyContent]): Either[RequestDataHolder,AssetFinderDataHolder] = {
@@ -88,10 +91,10 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
 
   protected def fromForm(form: DataForm, data: Map[String,Seq[String]]): AssetFinderDataHolder = {
     val (
-      tag, attributes, operation, astatus, atype, details, cafter, cbefore, uafter, ubefore, remoteLookup, state
+      tag, attributes, operation, astatus, atype, details, cafter, cbefore, uafter, ubefore, remoteLookup, state, query
     ) = form
     val attribs = AttributeResolver(mapAttributes(attributes.filter(_.nonEmpty), AttributeMap.fromMap(data)))
-    val afinder = AssetFinder(tag, astatus, atype, cafter, cbefore, uafter, ubefore, state)
+    val afinder = AssetFinder(tag, astatus, atype, cafter, cbefore, uafter, ubefore, state, query)
     AssetFinderDataHolder(
       afinder,
       attribs,

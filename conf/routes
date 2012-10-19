@@ -37,15 +37,14 @@ GET     /login                      controllers.Application.login
 POST    /login                      controllers.Application.authenticate
 GET     /logout                     controllers.Application.logout
 
-GET   /solrsearch                   app.Resources.searchSolr(query: String, details: String ?= "false", page: Int ?=0, size: Int ?=50, sort: String ?= "ASC")
-
 # API
 
 # Generic Functionality
 GET     /api/timestamp                       app.Api.timestamp
 
 # Admin API
-GET     /api/admin/solr                      app.Api.repopulateSolr(waitForCompletion: String ?= "true")
+GET     /api/admin/solr                          app.Api.repopulateSolr(waitForCompletion: String ?= "true")
+GET     /api/admin/solr/asset/:tag               app.Api.reindexAsset(tag: String)
 
 # IP Address API
 GET     /api/address/pools                   app.Api.getAddressPools(all: String ?= "true")
@@ -60,6 +59,7 @@ DELETE  /api/asset/:tag/addresses            app.Api.purgeAddresses(tag: String)
 PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 GET     /api/assets/logs            app.Api.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
+GET     /api/assets/logs/search     app.Api.searchLogs(page: Int ?=0, size: Int ?= 100, sortField: String ?="CREATED", sort: String ?= "DESC", query: String ?= "*")
 
 # Asset management API
 POST    /api/asset/:tag/ipmi        app.Api.updateIpmi(tag: String)
@@ -75,7 +75,7 @@ PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
 DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
 GET     /api/asset/:tag             app.Api.getAsset(tag: String, location: Option[String])
-GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", sortField: String ?= "TAG", query: String ?= "", details: String ?= "true")
+GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", sortField: String ?= "TAG", details: String ?= "true")
 GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
 
 # State Management API

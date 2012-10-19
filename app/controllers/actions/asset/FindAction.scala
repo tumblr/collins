@@ -17,14 +17,13 @@ import play.api.mvc.Result
 import java.util.concurrent.TimeoutException
 
 object FindAction {
-  def apply(pageParams: PageParams, sortField: String, spec: SecuritySpecification, handler: SecureController) = {
-    new FindAction(pageParams, sortField, spec, handler)
+  def apply(pageParams: PageParams, spec: SecuritySpecification, handler: SecureController) = {
+    new FindAction(pageParams, spec, handler)
   }
 }
 
 class FindAction(
   pageParams: PageParams,
-  sortField: String,
   spec: SecuritySpecification,
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction with AssetResultsAction {
@@ -48,7 +47,7 @@ class FindAction(
           Asset.findMulti(pageParams, ra, af, op, de.map(_.isTruthy).getOrElse(false) || isHtml)
         } else {
           logger.debug("Performing local asset find")
-          Asset.find(pageParams, ra, af, op, sortField)
+          Asset.find(pageParams, ra, af, op)
         }
         handleSuccess(results, afdh.details.map(_.isTruthy).getOrElse(false)) 
       } catch {

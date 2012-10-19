@@ -58,7 +58,7 @@ case class AssetSearchParameters(
     val p = params._1.map{case (enum, value) => SolrKeyVal(enum.toString, StringValueFormat.createValueFor(value))} ++ 
       params._2.map{case (assetMeta,value) => SolrKeyVal(assetMeta.name, StringValueFormat.createValueFor(value))} ++ 
       params._3.map{i => SolrKeyVal("ip_address", StringValueFormat.createValueFor(i))}
-    val allkeyvals = p ++ afinder.toSolrKeyVals
+    val allkeyvals = (p ++ afinder.toSolrKeyVals).toSet
     if (allkeyvals.size > 0) {
       operation.map{_.toUpperCase} match {
         case Some("OR") => SolrOrOp(allkeyvals)
@@ -175,6 +175,7 @@ class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchPar
 
   val PAGE_SIZE = 50
   val SORT = "ASC"
+  val SORT_FIELD = "TAG"
 
   val cachedAssets = new collection.mutable.Queue[AssetView]
   var nextRetrievedPage: Option[Int] = None
@@ -188,7 +189,7 @@ class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchPar
   private[this] def retrieveHead: Option[AssetView] = cachedAssets.headOption match {
     case None if (!eof) => {
       val page = nextRetrievedPage.getOrElse(0)
-      val pageParams = PageParams(page, PAGE_SIZE, SORT)
+      val pageParams = PageParams(page, PAGE_SIZE, SORT, SORT_FIELD)
       val results = client.getRemoteAssets(params, pageParams)
       if (results.size > 0) {
         cachedAssets ++= results
