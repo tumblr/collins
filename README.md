@@ -16,7 +16,8 @@ http://www.youtube.com/watch?v=rEyoS-iofK8
 
  1. Download play from here: http://download.playframework.org/releases/play-2.0.3.zip
  2. Unpack the zip into `$HOME/src/play-2.0.3`
- 3. In this directory type `~/src/play-2.0.3/play` and hit enter (this will take a minute the first time)
+ 3. cd ~/src/ && git clone git@github.com:tumblr/collins.git
+ 4. In the collins source directory type `~/src/play-2.0.3/play` and hit enter (this will take a minute the first time)
  4. Once you are in the play console, type `compile` and hit enter, you should see no errors. We're just testing your environment, you normally won't do this.
  5. Break out of the play console (`ctrl-d` or `quit`)
  6. Run `./scripts/package.sh`. This will create a fat zip with all the requirements and dependencies.
