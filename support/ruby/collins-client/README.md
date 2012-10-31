@@ -14,7 +14,7 @@ First install rvm
 
 Install the collins gem and use it
 
-    $ gem install --source=http://repo.tumblr.net:9929/ collins_client
+    $ gem install collins_client
 
 Remember, if you don't have 1.9.3 set as the default, before you use collins you'll need to do `rvm use 1.9.3`.
 

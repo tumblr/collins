@@ -6,7 +6,7 @@ the `collins_shell` application provides CLI API access to collins.
 
 ## Installation
 
-    > gem install collins_shell --source=http://repo.tumblr.net:9929
+    > gem install collins_shell
 
 ## Setup
 
