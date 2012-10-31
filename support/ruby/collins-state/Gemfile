@@ -1,8 +1,7 @@
 source :rubygems
-source "http://repo.tumblr.net:9929/"
 
 Encoding.default_external = Encoding::UTF_8
-gem 'collins_client', '~> 0.2.5'
+gem 'collins_client', '~> 0.2.7'
 gem 'escape',         '~> 0.0.4'
 
 group :development do

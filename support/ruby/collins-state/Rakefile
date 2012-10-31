@@ -14,7 +14,7 @@ require 'rake'
 require 'jeweler'
 jeweler = Jeweler::Tasks.new do |gem|
   gem.name = "collins_state"
-  gem.homepage = "http://github.com/tumblr/platform/tree/master/collins/clients/apps/collins_state"
+  gem.homepage = "https://github.com/tumblr/collins/tree/master/support/ruby/collins-state"
   gem.license = "APL 2.0"
   gem.summary = %Q{Collins based state management}
   gem.description = %Q{Provides basic framework for managing stateful processes with collins}
@@ -24,7 +24,7 @@ jeweler = Jeweler::Tasks.new do |gem|
   gem.files.exclude '.gitignore'
   gem.files.exclude '.rspec'
   gem.files.exclude '.rvmrc'
-  gem.add_runtime_dependency 'collins_client',  '~> 0.2.5'
+  gem.add_runtime_dependency 'collins_client',  '~> 0.2.7'
   gem.add_runtime_dependency 'escape',          '~> 0.0.4'
 end
 
