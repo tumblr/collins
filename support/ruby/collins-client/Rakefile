@@ -15,7 +15,7 @@ require 'yard'
 
 jeweler = Jeweler::Tasks.new do |gem|
   gem.name = 'collins_client'
-  gem.homepage = 'https://github.com/tumblr/platform/tree/master/collins/clients/ruby/collins-client'
+  gem.homepage = 'https://github.com/tumblr/collins/tree/master/support/ruby/collins-client'
   gem.license = 'APL 2.0'
   gem.summary = %Q{Client library for Collins API}
   gem.description = "Provides ruby support for interacting with the Collins API"
