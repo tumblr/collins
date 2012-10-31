@@ -32,16 +32,22 @@ class LdapAuthenticationProvider() extends AuthenticationProvider {
     Context.PROVIDER_URL -> url,
     Context.SECURITY_AUTHENTICATION -> "simple")
 
+  // returns uid=USERNAME,ou=people
   protected def getPrincipal(username: String): String = {
     "uid=%s,%s".format(username, usersub)
   }
 
+  // returns uid=USERNAME,ou=people,dc=example,dc=org
   protected def getSecurityPrincipal(username: String): String = {
     "%s,%s".format(getPrincipal(username), searchbase)
   }
 
+  // returns (&cn=*)(uniqueMember=uid=USERNAME,ou=people,dc=example,dc=org)
   protected def groupQuery(username: String): String = {
-    "(&(cn=*)(%s=%s))".format(groupattrib, getSecurityPrincipal(username))
+    if (config.isRfc2307Bis)
+      "(&(cn=*)(%s=%s))".format(groupattrib, getSecurityPrincipal(username))
+    else
+      "(&(cn=*)(%s=%s))".format(groupattrib, username)
   }
 
   logger.debug("LDAP URL: %s".format(url))
