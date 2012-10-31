@@ -158,10 +158,16 @@ permalink: index.html
         <p class="lead">
           Up and running in 5 minutes.
         </p>
+
+        <h3>Software Requirements</h3>
         <p>
-          Collins has 1 software requirement, Java (with the <a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">unlimited strength JCE</a>).
+          Collins has 1 software requirement, Java 1.6 (with the <a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">unlimited strength JCE</a>).
+          Collins is developed using Java 1.6 and in the tests I did with Java 1.7 on OS X collins performed poorly. Typing <code>java -version</code>
+          should display something like <code class="inlinecode">java version &quot;1.6.0_35&quot;</code><br>
           If you would like your data to persist between restarts, you should also have MySQL 5.5 (5.1 may work but is untested).
         </p>
+
+        <h3>Software Setup</h3>
         <ol>
           <li>Download the <a href="http://download.playframework.org/releases/play-2.0.3.zip">Play Framework</a></li>
           <li>Unpack the zip into <code>$HOME/src/play-2.0.3</code></li>
@@ -171,11 +177,18 @@ permalink: index.html
           <li>Type <code>run</code> and then visit <code>http://localhost:9000</code> in your browser. To run with a different configuration file (the default is <code>conf/application.conf</code>), instead of typing run type <code>run -Dconfig.file=/path/to/alt.conf</code>. Login with username <code>blake</code> and password <code>admin:first</code>.</li>
         </ol>
         <p>
-          There is a supplied population script at <code>scripts/populate.sh</code> which will create 10 assets in collins for you to play around with.<br>
-          There is a supplied package script at <code>scripts/package.sh</code> which will produce a fat zip with all the requirements and dependencies.<br>
-          There is a supplied init script at <code>scripts/collins.sh</code>. This is a useful starting point for running the app. Note that the supplied
-          init script requires <a href="http://libslack.org/daemon/">daemon</a>.
+          There is a quickstart screencast up <a target="_blank" href="http://www.youtube.com/watch?v=rEyoS-iofK8">here</a>. This has changed slightly since
+          it was published, but essentially just walks you through the above an additionally installs and sets up the collins-shell.
         </p>
+
+        <h3>Support Scripts</h3>
+        <p>
+          There is a supplied population script at <code>scripts/populate.sh</code> which will create 10 assets in your local collins instance for you to play around with.<br>
+          There is a supplied package script at <code>scripts/package.sh</code> which will produce a fat zip with all the requirements and dependencies. This is what we deploy to production at Tumblr.<br>
+          There is a supplied init script at <code>scripts/collins.sh</code>. This is a useful starting point for running the app and is what we use to run the app in production at Tumblr. This script is also bundled by the <code>scripts/package.sh</code> script. Note that the supplied init script requires <a href="http://libslack.org/daemon/">daemon</a>.
+        </p>
+
+        <h3>Authentication</h3>
         <p>
           By default the authentication is provided via the
           <a href="https://github.com/tumblr/collins/blob/master/app/util/security/MockAuthenticationProvider.scala">MockAuthenticationProvider</a>
