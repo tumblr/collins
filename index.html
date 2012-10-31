@@ -24,22 +24,12 @@ permalink: index.html
         <li><a href="#design"><i class="icon-chevron-right"></i> Design</a></li>
         <li><a href="#motivations"><i class="icon-chevron-right"></i> Motivations</a></li>
         <li><a href="#quickstart"><i class="icon-chevron-right"></i> Quickstart</a></li>
+        <li><a href="#links"><i class="icon-chevron-right"></i> Links</a></li>
         <li><a href="#thanks"><i class="icon-chevron-right"></i> Thanks</a></li>
       </ul>
     </div>
 
     <div class="span9">
-      <section id="about">
-        <div class="page-header">
-          <h1>Note</h1>
-        </div>
-        <p>
-          Collins is currently in private beta and will be open sourced at the end of October. Right now we're just
-          trying to gauge interest in the project and sign up a couple more beta testers. If you're interested email
-          <a href="mailto:bmatheny+collins@tumblr.com">bmatheny -at- tumblr.com</a>.
-        </p>
-      </section>
-
       <section id="about">
         <div class="page-header">
           <h1>About</h1>
@@ -50,7 +40,8 @@ permalink: index.html
         <p>
           Someone recently asked me to describe collins in a sentence. At Tumblr, it's the infrastructure
           source of truth and knowledge. Everything about Tumblr production environments is stored and
-          encoded in Collins, and that data is used to drive all of our automation.
+          encoded in Collins, and that data is used to drive all of our automation. Sometimes people refer
+          to systems like this as a CMDB, or Configuration Management DataBase.
         </p>
 	      <p>
 	        Collins started as a system to manage all of the physical servers, switches,
@@ -171,21 +162,131 @@ permalink: index.html
           Collins has 1 software requirement, Java (with the <a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">unlimited strength JCE</a>).
           If you would like your data to persist between restarts, you should also have MySQL 5.5 (5.1 may work but is untested).
         </p>
-        <p>
-          Collins is currently in beta, once released it will also be available as a downloadable zip.
-        </p>
         <ol>
           <li>Download the <a href="http://download.playframework.org/releases/play-2.0.3.zip">Play Framework</a></li>
           <li>Unpack the zip into <code>$HOME/src/play-2.0.3</code></li>
-          <li>Check out the collins code from <a href="https://github.com/tumblr/collins">here</a> into <code>~/src/collins</code></li>
+          <li><code>cd ~/src/ &amp; &amp; git clone git@github.com:tumblr/collins.git</code></li>
           <li>In <code>~/src/collins</code> type <code>~/src/play-2.0.3/play</code> and hit enter (this will take a minute the first time)</li>
-          <li>Once you are in the console type <code>compile</code> and hit enter, you should see no errors. We're just testing your environment, you normally won't do this. Now break out of the play console (<code>ctrl-d</code> or <code>quit</code>)</li>
-          <li>Run <code>./scripts/package.sh</code>. This will create a fat zip with all the requirements and dependencies</li>
+          <li>Once you are in the console type <code>compile</code> and hit enter, you should see no errors. We're just testing your environment, you normally won't do this.</li>
+          <li>Type <code>run</code> and then visit <code>http://localhost:9000</code> in your browser. To run with a different configuration file (the default is <code>conf/application.conf</code>), instead of typing run type <code>run -Dconfig.file=/path/to/alt.conf</code>. Login with username <code>blake</code> and password <code>admin:first</code>.</li>
         </ol>
         <p>
+          There is a supplied population script at <code>scripts/populate.sh</code> which will create 10 assets in collins for you to play around with.<br>
+          There is a supplied package script at <code>scripts/package.sh</code> which will produce a fat zip with all the requirements and dependencies.<br>
           There is a supplied init script at <code>scripts/collins.sh</code>. This is a useful starting point for running the app. Note that the supplied
           init script requires <a href="http://libslack.org/daemon/">daemon</a>.
         </p>
+        <p>
+          By default the authentication is provided via the
+          <a href="https://github.com/tumblr/collins/blob/master/app/util/security/MockAuthenticationProvider.scala">MockAuthenticationProvider</a>
+          (set in <code>conf/application.conf</code> as <code>authentication.type=default</code>). Usernames/passwords for this provider are below.
+        </p>
+        <p>
+          You can change the auth provider by setting <code>authentication.type</code> to <code>file</code> or <code>ldap</code> in
+          <code>conf/application.conf</code>. If you set <code>authentication.type</code> to <code>file</code>, the default file used
+          is <code>conf/users.conf</code> (which can be changed by setting <code>authentication.file.userfile=/path/to/users.conf</code>).
+          The usernames/passwords/groups in the default <code>users.conf</code> file are below.
+        </p>
+<div class="accordion" id="credentials">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#credentials" href="#credentials-default">Default Devel Credentials</a>
+    </div>
+    <div id="credentials-default" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <table class="table table-condensed table-hover">
+          <thead>
+            <tr>
+              <th>Username</th><th>Password</th><th>Groups</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>blake</td>
+              <td>admin:first</td>
+              <td>engineering,infra,ops</td>
+            </tr>
+            <tr>
+              <td>matt</td>
+              <td>foobar</td>
+              <td>engineering,management</td>
+            </tr>
+            <tr>
+              <td>test</td>
+              <td>fizz</td>
+              <td>none</td>
+            </tr>
+            <tr>
+              <td>joeengineer</td>
+              <td>flah</td>
+              <td>engineering</td>
+            </tr>
+          </tbody>
+        </table>
+      </div> <!-- accordion inner -->
+    </div> <!-- accordion-body -->
+  </div> <!-- accordion-group -->
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#credentials" href="#credentials-file">Default File Credentials</a>
+    </div>
+    <div id="credentials-file" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <table class="table table-condensed table-hover">
+          <thead>
+            <tr>
+              <th>Username</th><th>Password</th><th>Groups</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>blake</td>
+              <td>8vCeb3h8F863</td>
+              <td>engineering,infra,ops</td>
+            </tr>
+            <tr>
+              <td>matt</td>
+              <td>0592607689Cr</td>
+              <td>engineering,management</td>
+            </tr>
+            <tr>
+              <td>test</td>
+              <td>h2624A7WJA3y</td>
+              <td>none</td>
+            </tr>
+            <tr>
+              <td>joeengineer</td>
+              <td>4ZRl5311al77</td>
+              <td>engineering</td>
+            </tr>
+          </tbody>
+        </table>
+      </div> <!-- accordion inner -->
+    </div> <!-- accordion-body -->
+  </div> <!-- accordion-group -->
+</div> <!-- accordion -->
+        <p>
+          The script used to generate the file based passwords is available at <code>scripts/gen_passwords.sh</code>
+        </p>
+        <p>
+          There is more complete authentication configuration documentation available <a href="configuration.html#auth">here</a>
+        </p>
+      </section>
+
+      <section id="links">
+        <div class="page-header">
+          <h1>Links</h1>
+        </div>
+        <p class="lead">
+          Quick links to useful resources
+        </p>
+        <ul>
+          <li><a target="_blank" href="https://github.com/tumblr/collins/issues?state=open">Submit issues</a></li>
+          <li><a target="_blank" href="https://groups.google.com/forum/#!forum/collins-sm">Find help</a></li>
+          <li><a target="_blank" href="https://github.com/tumblr/collins">Code</a></li>
+          <li><a target="_blank" href="https://github.com/tumblr/collins/downloads">Downloads</a></li>
+          <li><a target="_blank" href="https://tumblr.github.com/collins">Docs</a></li>
+	      </ul>
       </section>
 
       <section id="thanks">

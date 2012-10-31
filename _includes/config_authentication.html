@@ -130,6 +130,16 @@ at least RFC 2307, IPA, and the OS X admin server.
       <td>An LDAP schema attribute to use for retrieving group information</td>
     </tr>
     <tr>
+      <td class="inlinecode">schema</td>
+      <td>Enum</td>
+      <td>
+        One of rfc2307 or rfc2307bis. Defaults to rfc2307bis. This
+        configuration dictates how group queries are performed. rfc2307 will
+        query as $groupAttribute=username (e.g. memberUid=fizzbuzz), rfc2307bis
+        will query as $groupAttribute=DN (e.g.  uniqueMember=uid=fizzbuzz,ou=people,dc=example,dc=org).
+      </td>
+    </tr>
+    <tr>
       <td class="inlinecode">searchbase</td>
       <td>String</td>
       <td>The LDAP search base to use</td>

@@ -2,7 +2,7 @@ $(document).ready(function() {
 
   var $window = $(window)
 
-  $('.sidenav').affix({
+  $('.sidenav:not(.huge-nav)').affix({
     offset: {
       top: function() { return $window.width() <= 980 ? 290 : 210 },
       bottom: 270
