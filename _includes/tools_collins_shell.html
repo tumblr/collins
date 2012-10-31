@@ -7,6 +7,19 @@ console, built around <a href="https://github.com/pry/pry">pry</a> giving you a 
 for task automation.
 </p>
 
+<h2>Installation</h2>
+<p>
+Note that rvm is not a requirement for using the collins shell. Ruby 1.9.x is however. I recommend
+using ruby 1.9.3 because that's what we develop with at Tumblr. 1.9.2 probably also works, 1.8.x will not work.
+There is additional information on installing rvm <a target="_blank" href="https://rvm.io/rvm/install/">here</a>.
+</p>
+<pre>
+$ curl -L get.rvm.io | bash -s stable --ruby
+$ rvm install 1.9.3
+$ rvm use 1.9.3
+$ gem install collins_shell
+</pre>
+
 <h2>Setup</h2>
 <p>
 By default <code>collins-shell</code> looks for a configuration file in <code>~/.collins.yaml</code>. You can
