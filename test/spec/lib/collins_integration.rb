@@ -137,7 +137,7 @@ class CollinsIntegration
           exit(1)
         end
       end
-      system "cd #{d}; gunzip -c #{dump_zip} > #{full_dump_file}"
+      system "cd #{d}; gunzip -c #{dump_zip} > #{full_dump_path}"
 
       if ! File.exists? dump_file
         Output.error "Error inflating dump file #{dump_zip}"
