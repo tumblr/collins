@@ -32,7 +32,7 @@ cp staged/* collins/lib
 
 cp ../scripts/collins.sh collins/scripts/collins.sh
 cp ../conf/logger.xml $CONF_DIR
-cp ../conf/production*.conf $CONF_DIR
+cp ../conf/production_starter.conf $CONF_DIR/production.conf
 cp ../conf/permissions.yaml $CONF_DIR
 cp ../conf/validations.conf $CONF_DIR
 
