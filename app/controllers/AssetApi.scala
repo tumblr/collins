@@ -1,6 +1,6 @@
 package controllers
 
-import actions.asset.{CreateAction, DeleteAction, DeleteAttributeAction, FindAction, FindSimilarAction, GetAction, SolrFindAction}
+import actions.asset.{CreateAction, DeleteAction, DeleteAttributeAction, FindAction, FindSimilarAction, GetAction}
 import actions.asset.{UpdateAction, UpdateForMaintenanceAction, UpdateRequestRouter, UpdateStatusAction}
 import actions.asset.UpdateRequestRouter.Matcher._
 
@@ -26,11 +26,8 @@ trait AssetApi {
   )
 
   // GET /api/assets?params
-  def getAssets(page: Int, size: Int, sort: String, sortField: String, query: String, details: String) = if (query == "") {
-    FindAction(PageParams(page, size, sort), sortField, Permissions.AssetApi.GetAssets, this)
-  } else {
-    SolrFindAction(PageParams(page, size, sort), query, (new Truthy(details)).isTruthy, sortField, Permissions.AssetApi.GetAssets, this)
-  }
+  def getAssets(page: Int, size: Int, sort: String, sortField: String, details: String) =
+    FindAction(PageParams(page, size, sort, sortField), Permissions.AssetApi.GetAssets, this)
 
   // PUT /api/asset/:tag
   def createAsset(tag: String) = CreateAction(Some(tag), None, Permissions.AssetApi.CreateAsset, this)
@@ -61,6 +58,6 @@ trait AssetApi {
 
   //GET /api/asset/:tag/similar
   def similar(tag: String, page: Int, size: Int, sort: String) = 
-    FindSimilarAction(tag, PageParams(page, size, sort), Permissions.AssetApi.GetAssets, this)
+    FindSimilarAction(tag, PageParams(page, size, sort, "sparse"), Permissions.AssetApi.GetAssets, this)
 
 }

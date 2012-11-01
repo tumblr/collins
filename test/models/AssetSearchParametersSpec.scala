@@ -10,7 +10,6 @@ import play.api.libs.json._
 class AssetSearchParametersSpec extends mutable.Specification {
 
   val EMPTY_RESULT_TUPLE = (Nil, Nil, Nil)
-  val EMPTY_FINDER = AssetFinder(None, None, None, None, None, None, None, None)
 
 
   class QuerySeq(items: Seq[(String, String)]) {
@@ -51,21 +50,21 @@ class AssetSearchParametersSpec extends mutable.Specification {
     "generate correct query string sequence" in {
 
       "asks for details" in {
-        AssetSearchParameters(EMPTY_RESULT_TUPLE, EMPTY_FINDER, None, true).toSeq.findOne("details") must_== Some("true")
+        AssetSearchParameters(EMPTY_RESULT_TUPLE, AssetFinder.empty, None, true).toSeq.findOne("details") must_== Some("true")
       }
       
       "include operation with empty params" in {
-        AssetSearchParameters(EMPTY_RESULT_TUPLE, EMPTY_FINDER, Some("and")).toSeq.findOne("operation") must_== Some("and")
+        AssetSearchParameters(EMPTY_RESULT_TUPLE, AssetFinder.empty, Some("and")).toSeq.findOne("operation") must_== Some("and")
       }
       
       "include operation with non-empty parms" in {
-        AssetSearchParameters(EMPTY_RESULT_TUPLE, EMPTY_FINDER.copy(tag = Some("foo")), Some("and")).toSeq.findOne("operation") must_== Some("and")
+        AssetSearchParameters(EMPTY_RESULT_TUPLE, AssetFinder.empty.copy(tag = Some("foo")), Some("and")).toSeq.findOne("operation") must_== Some("and")
       }
       
       "IPMI info" in {
         AssetSearchParameters(
           EMPTY_RESULT_TUPLE.copy(_1 = List((IpmiInfo.Enum.IpmiAddress, "1.2.3.4"))),
-          EMPTY_FINDER, 
+          AssetFinder.empty, 
           None
         ).toSeq.findOne(IpmiInfo.Enum.IpmiAddress.toString) must_== Some("1.2.3.4")
       }
@@ -73,7 +72,7 @@ class AssetSearchParametersSpec extends mutable.Specification {
       "single attribute" in {
         AssetSearchParameters(
           EMPTY_RESULT_TUPLE.copy(_2 = List((AssetMeta("CPU_COUNT", -1, "","", 0L), 2.toString))),
-          EMPTY_FINDER,
+          AssetFinder.empty,
           None
         ).toSeq.findOne("attribute") must_== Some("CPU_COUNT;2")
       }
@@ -85,7 +84,7 @@ class AssetSearchParametersSpec extends mutable.Specification {
         )
         AssetSearchParameters(
           EMPTY_RESULT_TUPLE.copy(_2 = metas),
-          EMPTY_FINDER,
+          AssetFinder.empty,
           None
         ).toSeq.findByKey("attribute") must_== List("CPU_COUNT;2", "FOO;BAR")
       }
@@ -93,7 +92,7 @@ class AssetSearchParametersSpec extends mutable.Specification {
       "ip address" in {
         AssetSearchParameters(
           EMPTY_RESULT_TUPLE.copy(_3 = List("1.3.5.7")),
-          EMPTY_FINDER,
+          AssetFinder.empty,
           None
         ).toSeq.findOne("attribute") must_== Some("ip_address;1.3.5.7")
       }
@@ -103,7 +102,7 @@ class AssetSearchParametersSpec extends mutable.Specification {
     "properly url-encode values" in {
       AssetSearchParameters(
         EMPTY_RESULT_TUPLE.copy(_2 = List((AssetMeta("TEST", -1, "","", 0L), "foo;|bar"))),
-        EMPTY_FINDER,
+        AssetFinder.empty,
         None
       ).toSeq.findOne("attribute") must_== Some("TEST;foo%3B%7Cbar")
     }

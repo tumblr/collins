@@ -25,7 +25,7 @@ module Collins
       # are attributes of the asset (such as hostname), and which are nort (such as sort or page).
       # @return [Array,<String>] Non-date related query parameters that are 'reserved'
       GENERAL_PARAMS = [
-        "details", "tag", "type", "status", "page", "size", "sort", "state", "operation", "remoteLookup"
+        "details", "tag", "type", "status", "page", "size", "sort", "state", "operation", "remoteLookup", "query"
       ]
       # @return [Array<String>] DATE_PARAMS plus GENERAL_PARAMS
       ALL_PARAMS = DATE_PARAMS + GENERAL_PARAMS
