@@ -1,4 +1,4 @@
-#! /usr/bin/env sh
+#!/usr/bin/env bash
 
 if [ -z "$1" ]; then
   DEBUG=0
@@ -31,6 +31,7 @@ done
 cp staged/* collins/lib
 
 cp ../scripts/collins.sh collins/scripts/collins.sh
+cp ../scripts/setup collins/scripts/setup
 cp ../conf/logger.xml $CONF_DIR
 cp ../conf/production_starter.conf $CONF_DIR/production.conf
 cp ../conf/permissions.yaml $CONF_DIR
