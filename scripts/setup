@@ -3,15 +3,23 @@
 require 'tempfile'
 require 'fcntl'
 
+# This is a little helper script for setting up collins. It should not be run after collins
+# has been configured
+
+# Get a line from stdin, strip the newline, return the string
 def get_line
   $stdin.gets.strip
 end
+
+# Confirm that an input line is an affirmative confirmation. If not print the msg and exit with ec
 def confirm_yes msg, ec
   if get_line.downcase.index('y') != 0 then
     puts msg
     exit ec.to_i
   end
 end
+
+# Print text with leading and optional trailing extra newlines
 def print_block str, trailing = false
   puts ""
   puts str
@@ -24,12 +32,16 @@ trap('SIGINT') {
 }
 
 class Application
+
+  # Basic app defaults that need to be configured
   DEFAULTS = {
     :APP_HOME => [File.expand_path("..",File.dirname(__FILE__)), "The directory where the app will be installed"],
     :DAEMON => ["/usr/local/bin/daemon", "The absolute path to the daemon binary"],
     :LISTEN_PORT => [8080, "The port to listen on"],
     :COLLINS_USER => ["nobody", "The user for collins to run is. This user must already exist"]
   }
+
+  # Merge the defaults with user specified values
   def collect_configs
     DEFAULTS.inject({}) do |res, (key, array)|
       value = array[0]
@@ -51,6 +63,7 @@ class Application
       res
     end
   end
+
   def tmpfile
     @tmpfile ||= get_tmpfile
   end
@@ -60,12 +73,11 @@ class Application
   # Cleanup after tmpfile if exit code was non-zero
   def shutdown
     if @tmpfile.nil? then
-      print_block "Exiting and no cleanup needed"
       return
     end
     exit_code = $!.respond_to?(:status) ? $!.status : 1
     if exit_code != 0 then
-      print_block "Deleting tempfile after aborted or failed attempt"
+      print_block "Deleting tempfile #{tmpfilename} after aborted or failed attempt"
       tmpfile.close
       File.unlink(tmpfilename)
     end
@@ -86,13 +98,11 @@ at_exit {
 print_block %{
 This script will setup collins for a production like environment
 for use with a MySQL database. You will be asked a few questions
-which will be used for the setup. We'll walk you through
-everything being done. When we're done you will move a config file
-into /etc/sysconfig/collins.
+which will be used for the setup. We'll walk you through every step.
 }.strip, true
 
 print "Are you ready to proceed? "
-confirm_yes "No worries, it's a big step", 1
+confirm_yes "Exiting", 1
 
 print_block %{
 You will be presented with the basic required setup options. To accept
@@ -115,18 +125,17 @@ configs.each do |k,v|
   application.tmpfile.syswrite "#{k}=#{v}\n"
 end
 
-print_block %{
-You now have a config file in #{application.tmpfilename}
-}.strip
-
 collins_user = configs[:COLLINS_USER]
 app_home = configs[:APP_HOME]
+collins_port = configs[:LISTEN_PORT]
 
 print_block %{
 Execute the following commands to finish configuration.
 # mv #{application.tmpfilename} /etc/sysconfig/collins
 # for dir in /var/log/collins /var/run/collins; do sudo mkdir $dir; sudo chown #{collins_user} $dir; done
 # sudo -u #{collins_user} #{app_home}/scripts/collins.sh initdb collins_db_username collins_db_password
+# sudo #{app_home}/scripts/collins.sh start
+# curl --basic -u blake:admin:first http://localhost:#{collins_port}/admin/solr
 
 Note that if you modify collins_db_username or collins_db_password that should also be reflected in
 conf/production.conf
