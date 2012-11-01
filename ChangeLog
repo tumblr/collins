@@ -1,9 +1,9 @@
 1.2.1		2012/11/01
 
-	* Config: Fixed default ipmi configuration. Thanks Chris Graf
 	* Build: Created install tool (scripts/install) for initial setup
+	* Docs: Added ChangeLog
+	* Config: Fixed default ipmi configuration. Thanks Chris Graf
 
 1.2.0		2012/10/31
 
 	* initial release
-
