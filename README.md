@@ -15,6 +15,10 @@ http://www.youtube.com/watch?v=rEyoS-iofK8
 
 http://tumblr.github.com/collins/#quickstart
 
+## Collins for Production
+
+http://tumblr.github.com/collins/#quickstart-prod
+
 ## License
 
 Copyright 2012 Tumblr, Inc.
