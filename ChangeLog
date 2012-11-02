@@ -1,0 +1,12 @@
+1.2.1		2012/11/01
+
+	* Build: Created install tool (scripts/setup) for initial setup
+	* Build: Made package.sh script a bit more correct
+	* Build: Starter config for use when packaging a release
+	* Deps: Remove snakeyaml-SNAPSHOT, code was integrated upstream
+	* Docs: Added ChangeLog
+	* Config: Fixed default ipmi configuration. Thanks Chris Graf
+
+1.2.0		2012/10/31
+
+	* initial release
