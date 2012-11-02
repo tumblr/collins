@@ -133,12 +133,14 @@ print_block %{
 Execute the following commands to finish configuration.
 # mv #{application.tmpfilename} /etc/sysconfig/collins
 # for dir in /var/log/collins /var/run/collins; do sudo mkdir $dir; sudo chown #{collins_user} $dir; done
-# sudo -u #{collins_user} #{app_home}/scripts/collins.sh initdb collins_db_username collins_db_password
+# sudo -u #{collins_user} #{app_home}/scripts/collins.sh initdb collins_db_uname collins_db_password
+# sudo chown -R #{collins_user} #{app_home}
 # sudo #{app_home}/scripts/collins.sh start
-# curl --basic -u blake:admin:first http://localhost:#{collins_port}/admin/solr
+# curl --basic -u blake:admin:first http://localhost:#{collins_port}/api/admin/solr
 
-Note that if you modify collins_db_username or collins_db_password that should also be reflected in
-conf/production.conf
+Note that if you modify collins_db_uname or collins_db_password that should also be reflected in
+conf/production.conf. After running the above steps you should be able to interact with collins
+via the collins-shell as well as in your browser.
 }.strip
 
 exit 0
