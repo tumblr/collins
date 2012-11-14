@@ -21,7 +21,7 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
   def getResults(): Either[String, (Seq[T], Long)] = Solr.server.map{server =>
     val q = new SolrQuery
     val queryString = query.toSolrQueryString
-    docType.keyResolver.either(page.sortField).right.flatMap{k => if (k.isSortable) Right(k.sortKey) else Left("Cannot sort on " + k.name)}.right.flatMap { sortKey =>
+    docType.keyResolver.either(page.sortField).right.flatMap{k => k.sortKey.map{Right(_)}.getOrElse(Left("Cannot sort on " + k.name))}.right.flatMap { sortKey =>
       logger.debug("SOLR: " + queryString + "| sort: " + sortKey.name)
       q.setQuery(queryString)
       q.setStart(page.offset)

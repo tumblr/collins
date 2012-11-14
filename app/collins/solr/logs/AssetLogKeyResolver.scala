@@ -32,7 +32,7 @@ object AssetLogKeyResolver extends SolrKeyResolver {
     messageTypeKey
   )
 
-  def docSpecificKey(rawKey: String): Option[SolrKey] = {
+  def docSpecificKey(rawKey: UpperCaseString): Option[SolrKey] = {
     keys.find{_ matches rawKey}
   }
 }

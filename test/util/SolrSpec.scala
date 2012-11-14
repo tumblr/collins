@@ -201,6 +201,20 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
     }
 
+    "SolrKey" should {
+      "properly convert names to U case" in {
+        val n: String = SolrKey("foo", String, false, false, false).name 
+        n must_== "FOO"
+      }
+      "convert aliases to UCASE" in {
+        SolrKey("foo", String, false, false, false, Set("bar", "BAZ")).isAliasOf("bar") must beTrue
+        SolrKey("foo", String, false, false, false, Set("bar", "BAZ")).isAliasOf("baz") must beTrue
+      }
+      "force multivalued keys to be non-sortable" in {
+        SolrKey("foo", String, false, true, true).sortKey must_== None
+      }
+    }
+
     "key-value" in {
       "string value" in {
         """foosolr = "bar"""".query.where must_== (("foosolr" -> "bar".quoted): SolrKeyVal)
@@ -357,13 +371,13 @@ class SolrQuerySpec extends ApplicationSpecification {
 
     "handle character escaping" in {
       "quoted" in {
-        S("04:7d:7b:06:8f:f9", Q)._toSolrQueryString(false) must_== """"04:7d:7b:06:8f:f9""""
+        S("04:7d:7b:06:8f:f9", Q).traverseQueryString(false) must_== """"04:7d:7b:06:8f:f9""""
       }
       "wildcard" in {
-        S("04:7d:7b:06:8",R)._toSolrQueryString(false) must_== """04\:7d\:7b\:06\:8*"""
+        S("04:7d:7b:06:8",R).traverseQueryString(false) must_== """04\:7d\:7b\:06\:8*"""
       }
       "strict unquoted" in {
-        S("04:7d:7b:06:8f:f9", StrictUnquoted)._toSolrQueryString(false) must_== """04\:7d\:7b\:06\:8f\:f9"""
+        S("04:7d:7b:06:8f:f9", StrictUnquoted).traverseQueryString(false) must_== """04\:7d\:7b\:06\:8f\:f9"""
       }
     }
   } 
@@ -373,56 +387,56 @@ class SolrQuerySpec extends ApplicationSpecification {
 
     "solr query generation" in {
       "empty query" in {
-        "*".query.where._toSolrQueryString must_== "*:*"
+        "*".query.where.traverseQueryString must_== "*:*"
       }
       "field wildcard" in {
-        "tag = *".query.where._toSolrQueryString must_== "tag:*"
+        "tag = *".query.where.traverseQueryString must_== "tag:*"
       }
       "simple keyval" in {
         //the quotes are expected since it hasn't type inferred to an int yet
-        "foosolr = 3".query.where._toSolrQueryString must_== """foosolr:"3""""
+        "foosolr = 3".query.where.traverseQueryString must_== """foosolr:"3""""
       }
       "not pad unquoted unchecked strings with wildcards" in {
-        "foo = bar".query.where._toSolrQueryString must_== """foo:"bar""""
+        "foo = bar".query.where.traverseQueryString must_== """foo:"bar""""
       }
       "handle ^" in {
-        "foo = ^bar".query.where._toSolrQueryString must_== """foo:bar*"""
+        "foo = ^bar".query.where.traverseQueryString must_== """foo:bar*"""
       }
       "handle $" in {
-        "foo = bar$".query.where._toSolrQueryString must_== """foo:*bar"""
+        "foo = bar$".query.where.traverseQueryString must_== """foo:*bar"""
       }
       "handle both ^ and $" in {
-        "foo = ^bar$".query.where._toSolrQueryString must_== """foo:"bar""""
+        "foo = ^bar$".query.where.traverseQueryString must_== """foo:"bar""""
       }
       "not handle ^ or $ in quoted string" in {
-        """foo = "^bar$"""".query.where._toSolrQueryString must_== """foo:"^bar$""""
+        """foo = "^bar$"""".query.where.traverseQueryString must_== """foo:"^bar$""""
       }
       "quoted dash" in {
-        """tag=-""".query.where._toSolrQueryString must_== """tag:"-""""
+        """tag=-""".query.where.traverseQueryString must_== """tag:"-""""
       }
       "leading wildcard" in {
-        """hostname=*foo""".query.where._toSolrQueryString must_== """hostname:*foo"""
+        """hostname=*foo""".query.where.traverseQueryString must_== """hostname:*foo"""
       }
       "trailing wildcard" in {
-        """hostname=foo*""".query.where._toSolrQueryString must_== """hostname:foo*"""
+        """hostname=foo*""".query.where.traverseQueryString must_== """hostname:foo*"""
       }
       "not quote ranges" in {
-        """foo = [abc, abd]""".query.where._toSolrQueryString must_== """foo:[abc TO abd]"""
+        """foo = [abc, abd]""".query.where.traverseQueryString must_== """foo:[abc TO abd]"""
       }
       "ANDs" in {
-         """foosolr = 3 AND bar = "abcdef" AND baz = true""".query.where._toSolrQueryString must_== """foosolr:"3" AND bar:"abcdef" AND baz:"true""""
+         """foosolr = 3 AND bar = "abcdef" AND baz = true""".query.where.traverseQueryString must_== """foosolr:"3" AND bar:"abcdef" AND baz:"true""""
       }
       "ORs" in {
-         """foosolr = 3 OR bar = "abcdef" OR baz = true""".query.where._toSolrQueryString must_== """foosolr:"3" OR bar:"abcdef" OR baz:"true""""
+         """foosolr = 3 OR bar = "abcdef" OR baz = true""".query.where.traverseQueryString must_== """foosolr:"3" OR bar:"abcdef" OR baz:"true""""
       }
       "NOT" in {
-        """NOT foosolr = 3""".query.where._toSolrQueryString must_== """NOT foosolr:"3""""
+        """NOT foosolr = 3""".query.where.traverseQueryString must_== """NOT foosolr:"3""""
       }
       "nested exprs" in {
-        """(foosolr = 3 OR foosolr = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.where._toSolrQueryString must_== """(foosolr:"3" OR foosolr:"4") AND (bar:"true" OR (bar:"false" AND baz:"5"))"""
+        """(foosolr = 3 OR foosolr = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.where.traverseQueryString must_== """(foosolr:"3" OR foosolr:"4") AND (bar:"true" OR (bar:"false" AND baz:"5"))"""
       }
       "support unquoted one-word strings" in {
-        """foosolr = bar""".query.where._toSolrQueryString must_== """foosolr:"bar""""
+        """foosolr = bar""".query.where.traverseQueryString must_== """foosolr:"bar""""
       }
     }
 

@@ -52,11 +52,10 @@ object AssetKeyResolver extends SolrKeyResolver{
 
   val enumKeys = typeKey :: statusKey :: stateKey :: Nil
 
-  def docSpecificKey(_rawkey: String): Option[SolrKey] = {
-    val ukey = _rawkey.toUpperCase
-    nonMetaKeys.find(_ matches ukey)
-      .orElse(enumKeys.find(_ matches ukey))
-      .orElse(AssetMeta.findByName(ukey).map{_.getSolrKey})
+  def docSpecificKey(key: UpperCaseString): Option[SolrKey] = {
+    nonMetaKeys.find(_ matches key)
+      .orElse(enumKeys.find(_ matches key))
+      .orElse(AssetMeta.findByName(key).map{_.getSolrKey})
   }
 
 
