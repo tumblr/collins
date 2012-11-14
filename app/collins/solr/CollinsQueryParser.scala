@@ -19,7 +19,7 @@ class CollinsQueryException(m: String) extends PlayException("CQL", m)
 /** 
  * Parses CQL strings into a SolrExpression AST
  */
-class CollinsQueryParser private(val docTypes: List[SolrDocType], val nowTime: () => Date) extends JavaTokenParsers {
+class CollinsQueryParser private(val docTypes: List[SolrDocType]) extends JavaTokenParsers {
 
   def parseQuery(input: String): Either[String, CQLQuery] = parse(topExpr, input.trim) match {
     case Success((docType, exp), next) => if (next.atEnd) {
@@ -79,7 +79,6 @@ class CollinsQueryParser private(val docTypes: List[SolrDocType], val nowTime: (
 }
 
 object CollinsQueryParser {
-  val nowTime: () => Date = () => new Date
   
-  def apply(types: List[SolrDocType] = List(AssetDocType), t: () => Date = nowTime) = new CollinsQueryParser(types, t)
+  def apply(types: List[SolrDocType] = List(AssetDocType)) = new CollinsQueryParser(types)
 }
