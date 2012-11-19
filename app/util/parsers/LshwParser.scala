@@ -123,7 +123,7 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
   }
 
   protected def getCoreNodes(elem: Elem): NodeSeq = {
-    val core = (elem \ "node").find { node =>
+    val core = (elem \\ "node").find { node =>
       (node \ "@id" text) == "core"
     }.getOrElse(throw MalformedAttributeException("Expected id=core node attribute"))
     core \\ "node"

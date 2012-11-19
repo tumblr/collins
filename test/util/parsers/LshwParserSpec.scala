@@ -136,6 +136,110 @@ class LshwParserSpec extends mutable.Specification {
 
     } // Parse dell (AMD) lshw output
 
+    "Parse different versioned formats" in {
+      "B.02.12 format" in new LshwParserHelper("lshw-old.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 11
+          rep.cpuCoreCount mustEqual 11
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(1.6, 0.1)
+    
+          rep.totalMemory.inGigabytes must beCloseTo(72L, 1)
+          rep.memoryBanksUsed mustEqual 18
+          rep.memoryBanksUnused mustEqual 0
+          rep.memoryBanksTotal mustEqual 18
+    
+          rep.totalStorage.toHuman mustEqual "930.99 GB"
+          rep.diskCount mustEqual 3
+
+          rep.nicCount mustEqual 4
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 4
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      } // B.02.12 format
+
+      "B.02.14 format" in new LshwParserHelper("lshw-b0214.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 2
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(2.3, 0.1)
+    
+          rep.totalMemory.inGigabytes must beCloseTo(96L, 1)
+          rep.memoryBanksUsed mustEqual 12
+          rep.memoryBanksUnused mustEqual 0
+          rep.memoryBanksTotal mustEqual 12
+    
+          rep.totalStorage.toHuman mustEqual "931.52 GB"
+          rep.diskCount mustEqual 2
+
+          rep.nicCount mustEqual 6
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 6
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      }
+
+      "B.02.15 format" in new LshwParserHelper("lshw-intel.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 12
+          rep.hasHyperthreadingEnabled must beTrue
+          rep.cpuSpeed must beCloseTo(1.6, 0.1)
+    
+          rep.totalMemory.inGigabytes must beCloseTo(72L, 1)
+          rep.memoryBanksUsed mustEqual 18
+          rep.memoryBanksUnused mustEqual 0
+          rep.memoryBanksTotal mustEqual 18
+    
+          rep.totalStorage.toHuman mustEqual "930.99 GB"
+          rep.diskCount mustEqual 3
+
+          rep.nicCount mustEqual 4
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 4
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      }
+
+      "B.02.16 format" in new LshwParserHelper("lshw-b0216.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 12
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(2.3, 0.1)
+    
+          rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
+          rep.memoryBanksUsed mustEqual 4
+          rep.memoryBanksUnused mustEqual 8
+          rep.memoryBanksTotal mustEqual 12
+  
+          rep.totalStorage.toHuman mustEqual "465.76 GB"
+          rep.hasFlashStorage must beFalse
+          rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
+          rep.diskCount mustEqual 1
+          rep.hasCdRom must beFalse
+  
+          rep.nicCount mustEqual 2
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 2
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      }
+    }
 
     "Leverage config for flash disks" in {
       val file = "lshw-virident.xml"
@@ -170,56 +274,6 @@ class LshwParserSpec extends mutable.Specification {
     }
 
     "Parse softlayer supermicro (Intel) lshw output" in {
-      "B.02.15 format" in new LshwParserHelper("lshw-intel.xml") {
-        val parseResults = parsed()
-        parseResults must beRight
-        parseResults.right.toOption must beSome.which { rep =>
-          rep.cpuCount mustEqual 2
-          rep.cpuCoreCount mustEqual 12
-          rep.hasHyperthreadingEnabled must beTrue
-          rep.cpuSpeed must beCloseTo(1.6, 0.1)
-    
-          rep.totalMemory.inGigabytes must beCloseTo(72L, 1)
-          rep.memoryBanksUsed mustEqual 18
-          rep.memoryBanksUnused mustEqual 0
-          rep.memoryBanksTotal mustEqual 18
-    
-          rep.totalStorage.toHuman mustEqual "930.99 GB"
-          rep.diskCount mustEqual 3
-
-          rep.nicCount mustEqual 4
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
-          rep.macAddresses must have length 4
-          rep.macAddresses must beNonEmptyStringSeq
-        }
-      }
-
-      "B.02.12 format" in new LshwParserHelper("lshw-old.xml") {
-        val parseResults = parsed()
-        parseResults must beRight
-        parseResults.right.toOption must beSome.which { rep =>
-          rep.cpuCount mustEqual 11
-          rep.cpuCoreCount mustEqual 11
-          rep.hasHyperthreadingEnabled must beFalse
-          rep.cpuSpeed must beCloseTo(1.6, 0.1)
-    
-          rep.totalMemory.inGigabytes must beCloseTo(72L, 1)
-          rep.memoryBanksUsed mustEqual 18
-          rep.memoryBanksUnused mustEqual 0
-          rep.memoryBanksTotal mustEqual 18
-    
-          rep.totalStorage.toHuman mustEqual "930.99 GB"
-          rep.diskCount mustEqual 3
-
-          rep.nicCount mustEqual 4
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
-          rep.macAddresses must have length 4
-          rep.macAddresses must beNonEmptyStringSeq
-        }
-      } // B.02.12 format
-
       "A Production SL Web LSHW Output" in new LshwParserHelper("lshw-old-web.xml") {
         val parseResults = parsed()
         parseResults must beRight
