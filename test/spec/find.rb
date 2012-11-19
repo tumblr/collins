@@ -112,6 +112,14 @@ describe "Asset Find" do
     checkQuery p, 5
   end
 
+  it "strips enclosing quotes" do
+    p = {
+      "pool" => "MEMCACHE",
+      "query" => "\"status = allocated or (hostname = *default* AND num_disks = 2)\" "
+    }
+    checkQuery p, 5
+  end
+
 
 
 

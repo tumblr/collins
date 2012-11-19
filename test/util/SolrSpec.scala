@@ -199,6 +199,18 @@ class SolrQuerySpec extends ApplicationSpecification {
       "Reject unknown select type" in {
         CollinsQueryParser().parseQuery("SELECT omgwtfbbq WHERE foo = bar") must beAnInstanceOf[Left[String, CQLQuery]]
       }
+
+      "clean string" in {
+        "trim whitespace" in {
+          """ 
+              foo = bar
+            """.query.where must_== SolrKeyVal("foo", SolrStringValue("bar"))
+         }
+        "remove enclosing quotes" in {
+          """   "foo = bar" """.query.where must_== SolrKeyVal("foo", SolrStringValue("bar"))
+        }
+      }
+
     }
 
     "SolrKey" should {

@@ -21,7 +21,7 @@ class CollinsQueryException(m: String) extends PlayException("CQL", m)
  */
 class CollinsQueryParser private(val docTypes: List[SolrDocType]) extends JavaTokenParsers {
 
-  def parseQuery(input: String): Either[String, CQLQuery] = parse(topExpr, input.trim) match {
+  def parseQuery(input: String): Either[String, CQLQuery] = parse(topExpr, clean(input)) match {
     case Success((docType, exp), next) => if (next.atEnd) {
       docTypes.find{_.name == docType.toUpperCase} match {
         case Some(t) => Right(CQLQuery(t,exp))
@@ -31,6 +31,18 @@ class CollinsQueryParser private(val docTypes: List[SolrDocType]) extends JavaTo
       Left("Unexpected stuff after query at position %s: %s, parsed %s".format(next.pos.toString, next.first, exp.toString))
     }
     case Failure(wtf, _) => Left("Error parsing query: %s".format(wtf.toString))
+  }
+
+  def clean(rawInput: String) = {
+    val trim = rawInput.trim
+    if (
+      (trim.startsWith("\"") && trim.endsWith("\"")) ||
+      (trim.startsWith("'") && trim.endsWith("'"))
+    ) {
+      trim.substring(1, trim.length-1) 
+    } else {
+      trim
+    }
   }
 
   def topExpr: Parser[(String, SolrExpression)] = withSelect | withoutSelect

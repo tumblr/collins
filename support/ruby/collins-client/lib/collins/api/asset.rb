@@ -79,11 +79,6 @@ module Collins; module Api
     # @return [Array<Collins::Asset>] An array of assets matching the query
     # @raise [UnexpectedResponseError] If the HTTP response code is not a 200
     def find options = {}
-      solrquery = options.delete(:query)
-      if solrquery != nil then
-        return search solrquery, (options[:size] || 50), (options[:sort] || "ASC"), "tag", options
-      end
-      use_api_version "1.1"
       query = asset_hash_to_find_query options
       params = query.to_a.map do |param|
         key, val = param
@@ -102,32 +97,14 @@ module Collins; module Api
     end
 
     def search query, size = 50, sort = "ASC", sort_field = "tag", options = {}
-      use_api_version "1.2"
-      if query.start_with? "\"" and query.end_with? "\"" then
-        query = query[1..-2]
-      end
+      logger.warn("client method \"search\" is deprecated, please use find instead")
       params = {
         :query => query,
         :size => size,
         :sort => sort,
         :sort_field => sort_field
       }
-      query = asset_hash_to_find_query options.merge(params)
-      params = query.to_a.map do |(key,val)|
-        if val.is_a?(Array) then
-          val.map{|v| "#{key}=#{asset_escape_attribute(v)}"}.join("&")
-        elsif val.nil? then
-          ""
-        else
-          "#{key}=#{asset_escape_attribute(val)}"
-        end
-      end.reject{|s| s.empty?}
-      logger.debug("perform asset search using query #{query} - #{params.inspect}")
-      http_get("/api/assets",params) do |response|
-        parse_response response, :expects => 200, :as => :paginated do |json|
-          json.map { |j| Collins::Asset.from_json(j) }
-        end
-      end
+      find params
     end
 
     def find_similar asset_or_tag, size = 50, sort = "ASC", sort_type = "distance", only_unallocated = true

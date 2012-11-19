@@ -44,12 +44,12 @@ class FindAction(
       try {
         val results = if (MultiCollinsConfig.enabled && rl.map(_.isTruthy).getOrElse(false)) {
           logger.debug("Performing remote asset find")
-          Asset.findMulti(pageParams, ra, af, op, de.map(_.isTruthy).getOrElse(false) || isHtml)
+          Asset.findMulti(pageParams, ra, af, op, de.map(_.isTruthy).getOrElse(true) || isHtml)
         } else {
           logger.debug("Performing local asset find")
           Asset.find(pageParams, ra, af, op)
         }
-        handleSuccess(results, afdh.details.map(_.isTruthy).getOrElse(false)) 
+        handleSuccess(results, afdh.details.map(_.isTruthy).getOrElse(true)) 
       } catch {
         case timeout: TimeoutException => {
           handleError(RequestDataHolder.error504(
