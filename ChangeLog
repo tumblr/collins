@@ -1,3 +1,8 @@
+1.2.2   2012/??/??
+
+	* Search: Refactored solr code, added log search API endpoint
+	* LDAP: Config now supports a 'schema' of rfc2307 or rfc2307bis (default)
+
 1.2.1		2012/11/01
 
 	* Build: Created install tool (scripts/setup) for initial setup
