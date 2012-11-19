@@ -59,7 +59,7 @@ class AssetSpec extends ApplicationSpecification {
           assetType = Some(AssetType.ServerNode.get)
         )
         val expected = assets.filter{_.tag == similarAssetTag}
-        val page = PageParams(0,10, "")
+        val page = PageParams(0,10, "", "tag")
         Asset.findByTag(assetTag).map{asset =>
           Asset.findSimilar(asset, page, finder, AssetSortType.Distribution).items must_== expected
         }.getOrElse(failure("Couldn't find asset but expected to"))

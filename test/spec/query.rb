@@ -5,13 +5,21 @@ require 'lib/collins_integration'
 describe "Asset Search" do
 
   def checkTags query, expectedTags
-    assets = @client.search query, 50
+    p = {
+      :query => query,
+      :size => 50
+    }
+    assets = @client.find p
     tags = assets.map {|a| a.tag}
     tags.should include(*expectedTags)
   end
 
   def checkSize query, expected_size
-    assets = @client.search query, 50
+    p = {
+      :query => query,
+      :size => 50
+    }
+    assets = @client.find p
     assets.size.should eql expected_size
   end
     
