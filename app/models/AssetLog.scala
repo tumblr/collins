@@ -192,6 +192,20 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
     Page(results, page, offset, totalCount)
   }
 
+  def findByAsset(asset: Asset) = inTransaction {
+    from(tableDef)(a =>
+      where(a.asset_id === asset.id)
+      select(a)
+    ).toList
+  }
+
+  def findById(id: Long): Option[AssetLog] = inTransaction {
+    from(tableDef)(a => 
+      where(a.id === id)
+      select(a)
+    ).toList.headOption
+  }
+
   private def whereClause(a: AssetLog, asset_id: Option[Long], filter: String) = {
     filter match {
       case e if e.isEmpty =>

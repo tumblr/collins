@@ -88,6 +88,25 @@ table.dataTable th:active {
   outline: none;
 }
 
+div.collapsable {
+margin: 0;
+padding: 0;
+width: 500px;
+}
+ 
+h5.expand_header {
+margin: 1px;
+padding: 3px 10px;
+cursor: pointer;
+position: relative;
+background: url('../images/sort_desc.png') no-repeat center right;
+background-color: #f5f5f5;
+}
+div.expand_content {
+padding: 5px 10px;
+}
+p { padding: 5px 0; }
+
 /* Bootstrap code examples
 -------------------------------------------------- */
 

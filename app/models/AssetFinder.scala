@@ -19,7 +19,8 @@ case class AssetFinder(
   createdBefore: Option[Date],
   updatedAfter: Option[Date],
   updatedBefore: Option[Date],
-  state: Option[State])
+  state: Option[State],
+  query: Option[SolrExpression])
 {
   def asLogicalBoolean(a: Asset): LogicalBoolean = {
     val tagBool = tag.map((a.tag === _))
@@ -49,6 +50,7 @@ case class AssetFinder(
       updatedAfter.map(t => "updatedAfter" -> Formatter.dateFormat(t)) ::
       updatedBefore.map(t => "updatedBefore" -> Formatter.dateFormat(t)) ::
       state.map(s => "state" -> s.name) ::
+      query.map{q => "query" -> "UHOH!!!!"} :: //FIXME: need toCQL traversal
       Nil
     )
     items.flatten
@@ -59,15 +61,16 @@ case class AssetFinder(
       status.map{t => SolrKeyVal("status" , SolrIntValue(t.id))} ::
       assetType.map(t => SolrKeyVal("assetType" , SolrIntValue(t.id))) ::
       state.map(t => SolrKeyVal("state", SolrIntValue(t.id))) ::
+      query ::
       Nil
     val cOpt = (createdBefore.map{d =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}, createdAfter.map{d =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}) match {
       case (None, None) => None
-      case (bOpt, aOpt) => Some(SolrKeyRange("created", aOpt, bOpt))
+      case (bOpt, aOpt) => Some(SolrKeyRange("created", aOpt, bOpt, true))
     }
     val uOpt = (updatedBefore.map{d =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}, updatedAfter.map{d
       =>SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted)}) match {
       case (None, None) => None
-      case (bOpt, aOpt) => Some(SolrKeyRange("updated", aOpt, bOpt))
+      case (bOpt, aOpt) => Some(SolrKeyRange("updated", aOpt, bOpt, true))
     }
     (cOpt :: uOpt :: items).flatten
   }
@@ -76,5 +79,5 @@ case class AssetFinder(
 
 object AssetFinder {
 
-  val empty = AssetFinder(None,None,None,None,None,None,None,None)
+  val empty = AssetFinder(None,None,None,None,None,None,None,None,None)
 }

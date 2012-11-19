@@ -86,7 +86,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     val nodeclassParams: ResolvedAttributes = EmptyResolvedAttributes
       .withMeta(NodeclassifierConfig.identifyingMetaTag, "true")
     val nodeclasses = AssetMetaValue
-      .findAssetsByMeta(PageParams(0,50,"ASC"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
+      .findAssetsByMeta(PageParams(0,50,"ASC", "tag"), nodeclassParams.assetMeta, instanceFinder, Some("and"))
       .items
       .collect{case a: Asset => a}
     val myMetaSeq = this.metaSeq
@@ -173,13 +173,12 @@ object Asset extends Schema with AnormAdapter[Asset] {
     }
   }
 
-  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None, sortField: String = "TAG"): Page[AssetView] =
+  def find(page: PageParams, params: util.AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String] = None): Page[AssetView] =
   Stats.time("Asset.find") {
-    AssetSearchParameters(params, afinder, operation)
-      .toSolrExpression
+    CQLQuery(AssetDocType, AssetSearchParameters(params, afinder, operation).toSolrExpression)
       .typeCheck
       .right
-      .flatMap{exp => CollinsSearchQuery(exp, page, sortField).getPage()}
+      .flatMap{exp => AssetSearchQuery(exp, page).getPage()}
       .fold(
         err => throw new Exception(err),
         page => page
@@ -211,10 +210,11 @@ object Asset extends Schema with AnormAdapter[Asset] {
       updatedAfter = None,
       updatedBefore = None,
       assetType = Some(MultiCollinsConfig.instanceAssetType),
-      state = None
+      state = None,
+      query = None
     )
     val findLocations = Asset
-      .find(PageParams(0,50,"ASC"), AttributeResolver.emptyResultTuple, instanceFinder)
+      .find(PageParams(0,50,"ASC", "tag"), AttributeResolver.emptyResultTuple, instanceFinder)
       .items
       .collect{case a: Asset => a}
       .filter{_.tag != MultiCollinsConfig.thisInstance}
@@ -252,7 +252,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     asset.nodeClass.map{ nodeclass => 
       logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
       val unsortedItems:Page[AssetView] = find(
-        PageParams(0,10000, "asc"), //TODO: unbounded search
+        PageParams(0,10000, "asc", "tag"), //TODO: unbounded search
         (Nil, nodeclass.filteredMetaSeq, Nil),
         afinder,
         Some("and")

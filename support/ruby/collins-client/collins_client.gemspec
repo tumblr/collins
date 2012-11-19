@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "collins_client"
-  s.version = "0.2.7"
+  s.version = "0.2.9"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Blake Matheny"]
-  s.date = "2012-10-31"
+  s.date = "2012-11-19"
   s.description = "Provides ruby support for interacting with the Collins API"
   s.email = "bmatheny@tumblr.com"
   s.extra_rdoc_files = [
@@ -55,7 +55,7 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/tumblr/collins/tree/master/support/ruby/collins-client"
   s.licenses = ["APL 2.0"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.24"
+  s.rubygems_version = "1.8.23"
   s.summary = "Client library for Collins API"
 
   if s.respond_to? :specification_version then

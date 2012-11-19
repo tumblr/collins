@@ -15,10 +15,9 @@ import play.api.mvc.Result
 case class FindAction(
   pageParams: PageParams,
   operation: String,
-  sortField: String,
   spec: SecuritySpecification,
   handler: SecureController
-) extends AssetFindAction(pageParams, sortField, spec, handler) {
+) extends AssetFindAction(pageParams, spec, handler) {
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] =  
     AssetFinderDataHolder.processRequest(ActionHelper.createRequest(request, requestMap))
@@ -43,7 +42,7 @@ case class FindAction(
         else
           Status.Redirect(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(p.items(0).tag))
       case n =>
-        Status.Ok(views.html.asset.list(p, pageParams.sort, Some(sortField))(flash, request))
+        Status.Ok(views.html.asset.list(p, pageParams.sort, Some(pageParams.sortField))(flash, request))
     }
   }
 

@@ -1,7 +1,7 @@
 source :rubygems
 
 Encoding.default_external = Encoding::UTF_8
-gem 'collins_client', '~> 0.2.7'
+gem 'collins_client', '~> 0.2.9'
 gem 'escape',         '~> 0.0.4'
 
 group :development do
@@ -9,7 +9,7 @@ group :development do
   gem "yard", "~> 0.8"
   gem 'redcarpet'
   gem 'webmock'
-  gem "bundler", "~> 1.1.4"
+  gem "bundler", "~> 1.2.1"
   gem "jeweler", "~> 1.8.4"
   gem 'simplecov'
 end
