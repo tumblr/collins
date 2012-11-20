@@ -5,20 +5,27 @@ of a typical SQL query.  It is designed to allow freeform advanced search
 queries constructed out of arbitary boolean expressions on asset attributes.
 </p>
 
+<p>Currently, CQL can be used to search for assets as well as asset logs.
+Asset log searching is still in beta and is only availble via a specialized API
+endpoint.</p>
+
 <section id="recipes-cql-syntax">
 <h2>CQL Syntax</h2>
 <p>CQL's syntax is a mix of standard SQL and Solr's native query format</p>
-(many examples to come soon)
 
 <h3>Data Types</h3>
 
-<p>Asset attribute values follow a simple type system with the following defined types:</p>
+<p>Attribute values follow a simple type system with the following defined types:</p>
 <ul>
   <li>String (currently includes dates and ip addresses)
   <li>Integer
   <li>Double
   <li>Boolean
 </ul>
+
+<p>When new Attributes are created, they default to String type.  Currently there
+is no way to change this, but most CQL features including range queries work on
+strings just as well as numeric types.</p>
 
 <h3>Simple Key/Values</h3>
 
@@ -28,7 +35,20 @@ queries constructed out of arbitary boolean expressions on asset attributes.
 <pre>TAG = "my_asset_tag"</pre>
 </div>
 
-<p>You can search on pretty much every piece of data that Collins stores about an asset, including hardware data and unmanaged tags:</p>
+<p>All keys and string values are case insensitive and extra whitespace is
+ignored.  When values consist of a single word (any string not
+containing spaces, quotes, or parentheses), quotes can be omitted</p>
+
+<div class="example example-command">
+<p>All are valid queres:</p>
+<pre>tag = my_asset_tag</pre>
+<pre>TAG="my_asset_tag"</pre>
+<pre>tag =     "MY_ASSET_TAG"</pre>
+</div>
+
+
+<p>Almost every piece of data that Collins stores about an asset can be
+searched, including hardware data and unmanaged tags:</p>
 
 <div class="example example-command">
 <pre>
@@ -47,17 +67,19 @@ value.</p>
 <h4>Fuzzy Searching String Values</h4>
 <p>CQL allows for fuzzy searching via wildcards and (very) limited regex
 support.  Currently full-text searching and other Lucene-style text searching
-is not enabled, but is planned for a future release</p>
+is not enabled for most values, but is planned for a future release</p>
 
 <div class="example example-command">
   <p>Find assets that have any value set for a tag</p>
-  <pre>hostname = *</pre>
   <p>This will return any asset that has a hostname</p>
+  <pre>hostname = *</pre>
+  <p>and this will return any asset that does not have a hostname:</p>
   <pre>NOT hostname = *</pre>
-  <p>and this will return any asset that does not have a hostname</p>
 </div>
 
-<p>When string values are enclosed in double quotes, Collins will search for exact matches.  When single-word values are unquoted, Collins will search for values that contain the search value as a substring</p>
+<p>When string values are enclosed in double quotes, Collins will search for
+exact matches.  When single-word values are unquoted, Collins will search for
+values that contain the search value as a substring</p>
 
 <div class="example example-command">
   <p>Find an asset with a specific hostname</p>
@@ -74,6 +96,11 @@ is not enabled, but is planned for a future release</p>
   <pre>hostname = .bar.com$</pre>
 </div>
 
+<p>While most fields default unquoted values to double-ended wildcards (eg foo
+is converted to *foo*), some fields default to exact match searching.
+Currently these fields are TAG, IP_ADDRESS, and IPMI_ADDRESS.  This is will be
+configurable in the next Collins release.</p>
+
 <h3>Range Queries</h3>
 <p>Instead of searching a single value, CQL can search on a range of values by specifying lower and upper bounds:</p>
 
@@ -84,6 +111,10 @@ is not enabled, but is planned for a future release</p>
   <pre>DISK_STORAGE_TOTAL = [268435456000, *]</pre>
   <p>Find all assets with at most 4 memory banks</p>
   <pre>MEMORY_BANKS_TOTAL = [*, 4]</pre>
+  <pre>MEMORY_BANDS_TOTAL &lt;= 4</pre>
+  <p>Find assets with more than 1 disk</p>
+  <pre>NUM_DISKS = (1,*]</pre>
+  <pre>NUM_DISKS &gt; 1</pre>
   <p>The following two queries are equivalent</p>
   <pre>CPU_COUNT = *</pre>
   <pre>CPU_COUNT = [*, *]</pre>
@@ -92,8 +123,8 @@ is not enabled, but is planned for a future release</p>
 <p>Numeric and date values use their natural ordering.  Ip addresses and other strings use lexicographical ordering.</p>
 
 
-<h3>Logical Operators</h3>
-<p>CQL permits arbitrary boolean expressions of key/values using the standard AND, OR, and NOT operators</p>
+<h3>Logical Connectives</h3>
+<p>CQL permits arbitrary boolean expressions of key/values using the standard AND, OR, and NOT connectives</p>
 
 <div class="example example-command">
   <pre>TAG = 10016 OR TAG = 10033</pre>
@@ -104,7 +135,35 @@ is not enabled, but is planned for a future release</p>
 <p>When parentheses are omitted, CQL follows the standard order of operations,
 where NOT is evaluated first, followed by AND and OR.</p>
 
+<div class="example example-command">
+  <pre>ATTR_A = A OR NOT ATTR_B = B AND ATTR_C = C</pre>
+  <p>is equivalent to</p>
+  <pre>ATTR_A = A OR ((NOT ATTR_B = B) AND ATTR_C = C)</pre>
+</div>
+
 
 <h3>Sorting and Limiting</h3>
 <p>Any single-valued attribute can be sorted, either ascending or descending.</p>
+
+<section id="recipes-cql-use">
+<h2>How to use CQL</h2>
+<p>in the Ruby Collins client, the search method performs CQL queries:</p>
+<div class="docs example-code">
+  <p>The method signature:</p>
+  <pre style="background-color: #F1F1F1; color: #000000;">    <span style="color: #2060A0;">def</span> <span style="color: #800000;">search</span> query, size <span style="color: #2060A0;">=</span> <span style="color: #0080A0;">50</span>, sort <span style="color: #2060A0;">=</span> <span style="color: #C03030;"><span style="color: #C03030;">"</span>ASC<span style="color: #C03030;">"</span></span>, sort_field <span style="color: #2060A0;">=</span> <span style="color: #C03030;"><span style="color: #C03030;">"</span>tag<span style="color: #C03030;">"</span></span>
+</pre>
+  <p>Example:</p>
+<pre style="background-color: #F1F1F1; color: #000000;">client.<span style="color: #800000;">search</span> <span style="color: #C03030;"><span style="color: #C03030;">"</span>HOSTNAME = web-* AND status = Allocated<span style="color: #C03030;">"</span></span>, <span style="color: #0080A0;">50</span>, <span style="color: #C03030;"><span style="color: #C03030;">"</span>ASC<span style="color: #C03030;">"</span></span>, <span style="color: #C03030;"><span style="color: #C03030;">"</span>HOSTNAME<span style="color: #C03030;">"</span></span>
+</pre>
+</div>
+
+In the API and in Collins shell, CQL is part of the asset find operation:
+
+<div class="example curl">
+  <pre>curl --basic -u blake:admin:first 'http://localhost:9000/api/assets?query=hostname%20%3D%20web*%20AND%20status%20%3D%20allocated'</pre>
+</div>
+
+<div class="example collins-shell">
+  <pre>./collins_shell asset find --selector="query:hostname = web* AND status = allocated" --size=50 --sort=ASC --sortField=hostname</pre>
+</div>
 
