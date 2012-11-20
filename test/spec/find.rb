@@ -15,6 +15,12 @@ describe "Asset Find" do
     assets.size.should eql expected_size
   end
 
+  def checkOrder(params, tag_list)
+    params[:size] = 50
+    assets = @client.find params
+    assets.map{|x| x.tag}.should eql tag_list
+  end
+
   #these are all pulled from prod using query logging
   
   it "attribute=POOL;FIREHOSE&attribute=PRIMARY_ROLE;SERVICE&status=Allocated&type=SERVER_NODE&details=false&operation=and:2" do
@@ -119,6 +125,24 @@ describe "Asset Find" do
     }
     checkQuery p, 5
   end
+
+  it "sorts the assets" do 
+    p = {
+      "pool" => "MEMCACHE",
+      "query" => "\"status = allocated or (hostname = *default* AND num_disks = 2)\" ",
+      "sortField" => "tag",
+      "sort" => "ASC"
+    }
+    checkOrder p, ["001044", "001046", "001049", "001336", "001415"]
+    p = {
+      "pool" => "MEMCACHE",
+      "query" => "\"status = allocated or (hostname = *default* AND num_disks = 2)\" ",
+      "sortField" => "hostname",
+      "sort" => "ASC"
+    }
+    checkOrder p, ["001415", "001044", "001046", "001336", "001049"]
+  end
+
 
 
 

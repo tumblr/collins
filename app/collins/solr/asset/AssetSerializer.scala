@@ -24,7 +24,7 @@ class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
 
   val res = AssetDocType.keyResolver
 
-  def serialize(asset: Asset, indexTime: Date) = postProcess {
+  def getFields(asset: Asset, indexTime: Date) = postProcess {
     val opt = Map[SolrKey, Option[SolrValue]](
       res("UPDATED").get -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
       res("DELETED").get -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
@@ -44,7 +44,7 @@ class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
       res(IpmiInfo.Enum.IpmiAddress.toString).get -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
     )}.getOrElse(Map())
       
-    allDocFields(asset.id, indexTime) ++ opt ++ ipmi ++ Map[SolrKey, SolrValue](
+    opt ++ ipmi ++ Map[SolrKey, SolrValue](
       res("ID").get -> SolrIntValue(asset.id.toInt),
       res("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
       res("STATUS").get -> SolrStringValue(asset.getStatus.name, StrictUnquoted),
@@ -53,6 +53,7 @@ class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset, false))
   }
 
+  def getUUID(asset: Asset) = asset.id
   
   //FIXME: The parsing logic here is duplicated in AssetMeta.validateValue
   def serializeMetaValues(values: Seq[MetaWrapper]): AssetSolrDocument = {
@@ -88,9 +89,9 @@ class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
     val almostDone = doc ++ newFields
     val keyList = SolrMultiValue(MultiSet.fromSeq(almostDone.map{case (k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSeq), String)
 
-    val sortKeys = almostDone.map{case(k,v) => k.sortify(v)}.flatten
+    //val sortKeys = almostDone.map{case(k,v) => k.sortify(v)}.flatten
 
-    almostDone ++ sortKeys + (res("KEYS").get -> keyList)
+    almostDone + (res("KEYS").get -> keyList)
   }
 
 }

@@ -75,10 +75,14 @@ class SolrSpec extends ApplicationSpecification {
       val indexTime = new Date
       val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
       val ipmi = IpmiInfo.createForAsset(asset)
-      val almostExpected = Map(
+
+      //alldoc keys are not added to the KEYS field
+      val allDoc = Map(
         SolrKey("DOC_TYPE", String, false, false, true) -> SolrStringValue("ASSET", StrictUnquoted),
         SolrKey("LAST_INDEXED", String, false, false, true) -> SolrStringValue(Formatter.solrDateFormat(indexTime), StrictUnquoted),
-        SolrKey("UUID", String, false, false, true) -> SolrStringValue("ASSET_" + asset.id, StrictUnquoted),
+        SolrKey("UUID", String, false, false, true) -> SolrStringValue("ASSET_" + asset.id, StrictUnquoted)
+      )
+      val almostExpected = Map(
         SolrKey("ID", Integer, false, false,true) -> SolrIntValue(asset.id.toInt),
         SolrKey("TAG", String, false, false, true) -> SolrStringValue(assetTag, StrictUnquoted),
         SolrKey("STATUS", String, false, false, true) -> SolrStringValue(status.name, StrictUnquoted),
@@ -109,7 +113,8 @@ class SolrSpec extends ApplicationSpecification {
         SolrKey("IPMI_ADDRESS_SORT", String, false,false, true) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
       )
 
-      val expected = almostExpected 
+      val expected = allDoc
+        .++(almostExpected)
         .++(sortKeys)
         .+((SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(MultiSet.fromSeq(almostExpected.map{case(k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSeq), String)))
       val actual = (new AssetSerializer).serialize(asset, indexTime) 
@@ -122,7 +127,6 @@ class SolrSpec extends ApplicationSpecification {
       val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true, true,false) -> SolrMultiValue(MultiSet(SolrStringValue("123", StrictUnquoted), SolrStringValue("123", StrictUnquoted))))
       val expected = m + 
         (SolrKey("NUM_DISKS", Integer, true, false, true) -> SolrIntValue(2)) + 
-        (SolrKey("NUM_DISKS_SORT", String, false, false, true) -> SolrStringValue("2", StrictUnquoted)) + 
         (SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(MultiSet(SolrStringValue("DISK_SIZE_BYTES", StrictUnquoted), SolrStringValue("NUM_DISKS", StrictUnquoted))))
       val actual = (new AssetSerializer).postProcess(m)
       val actualSet = actual.toSet
