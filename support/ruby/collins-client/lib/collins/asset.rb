@@ -26,7 +26,7 @@ module Collins
       # @return [Array,<String>] Non-date related query parameters that are 'reserved'
       GENERAL_PARAMS = [
         "details", "tag", "type", "status", "page", "size", "sort", "state", "operation", "remoteLookup", "query",
-        "sort_field"
+        "sortField"
       ]
       # @return [Array<String>] DATE_PARAMS plus GENERAL_PARAMS
       ALL_PARAMS = DATE_PARAMS + GENERAL_PARAMS

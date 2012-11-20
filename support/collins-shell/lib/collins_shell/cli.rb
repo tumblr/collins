@@ -129,6 +129,7 @@ module CollinsShell
           :query => query,
           :size => options[:size].to_i,
           :sort => options[:sort],
+          :sortField => 'date'
         ]
         logs = client.search_logs params
         printer = CollinsShell::LogPrinter.new("all assets", logs)

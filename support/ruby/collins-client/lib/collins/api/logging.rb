@@ -109,7 +109,8 @@ module Collins; module Api
     # new solr interface
     def search_logs options = {}
       parameters = get_page_options(options).merge(
-        :query => get_option(:query, options, nil)
+        :query => get_option(:query, options, nil),
+        :sortField => get_option(:sortField, options, 'ID')
       )
       parameters = select_non_empty_parameters parameters
       logger.debug("Fetching logs for all assets with parameters #{parameters.inspect}")
@@ -118,7 +119,6 @@ module Collins; module Api
           json.map{|j| OpenStruct.new(symbolize_hash(j))}
         end
       end
-
     end
 
     # Same as logs but for all assets

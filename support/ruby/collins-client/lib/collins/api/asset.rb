@@ -102,7 +102,7 @@ module Collins; module Api
         :query => query,
         :size => size,
         :sort => sort,
-        :sort_field => sort_field
+        :sortField => sort_field
       }
       find params
     end
