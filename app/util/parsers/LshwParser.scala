@@ -52,7 +52,7 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
   }
 
   val cpuMatcher: PartialFunction[NodeSeq,Cpu] = {
-    case n if (n \ "@class" text) == "processor" && !((n \ "@disabled" text) == "true") =>
+    case n if isCpuNode(n) =>
       val asset = getAsset(n)
       val speedString = Option(n \ "size" text).filter(_.nonEmpty).getOrElse("0")
       val speed = SpeedConversions.hzToGhz(speedString.toLong)
@@ -120,6 +120,16 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
         }
       }
       Nic(speed, mac, asset.description, asset.product, asset.vendor)
+  }
+
+  protected def isCpuNode(n: NodeSeq): Boolean = {
+    val isProc = (n \ "@class" text) == "processor"
+    val isDisabled = (n \ "@disabled" text).toString == "true"
+    if (LshwConfig.includeDisabledCpu) {
+      isProc
+    } else {
+      isProc && !isDisabled
+    }
   }
 
   protected def getCoreNodes(elem: Elem): NodeSeq = {

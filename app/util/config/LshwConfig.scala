@@ -7,9 +7,11 @@ object LshwConfig extends Configurable {
 
   def flashProduct = getString("flashProduct", "flashmax").toLowerCase
   def flashSize = getLong("flashSize", 1400000000000L)
+  def includeDisabledCpu = getBoolean("includeDisabledCpu", false)
 
   override protected def validateConfig() {
     flashProduct
     flashSize
+    includeDisabledCpu
   }
 }
