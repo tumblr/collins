@@ -332,6 +332,29 @@ class LshwParserSpec extends mutable.Specification {
 
     } // Parse softlayer supermicro (Intel) lshw output"
 
+    "Parse Dell LSHW Output" in {
+      "R620 LSHW Output" in new LshwParserHelper("lshw-dell-r620-single-cpu.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 1
+          rep.cpuCoreCount mustEqual 8
+          rep.hasHyperthreadingEnabled must beTrue
+          rep.cpuSpeed must beCloseTo(2.0, 0.1)
+
+          rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
+          rep.memoryBanksUsed mustEqual 4
+          rep.memoryBanksUnused mustEqual 20
+          rep.memoryBanksTotal mustEqual 24
+
+          rep.nicCount mustEqual 4
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 4
+          rep.macAddresses must beNonEmptyStringSeq 
+        }
+      }
+    }
   } // The LSHW parser should
 
 }
