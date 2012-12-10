@@ -78,16 +78,20 @@ case class CreateAction(
       }
   }
 
-  override def handleWebError(rd: RequestDataHolder) = {
-    assetTypeString(rd) match {
-      case None =>
-        Some(Redirect(app.routes.Resources.index).flashing("error" -> "Invalid asset type specified"))
-      case Some(s) =>
-        Some(Redirect(app.routes.Resources.displayCreateForm(s)).flashing(
-          "error" -> rd.error.getOrElse("A tag must be specified")
-        ))
+  override def handleWebError(rd: RequestDataHolder) = if(rd.string(rd.ErrorKey).isDefined) {
+    rd.string(rd.ErrorKey).map{
+      err => Redirect(app.routes.Resources.index).flashing("error" -> err)
     }
+  } else assetTypeString(rd) match {
+    case None =>
+      Some(Redirect(app.routes.Resources.index).flashing("error" -> "Invalid asset type specified"))
+    case Some(s) =>
+      Some(Redirect(app.routes.Resources.displayCreateForm(s)).flashing(
+        "error" -> rd.error.getOrElse("A tag must be specified")
+      ))
   }
+    
+  
 
   protected def handleSuccess(asset: Asset, ipmi: Option[IpmiInfo]): Result = isHtml match {
     case true =>
