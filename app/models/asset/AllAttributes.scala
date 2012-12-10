@@ -13,7 +13,9 @@ object AllAttributes {
       AllAttributes(asset,
         LshwRepresentation.empty,
         LldpRepresentation.empty,
-        None, Seq(), PowerUnits(),
+        None,
+        IpAddresses.findAllByAsset(asset),
+        PowerUnits(),
         AssetMetaValue.findByAsset(asset)
       )
     } else {
