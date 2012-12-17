@@ -35,7 +35,7 @@ object AssetLifecycleConfig {
 
   def withExcludes(includeUser: Boolean = false) = includeUser match {
     case false => RestrictedKeys
-    case true => RestrictedKeys -- Feature.allowTagUpdates
+    case true => RestrictedKeys -- configuredExcludes
   }
 }
 
@@ -223,7 +223,6 @@ object AssetLifecycle {
     }.left.map(e => handleException(asset, "Exception updating asset", e))
   }
 
-  
   protected def updateMaintenanceServer(asset: Asset, options: Map[String, String]): Status[Boolean] = {
     //only lshw,lldp can be updated in maintenance mode
     allCatch[Boolean].either {

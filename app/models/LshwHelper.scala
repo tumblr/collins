@@ -7,10 +7,6 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
   import AssetMeta.Enum._
 
   val managedTags = Set(
-    ServiceTag,
-    ChassisTag,
-    RackPosition,
-    PowerPort,
     CpuCount,
     CpuCores,
     CpuThreads,
