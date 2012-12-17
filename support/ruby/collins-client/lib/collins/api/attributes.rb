@@ -1,6 +1,7 @@
 module Collins; module Api
 
   module Attributes
+
     def delete_attribute! asset_or_tag, attribute, group_id = nil
       asset = get_asset_or_tag asset_or_tag
       parameters = {
@@ -12,14 +13,36 @@ module Collins; module Api
         parse_response response, :expects => 202, :as => :status, :raise => strict?, :default => false
       end
     end
+
     def set_attribute! asset_or_tag, key, value, group_id = nil
+      set_multi_attribute! asset_or_tag, {key => value}, group_id
+    end
+
+    def set_multi_attribute! asset_or_tag, kv_hash, group_id = nil
       asset = get_asset_or_tag asset_or_tag
+      http_overrides = {}
       parameters = {
-        :attribute => "#{key};#{value}",
-        :groupId => group_id
+        :groupId => group_id,
+        :attribute => []
       }
+      kv_hash.each do |key,value|
+        if ::Collins::Asset::Update.is_attribute?(key) then
+          parameters[:attribute] << "#{key};#{value}"
+        else
+          p = ::Collins::Asset::Update.get_param(key)
+          parameters[p.to_sym] = ::Collins::Asset::Update.get_param_value(key, value)
+        end
+      end
+      if parameters[:attribute].empty? then
+        parameters[:attribute] = nil
+      elsif parameters[:attribute].size == 1 then
+        parameters[:attribute] = parameters[:attribute].first
+      else
+        http_overrides[:query_string_normalizer] = HTTParty::Request::NON_RAILS_QUERY_STRING_NORMALIZER
+      end
       parameters = select_non_empty_parameters parameters
-      logger.debug("Setting attribute #{key} to #{value} on #{asset.tag}")
+      logger.debug("Setting attributes #{parameters.inspect} on #{asset.tag}")
+      parameters[:http_options] = http_overrides unless http_overrides.empty?
       http_post("/api/asset/#{asset.tag}", parameters, asset.location) do |response|
         parse_response response, :expects => 200, :as => :status, :raise => strict?, :default => false
       end

@@ -96,4 +96,42 @@ describe Collins::Asset do
     end
   end
 
+  context "Update" do
+    it "lshw is not an attribute" do
+      ["lshw","LSHW"].each do |name|
+        ::Collins::Asset::Update.is_attribute?(name).should be_false
+        ::Collins::Asset::Update.get_param(name).should === "lshw"
+        ::Collins::Asset::Update.is_file_param?(name).should be_true
+      end
+    end
+    it "chassis_tag is not an attribute" do
+      ["CHASSIS_TAG","chassis_tag"].each do |name|
+        ::Collins::Asset::Update.is_attribute?(name).should be_false
+        ::Collins::Asset::Update.get_param(name).should === "CHASSIS_TAG"
+        ::Collins::Asset::Update.is_file_param?(name).should be_false
+      end
+    end
+    it "file params support reading from files" do
+      ::Collins::Asset::Update.get_param_value('lshw', 'fizz buzz').should === 'fizz buzz'
+      filename = File.join(File.dirname(__FILE__), '..', 'fixtures', 'bare_asset.json')
+      expected_md5 = md5(File.read(filename))
+      file_contents = ::Collins::Asset::Update.get_param_value('lshw', "@#{filename}")
+      actual_md5 = md5(file_contents)
+      actual_md5.should === expected_md5
+      expect {
+        ::Collins::Asset::Update.get_param_value('lshw', '@non-existant-file')
+      }.to raise_error(::Collins::ExpectationFailedError)
+    end
+    it "foo is an attribute" do
+      ::Collins::Asset::Update.is_attribute?("foo").should be_true
+      ::Collins::Asset::Update.get_param("foo").should === "foo"
+      ::Collins::Asset::Update.is_attribute?("FOO").should be_true
+      ::Collins::Asset::Update.get_param("FOO").should === "FOO"
+    end
+  end
+
+  def md5 str
+    require 'digest/md5'
+    Digest::MD5.hexdigest(str)
+  end
 end

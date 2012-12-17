@@ -37,8 +37,9 @@ module Collins; module Api; module Util
 
     def http_post uri, parameters = {}, remote = nil
       http_call(uri) {
+        http_overrides = parameters.delete(:http_options) || {}
         params = strip_request :body, :body => parameters
-        result = self.class.post(uri, http_options(params, remote))
+        result = self.class.post(uri, http_options(params, remote, http_overrides))
         if block_given? then
           yield(result)
         else
@@ -59,7 +60,7 @@ module Collins; module Api; module Util
       }
     end
 
-    def http_options opts = {}, remote = nil
+    def http_options opts = {}, remote = nil, overrides = {}
       if remote then
         host_info = get_location_information remote
         auth = {:username => host_info.username, :password => host_info.password}
@@ -70,6 +71,7 @@ module Collins; module Api; module Util
       end
       http_opts = opts.merge!({:basic_auth => auth, :base_uri => base_uri, :timeout => timeout_i})
       http_opts[:headers] = headers unless headers.empty?
+      http_opts.merge!(overrides)
       http_opts[:debug_output] = $stderr if (logger.level < 0 and Module.const_defined?(:HTTP_DEBUG) and HTTP_DEBUG)
       http_opts
     end

@@ -1,4 +1,6 @@
 require 'collins/address'
+require 'collins/asset_find'
+require 'collins/asset_update'
 require 'collins/ipmi'
 require 'collins/power'
 require 'collins/state'
@@ -14,33 +16,8 @@ module Collins
 
     # Asset finder related parameter descriptions
     # @note these exist here instead of the API module for convenience
-    module Find
-      # Find API parameters that are dates
-      # @return [Array<String>] Date related query parameters
-      DATE_PARAMS = [
-        "createdAfter", "createdBefore", "updatedAfter", "updatedBefore"
-      ]
-      # Find API parameters that are not dates
-      # This list exists so that when assets are being queries, we know what keys in the find hash
-      # are attributes of the asset (such as hostname), and which are nort (such as sort or page).
-      # @return [Array,<String>] Non-date related query parameters that are 'reserved'
-      GENERAL_PARAMS = [
-        "details", "tag", "type", "status", "page", "size", "sort", "state", "operation", "remoteLookup", "query",
-        "sortField"
-      ]
-      # @return [Array<String>] DATE_PARAMS plus GENERAL_PARAMS
-      ALL_PARAMS = DATE_PARAMS + GENERAL_PARAMS
-
-      class << self
-        def to_a
-          Collins::Asset::Find::ALL_PARAMS
-        end
-        def valid? key
-          to_a.include?(key.to_s)
-        end
-      end
-    end
-
+    include Collins::Asset::Find
+    include Collins::Asset::Update
     include Collins::Util
 
     # @return [Array<CollinsAddress>] Addresses associated with asset

@@ -129,7 +129,7 @@ module Collins; module Api
     end
 
     def asset_hash_to_find_query opts = {}
-      options = opts.clone
+      options = deep_copy_hash opts
       hash = {:attribute => []}
       okeys = options.keys
       Collins::Asset::Find::DATE_PARAMS.each do |query_key|
