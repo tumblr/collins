@@ -148,6 +148,35 @@ module CollinsShell
       end
     end
 
+    desc 'set_attributes KEY=VALUE [KEY=VALUE,...]', 'set multiple attributes on an asset in collins'
+    use_collins_options
+    use_tag_option
+    use_selector_option
+    def set_attributes *hash
+      attributes = hash.inject({}) do |ret, e|
+        k, v = e.split('=', 2)
+        if k.nil? or v.nil? then
+          k, v = e.split(':', 2)
+          if k.nil? or v.nil? then
+            raise ::CollinsShell::RequirementFailedError.new "Expected key=value (or key:value) format"
+          end
+        end
+        ret[k] = v
+        ret
+      end
+      batch_selector_operation Hash[
+        :remote => options.remote,
+        :operation => "set_attributes",
+        :success_message => proc {|asset| "Set attributes on #{asset.tag}"},
+        :error_message => proc{|asset| "Setting attributes on #{asset.tag}"},
+        :confirmation_message => proc do |assets|
+          "You are about to set #{attributes.inspect} on #{assets.length} hosts. ARE YOU SURE?"
+        end
+      ] do |client,asset|
+        client.set_multi_attribute!(asset, attributes)
+      end
+    end
+
     desc 'delete_attribute KEY', 'delete an attribute in collins'
     use_collins_options
     use_tag_option
