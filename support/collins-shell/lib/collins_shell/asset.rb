@@ -131,6 +131,7 @@ module CollinsShell
     use_tag_option
     use_selector_option
     method_option :json, :type => :boolean, :default => false, :desc => 'Encode as JSON value. Only works for arrays and hashes.'
+    method_option :dimension, :type => :numeric, :default => -1, :desc => 'Data dimension, must be a number'
     def set_attribute key, value
       batch_selector_operation Hash[
         :remote => options.remote,
@@ -144,7 +145,11 @@ module CollinsShell
         if options.json then
           value = JSON.dump(eval(value))
         end
-        client.set_attribute!(asset, key, value)
+        dimension = nil
+        if options.dimension >= 0 then
+          dimension = options.dimension
+        end
+        client.set_attribute!(asset, key, value, dimension)
       end
     end
 
