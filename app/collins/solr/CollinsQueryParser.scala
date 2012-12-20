@@ -83,7 +83,7 @@ class CollinsQueryParser private(val docTypes: List[SolrDocType]) extends JavaTo
    * handled in the typeCheck phase.  This is because in some cases we need to
    * parse numbers as strings, particularly for numeric asset tags.
    */
-  def kv            = ident ~ "=" ~ value ^^{case k ~ "=" ~ v => SolrKeyVal(k,v)}
+  def kv            = ident ~ "!=|=".r ~ value ^^{case k ~ op ~ v => if (op == "!=") SolrNotOp(SolrKeyVal(k,v)) else SolrKeyVal(k,v)}
   def value   = quotedString | unquotedString
   def quotedString = stringLiteral  ^^ {s => SolrStringValue(s.substring(1,s.length-1), Quoted)}
   def unquotedString = """[^\s()'"]+""".r  ^^ {s => StringValueFormat.createValueFor(s)}

@@ -337,6 +337,9 @@ class SolrQuerySpec extends ApplicationSpecification {
       "negate complex expression" in {
         """NOT (foosolr = 5 AND bar = "baz")""".query.where must_== SolrNotOp(("foosolr" -> "5") AND ("bar" -> "baz".quoted))
       }
+      "!=" in {
+        """foosolr != 5""".query.where must_== SolrNotOp(SolrKeyVal("foosolr", SolrStringValue("5", Unquoted)))
+      }
         
     }
   }
