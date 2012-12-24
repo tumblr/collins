@@ -143,6 +143,13 @@ describe "Asset Find" do
     checkOrder p, ["001415", "001044", "001046", "001336", "001049"]
   end
 
+  it "multi nots" do 
+    p = {
+      "query" => "NOT hostname = *web* AND NOT status=allocated"
+    }
+    checkQuery p,50
+  end
+
 
 
 

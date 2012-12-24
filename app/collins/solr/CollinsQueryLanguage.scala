@@ -134,10 +134,16 @@ case object TypedEmptySolrQuery extends _EmptySolrQuery with TypedSolrExpression
 abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends SolrExpression {
   require(exprs.size > 0, "Cannot create empty multi-expression")
 
+  //create a typed instance of this object
   def create(exprs: Set[SolrExpression]): TypedSolrExpression
 
+  //create a typed instance of the dual of this object (and creates or, vice versa)
+  //NOTE - 
+  def createOp(exprs:Set[SolrExpression]): TypedSolrExpression
+
   def traverseQueryString(toplevel: Boolean) = {
-    val e = exprs.map{_.traverseQueryString(false)}.mkString(" %s ".format(op))
+    val e = exprs
+      .map{_.traverseQueryString(false)}.mkString(" %s ".format(op))
     if (toplevel) e else "(%s)".format(e)
   }
 
@@ -149,7 +155,19 @@ abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends Sol
         case Right(expr) => Right(set + expr)
       }
     }}
-    r.right.map{s => create(s)}
+    //if all the members are NOT's, apply de morgans laws to avoid solr bug    
+    r.right.map{s => 
+      val ops:Set[SolrExpression] = s.flatMap{
+        case SolrNotOp(expr) => Some(expr)
+        case _ => None
+      }
+      if (ops.size == s.size) {
+        new SolrNotOp(createOp(ops)) with TypedSolrExpression
+      } else {
+        create(s)
+      }
+    }
+    
   }
 
 }
@@ -158,6 +176,7 @@ case class SolrAndOp(exprs: Set[SolrExpression]) extends SolrMultiExpr(exprs, "A
   def AND(k: SolrExpression) = SolrAndOp(Set(this, k))
 
   def create(exprs: Set[SolrExpression]) = new SolrAndOp(exprs) with TypedSolrExpression
+  def createOp(exprs: Set[SolrExpression]) = new SolrOrOp(exprs) with TypedSolrExpression
 
 
 }
@@ -166,6 +185,7 @@ case class SolrOrOp(exprs: Set[SolrExpression]) extends SolrMultiExpr(exprs, "OR
   def OR(k: SolrExpression) = SolrOrOp(Set(this,k))
 
   def create(exprs: Set[SolrExpression]) = new SolrOrOp(exprs) with TypedSolrExpression
+  def createOp(exprs: Set[SolrExpression]) = new SolrAndOp(exprs) with TypedSolrExpression
 
 }
 
@@ -256,7 +276,7 @@ case class SolrNotOp(expr: SolrExpression) extends SolrSimpleExpr {
 
   def typeCheck(t: SolrDocType) = expr.typeCheck(t).right.map{e => new SolrNotOp(e) with TypedSolrExpression}
 
-  def traverseQueryString(toplevel: Boolean) = "NOT " + expr.traverseQueryString
+  def traverseQueryString(toplevel: Boolean) = "-" + expr.traverseQueryString(false)
 
 }
 

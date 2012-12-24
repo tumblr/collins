@@ -446,7 +446,10 @@ class SolrQuerySpec extends ApplicationSpecification {
          """foosolr = 3 OR bar = "abcdef" OR baz = true""".query.where.traverseQueryString must_== """foosolr:"3" OR bar:"abcdef" OR baz:"true""""
       }
       "NOT" in {
-        """NOT foosolr = 3""".query.where.traverseQueryString must_== """NOT foosolr:"3""""
+        """NOT foosolr = 3""".query.where.traverseQueryString must_== """-foosolr:"3""""
+      }
+      "NOT with multi" in {
+        """NOT (foosolr = 3 AND foosolr = 5)""".query.where.traverseQueryString must_== """-(foosolr:"3" AND foosolr:"5")"""
       }
       "nested exprs" in {
         """(foosolr = 3 OR foosolr = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.where.traverseQueryString must_== """(foosolr:"3" OR foosolr:"4") AND (bar:"true" OR (bar:"false" AND baz:"5"))"""
@@ -503,6 +506,12 @@ class SolrQuerySpec extends ApplicationSpecification {
       }
       "not lose NOT" in {
         "NOT foosolr = 3".query.typeCheck must_== Right(A(SolrNotOp(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3)))))
+      }
+      "De Morgan applied to NOTs in multi AND" in {
+        "NOT foosolr = 3 AND NOT foosolr = 5".query.typeCheck must_== Right(A(SolrNotOp(SolrOrOp(Set(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3)), SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(5)))))))
+      }
+      "De Morgan applied to NOTs in multi OR" in {
+        "NOT foosolr = 3 OR NOT foosolr = 5".query.typeCheck must_== Right(A(SolrNotOp(SolrAndOp(Set(SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(3)), SolrKeyVal("FOOSOLR_meta_i", SolrIntValue(5)))))))
       }
       "tag search" in {
         """tag = test""".query.typeCheck must_== Right(A(SolrKeyVal("TAG", SolrStringValue("test", Quoted))))
