@@ -224,7 +224,12 @@ object AssetLifecycle {
   }
 
   protected def updateMaintenanceServer(asset: Asset, options: Map[String, String]): Status[Boolean] = {
-    //only lshw,lldp can be updated in maintenance mode
+    //only lshw,lldp, and chasis tag can be updated in maintenance mode, at least one must be present
+    val allowedKeys = Set("lshw", "lldp", "CHASSIS_TAG")
+    if (allowedKeys.find{key => options.contains(key)} == None) {
+      return Left(new Exception("At least one of " + allowedKeys.mkString(",") + " required"))
+    }
+
     allCatch[Boolean].either {
       Asset.inTransaction {
         options.get("lshw").foreach{lshw => 
@@ -233,6 +238,9 @@ object AssetLifecycle {
         options.get("lldp").foreach{lldp =>
           parseLldp(asset, new LldpParser(lldp)).left.foreach{throw _}
         }
+        options.get("CHASSIS_TAG").foreach{chassis_tag => 
+          MetaWrapper.createMeta(asset, Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
+        }          
         true
       }
     }.left.map(e => handleException(asset, "Exception updating asset", e))
