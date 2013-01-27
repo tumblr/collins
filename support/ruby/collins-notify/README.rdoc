@@ -1,0 +1,27 @@
+= collins-notify
+
+CLI and library for sending templated (or not) notifications via email, hipchat,
+and IRC.
+
+== Exit Codes
+
+Exit codes only apply to when you use the CommandRunner (via the collins-notify
+CLI interface). Otherwise, exceptions and return values will indicate the status
+of an operation.
+
+* 0 - Success
+* 1 - Invalid configuration value
+* 2 - Could not parse CLI options
+* 3 - Unable to run with specified configuration
+* 4 - Timeout talking to remote service
+* 5 - General error sending notification
+
+== Contributing to collins-notify
+ 
+* Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
+* Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
+* Fork the project.
+* Start a feature/bugfix branch.
+* Commit and push until you are happy with your contribution.
+* Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
+* Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
