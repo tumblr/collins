@@ -24,6 +24,8 @@ module CollinsNotify; module ConfigurationMixin
     end
   end
 
+  def test?; (config.test == true); end
+
   # Handles magic getters/setters
   def method_missing m, *args, &block
     kname = m.to_s.gsub(/=$/, '') # key name, remove = in case it's assignment

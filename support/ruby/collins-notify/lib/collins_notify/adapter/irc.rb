@@ -6,8 +6,6 @@ module CollinsNotify
     supports_mimetype :text
     require_config :username, :host, :port
 
-    include Collins::Util
-
     def configure!
       # An exception gets thrown if needed
       get_channel config.adapters[:irc], nil
@@ -36,10 +34,15 @@ module CollinsNotify
       }
       cp_config.merge!(tmp_config)
       logger.trace "Using IRC config: #{cp_config.inspect}"
+      if config.test? then
+        logger.info "Not sending message in test mode"
+        return true
+      end
       cp = try_connect cp_config
       return false unless cp
+      logger.info "Connected to IRC"
       begin
-        body = get_message_body(binding).gsub(/[\n\r]/, ' ')
+        body = get_message_body(binding).strip.gsub(/[\n\r]/, ' ')
         cp.message body, cp_config[:notice]
         true
       rescue CollinsNotify::CollinsNotifyException => e

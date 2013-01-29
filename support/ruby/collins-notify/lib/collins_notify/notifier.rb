@@ -5,6 +5,8 @@ module CollinsNotify
 
   class Notifier
 
+    include Collins::Util
+
     class << self
       def require_config *keys
         @requires_config = keys.map{|k| k.to_sym}
@@ -77,6 +79,28 @@ module CollinsNotify
     attr_reader :config
     attr_reader :logger
 
+    # Retrieve (safely) a key from a binding
+    def fetch_bound_option b, name, default
+      begin
+        eval(name, b)
+      rescue Exception => e
+        logger.trace "Could not find value name #{name} in binding"
+        default
+      end
+    end
+
+    # Retrieve (safely) a key from a message object which may be a hash, OpenStruct, or arbitrary
+    # value
+    def fetch_mo_option mo, key, default
+      value = default
+      if mo.is_a?(Hash) && mo.key?(key) && !mo[key].nil? then
+        value = mo[key]
+      elsif mo.respond_to?(key) && !mo.send(key).nil? then
+        value = mo.send(key)
+      end
+      value
+    end
+
     # b is the binding to use
     def get_message_body b
       if config.stdin? then
@@ -98,23 +122,27 @@ module CollinsNotify
     def render_template tmpl, b
       template_format = config.template_format
       if template_format == :default && tmpl.is_a?(File) && tmpl.path.include?(".html") then
-        logger.info "Detected HTML formatted template file"
+        logger.info "Detected HTML formatted template file, will render to HTML if possible"
         # If format was unspecified but it seems like it's html, make it so
         template_format = :html
       end
       tmpl_txt = tmpl.is_a?(File) ? tmpl.read : tmpl
       begin
         template = ERB.new(tmpl_txt, nil, '<>')
-        rendered_tmpl = plain_text = template.result(b)
+        html_text = plain_text = nil
         if template_format == :html then
-          logger.debug "Template format is html, rendering it as plain text"
-          plain_text = as_plain_text rendered_tmpl
+          logger.debug "Template format is html, rendering it as HTML"
+          html_text = template.result(b)
+          plain_text = as_plain_text html_text
+        else
+          logger.debug "Template format is plain text, treating it as such"
+          plain_text = template.result(b)
         end
         if supports_html? then
-          logger.debug "HTML is supported by #{self.class.adapter_name}"
-          handle_html b, rendered_tmpl, plain_text
+          logger.info "HTML is supported by #{self.class.adapter_name}"
+          handle_html b, html_text, plain_text
         else
-          logger.debug "Only plain text supported by #{self.class.adapter_name}"
+          logger.info "Only plain text supported by #{self.class.adapter_name}"
           logger.debug "Rendered plain text: '#{plain_text.gsub(/[\r\n]/, ' ')}'"
           plain_text
         end

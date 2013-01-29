@@ -26,7 +26,7 @@ jeweler = Jeweler::Tasks.new do |gem|
     gem.files.exclude fp
   end
   gem.add_runtime_dependency 'collins_client', '~> 0.2.10'
-  gem.add_runtime_dependency 'hipchat',        '~> 0.4.1'
+  gem.add_runtime_dependency 'hipchat',        '~> 0.7.0'
   gem.add_runtime_dependency 'mail',           '~> 2.4.4'
   gem.add_runtime_dependency 'nokogiri',       '~> 1.5.2'
 end

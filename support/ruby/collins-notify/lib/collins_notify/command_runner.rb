@@ -17,13 +17,15 @@ module CollinsNotify
         $stdout.puts CollinsNotify::Options.get_instance(app.config)
         exit 2
       end
+      # This is legacy behavior
+      app.config.type = :email if app.config.type.nil?
 
       unless app.valid? then
         $stdout.puts CollinsNotify::Options.get_instance(app.config)
         exit 3
       end
 
-      app.logger.debug "Configuration -> #{app.config.to_hash.inspect}"
+      app.logger.trace "Configuration -> #{app.config.to_hash.inspect}"
 
       begin
         contact, asset = get_contact_and_asset app

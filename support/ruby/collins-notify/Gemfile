@@ -1,7 +1,7 @@
 source :rubygems
 
 gem 'collins_client', '~> 0.2.10'
-gem 'hipchat',        '~> 0.4.1'
+gem 'hipchat',        '~> 0.7.0'
 gem 'mail',           '~> 2.4.4'
 gem 'nokogiri',       '~> 1.5.2'
 
