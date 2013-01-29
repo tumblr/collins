@@ -33,7 +33,7 @@ module CollinsNotify
     #   room_name - hipchat room
     #   username - user message being sent as
     #   at - If we are at'ing a person
-    def notify! to = nil, message_obj = OpenStruct.new
+    def notify! message_obj = OpenStruct.new, to = nil
       room_name = get_room message_obj
       username = get_from_username message_obj
       if room_name.nil? then

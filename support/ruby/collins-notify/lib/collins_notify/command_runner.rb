@@ -29,7 +29,7 @@ module CollinsNotify
 
       begin
         contact, asset = get_contact_and_asset app
-        if !app.notify!(contact, asset) then
+        if !app.notify!(asset, contact) then
           raise Exception.new "failed"
         end
       rescue Timeout::Error => e

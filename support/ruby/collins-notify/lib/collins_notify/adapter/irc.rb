@@ -18,7 +18,7 @@ module CollinsNotify
     #   channel - channel sending to
     #   host - host connecting to
     #   port - port on host being connected to
-    def notify! to = nil, message_obj = OpenStruct.new
+    def notify! message_obj = OpenStruct.new, to = nil
       tmp_config = symbolize_hash(deep_copy_hash(config.adapters[:irc]))
       host = tmp_config.delete(:host)
       port = tmp_config.delete(:port).to_i

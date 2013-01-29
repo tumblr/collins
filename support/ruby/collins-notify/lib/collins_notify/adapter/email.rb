@@ -22,7 +22,7 @@ module CollinsNotify
     #   recipient_address - Resolved address of recipient
     #   subject - Mail subject
     #   message_obj - Depends on call
-    def notify! to = nil, message_obj = OpenStruct.new
+    def notify! message_obj = OpenStruct.new, to = nil
       sender_address = get_sender_address message_obj
       recipient_address = get_recipient_address message_obj, to
       subject = get_subject message_obj

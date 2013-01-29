@@ -64,7 +64,7 @@ module CollinsNotify
     end
 
     # Return boolean indicating success/fail
-    def notify! to = nil, message_obj = OpenStruct.new
+    def notify! message_obj = OpenStruct.new, to = nil
       raise NotImplementedError.new "CollinsNotify::Notifier#notify! must be implemented"
     end
 
