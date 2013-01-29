@@ -139,6 +139,8 @@ module CollinsNotify
       f = format_file file
       if File.exists?(f) then
         f
+      elsif template_dir && File.exists?(File.expand_path(File.join(template_dir, file))) then
+        File.expand_path(File.join(template_dir, file))
       elsif File.exists?(File.expand_path(File.join(default_template_dir, file))) then
         File.expand_path(File.join(default_template_dir, file))
       end

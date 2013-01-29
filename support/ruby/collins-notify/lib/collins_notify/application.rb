@@ -6,8 +6,12 @@ module CollinsNotify
     attr_writer :config
     attr_reader :logger
 
-    def initialize
-      @logger = get_logger :logfile => $stderr, :program => 'collins_notify'
+    def initialize lgr = nil
+      if lgr.nil? then
+        @logger = get_logger :logfile => $stderr, :program => 'collins_notify'
+      else
+        @logger = lgr
+      end
       @config = CollinsNotify::Configuration.new @logger
     end
 
