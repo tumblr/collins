@@ -1,0 +1,32 @@
+---
+:collins:
+    host: "https://collins.example.net"
+    username: "some_username"
+    password: "some_password"
+    timeout: 30
+:email:
+    address: "smtp.sendgrid.net"
+    port: 587
+    domain: "example.com"
+    user_name: "some_username"
+    password: "some_password"
+    authentication: "plain"
+    enable_starttls_auto: true
+    sender_address: "Collins <collins@example.com>"
+:hipchat:
+    api_token: "api_token_here"
+    colors:
+      success: "green"
+      error: "red"
+    notify: true
+    room: "AutoBots"
+    from_username: "Collins"
+:irc:
+    username: "some_username"
+    password: "some_password"
+    host: "hostname"
+    port: 6697
+    ssl: true
+    join: true
+    notice: true
+    channel: "#test"
