@@ -1,3 +1,6 @@
+require 'erb'
+require 'nokogiri'
+
 module CollinsNotify
 
   class Notifier
@@ -53,11 +56,13 @@ module CollinsNotify
       @logger = app.logger
     end
 
+    # Throw an exception if it cant be configured
     def configure!
       raise NotImplementedError.new "CollinsNotify::Notifier#configure! must be implemented"
     end
 
-    def notify! overrides = {}
+    # Return boolean indicating success/fail
+    def notify! to = nil, message_obj = OpenStruct.new
       raise NotImplementedError.new "CollinsNotify::Notifier#notify! must be implemented"
     end
 
@@ -72,16 +77,59 @@ module CollinsNotify
     attr_reader :config
     attr_reader :logger
 
-    def get_message_body
+    # b is the binding to use
+    def get_message_body b
       if config.stdin? then
-        $stdin.read.strip
+        message_txt = $stdin.read.strip
+        if config.template_processor == :erb then
+          render_template message_txt, b
+        else
+          message_txt
+        end
       elsif config.template? then
         tmpl = config.resolved_template
-        # do stuff
-        "not yet implemented"
+        logger.debug "Using template file #{tmpl}"
+        render_template File.new(tmpl), b
       else
         raise CollinsNotify::CollinsNotifyException.new "Unknown message body type"
       end
+    end
+
+    def render_template tmpl, b
+      template_format = config.template_format
+      if template_format == :default && tmpl.is_a?(File) && tmpl.path.include?(".html") then
+        logger.info "Detected HTML formatted template file"
+        # If format was unspecified but it seems like it's html, make it so
+        template_format = :html
+      end
+      tmpl_txt = tmpl.is_a?(File) ? tmpl.read : tmpl
+      begin
+        template = ERB.new(tmpl_txt, nil, '<>')
+        rendered_tmpl = plain_text = template.result(b)
+        if template_format == :html then
+          logger.debug "Template format is html, rendering it as plain text"
+          plain_text = as_plain_text rendered_tmpl
+        end
+        if supports_html? then
+          logger.debug "HTML is supported by #{self.class.adapter_name}"
+          handle_html b, rendered_tmpl, plain_text
+        else
+          logger.debug "Only plain text supported by #{self.class.adapter_name}"
+          logger.debug "Rendered plain text: '#{plain_text.gsub(/[\r\n]/, ' ')}'"
+          plain_text
+        end
+      rescue Exception => e
+        raise CollinsNotify::CollinsNotifyException.new "Invalid template #{tmpl} - #{e}"
+      end
+    end
+
+    # b is original binding, html is html version, plain_text is plain text version
+    def handle_html b, html, plain_text
+      html
+    end
+
+    def as_plain_text html
+      Nokogiri::HTML(html).text
     end
 
   end

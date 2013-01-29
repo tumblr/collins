@@ -1,5 +1,7 @@
 module CollinsNotify; module ConfigurationMixin
 
+  include Collins::Util
+
   def config
     raise NotImplementedError.new "ConfigurationMixin#config must be implemented"
   end
@@ -67,16 +69,19 @@ module CollinsNotify; module ConfigurationMixin
   protected
   def configurable
     {
-      :config_file      => nil,
-      :logfile          => nil,
-      :recipient        => nil,
-      :selector         => {}, # optional collins asset to notify about
-      :severity         => Logger::INFO,
-      :template         => nil,
-      :template_dir     => nil, # legacy needs
-      :test             => false,
-      :timeout          => 10,
-      :type             => nil,
+      :collins            => {}, # collins configs
+      :config_file        => nil,
+      :logfile            => nil,
+      :recipient          => nil,
+      :selector           => {}, # optional collins asset to notify about
+      :severity           => Logger::INFO,
+      :template           => nil,
+      :template_dir       => nil, # legacy needs
+      :template_format    => :default,
+      :template_processor => :default,
+      :test               => false,
+      :timeout            => 10,
+      :type               => nil,
     }
   end
 

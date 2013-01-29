@@ -4,6 +4,8 @@ require 'yaml'
 module CollinsNotify
 
   class Options < OptionParser
+    ETC_CONFIG = "/etc/collins_notify.yaml"
+
     include Collins::Util
 
     def self.app_name
@@ -19,8 +21,9 @@ module CollinsNotify
 
     def parse! argv = default_argv
       res = super
-      if config.config_file then
-        yaml = YAML::load(File.open(config.config_file))
+      cfg_file = get_config_file
+      if cfg_file then #config.config_file then
+        yaml = YAML::load(File.open(cfg_file))
         adapters = CollinsNotify::Notifier.adapters.keys
         yaml.each do |k,v|
           if adapters.include?(k.to_sym) then
@@ -38,6 +41,16 @@ module CollinsNotify
     def initialize config
       @config = config
       super()
+    end
+
+    def get_config_file
+      if config.config_file then
+        config.config_file
+      elsif File.exists?(ETC_CONFIG) && File.readable?(ETC_CONFIG) then
+        ETC_CONFIG
+      else
+        nil
+      end
     end
 
     def setup
@@ -76,6 +89,12 @@ module CollinsNotify
       end
       on_tail('--template-dir=DIR', 'Use fully qualified path in --template, do not use this') do |d|
         @config.template_dir = d
+      end
+      on_tail('--template-format=FMT', [:default, :html], 'Template format (default, html).') do |t|
+        @config.template_format = t.to_sym
+      end
+      on_tail('--template-processor=PROC', [:default, :erb], 'Template processor (default, erb).') do |t|
+        @config.template_processor = t.to_sym
       end
       on_tail('-t', '--[no-]test', 'Enable or disable testing') do |t|
         @config.test = t

@@ -39,6 +39,9 @@ module CollinsNotify
     def increase_verbosity
       if severity > -1 then
         self.severity -= 1
+        if trace? then
+          $DEBUG = true
+        end
       end
     end
 
@@ -87,6 +90,22 @@ module CollinsNotify
     ###################################################################################
     # Validators and Formatters
     ###################################################################################
+    def format_collins cfg
+      symbolize_hash(cfg) unless cfg.nil?
+    end
+    def valid_collins? cfg
+      if !cfg.nil? && cfg.is_a?(Hash) then
+        [:host,:username,:password].each do |key|
+          if !cfg.key?(key) then
+            return false
+          end
+        end
+        true
+      else
+        false
+      end
+    end
+
     def format_config_file file
       format_file file
     end
@@ -117,7 +136,12 @@ module CollinsNotify
     end
 
     def format_template file
-      format_file file
+      f = format_file file
+      if File.exists?(f) then
+        f
+      elsif File.exists?(File.expand_path(File.join(default_template_dir, file))) then
+        File.expand_path(File.join(default_template_dir, file))
+      end
     end
     def valid_template? file
       valid_file? file
@@ -128,6 +152,20 @@ module CollinsNotify
     end
     def valid_template_dir? d
       !d.nil? && File.exists?(d)
+    end
+
+    def format_template_format f
+      f.to_sym unless f.nil?
+    end
+    def valid_template_format? t
+      !t.nil? && t.is_a?(Symbol) && [:default,:html].include?(t)
+    end
+
+    def format_template_processor f
+      f.to_sym unless f.nil?
+    end
+    def valid_template_processor? t
+      !t.nil? && t.is_a?(Symbol) && [:default,:erb].include?(t)
     end
 
     def valid_test? t

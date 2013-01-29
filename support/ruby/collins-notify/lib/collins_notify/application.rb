@@ -25,9 +25,9 @@ module CollinsNotify
       @logger.level = config.severity
     end
 
-    def notify! overrides = {}
+    def notify! to = nil, message_obj = OpenStruct.new
       Timeout::timeout(config.timeout) do
-        notifier.notify! overrides
+        notifier.notify! to, message_obj
       end
     end
 

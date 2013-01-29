@@ -29,7 +29,6 @@ jeweler = Jeweler::Tasks.new do |gem|
   gem.add_runtime_dependency 'hipchat',        '~> 0.4.1'
   gem.add_runtime_dependency 'mail',           '~> 2.4.4'
   gem.add_runtime_dependency 'nokogiri',       '~> 1.5.2'
-  gem.add_runtime_dependency 'carrier-pigeon', '~> 0.6.0'
 end
 
 task :help do

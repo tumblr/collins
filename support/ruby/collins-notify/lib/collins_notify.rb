@@ -1,3 +1,5 @@
+$:.unshift File.dirname(__FILE__)
+
 require 'logger'
 require 'timeout'
 require 'collins_client'
