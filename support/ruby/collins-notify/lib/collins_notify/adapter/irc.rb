@@ -8,7 +8,7 @@ module CollinsNotify
 
     def configure!
       # An exception gets thrown if needed
-      get_channel config.adapters[:irc], nil
+      get_channel symbolize_hash(deep_copy_hash(config.adapters[:irc])), nil
       nil
     end
 
