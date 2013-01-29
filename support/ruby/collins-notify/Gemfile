@@ -1,5 +1,6 @@
 source :rubygems
 
+gem 'addressable',    '~> 2.3.2'
 gem 'collins_client', '~> 0.2.10'
 gem 'hipchat',        '~> 0.7.0'
 gem 'mail',           '~> 2.4.4'

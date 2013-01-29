@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "collins_notify"
-  s.version = "0.0.1"
+  s.version = "0.0.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Blake Matheny"]
@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
     "Rakefile",
     "VERSION",
     "bin/collins-notify",
+    "collins_notify.gemspec",
     "lib/collins_notify.rb",
     "lib/collins_notify/adapter/email.rb",
     "lib/collins_notify/adapter/helper/carried-pigeon.rb",
@@ -48,17 +49,20 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency(%q<addressable>, ["~> 2.3.2"])
       s.add_runtime_dependency(%q<collins_client>, ["~> 0.2.10"])
       s.add_runtime_dependency(%q<hipchat>, ["~> 0.7.0"])
       s.add_runtime_dependency(%q<mail>, ["~> 2.4.4"])
       s.add_runtime_dependency(%q<nokogiri>, ["~> 1.5.2"])
     else
+      s.add_dependency(%q<addressable>, ["~> 2.3.2"])
       s.add_dependency(%q<collins_client>, ["~> 0.2.10"])
       s.add_dependency(%q<hipchat>, ["~> 0.7.0"])
       s.add_dependency(%q<mail>, ["~> 2.4.4"])
       s.add_dependency(%q<nokogiri>, ["~> 1.5.2"])
     end
   else
+    s.add_dependency(%q<addressable>, ["~> 2.3.2"])
     s.add_dependency(%q<collins_client>, ["~> 0.2.10"])
     s.add_dependency(%q<hipchat>, ["~> 0.7.0"])
     s.add_dependency(%q<mail>, ["~> 2.4.4"])

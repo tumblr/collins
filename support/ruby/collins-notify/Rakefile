@@ -25,6 +25,7 @@ jeweler = Jeweler::Tasks.new do |gem|
   %w[config.yaml spec/**/* .gitignore .rspec .rvmrc .document .rbenv-version].each do |fp|
     gem.files.exclude fp
   end
+  gem.add_runtime_dependency 'addressable',    '~> 2.3.2'
   gem.add_runtime_dependency 'collins_client', '~> 0.2.10'
   gem.add_runtime_dependency 'hipchat',        '~> 0.7.0'
   gem.add_runtime_dependency 'mail',           '~> 2.4.4'
