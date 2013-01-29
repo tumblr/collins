@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.join(File.dirname(__FILE__), '..', 'lib')
+
+require 'collins_notify'
+require 'pp'
+
+CollinsNotify::CommandRunner.new.run ARGV

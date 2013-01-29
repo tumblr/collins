@@ -1,6 +1,6 @@
 *.swp
 *.gem
-bin/*
+bin/test.rb
 rdoc
 .yardoc
 doc
