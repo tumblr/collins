@@ -103,17 +103,18 @@ module CollinsNotify
 
     # b is the binding to use
     def get_message_body b
-      if config.stdin? then
+      if config.template? then
+        tmpl = config.resolved_template
+        logger.debug "Using template file #{tmpl}"
+        render_template File.new(tmpl), b
+      elsif config.stdin? then
         message_txt = $stdin.read.strip
+        logger.debug "Using stdin for message body"
         if config.template_processor == :erb then
           render_template message_txt, b
         else
           message_txt
         end
-      elsif config.template? then
-        tmpl = config.resolved_template
-        logger.debug "Using template file #{tmpl}"
-        render_template File.new(tmpl), b
       else
         raise CollinsNotify::CollinsNotifyException.new "Unknown message body type"
       end
