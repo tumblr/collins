@@ -30,12 +30,21 @@ done
 
 cp staged/* collins/lib
 
-cp ../scripts/collins.sh collins/scripts/collins.sh
-cp ../scripts/setup collins/scripts/setup
-cp ../conf/logger.xml $CONF_DIR
+# Copy over test data for use with populate.sh
+mkdir -p collins/test/resources
+cp ../test/resources/*.xml collins/test/resources
+cp ../test/resources/*.yaml collins/test/resources
+
+# Copy over scripts
+for script in collins.sh package.sh populate.sh setup; do
+  cp ../scripts/${script} collins/scripts/${script}
+done
+
+# Copy over configs
+for conf in logger.xml permissions.yaml validations.conf; do
+  cp ../conf/${conf} $CONF_DIR/${conf}
+done
 cp ../conf/production_starter.conf $CONF_DIR/production.conf
-cp ../conf/permissions.yaml $CONF_DIR
-cp ../conf/validations.conf $CONF_DIR
 
 cp -R ../conf/solr/conf/* $CONF_DIR/solr/conf/
 cp -R ../conf/evolutions/* $CONF_DIR/evolutions/
