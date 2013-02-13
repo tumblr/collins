@@ -1,0 +1,51 @@
+---
+permalink: downloads.html
+title: Downloads
+layout: default
+desc: Collins Releases
+---
+
+<header class="jumbotron subhead" id="page-overview">
+  <div class="container">
+    <h1>
+      Collins Releases
+    </h1>
+    <p class="lead">Collins Software Releases</p>
+  </div>
+</header>
+
+<div class="container">
+  <div class="row">
+
+    <div class="span12">
+
+      <section id="overview">
+        <div class="page-header">
+          <h1>Downloads</h1>
+        </div>
+        <ul>
+          <li>2013/02/13 - <a href="releases/collins-1.2.2.zip">1.2.2</a></li>
+          <ul>
+            <li>Search: Refactored solr code, added log search API endpoint</li>
+            <li>LDAP: Config now supports a 'schema' of rfc2307 or rfc2307bis (default)</li>
+            <li>Search: Index decommissioned assets</li>
+            <li>Bug: CQL parser should properly handle all quotes</li>
+            <li>LSHW: Support for B.02.16 (thanks Johannes Ziemke)</li>
+            <li>Bug: IP Address now retrieved for config assets (#47)</li>
+            <li>Bug: Don't purge intake data on LSHW update (#55)</li>
+            <li>Client: set_multi_attribute allows multiple updates, file upload support via @</li>
+          </ul>
+          <li>2012/11/01 - <a href="releases/collins-1.2.1.zip">1.2.1</a></li>
+          <ul>
+            <li>Build: Created install tool (scripts/setup) for initial setup</li>
+            <li>Build: Made package.sh script a bit more correct</li>
+            <li>Build: Starter config for use when packaging a release</li>
+            <li>Deps: Remove snakeyaml-SNAPSHOT, code was integrated upstream</li>
+            <li>Docs: Added ChangeLog</li>
+            <li>Config: Fixed default ipmi configuration. Thanks Chris Graf</li>
+          </ul>
+        </ul>
+      </section>
+    </div>
+  </div>
+</div>
