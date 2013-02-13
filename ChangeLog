@@ -1,7 +1,17 @@
-1.2.2   2012/??/??
+1.2.3		2013/??/??
+
+	* Not yet released
+
+1.2.2   2013/02/13
 
 	* Search: Refactored solr code, added log search API endpoint
 	* LDAP: Config now supports a 'schema' of rfc2307 or rfc2307bis (default)
+	* Search: Index decommissioned assets
+	* Bug: CQL parser should properly handle all quotes
+	* LSHW: Support for B.02.16 (thanks Johannes Ziemke)
+	* Bug: IP Address now retrieved for config assets (#47)
+	* Bug: Don't purge intake data on LSHW update (#55)
+	* Client: set_multi_attribute allows multiple updates, file upload support via '@'
 
 1.2.1		2012/11/01
 
