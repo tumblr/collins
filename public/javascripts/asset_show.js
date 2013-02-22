@@ -104,4 +104,37 @@ $(document).ready(function() {
       updateProvisionerValues(config, value);
     });
   });
+
+  /**
+   * data-trigger-update - id of other select to change when this select is changed
+   * data-trigger-update-map - map where keys are values from this select, and values are the new set of options
+   *
+   * changing s1 will update s2 to a new set of options specified by the trigger-update-map
+   */
+  $("[data-trigger-update]").each(function() {
+    var el = $(this);
+    var elToUpdate = $(elId(el.attr('data-trigger-update')));
+    var updateMap = window[el.attr('data-trigger-update-map')];
+    if (typeof(updateMap) === 'undefined') {
+      return;
+    }
+    el.change(function() {
+      el.find('option:selected').each(function() {
+        var optionEl = $(this);
+        var optionValue = optionEl.val();
+        var values = updateMap[optionValue];
+        if (typeof(values) !== 'undefined') {
+          var selected = elToUpdate.find('option:selected').val();
+          elToUpdate.empty();
+          $.each(values, function(id, state) {
+            var value = $("<option></option>").attr("value", state["NAME"]).text(state["LABEL"]);
+            if (state["NAME"] == selected) {
+              value.attr("selected", "selected");
+            }
+            elToUpdate.append(value);
+          });
+        }
+      });
+    });
+  });
 });

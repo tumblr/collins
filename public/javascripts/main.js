@@ -131,6 +131,9 @@ $(document).ready(function() {
     });
   });
 
+  /**
+   * When an option is selected, show a different div
+   */
   $("[data-show]").each(function() {
     var e = $(this);
     var selectors = e.attr('data-show').split(',');
@@ -138,17 +141,17 @@ $(document).ready(function() {
     e.change(function() {
       e.find('option:selected').each(function() {
         var el = $(this);
-	if (el.attr('data-show-display') == "true") {
+        if (el.attr('data-show-display') == "true") {
           showSelectors.forEach(function(v) { $(v).show(); });
-	} else {
+	      } else {
           showSelectors.forEach(function(v) {
-	    $(v).hide();
-	    $(v).find("input").each(function() {
+	          $(v).hide();
+	          $(v).find("input").each(function() {
               $(this).val("");
-	      $(this).keyup();
+	            $(this).keyup();
             });
           });
-	}
+	      }
       });
     });
   });

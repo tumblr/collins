@@ -4,7 +4,7 @@
 @import util._
 @import _root_.models.State
 @import _root_.util.plugins.Maintenance
-@import _root_.util.views.OptionSorter
+@import _root_.util.views.{OptionSorter, StateHelper}
 
 <!-- start asset maintenance modal -->
 @container("asset-maintenance", "assetMaintenanceLabel", true) {
@@ -13,10 +13,13 @@
     <div class="modal-body">
       @body
       @if(selectStatus) {
+        <script type="text/javascript">
+          var STATE_MAP = @StateHelper.statesAsJson();
+        </script>
         @formField {
           @formLabel("status", "Status")
           @formInput {
-            <select name="status" id="status">
+            <select name="status" id="status" data-trigger-update="#state" data-trigger-update-map="STATE_MAP">
               <option value="" selected="selected"></option>
               @OptionSorter.sortStrings(Status.statusNames.toSeq, Some(" ")).map { v =>
               <option value="@v._1">@v._2</option>
@@ -26,7 +29,7 @@
         }
       }
       @formField {
-        @formLabel("state", "Type")
+        @formLabel("state", "State")
         @formInput {
           <select name="state" id="state">
             @if(!defaultState.isDefined) {
