@@ -11,7 +11,7 @@ object StateHelper {
     val anyState = State.findByAnyStatus()
     // create a map where keys are asset names and values are state objects
     val statusMap = Status.find().map { status =>
-      val states = (State.findByStatus(status) ++ anyState).toSet.toList.sort((e1, e2) =>
+      val states = (State.findByStatus(status) ++ anyState).toSet.toList.sortWith((e1, e2) =>
         e1.name.compareTo(e2.name) < 0
       )
       status.name -> toJson(states)

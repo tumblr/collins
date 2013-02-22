@@ -5,7 +5,7 @@
 There is good documentation available at http://tumblr.github.com/collins. The
 documentation below is for developers or people setting up a new instance.
 
-The most recent production build of collins is available [here](https://github.com/downloads/tumblr/collins/collins-1.2.zip)
+The most recent production build of collins is available [here](http://tumblr.github.com/collins/downloads.html)
 
 ## Quickstart - Screencast
 
@@ -37,3 +37,12 @@ limitations under the License.
 
 Email collins-sm@googlegroups.com or see the mailing list archive at https://groups.google.com/forum/#!forum/collins-sm
 
+## Internal (Tumblr) docs
+
+To create a production zip, run `./scripts/package.sh`. This will produce
+`target/collins.zip`.
+
+Copy `target/collins.zip` to `repo.d2.tumblr.net:/usr/local/static_file_server/collins.zip`.
+
+Run `cap deploy ROLES=appd2` to deploy to d2, then `cap deploy ROLES=app` to
+deploy to EWR01.
