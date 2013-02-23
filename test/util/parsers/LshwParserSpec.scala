@@ -141,8 +141,8 @@ class LshwParserSpec extends mutable.Specification {
         val parseResults = parsed()
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
-          rep.cpuCount mustEqual 11
-          rep.cpuCoreCount mustEqual 11
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 2
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(1.6, 0.1)
     
@@ -278,8 +278,8 @@ class LshwParserSpec extends mutable.Specification {
         val parseResults = parsed()
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
-          rep.cpuCount mustEqual 11
-          rep.cpuCoreCount mustEqual 11
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 2
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(1.6, 0.1)
 
@@ -306,8 +306,8 @@ class LshwParserSpec extends mutable.Specification {
         val parseResults = parsed()
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
-          rep.cpuCount mustEqual 15
-          rep.cpuCoreCount mustEqual 15
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 2
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(2.0, 0.1)
 
