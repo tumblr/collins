@@ -124,11 +124,25 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
 
   protected def isCpuNode(n: NodeSeq): Boolean = {
     val isProc = (n \ "@class" text) == "processor"
+    // For unclear reasons, lshw B.02.12.01 on el5 can claim that
+    // bogus CPUs exist. This leads to nonsensical results where lshw
+    // claims there are more CPUs than physical sockets. In text mode
+    // they are listed as UNCLAIMED, but are only identified in the
+    // xml by empty attributes
+    val hasHandle = ! (n \ "@handle" text).isEmpty
+    // lshw B.02.12.01 on el5 will also populate an empty socket with
+    // generic ghost data (like "I'm socket 2 and I *could* in theory
+    // have a proc with this clock speed, but I'm not going to give
+    // you a useful field like <empty>true</true> to figure out what's
+    // going on.")  It appears that the "product" field is the best
+    // bet for identifying occupied sockets.
+    val isOccupiedSocket = n \ "product" nonEmpty
     val isDisabled = (n \ "@disabled" text).toString == "true"
+    val probablyRealCpu = isProc && hasHandle && (LshwConfig.includeEmptySocket || isOccupiedSocket)
     if (LshwConfig.includeDisabledCpu) {
-      isProc
+      probablyRealCpu
     } else {
-      isProc && !isDisabled
+      probablyRealCpu && !isDisabled
     }
   }
 
