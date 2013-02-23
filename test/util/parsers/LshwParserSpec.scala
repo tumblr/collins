@@ -355,6 +355,41 @@ class LshwParserSpec extends mutable.Specification {
         }
       }
     }
-  } // The LSHW parser should
 
+    "parse amd-opteron-wonky" in {
+      "wonky amd-opteron output" in new LshwParserHelper("lshw-amd-opteron-wonky.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 1
+          rep.cpuCoreCount mustEqual 1 // This really has 6, but sadly lshw has no clue
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(2.8, 0.1)
+
+          rep.totalMemory.inGigabytes must beCloseTo(16L, 1)
+          rep.memoryBanksUsed mustEqual 4
+          rep.memoryBanksUnused mustEqual 8
+          rep.memoryBanksTotal mustEqual 12
+
+          rep.nicCount mustEqual 2
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 2
+          rep.macAddresses must beNonEmptyStringSeq
+          }
+       }
+
+      "wonky amd-opteron output w/ show empty sockets" in new LshwParserHelper("lshw-amd-opteron-wonky.xml") {
+        val config = Map(
+          "lshw.includeEmptySocket" -> "true"
+        )
+        val parseResults = parsed(config)
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 2
+        }
+      }
+    } // wonky opterons
+
+  } // The LSHW parser should
 }
