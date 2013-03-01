@@ -89,6 +89,14 @@ trait ConfigAccessor {
 
   protected def getStringList(key: String): List[String] =
     getValue(key, _.getStringList(key).asScala.toList).getOrElse(List())
+  protected def getStringList(key: String, default: List[String]): List[String] = {
+    val list = getStringList(key)
+    if (list.isEmpty)
+      default
+    else
+      list
+  }
+
 
   protected def getStringSet(key: String): Set[String] = getStringList(key).toSet
   protected def getStringSet(key: String, default: Set[String]): Set[String] = {
