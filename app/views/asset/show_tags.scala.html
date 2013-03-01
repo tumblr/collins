@@ -1,0 +1,25 @@
+@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+
+@import _root_.models.asset.AllAttributes
+
+<!-- start pretty tags -->
+<div class="tab-pane" id="pretty-tags">
+<div id="raw-json" style="visibility: hidden; display: none;">
+@(AllAttributes.get(aa.asset).toJsValue \\ "ATTRIBS")
+</div>
+
+<pre class="prettyprint"><code class="language-javascript"><div id="pretty-json">
+</div></code></pre>
+</div> 
+
+<script>
+  !function ($) {
+    $(function(){
+      var jsonString = JSON.stringify(JSON.parse(document.getElementById("raw-json").innerHTML), null, 4);
+      document.getElementById("pretty-json").innerHTML = jsonString.trim();
+
+      window.prettyPrint && prettyPrint()
+    })
+  }(window.jQuery)
+</script>
+<!-- end pretty tags -->
