@@ -1,0 +1,29 @@
+@(ad_hoc_view: String)
+
+@genURL() = @{
+  Seq(
+    "%s?hide-hf=true".format(collins.graphs.GangliaGraphConfig.url),
+    "tab=v",
+    "r=%s".format(collins.graphs.GangliaGraphConfig.timeRange),
+    "ad-hoc-view=%s".format(ad_hoc_view)
+  ).mkString("&")
+}
+
+<style type="text/css">
+#ganglia-graph {
+  width: 100%;
+  height: 1600px;
+}
+</style>
+
+<iframe id="ganglia-graph" src="" frameborder="0"></iframe>
+
+<script type="text/javascript">
+  $('a[data-toggle="pill"]').on('show', function(e) {
+    var target = $(e.target)
+    var iframe = $('#ganglia-graph')
+    if (target.attr('href') === '#graph-info' && iframe.attr('src') === "") {
+      iframe.attr('src', "@Html(genURL())")
+    }
+  })
+</script>
