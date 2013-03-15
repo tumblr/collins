@@ -5,25 +5,28 @@ import play.api.libs.json._
 
 object LshwRepresentation {
   def empty(): LshwRepresentation = {
-    new LshwRepresentation(Seq(), Seq(), Seq(), Seq())
+    new LshwRepresentation(Seq(), Seq(), Seq(), Seq(), null)
   }
   implicit object LshwFormat extends Format[LshwRepresentation] {
     import Cpu._
     import Disk._
     import Memory._
     import Nic._
+    import ServerBase._
     import Json.toJson
     override def reads(json: JsValue) = LshwRepresentation(
       (json \ "CPU").as[Seq[Cpu]],
       (json \ "MEMORY").as[Seq[Memory]],
       (json \ "NIC").as[Seq[Nic]],
-      (json \ "DISK").as[Seq[Disk]]
+      (json \ "DISK").as[Seq[Disk]],
+      (json \ "BASE").as[ServerBase]
     )
     override def writes(lshw: LshwRepresentation) = JsObject(Seq(
       "CPU" -> toJson(lshw.cpus),
       "MEMORY" -> toJson(lshw.memory),
       "NIC" -> toJson(lshw.nics),
-      "DISK" -> toJson(lshw.disks)
+      "DISK" -> toJson(lshw.disks),
+      "BASE" -> toJson(lshw.base)
     ))
   }
 }
@@ -32,7 +35,9 @@ case class LshwRepresentation(
   cpus: Seq[Cpu],
   memory: Seq[Memory],
   nics: Seq[Nic],
-  disks: Seq[Disk]
+  disks: Seq[Disk],
+  base: ServerBase
+
 ) {
   def cpuCount: Int = cpus.size
   def hasHyperthreadingEnabled: Boolean = (cpuThreadCount > cpuCoreCount)

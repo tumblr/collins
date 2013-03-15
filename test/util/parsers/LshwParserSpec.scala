@@ -44,6 +44,9 @@ class LshwParserSpec extends mutable.Specification {
           rep.has10GbNic must beTrue
           rep.macAddresses must have length 3
           rep.macAddresses must beNonEmptyStringSeq
+
+          rep.base.product mustEqual "PowerEdge C6105 (N/A)"
+          rep.base.vendor mustEqual "Winbond Electronics"
         }
       } // with a 10-gig card
 
@@ -159,6 +162,9 @@ class LshwParserSpec extends mutable.Specification {
           rep.has10GbNic must beFalse
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
+
+          rep.base.product mustEqual "X8DTN"
+          rep.base.vendor mustEqual "Supermicro"
         }
       } // B.02.12 format
 
@@ -237,6 +243,9 @@ class LshwParserSpec extends mutable.Specification {
           rep.has10GbNic must beFalse
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
+
+          rep.base.product mustEqual "PowerEdge C6105 (N/A)"
+          rep.base.vendor mustEqual "Dell Inc."
         }
       }
     }
@@ -351,7 +360,10 @@ class LshwParserSpec extends mutable.Specification {
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
           rep.macAddresses must have length 4
-          rep.macAddresses must beNonEmptyStringSeq 
+          rep.macAddresses must beNonEmptyStringSeq
+
+          rep.base.product mustEqual "PowerEdge R620 ()"
+          rep.base.vendor mustEqual "Winbond Electronics"
         }
       }
     }
@@ -376,6 +388,10 @@ class LshwParserSpec extends mutable.Specification {
           rep.has10GbNic must beFalse
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
+
+          rep.base.description mustEqual "Multi-system"
+          rep.base.product mustEqual "ProLiant SL335s G7"
+          rep.base.vendor mustEqual "HP"
           }
        }
 
