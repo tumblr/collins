@@ -5,7 +5,9 @@ import lshw._
 
 object LshwHelper extends CommonHelper[LshwRepresentation] {
   import AssetMeta.Enum._
+  import AssetMeta.DynamicEnum._
 
+  // TODO: Is this set actually used anywhere?
   val managedTags = Set(
     CpuCount,
     CpuCores,
@@ -29,7 +31,8 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     collectCpus(asset, lshw) ++
       collectMemory(asset, lshw) ++
       collectNics(asset, lshw) ++
-      collectDisks(asset, lshw)
+      collectDisks(asset, lshw) ++
+      collectBase(asset, lshw)
   }
 
   def reconstruct(asset: Asset, assetMeta: Seq[MetaWrapper]): Reconstruction = {
@@ -38,7 +41,8 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     val (memory,postMemoryMap) = reconstructMemory(postCpuMap)
     val (nics,postNicMap) = reconstructNics(postMemoryMap)
     val (disks,postDiskMap) = reconstructDisks(postNicMap)
-    (LshwRepresentation(cpus, memory, nics, disks), postDiskMap.values.flatten.toSeq)
+    val (base,postBaseMap) = reconstructBase(postDiskMap)
+    (LshwRepresentation(cpus, memory, nics, disks, base.head), postBaseMap.values.flatten.toSeq)
   }
 
   protected def reconstructCpu(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Cpu] = {
@@ -195,6 +199,36 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     }._2
     val diskSummary = AssetMetaValue(asset, DiskStorageTotal.id, lshw.totalUsableStorage.inBytes.toString)
     Seq(diskSummary) ++ physicalDisks
+  }
+
+  protected def reconstructBase(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[ServerBase] = {
+    val baseSeq = meta.get(0).map { seq =>
+      val baseDescription = amfinder(seq, BaseDescription, _.toString, "")
+      val baseProduct = amfinder(seq, BaseProduct, _.toString, "")
+      val baseVendor = amfinder(seq, BaseVendor, _.toString, "")
+      Seq(ServerBase(baseDescription, baseProduct, baseVendor))
+    }.getOrElse(Nil)
+
+    val filteredMeta = meta.map { case(groupId, metaSeq) =>
+      val newSeq = filterNot(
+        metaSeq,
+        Set(BaseDescription.id, BaseProduct.id, BaseVendor.id)
+      )
+      groupId -> newSeq
+    }
+    (baseSeq, filteredMeta)
+  }
+
+  protected def collectBase(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
+    val base = lshw.base
+    if (base == null) {
+      return Seq()
+    }
+    Seq(
+      AssetMetaValue(asset, BaseDescription.id, base.description),
+      AssetMetaValue(asset, BaseProduct.id, base.product),
+      AssetMetaValue(asset, BaseVendor.id, base.vendor)
+    )
   }
 
 }

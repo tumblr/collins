@@ -25,12 +25,10 @@ trait CommonHelperSpec[REP] extends test.ResourceFinder {
 
   def metaValue2metaWrapper(mvs: Seq[AssetMetaValue]): Seq[MetaWrapper] = {
     val enums = AssetMeta.Enum.values.toSeq
+    val dvals = AssetMeta.DynamicEnum.getValues
     mvs.map { mv =>
       val mid = mv.asset_meta_id
-      val meta = enums.find { e => e.id == mid }.map { e =>
-        AssetMeta(e.toString, -1, e.toString, e.toString, mv.asset_meta_id)
-      }.getOrElse(throw new Exception("Found unhandled AssetMeta"))
-      MetaWrapper(meta, mv)
+      MetaWrapper(AssetMeta.findById(mv.asset_meta_id).get, mv)
     }
   }
 }
