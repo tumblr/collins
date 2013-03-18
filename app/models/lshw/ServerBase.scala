@@ -19,7 +19,7 @@ object ServerBase {
 }
 
 case class ServerBase(
-  description: String, product: String, vendor: String
+  description: String = "", product: String = "", vendor: String = ""
 ) extends LshwAsset {
   import ServerBase._
   override def toJsValue() = Json.toJson(this)

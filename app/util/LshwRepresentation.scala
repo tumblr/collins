@@ -5,7 +5,7 @@ import play.api.libs.json._
 
 object LshwRepresentation {
   def empty(): LshwRepresentation = {
-    new LshwRepresentation(Seq(), Seq(), Seq(), Seq(), null)
+    new LshwRepresentation(Seq(), Seq(), Seq(), Seq(), new ServerBase)
   }
   implicit object LshwFormat extends Format[LshwRepresentation] {
     import Cpu._

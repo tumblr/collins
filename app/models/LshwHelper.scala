@@ -221,9 +221,6 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
 
   protected def collectBase(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     val base = lshw.base
-    if (base == null) {
-      return Seq()
-    }
     Seq(
       AssetMetaValue(asset, BaseDescription.id, base.description),
       AssetMetaValue(asset, BaseProduct.id, base.product),
