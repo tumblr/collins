@@ -51,6 +51,7 @@ module CollinsShell
     method_option :logs, :type => :boolean, :default => false, :desc => 'Also display asset logs, only used with details (SLOW)'
     method_option :size, :type => :numeric, :default => 50, :desc => 'Number of results to find. Defaults to 50'
     method_option :tags, :type => :array, :desc => 'Tags to display of form: tag1 tag2 tag3. e.g. --tags=hostname tag backend_ip_address'
+    method_option :threads, :type => :numeric, :default => 1, :desc => 'Number of threads to use for --exec. Defaults to 1.'
     method_option :url, :type => :boolean, :default => true, :desc => 'Display a URL along with tags or the default listing'
     def find
       client = get_collins_client
@@ -69,14 +70,15 @@ module CollinsShell
                                                                   :detailed => !options.exec?
             puts printer
           end
-          asset_exec asset, options.exec, options.confirm
+          asset_exec asset, options.exec, options.confirm, options.threads
         end
       else
         if not options.quiet then
           print_find_results assets, options.tags, :header => options.header, :url => options.url
         end
-        assets.each {|asset| asset_exec(asset, options.exec, options.confirm)}
+        assets.each {|asset| asset_exec(asset, options.exec, options.confirm, options.threads)}
       end
+      finalize_exec
     end
 
     desc 'find_similar TAG', 'get similar unallocated assets for a gven asset'
