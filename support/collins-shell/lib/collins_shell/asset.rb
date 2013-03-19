@@ -49,7 +49,6 @@ module CollinsShell
     method_option :exec, :type => :string, :desc => 'Execute a command using the data from this asset. Use {{hostname}}, {{ipmi.password}}, etc for substitution'
     method_option :header, :type => :boolean, :default => true, :desc => 'Display a tag header. Defaults to true'
     method_option :logs, :type => :boolean, :default => false, :desc => 'Also display asset logs, only used with details (SLOW)'
-    method_option :size, :type => :numeric, :default => 50, :desc => 'Number of results to find. Defaults to 50'
     method_option :tags, :type => :array, :desc => 'Tags to display of form: tag1 tag2 tag3. e.g. --tags=hostname tag backend_ip_address'
     method_option :threads, :type => :numeric, :default => 1, :desc => 'Number of threads to use for --exec. Defaults to 1.'
     method_option :url, :type => :boolean, :default => true, :desc => 'Display a URL along with tags or the default listing'
@@ -138,6 +137,7 @@ module CollinsShell
       batch_selector_operation Hash[
         :remote => options.remote,
         :operation => "set_attribute",
+        :size => options["size"],
         :success_message => proc {|asset| "Set attribute on #{asset.tag}"},
         :error_message => proc{|asset| "Setting attribute on #{asset.tag}"},
         :confirmation_message => proc do |assets|
@@ -174,6 +174,7 @@ module CollinsShell
       batch_selector_operation Hash[
         :remote => options.remote,
         :operation => "set_attributes",
+        :size => options["size"],
         :success_message => proc {|asset| "Set attributes on #{asset.tag}"},
         :error_message => proc{|asset| "Setting attributes on #{asset.tag}"},
         :confirmation_message => proc do |assets|
@@ -192,6 +193,7 @@ module CollinsShell
       batch_selector_operation Hash[
         :remote => options.remote,
         :operation => "delete_attribute",
+        :size => options["size"],
         :success_message => proc {|asset| "Delete attribute on #{asset.tag}"},
         :error_message => proc{|asset| "Delete attribute on #{asset.tag}"},
         :confirmation_message => proc do |assets|
@@ -219,6 +221,7 @@ module CollinsShell
       batch_selector_operation Hash[
         :remote => options.remote,
         :operation => "set_status",
+        :size => options["size"],
         :success_message => proc {|asset| "Set status to #{status} on #{asset.tag}"},
         :error_message => proc{|asset| "Setting status on #{asset.tag}"},
         :confirmation_message => proc do |assets|

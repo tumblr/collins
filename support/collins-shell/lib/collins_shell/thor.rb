@@ -48,6 +48,7 @@ module CollinsShell
     def use_selector_option required = false
       method_option :selector, :type => :hash, :required => required, :desc => 'Selector to query collins. Takes the form of --selector=key1:val1 key2:val2 etc'
       method_option :remote, :type => :boolean, :default => false, :desc => 'Search all collins instances, including remote ones'
+      method_option :size, :type => :numeric, :default => 50, :desc => 'Number of results to find. Defaults to 50'
     end
 
     def selector_or_tag
@@ -91,7 +92,7 @@ module CollinsShell
       require_non_empty(success_message, "success_message not set")
       require_non_empty(error_message, "error_message not set")
       require_non_empty(operation, "operation not set")
-      selector = get_selector selector_or_tag, [], nil, options[:remote]
+      selector = get_selector selector_or_tag, [], options[:size], options[:remote]
       call_collins get_collins_client, operation do |client|
         assets = client.find selector
         if assets.length > 1 then
