@@ -61,9 +61,16 @@ module CollinsShell
     end
 
     def require_yes message, color = nil, should_exit = true
+      def appropriate_answer?(a); na = a.to_s.downcase.strip; na == 'yes' || na == 'no'; end
       highline = HighLine.new
       colored_message = set_color(message, color)
-      answer = ask(colored_message)
+      answer = nil
+      while !appropriate_answer?(answer) do
+        unless answer.nil? then
+          say_status "error", "Please type 'yes' or 'no'.", :red
+        end
+        answer = ask(colored_message)
+      end
       if answer.downcase.strip !~ /^yes$/ then
         if should_exit then
           exit(0)
