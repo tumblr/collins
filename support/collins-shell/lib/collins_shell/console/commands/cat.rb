@@ -96,6 +96,7 @@ module CollinsShell; module Console; module Commands
       end
 
       def display_asset tag
+        tag = tag.gsub(/^\//, '')
         if asset_exists? tag then
           asset = get_asset tag
           show_logs = opts.logs?
