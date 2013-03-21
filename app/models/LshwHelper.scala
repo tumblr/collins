@@ -42,7 +42,7 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     val (nics,postNicMap) = reconstructNics(postMemoryMap)
     val (disks,postDiskMap) = reconstructDisks(postNicMap)
     val (base,postBaseMap) = reconstructBase(postDiskMap)
-    (LshwRepresentation(cpus, memory, nics, disks, base.head), postBaseMap.values.flatten.toSeq)
+    (LshwRepresentation(cpus, memory, nics, disks, base.headOption.getOrElse(ServerBase())), postBaseMap.values.flatten.toSeq)
   }
 
   protected def reconstructCpu(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Cpu] = {
