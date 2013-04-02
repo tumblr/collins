@@ -69,7 +69,7 @@ class LdapAuthenticationProvider() extends AuthenticationProvider {
       Some(user)
     } catch {
       case e: AuthenticationException =>
-        logger.info("Failed authentication for user %s".format(username))
+        logger.info("Failed authentication for user %s with error %s".format(username, e.getMessage))
         None
       case e: Throwable =>
         logger.info("Failed authentication", e)

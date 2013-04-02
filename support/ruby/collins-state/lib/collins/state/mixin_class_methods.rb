@@ -113,6 +113,8 @@ module Collins; module State; module Mixin
     # @return [Fixnum] Value in seconds
     def after duration, time_unit = :seconds
       multiplier = case time_unit
+                   when :days, :day
+                     24*60*60
                    when :hours, :hour
                      60*60
                    when :minutes, :minute
