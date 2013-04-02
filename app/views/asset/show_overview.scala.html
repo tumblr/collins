@@ -81,7 +81,7 @@
         </tr>
         @aa.mvs.filter(_.getName() != "HOSTNAME").map { mv =>
         <tr>
-          <th>@mv.getLabel</th>
+          <th>@mv.getLabel @if(mv.getGroupId() > 0) {(@mv.getGroupId())}</th>
           <td>
           @{
             mv.getName match {
