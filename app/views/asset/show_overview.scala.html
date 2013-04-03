@@ -2,7 +2,7 @@
 
 @import _root_.util.config.Feature
 @import _root_.util.plugins.SoftLayer
-@import _root_.util.views.TagDecorator
+@import _root_.util.views.{MetaValueOrderer, TagDecorator}
 
 <div class="active tab-pane" id="overview">
 <!--
@@ -79,9 +79,9 @@
           <td>@aa.asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse {<em>Never</em>}</td>
           <td></td>
         </tr>
-        @aa.mvs.filter(_.getName() != "HOSTNAME").map { mv =>
+        @MetaValueOrderer.order(aa.mvs.filter(_.getName() != "HOSTNAME")).map { case(size, mv) =>
         <tr>
-          <th>@mv.getLabel @if(mv.getGroupId() > 0) {(@mv.getGroupId())}</th>
+          <th>@mv.getLabel() @if(size > 1 || mv.getGroupId() != 0){(@mv.getGroupId())}</th>
           <td>
           @{
             mv.getName match {
