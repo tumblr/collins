@@ -19,7 +19,7 @@ object GangliaGraphConfig extends Configurable {
   // together in one graph image (show load_one, and load_five).
   // Confusingly, these are sometimes called graphs, and sometimes
   // reports.
-  def defaultGraphs = getStringList("defaultMetrics", List(
+  def defaultGraphs = getStringList("defaultGraphs", List(
     "load_all_report", "load_report", "mem_report", "cpu_report", "network_report", "packet_report"
   ))
 
