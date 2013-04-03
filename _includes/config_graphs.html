@@ -11,15 +11,17 @@
     </p>
 
     <p>
-    There is currently only support for Fibr, the <a href="http://opentsdb.net/">OpenTSDB</a>
-    visualization tool we built at Tumblr. While there are plans to open source fibr in the
-    near future, it is likely an early November release.
+    There is currently support for Fibr,
+    the <a href="http://opentsdb.net/">OpenTSDB</a> visualization tool
+    we built at Tumblr
+    and <a href="http://ganglia.info/">ganglia</a>. While there are
+    plans to open source fibr in the near future, it is likely an
+    early November release.
     </p>
 
     <p>
     Because graph plugins are easy to implement, we hope that the community will
-    contribute plugins for other common similar systems such as graphite, munin, or
-    ganglia.
+    contribute plugins for other common similar systems such as graphite, or munin.
     </p>
 
     <p>
@@ -159,3 +161,78 @@ In the above example, hosts that have a <code>PRIMARY_ROLE</code> of <code>DATAB
 display in addition to the default metrics, the MySQL specific metrics. Assets with a <code>POOL</code>
 matching <code>MEMCACHE*</code> will additionally display memcache specific metrics.
 </p>
+
+<h3>Ganglia Graphs <small><span class="label label-info">Namespace</span> <span class="inlinecode">graph.GangliaGraphs</span></small></h3>
+
+<ul class="thumbnails">
+  <li class="span4">
+    <p>
+      <a href="http://ganglia.info/">Ganglia</a> is a distributed
+      metrics generation, collection, and visualization system.  Collins
+      integration relies on
+      recent <a href="https://github.com/ganglia/ganglia-web/blob/master/docs/ad-hoc-views.mdown">ad-hoc-views</a>
+      support.
+    </p>
+
+  </li>
+  <li class="span5">
+    <a href="img/ganglia_asset_graph.png" class="thumbnail" target="_blank"><img src="img/ganglia_asset_graph.png" alt="Ganglia graph example"></a>
+  </li>
+</ul>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">url</td>
+      <td>String</td>
+      <td>Location of the ganglia web ui.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">timeRange</td>
+      <td>String</td>
+      <td>Default time range to display in the UI.  Defaults
+      to <code>1hr</code>.  Options available will depend on your
+      ganglia setup.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">hostSuffix</td>
+      <td>String</td>
+      <td>By default ganglia uses reverse dns to determine hostnames.
+      That means a server with a hosname of <code>foo</code> might
+      show up as <code>foo.example.com</code>.  If your reverse dns
+      scheme has a consistent suffix, you can supply it here.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">defaultGraphs</td>
+      <td>Set[String]</td>
+      <td>gweb veiws makes a distinction between "graphs" (or reports)
+      and individual metrics.  "graphs" are pre-defined and can
+      combine multiple metrics whiel metrics just display a single
+      value.  Defaults to <code>"load_all_report", "load_report",
+      "mem_report", "cpu_report", "network_report",
+      "packet_report"</code>.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">defaultMetrics</td>
+      <td>Set[String]</td>
+      <td>
+        Which individual metrics to display.  Defaults to <code>"disk_free", "disk_total"</code>.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example example-config">
+<pre>graph {
+  class = "collins.graphs.GangliaGraphs"
+  enabled = true
+  GangliaGraphs {
+    url = "http://my-ganglia.domain.local/"
+ }
+}</pre>
+</div>
