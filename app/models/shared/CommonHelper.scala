@@ -42,6 +42,9 @@ trait CommonHelper[T] {
   protected def finder[T](m: Seq[MetaWrapper], e: AssetMeta.Enum, c: (String => T), d: T): T = {
     m.find { _.getMetaId == e.id }.map { i => c(i.getValue) }.getOrElse(d)
   }
+  protected def amfinder[T](m: Seq[MetaWrapper], e: AssetMeta, c: (String => T), d: T): T = {
+    m.find { _.getMetaId == e.getId }.map { i => c(i.getValue) }.getOrElse(d)
+  }
   protected def seqFinder[T](m: Seq[MetaWrapper], e: AssetMeta.Enum, c: (String => T)): Seq[T] = {
     m.filter(_.getMetaId == e.id).map(i => c(i.getValue))
   }
