@@ -34,7 +34,8 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
         return Left(e)
     }
     val rep = try {
-      getCoreNodes(xml).foldLeft(LshwRepresentation(Nil,Nil,Nil,Nil)) { case (holder,node) =>
+      val base = getBaseInfo(xml)
+      getCoreNodes(xml).foldLeft(LshwRepresentation(Nil,Nil,Nil,Nil,base)) { case (holder,node) =>
         matcher(node) match {
           case c: Cpu => holder.copy(cpus = c +: holder.cpus)
           case m: Memory => holder.copy(memory = m.copy(bank = holder.memory.size) +: holder.memory)
@@ -151,6 +152,25 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
       (node \ "@id" text) == "core"
     }.getOrElse(throw MalformedAttributeException("Expected id=core node attribute"))
     core \\ "node"
+  }
+
+  protected def getBaseInfo(elem: Elem): ServerBase = {
+    // Note that this does not uniquely identify the root of the lshw
+    // xml, but is only a sanity check that this is being called on
+    // the correct element
+    if ((elem \ "@class" text).toString == "system") {
+      val asset = getAsset(elem)
+      ServerBase(asset.description, asset.product, asset.vendor)
+    }
+    // To spice things up, sometimes we get <list>$everything</list>
+    // instead of just $everything
+    else if (((elem \ "node") \ "@class" text) == "system")  {
+      val asset = getAsset(elem \ "node")
+      ServerBase(asset.description, asset.product, asset.vendor)
+    }
+    else {
+      throw MalformedAttributeException("Expected root class=system node attribute")
+    }
   }
 
   protected def settingsMap(n: NodeSeq): Map[String,String] = {

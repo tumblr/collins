@@ -188,4 +188,17 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     // DO NOT USE - Deprecated
     val NicAddress = Value(33, "INTERFACE_ADDRESS")
   }
+
+  // Post enum fields, enum is not safe to extend with new values
+  object DynamicEnum {
+    val BaseDescription = AssetMeta.findOrCreateFromName("BASE_DESCRIPTION")
+    val BaseProduct = AssetMeta.findOrCreateFromName("BASE_PRODUCT")
+    val BaseVendor = AssetMeta.findOrCreateFromName("BASE_VENDOR")
+
+    def getValues(): Seq[AssetMeta] = {
+      Seq(BaseDescription,BaseProduct,BaseVendor)
+    }
+
+
+  }
 }
