@@ -5,28 +5,30 @@
 <!-- Start Hardware Details -->
 <div class="tab-pane" id="hardware-details">
   @if(aa.lshw.cpuCount > 0) {
-  <h4>Server Base <small>Collected Information About the server itself</small></h4>
-  <table class="table table-bordered table-hover table-condensed">
-    <thead>
-      <tr>
-        <th>Field</th><th>Value</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Description is not displayed because it is rarely interesting (usually something like "system") -->
-      <!--
-      <tr>
-        <td>Description</td><td>@aa.lshw.base.description</td>
-      </tr>
-      -->
-      <tr>
-        <td>Product</td><td>@aa.lshw.base.product</td>
-      </tr>
-      <tr>
-        <td>Vendor</td><td>@aa.lshw.base.vendor</td>
-      </tr>
-    </tbody>
-  </table>
+    @if(!aa.lshw.base.isEmpty) {
+    <h4>Server Base <small>Collected Information About the server itself</small></h4>
+    <table class="table table-bordered table-hover table-condensed">
+      <thead>
+        <tr>
+          <th>Field</th><th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Description is not displayed because it is rarely interesting (usually something like "system") -->
+        <!--
+        <tr>
+          <td>Description</td><td>@aa.lshw.base.description</td>
+        </tr>
+        -->
+        <tr>
+          <td>Product</td><td>@aa.lshw.base.product</td>
+        </tr>
+        <tr>
+          <td>Vendor</td><td>@aa.lshw.base.vendor</td>
+        </tr>
+      </tbody>
+    </table>
+    }
 
   <h4>Network Interfaces <small>Collected NIC Information</small></h4>
   <table class="table table-bordered table-hover table-condensed">

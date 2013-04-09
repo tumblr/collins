@@ -23,4 +23,6 @@ case class ServerBase(
 ) extends LshwAsset {
   import ServerBase._
   override def toJsValue() = Json.toJson(this)
+
+  def isEmpty(): Boolean = description.isEmpty && product.isEmpty && vendor.isEmpty
 }
