@@ -16,7 +16,7 @@ object MetaValueOrderer {
       total ++ cur._2.map(m => (cur._1 -> m))
     }.sortBy { case(size, value) =>
       // sort by name/group id
-      "%s-%d".format(value.getName, value.getGroupId)
+      "%s-%d".format(value.getLabel, value.getGroupId)
     }
   }
 }
