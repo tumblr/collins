@@ -73,3 +73,12 @@
   </div>
 </div>
 
+<script type="text/javascript">
+    jQuery(document).ready(function ($) {
+      var anchor = location.href.split('#')[1];
+      $('a[href=#' + anchor + ']').tab('show');
+      setTimeout(function() {
+        $(window).scrollTop(0);
+       }, 0);
+    });
+</script>
