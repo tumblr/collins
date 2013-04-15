@@ -45,12 +45,38 @@ module CollinsShell; module Console
       CollinsShell::Console::Filesystem.new(opts)
     end
 
+    def exclude_methods
+      ['respond_to?','to_s','cput', 'id'].map{|s|s.to_sym}
+    end
+
+    def asset_methods exclude_non_scalar = false
+      non_scalar = [:addresses, :backend_address, :backend_addresses, :backend_ip_addresses,
+        :backend_netmasks, :cpus, :disks, :extras, :get_attribute, :mac_addresses, :memory, :nics,
+        :power, :public_address, :public_addresses, :public_ip_addresses]
+      asset_objects = {:ipmi => Collins::Ipmi, :state => Collins::AssetState}
+      ex_methods = exclude_methods
+      ex_methods += non_scalar if exclude_non_scalar
+      Collins::Asset.public_instance_methods(false).map(&:to_sym).reject do |meth|
+        ex_methods.include?(meth)
+      end.map do |meth|
+        if asset_objects.key?(meth) then
+          asset_objects[meth].public_instance_methods(false).map(&:to_sym).reject do |meh|
+            ex_methods.include?(meh) || meh.to_s =~ /=$/
+          end.map do |meh|
+            "#{meth}.#{meh}"
+          end
+        else
+          [meth.to_s]
+        end
+      end.flatten.sort
+    end
+
     def available_commands
       includes = ['clear_cache'] + pry_commands
       if asset? then
-        excludes = ['respond_to?','to_s','cput'].map{|s|s.to_sym}
+        excludes = exclude_methods
         cmds1 = CollinsShell::Console::Asset.public_instance_methods(false).reject{|i| excludes.include?(i.to_sym)}
-        cmds2 = Collins::Asset.public_instance_methods(false).reject{|i| excludes.include?(i.to_sym)}.map{|s| "asset.#{s}"}
+        cmds2 = asset_methods.map{|m| "asset.#{m}"}.sort
         cmds1 + cmds2 + includes
       else
         includes

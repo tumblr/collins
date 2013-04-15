@@ -75,7 +75,10 @@ module CollinsShell; module Console; module Commands
         end
         # Should we just display commands?
         if display_commands then
-          output.puts("Available commands:")
+          output.puts("Available formats (see ls --help):")
+          r = fs_node.asset_methods(true)
+          process_values r.map{|m| "{{#{m}}}"}, 8
+          output.puts("\nAvailable commands:")
           process_values fs_node.available_commands, 8
           output.puts()
         # If we have nothing, grab all tags

@@ -8,7 +8,10 @@ class Pry
   # We kill the built in completion so we can tell users what things are available
   module InputCompleter
     class << self
-      def build_completion_proc(target, commands=[""])
+      def build_completion_proc(target, commands=[""], cmplns = nil)
+        if cmplns.is_a?(Array) then # Work around for breakage between pry 0.9.9.6 and 0.9.12
+          commands = cmplns
+        end
         proc do |input|
           commands.map do |cmd|
             cmd_s = cmd.to_s
