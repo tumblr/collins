@@ -36,6 +36,13 @@
           }
         }
         @formField {
+          @formLabel("hostname", "Hostname")
+          @formInput {
+            <input type="text" id="hostname" name="hostname" tabindex="2" autocomplete="off">
+            <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Asset hostname"></i></span>
+          }
+        }
+        @formField {
           @formLabel("status", "Status")
           @formInput {
             <select name="status" id="status" tabindex="501" accesskey="l">
