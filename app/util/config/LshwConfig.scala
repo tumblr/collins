@@ -9,11 +9,13 @@ object LshwConfig extends Configurable {
   def flashSize = getLong("flashSize", 1400000000000L)
   def includeDisabledCpu = getBoolean("includeDisabledCpu", false)
   def includeEmptySocket = getBoolean("includeEmptySocket", false)
+  def defaultNicCapacity = getString("defaultNicCapacity")(ConfigValue.Optional)
 
   override protected def validateConfig() {
     flashProduct
     flashSize
     includeDisabledCpu
     includeEmptySocket
+    defaultNicCapacity
   }
 }
