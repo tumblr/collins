@@ -1,6 +1,20 @@
-1.2.3		2013/??/??
+1.2.4		2013/??/??
 
 	* Not yet released
+
+1.2.3		2013/04/24
+
+	* LSHW: Allow a default speed to be specified via defaultNicCapacity (Benjamin VanEvery #91)
+	* Bug: Evolution 11 autoinc should work with MySQL and H2 (Benjamin VanEvery #90)
+	* Bug: Exact match search when dropdown used in UI (Chris Burroughs #88)
+	* UI: Bookmarkable tabs and working logs refresh button in asset view (Chris Burroughs #87)
+	* Docs: Document ganglia graphing config (Chris Burroughs #84 and #85)
+	* UI: Display dimension of attribute in asset view (Chris Burroughs, Blake Matheny #83 and #79)
+	* Logging: Better LDAP failure messages (Chris Burroughs #79)
+	* LSHW: Include server description, vendor, etc during intake (Chris Burroughs #77)
+	* Graph: Ganglia GraphView support (Chris Burroughs #76)
+	* Shell: Support for size and threads parameter for batch operations (Blake Matheny #72)
+	* LSHW: Handle ghost CPUs in LSHW output (Chris Burroughs #70)
 
 1.2.2   2013/02/13
 
