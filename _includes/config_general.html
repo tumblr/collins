@@ -158,6 +158,11 @@ match is found.
   </thead>
   <tbody>
     <tr>
+      <td class="inlinecode">lshw.defaultNicCapacity</td>
+      <td>Long</td>
+      <td>If the network interface capacity can not be found, fallback to this value. Specified in bits. No default value.</td>
+    </tr>
+    <tr>
       <td class="inlinecode">lshw.flashProduct</td>
       <td>String</td>
       <td>Product string to look for in LSHW output to detect a flash device.  Defaults to flashmax.</td>
@@ -167,11 +172,22 @@ match is found.
       <td>Long</td>
       <td>If the flashProduct matched, the size to use. Defaults to 1400000000000.</td>
     </tr>
+    <tr>
+      <td class="inlinecode">lshw.includeDisabledCpu</td>
+      <td>Bool</td>
+      <td>Whether CPUs marked as disabled should be included. Defaults to false.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">lshw.includeEmptySocket</td>
+      <td>Bool</td>
+      <td>Whether sockets with no CPU should be included. Defaults to false.</td>
+    </tr>
   </tbody>
 </table>
 
 <div class="example reference-config">
 <pre>lshw {
+  defaultNicCapacity = 10000000000
   flashProduct = "flashmax"
   flashSize = 1400000000000
 }</pre>
