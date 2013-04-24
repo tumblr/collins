@@ -106,21 +106,35 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
       Disk(size, Disk.Type.Flash, asset.description, asset.product, asset.vendor)
   }
 
+  private val defaultNicCapacity = LshwConfig.defaultNicCapacity
+
   val nicMatcher: PartialFunction[NodeSeq,Nic] = {
-    case n if (n \ "@class" text) == "network" =>
+    case n if ((n \ "@class" text) == "network") => {
       val asset = getAsset(n)
       val mac = (n \ "serial" text)
       val speed = (n \ "capacity" text) match {
         case cap if cap.nonEmpty => BitStorageUnit(cap.toLong)
-        case empty => asset.product.toLowerCase.contains("10-gig") match {
-          case true => BitStorageUnit(10000000000L)
-          case false =>
-            throw AttributeNotFoundException(
-              "Could not find capacity for network interface"
-            )
-        }
+        case empty => getDefaultNicStorage(asset)
       }
       Nic(speed, mac, asset.description, asset.product, asset.vendor)
+    }
+  }
+
+  /**
+   * Parse the NIC capacity from product name or use the configured default
+   * @return The NIC capacity of the asset or the default if the asset did not provide a NIC capacity
+   * @throws AttributeNotFoundException if cannot deduce speed from product name and not default configured
+   */
+  private def getDefaultNicStorage(asset: LshwAsset): BitStorageUnit = {
+    asset.product.toLowerCase.contains("10-gig") match {
+      case true => BitStorageUnit(10000000000L)
+      case false => defaultNicCapacity
+        .map((s: String) => BitStorageUnit(s.toLong))
+        .getOrElse(
+          throw AttributeNotFoundException(
+            "Could not find capacity for network interface"
+        ))
+    }
   }
 
   protected def isCpuNode(n: NodeSeq): Boolean = {

@@ -80,7 +80,7 @@ class LshwParserSpec extends mutable.Specification {
       } // basic
 
       "quad nic" in new LshwParserHelper("lshw-quad.xml") {
-        val parseResults = parsed()
+        val parseResults = parsed(Map("defaultNicCapacity" -> "10000000000"))
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
           rep.cpuCount mustEqual 2
@@ -102,7 +102,7 @@ class LshwParserSpec extends mutable.Specification {
 
           rep.nicCount mustEqual 6
           rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.has10GbNic aka "has 10 gig card" must beTrue // picked up from default in config
           rep.macAddresses must have length 6
           rep.macAddresses must beNonEmptyStringSeq
         }
