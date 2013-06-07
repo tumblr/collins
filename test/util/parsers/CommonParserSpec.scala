@@ -3,6 +3,7 @@ package util
 package parsers
 
 import play.api.Configuration
+import _root_.util.config.LldpConfig
 import _root_.util.config.LshwConfig
 import org.specs2._
 import specification._
@@ -19,6 +20,7 @@ trait CommonParserSpec[REP] extends ResourceFinder {
       _root_.util.config.AppConfig.globalConfig = None;
     }
     LshwConfig.initialize
+    LldpConfig.initialize
     val parser = getParser(data)
     parser.parse()
   }

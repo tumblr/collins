@@ -10,7 +10,7 @@ class LldpParserSpec extends mutable.Specification {
 
   class LldpParserHelper(val filename: String) extends Scope with CommonParserSpec[LldpRepresentation] {
     override def getParser(txt: String) = new LldpParser(txt)
-    def parsed() = getParseResults(filename)
+    def parsed(options: Map[String,String] = Map.empty) = getParseResults(filename, options)
   }
 
   "The Lldp Parser" should {
@@ -42,6 +42,24 @@ class LldpParserSpec extends mutable.Specification {
       }
     }
 
+    "missing vlan config fail" in new LldpParserHelper("lldpctl-no-name.xml") {
+      val parseResult = parsed()
+      parseResult must beLeft
+    }
+
+    "missing vlan config ok" in new LldpParserHelper("lldpctl-no-name.xml") {
+      val config = Map(
+        "lshw.requireVlanName" -> "false"
+      )
+      val parseResult = parsed(config)
+      parseResult must beRight
+      parseResult.right.toOption must beSome.which { rep =>
+        rep.interfaceCount mustEqual(2)
+        rep.vlanNames.toSet mustEqual(Set(""))
+        rep.vlanIds.toSet mustEqual(Set(100,101))
+      }
+    }
+
     "Parse XML with four network interfaces" in new LldpParserHelper("lldpctl-four-nic.xml") {
       val parseResult = parsed()
       parseResult must beRight
@@ -59,11 +77,11 @@ class LldpParserSpec extends mutable.Specification {
     }
 
     "Parse a generated XML file" in new LldpParserHelper("lldpctl-empty.xml") {
-      parsed must beRight
+      parsed() must beRight
     }
 
     "Fail to parse wrong XML" in new LldpParserHelper("lshw-basic.xml") {
-      parsed must beLeft
+      parsed() must beLeft
     }
 
     "Fail to parse text" in new LldpParserHelper("hello world") {
