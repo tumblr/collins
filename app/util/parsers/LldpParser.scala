@@ -2,6 +2,7 @@ package util
 package parsers
 
 import models.lldp._
+import config.LldpConfig
 import scala.xml.{Elem, MalformedAttributeException, Node, NodeSeq, XML}
 
 class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
@@ -61,7 +62,11 @@ class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
     (seq \\ "vlan").foldLeft(Seq[Vlan]()) { case(vseq, vlan) =>
       val id = Option(vlan \ "@vlan-id" text).filter(_.nonEmpty).getOrElse("0")
       val name = vlan.text
-      requireNonEmpty((id -> "vlan-id"), (name -> "vlan name"))
+      if (LldpConfig.requireVlanName) {
+        requireNonEmpty((id -> "vlan-id"), (name -> "vlan name"))
+      } else {
+        requireNonEmpty((id -> "vlan-id"))
+      }
       Vlan(id.toInt, name) +: vseq
     }
   }

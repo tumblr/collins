@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lldp label="LLDP neighbors">
+ <interface label="Interface" name="eth0" via="LLDP" rid="1" age="0 day, 00:00:44">
+  <chassis label="Chassis">
+   <id label="ChassisID" type="mac">00:00:00:00:00:00</id>
+   <name label="SysName">laxb-101</name>
+   <descr label="SysDescr">HP Switch </descr>
+   <capability label="Capability" type="Bridge" enabled="on"/>
+   <capability label="Capability" type="Router" enabled="off"/>
+  </chassis>
+  <port label="Port">
+   <id label="PortID" type="local">9</id>
+   <descr label="PortDescr">A9</descr>
+   <auto-negotiation label="PMD autoneg" supported="yes" enabled="yes">
+    <advertised label="Adv" type="10Base-T" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="100Base-TX" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="1000Base-T" hd="no" fd="yes"/>
+    <current label="MAU oper type">1000BaseTFD - Four-pair Category 5 UTP, full duplex mode</current>
+   </auto-negotiation>
+   <power label="MDI Power" supported="yes" enabled="yes" paircontrol="no">
+    <device-type label="Device type">PSE</device-type>
+    <pairs label="Power pairs">signal</pairs>
+    <class label="Class">class 0</class>
+   </power>
+  </port>
+  <vlan label="VLAN" vlan-id="100" pvid="yes"/>
+ </interface>
+ <interface label="Interface" name="eth1" via="LLDP" rid="1" age="0 day, 00:00:44">
+  <chassis label="Chassis">
+   <id label="ChassisID" type="mac">00:00:00:00:00:00</id>
+   <name label="SysName">laxb-101</name>
+   <descr label="SysDescr">HP Switch</descr>
+   <capability label="Capability" type="Bridge" enabled="on"/>
+   <capability label="Capability" type="Router" enabled="off"/>
+  </chassis>
+  <port label="Port">
+   <id label="PortID" type="local">65</id>
+   <descr label="PortDescr">C17</descr>
+   <auto-negotiation label="PMD autoneg" supported="yes" enabled="yes">
+    <advertised label="Adv" type="10Base-T" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="100Base-TX" hd="yes" fd="yes"/>
+    <advertised label="Adv" type="1000Base-T" hd="no" fd="yes"/>
+    <current label="MAU oper type">1000BaseTFD - Four-pair Category 5 UTP, full duplex mode</current>
+   </auto-negotiation>
+   <power label="MDI Power" supported="yes" enabled="yes" paircontrol="no">
+    <device-type label="Device type">PSE</device-type>
+    <pairs label="Power pairs">signal</pairs>
+    <class label="Class">class 0</class>
+   </power>
+  </port>
+  <vlan label="VLAN" vlan-id="101" pvid="yes"/>
+ </interface>
+</lldp>
