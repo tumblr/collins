@@ -1,0 +1,37 @@
+package collins.intake
+
+import collins.cache.ConfigCache
+import collins.shell.{Command, CommandResult}
+import models.Asset
+
+import play.api.{Application, Plugin}
+
+import com.twitter.util.{Future, FuturePool}
+import java.util.concurrent.Executors
+import collins.provisioning.{ProfileLoader, Provisioner}
+
+class IntakePlugin(app: Application) extends Plugin with Provisioner {
+
+  lazy protected[this] val profileCache =
+    ConfigCache.create(IntakeConfig, ProfileLoader())
+
+  protected[this] val executor = Executors.newCachedThreadPool()
+  protected[this] val pool = FuturePool(executor)
+
+  override def enabled: Boolean = {
+    IntakeConfig.pluginInitialize(app.configuration)
+    IntakeConfig.enabled
+  }
+
+  override def onStart() {
+    if (enabled) {
+      IntakeConfig.validateConfig
+    }
+  }
+
+  override def onStop() {
+    try executor.shutdown() catch {
+      case _ =>
+    }
+  }
+}
