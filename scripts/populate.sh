@@ -1,6 +1,6 @@
 #!/bin/sh
 
-URL="http://localhost:9000/api/asset"
+URL="http://localhost:8080/api/asset"
 LshwFiles="10g
 old-web
 basic
