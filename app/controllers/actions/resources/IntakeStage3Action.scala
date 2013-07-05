@@ -120,7 +120,6 @@ case class IntakeStage3Action(
     Right(IntakeDataHolder(chassisTag, rp, extractFieldValuesFromRequest(), pmap))
   }
 
-
   private def extractFieldValuesFromRequest(): Map[String, String] = {
     // Return the extracted values for the custom fields from the request
     intakeCustomFields.map((fieldName: String) => {
