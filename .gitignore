@@ -15,4 +15,6 @@ RUNNING_PID
 conf/solr/data/
 .DS_Store
 Gemfile.lock
+.idea
+.idea_modules
 
