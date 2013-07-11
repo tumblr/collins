@@ -18,6 +18,5 @@ Gemfile.lock
 .idea_modules
 
 /conf/solr/data/
-/conf/dev_authentication.conf
 
 
