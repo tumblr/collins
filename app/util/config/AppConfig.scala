@@ -36,9 +36,10 @@ trait AppConfig {
       import play.api.Play.current
       Some(current.configuration)
     } catch {
-      case e: RuntimeException =>
+      case e: RuntimeException => {
         Logger(getClass).error("No current play application configured")
         AppConfig.globalConfig
+      }
     }
   }.orElse(default).getOrElse(play.api.Configuration.from(Map.empty))
 }
