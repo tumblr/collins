@@ -2,9 +2,7 @@ package util
 package security
 
 import util.config.{Configurable, ConfigValue}
-import collins.permissions.PermissionsHelper
 import collins.validation.File
-import java.io.{File => IoFile}
 
 object AuthenticationProviderConfig extends Configurable {
   override val namespace = "authentication"
@@ -33,6 +31,7 @@ object FileAuthenticationProviderConfig extends Configurable {
 
   override protected def validateConfig() {
     if (AuthenticationProviderConfig.authType == "file") {
+      logger.debug("User authentication file " + userfile)
       File.requireFileIsReadable(userfile)
     }
   }

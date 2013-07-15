@@ -104,6 +104,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
         if (!skipValidation) {
           logger.debug("Validating configuration for %s".format(getClass.getName))
           validateConfig()
+          logger.trace("Validation successful for configuration for %s".format(getClass.getName))
         }
       } catch {
         case e =>

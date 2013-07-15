@@ -54,13 +54,7 @@ object AuthenticationProvider {
     ConfigCache.create(AuthenticationProviderConfig.cachePermissionsTimeout, PermissionsLoader())
 
   def get(name: String): AuthenticationProvider = {
-    name match {
-      case "default" => Default
-      case "file" => new FileAuthenticationProvider()
-      case "ldap" => new LdapAuthenticationProvider()
-      case o =>
-        throw new Exception("Invalid auth type %s specified".format(name))
-    }
+    new MixedAuthenticationProvider(name)
   }
 
   def permissions(concern: String): Option[Set[String]] = {
