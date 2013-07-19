@@ -194,9 +194,10 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     val BaseDescription = AssetMeta.findOrCreateFromName("BASE_DESCRIPTION")
     val BaseProduct = AssetMeta.findOrCreateFromName("BASE_PRODUCT")
     val BaseVendor = AssetMeta.findOrCreateFromName("BASE_VENDOR")
+    val BaseSerial = AssetMeta.findOrCreateFromName("BASE_SERIAL")
 
     def getValues(): Seq[AssetMeta] = {
-      Seq(BaseDescription,BaseProduct,BaseVendor)
+      Seq(BaseDescription,BaseProduct,BaseVendor,BaseSerial)
     }
 
 

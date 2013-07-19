@@ -6,10 +6,11 @@ abstract class LshwAsset {
   val description: String
   val product: String
   val vendor: String
+
   def toJsValue(): JsValue
 }
 object LshwAsset {
-  def apply(desc: String, prod: String, vend: String) = new LshwAsset {
+  def apply(desc: String, prod: String, vend: String ) = new LshwAsset {
     val description = desc
     val product = prod
     val vendor = vend

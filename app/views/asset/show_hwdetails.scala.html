@@ -6,7 +6,7 @@
 <div class="tab-pane" id="hardware-details">
   @if(aa.lshw.cpuCount > 0) {
     @if(!aa.lshw.base.isEmpty) {
-    <h4>Server Base <small>Collected Information About the server itself</small></h4>
+    <h4>Server Base <small>Collected information about the server itself</small></h4>
     <table class="table table-bordered table-hover table-condensed">
       <thead>
         <tr>
@@ -25,6 +25,10 @@
         </tr>
         <tr>
           <td>Vendor</td><td>@aa.lshw.base.vendor</td>
+        </tr>
+
+        <tr>
+            <td>Serial</td><td>@aa.lshw.base.serial</td>
         </tr>
       </tbody>
     </table>

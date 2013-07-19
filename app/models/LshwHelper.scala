@@ -206,7 +206,8 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       val baseDescription = amfinder(seq, BaseDescription, _.toString, "")
       val baseProduct = amfinder(seq, BaseProduct, _.toString, "")
       val baseVendor = amfinder(seq, BaseVendor, _.toString, "")
-      Seq(ServerBase(baseDescription, baseProduct, baseVendor))
+      val baseSerial = amfinder(seq, BaseSerial, _.toString, "")
+      Seq(ServerBase(baseDescription, baseProduct, baseVendor, baseSerial))
     }.getOrElse(Nil)
 
     val filteredMeta = meta.map { case(groupId, metaSeq) =>
@@ -224,7 +225,8 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     Seq(
       AssetMetaValue(asset, BaseDescription.id, base.description),
       AssetMetaValue(asset, BaseProduct.id, base.product),
-      AssetMetaValue(asset, BaseVendor.id, base.vendor)
+      AssetMetaValue(asset, BaseVendor.id, base.vendor),
+      AssetMetaValue(asset, BaseSerial.id, base.serial)
     )
   }
 
