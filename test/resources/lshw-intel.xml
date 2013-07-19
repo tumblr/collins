@@ -8,7 +8,6 @@
  <product>X8DTN (1234567890)</product>
  <vendor>Supermicro</vendor>
  <version>1234567890</version>
- <serial>1234567890</serial>
  <width units="bits">64</width>
  <configuration>
   <setting id="boot" value="normal" />
