@@ -1,34 +1,45 @@
 #! /usr/bin/env bash
 #
 # collins - groovy kind of love
+# http://tumblr.github.io/collins/#about
 #
 # chkconfig:   35 95 5
-# description: groovy kind of love
+# description: Collins inventory asset manager
+##
 
 APP_NAME="collins"
 APP_HOME="/usr/local/$APP_NAME/current"
+LOG_HOME='/var/log'
 DAEMON="/usr/local/bin/daemon"
 LISTEN_PORT=8080
 FILE_LIMIT=8192
 COLLINS_USER="collins"
-HEAP_OPTS="-XX:MaxPermSize=384m"
+
+##
+# Defaults for JVM
+# Optionally tweak these via sysconfig
+##
+HEAP_OPTS=""
+# Play/Scala dynamic class allocation uses a lot of space
+PERMGEN_OPTS="-XX:MaxPermSize=384m -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+# http://blog.ragozin.info/2011/09/hotspot-jvm-garbage-collection-options.html
+# http://www.javaworld.com/javaworld/jw-01-2002/jw-0111-hotspotgc.html
+GC_LOGGING_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintTenuringDistribution -XX:+PrintHeapAtGC"
+GC_LOG="-Xloggc:${LOG_HOME}/$APP_NAME/gc.log -XX:+UseGCLogFileRotation"
+JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=3333 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
+DEBUG_OPTS="-XX:ErrorFile=${LOG_HOME}/$APP_NAME/java_error%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/collinsDump.hprof"
 
 # Check for config overrides
 [ -f /etc/sysconfig/collins ] && . /etc/sysconfig/collins
 
 APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
 DNS_OPTS="-Dnetworkaddress.cache.ttl=1 -Dnetworkaddress.cache.negative.ttl=1"
-GC_OPTS="-XX:+CMSClassUnloadingEnabled"
-GC_LOG_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintTenuringDistribution -XX:+PrintHeapAtGC"
-GC_LOG="-Xloggc:/var/log/$APP_NAME/gc.log"
-DEBUG_OPTS="-XX:ErrorFile=/var/log/$APP_NAME/java_error%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/collinsDump.hprof"
-JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=3333 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
-JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $GC_OPTS $GC_LOG_OPTS $GC_LOG $HEAP_OPTS $DEBUG_OPTS"
+JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $PERMGEN_OPTS $GC_LOGGING_OPTS $GC_LOG $HEAP_OPTS $DEBUG_OPTS"
 
 pidfile="/var/run/$APP_NAME/$APP_NAME.pid"
 daemon_pidfile="/var/run/$APP_NAME/$APP_NAME-daemon.pid"
 daemon_args="-u $COLLINS_USER --env HOME=$APP_HOME --name $APP_NAME --pidfile $daemon_pidfile --core -U --chdir /"
-daemon_start_args="--stdout=/var/log/$APP_NAME/stdout --stderr=/var/log/$APP_NAME/error"
+daemon_start_args="--stdout=${LOG_HOME}/$APP_NAME/stdout --stderr=${LOG_HOME}/$APP_NAME/error"
 
 function running() {
   $DAEMON $daemon_args --running
