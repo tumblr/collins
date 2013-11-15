@@ -15,10 +15,9 @@ Collins shell will look for a yaml file at ~/.collins.yaml, passed in via
 `COLLINS=~/my_collins.yaml`. The file should look like:
 
     ---
-    collins:
-        host: "http://somehost:8080"
-        username: "user"
-        password: "secret"
+    host: "http://somehost:8080"
+    username: "user"
+    password: "secret"
 
 You can also specify the host, username, or options via the `--host`,
 `--username` and `--password` options. If you just specify `--password`
