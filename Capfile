@@ -13,7 +13,7 @@ task :ewr01 do
 end
 
 task :d2 do
-  role :app, 'collins.d2.tumblr.net', user: 'root'
+  role :app, 'collins.d2.tumblr.net'
 end
 
 load 'deploy'
