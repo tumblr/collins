@@ -5,7 +5,6 @@ import play.api.{Application, Logger, Play, Plugin}
 import models.Model
 
 class DatabasePlugin(app: Application) extends Plugin {
-
   override def enabled = true
 
   override def onStart() {
@@ -15,6 +14,12 @@ class DatabasePlugin(app: Application) extends Plugin {
   }
 
   override def onStop() {
+    if (enabled) {
+      Model.shutdown()
+    }
+  }
+
+  def closeConnection() {
     if (enabled) {
       Model.shutdown()
     }

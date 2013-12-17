@@ -32,6 +32,9 @@ object Model {
   }
 
   def shutdown() {
+    if(Session.hasCurrentSession) {
+      Session.currentSession.close
+      Session.currentSession.unbindFromCurrentThread
+    }
   }
-
 }
