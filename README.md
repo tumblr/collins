@@ -42,7 +42,6 @@ Email collins-sm@googlegroups.com or see the mailing list archive at https://gro
 To create a production zip, run `./scripts/package.sh`. This will produce
 `target/collins.zip`.
 
-Copy `target/collins.zip` to `repo.d2.tumblr.net:/usr/local/static_file_server/collins.zip`.
+Copy `target/collins.zip` to `repo.tumblr.net:/usr/local/static_file_server/collins.zip`.
 
-Run `cap deploy ROLES=appd2` to deploy to d2, then `cap deploy ROLES=app` to
-deploy to EWR01.
+Run `cap ewr01 deploy` to deploy to ewr01, and `cap d2 deploy` to deploy to d2.

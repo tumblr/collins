@@ -6,7 +6,6 @@ set :repository,  '.'
 set :scm,        :none
 set :deploy_via, :wget
 set :copy_strategy, :wget
-#set :wget_local, true
 set :deploy_to,  '/usr/local/collins'
 
 # user options
@@ -20,9 +19,6 @@ ssh_options[:forward_agent] = true
 # misc options
 default_run_options[:pty]   = true
 set :normalize_asset_timestamps, false
-
-# nodes
-role :dev, 'localhost', :user => ENV['USER']
 
 # tasks
 namespace :deploy do
@@ -55,7 +51,6 @@ namespace :deploy do
     stop
     start
   end
-
 end
 
 after 'deploy:update', 'deploy:copy_config'
