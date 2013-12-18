@@ -39,9 +39,8 @@ Email collins-sm@googlegroups.com or see the mailing list archive at https://gro
 
 ## Internal (Tumblr) docs
 
-To create a production zip, run `./scripts/package.sh`. This will produce
-`target/collins.zip`.
-
-Copy `target/collins.zip` to `repo.tumblr.net:/usr/local/static_file_server/collins.zip`.
-
-Run `cap ewr01 deploy` to deploy to ewr01, and `cap d2 deploy` to deploy to d2.
+To create a production zip:
+  - download and unpackage play @ ~/src/play-2.0.3 or define $PLAY_CMD with an alternate location
+  - run `./scripts/package.sh` which will produce  `target/collins.zip`
+  - copy `target/collins.zip` to `repo.tumblr.net:/usr/local/static_file_server/collins.zip`
+  - run `cap ewr01 deploy` to deploy to ewr01 and `cap d2 deploy` to deploy to d2
