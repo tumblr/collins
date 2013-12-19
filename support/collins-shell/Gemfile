@@ -11,8 +11,8 @@ gem 'terminal-table', '~> 1.4.5'
 gem 'thor',           '~> 0.16.0'
 
 group :development do
-    gem 'jeweler',      '~> 1.8.3'
-    gem 'redcarpet'
-    gem 'rspec',        '~> 2.10.0'
-    gem 'yard',         '~> 0.8'
+  gem 'jeweler',      '~> 1.8.3'
+  gem 'redcarpet'
+  gem 'rspec',        '~> 2.10.0'
+  gem 'yard',         '~> 0.8'
 end
