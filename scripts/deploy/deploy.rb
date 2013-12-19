@@ -20,7 +20,28 @@ ssh_options[:forward_agent] = true
 default_run_options[:pty]   = true
 set :normalize_asset_timestamps, false
 
+# tumblr options
+set :release_server, 'repo.tumblr.net'
+set :release_location, File.join(File.dirname(__FILE__), '../../target/collins.zip')
+set :remote_release_location, '/usr/local/static_file_server'
+
 # tasks
+namespace :publish do
+  task :collins do
+    set :user, ENV['user']
+    abort "unable to find packaged collins release @ #{release_location}" unless File.exist?(release_location)
+
+    release_file_name = ['collins', File.mtime(release_location).to_i, 'zip'].join('.')
+    upload_target_location = File.join '/tmp', release_file_name
+    upload release_location, upload_target_location, hosts: [release_server]
+
+    sudo [
+      "mv #{upload_target_location} #{remote_release_location}",
+      "ln -fs #{File.join(remote_release_location, release_file_name)} #{File.join(remote_release_location, 'collins.zip')}"
+    ].join(' && '), hosts: [release_server]
+  end
+end
+
 namespace :deploy do
   task :default do
     update
