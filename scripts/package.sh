@@ -11,6 +11,11 @@ if [ -z "$PLAY_CMD" ]; then
   PLAY_CMD="$HOME/src/play-2.0.4/play";
 fi
 
+if [ ! -f $PLAY_CMD ]; then
+  echo "unable to find play command @ $PLAY_CMD"
+  exit 1
+fi
+
 if [ $DEBUG -eq 0 ]; then
   rm -rf targed/staged
   $PLAY_CMD clean compile stage

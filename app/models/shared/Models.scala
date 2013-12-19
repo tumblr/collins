@@ -1,7 +1,7 @@
 package models
 
 import play.api.db._
-import play.api.Play
+import play.api.{Play, Logger}
 import play.api.Play.current
 
 import org.squeryl.{PrimitiveTypeMode, Session, SessionFactory}
@@ -32,6 +32,11 @@ object Model {
   }
 
   def shutdown() {
-  }
+    if(Session.hasCurrentSession) {
+      Logger.debug("closing squeryl session")
 
+      Session.currentSession.close
+      Session.currentSession.unbindFromCurrentThread
+    }
+  }
 }
