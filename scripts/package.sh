@@ -8,7 +8,7 @@ else
 fi
 
 if [ -z "$PLAY_CMD" ]; then
-  PLAY_CMD="$HOME/src/play-2.0.3/play";
+  PLAY_CMD="$HOME/src/play-2.0.4/play";
 fi
 
 if [ ! -f $PLAY_CMD ]; then
