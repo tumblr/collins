@@ -39,7 +39,8 @@ Email collins-sm@googlegroups.com or see the mailing list archive at https://gro
 
 ## Internal (Tumblr) docs
 
-To create a production zip:
+To create a production zip and deploy to production:
+  - ensure capistrano 2.15.5 is installed
   - download and unpackage play @ ~/src/play-2.0.3 or define $PLAY_CMD with an alternate location
   - run `./scripts/package.sh` which will produce  `target/collins.zip`
   - copy `target/collins.zip` to `repo.tumblr.net:/usr/local/static_file_server/collins.zip`
