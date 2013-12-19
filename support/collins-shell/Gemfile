@@ -16,3 +16,7 @@ group :development do
   gem 'rspec',        '~> 2.10.0'
   gem 'yard',         '~> 0.8'
 end
+
+group :deployment do
+  gem 'capistrano',   '~> 2.15.5'
+end
