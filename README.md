@@ -42,6 +42,6 @@ Email collins-sm@googlegroups.com or see the mailing list archive at https://gro
 To create a production zip and deploy to production:
   - ensure capistrano 2.15.5 is installed
   - download and unpackage play @ ~/src/play-2.0.3 or define $PLAY_CMD with an alternate location
-  - run `./scripts/package.sh` which will produce  `target/collins.zip`
-  - copy `target/collins.zip` to `repo.tumblr.net:/usr/local/static_file_server/collins.zip`
+  - run `./scripts/package.sh` which will produce `target/collins.zip`
+  - run `cap publish:collins` which will upload and link to release to `http://repo.tumblr.net:8888/collins.zip`
   - run `cap ewr01 deploy` to deploy to ewr01 and `cap d2 deploy` to deploy to d2
