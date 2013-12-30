@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 URL="http://localhost:9000/api/asset"
 LshwFiles="10g
