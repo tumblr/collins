@@ -23,7 +23,7 @@ lldp_files=($LldpFiles)
 num_lldp_files=${#lldp_files[*]}
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-RESOURCE_DIR="$(realpath "${DIR}/../test/resources/")"
+RESOURCE_DIR="${DIR}/../test/resources/"
 
 for i in `seq 300 310`; do
   TAG="tumblrtag${i}"
