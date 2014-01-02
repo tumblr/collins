@@ -15,7 +15,7 @@ libraryDependencies ++= Seq(
   "com.google.code.findbugs" % "jsr305" % "1.3.9",
   "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
   "com.yammer.metrics" %% "metrics-scala" % "2.2.0",
-  "com.addthis.metrics" % "reporter-config" % "2.0.5",
+  "com.addthis.metrics" % "reporter-config" % "2.1.0",
   "mysql" % "mysql-connector-java" % "5.1.19",
   "com.h2database" % "h2" % "1.3.158",
   "org.apache.solr" % "solr-solrj" % "3.6.1",
