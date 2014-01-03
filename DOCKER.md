@@ -6,8 +6,7 @@ developer builds and tests on a laptop can run at scale, in production, on VMs,
 bare metal, OpenStack clusters, public clouds and more. For more infos, see
 [docker.io](http://www.docker.io/).
 
-This document explains how to build and run collins as a docker container.
-
+This document explains how to build and run collins as a docker container, though it is possible to build and run collins without Docker if you prefer.
 
 # Running collins on docker:
 
