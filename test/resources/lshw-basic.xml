@@ -8,7 +8,7 @@
  <product>PowerEdge C6105 (N/A)</product>
  <vendor>Winbond Electronics</vendor>
  <version>N/A</version>
- <serial>FZ22YQ1</serial>
+ <serial>1234567890</serial>
  <width units="bits">64</width>
  <configuration>
   <setting id="boot" value="normal" />

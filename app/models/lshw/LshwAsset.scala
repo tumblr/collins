@@ -6,6 +6,7 @@ abstract class LshwAsset {
   val description: String
   val product: String
   val vendor: String
+
   def toJsValue(): JsValue
 }
 object LshwAsset {

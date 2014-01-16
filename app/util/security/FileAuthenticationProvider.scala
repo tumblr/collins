@@ -37,3 +37,4 @@ class FileAuthenticationProvider() extends AuthenticationProvider {
     "{SHA}" + new BASE64Encoder().encode(MessageDigest.getInstance("SHA1").digest(s.getBytes()))
   }
 }
+

@@ -1,11 +1,13 @@
 package util
 package config
 
-import play.api.PlayException
+import play.api.{Logger, PlayException}
 import com.typesafe.config.{ConfigException, ConfigFactory, ConfigObject, ConfigValue => TypesafeConfigValue}
 import scala.collection.JavaConverters._
 import java.net.{MalformedURLException, URL}
 import java.util.concurrent.atomic.AtomicReference
+
+class ConfigurationException(msg: String) extends Exception(msg)
 
 // Provide access to values from an underlying configuration
 trait ConfigAccessor {
@@ -79,7 +81,7 @@ trait ConfigAccessor {
         cfgv match {
           case ConfigValue.Required =>
             val keyname = getFqNs(key)
-            throw new Exception("Required configuration %s not found".format(keyname))
+            throw new ConfigurationException("Required configuration %s not found".format(keyname))
           case _ =>
             None
         }
@@ -127,6 +129,8 @@ trait ConfigAccessor {
     underlying.flatMap(cfg => Option(p(cfg)))
   } catch {
     case e: ConfigException.Missing =>
+      Logger(getClass).warn("Missing value for key '%s'".format(path))
+
       None
   }
 }

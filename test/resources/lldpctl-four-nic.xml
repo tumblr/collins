@@ -75,6 +75,6 @@
     <current label="MAU oper type">unknown</current>
    </auto-negotiation>
   </port>
-  <vlan label="VLAN" vlan-id="108" pvid="yes">EWR-PROVISIONING</vlan>
+  <vlan label="VLAN" vlan-id="108" pvid="yes"/>
  </interface>
 </lldp>

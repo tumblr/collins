@@ -2,9 +2,7 @@ package util
 package security
 
 import util.config.{Configurable, ConfigValue}
-import collins.permissions.PermissionsHelper
 import collins.validation.File
-import java.io.{File => IoFile}
 
 object AuthenticationProviderConfig extends Configurable {
   override val namespace = "authentication"
@@ -33,6 +31,7 @@ object FileAuthenticationProviderConfig extends Configurable {
 
   override protected def validateConfig() {
     if (AuthenticationProviderConfig.authType == "file") {
+      logger.debug("User authentication file " + userfile)
       File.requireFileIsReadable(userfile)
     }
   }
@@ -50,6 +49,7 @@ object LdapAuthenticationProviderConfig extends Configurable {
   def groupsub = getString("groupsub")(ConfigValue.Required).get
   def groupAttribute = getString("groupAttribute")(ConfigValue.Required).get
   def host = getString("host")(ConfigValue.Required).get
+  def userAttribute = getString("userAttribute", "uid")
   def schema = getString("schema")(ConfigValue.Required).map(_.toLowerCase).get
   def searchbase = getString("searchbase")(ConfigValue.Required).get
   def usersub = getString("usersub")(ConfigValue.Required).get

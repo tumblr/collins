@@ -76,6 +76,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.has10GbNic must beFalse
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
+
+	        rep.base.serial mustEqual "1234567890"
         }
       } // basic
 
@@ -215,6 +217,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.has10GbNic must beFalse
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
+
+          rep.base.serial mustEqual ""
         }
       }
 

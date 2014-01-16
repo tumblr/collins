@@ -12,9 +12,12 @@ test.rb
 *.db
 _site
 RUNNING_PID
-conf/solr/data/
 .DS_Store
 Gemfile.lock
 .idea
 .idea_modules
+
+/conf/solr/data/
+/conf/dev_authentication.conf
+
 
