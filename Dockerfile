@@ -4,10 +4,10 @@ MAINTAINER Johannes 'fish' Ziemke <fish@docker.com>
 WORKDIR /collins
 
 RUN apt-get update
-RUN apt-get -y -q upgrade
+#RUN apt-get -y -q upgrade
 
 # Disable upstart
-RUN dpkg-divert --local --rename --add /sbin/initctl && ln -s /bin/true /sbin/initctl
+#RUN dpkg-divert --local --rename --add /sbin/initctl && ln -s /bin/true /sbin/initctl
 
 # We can't mknod, so fake it
 RUN apt-get -y -q install fakeroot && fakeroot apt-get -y -q install fuse
