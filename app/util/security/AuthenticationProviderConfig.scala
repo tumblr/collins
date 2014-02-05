@@ -50,6 +50,7 @@ object LdapAuthenticationProviderConfig extends Configurable {
   def groupsub = getString("groupsub")(ConfigValue.Required).get
   def groupAttribute = getString("groupAttribute")(ConfigValue.Required).get
   def host = getString("host")(ConfigValue.Required).get
+  def userAttribute = getString("userAttribute", "uid")
   def schema = getString("schema")(ConfigValue.Required).map(_.toLowerCase).get
   def searchbase = getString("searchbase")(ConfigValue.Required).get
   def usersub = getString("usersub")(ConfigValue.Required).get
