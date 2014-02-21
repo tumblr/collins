@@ -90,7 +90,6 @@ object AssetLifecycle {
   }
 
   def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    Logger.warn("Updating asset")
     asset.isServerNode match {
       case true => updateServer(asset, options)
       case false => updateOther(asset, options)
