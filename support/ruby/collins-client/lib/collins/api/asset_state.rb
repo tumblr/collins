@@ -12,16 +12,25 @@ module Collins; module Api
         :description => description,
         :status => status
       }
+
       if not ::Collins::Api::AssetState.state_test then
         parameters = select_non_empty_parameters parameters
       end
+
       logger.debug("Creating state with name #{name}")
       http_put("/api/state/#{name}", parameters) do |r|
         parse_response r, :expects => 201, :as => :status, :raise => strict?, :default => false
       end
     end
-    def state_delete! name
-      name = validate_state_name name
+
+    def state_delete! state
+      name = validate_state_name case state.class
+      when ::Collins::AssetState
+        state.name
+      else
+        state
+      end
+
       logger.debug("Deleting state with name #{name}")
       http_delete("/api/state/#{name}") do |r|
         parse_response r, :expects => 202, :as => :data, :raise => strict?, :default => 0 do |js|
@@ -29,8 +38,15 @@ module Collins; module Api
         end
       end
     end
-    def state_update! name, options = {}
-      name = validate_state_name name
+
+    def state_update! state, options = {}
+      name = validate_state_name case state.class
+      when ::Collins::AssetState
+        state.name
+      else
+        state
+      end
+
       parameters = {
         :label => options[:label],
         :description => options[:description],
@@ -45,6 +61,7 @@ module Collins; module Api
         parse_response r, :expects => 200, :as => :status, :raise => strict?, :default => false
       end
     end
+
     def state_get name
       name = validate_state_name name
       logger.debug("Fetching state with name #{name}")
@@ -55,6 +72,7 @@ module Collins; module Api
         end
       end
     end
+
     def state_get_all
       http_get("/api/states") do |r|
         parse_response r, :expects => 200, :as => :data, :default => [], :raise => false do |js|
