@@ -100,7 +100,7 @@ object AssetLifecycle {
     } else if (asset.isNew) {
       updateNewServer(asset, options)
     } else {
-      updateAnyServer(asset, options)
+      updateServerHardwareMeta(asset, options)
     }
   }
 
@@ -149,7 +149,7 @@ object AssetLifecycle {
     }.left.map(e => handleException(asset, "Error updating status/state for asset", e))
   }
 
-  protected def updateAnyServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  protected def updateServerHardwareMeta(asset: Asset, options: Map[String,String]): Status[Boolean] = {
     // if asset's status is in the allowed statuses for updating, do it
     if (Feature.allowedServerUpdateStatuses.contains(asset.getStatus())) {
       // we will allow updates to lshw/lldp while the machine is in these statuses
