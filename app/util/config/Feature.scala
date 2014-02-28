@@ -17,7 +17,7 @@ object Feature extends Configurable {
   override val referenceConfigFilename = "features_reference.conf"
 
   def allowTagUpdates = getStringSet("allowTagUpdates")
-  def allowedServerUpdateStatuses = getStringSet("allowedServerUpdateStatuses").union(Set("NEW", "INCOMPLETE", "MAINTENANCE"))
+  def allowedServerUpdateStatuses = getStringSet("allowedServerUpdateStatuses").union(Set("MAINTENANCE"))
     .map { m => Status.findByName(m) }
     .filter(_.isDefined).map(_.get)
   def defaultLogType = {
