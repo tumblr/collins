@@ -1,0 +1,21 @@
+csv:
+  -
+    outdir: '/tmp/metrics/crazy-debugging'
+    period: 2
+    timeunit: 'MINUTES'
+ganglia:
+  -
+    period: 60
+    timeunit: 'SECONDS'
+    hosts:
+      - host: 'gmond.domain.local'
+        port: 8649
+      - host: 'gmond-backup.domain.local'
+        port: 8649
+graphite:
+  -
+    period: 120
+    timeunit: 'SECONDS'
+    hosts:
+     - host: 'graphite-server.domain.local'
+        port: 2003

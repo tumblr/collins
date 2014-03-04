@@ -12,8 +12,9 @@ This document explains how to build and run collins as a docker container, thoug
 
 Create conf/production.conf:
 
-    $ alias rand="tr -cd '[:alnum:]' < /dev/urandom | fold -w64 | head -n1"
-    $ sed "s/^db.collins.user=.*/db.collins.user=\"collins\"/;s/^collins_conf_dir.*/collins_conf_dir=\"conf\/\"/;s/\(application.secret=\"\).*/\1$(rand)\"/;s/\(crypto.key=\"\).*/\1$(rand)\"/" \
+    $ alias rand="head /dev/urandom | shasum -a 512 | fold -w64 | head -n1"
+    $ MYSQL_PASS=$(rand)
+    $ sed "s/^db.collins.user=.*/db.collins.user=\"collins\"/;s/^db.collins.password=.*/db.collins.password=\"$MYSQL_PASS\"/;s/^collins_conf_dir.*/collins_conf_dir=\"conf\/\"/;s/\(application.secret=\"\).*/\1$(rand)\"/;s/\(crypto.key=\"\).*/\1$(rand)\"/" \
       conf/production_starter.conf > conf/production.conf
 
 Feel free to edit other options, but you can pass any configuration options via
@@ -38,24 +39,19 @@ Start a mysqld container:
 
 Create collins database and user:
 
+    $ echo $MYSQL_PASS
     $ mysql -u root -h 127.0.0.1 -P $(sudo docker port mysql-server 3306 | cut -d: -f2) -e \
       "create database if not exists collins;
-       grant all privileges on collins.* to collins@'%' identified by 'collins123'"
+       grant all privileges on collins.* to collins@'%' identified by '< paste mysql password here >'"
 
 Initialized the database:
 
     $ sudo docker run -link mysql-server:db collins \
-      -Ddb.collins.password="collins123" \
       DbUtil conf/evolutions
 
 Run collins:
 
-    $ sudo docker run -link mysql-server:db -name="collins-server" -p 9000 \
-      collins -Ddb.collins.password="collins123" play.core.server.NettyServer
-
-(If you're setting the db password in the production.conf, you can ommit
-play.core.server.NettyServer)
-
+    $ sudo docker run -link mysql-server:db -name="collins-server" -p 9000 collins
 
 If you start a new container based on existing data in mysql, you need to update
 the solr index:
