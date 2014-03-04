@@ -90,12 +90,8 @@ object AssetLifecycle {
   }
 
   def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = asset.isServerNode match {
-    case true => updateServer(asset, options)
-    case false => updateOther(asset, options)
-  }
-
-  protected def updateOther(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    updateAssetAttributes(asset, options)
+    case true  => updateServer(asset, options)
+    case false => updateAssetAttributes(asset, options)
   }
 
   protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -103,10 +99,8 @@ object AssetLifecycle {
       updateIncompleteServer(asset, options)
     } else if (asset.isNew) {
       updateNewServer(asset, options)
-    } else if (asset.isMaintenance) {
-      updateMaintenanceServer(asset, options)
     } else {
-      Left(new Exception("Only updates for Incomplete, New, and Maintenance servers are currently supported"))
+      updateServerHardwareMeta(asset, options)
     }
   }
 
@@ -153,6 +147,31 @@ object AssetLifecycle {
       ApiTattler.informational(asset, None, message)
       true
     }.left.map(e => handleException(asset, "Error updating status/state for asset", e))
+  }
+
+  protected def updateServerHardwareMeta(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+    // if asset's status is in the allowed statuses for updating, do it
+    if (Feature.allowedServerUpdateStatuses.contains(asset.getStatus())) {
+      // we will allow updates to lshw/lldp while the machine is in these statuses
+      allCatch[Boolean].either {
+        Asset.inTransaction {
+          options.get("lshw").foreach{lshw =>
+            parseLshw(asset, new LshwParser(lshw)).left.foreach{throw _}
+            InternalTattler.informational(asset, None, "Parsing and storing LSHW data succeeded")
+          }
+          options.get("lldp").foreach{lldp =>
+            parseLldp(asset, new LldpParser(lldp)).left.foreach{throw _}
+            InternalTattler.informational(asset, None, "Parsing and storing LLDP data succeeded")
+          }
+          options.get("CHASSIS_TAG").foreach{chassis_tag =>
+            MetaWrapper.createMeta(asset, Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
+          }
+          true
+        }
+      }.left.map(e => handleException(asset, "Exception updating asset", e))
+    } else {
+      Left(new Exception("Only updates for servers in statuses " + Feature.allowedServerUpdateStatuses.mkString(", ") + " are currently supported"))
+    }
   }
 
   protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
@@ -217,30 +236,7 @@ object AssetLifecycle {
         MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
         val newAsset = asset.copy(status = Status.New.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
         Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.New)
-        InternalTattler.informational(newAsset, None, "Parsing and storing LSHW data succeeded")
-        true
-      }
-    }.left.map(e => handleException(asset, "Exception updating asset", e))
-  }
-
-  protected def updateMaintenanceServer(asset: Asset, options: Map[String, String]): Status[Boolean] = {
-    //only lshw,lldp, and chasis tag can be updated in maintenance mode, at least one must be present
-    val allowedKeys = Set("lshw", "lldp", "CHASSIS_TAG")
-    if (allowedKeys.find{key => options.contains(key)} == None) {
-      return Left(new Exception("At least one of " + allowedKeys.mkString(",") + " required"))
-    }
-
-    allCatch[Boolean].either {
-      Asset.inTransaction {
-        options.get("lshw").foreach{lshw => 
-          parseLshw(asset, new LshwParser(lshw)).left.foreach{throw _}
-        }
-        options.get("lldp").foreach{lldp =>
-          parseLldp(asset, new LldpParser(lldp)).left.foreach{throw _}
-        }
-        options.get("CHASSIS_TAG").foreach{chassis_tag => 
-          MetaWrapper.createMeta(asset, Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
-        }          
+        InternalTattler.informational(newAsset, None, "Parsing and storing LSHW/LLDP data succeeded")
         true
       }
     }.left.map(e => handleException(asset, "Exception updating asset", e))

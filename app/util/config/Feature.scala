@@ -1,7 +1,7 @@
 package util
 package config
 
-import models.{Asset, AssetMeta}
+import models.{Asset, AssetMeta, Status}
 import models.logs.LogMessageType
 
 /**
@@ -17,6 +17,9 @@ object Feature extends Configurable {
   override val referenceConfigFilename = "features_reference.conf"
 
   def allowTagUpdates = getStringSet("allowTagUpdates")
+  def allowedServerUpdateStatuses = getStringSet("allowedServerUpdateStatuses").union(Set("MAINTENANCE"))
+    .map { m => Status.findByName(m) }
+    .filter(_.isDefined).map(_.get)
   def defaultLogType = {
     val lts = getString("defaultLogType", "Informational").toUpperCase
     try {
