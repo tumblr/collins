@@ -13,9 +13,9 @@ object MetricsReporterConfig extends Configurable {
   def enabled = getBoolean("enabled", false)
   def configFile = getString("configFile")(ConfigValue.Required).get
 
-  override def validateConfig() {
-    enabled
-    File.requireFileIsReadable(configFile)
+  override def validateConfig() = enabled match {
+    case true => File.requireFileIsReadable(configFile)
+    case _    => false
   }
 
 }
