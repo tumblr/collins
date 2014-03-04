@@ -17,4 +17,9 @@ conf/solr/data/
 Gemfile.lock
 .idea
 .idea_modules
-
+*.iml
+# eclipse project files
+.classpath
+.project
+.settings/*
+_includes/*
