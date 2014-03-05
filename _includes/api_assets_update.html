@@ -19,12 +19,12 @@
             <tr>
               <th class="inlinecode">lshw</th>
               <td>String</td>
-              <td>Only accepted when the asset is Incomplete. Should be the XML output from running the lshw command on the asset.</td>
+              <td>Only accepted when the asset is Incomplete, Maintenance, or states specified in allowedServerUpdateStatuses. Should be the XML output from running the lshw command on the asset.</td>
             </tr>
             <tr>
               <th class="inlinecode">lldp</th>
               <td>String</td>
-              <td>Only accepted when the asset is Incomplete. Should be the XML output from running the lldp command on the asset.</td>
+              <td>Only accepted when the asset is Incomplete, Maintenance, or states specified in allowedServerUpdateStatuses. Should be the XML output from running the lldp command on the asset.</td>
             </tr>
             <tr>
               <th class="inlinecode">groupId</th>
@@ -39,7 +39,7 @@
             <tr>
               <th class="inlinecode">CHASSIS_TAG</th>
               <td>Option[String]</td>
-              <td>Only accepted for Incomplete assets during the intake phase</td>
+              <td>Only accepted for Incomplete assets during the intake phase, Maintenance, or states specified in allowedServerUpdateStatuses.</td>
             </tr>
             <tr>
               <th class="inlinecode">RACK_POSITION</th>

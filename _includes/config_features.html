@@ -21,6 +21,11 @@ feature flags are documented below.
       <td>A set of managed tags that can be updated for non-server assets</td>
     </tr>
     <tr>
+      <td class="inlinecode">allowedServerUpdateStatuses</td>
+      <td>Set[String]</td>
+      <td>A set of statuses in which collins will accept LLDP/LSHW/CHASSIS_TAG updates for server assets. Maintenance is always a member of this set, even if not specified.</td>
+    </tr>
+    <tr>
       <td class="inlinecode">defaultLogType</td>
       <td>String</td>
       <td>Used for logs being created via the API when no type is specified</td>
@@ -98,6 +103,8 @@ feature flags are documented below.
 <pre>features {
   allowTagUpdates = []
 
+  allowedServerUpdateStatuses = []
+
   defaultLogType = Informational
 
   deleteIpmiOnDecommission = true
@@ -134,6 +141,8 @@ feature flags are documented below.
     <div id="feature-ex" class="accordion-body collapse in">
       <div class="accordion-inner">
 <pre>features {
+  allowedServerUpdateStatuses = [ PROVISIONED, PROVISIONING ]
+
   encryptedTags = [SYSTEM_PASSWORD, LOCATION]
 
   noLogAssets = [chatty_config, other_chatty_config]
