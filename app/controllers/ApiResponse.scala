@@ -160,7 +160,7 @@ trait ApiResponse extends Controller {
       v match {
         case m: JsObject => formatBashResponse(m, "%s_".format(prefix + k))
         case JsArray(list) => formatList(list, "%s_".format(prefix + k))
-        case o => "%s%s=%s;".format(prefix, k, formatBasic(o))
+        case o => "%s%s=%s;".format(prefix, k.replace('-', '_'), formatBasic(o)) //Variables with '-' in their name are invalid for bash.
       }
     }.mkString("\n")
   }
