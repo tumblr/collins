@@ -161,7 +161,7 @@ trait ApiResponse extends Controller {
       val posixTailRegex = """[^a-zA-Z0-9_]""".r
       key.head.toString match {
         case posixHeadRegex() => formatPosixKey("_" + key)
-        case _              => posixTailRegex.replaceAllIn(key,"_").toUpperCase
+        case _                => posixTailRegex.replaceAllIn(key,"_").toUpperCase
       }
     } else {
       throw new Exception("Cannot convert an empty key into a POSIX environment variable name")
