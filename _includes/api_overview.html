@@ -68,7 +68,7 @@ every API endpoint has support for plain text, bash, and JSON output. The recogn
   <li><code>text/x-shellscript</code></li>
 </ul>
 <p>
-The <code>text/x-shellscript</code> endpoint will modify keys to make them valid POSIX variables.  Specifically, if a key starts with a digit, an underscore will be prepended to the key, Also, any special characters in a key will be replaced with underscores.
+The <code>text/x-shellscript</code> endpoint will modify keys to make them valid POSIX variables.  Specifically, if a key starts with a special character or digit, an underscore will be prepended to the key. Also, any special characters in a key will be replaced with underscores.
 
 <h3>API Versioning</h3>
 <p>
