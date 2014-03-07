@@ -154,13 +154,26 @@ trait ApiResponse extends Controller {
         throw new Exception("Invalid JS specified")
       }
     }
+
+    // formats a key to an acceptable POSIX environment variable name
+    def formatPosixKey(key: String): String = if (!key.isEmpty) {
+      val posixHeadRegex = """^[^a-zA-Z_]""".r
+      val posixTailRegex = """[^a-zA-Z0-9_]""".r
+      key.head.toString match {
+        case posixHeadRegex() => formatPosixKey("_" + key)
+        case _                => posixTailRegex.replaceAllIn(key,"_").toUpperCase
+      }
+    } else {
+      throw new Exception("Cannot convert an empty key into a POSIX environment variable name")
+    }
+
     // FIXME
     require(jsobject.isInstanceOf[JsObject], "Required a JsObject")
     jsobject.asInstanceOf[JsObject].value.map { case(k, v) =>
       v match {
         case m: JsObject => formatBashResponse(m, "%s_".format(prefix + k))
         case JsArray(list) => formatList(list, "%s_".format(prefix + k))
-        case o => "%s%s=%s;".format(prefix, k, formatBasic(o))
+        case o => "%s=%s;".format(formatPosixKey(prefix + k), formatBasic(o))
       }
     }.mkString("\n")
   }

@@ -49,7 +49,7 @@ IpAddressApi with AssetStateApi with AdminApi {
           "TestList" -> JsArray(List(JsNumber(1), JsNumber(2)))
         )),
         "TestList" -> JsArray(List(
-          JsObject(Seq("id" -> JsNumber(123), "name" -> JsString("foo123"))),
+          JsObject(Seq("id" -> JsNumber(123), "name" -> JsString("foo123"), "key-with-dash" -> JsString("val-with-dash"))),
           JsObject(Seq("id" -> JsNumber(124), "name" -> JsString("foo124"))),
           JsObject(Seq("id" -> JsNumber(124), "name" -> JsString("foo124")))
         ))
