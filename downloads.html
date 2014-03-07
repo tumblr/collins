@@ -24,6 +24,24 @@ desc: Collins Releases
           <h1>Downloads</h1>
         </div>
         <ul>
+	  <li>2014/03/07 - <a href="releases/collins-1.2.4.zip">1.2.4</a></li>
+	  <ul>
+	    <li>Various documentation/labeling fixes ( #95, #94, #99, #103, #104)</li>
+	    <li>vlan names can be optional (Chris Burroughs #93)</li>
+	    <li>squeryl session cleanup and updated deployment automation (Dallas Marlow #109)</li>
+	    <li>Upgraded to play 2.0.4, to handle a UTF8 issue (Dallas Marlow #108)</li>
+	    <li>Upgraded bonecp (Dallas Marlow #110)</li>
+	    <li>Added Metrics support (Chris Burroughs #86)</li>
+	    <li>Added dockerfiles, so users can build and run Collins with Docker, if they choose to (Johannes 'fish' Ziemke #111)</li>
+	    <li>Minor script fixes (Will Richard and Brent Langston #97 and #113)</li>
+	    <li>Trim whitespace from strings before sending them to solr, to get more accurate results (Will Richard #115)</li>
+	    <li>Update Bootstrap link in docs footer (Chris Rebert #119)</li>
+	    <li>Don't parse config yml files if plugins are disabled (Gabe Conradi #122)</li>
+	    <li>Allow LSHW and LLDP updates in more states (Gabe Conradi #123)</li>
+	    <li>Accept collins asset state when doing a state update or state delete (Dallas Marlow #124)</li>
+	    <li>Created a 'contrib' directory for helpful script for running and maintaining collins (Will Richard & Gabe Conradi #126)</li>
+	    <li>Ensured that variables provided when using text/x-shellscript API endpoint are valid POSIX (Will Richard & Gab Conradi #129)</li>
+	  </ul>
           <li>2013/04/24 - <a href="releases/collins-1.2.3.zip">1.2.3</a></li>
           <ul>
             <li>LSHW: Allow a default speed to be specified via defaultNicCapacity (Benjamin VanEvery #91)</li>
