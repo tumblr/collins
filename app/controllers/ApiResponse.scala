@@ -173,7 +173,7 @@ trait ApiResponse extends Controller {
       v match {
         case m: JsObject => formatBashResponse(m, "%s_".format(prefix + k))
         case JsArray(list) => formatList(list, "%s_".format(prefix + k))
-        case o => "%s%s=%s;".format(formatPosixKey(prefix + k), formatBasic(o))
+        case o => "%s=%s;".format(formatPosixKey(prefix + k), formatBasic(o))
       }
     }.mkString("\n")
   }
