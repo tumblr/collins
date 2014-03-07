@@ -157,7 +157,12 @@ trait ApiResponse extends Controller {
 
     // formats a key to an acceptable POSIX environment variable name
     def formatPosixKey(key: String): String = if (!key.isEmpty) {
-      ("""[^a-zA-Z_]""".r.replaceAllIn(key.head.toString,"_") + """[^a-zA-Z0-9_]""".r.replaceAllIn(key.tail,"_")).toUpperCase
+      val posixHeadRegex = """^[^a-zA-Z_]""".r
+      val posixTailRegex = """[^a-zA-Z0-9_]""".r
+      key.head.toString match {
+        case posixHeadRegex() => formatPosixKey("_" + key)
+        case _              => posixTailRegex.replaceAllIn(key,"_").toUpperCase
+      }
     } else {
       throw new Exception("Cannot convert an empty key into a POSIX environment variable name")
     }
