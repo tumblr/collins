@@ -7,6 +7,8 @@ public class JProfile implements java.io.Serializable {
     private String primary_role;
     private String secondary_role;
     private String pool;
+    private String contact;
+    private String contact_notes;
 
     private Boolean allow_suffix;
     private Boolean requires_primary_role;
@@ -44,6 +46,20 @@ public class JProfile implements java.io.Serializable {
     }
     public void setPrimary_role(final String primary_role) {
         this.primary_role = primary_role;
+    }
+
+    public String getContact() {
+        return contact;
+    }
+    public void setContact(final String contact) {
+        this.contact = contact;
+    }
+
+    public String getContact_notes() {
+        return contact_notes;
+    }
+    public void setContact_notes(final String contact_notes) {
+        this.contact_notes = contact_notes;
     }
 
     public String getSecondary_role() {
