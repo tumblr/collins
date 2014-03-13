@@ -55,6 +55,7 @@ object ProfileLoader {
         optionalButNonEmpty(profile.getPool()),
         optionalButNonEmpty(profile.getSecondary_role()),
         optionalButNonEmpty(profile.getContact()),
+        optionalButNonEmpty(profile.getContact_notes()),
         Option(profile.getRequires_primary_role()).map(_.booleanValue()).getOrElse(true),
         Option(profile.getRequires_pool()).map(_.booleanValue()).getOrElse(true),
         Option(profile.getRequires_secondary_role()).map(_.booleanValue()).getOrElse(false)

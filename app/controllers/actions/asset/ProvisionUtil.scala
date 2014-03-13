@@ -104,6 +104,7 @@ trait ProvisionUtil { self: SecureAction =>
       Seq(
         "NODECLASS" -> request.profile.identifier,
         "CONTACT" -> role.contact.getOrElse(""),
+        "CONTACT_NOTES" -> role.contact_notes.getOrElse(""),
         "SUFFIX" -> suffix.getOrElse(""),
         "PRIMARY_ROLE" -> role.primary_role.getOrElse(""),
         "POOL" -> role.pool.getOrElse(""),

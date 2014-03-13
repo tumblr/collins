@@ -9,11 +9,12 @@ case class ProvisionerRoleData(
   pool: Option[String],
   secondary_role: Option[String],
   contact: Option[String],
+  contact_notes: Option[String],
   requires_primary_role: Boolean,
   requires_pool: Boolean,
   requires_secondary_role: Boolean
 ) {
-  def this() = this(None,None,None,None,false,false,false)
+  def this() = this(None,None,None,None,None,false,false,false)
 }
 
 
