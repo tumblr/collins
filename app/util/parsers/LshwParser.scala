@@ -100,7 +100,7 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
         case size => ByteStorageUnit(size.toLong)
       }
       Disk(size, _type, asset.description, asset.product, asset.vendor)
-    case n if (n \ "@class" text) == "memory" && (n \ "product" text).toLowerCase.contains(LshwConfig.flashProduct) =>
+    case n if (n \ "@class" text) == "memory" && LshwConfig.flashProducts.exists(s => (n \ "product" text).toLowerCase.contains(s)) =>
       val asset = getAsset(n)
       val size = ByteStorageUnit(LshwConfig.flashSize)
       Disk(size, Disk.Type.Flash, asset.description, asset.product, asset.vendor)
