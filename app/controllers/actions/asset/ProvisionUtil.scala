@@ -97,17 +97,19 @@ trait ProvisionUtil { self: SecureAction =>
   }
 
   protected def attribs(request: ProvisionerRequest, form: ProvisionForm): Map[String,String] = {
-    val contact = form._2
+    val build_contact = form._2
     val suffix = form._3
     val role = request.profile.role
     val attribSequence =
       Seq(
         "NODECLASS" -> request.profile.identifier,
-        "CONTACT" -> contact,
+        "CONTACT" -> role.contact.getOrElse(""),
+        "CONTACT_NOTES" -> role.contact_notes.getOrElse(""),
         "SUFFIX" -> suffix.getOrElse(""),
         "PRIMARY_ROLE" -> role.primary_role.getOrElse(""),
         "POOL" -> role.pool.getOrElse(""),
-        "SECONDARY_ROLE" -> role.secondary_role.getOrElse("")
+        "SECONDARY_ROLE" -> role.secondary_role.getOrElse(""),
+        "BUILD_CONTACT" -> build_contact
       )
     val mapForDelete = Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
     mapForDelete ++ Map(attribSequence:_*)
