@@ -165,7 +165,12 @@ match is found.
     <tr>
       <td class="inlinecode">lshw.flashProduct</td>
       <td>String</td>
-      <td>Product string to look for in LSHW output to detect a flash device.  Defaults to flashmax.</td>
+      <td><span class="label label-warning">Deprecated</span> Product string to look for in LSHW output to detect a flash device.  Defaults to flashmax. This is deprecated, and will be removed in a future version. Please use <code>lshw.flashProducts</code> instead.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">lshw.flashProducts</td>
+      <td>Set[String]</td>
+      <td>Product strings to look for in LSHW output to detect a flash device.  Defaults to <code>["flashmax"]</code>, and includes <code>lshw.flashProduct</code>.</td>
     </tr>
     <tr>
       <td class="inlinecode">lshw.flashSize</td>
@@ -188,7 +193,7 @@ match is found.
 <div class="example reference-config">
 <pre>lshw {
   defaultNicCapacity = 10000000000
-  flashProduct = "flashmax"
+  flashProducts = ["flashmax","fusionIO","TachION Drive"]
   flashSize = 1400000000000
 }</pre>
 </div>
