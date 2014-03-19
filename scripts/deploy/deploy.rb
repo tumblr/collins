@@ -9,7 +9,7 @@ set :copy_strategy, :wget
 set :deploy_to,  '/usr/local/collins'
 
 # user options
-set :user,       'deploy'
+set :user,       'root'
 set :use_sudo,   true
 set :admin_runner, 'collins'
 
