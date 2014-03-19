@@ -49,7 +49,7 @@ namespace :deploy do
   end
 
   task :start do
-    sudo "/usr/local/collins/current/scripts/collins.sh start", :as => "collins"
+    run "/usr/local/collins/current/scripts/collins.sh start"
   end
 
   task :fix_permissions do
@@ -57,15 +57,15 @@ namespace :deploy do
   end
 
   task :stop do
-    sudo "/usr/local/collins/current/scripts/collins.sh stop", :as => "collins"
+    run "/usr/local/collins/current/scripts/collins.sh stop"
   end
 
   task :copy_config do
-    sudo "cp #{fetch(:previous_release)}/conf/production.conf #{fetch(:current_path)}/conf/production.conf", :as => "collins" if fetch(:previous_release)
+    run "cp #{fetch(:previous_release)}/conf/production.conf #{fetch(:current_path)}/conf/production.conf" if fetch(:previous_release)
   end
 
   task :status do
-    sudo "/usr/local/collins/current/scripts/collins.sh status", :as => "collins"
+    run "/usr/local/collins/current/scripts/collins.sh status"
   end
 
   task :restart do
