@@ -1,6 +1,20 @@
-1.2.4		2013/??/??
+1.2.4   2014/03/07
 
-	* Not yet released
+	* Docs: Various documentation/labeling fixes ( #95, #94, #99, #103, #104)
+	* Bug: vlan names can be optional (Chris Burroughs #93)
+	* Bug: squeryl session cleanup and updated deployment automation (Dallas Marlow #109)
+	* Build: Upgraded to play 2.0.4, to handle a UTF8 issue (Dallas Marlow #108)
+	* Build: Upgraded bonecp (Dallas Marlow #110)
+	* Metrics: Added Metrics support (Chris Burroughs #86)
+	* Housekeeping: Added dockerfiles, so users can build and run Collins with Docker, if they choose to (Johannes 'fish' Ziemke #111)
+	* Housekeepin: Minor script fixes (Will Richard and Brent Langston #97 and #113)
+	* Bug: Trim whitespace from strings before sending them to solr, to get more accurate results (Will Richard #115)
+	* UI: Update Bootstrap link in docs footer (Chris Rebert #119)
+	* Bug: Don't parse config yml files if plugins are disabled (Gabe Conradi #122)
+	* LSHW: Allow LSHW and LLDP updates in more states (Gabe Conradi #123)
+	* Support: Accept collins asset state when doing a state update or state delete (Dallas Marlow #124)
+	* Housekeeping: Created a 'contrib' directory for helpful script for running and maintaining collins (Will Richard & Gabe Conradi #126)
+	* API: Ensured that variables provided when using text/x-shellscript API endpoint are valid POSIX (Will Richard & Gabe Conradi #129)
 
 1.2.3		2013/04/24
 
