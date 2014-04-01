@@ -14,10 +14,11 @@ RUN apt-get -y -q install fakeroot && fakeroot apt-get -y -q install fuse
 RUN apt-get install -y -q wget unzip default-jre default-jdk git
 
 RUN wget http://download.playframework.org/releases/play-2.0.4.zip && unzip play-2.0.4.zip
-RUN for dir in /collins /var/log/collins /var/run/collins; do mkdir $dir; chown nobody $dir; done
-ADD RUN git clone https://github.com/tumblr/collins.git /collins
+RUN for dir in /var/log/collins /var/run/collins; do mkdir $dir; chown nobody $dir; done
+RUN git clone https://github.com/tumblr/collins.git /collins/collins
+WORKDIR /collins/collins
 
-RUN ./play-2.0.4/play compile stage
+RUN ../play-2.0.4/play compile stage
 
 EXPOSE 9000
 RUN printf '#!/bin/sh\nexec java -cp "target/staged/*" -Dpidfile.path=/dev/null -Ddb.collins.url="jdbc:$(echo $DB_PORT|sed 's/^tcp/mysql/')/collins?autoReconnect=true&interactiveClient=true" $@' > run.sh && chmod a+x run.sh
