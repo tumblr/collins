@@ -13,8 +13,8 @@ module Collins
       action :reprovision do |asset, p|
         detailed = client.get asset
         p.logger.warn "Reprovisioning #{detailed.tag}"
-        client.set_status! asset, "Maintenance"
-        client.provision asset, detailed.nodeclass, detailed.contact, :suffix => detailed.suffix,
+        client.set_status! asset, "Maintenance", "Automated reprovisioning"
+        client.provision asset, detailed.nodeclass, (detailed.build_contact || "nobody"), :suffix => detailed.suffix,
           :primary_role => detailed.primary_role, :secondary_role => detailed.secondary_role,
           :pool => detailed.pool
       end
