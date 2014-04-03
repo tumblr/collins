@@ -18,7 +18,7 @@ module Collins
       end
       
       # Something is missing. Can we prompt for it?
-      if prompt
+      if options[:prompt]
         conf.merge(prompt_creds(conf))
       else
         raise "could not load any valid configuration."
