@@ -5,7 +5,7 @@ require 'socket'
 
 module Collins
   module Authenticator
-    def self.setup_client(options = {})
+    def self.setup_client(options = nil)
       Collins::Client.new load_config(options)
     end
 
