@@ -2,8 +2,7 @@ collins_auth
 ============
 
 This is a library to make it easy to obtain an authenticated collins_client object. 
-It manages ENV['COLLINS_CLIENT_CONFIG'], ~/.collins.yml, /etc/collins.yml, /var/db/collins.yml, 
-and user interaction to determine the right configuration and authentication tokens.
+It attempts to load credentials from the following yaml files ENV['COLLINS_CLIENT_CONFIG'], ~/.collins.yml, /etc/collins.yml, /var/db/collins.yml, and supports user input.
 
 Installation
 ============
@@ -27,33 +26,6 @@ Usage
     
     client.find hostname: /^abc.+/
 
-How it works
-============
-
-Only two methods are exposed:
-* load_config  - loads the best configuration it can find
-* setup_client - Creates a new Collins::Client from load_config output
-
-The configuration is a merge of the following, in order of preference:
-* passed in configuration
-* ~/.collins.yml
-* /var/db/collins.yml
-* Prompt
-
-The configuration is built up from there.  If :host is not set it is built up
-from https://collins.{domain}.
-
-Most importantly, :username and :password are considered a tuple.  If you have
-full credentials in /var/db/collins.yml but only specify a username in
-~/.collins.yml, the username and password from /var/db/collins.yml are used in
-the configuration.
-
-Finally, if :password or :username are not set by the end of this process, the
-user is interactively asked for credentials.  This can be supressed by passing a
-parameter to not prompt the user:
-
-    client = Collins::Authenticator.setup_client({}, false)
-    
 License
 ============
 
