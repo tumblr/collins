@@ -11,6 +11,6 @@ Gem::Specification.new do |s|
   
   s.files = Dir["{lib}/*.rb", "*.md", "*.txt"]
   
-  s.add_dependency 'collins_client', '~> 0.2', '>= 0.2.10'
-  s.add_dependency 'highline', '~> 1.6', '>= 1.6.13'
+  s.add_dependency 'collins_client'
+  s.add_dependency 'highline'
 end

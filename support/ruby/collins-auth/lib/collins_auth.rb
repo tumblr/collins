@@ -6,13 +6,11 @@ require 'socket'
 module Collins
   module Authenticator
     def self.setup_client(options = {})
-      options = {prompt: false}.merge options
-
-      Collins::Client.new load_config(options[:prompt])
+      Collins::Client.new load_config(options)
     end
 
-    def self.load_config(prompt=false)
-      conf = (read_config || {}) unless prompt == :only
+    def self.load_config options = {prompt: false}
+      conf = (read_config || options) unless options[:prompt] == :only
       
       # check if we have all that we expect
       if [:username, :password, :host].all? {|key| conf.keys.include? key}
