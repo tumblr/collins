@@ -6,49 +6,40 @@ developer builds and tests on a laptop can run at scale, in production, on VMs,
 bare metal, OpenStack clusters, public clouds and more. For more infos, see
 [docker.io](http://www.docker.io/).
 
-This document explains how to build and run collins as a docker container, though it is possible to build and run collins without Docker if you prefer.
+# Running collins on Docker
 
-# Running collins on docker:
+There is a trusted build of collins available, maintained by [fish](https://index.docker.io/u/fish).
 
-Create conf/production.conf:
+The bare image isn't very useful on it's own, but you can easily vendorize it by
+creating custom configs in `conf/` and create a custom Dockerfile using the
+collins build as base:
 
-    $ alias rand="tr -cd '[:alnum:]' < /dev/urandom | fold -w64 | head -n1"
-    $ sed "s/^db.collins.user=.*/db.collins.user=\"collins\"/;s/^collins_conf_dir.*/collins_conf_dir=\"conf\/\"/;s/\(application.secret=\"\).*/\1$(rand)\"/;s/\(crypto.key=\"\).*/\1$(rand)\"/" \
-      conf/production_starter.conf > conf/production.conf
+    FROM fish/collins
+    ADD conf /collins/conf/
 
-Feel free to edit other options, but you can pass any configuration options via
-the command line.
+Build this by running:
 
-You should also edit `conf/users.conf` and `conf/permissions.yaml`.
-See collins documentation for help. Otherwise the default admin credentials are:
+    $ docker build -t my-vendored-collins .
 
-- user: blake
-- password: admin:first
-
-
-Now build the docker image by running:
-
-    $ docker build -t collins .
-
-
-Start a mysqld container:
+Next is the database, let's assume you want to use a mysq. Start a mysqld
+container by running:
 
     $ sudo docker run -name="mysql-server" -p 3306 -d jonwood/mysql-server
 
 
-Create collins database and user:
+Now create collins database and user:
 
     $ mysql -u root -h 127.0.0.1 -P $(sudo docker port mysql-server 3306 | cut -d: -f2) -e \
       "create database if not exists collins;
        grant all privileges on collins.* to collins@'%' identified by 'collins123'"
 
-Initialized the database:
+And initialized the database:
 
     $ sudo docker run -link mysql-server:db collins \
       -Ddb.collins.password="collins123" \
       DbUtil conf/evolutions
 
-Run collins:
+Then run collins:
 
     $ sudo docker run -link mysql-server:db -name="collins-server" -p 9000 \
       collins -Ddb.collins.password="collins123" play.core.server.NettyServer
@@ -62,4 +53,11 @@ the solr index:
 
     $ curl --basic -u <user>:<password> \
       http://localhost:$(sudo docker port collins-server 9000|cut -d: -f2)/api/admin/solr
+
+# Build collins on Docker
+
+If you want to build the docker image on your own, this in `contrib/docker`:
+
+    $ docker build -t collins .
+
 
