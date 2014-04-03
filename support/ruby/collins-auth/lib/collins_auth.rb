@@ -9,7 +9,7 @@ module Collins
       Collins::Client.new load_config(options)
     end
 
-    def self.load_config options = {}
+    def self.load_config(options = {})
       conf = (read_config || options) unless options[:prompt] == :only
       
       # check if we have all that we expect
