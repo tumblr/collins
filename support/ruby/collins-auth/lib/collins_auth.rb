@@ -5,11 +5,11 @@ require 'socket'
 
 module Collins
   module Authenticator
-    def self.setup_client(options = nil)
+    def self.setup_client(options = {prompt: false})
       Collins::Client.new load_config(options)
     end
 
-    def self.load_config options = {prompt: false}
+    def self.load_config options = {}
       conf = (read_config || options) unless options[:prompt] == :only
       
       # check if we have all that we expect
