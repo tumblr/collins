@@ -6,11 +6,15 @@ require 'socket'
 module Collins
   module Authenticator
     def self.setup_client(options = {prompt: false})
+      if options[:config_file] and not File.readable? options[:config_file]
+        raise 'unable to read invalid config file: ' + options[:config_file]
+      end
+
       Collins::Client.new load_config(options)
     end
 
     def self.load_config(options = {})
-      conf = (read_config || {}).merge(options) unless options[:prompt] == :only
+      conf = (read_config(options[:config_file]) || {}).merge(options) unless options[:prompt] == :only
       
       # check if we have all that we expect
       if [:username, :password, :host].all? {|key| conf.keys.include? key}
@@ -46,12 +50,12 @@ module Collins
       conf
     end
      
-    def self.read_config 
-      conf = [ENV['COLLINS_CLIENT_CONFIG'], File.join(ENV['HOME'], '.collins.yml'), '/etc/collins.yml', '/var/db/collins.yml'].compact.find do |config_file|
+    def self.read_config(config_file = nil)
+      config_file ||= [ENV['COLLINS_CLIENT_CONFIG'], File.join(ENV['HOME'], '.collins.yml'), '/etc/collins.yml', '/var/db/collins.yml'].compact.find do |config_file|
         File.readable? config_file and File.size(config_file) > 0
       end
       
-      file2conf conf
+      file2conf config_file
     end    
     
     def self.get_domain
