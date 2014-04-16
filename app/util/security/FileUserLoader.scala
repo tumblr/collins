@@ -1,5 +1,7 @@
 package util.security
 
+import com.tumblr.play.interop.PrivilegedHelper
+
 import collins.validation.File
 import models.{User, UserImpl}
 
@@ -32,8 +34,11 @@ object FileUserLoader {
     val users = fromFile(new IoFile(usersFile))
     FileUserLoader(users)
   }
-  def fromFile(file: IoFile): FileUserMap = FileUserMap(
-    Source.fromFile(file, "UTF-8").getLines().map { line =>
+  def fromFile(file: IoFile): FileUserMap = FileUserMap{
+    val src = Source.fromFile(file, "UTF-8")
+    val lines = src.getLines
+    src.close()
+    lines.map { line =>
       val split = line.split(":", 3)
       if (split.length != 3) {
         throw FileUserLoaderException("Invalid line format for users")
@@ -43,5 +48,5 @@ object FileUserLoader {
       val roles = split(2).split(",").toSet
       (username -> UserImpl(username, password, roles, username.hashCode, false))
     }.toMap
-  )
+  }
 }
