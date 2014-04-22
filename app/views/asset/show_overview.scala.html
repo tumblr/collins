@@ -44,7 +44,19 @@
           @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
             @slLink(aa.asset, aa.asset.tag)
           }.getOrElse{<td>@aa.asset.tag</td>}
-          <td>Find Similar Assets: <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>, <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a></td>
+          <td>
+          @{
+            val nodeclass = aa.asset.nodeClass
+            nodeclass match {
+              case Some(nc) => {
+                <span>Find other {nc.tag} assets: <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>, <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a></span>
+              }
+              case _        => {
+                <span>No node classifier found</span>
+              }
+            }
+          }
+          </td>
         </tr>
         <tr>
           <th>Asset Type</th>
