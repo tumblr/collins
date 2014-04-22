@@ -42,8 +42,8 @@
         <tr>
           <th>Asset Tag</th>
           @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
-  	          @slLink(aa.asset, aa.asset.tag)
-  	        }.getOrElse{<td>@aa.asset.tag</td>}
+            @slLink(aa.asset, aa.asset.tag)
+          }.getOrElse{<td>@aa.asset.tag</td>}
           <td>Find Similar Assets: <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>, <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a></td>
         </tr>
         <tr>
