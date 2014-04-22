@@ -19,7 +19,8 @@ object NodeclassifierConfig extends Configurable {
   }.get
 
   def identifyingMetaTag = getString("identifyingMetaTag", "IS_NODECLASS").toUpperCase
-  def excludeMetaTags = getStringSet("excludeMetaTags").map(_.toUpperCase)
+  def displayNameAttribute = getString("displayNameAttribute", "NAME").toUpperCase
+  def excludeMetaTags = getStringSet("excludeMetaTags").map(_.toUpperCase) ++ Set(displayNameAttribute)
   def sortKeys = getStringSet("sortKeys", Set(DefaultSortType)).filter(SortTypes.contains(_))
 
   override protected def validateConfig() {

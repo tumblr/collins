@@ -1,6 +1,6 @@
 @(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
-@import _root_.util.config.Feature
+@import _root_.util.config.{Feature, NodeclassifierConfig}
 @import _root_.util.plugins.SoftLayer
 @import _root_.util.views.{MetaValueOrderer, TagDecorator}
 
@@ -45,17 +45,13 @@
             @slLink(aa.asset, aa.asset.tag)
           }.getOrElse{<td>@aa.asset.tag</td>}
           <td>
-          @{
-            val nodeclass = aa.asset.nodeClass
-            nodeclass match {
-              case Some(nc) => {
-                <span>Find other {nc.tag} assets: <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>, <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a></span>
-              }
-              case _        => {
-                <span>No node classifier found</span>
-              }
-            }
-          }
+            <span>
+              @aa.asset.nodeClass.map { nc =>
+                Find other @nc.getMetaAttribute(NodeclassifierConfig.displayNameAttribute).getOrElse{@nc.tag} assets: 
+                <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>, 
+                <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a>
+              }.getOrElse{No node classifier found}
+            </span>
           </td>
         </tr>
         <tr>
