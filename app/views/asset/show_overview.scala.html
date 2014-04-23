@@ -44,15 +44,28 @@
           @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
             @slLink(aa.asset, aa.asset.tag)
           }.getOrElse{<td>@aa.asset.tag</td>}
+          <td></td>
+        </tr>
+        <tr>
+          @defining(aa.asset.nodeClass){ nodeclass =>
+          <th>Classification</th>
           <td>
             <span>
-              @aa.asset.nodeClass.map { nc =>
-                Find other @nc.getMetaAttribute(NodeclassifierConfig.displayNameAttribute).getOrElse{@nc.tag} assets: 
-                <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>, 
-                <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a>
-              }.getOrElse{No node classifier found}
+              @nodeclass.map { nc =>
+                <a href="@nc.tag">@nc.getMetaAttribute(NodeclassifierConfig.displayNameAttribute).getOrElse{@nc.tag}</a>
+              }.getOrElse{Unclassified}
             </span>
           </td>
+          <td>
+            <span>
+              @nodeclass.map { nc =>
+                Find other @nc.getMetaAttribute(NodeclassifierConfig.displayNameAttribute).getOrElse{@nc.tag} assets:
+                <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>,
+                <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a>
+              }
+            </span>
+          </td>
+          }
         </tr>
         <tr>
           <th>Asset Type</th>
