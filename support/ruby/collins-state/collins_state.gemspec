@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "collins_state"
-  s.version = "0.2.12"
+  s.version = File.read 'VERSION'
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Blake Matheny"]
