@@ -4,12 +4,6 @@ if ENV.key?('COLLINS_DEBUG') && ENV['COLLINS_DEBUG'] then
 HTTP_DEBUG = true
 end
 
-# Make sure we're running a valid version of ruby
-if RUBY_VERSION !~ /^1\.9\./ then
-  puts("We require ruby 1.9.2")
-  exit(1)
-end
-
 if not ENV.key?('HOME') || ENV['HOME'].empty? then
   puts("No HOME environment found. Exiting")
   exit(2)
