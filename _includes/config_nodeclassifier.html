@@ -47,6 +47,11 @@ UI should find links for finding similar assets.
       <td>A set of tags to exclude from finding similar assets. IS_NODECLASS and NOTE are included by default.</td>
     </tr>
     <tr>
+      <td class="inlinecode">displayNameAttribute</td>
+      <td>String</td>
+      <td>What attribute to use for a friendly name for this classification, instead of the tag of the classification asset. Defaults to NAME.</td>
+    </tr>
+    <tr>
       <td class="inlinecode">sortKeys</td>
       <td>Set[String]</td>
       <td>Tags to be used for sorting. This is useful for instance for specifying that ROW, followed by RACK should be used for location based ordering of results. We use this at Tumblr to provide good distribution when provisioning.</td>
@@ -58,6 +63,7 @@ UI should find links for finding similar assets.
 <pre>nodeclassifier {
   assetType = CONFIGURATION
   identifyingMetaTag = IS_NODECLASS
+  displayNameAttribute = NAME
   excludeMetaTags = [IS_NODECLASS, NOTE]
   sortKeys = []
 }</pre>
