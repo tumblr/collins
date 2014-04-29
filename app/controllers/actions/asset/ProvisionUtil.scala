@@ -100,8 +100,8 @@ trait ProvisionUtil { self: SecureAction =>
     val build_contact = form._2
     val suffix = form._3
     val role = request.profile.role
-    val attribSequence =
-      Seq(
+    val highPriorityAttrs =
+      Map(
         "NODECLASS" -> request.profile.identifier,
         "CONTACT" -> role.contact.getOrElse(""),
         "CONTACT_NOTES" -> role.contact_notes.getOrElse(""),
@@ -111,8 +111,12 @@ trait ProvisionUtil { self: SecureAction =>
         "SECONDARY_ROLE" -> role.secondary_role.getOrElse(""),
         "BUILD_CONTACT" -> build_contact
       )
-    val mapForDelete = Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
-    mapForDelete ++ Map(attribSequence:_*)
+    val lowPriorityAttrs = role.attributes.getOrElse(Map()).map(x => (x._1.toUpperCase,x._2))
+    val clearOnRepurposeAttrs = Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
+
+    // make sure high priority attrs take precedence over low priority
+    // and make sure any explicitly set attrs override any that are to be cleared
+    clearOnRepurposeAttrs ++ lowPriorityAttrs ++ highPriorityAttrs
   }
 
   protected def fieldError(form: Form[ProvisionForm]): Validation = (form match {
