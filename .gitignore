@@ -24,4 +24,11 @@ Gemfile.lock
 .classpath
 .project
 .settings/*
+.externalToolBuilders/
 _includes/*
+
+/bin
+
+#emacs files
+*~
+\#*\#
