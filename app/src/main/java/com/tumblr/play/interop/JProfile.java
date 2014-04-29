@@ -1,4 +1,5 @@
 package com.tumblr.play.interop;
+import java.util.Properties;
 
 public class JProfile implements java.io.Serializable {
     static final long serialVersionUID = -3055921821909895808L;
@@ -9,6 +10,7 @@ public class JProfile implements java.io.Serializable {
     private String pool;
     private String contact;
     private String contact_notes;
+    private Properties attributes;
 
     private Boolean allow_suffix;
     private Boolean requires_primary_role;
@@ -21,6 +23,9 @@ public class JProfile implements java.io.Serializable {
         primary_role = "";
         secondary_role = "";
         pool = "";
+        contact = "";
+        contact_notes = "";
+        attributes = new Properties();
         allow_suffix = Boolean.FALSE;
         requires_primary_role = Boolean.TRUE;
         requires_secondary_role = Boolean.FALSE;
@@ -60,6 +65,13 @@ public class JProfile implements java.io.Serializable {
     }
     public void setContact_notes(final String contact_notes) {
         this.contact_notes = contact_notes;
+    }
+
+    public Properties getAttributes(){
+        return attributes;
+    }
+    public void setAttributes(final Properties attributes) {
+        this.attributes = attributes;
     }
 
     public String getSecondary_role() {

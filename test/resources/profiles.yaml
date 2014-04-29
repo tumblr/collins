@@ -172,6 +172,9 @@ profiles:
         vlans: ["aaa"]
         primary_role: "INFRA"
         allow_suffix: true
+        attributes:
+          super_important_tag: "true"
+          this_is_lower_case: Hello world
     dhcpnode:
         cobbler_profile: "centos-5.6-x86_64-web-v2"
         label: "DHCP/iPXE Server"

@@ -2,6 +2,7 @@ package collins.provisioning
 
 import collins.validation.File
 import com.tumblr.play.interop.{JProfile, ProvisionerProfileHelper}
+import scala.collection.JavaConverters._
 
 import play.api.Logger
 import com.google.common.cache.CacheLoader
@@ -56,6 +57,7 @@ object ProfileLoader {
         optionalButNonEmpty(profile.getSecondary_role()),
         optionalButNonEmpty(profile.getContact()),
         optionalButNonEmpty(profile.getContact_notes()),
+        Option(profile.getAttributes().asScala.toMap),
         Option(profile.getRequires_primary_role()).map(_.booleanValue()).getOrElse(true),
         Option(profile.getRequires_pool()).map(_.booleanValue()).getOrElse(true),
         Option(profile.getRequires_secondary_role()).map(_.booleanValue()).getOrElse(false)
