@@ -2,7 +2,6 @@ package collins.provisioning
 
 import collins.validation.File
 import com.tumblr.play.interop.{JProfile, ProvisionerProfileHelper}
-import scala.collection.JavaConverters._
 
 import play.api.Logger
 import com.google.common.cache.CacheLoader
