@@ -111,12 +111,13 @@ trait ProvisionUtil { self: SecureAction =>
         "SECONDARY_ROLE" -> role.secondary_role.getOrElse(""),
         "BUILD_CONTACT" -> build_contact
       )
-    val lowPriorityAttrs = role.attributes.getOrElse(Map()).map(x => (x._1.toUpperCase,x._2))
+    val lowPriorityAttrs = role.attributes.getOrElse(Map())
     val clearOnRepurposeAttrs = Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
+    val clearProfileAttrs = role.clear_attributes.getOrElse(Set()).map(a => (a -> "")).toMap
 
     // make sure high priority attrs take precedence over low priority
     // and make sure any explicitly set attrs override any that are to be cleared
-    clearOnRepurposeAttrs ++ lowPriorityAttrs ++ highPriorityAttrs
+    clearOnRepurposeAttrs ++ clearProfileAttrs ++ lowPriorityAttrs ++ highPriorityAttrs
   }
 
   protected def fieldError(form: Form[ProvisionForm]): Validation = (form match {
