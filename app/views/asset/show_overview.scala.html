@@ -1,6 +1,6 @@
 @(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
-@import _root_.util.config.Feature
+@import _root_.util.config.{Feature, NodeclassifierConfig}
 @import _root_.util.plugins.SoftLayer
 @import _root_.util.views.{MetaValueOrderer, TagDecorator}
 
@@ -42,9 +42,30 @@
         <tr>
           <th>Asset Tag</th>
           @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
-  	          @slLink(aa.asset, aa.asset.tag)
-  	        }.getOrElse{<td>@aa.asset.tag</td>}
-          <td>Find Similar Assets: <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>, <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a></td>
+            @slLink(aa.asset, aa.asset.tag)
+          }.getOrElse{<td>@aa.asset.tag</td>}
+          <td></td>
+        </tr>
+        <tr>
+          @defining(aa.asset.nodeClass){ nodeclass =>
+          <th>Classification</th>
+          <td>
+            <span>
+              @nodeclass.map { nc =>
+                <a href="@nc.tag">@nc.getMetaAttribute(NodeclassifierConfig.displayNameAttribute).getOrElse{@nc.tag}</a>
+              }.getOrElse{Unclassified}
+            </span>
+          </td>
+          <td>
+            <span>
+              @nodeclass.map { nc =>
+                Find other @nc.getMetaAttribute(NodeclassifierConfig.displayNameAttribute).getOrElse{@nc.tag} assets:
+                <a href="@app.routes.Resources.similar(aa.asset.tag)">Unallocated</a>,
+                <a href="@app.routes.Resources.similar(aa.asset.tag)?onlyUnallocated=false">All</a>
+              }
+            </span>
+          </td>
+          }
         </tr>
         <tr>
           <th>Asset Type</th>

@@ -18,7 +18,6 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     ".pryrc",
-    ".rvmrc",
     "Gemfile",
     "Gemfile.lock",
     "README.md",
