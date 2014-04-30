@@ -173,8 +173,14 @@ profiles:
         primary_role: "INFRA"
         allow_suffix: true
         attributes:
-          super_important_tag: "true"
-          this_is_lower_case: Hello world
+          super_important_tag: true
+          lower_case_attribute: Hello world
+          numeric_attribute: 123
+          nodeclass: shouldnt be set to this
+        clear_attributes:
+          - nodeclass
+          - delete_me
+          - super_dangerous_tag
     dhcpnode:
         cobbler_profile: "centos-5.6-x86_64-web-v2"
         label: "DHCP/iPXE Server"
@@ -292,3 +298,21 @@ profiles:
         pool: "MREPO_POOL"
         secondary_role: "MREPO_MIRROR"
         allow_suffix: false
+    testattributesnode:
+        label: "Test Custom Attributes Node"
+        prefix: "test"
+        vlans: ["whatever"]
+        primary_role: "PRI_ROLE"
+        requires_pool: no
+        allow_suffix: true
+        attributes:
+          super_important_tag: true
+          lower_case_attribute: Hello world
+          numeric_attribute: 123
+          nodeclass: shouldnt be set to this
+        clear_attributes:
+          - nodeclass
+          - delete_me
+          - duplicate_attribute
+          - super_dangerous_tag
+          - duplicate_attribute
