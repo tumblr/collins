@@ -1,5 +1,6 @@
 package com.tumblr.play.interop;
-import java.util.Properties;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -12,7 +13,7 @@ public class JProfile implements java.io.Serializable {
     private String pool;
     private String contact;
     private String contact_notes;
-    private Properties attributes;
+    private Map<String,Object> attributes;
     private List<String> clear_attributes;
 
     private Boolean allow_suffix;
@@ -28,7 +29,7 @@ public class JProfile implements java.io.Serializable {
         pool = "";
         contact = "";
         contact_notes = "";
-        attributes = new Properties();
+        attributes = new HashMap<String,Object>();
         clear_attributes = new ArrayList<String>();
         allow_suffix = Boolean.FALSE;
         requires_primary_role = Boolean.TRUE;
@@ -71,10 +72,10 @@ public class JProfile implements java.io.Serializable {
         this.contact_notes = contact_notes;
     }
 
-    public Properties getAttributes(){
+    public Map<String,Object> getAttributes(){
         return attributes;
     }
-    public void setAttributes(final Properties attributes) {
+    public void setAttributes(final Map<String,Object> attributes) {
         this.attributes = attributes;
     }
 
