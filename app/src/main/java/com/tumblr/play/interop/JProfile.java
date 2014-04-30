@@ -1,5 +1,8 @@
 package com.tumblr.play.interop;
 
+import java.util.List;
+import java.util.ArrayList;
+
 public class JProfile implements java.io.Serializable {
     static final long serialVersionUID = -3055921821909895808L;
     private String label;
@@ -9,6 +12,7 @@ public class JProfile implements java.io.Serializable {
     private String pool;
     private String contact;
     private String contact_notes;
+    private List<String> allowed_hardware;
 
     private Boolean allow_suffix;
     private Boolean requires_primary_role;
@@ -21,6 +25,7 @@ public class JProfile implements java.io.Serializable {
         primary_role = "";
         secondary_role = "";
         pool = "";
+        allowed_hardware = new ArrayList<String>();
         allow_suffix = Boolean.FALSE;
         requires_primary_role = Boolean.TRUE;
         requires_secondary_role = Boolean.FALSE;
@@ -102,6 +107,13 @@ public class JProfile implements java.io.Serializable {
     }
     public void setRequires_pool(final Boolean requires_pool) {
         this.requires_pool = requires_pool;
+    }
+
+    public List<String> getAllowed_hardware() {
+        return allowed_hardware;
+    }
+    public void setAllowed_hardware(final List<String> allowed_hardware) {
+        this.allowed_hardware = allowed_hardware;
     }
 
 }
