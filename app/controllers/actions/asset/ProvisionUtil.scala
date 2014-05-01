@@ -142,7 +142,7 @@ trait ProvisionUtil { self: SecureAction =>
       Right(role)
   }
 
-  protected def validateAllowedHardware(role: ProvisionerRole, asset: Asset): ValidOption = role.allowed_hardware match {
+  protected def validateAllowedHardware(role: ProvisionerRole, asset: Asset): ValidOption = role.allowed_classes match {
     case Some(classifiers) => asset.nodeClass match {
       case Some(nc) => {
         if (classifiers contains nc.tag)

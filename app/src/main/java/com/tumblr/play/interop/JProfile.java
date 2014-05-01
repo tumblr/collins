@@ -12,7 +12,7 @@ public class JProfile implements java.io.Serializable {
     private String pool;
     private String contact;
     private String contact_notes;
-    private List<String> allowed_hardware;
+    private List<String> allowed_classes;
 
     private Boolean allow_suffix;
     private Boolean requires_primary_role;
@@ -25,7 +25,7 @@ public class JProfile implements java.io.Serializable {
         primary_role = "";
         secondary_role = "";
         pool = "";
-        allowed_hardware = new ArrayList<String>();
+        allowed_classes= new ArrayList<String>();
         allow_suffix = Boolean.FALSE;
         requires_primary_role = Boolean.TRUE;
         requires_secondary_role = Boolean.FALSE;
@@ -109,11 +109,11 @@ public class JProfile implements java.io.Serializable {
         this.requires_pool = requires_pool;
     }
 
-    public List<String> getAllowed_hardware() {
-        return allowed_hardware;
+    public List<String> getAllowed_classes() {
+        return allowed_classes;
     }
-    public void setAllowed_hardware(final List<String> allowed_hardware) {
-        this.allowed_hardware = allowed_hardware;
+    public void setAllowed_classes(final List<String> allowed_classes) {
+        this.allowed_classes = allowed_classes;
     }
 
 }

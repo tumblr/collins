@@ -10,7 +10,7 @@ case class ProvisionerRoleData(
   secondary_role: Option[String],
   contact: Option[String],
   contact_notes: Option[String],
-  allowed_hardware: Option[Set[String]],
+  allowed_classes: Option[Set[String]],
   requires_primary_role: Boolean,
   requires_pool: Boolean,
   requires_secondary_role: Boolean

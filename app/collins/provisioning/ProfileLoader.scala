@@ -56,7 +56,7 @@ object ProfileLoader {
         optionalButNonEmpty(profile.getSecondary_role()),
         optionalButNonEmpty(profile.getContact()),
         optionalButNonEmpty(profile.getContact_notes()),
-        Option(profile.getAllowed_hardware().asScala.toSet).filter(_.nonEmpty),
+        Option(profile.getAllowed_classes().asScala.toSet).filter(_.nonEmpty),
         Option(profile.getRequires_primary_role()).map(_.booleanValue()).getOrElse(true),
         Option(profile.getRequires_pool()).map(_.booleanValue()).getOrElse(true),
         Option(profile.getRequires_secondary_role()).map(_.booleanValue()).getOrElse(false)
