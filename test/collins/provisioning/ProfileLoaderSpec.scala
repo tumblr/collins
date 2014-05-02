@@ -26,6 +26,7 @@ class ProfileLoaderSpec extends Specification {
       role.requires_pool === false
       role.attributes === Map()
       role.clear_attributes === Set()
+      role.allowed_classes === None
     }
     "a profile with mostly defaults" >> {
       val profile = profiles.find(_.identifier == "webnode").get
@@ -41,6 +42,7 @@ class ProfileLoaderSpec extends Specification {
       role.requires_pool === true
       role.attributes === Map()
       role.clear_attributes === Set()
+      role.allowed_classes === None
     }
     "a profile with custom attributes" >> {
       val profile = profiles.find(_.identifier == "testattributesnode").get
@@ -54,6 +56,10 @@ class ProfileLoaderSpec extends Specification {
       addattrs.get("NODECLASS").get === "shouldnt be set to this"
       val clearattrs = role.clear_attributes
       clearattrs === Set("NODECLASS","DELETE_ME","SUPER_DANGEROUS_TAG","DUPLICATE_ATTRIBUTE")
+    }
+    "a profile with asset classification restrictions" >> {
+      val profile = profiles.find(_.identifier == "databasenode").get
+      profile.role.allowed_classes === Some(Set("io_class","database_class"))
     }
   }
 }

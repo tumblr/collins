@@ -21,6 +21,9 @@ profiles:
         prefix: "db"
         primary_role: "DATABASE"
         requires_pool: false
+        allowed_classes:
+          - io_class
+          - database_class
     devnode:
         cobbler_profile: "centos-5.6-x86_64-web"
         label: "Dev Machine"
