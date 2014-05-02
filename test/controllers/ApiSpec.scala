@@ -81,9 +81,9 @@ class ApiSpec extends ApplicationSpecification with ControllerSpec {
   def provideBashResponse = new ResponseMatcher(BashOutput().contentType) {
     override def expectedStatusCode = 200
     override def responseMatches(txt: String): Boolean = {
-      txt.contains("""Data_TestList_0_name="foo123";""") &&
-      txt.contains("""Data_TestList_0_key_with_dash="val-with-dash";""") && 
-      txt.contains("""Status="Ok";""");
+      txt.contains("""DATA_TESTLIST_0_NAME="foo123";""") &&
+      txt.contains("""DATA_TESTLIST_0_KEY_WITH_DASH="val-with-dash";""") &&
+      txt.contains("""STATUS="Ok";""");
     }
   }
 

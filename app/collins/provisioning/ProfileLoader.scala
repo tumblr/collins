@@ -57,6 +57,8 @@ object ProfileLoader {
         optionalButNonEmpty(profile.getContact()),
         optionalButNonEmpty(profile.getContact_notes()),
         Option(profile.getAllowed_classes().asScala.toSet).filter(_.nonEmpty),
+        profile.getAttributes().asScala.map(a => (a._1.toUpperCase, a._2.toString)).toMap,
+        profile.getClear_attributes().asScala.map(_.toUpperCase).toSet,
         Option(profile.getRequires_primary_role()).map(_.booleanValue()).getOrElse(true),
         Option(profile.getRequires_pool()).map(_.booleanValue()).getOrElse(true),
         Option(profile.getRequires_secondary_role()).map(_.booleanValue()).getOrElse(false)
