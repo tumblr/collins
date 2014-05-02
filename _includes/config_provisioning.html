@@ -137,12 +137,23 @@ pairs.
     prefix: "db"
     primary_role: "DATABASE"
     requires_pool: false
+    clear_attributes:
+    - TEST_DATABASE
+    - DONT_WANT_THIS_ATTRIBUTE_EITHER
   devnode:
     label: "Dev Machine"
     prefix: "dev"
     allow_suffix: true
     primary_role: "DEVEL"
     pool: "DEVEL"
+    attributes:
+      DEV_MODE: true
+  hadoopnode:
+    label: "Hadoop Server"
+    prefix: "hadoop"
+    allowed_classes:
+    - storage_class
+    - service_class
   webnode:
     label: "Web Server"
     prefix: "web"
