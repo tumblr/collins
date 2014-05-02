@@ -131,7 +131,7 @@ pairs.
 </p>
 
 <div class="example reference-config">
-<pre>profiles:
+  <pre>profiles:
   databasenode:
     label: "Database Server"
     prefix: "db"
@@ -200,6 +200,31 @@ pairs.
       <td class="inlinecode">allow_suffix</td>
       <td>Boolean</td>
       <td>Whether a user may specify an additional suffix for the hostname, defaults to false. If this is set to true, and the user for instance specifies a value of "foo" and the prefix was set to "dev", the generated hostname will be something like "dev-foo".</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">contact</td>
+      <td>Option[String]</td>
+      <td>If specified, this value is set on the <code>CONTACT</code> attribute at provision time. Useful to map responsible parties to nodeclasses. If not specified, <code>CONTACT</code> is cleared on the asset.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">contact_notes</td>
+      <td>Option[String]</td>
+      <td>Similar to <code>contact</code>, this field can be used to store some kind of information about the nodeclass, i.e. a link to a wiki page about the node profile, or services running on the machine. If not specified, this will be cleared at provision time.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">attributes</td>
+      <td>Map[String,Object]</td>
+      <td>If specified, any key value pair here will be set as attributes on the asset at provision time. You can use any value types that YAML supports; the parsed representation will be turned into a string when setting the attribute. These attributes have a lower precedence than attributes set by collins, such as nodeclass and primary_role.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">clear_attributes</td>
+      <td>List[String]</td>
+      <td>If specified, any attribute in this list will be cleared on provision. These attributes have a lower precedence than any attributes set in <code>attributes</code>, and wont clear any attributes set by collins itsself (nodeclass, primary_role, etc)</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">allowed_classes</td>
+      <td>Option[List[String]]</td>
+      <td>A list of asset classification tags that an asset must be classified as to allow provisioning. The list is ORed, so an asset matching any of the classifications will be provisionable. If omitted, there are no restrictions placed on what asset can be used to provision this profile (any classified/unclassified asset will provision). This is useful to restrict certain nodeclasses to certain hardware profiles, i.e. hadoopnode requires storage_class assets.</td>
     </tr>
   </tbody>
 </table>
