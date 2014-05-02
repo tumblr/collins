@@ -13,6 +13,7 @@ public class JProfile implements java.io.Serializable {
     private String pool;
     private String contact;
     private String contact_notes;
+    private List<String> allowed_classes;
     private Map<String,Object> attributes;
     private List<String> clear_attributes;
 
@@ -29,6 +30,7 @@ public class JProfile implements java.io.Serializable {
         pool = "";
         contact = "";
         contact_notes = "";
+        allowed_classes= new ArrayList<String>();
         attributes = new HashMap<String,Object>();
         clear_attributes = new ArrayList<String>();
         allow_suffix = Boolean.FALSE;
@@ -126,6 +128,13 @@ public class JProfile implements java.io.Serializable {
     }
     public void setRequires_pool(final Boolean requires_pool) {
         this.requires_pool = requires_pool;
+    }
+
+    public List<String> getAllowed_classes() {
+        return allowed_classes;
+    }
+    public void setAllowed_classes(final List<String> allowed_classes) {
+        this.allowed_classes = allowed_classes;
     }
 
 }
