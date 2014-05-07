@@ -18,7 +18,7 @@ case class AssetMeta(
 {
   override def validate() {
     require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
-    require(AssetMeta.isValidName(name), "Name must be all upper case, alpha numeric (and hyphens)")
+    require(AssetMeta.isValidName(name), "Name must be all upper case, alpha numeric (and hyphens): %s".format(name))
     require(description != null && description.length > 0, "Need a description")
     require(AssetMeta.ValueType.valIds(value_type), "Invalid value_type, must be one of [%s]".format(AssetMeta.ValueType.valStrings.mkString(",")))
   }
