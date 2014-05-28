@@ -48,8 +48,7 @@ function find_java() {
 
 find_java
 
-case "$1" in
-  initdb)
+initialize_db() {
     echo "mysql root password. Enter for none."
     mysql -u root -p -e 'create database if not exists collins;'
     if [ -z "$2" ]; then
@@ -66,14 +65,29 @@ case "$1" in
     fi
     echo "mysql root password. Enter for none."
     mysql -u root -p -e "grant all privileges on collins.* to $db_username@'127.0.0.1' identified by '$db_password';"
+
+}
+
+evolve_db() {
     if [ ! -x $JAVA_HOME/bin/java ]; then
       echo "FAIL"
       echo "Didn't find $JAVA_HOME/bin/java, check JAVA_HOME?"
       exit 1
     fi
+
     echo "Running migrations"
     ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/conf/evolutions/
     echo "Database initialization attempted" > /var/run/$APP_NAME/install.log
+}
+
+case "$1" in
+  initdb)
+    initialize_db $1 $2 $3
+    evolve_db
+  ;;
+
+  evolvedb)
+    evolve_db
   ;;
 
   start)
