@@ -176,8 +176,8 @@ case "$1" in
   ;;
 
   *)
-    echo "Usage: /etc/init.d/${APP_NAME}.sh {start|stop|restart|status|initdb}"
-    echo "Note: initdb can optionally be passed a username followed by a password to initialize the db"
+    echo "Usage: $0 {start|stop|restart|status|initdb|evolvedb}"
+    echo "Note: 'initdb' can optionally be passed a username followed by a password to initialize the db"
     exit 1
   ;;
 esac
