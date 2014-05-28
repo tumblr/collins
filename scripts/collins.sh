@@ -49,40 +49,43 @@ function find_java() {
 find_java
 
 initialize_db() {
+	declare db_username="$1";
+	declare db_password="$2";
+
     echo "mysql root password. Enter for none."
-    mysql -u root -p -e 'create database if not exists collins;'
-    if [ -z "$2" ]; then
+    mysql -u root -p -e 'CREATE DATABASE IF NOT EXISTS collins;'
+
+    if [ -z "$db_username" ]; then
       read -p "Application Database Username: " db_username
     else
-      db_username=$2;
+      db_username="$2";
     fi
-    if [ -z "$3" ]; then
+    if [ -z "$db_password" ]; then
       stty -echo
       read -p "Application Database Password: " db_password; echo
       stty echo
     else
-      db_password=$3;
+      db_password="$3";
     fi
-    echo "mysql root password. Enter for none."
-    mysql -u root -p -e "grant all privileges on collins.* to $db_username@'127.0.0.1' identified by '$db_password';"
 
+    echo "mysql root password. Enter for none."
+    mysql -u root -p -e "GRANT ALL PRIVILEGES ON collins.* to $db_username@'127.0.0.1' IDENTIFIED BY '$db_password';"
 }
 
 evolve_db() {
     if [ ! -x $JAVA_HOME/bin/java ]; then
-      echo "FAIL"
-      echo "Didn't find $JAVA_HOME/bin/java, check JAVA_HOME?"
+      echo "FAIL. Didn't find $JAVA_HOME/bin/java, check JAVA_HOME?"
       exit 1
     fi
 
     echo "Running migrations"
     ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/conf/evolutions/
-    echo "Database initialization attempted" > /var/run/$APP_NAME/install.log
+    echo "Database initialization attempted" >> /var/run/$APP_NAME/install.log
 }
 
 case "$1" in
   initdb)
-    initialize_db $1 $2 $3
+    initialize_db "$2" "$3"
     evolve_db
   ;;
 
