@@ -11,7 +11,7 @@ parallelExecution in IntegrationTest := false
 scalaVersion := "2.9.1"
 
 libraryDependencies ++= Seq(
-  "org.specs2" %% "specs2" % "1.12.4" % "test",
+  "org.specs2" %% "specs2" % "1.7.1" % "test",
   "org.mockito" % "mockito-all" % "1.9.0" % "test",
   "com.google.guava" % "guava" % "15.0",
   "com.google.code.findbugs" % "jsr305" % "1.3.9",
