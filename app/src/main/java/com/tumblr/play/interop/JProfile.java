@@ -1,4 +1,8 @@
 package com.tumblr.play.interop;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 
 public class JProfile implements java.io.Serializable {
     static final long serialVersionUID = -3055921821909895808L;
@@ -9,6 +13,9 @@ public class JProfile implements java.io.Serializable {
     private String pool;
     private String contact;
     private String contact_notes;
+    private List<String> allowed_classes;
+    private Map<String,Object> attributes;
+    private List<String> clear_attributes;
 
     private Boolean allow_suffix;
     private Boolean requires_primary_role;
@@ -21,6 +28,11 @@ public class JProfile implements java.io.Serializable {
         primary_role = "";
         secondary_role = "";
         pool = "";
+        contact = "";
+        contact_notes = "";
+        allowed_classes= new ArrayList<String>();
+        attributes = new HashMap<String,Object>();
+        clear_attributes = new ArrayList<String>();
         allow_suffix = Boolean.FALSE;
         requires_primary_role = Boolean.TRUE;
         requires_secondary_role = Boolean.FALSE;
@@ -60,6 +72,20 @@ public class JProfile implements java.io.Serializable {
     }
     public void setContact_notes(final String contact_notes) {
         this.contact_notes = contact_notes;
+    }
+
+    public Map<String,Object> getAttributes(){
+        return attributes;
+    }
+    public void setAttributes(final Map<String,Object> attributes) {
+        this.attributes = attributes;
+    }
+
+    public List<String> getClear_attributes(){
+        return clear_attributes;
+    }
+    public void setClear_attributes(final List<String> clear_attributes) {
+        this.clear_attributes = clear_attributes;
     }
 
     public String getSecondary_role() {
@@ -102,6 +128,13 @@ public class JProfile implements java.io.Serializable {
     }
     public void setRequires_pool(final Boolean requires_pool) {
         this.requires_pool = requires_pool;
+    }
+
+    public List<String> getAllowed_classes() {
+        return allowed_classes;
+    }
+    public void setAllowed_classes(final List<String> allowed_classes) {
+        this.allowed_classes = allowed_classes;
     }
 
 }

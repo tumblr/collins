@@ -73,6 +73,7 @@ trait ProvisionUtil { self: SecureAction =>
         validatePrimaryRole(role, primary_role)
           .right.flatMap(vrole => validatePool(vrole, pool))
           .right.flatMap(vrole => validateSecondaryRole(vrole, secondary_role))
+          .right.flatMap(vrole => validateAllowedHardware(vrole, asset))
           .right.map(frole => request.profile.copy(role = frole))
           .right.map(profile => request.copy(profile = profile))
           .right.map { frequest =>
@@ -100,8 +101,8 @@ trait ProvisionUtil { self: SecureAction =>
     val build_contact = form._2
     val suffix = form._3
     val role = request.profile.role
-    val attribSequence =
-      Seq(
+    val highPriorityAttrs =
+      Map(
         "NODECLASS" -> request.profile.identifier,
         "CONTACT" -> role.contact.getOrElse(""),
         "CONTACT_NOTES" -> role.contact_notes.getOrElse(""),
@@ -111,8 +112,13 @@ trait ProvisionUtil { self: SecureAction =>
         "SECONDARY_ROLE" -> role.secondary_role.getOrElse(""),
         "BUILD_CONTACT" -> build_contact
       )
-    val mapForDelete = Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
-    mapForDelete ++ Map(attribSequence:_*)
+    val lowPriorityAttrs = role.attributes
+    val clearOnRepurposeAttrs = Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
+    val clearProfileAttrs = role.clear_attributes.map(a => (a -> "")).toMap
+
+    // make sure high priority attrs take precedence over low priority
+    // and make sure any explicitly set attrs override any that are to be cleared
+    clearOnRepurposeAttrs ++ clearProfileAttrs ++ lowPriorityAttrs ++ highPriorityAttrs
   }
 
   protected def fieldError(form: Form[ProvisionForm]): Validation = (form match {
@@ -139,6 +145,19 @@ trait ProvisionUtil { self: SecureAction =>
       Left(RequestDataHolder.error400("A primary_role is required but none was specified"))
     else
       Right(role)
+  }
+
+  protected def validateAllowedHardware(role: ProvisionerRole, asset: Asset): ValidOption = role.allowed_classes match {
+    case Some(classifiers) => asset.nodeClass match {
+      case Some(nc) => {
+        if (classifiers contains nc.tag)
+          Right(role)
+        else
+          Left(RequestDataHolder.error400("Asset is classified as %s, but the provisioning profile requires assets matching: %s".format(nc.tag, classifiers.mkString(" or "))))
+      }
+      case _ => Left(RequestDataHolder.error400("Asset is unclassified, but the provisioning profile requires classified assets matching: %s".format(classifiers.mkString(" or "))))
+    }
+    case _ => Right(role)
   }
 
   protected def validateSecondaryRole(role: ProvisionerRole, srole: Option[String]): ValidOption = {
