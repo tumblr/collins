@@ -51,7 +51,7 @@ module Collins
     end
      
     def self.read_config(config_file = nil)
-      config_file ||= [ENV['COLLINS_CLIENT_CONFIG'], File.join(ENV['HOME'], '.collins.yml'), '/etc/collins.yml', '/var/db/collins.yml'].compact.find do |config_file|
+      config_file ||= [ENV['COLLINS_CLIENT_CONFIG'], File.join(ENV.fetch('HOME','.'), '.collins.yml'), '/etc/collins.yml', '/var/db/collins.yml'].compact.find do |config_file|
         File.readable? config_file and File.size(config_file) > 0
       end
       
