@@ -1,13 +1,15 @@
-package org.yaml.snakeyaml.constructor;
+package com.tumblr.play.interop;
 
-public class PlayClassLoaderConstructor extends Constructor {
-  private ClassLoader loader = PlayClassLoaderConstructor.class.getClassLoader();
+import org.yaml.snakeyaml.constructor.Constructor;
 
-  public PlayClassLoaderConstructor (ClassLoader cLoader) {
+public class CustomClassLoaderConstructor extends Constructor {
+  private ClassLoader loader = CustomClassLoaderConstructor.class.getClassLoader();
+
+  public CustomClassLoaderConstructor (ClassLoader cLoader) {
     this(Object.class, cLoader);
   }
 
-  public PlayClassLoaderConstructor(Class<? extends Object> theRoot) {
+  public CustomClassLoaderConstructor(Class<? extends Object> theRoot) {
     super(theRoot);
     ClassLoader l = theRoot.getClassLoader();
     if (l == null) {
@@ -16,7 +18,7 @@ public class PlayClassLoaderConstructor extends Constructor {
     this.loader = l;
   }
 
-  public PlayClassLoaderConstructor(Class<? extends Object> theRoot, ClassLoader theLoader) {
+  public CustomClassLoaderConstructor(Class<? extends Object> theRoot, ClassLoader theLoader) {
     super(theRoot);
     if (theLoader == null) {
       throw new NullPointerException("Loader must be provided.");
