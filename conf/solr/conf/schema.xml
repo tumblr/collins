@@ -235,9 +235,9 @@
    <field name="STATUS" type="string" indexed="true" stored="true" required="false"/>
    <field name="ID" type="int" indexed="true" stored="true" required="false" />
    <field name="STATE" type="string" indexed="true" stored="true" required="false"/>
-   <field name="CREATED" type="tdate" indexed="true" stored="true" requred="false"/>
-   <field name="UPDATED" type="tdate" indexed="true" stored="true" requred="false"/>
-   <field name="DELETED" type="tdate" indexed="true" stored="true" requred="false"/>
+   <field name="CREATED" type="tdate" indexed="true" stored="true" required="false"/>
+   <field name="UPDATED" type="tdate" indexed="true" stored="true" required="false"/>
+   <field name="DELETED" type="tdate" indexed="true" stored="true" required="false"/>
    <field name="IP_ADDRESS" type="string" indexed="true" stored="true" required="false" multiValued="true"/>
 
    <!-- 
