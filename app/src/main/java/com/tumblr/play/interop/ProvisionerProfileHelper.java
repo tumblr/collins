@@ -3,7 +3,6 @@ package com.tumblr.play.interop;
 import java.io.*;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.representer.Representer;
-import org.yaml.snakeyaml.constructor.PlayClassLoaderConstructor;
 
 public class ProvisionerProfileHelper {
   public static JProvisionerProfile fromFile(final File file) throws FileNotFoundException {
@@ -12,7 +11,7 @@ public class ProvisionerProfileHelper {
     }
     final Representer r = new Representer();
     r.getPropertyUtils().setSkipMissingProperties(true);
-    final Yaml yaml = new Yaml(new PlayClassLoaderConstructor(JProvisionerProfile.class), r);
+    final Yaml yaml = new Yaml(new CustomClassLoaderConstructor(JProvisionerProfile.class), r);
     final InputStream fis = new FileInputStream(file);
     JProvisionerProfile p = null;
     try {
