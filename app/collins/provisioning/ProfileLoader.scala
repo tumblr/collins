@@ -40,14 +40,7 @@ object ProfileLoader {
   }
   def fromFile(file: IoFile): Set[ProvisionerProfile] = {
     File.requireFileIsReadable(file)
-    val classLoader = try {
-      import play.api.Play.current
-      current.classloader
-    } catch {
-      case e =>
-        getClass.getClassLoader
-    }
-    val p = ProvisionerProfileHelper.fromFile(file, classLoader)
+    val p = ProvisionerProfileHelper.fromFile(file)
     require(p != null, "Invalid yaml file %s".format(file.getAbsolutePath))
     val seq = p.profiles.asScala.map { case(key, profile) =>
       val roleData = ProvisionerRoleData(
