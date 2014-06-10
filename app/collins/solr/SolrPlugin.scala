@@ -77,7 +77,7 @@ class SolrPlugin(app: Application) extends Plugin {
     val server = if (SolrConfig.useEmbeddedServer) {
       Solr.getNewEmbeddedServer(SolrConfig.embeddedSolrHome)
     } else {
-      Solr.getNewRemoteServer(SolrConfig.externalUrl.get)
+      Solr.getNewRemoteServer()
     }
     _server = Some(server)
   }
@@ -135,7 +135,7 @@ class SolrPlugin(app: Application) extends Plugin {
         if (commit) {
           server.commit()
           if (items.size == 1) {
-            logger.debug(("Re-indexing %s, %s".format(serializer.docType.name, items.head.toString)))
+            logger.debug(("Indexed %s: %s".format(serializer.docType.name, items.head.toString)))
           } else {
             logger.info("Indexed %d %ss".format(docs.size, serializer.docType.name))
           }
