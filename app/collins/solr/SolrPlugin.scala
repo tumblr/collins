@@ -75,9 +75,9 @@ class SolrPlugin(app: Application) extends Plugin {
 
   private def setupServer() {
     val server = if (SolrConfig.useEmbeddedServer) {
-      Solr.getNewEmbeddedServer(SolrConfig.embeddedSolrHome)
+      Solr.getNewEmbeddedServer
     } else {
-      Solr.getNewRemoteServer()
+      Solr.getNewRemoteServer
     }
     _server = Some(server)
   }

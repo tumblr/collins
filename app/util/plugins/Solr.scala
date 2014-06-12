@@ -48,7 +48,8 @@ object Solr {
     app.plugin[SolrPlugin].filter(_.enabled).map{_.server}
   }
 
-  private[solr] def getNewEmbeddedServer(solrHome: String) = {
+  private[solr] def getNewEmbeddedServer = {
+    val solrHome = SolrConfig.embeddedSolrHome
     System.setProperty("solr.solr.home",solrHome) // (╯°□°)╯︵ɐʌɐɾ
     val initializer = new CoreContainer.Initializer()
     val coreContainer = initializer.initialize()
@@ -56,7 +57,7 @@ object Solr {
     new EmbeddedSolrServer(coreContainer, "")
   }
 
-  private[solr] def getNewRemoteServer() = {
+  private[solr] def getNewRemoteServer = {
     //out-of-the-box config from solrj wiki
     //http://wiki.apache.org/solr/Solrj#Changing_other_Connection_Settings
     Logger.logger.debug("Using external Solr Server")
