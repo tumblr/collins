@@ -54,6 +54,26 @@ also sort results by any tag which is nice. You can find example queries in the
       <td>Boolean</td>
       <td>Defaults to true</td>
     </tr>
+    <tr>
+      <td class="inlinecode">socketTimeout</td>
+      <td>Int</td>
+      <td>Solr socket timeout for HTTP client. Defaults to 1000ms. (Only applicable to external Solr server)</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">connectionTimeout</td>
+      <td>Int</td>
+      <td>Solr HTTP connection timeout. Defaults to 100ms. (Only applicable to external Solr server)</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">maxTotalConnections</td>
+      <td>Int</td>
+      <td>Solr HTTP client tunable; defaults to 100. (Only applicable to external Solr server)</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">defaultMaxConnectionsPerHost</td>
+      <td>Int</td>
+      <td>Solr HTTP client tunable; defaults to 100. (Only applicable to external Solr server)</td>
+    </tr>
   </tbody>
 </table>
 
