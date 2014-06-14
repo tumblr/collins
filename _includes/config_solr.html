@@ -27,7 +27,7 @@ also sort results by any tag which is nice. You can find example queries in the
     <tr>
       <td class="inlinecode">embeddedSolrHome</td>
       <td>String</td>
-      <td>Must be a writable directory if useEmbeddedServer is true</td>
+      <td><span class="label label-info">Embedded only</span> Must be a writable directory if useEmbeddedServer is true</td>
     </tr>
     <tr>
       <td class="inlinecode">enabled</td>
@@ -37,7 +37,7 @@ also sort results by any tag which is nice. You can find example queries in the
     <tr>
       <td class="inlinecode">externalUrl</td>
       <td>String</td>
-      <td>If useEmbeddedServer is false, this must be a valid solr URL</td>
+      <td><span class="label label-info">External only</span> If useEmbeddedServer is false, this must be a valid solr URL</td>
     </tr>
     <tr>
       <td class="inlinecode">reactToUpdates</td>
@@ -57,22 +57,22 @@ also sort results by any tag which is nice. You can find example queries in the
     <tr>
       <td class="inlinecode">socketTimeout</td>
       <td>Int</td>
-      <td>Solr socket timeout for HTTP client. Defaults to 1000ms. (Only applicable to external Solr server)</td>
+      <td><span class="label label-info">External only</span> Solr socket timeout for HTTP client. Defaults to 1000ms.</td>
     </tr>
     <tr>
       <td class="inlinecode">connectionTimeout</td>
       <td>Int</td>
-      <td>Solr HTTP connection timeout. Defaults to 100ms. (Only applicable to external Solr server)</td>
+      <td><span class="label label-info">External only</span> Solr HTTP connection timeout. Defaults to 100ms.</td>
     </tr>
     <tr>
       <td class="inlinecode">maxTotalConnections</td>
       <td>Int</td>
-      <td>Solr HTTP client tunable; defaults to 100. (Only applicable to external Solr server)</td>
+      <td><span class="label label-info">External only</span> Solr HTTP client tunable; defaults to 100.</td>
     </tr>
     <tr>
       <td class="inlinecode">defaultMaxConnectionsPerHost</td>
       <td>Int</td>
-      <td>Solr HTTP client tunable; defaults to 100. (Only applicable to external Solr server)</td>
+      <td><span class="label label-info">External only</span> Solr HTTP client tunable; defaults to 100.</td>
     </tr>
   </tbody>
 </table>
