@@ -1,0 +1,36 @@
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">tagdecorators</span>
+</p>
+
+<p>
+Tag decorators allow you to change how tags are displayed on asset. Creating links, formatting names, anything is fair game. The best way to illustrate is through an example.
+</p>
+
+<div class="example reference-config">
+  <pre>
+tagdecorators {
+  templates {
+    search = "<a href=\"/resources?{name}={value}\">{value}</a>"
+  }
+  decorators {
+    APPLICATION_SHA.decorator    = "<a target=\"_blank\" href=\"https://scm.site.net/commit/{value}\">{value}</a>"
+    CONTACT.decorator       = "<a href=\"mailto:{value}\">{value}</a>"
+    CONTACT_NOTES.decorator = "<a target=\"_blank\" href=\"{value}\">{value}</a>"
+    RACK_POSITION {
+      decorator = ${tagdecorators.templates.search}
+      valueParser = "util.views.DelimiterParser"
+      delimiter = "-"
+      between = "-"
+    }
+    NODECLASS.decorator = ${tagdecorators.templates.search}
+    IP_ADDRESS {
+
+      decorator="<a href=\"ssh://{value}\">{value}</a>"
+      between=", "
+    }
+    HYPERVISOR.decorator  = "<a href=\"/resources?TAG={value}\">{value}</a>"
+    AVAILABILITY_ZONE.decorator     = "<a href=\"/resources?IS_AVAILABILITY_ZONE=true&NAME={value}\">{value}</a>"
+  }
+}
+  </pre>
+</div>
