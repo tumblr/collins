@@ -7,15 +7,15 @@ Tag decorators allow you to change how tags are displayed on asset. Creating lin
 </p>
 
 <div class="example reference-config">
-  <pre>
+  <pre><code>
 tagdecorators {
   templates {
-    search = "<a href=\"/resources?{name}={value}\">{value}</a>"
+    search = "&lt;a href=\"/resources?{name}={value}\"&gt;{value}&lt;/a&gt;"
   }
   decorators {
-    APPLICATION_SHA.decorator    = "<a target=\"_blank\" href=\"https://scm.site.net/commit/{value}\">{value}</a>"
-    CONTACT.decorator       = "<a href=\"mailto:{value}\">{value}</a>"
-    CONTACT_NOTES.decorator = "<a target=\"_blank\" href=\"{value}\">{value}</a>"
+    APPLICATION_SHA.decorator    = "&lt;a target=\"_blank\" href=\"https://scm.site.net/commit/{value}\"&gt;{value}&lt;/a&gt;"
+    CONTACT.decorator       = "&lt;a href=\"mailto:{value}\"&gt;{value}&lt;/a&gt;"
+    CONTACT_NOTES.decorator = "&lt;a target=\"_blank\" href=\"{value}\"&gt;{value}&lt;/a&gt;"
     RACK_POSITION {
       decorator = ${tagdecorators.templates.search}
       valueParser = "util.views.DelimiterParser"
@@ -24,13 +24,12 @@ tagdecorators {
     }
     NODECLASS.decorator = ${tagdecorators.templates.search}
     IP_ADDRESS {
-
-      decorator="<a href=\"ssh://{value}\">{value}</a>"
+      decorator="&lt;a href=\"ssh://{value}\"&gt;>{value}&lt;/a&gt;"
       between=", "
     }
-    HYPERVISOR.decorator  = "<a href=\"/resources?TAG={value}\">{value}</a>"
-    AVAILABILITY_ZONE.decorator     = "<a href=\"/resources?IS_AVAILABILITY_ZONE=true&NAME={value}\">{value}</a>"
+    HYPERVISOR.decorator  = "&lt;a href=\"/resources?TAG={value}\"&gt;>{value}&lt;/a&gt;"
+    AVAILABILITY_ZONE.decorator     = "&lt;a href=\"/resources?IS_AVAILABILITY_ZONE=true&NAME={value}\"&gt;{value}&lt;/a&gt;"
   }
 }
-  </pre>
+  </code></pre>
 </div>
