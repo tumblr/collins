@@ -48,7 +48,7 @@ class AssetSolrUpdater extends Actor {
           logger.debug("Scheduling update, saw %s".format(asset.tag))
           context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
         } else {
-          logger.debug("Not scheduling update, saw %s".format(asset.tag))
+          logger.trace("Not scheduling update, saw %s".format(asset.tag))
         }
       }
     case Reindex =>
