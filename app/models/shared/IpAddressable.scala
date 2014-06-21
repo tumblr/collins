@@ -6,6 +6,7 @@ import util.{IpAddress, IpAddressCalc}
 import org.squeryl.Schema
 import play.api.Logger
 import java.sql.SQLException
+import collection.immutable.SortedSet
 
 trait IpAddressable extends ValidatedEntity[Long] {
 
@@ -125,14 +126,15 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   * For a range 0L..20L, used addresses List(17,18,19,20), the result will be None (allocate from beginning)
   */
   protected def getCurrentLowestLocalMaxAddress(minAddress: Long, maxAddress: Long)(implicit scope: Option[String]): Option[Long] = {
-    val sortedAddresses = from(tableDef)(t =>
+    val addresses = from(tableDef)(t =>
       where(
         (t.address gte minAddress) and
         (t.address lte maxAddress)
       )
       select(t.address)
       orderBy(t.address asc)
-    ).toList
+    ).toSet
+    val sortedAddresses = SortedSet[Long]() ++ addresses
     val localMaximaAddresses = for (
       localMax <- sortedAddresses if !sortedAddresses.contains(localMax + 1)
     ) yield localMax
