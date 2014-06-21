@@ -134,21 +134,21 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
       select(t.address)
       orderBy(t.address asc)
     ).toSet
+
     val sortedAddresses = SortedSet[Long]() ++ addresses
     val localMaximaAddresses = for (
-      localMax <- sortedAddresses if !sortedAddresses.contains(localMax + 1)
+      localMax <- sortedAddresses if !sortedAddresses.contains(localMax + 1L)
     ) yield localMax
 
-    localMaximaAddresses.isEmpty match {
-      case true  => None
-      case false => {
-        val localMax = localMaximaAddresses.head
-        localMax match {
+    localMaximaAddresses.headOption match {
+      case Some(localMax) =>
+        if (localMax == maxAddress) {
           //if we are at the end of our range, start from the beginning
-          case limit if localMax == maxAddress => None
-          case _ => Some(localMax)
+          None
+        } else {
+          Some(localMax)
         }
-      }
+      case _ => None
     }
   }
 
