@@ -126,30 +126,30 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   * For a range 0L..20L, used addresses List(17,18,19,20), the result will be None (allocate from beginning)
   */
   protected def getCurrentLowestLocalMaxAddress(minAddress: Long, maxAddress: Long)(implicit scope: Option[String]): Option[Long] = {
-    val addresses = from(tableDef)(t =>
+    val sortedAddresses = from(tableDef)(t =>
       where(
         (t.address gte minAddress) and
         (t.address lte maxAddress)
       )
       select(t.address)
       orderBy(t.address asc)
-    ).toSet
+    ).toSeq
 
-    val sortedAddresses = SortedSet[Long]() ++ addresses
-    val localMaximaAddresses = for (
-      localMax <- sortedAddresses if !sortedAddresses.contains(localMax + 1L)
-    ) yield localMax
+    val localMaximaAddresses = for {
+      i <- 0 to sortedAddresses.size -2
+      curr = sortedAddresses(i)
+      next = sortedAddresses(i+1)
+      if (next > curr + 1)
+    } yield curr
 
-    localMaximaAddresses.headOption match {
-      case Some(localMax) =>
-        if (localMax == maxAddress) {
-          //if we are at the end of our range, start from the beginning
-          None
-        } else {
-          Some(localMax)
-        }
-      case _ => None
-    }
+    localMaximaAddresses.headOption.flatMap(localMax =>
+      if (localMax == maxAddress) {
+        //if we are at the end of our range, start from the beginning
+        None
+      } else {
+        Some(localMax)
+      }
+    )
   }
 
   protected def getGateway()(implicit scope: Option[String]): Option[Long] = getConfig() match {
