@@ -6,6 +6,7 @@ import util.{IpAddress, IpAddressCalc}
 import org.squeryl.Schema
 import play.api.Logger
 import java.sql.SQLException
+import collection.immutable.SortedSet
 
 trait IpAddressable extends ValidatedEntity[Long] {
 
@@ -27,7 +28,7 @@ trait IpAddressable extends ValidatedEntity[Long] {
   def getId(): Long = id
   def getAssetId(): Long = asset_id
   def getAsset(): Asset = Asset.findById(getAssetId()).get
-    
+
 }
 
 trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
@@ -75,15 +76,15 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   }
 
   def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long,Long,Long] = {
+    //this is used by ip allocation without pools (i.e. IPMI)
     val network = getNetwork
     val startAt = overrideStart.orElse(getStartAddress)
     val calc = IpAddressCalc(network, startAt)
     val gateway: Long = getGateway().getOrElse(calc.minAddressAsLong)
     val netmask: Long = calc.netmaskAsLong
-    val currentMax: Option[Long] = getCurrentMaxAddress(
-      calc.minAddressAsLong, calc.maxAddressAsLong
-    )
-    val address: Long = calc.nextAvailableAsLong(currentMax)
+    // look for the local maximum address (i.e. the last used address in a continuous sequence from startAddress)
+    val localMax: Option[Long] = getCurrentLowestLocalMaxAddress(calc.minAddressAsLong, calc.maxAddressAsLong)
+    val address: Long = calc.nextAvailableAsLong(localMax)
     (gateway, address, netmask)
   }
 
@@ -95,7 +96,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     var i = 0
     do {
       try {
-        res = Some(f(i)) 
+        res = Some(f(i))
       } catch {
         case e: SQLException =>
           logger.info("createAddressWithRetry attempt %d: %s".format((i + 1), e.getMessage))
@@ -115,13 +116,39 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     )
   }
 
-  protected def getCurrentMaxAddress(minAddress: Long, maxAddress: Long)(implicit scope: Option[String]): Option[Long] = inTransaction {
-    from(tableDef)(t =>
+  /*
+  * returns the lowest last used address in a continuous sequence from minAddress
+  * If maxAddress is the same as the lowest last used address, we return None which signifies
+  * that you should start allocating addresses from the start of the range.
+  *
+  * Ex: For a range 0L..20L, used addresses List(1,2,3,4,5,13,14,15,19,20), the result will be Some(5)
+  * For a range 0L..20L, used addresses List(5,6,7,8,19,20), the result will be Some(8)
+  * For a range 0L..20L, used addresses List(17,18,19,20), the result will be None (allocate from beginning)
+  */
+  protected def getCurrentLowestLocalMaxAddress(minAddress: Long, maxAddress: Long)(implicit scope: Option[String]): Option[Long] = {
+    val sortedAddresses = from(tableDef)(t =>
       where(
         (t.address gte minAddress) and
         (t.address lte maxAddress)
       )
-      compute(max(t.address))
+      select(t.address)
+      orderBy(t.address asc)
+    ).toSeq
+
+    lazy val localMaximaAddresses = for {
+      i <- Range(0, sortedAddresses.size-1).inclusive.toStream
+      curr = sortedAddresses(i)
+      next = sortedAddresses.lift(i+1)
+      if (next.map{_ > curr + 1}.getOrElse(true))
+    } yield curr
+
+    localMaximaAddresses.headOption.flatMap(localMax =>
+      if (localMax == maxAddress) {
+        //if we are at the end of our range, start from the beginning
+        None
+      } else {
+        Some(localMax)
+      }
     )
   }
 
