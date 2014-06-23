@@ -136,10 +136,10 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     ).toSeq
 
     lazy val localMaximaAddresses = for {
-      i <- Stream.range(0, sortedAddresses.size-2)
+      i <- Range(0, sortedAddresses.size-1).inclusive.toStream
       curr = sortedAddresses(i)
-      next = sortedAddresses(i+1)
-      if (next > curr + 1)
+      next = sortedAddresses.lift(i+1)
+      if (next.map{_ > curr + 1}.getOrElse(true))
     } yield curr
 
     localMaximaAddresses.headOption.flatMap(localMax =>
