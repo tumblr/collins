@@ -135,8 +135,8 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
       orderBy(t.address asc)
     ).toSeq
 
-    val localMaximaAddresses = for {
-      i <- 0 to sortedAddresses.size -2
+    lazy val localMaximaAddresses = for {
+      i <- Stream.range(0, sortedAddresses.size-2)
       curr = sortedAddresses(i)
       next = sortedAddresses(i+1)
       if (next > curr + 1)
