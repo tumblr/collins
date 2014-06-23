@@ -653,7 +653,7 @@ class SolrServerSpecification extends ApplicationSpecification {
 
   def home = SolrConfig.embeddedSolrHome
 
-  lazy val server = Solr.getNewEmbeddedServer(home)
+  lazy val server = Solr.getNewEmbeddedServer
 
   "solr server" should {
     "get solrhome config" in {
