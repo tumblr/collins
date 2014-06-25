@@ -26,7 +26,7 @@ trait AssetAction {
   def setAsset(a: Option[Asset]): Unit = _asset.set(a)
   def setAsset(a: Asset): Unit = _asset.set(Some(a))
   def getAsset(): Option[Asset] = _asset.get
-  def definedAsset(): Asset = getAsset().get
+  def definedAsset: Asset = getAsset().get
 
   def assetNotFound(t: String) = RequestDataHolder.error404(AssetMessages.notFound(t))
 

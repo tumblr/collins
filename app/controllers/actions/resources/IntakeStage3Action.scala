@@ -5,6 +5,7 @@ package resources
 import asset.ActionAttributeHelper
 import models.AssetLifecycle
 import models.AssetMeta.Enum.{ChassisTag, RackPosition}
+import collins.intake.IntakeConfig
 import util.MessageHelperI
 import util.security.SecuritySpecification
 import util.power.{InvalidPowerConfigurationException, PowerUnits}
@@ -17,18 +18,25 @@ import java.util.concurrent.atomic.AtomicReference
 import scala.util.control.Exception.allCatch
 
 trait IntakeStage3Form extends ParamValidation {
-  type DataForm = Tuple2[
-    String,              // chassis tag
-    String               // rack position
-  ]
+
+  val intakeCustomFields = IntakeConfig.intake_field_names
+
+  // See http://www.playframework.com/documentation/2.0/ScalaForms
+  type DataForm = (
+    String, // chassis tag
+    String // rack position
+   )
+
   val dataForm = Form(tuple(
     ChassisTag.toString -> validatedText(1),
     RackPosition.toString -> validatedText(1)
   ))
+
   def formFromChassisTag(tag: String) = dataForm.bind(Map(
     ChassisTag.toString -> tag
   )).copy(errors = Nil)
 }
+
 object IntakeStage3Action extends IntakeStage3Form
 
 case class IntakeStage3Action(
@@ -44,10 +52,11 @@ case class IntakeStage3Action(
   protected val form = new AtomicReference[Form[DataForm]](dataForm)
 
   case object ActionError extends RequestDataHolder
-  case class ActionDataHolder(
+  case class IntakeDataHolder(
     chassisTag: String,
     rackPosition: String,
-    powerMap: Map[String,String]
+    customFieldMap: Map[String, String],
+    powerMap: Map[String, String]
   ) extends RequestDataHolder
 
   override def invalidAttributeMessage(p: String) = "Parameter %s invalid".format(p)
@@ -59,9 +68,11 @@ case class IntakeStage3Action(
       if (boundForm.hasErrors)
         Left(ActionError)
       else {
-        val (chassisTag, rackPosition) = boundForm.get
+        val (chassisTag, rackPosition ) = boundForm.get
         verifyChassisTag(chassisTag) match {
-          case Right(ctag) => validate(ctag, rackPosition)
+          case Right(cleanChassisTag) => {
+            validateIntakeFields(cleanChassisTag, rackPosition)
+          }
           case Left(rdh) => updateFormErrors(rdh.toString)
         }
       }
@@ -69,24 +80,28 @@ case class IntakeStage3Action(
   }
 
   override def execute(rd: RequestDataHolder) = rd match {
-    case ActionDataHolder(chassisTag, rackPosition, powerMap) =>
+    case IntakeDataHolder(chassisTag, rackPosition, customFieldMap, powerMap) => {
       val basicMap = Map(
         ChassisTag.toString -> chassisTag,
         RackPosition.toString -> rackPosition
       )
-      val updateMap = basicMap ++ powerMap
+
+      val updateMap = basicMap ++ customFieldMap ++ powerMap
+      // Asset Lifecycle business
       AssetLifecycle.updateAsset(definedAsset, updateMap) match {
+
         case Left(error) =>
           handleError(RequestDataHolder.error400(error.getMessage))
         case Right(ok) if ok =>
           Redirect(app.routes.Resources.index).flashing(
-            "success" -> rootMessage("asset.intake.success", definedAsset.tag)
+             "success" -> rootMessage("asset.intake.success", definedAsset.tag)
           )
         case Right(ok) if !ok =>
           handleError(RequestDataHolder.error400(
             rootMessage("asset.intake.failed", definedAsset.tag)
           ))
       }
+    }
   }
 
   override def handleWebError(rd: RequestDataHolder) = rd match {
@@ -97,15 +112,20 @@ case class IntakeStage3Action(
       Some(Status.Ok(Stage3Template(definedAsset, form.get)(flash, request)))
   }
 
-  protected def validate(chassisTag: String, rackPosition: String): Validation = try {
+  private def validateIntakeFields(chassisTag: String, rackPosition: String): Either[RequestDataHolder,RequestDataHolder] = {
     val pmap = PowerUnits.unitMapFromMap(getInputMap)
     PowerUnits.validateMap(pmap)
-    Right(ActionDataHolder(chassisTag, cleanString(rackPosition).get, pmap))
-  } catch {
-    case InvalidPowerConfigurationException(message, Some(key)) =>
-      updateFormErrors(message, key)
-    case error =>
-      updateFormErrors(error.getMessage)
+    val rp = cleanString(rackPosition).get
+
+    Right(IntakeDataHolder(chassisTag, rp, extractFieldValuesFromRequest(), pmap))
+  }
+
+  private def extractFieldValuesFromRequest(): Map[String, String] = {
+    // Return the extracted values for the custom fields from the request
+    intakeCustomFields.map((fieldName: String) => {
+      val formValue = request().queryString(fieldName).mkString
+          fieldName -> formValue
+    }).toMap
   }
 
   private def updateFormErrors(message: String, key: String = "") = {
