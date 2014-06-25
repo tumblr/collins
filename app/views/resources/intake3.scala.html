@@ -40,11 +40,11 @@
       }
     }
 
+    @inputText(f(RackPosition.toString), '_label -> "Rack Position", 'autocomplete -> "off", Symbol("enter-style") -> "tab", 'class -> "focus")
+
     @IntakeConfig.intake_field_names.map { (name) =>
        @inputText(f(name), '_label -> name, 'autocomplete -> "off", Symbol("enter-style") -> "tab")
       }
-
-    @inputText(f(RackPosition.toString), '_label -> "Rack Position", 'autocomplete -> "off", Symbol("enter-style") -> "tab")
 
     @getPowerComponentsInOrder.map { component =>
     @inputText(f(component.key), '_help -> "Value Required", '_label -> component.label, 'autocomplete -> "off", Symbol("enter-style") -> "tab")
