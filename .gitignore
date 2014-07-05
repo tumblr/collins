@@ -32,3 +32,6 @@ _includes/*
 #emacs files
 *~
 \#*\#
+
+# jenv java version mgmt
+.java-version
