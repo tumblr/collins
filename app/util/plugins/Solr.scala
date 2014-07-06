@@ -38,12 +38,6 @@ object Solr {
   //TODO: Rename
   type AssetSolrDocument = Map[SolrKey, SolrValue]
 
-  def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {
-    val input = new SolrInputDocument
-    typedMap.foreach{case(key,value) => input.addField(key.resolvedName,value.value)}
-    input
-  }
-
   def server: Option[SolrServer] = Play.maybeApplication.flatMap { app =>
     app.plugin[SolrPlugin].filter(_.enabled).map{_.server}
   }
