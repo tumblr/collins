@@ -53,7 +53,7 @@ class AssetSolrUpdater extends Actor {
       if (scheduled.get == true) {
         val toRemove = set.asScala.toSeq
         val indexTime = new Date
-        val assets = toRemove.map(t => Asset.findByTag(t)).filter(_.isDefined).map(_.get)
+        val assets = toRemove.map(t => Asset.findByTag(t)).flatMap(a => a)
         logger.debug("Got Reindex task, working on %d assets, set is %d".format(toRemove.size, set.size))
         Solr.plugin.foreach(_.updateAssets(assets, indexTime))
         set.removeAll(toRemove.asJava)
