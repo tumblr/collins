@@ -5,7 +5,7 @@ require 'socket'
 
 module Collins
   module Authenticator
-    def self.setup_client(options = {prompt: false})
+    def self.setup_client(options = {:prompt => false})
       if options[:config_file] and not File.readable? options[:config_file]
         raise 'unable to read invalid config file: ' + options[:config_file]
       end
