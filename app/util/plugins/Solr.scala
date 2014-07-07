@@ -44,7 +44,9 @@ object Solr {
 
   private[solr] def getNewEmbeddedServer = {
     val solrHome = SolrConfig.embeddedSolrHome
-    val coreContainer = new CoreContainer(solrHome)
+    System.setProperty("solr.solr.home",solrHome) // (╯°□°)╯︵ɐʌɐɾ
+    val initializer = new CoreContainer.Initializer()
+    val coreContainer = initializer.initialize()
     Logger.logger.debug("Booting embedded Solr Server with solrhome " + solrHome)
     new EmbeddedSolrServer(coreContainer, "")
   }
