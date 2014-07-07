@@ -14,7 +14,7 @@ module Collins
     end
 
     def self.load_config(options = {})
-      conf = (read_config(options[:config_file]) || {}).merge(options) unless options[:prompt] == :only
+      conf = (options[:prompt] == :only) ? {} : (read_config(options[:config_file]) || {}).merge(options)
       
       # check if we have all that we expect
       if [:username, :password, :host].all? {|key| conf.keys.include? key}
