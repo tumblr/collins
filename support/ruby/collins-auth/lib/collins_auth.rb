@@ -15,22 +15,22 @@ module Collins
 
     def self.load_config(options = {})
       conf = (options[:prompt] == :only) ? {} : (read_config(options[:config_file]) || {}).merge(options)
-      
+
       # check if we have all that we expect
       if [:username, :password, :host].all? {|key| conf.keys.include? key}
         return conf
       end
-      
+
       # Something is missing. Can we prompt for it?
       if options[:prompt]
         conf.merge!(prompt_creds(conf))
       else
         raise "could not load any valid configuration."
       end
-      
+
       conf
     end
-    
+
     private
     def self.file2conf(file)
       if file and File.readable? file
@@ -49,20 +49,20 @@ module Collins
       conf[:host]     ||= ask('host: ') {|host| host.default = ['https://collins', get_domain].compact.join('.')}
       conf
     end
-     
+
     def self.read_config(config_file = nil)
       home_config_file = File.join(ENV['HOME'], '.collins.yml') unless ENV['HOME'].nil?
 
       config_file ||= [ENV['COLLINS_CLIENT_CONFIG'], home_config_file, '/etc/collins.yml', '/var/db/collins.yml'].compact.find do |config_file|
         File.readable? config_file and File.size(config_file) > 0
       end
-      
+
       file2conf config_file
-    end    
-    
+    end
+
     def self.get_domain
       hostname = Socket.gethostname.downcase.split('.')
-      
+
       if hostname.length > 1
         hostname.shift
         hostname.join('.')
