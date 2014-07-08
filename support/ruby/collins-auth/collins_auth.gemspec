@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = "collins_auth"
   s.version = "0.1.2"
-  s.date = "2013-11-22"
+  s.date = "2014-07-08"
   s.summary = "Library to aid in getting an authenticated Collins::Client"
   s.description = "This is a library to make it easy to obtain an authenticated collins_client object. It attempts to load credentials from the following yaml files ENV['COLLINS_CLIENT_CONFIG'], ~/.collins.yml, /etc/collins.yml, /var/db/collins.yml, and supports user input."
   s.authors = ["Michael Benedict"]
