@@ -43,14 +43,12 @@ class AssetSolrUpdater extends Actor {
    */
   def receive = {
     case asset: Asset =>
-      if (shouldIndex(asset)) {
-        assetTagsRef.get.add(asset.tag)
-        if (scheduled.compareAndSet(false, true)) {
-          logger.debug("Scheduling update, saw %s".format(asset.tag))
-          context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
-        } else {
-          logger.trace("Not scheduling update, saw %s".format(asset.tag))
-        }
+      assetTagsRef.get.add(asset.tag)
+      if (scheduled.compareAndSet(false, true)) {
+        logger.debug("Scheduling update, saw %s".format(asset.tag))
+        context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
+      } else {
+        logger.trace("Not scheduling update, saw %s".format(asset.tag))
       }
     case Reindex =>
       if (scheduled.get == true) {
@@ -62,11 +60,6 @@ class AssetSolrUpdater extends Actor {
         scheduled.set(false)
       }
   }
-
-  protected def shouldIndex(asset: Asset): Boolean =
-    Asset.findByTag(asset.tag).map { oasset =>
-      true
-    }.getOrElse(false)
 }
 
 class AssetLogSolrUpdater extends Actor {
