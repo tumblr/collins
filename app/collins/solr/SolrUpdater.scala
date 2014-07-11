@@ -3,14 +3,13 @@ package collins.solr
 import akka.actor._
 import akka.util.duration._
 import play.api.Logger
-
 import models.{Asset, AssetLog}
-
 import java.util.Collections
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.JavaConverters._
+import java.util.concurrent.atomic.AtomicReference
 
 //TODO: refactor all this
 
@@ -23,9 +22,11 @@ import scala.collection.JavaConverters._
  */
 class AssetSolrUpdater extends Actor {
 
-  private[this] val set = Collections.newSetFromMap[String](
+  private[this] def newAssetTagSet = Collections.newSetFromMap[String](
     new ConcurrentHashMap[String,java.lang.Boolean]()
   )
+  
+  private[this] val assetTagsRef = new AtomicReference(newAssetTagSet)
   private[this] val logger = Logger("SolrUpdater")
 
   //mutex to prevent multiple concurrent scheduler calls
@@ -42,7 +43,7 @@ class AssetSolrUpdater extends Actor {
    */
   def receive = {
     case asset: Asset =>
-      set.add(asset.tag)
+      assetTagsRef.get.add(asset.tag)
       if (scheduled.compareAndSet(false, true)) {
         logger.debug("Scheduling update, saw %s".format(asset.tag))
         context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
@@ -51,13 +52,11 @@ class AssetSolrUpdater extends Actor {
       }
     case Reindex =>
       if (scheduled.get == true) {
-        val toRemove = set.asScala.toSeq
+        val assetTags = assetTagsRef.getAndSet(newAssetTagSet).asScala.toSeq
         val indexTime = new Date
-        val assets = toRemove.map(t => Asset.findByTag(t)).filter(_.isDefined).map(_.get)
-        logger.debug("Got Reindex task, working on %d assets, set is %d".format(toRemove.size, set.size))
+        val assets = assetTags.map(t => Asset.findByTag(t)).flatMap(a => a)
+        logger.debug("Got Reindex task, working on %d assets".format(assetTags.size))
         Solr.plugin.foreach(_.updateAssets(assets, indexTime))
-        set.removeAll(toRemove.asJava)
-        logger.debug("Set size now %d".format(set.size))
         scheduled.set(false)
       }
   }
