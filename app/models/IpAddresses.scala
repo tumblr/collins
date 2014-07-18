@@ -62,7 +62,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
       case failed =>
         logger.info("Address cache dirty. Failed cache lookup so using DB")
         populateCacheIfNeeded(scope, true)
-        getCurrentLowestLocalMaxAddress(calc.minAddressAsLong, calc.maxAddressAsLong)
+        getCurrentLowestLocalMaxAddress(calc)
     }
     val address: Long = calc.nextAvailableAsLong(currentMax)
     (gateway, address, netmask)

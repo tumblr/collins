@@ -117,16 +117,19 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
         minAddressAsLong + 1
     }
   }
+  // next consumable IP from address. Skips unusable addresses (broadcast=.255, network=.0)
+  // This is not guaranteed to be within your range, FYI
+  def incrementAddressUnchecked(address: Long) = IpAddress.lastOctet(address) match {
+    // 4 = n + 1 is broadcast, n + 2 is network, n + 3 is first address
+    case next if next >= lastOctetInRange => address + 3
+    case byTwo if IpAddress.lastOctet(address) == 0 => address + 2
+    case _ => address + 1
+  }
   protected def increment(address: Long): String = {
     IpAddress.toString(incrementAsLong(address))
   }
   protected def incrementAsLong(address: Long): Long = {
-    val nextAddress = IpAddress.lastOctet(address) match {
-      // 4 = n + 1 is broadcast, n + 2 is network, n + 3 is first address
-      case next if next >= lastOctetInRange => address + 3
-      case byTwo if IpAddress.lastOctet(address) == 0 => address + 2
-      case _ => address + 1
-    }
+    val nextAddress = incrementAddressUnchecked(address)
     val nextAddressString = IpAddress.toString(nextAddress)
     try {
       subnetInfo.isInRange(nextAddressString) match {
