@@ -83,7 +83,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     val gateway: Long = getGateway().getOrElse(calc.minAddressAsLong)
     val netmask: Long = calc.netmaskAsLong
     // look for the local maximum address (i.e. the last used address in a continuous sequence from startAddress)
-    val localMax: Option[Long] = getCurrentLowestLocalMaxAddress(calc.minAddressAsLong, calc.maxAddressAsLong)
+    val localMax: Option[Long] = getCurrentLowestLocalMaxAddress(calc)
     val address: Long = calc.nextAvailableAsLong(localMax)
     (gateway, address, netmask)
   }
@@ -125,7 +125,9 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   * For a range 0L..20L, used addresses List(5,6,7,8,19,20), the result will be Some(8)
   * For a range 0L..20L, used addresses List(17,18,19,20), the result will be None (allocate from beginning)
   */
-  protected def getCurrentLowestLocalMaxAddress(minAddress: Long, maxAddress: Long)(implicit scope: Option[String]): Option[Long] = {
+  protected def getCurrentLowestLocalMaxAddress(calc: IpAddressCalc)(implicit scope: Option[String]): Option[Long] = {
+    val minAddress = calc.minAddressAsLong
+    val maxAddress = calc.maxAddressAsLong
     val sortedAddresses = from(tableDef)(t =>
       where(
         (t.address gte minAddress) and
@@ -139,17 +141,15 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
       i <- Range(0, sortedAddresses.size-1).inclusive.toStream
       curr = sortedAddresses(i)
       next = sortedAddresses.lift(i+1)
+      // address should not have an address after it
       if (next.map{_ > curr + 1}.getOrElse(true))
+      // address should not be the last address in the IP range
+      if (curr != calc.maxAddressAsLong)
+      // address should not be the last octet in the /24 (only for ranges larger than a /24)
+      if (IpAddress.lastOctet(curr) != 254L)
     } yield curr
 
-    localMaximaAddresses.headOption.flatMap(localMax =>
-      if (localMax == maxAddress) {
-        //if we are at the end of our range, start from the beginning
-        None
-      } else {
-        Some(localMax)
-      }
-    )
+    localMaximaAddresses.headOption
   }
 
   protected def getGateway()(implicit scope: Option[String]): Option[Long] = getConfig() match {
