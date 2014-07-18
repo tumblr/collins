@@ -4,7 +4,7 @@ package asset
 
 import actors._
 import forms._
-import models.{Asset, AssetLifecycle, Status => AStatus, Truthy}
+import models.{Asset, AssetLifecycle, AssetMetaValue, Status => AStatus, Truthy}
 import util.{ApiTattler, UserTattler}
 import util.concurrent.BackgroundProcessor
 import util.config.Feature
@@ -77,7 +77,7 @@ trait ProvisionUtil { self: SecureAction =>
           .right.map(frole => request.profile.copy(role = frole))
           .right.map(profile => request.copy(profile = profile))
           .right.map { frequest =>
-            ActionDataHolder(asset, frequest, activeBool(activate), attribs(frequest, form))
+            ActionDataHolder(asset, frequest, activeBool(activate), attribs(asset, frequest, form))
           }
     }
   }
@@ -97,7 +97,7 @@ trait ProvisionUtil { self: SecureAction =>
       None
   }
 
-  protected def attribs(request: ProvisionerRequest, form: ProvisionForm): Map[String,String] = {
+  protected def attribs(asset: Asset, request: ProvisionerRequest, form: ProvisionForm): Map[String,String] = {
     val build_contact = form._2
     val suffix = form._3
     val role = request.profile.role
@@ -113,14 +113,24 @@ trait ProvisionUtil { self: SecureAction =>
         "BUILD_CONTACT" -> build_contact
       )
     val lowPriorityAttrs = role.attributes
-    val clearOnRepurposeAttrs = Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
     val clearProfileAttrs = role.clear_attributes.map(a => (a -> "")).toMap
 
     // make sure high priority attrs take precedence over low priority
     // and make sure any explicitly set attrs override any that are to be cleared
-    clearOnRepurposeAttrs ++ clearProfileAttrs ++ lowPriorityAttrs ++ highPriorityAttrs
+    clearOnRepurposeAttrs(asset) ++ clearProfileAttrs ++ lowPriorityAttrs ++ highPriorityAttrs
   }
-
+  
+  private[this] def clearOnRepurposeAttrs(asset: Asset): Map[String, String] = {
+    if (Feature.useWhiteListOnRepurpose) {
+      val keepAttributes = Feature.keepSomeMetaOnRepurpose.map(_.name)
+      val allAttributes = AssetMetaValue.findByAsset(asset).map(_.getName()).toSet
+      val deleteAttributes = allAttributes -- keepAttributes
+      deleteAttributes.map(s => (s -> "")).toMap
+    } else {
+      Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
+    }
+  }
+  
   protected def fieldError(form: Form[ProvisionForm]): Validation = (form match {
     case f if f.error("profile").isDefined => Option("Profile must be specified")
     case f if f.error("contact").isDefined => Option("Contact must be specified")
