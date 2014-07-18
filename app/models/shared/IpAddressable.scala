@@ -141,12 +141,11 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
       i <- Range(0, sortedAddresses.size-1).inclusive.toStream
       curr = sortedAddresses(i)
       next = sortedAddresses.lift(i+1)
-      // address should not have an address after it
-      if (next.map{_ > curr + 1}.getOrElse(true))
+      nextAddress = calc.incrementAddressUnchecked(curr)
+      // address should not have an allocated address logically after it
+      if (next.map{_ > nextAddress}.getOrElse(true))
       // address should not be the last address in the IP range
-      if (curr != calc.maxAddressAsLong)
-      // address should not be the last octet in the /24 (only for ranges larger than a /24)
-      if (IpAddress.lastOctet(curr) != 254L)
+      if (curr < calc.maxAddressAsLong)
     } yield curr
 
     localMaximaAddresses.headOption
