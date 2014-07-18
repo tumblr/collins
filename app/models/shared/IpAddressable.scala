@@ -145,7 +145,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
       // address should not have an allocated address logically after it
       if (next.map{_ > nextAddress}.getOrElse(true))
       // address should not be the last address in the IP range
-      if (curr < calc.maxAddressAsLong)
+      if (curr < maxAddress)
     } yield curr
 
     localMaximaAddresses.headOption
