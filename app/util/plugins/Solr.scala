@@ -1,19 +1,16 @@
 package collins.solr
 
 import java.util.Date
-
 import models.Asset
-
 import org.apache.solr.client.solrj.SolrServer
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.core.CoreContainer
 import org.apache.solr.client.solrj.impl.{HttpSolrServer, XMLResponseParser}
-
 import play.api.{Logger, Play}
 import play.api.Play.current
-
 import java.net.URL
+import java.io.File
 
 object Solr {
 
@@ -44,9 +41,12 @@ object Solr {
 
   private[solr] def getNewEmbeddedServer = {
     val solrHome = SolrConfig.embeddedSolrHome
-    System.setProperty("solr.solr.home",solrHome) // (╯°□°)╯︵ɐʌɐɾ
-    val initializer = new CoreContainer.Initializer()
-    val coreContainer = initializer.initialize()
+    val coreContainer = new CoreContainer(solrHome)
+    val file = new File(solrHome, "solr.xml")
+    if (!file.exists()) {
+      throw new IllegalArgumentException("Could not find solr configuration file in %s".format(solrHome))
+    }
+    coreContainer.load(solrHome, file)
     Logger.logger.debug("Booting embedded Solr Server with solrhome " + solrHome)
     new EmbeddedSolrServer(coreContainer, "")
   }
