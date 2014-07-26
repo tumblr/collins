@@ -539,7 +539,6 @@
              <version>01</version>
              <serial>90:e2:ba:09:e2:a0</serial>
              <size units="bit/s">1000000000</size>
-             <capacity>1000000000</capacity>
              <width units="bits">32</width>
              <clock units="Hz">33000000</clock>
              <configuration>
