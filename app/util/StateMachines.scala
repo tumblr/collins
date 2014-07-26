@@ -29,9 +29,22 @@ case class AssetStateMachine(asset: Asset) {
     }
     if (Feature.deleteMetaOnDecommission) {
       AssetMetaValue.deleteByAsset(asset)
-    } else if (Feature.deleteSomeMetaOnRepurpose.size > 0) {
-      val deleteAttributes: Set[Long] = Feature.deleteSomeMetaOnRepurpose.map(_.id)
-      AssetMetaValue.deleteByAssetAndMetaId(asset, deleteAttributes)
+    } else {
+      if (Feature.useWhiteListOnRepurpose) {
+        if (Feature.keepSomeMetaOnRepurpose.size > 0) {
+          val keepAttributes: Set[Long] = Feature.keepSomeMetaOnRepurpose.map(_.id)
+          val allAttributes: Set[Long] = AssetMetaValue.findByAsset(asset).map(_.getMetaId()).toSet
+          val deleteAttributes = allAttributes -- keepAttributes
+          if (deleteAttributes.size > 0) {
+            AssetMetaValue.deleteByAssetAndMetaId(asset, deleteAttributes)
+          }
+        }
+      } else {
+        if (Feature.deleteSomeMetaOnRepurpose.size > 0) {
+          val deleteAttributes: Set[Long] = Feature.deleteSomeMetaOnRepurpose.map(_.id)
+          AssetMetaValue.deleteByAssetAndMetaId(asset, deleteAttributes)
+        }
+      }
     }
     res
   } else {
