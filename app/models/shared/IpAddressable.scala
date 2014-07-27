@@ -125,7 +125,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   * For a range 0L..20L, used addresses List(5,6,7,8,19,20), the result will be Some(8)
   * For a range 0L..20L, used addresses List(17,18,19,20), the result will be None (allocate from beginning)
   */
-  protected def getCurrentLowestLocalMaxAddress(calc: IpAddressCalc)(implicit scope: Option[String]): Option[Long] = {
+  protected def getCurrentLowestLocalMaxAddress(calc: IpAddressCalc)(implicit scope: Option[String]): Option[Long] = inTransaction {
     val minAddress = calc.minAddressAsLong
     val maxAddress = calc.maxAddressAsLong
     val sortedAddresses = from(tableDef)(t =>
