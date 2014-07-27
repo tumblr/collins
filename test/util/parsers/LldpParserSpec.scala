@@ -49,7 +49,7 @@ class LldpParserSpec extends mutable.Specification {
 
     "missing vlan config ok" in new LldpParserHelper("lldpctl-no-name.xml") {
       val config = Map(
-        "lshw.requireVlanName" -> "false"
+        "requireVlanName" -> "false"
       )
       val parseResult = parsed(config)
       parseResult must beRight
