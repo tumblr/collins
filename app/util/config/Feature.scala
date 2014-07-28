@@ -37,12 +37,10 @@ object Feature extends Configurable {
   def deleteIpmiOnDecommission = getBoolean("deleteIpmiOnDecommission", true)
   def deleteIpAddressOnDecommission = getBoolean("deleteIpAddressOnDecommission", true)
   def deleteMetaOnDecommission = getBoolean("deleteMetaOnDecommission", false)
-  def deleteSomeMetaOnRepurpose = getStringSet("deleteSomeMetaOnRepurpose").map { m =>
-    AssetMeta.findByName(m)
-  }.filter(_.isDefined).map(_.get)
-  def encryptedTags = getStringSet("encryptedTags").map { m =>
-    AssetMeta.findByName(m)
-  }.filter(_.isDefined).map(_.get)
+  def useWhiteListOnRepurpose = getBoolean("useWhitelistOnRepurpose", false)
+  def deleteSomeMetaOnRepurpose = getStringSet("deleteSomeMetaOnRepurpose").flatMap(AssetMeta.findByName(_))
+  def encryptedTags = getStringSet("encryptedTags").flatMap(AssetMeta.findByName(_))
+  def keepSomeMetaOnRepurpose = getStringSet("keepSomeMetaOnRepurpose").flatMap(AssetMeta.findByName(_))
   def intakeSupported = getBoolean("intakeSupported", true)
   def ignoreDangerousCommands = getStringSet("ignoreDangerousCommands")
   def hideMeta = getStringSet("hideMeta")
@@ -57,7 +55,11 @@ object Feature extends Configurable {
   override protected def validateConfig() {
     defaultLogType
     encryptedTags
-    deleteSomeMetaOnRepurpose
+    if (useWhiteListOnRepurpose) {
+      keepSomeMetaOnRepurpose
+    } else {
+      deleteSomeMetaOnRepurpose
+    }
     syslogAsset
   }
 }

@@ -15,7 +15,7 @@ trait CommonHelperSpec[REP] extends test.ResourceFinder {
     val data = getResource(filename)
     val parser = getParser(data)
     val parsed = parser.parse()
-    parsed.right.get
+    parsed.right.getOrElse(throw parsed.left.get)
   }
 
 

@@ -132,7 +132,7 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
         .map((s: String) => BitStorageUnit(s.toLong))
         .getOrElse(
           throw AttributeNotFoundException(
-            "Could not find capacity for network interface"
+            "Could not find capacity for network interface for %s".format(asset.product)
         ))
     }
   }
