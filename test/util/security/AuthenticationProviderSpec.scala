@@ -18,9 +18,7 @@ object AuthenticationProviderSpec extends Specification with _root_.test.Resourc
     "work with file based auth" >> {
       val authFile = findResource("htpasswd_users")
       val configData = Map(
-        "authentication.type" -> "file",
-        "authentication.permissionsFile" -> "conf/permissions.yaml",
-        "authentication.file.userfile" -> authFile.getAbsolutePath
+        "userfile" -> authFile.getAbsolutePath
       )
       val config = Configuration.from(configData)
       _root_.util.config.AppConfig.globalConfig = Some(config)
