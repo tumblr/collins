@@ -3,9 +3,7 @@ package models
 import test.ApplicationSpecification
 import util.IpAddress
 import util.config.IpmiConfig
-
 import play.api.Configuration
-
 import org.specs2._
 import specification._
 
@@ -64,13 +62,13 @@ class IpmiInfoSpec extends ApplicationSpecification {
         IpmiInfo.deleteByAsset(a3) mustEqual 1
         IpmiInfo.createForAsset(a3).dottedAddress mustEqual "172.16.32.22"
       }
-      "createForAsset with rollover" in {
+      "createForAsset with reuse in range" in {
         val asset = ipmiAsset("ipmiAssetTag3")
         val ipmiInfo = IpmiInfo.findByAsset(asset).get
         IpmiInfo.update(ipmiInfo.copy(address = IpAddress.toLong("172.16.32.254"))) mustEqual 1
         val a4 = newIpmiAsset("ipmiAssetTag4")
         val ipmi4 = IpmiInfo.createForAsset(a4)
-        ipmi4.dottedAddress mustEqual "172.16.33.1"
+        ipmi4.dottedAddress mustEqual "172.16.32.22"
         ipmi4.dottedGateway mustEqual "172.16.32.1"
       }
       "findByAsset" in {

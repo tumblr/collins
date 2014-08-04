@@ -80,6 +80,35 @@ class LshwParserSpec extends mutable.Specification {
       } // basic
 
       "quad nic" in new LshwParserHelper("lshw-quad.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 12
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(2.3, 0.1)
+  
+          rep.totalMemory.inGigabytes must beCloseTo(96L, 1)
+          rep.memoryBanksUsed mustEqual 12
+          rep.memoryBanksUnused mustEqual 0
+          rep.memoryBanksTotal mustEqual 12
+    
+          rep.totalStorage.toHuman mustEqual "931.52 GB"
+          rep.diskCount mustEqual 2
+    
+          rep.hasFlashStorage must beFalse
+          rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
+          rep.totalUsableStorage.toHuman mustEqual "931.52 GB"
+
+          rep.nicCount mustEqual 6
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 6
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      }
+      
+      "quad nic missing capacity" in new LshwParserHelper("lshw-quad-no-capacity.xml") {
         val parseResults = parsed(Map("defaultNicCapacity" -> "10000000000"))
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
@@ -252,11 +281,10 @@ class LshwParserSpec extends mutable.Specification {
 
     "Leverage config for flash disks" in {
       val file = "lshw-virident.xml"
-
       "Different flash description and size" in new LshwParserHelper(file) {
         val config = Map(
-          "lshw.flashProduct" -> "flashmax",
-          "lshw.flashSize" -> "1048576"
+          "flashProduct" -> "flashmax",
+          "flashSize" -> "1048576"
         )
         val parseResults = parsed(config)
         parseResults must beRight
@@ -269,8 +297,8 @@ class LshwParserSpec extends mutable.Specification {
 
       "Bad flash description" in new LshwParserHelper(file) {
         val config = Map(
-          "lshw.flashProduct" -> "flashing memory",
-          "lshw.flashSize" -> "1048576"
+          "flashProduct" -> "flashing memory",
+          "flashSize" -> "1048576"
         )
         val parseResults = parsed(config)
         parseResults must beRight
@@ -397,7 +425,7 @@ class LshwParserSpec extends mutable.Specification {
 
       "wonky amd-opteron output w/ show empty sockets" in new LshwParserHelper("lshw-amd-opteron-wonky.xml") {
         val config = Map(
-          "lshw.includeEmptySocket" -> "true"
+          "includeEmptySocket" -> "true"
         )
         val parseResults = parsed(config)
         parseResults must beRight
