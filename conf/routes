@@ -78,6 +78,12 @@ GET     /api/asset/:tag             app.Api.getAsset(tag: String, location: Opti
 GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", sortField: String ?= "TAG", details: String ?= "true")
 GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
 
+# Asset Type API
+GET     /api/assettypes             app.Api.getAssetTypes
+GET     /api/assettype/:name        app.Api.getAssetType(name: String)
+DELETE  /api/assettype/:name        app.Api.deleteAssetType(name: String)
+PUT     /api/assettype/:name        app.Api.createAssetType(name: String)
+
 # State Management API
 PUT     /api/state/:name            app.Api.createState(name: String)
 POST    /api/state/:name            app.Api.updateState(name: String)

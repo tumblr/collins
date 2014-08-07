@@ -45,6 +45,13 @@ object Permissions {
     def UpdateAssetStatus = spec("updateAssetStatus", AdminSpec)
   }
 
+  object AssetTypeApi extends PermSpec("controllers.AssetTypeApi") {
+    def Spec = spec(LoggedIn)
+    def GetAssetTypes = spec("getAssetTypes", Spec)
+    def CreateAssetType = spec("createAssetType", AdminSpec)
+    def DeleteAssetType = spec("deleteAssetType", AdminSpec)
+  }
+
   object AssetLogApi extends PermSpec("controllers.AssetLogApi") {
     def Spec = spec(AdminSpec)
     def Create = spec("submitLogData", Spec)

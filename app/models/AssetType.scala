@@ -19,6 +19,7 @@ case class AssetType(name: String, label: String, id: Int = 0) extends Validated
 object AssetType extends Schema with AnormAdapter[AssetType] {
 
   override val tableDef = table[AssetType]("asset_type")
+  val reservedNames = List("SERVER_NODE","SERVER_CHASSIS","RACK","SWITCH","ROUTER","POWER_CIRCUIT","POWER_STRIP","DATA_CENTER","CONFIGURATION")
   on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
     a.name is(unique)
@@ -36,6 +37,12 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
       "LABEL" -> Json.toJson(at.label)
     ))
   }
+
+  /* defined by implicit object AssetTypeFormat?
+  def apply(name: String, label: String, id: Int) = {
+    new AssetType(name, label, id)
+  }
+  */
 
   override def cacheKeys(a: AssetType) = Seq(
     "AssetType.findById(%d)".format(a.id),
@@ -73,5 +80,6 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
 
   def ServerNode = findByName("SERVER_NODE")
   def Configuration = findByName("CONFIGURATION")
+  def isSystemType(atype: AssetType) = reservedNames.contains(atype.name.toUpperCase)
 
 }
