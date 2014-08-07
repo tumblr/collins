@@ -38,12 +38,6 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
     ))
   }
 
-  /* defined by implicit object AssetTypeFormat?
-  def apply(name: String, label: String, id: Int) = {
-    new AssetType(name, label, id)
-  }
-  */
-
   override def cacheKeys(a: AssetType) = Seq(
     "AssetType.findById(%d)".format(a.id),
     "AssetType.findByName(%s)".format(a.name.toUpperCase),
