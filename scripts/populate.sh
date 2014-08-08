@@ -6,6 +6,7 @@ amd-opteron-wonky
 b0214
 b0216
 dell-r620-single-cpu
+lvm
 intel
 new-web-old-lshw
 old-web

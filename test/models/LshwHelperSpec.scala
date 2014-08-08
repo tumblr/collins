@@ -68,6 +68,13 @@ class LshwHelperSpec extends test.ApplicationSpecification {
         val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
         lshw mustEqual reconstructed
       }
+      "with an LVM volume on a disk" in new LshwCommonHelper("lshw-lvm.xml") {
+        val lshw = parsed()
+        val stub = getStub()
+        val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
+        val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
+        lshw mustEqual reconstructed
+      }
     }
 
     "update asset meta tags" in {

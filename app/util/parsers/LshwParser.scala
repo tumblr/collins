@@ -85,7 +85,9 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
   }
 
   val diskMatcher: PartialFunction[NodeSeq,Disk] = {
-    case n if (n \ "@class" text) == "disk" =>
+    case n if ( (n \ "@class" text) == "disk" ) ||
+              ( (n \ "@class" text) == "volume" &&
+                (n \ "@id" text).contains("disk") ) =>
       val _type = (n \ "physid" text).contains("\\.") match {
         case true => Disk.Type.Ide
         case false =>
