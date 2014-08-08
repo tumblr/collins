@@ -49,6 +49,7 @@ object Permissions {
     def Spec = spec(LoggedIn)
     def GetAssetTypes = spec("getAssetTypes", Spec)
     def CreateAssetType = spec("createAssetType", AdminSpec)
+    def UpdateAssetType = spec("updateAssetType", AdminSpec)
     def DeleteAssetType = spec("deleteAssetType", AdminSpec)
   }
 

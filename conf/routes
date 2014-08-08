@@ -83,6 +83,7 @@ GET     /api/assettypes             app.Api.getAssetTypes
 GET     /api/assettype/:name        app.Api.getAssetType(name: String)
 DELETE  /api/assettype/:name        app.Api.deleteAssetType(name: String)
 PUT     /api/assettype/:name        app.Api.createAssetType(name: String)
+POST    /api/assettype/:name        app.Api.updateAssetType(name: String)
 
 # State Management API
 PUT     /api/state/:name            app.Api.createState(name: String)

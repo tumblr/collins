@@ -44,14 +44,24 @@ class AssetTypeApiSpec extends ApplicationSpecification with ControllerSpec {
       }
     }
 
+    "Support updating" in {
+      "via POST" in new assetType {
+        val request = FakeRequest("POST", assetTypeUrl + "?label=updatedlabel")
+        val result = Extract.from(api.updateAssetType(aname).apply(request))
+        result must haveStatus(200)
+        result must haveJsonData.which { s =>
+          s must /("data") */("SUCCESS" -> true)
+        }
+      }
+    }
+
     "Support getting" in {
       "all asset types" in new assetType {
         val req2 = FakeRequest("GET", findUrl)
         val result2 = Extract.from(api.getAssetTypes.apply(req2))
         result2 must haveStatus(200)
         result2 must haveJsonData.which { txt =>
-          txt must /("status" -> "success:ok")
-          txt must /("data") */("NAME" -> aname)
+          txt must */("NAME" -> aname)
         }
       }
       "by name" in new assetType {
