@@ -25,8 +25,12 @@ object GetAction {
  * @apirespond 200 success - the asset type
  * @apirespond 404 invalid asset type name
  * @apiperm controllers.AssetTypeApi.getAssetType
+ * @collinsshell {{{
+ *  collins-shell asset_type get NAME
+ *  collins-shell asset_type list
+ * }}}
  * @curlexample {{{
- *  curl -v -u blake:admin:first --basic http://localhost:9000/api/assettype/SERVICE
+ *  curl -v -u blake:admin:first --basic http://localhost:9000/api/assettype/NAME
  *  curl -v -u blake:admin:first --basic http://localhost:9000/api/assettypes
  * }}}
  */

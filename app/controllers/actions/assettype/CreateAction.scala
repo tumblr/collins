@@ -34,6 +34,9 @@ object CreateAction {
  * @apirespond 409 name already in use
  * @apirespond 500 error saving asset type
  * @apiperm controllers.AssetTypeApi.createAssetType
+ * @collinsshell {{{
+ *  collins-shell asset_type create --name=NAME --label=LABEL
+ * }}}
  * @curlexample {{{
  *  curl -v -u blake:admin:first --basic \
  *    -d label='Service Asset Type' \

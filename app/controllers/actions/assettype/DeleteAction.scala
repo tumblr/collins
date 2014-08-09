@@ -35,6 +35,9 @@ object DeleteAction {
  * @apirespond 409 system name can not be deleted
  * @apirespond 500 error deleting asset type
  * @apiperm controllers.AssetTypeApi.deleteAssetType
+ * @collinsshell {{{
+ *  collins-shell asset_type delete NAME
+ * }}}
  * @curlexample {{{
  *  curl -v -u blake:admin:first --basic \
  *    -X DELETE \
