@@ -1,4 +1,5 @@
 require 'collins_shell/asset'
+require 'collins_shell/asset_type'
 require 'collins_shell/console'
 require 'collins_shell/ip_address'
 require 'collins_shell/ipmi'
@@ -23,6 +24,7 @@ module CollinsShell
     include CollinsShell::Util
 
     register(CollinsShell::Asset, 'asset', 'asset <command>', 'Asset related commands')
+    register(CollinsShell::AssetType, 'asset_type', 'asset_type <command>', 'Asset Type related commands')
     register(CollinsShell::Tag, 'tag', 'tag <command>', 'Tag related commands')
     register(CollinsShell::IpAddress, 'ip_address', 'ip_address <command>', 'IP address related commands')
     register(CollinsShell::Ipmi, 'ipmi', 'ipmi <command>', 'IPMI related commands')

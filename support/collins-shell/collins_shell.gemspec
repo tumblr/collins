@@ -8,10 +8,10 @@ Gem::Specification.new do |s|
   s.version = File.read 'VERSION'
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Blake Matheny"]
-  s.date = "2013-04-15"
+  s.authors = ["Blake Matheny", "Gabe Conradi"]
+  s.date = "2014-08-09"
   s.description = "Provides basic CLI for interacting with Collins API"
-  s.email = "bmatheny@tumblr.com"
+  s.email = ["bmatheny@tumblr.com","gabe@tumblr.com"]
   s.executables = ["collins-shell"]
   s.extra_rdoc_files = [
     "README.md"
@@ -27,6 +27,7 @@ Gem::Specification.new do |s|
     "collins_shell.gemspec",
     "lib/collins_shell.rb",
     "lib/collins_shell/asset.rb",
+    "lib/collins_shell/asset_type.rb",
     "lib/collins_shell/cli.rb",
     "lib/collins_shell/console.rb",
     "lib/collins_shell/console/asset.rb",
@@ -65,7 +66,7 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<collins_client>, ["~> 0.2.9"])
+      s.add_runtime_dependency(%q<collins_client>, ["~> 0.2.11"])
       s.add_runtime_dependency(%q<highline>, ["~> 1.6.15"])
       s.add_runtime_dependency(%q<mustache>, ["~> 0.99.4"])
       s.add_runtime_dependency(%q<pry>, ["~> 0.9.9.6"])
@@ -73,7 +74,7 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<terminal-table>, ["~> 1.4.5"])
       s.add_runtime_dependency(%q<thor>, ["~> 0.16.0"])
     else
-      s.add_dependency(%q<collins_client>, ["~> 0.2.9"])
+      s.add_dependency(%q<collins_client>, ["~> 0.2.11"])
       s.add_dependency(%q<highline>, ["~> 1.6.15"])
       s.add_dependency(%q<mustache>, ["~> 0.99.4"])
       s.add_dependency(%q<pry>, ["~> 0.9.9.6"])
@@ -82,7 +83,7 @@ Gem::Specification.new do |s|
       s.add_dependency(%q<thor>, ["~> 0.16.0"])
     end
   else
-    s.add_dependency(%q<collins_client>, ["~> 0.2.9"])
+    s.add_dependency(%q<collins_client>, ["~> 0.2.11"])
     s.add_dependency(%q<highline>, ["~> 1.6.15"])
     s.add_dependency(%q<mustache>, ["~> 0.99.4"])
     s.add_dependency(%q<pry>, ["~> 0.9.9.6"])
