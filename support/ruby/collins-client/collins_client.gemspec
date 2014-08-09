@@ -8,15 +8,14 @@ Gem::Specification.new do |s|
   s.version = File.read 'VERSION'
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Blake Matheny"]
-  s.date = "2012-12-17"
+  s.authors = ["Blake Matheny", "Gabe Conradi"]
+  s.date = "2014-08-08"
   s.description = "Provides ruby support for interacting with the Collins API"
-  s.email = "bmatheny@tumblr.com"
+  s.email = ["bmatheny@tumblr.com","gabe@tumblr.com"]
   s.extra_rdoc_files = [
     "README.md"
   ]
   s.files = [
-    ".rbenv-version",
     "Gemfile",
     "Gemfile.lock",
     "README.md",
@@ -28,6 +27,7 @@ Gem::Specification.new do |s|
     "lib/collins/api/admin.rb",
     "lib/collins/api/asset.rb",
     "lib/collins/api/asset_state.rb",
+    "lib/collins/api/asset_type.rb",
     "lib/collins/api/attributes.rb",
     "lib/collins/api/ip_address.rb",
     "lib/collins/api/logging.rb",
@@ -41,6 +41,7 @@ Gem::Specification.new do |s|
     "lib/collins/asset.rb",
     "lib/collins/asset_client.rb",
     "lib/collins/asset_find.rb",
+    "lib/collins/asset_type.rb",
     "lib/collins/asset_update.rb",
     "lib/collins/client.rb",
     "lib/collins/errors.rb",
