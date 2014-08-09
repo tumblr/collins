@@ -107,7 +107,7 @@ class LshwParserSpec extends mutable.Specification {
           rep.macAddresses must beNonEmptyStringSeq
         }
       }
-      
+
       "quad nic missing capacity" in new LshwParserHelper("lshw-quad-no-capacity.xml") {
         val parseResults = parsed(Map("defaultNicCapacity" -> "10000000000"))
         parseResults must beRight
@@ -394,6 +394,34 @@ class LshwParserSpec extends mutable.Specification {
           rep.base.vendor mustEqual "Winbond Electronics"
         }
       }
+      "with LVM disk" in new LshwParserHelper("lshw-lvm.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 1
+          rep.cpuCoreCount mustEqual 8
+          rep.hasHyperthreadingEnabled must beTrue
+          rep.cpuSpeed must beCloseTo(2.0, 0.1)
+
+          rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
+          rep.memoryBanksUsed mustEqual 4
+          rep.memoryBanksUnused mustEqual 20
+          rep.memoryBanksTotal mustEqual 24
+
+          rep.totalStorage.toHuman mustEqual "381.94 GB"
+          rep.diskCount mustEqual 2
+
+          rep.hasFlashStorage must beFalse
+          rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
+          rep.totalUsableStorage.toHuman mustEqual "381.94 GB"
+
+          rep.nicCount mustEqual 4
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beFalse
+          rep.macAddresses must have length 4
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      } // LVM
     }
 
     "parse amd-opteron-wonky" in {
