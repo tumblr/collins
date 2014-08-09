@@ -70,7 +70,7 @@ class AssetTypeApiSpec extends ApplicationSpecification with ControllerSpec {
         result2 must haveStatus(200)
         result2 must haveJsonData.which { txt =>
           txt must /("data") */("NAME" -> aname)
-          txt must /("data") */("LABEL" -> "testlabel")
+          txt must /("data") */("LABEL" -> "updatedlabel")
         }
       }
     }
