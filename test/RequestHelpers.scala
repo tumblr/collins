@@ -88,7 +88,8 @@ trait ResponseMatchHelpers {
     def apply[S <: ResultTuple](s: Expectable[S]) = {
       val response = s.value._3
       val parsed = Json.parse(response)
-      val matchResult = (parsed \ "data").isInstanceOf[JsObject]
+      val data = (parsed \ "data")
+      val matchResult = data.isInstanceOf[JsObject] || data.isInstanceOf[JsArray]
       result(matchResult,
         "Response is JSON and contains data key",
         "Response is not JSON or does not contain a 'data' key: %s".format(response),
