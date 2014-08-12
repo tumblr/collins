@@ -14,7 +14,7 @@ require 'jeweler'
 
 jeweler = Jeweler::Tasks.new do |gem|
   gem.name = 'collins_shell'
-  gem.homepage = 'https://github.com/tumblr/collins/tree/master/support/collins-shell'
+  gem.homepage = 'https://github.com/tumblr/collins/tree/master/support/ruby/collins-shell'
   gem.license = 'APL 2.0'
   gem.summary = %Q{Shell for Collins API}
   gem.description = "Provides basic CLI for interacting with Collins API"
