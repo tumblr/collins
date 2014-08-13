@@ -38,7 +38,7 @@ object CreateAction {
  *  collins-shell asset_type create --name=NAME --label=LABEL
  * }}}
  * @curlexample {{{
- *  curl -v -u blake:admin:first --basic \
+ *  curl -XPUT -u blake:admin:first --basic \
  *    -d label='Service Asset Type' \
  *    http://localhost:9000/api/assettype/SERVICE
  * }}}
