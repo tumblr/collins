@@ -58,7 +58,7 @@ collins-shell asset_type create --name=NAME --label=LABEL
 </div>
 
 <div class="example curl">
-curl -v -u blake:admin:first --basic \
+curl -XPUT -u blake:admin:first --basic \
      -d label='Service Asset Type' \
      http://localhost:9000/api/assettype/SERVICE
 </div>
@@ -70,7 +70,7 @@ curl -v -u blake:admin:first --basic \
     </div>
     <div id="asset-type-create-json-response" class="accordion-body collapse">
       <div class="accordion-inner">
-        <pre>{}</pre>
+        <pre>{"status":"success:created","data":{"SUCCESS":true}}</pre>
       </div>
     </div>
   </div>
@@ -80,7 +80,7 @@ curl -v -u blake:admin:first --basic \
     </div>
     <div id="asset-type-create-bash-response" class="accordion-body collapse">
       <div class="accordion-inner">
-        <pre>{}</pre>
+        <pre>SUCCESS=true;</pre>
       </div>
     </div>
   </div>
@@ -90,7 +90,7 @@ curl -v -u blake:admin:first --basic \
     </div>
     <div id="asset-type-create-text-response" class="accordion-body collapse">
       <div class="accordion-inner">
-        <pre>{}</pre>
+        <pre>SUCCESS true</pre>
       </div>
     </div>
   </div>
