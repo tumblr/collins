@@ -1,0 +1,53 @@
+<h2>Asset Type List</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Get all asset types</td></tr>
+    <tr><th>Request</th><td><code>GET /api/assettypes</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetTypeApi.getAssetType</td></tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">200</th>
+              <td>Success</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">404</th>
+              <td>Asset types could not be found</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell asset_type list
+</div>
+
+<div class="example curl">
+curl --basic -u blake:admin:first http://localhost:9000/api/assettypes
+</div>
+
+<div class="accordion" id="asset-type-get-all-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-type-get-all-response" href="#asset-type-get-all-json-response">JSON Response</a>
+    </div>
+    <div id="asset-type-get-all-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre></pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->
