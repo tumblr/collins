@@ -31,7 +31,7 @@ import play.api.data.Forms._
  *  collins-shell asset_type update OLDNAME [--name=NAME --label=LABEL]
  * }}}
  * @curlexample {{{
- *  curl -v -u blake:admin:first --basic \
+ *  curl -XPOST -u blake:admin:first --basic \
  *    -d name='NEW_NAME' \
  *    http://localhost:9000/api/assettype/OLD_NAME
  * }}}
