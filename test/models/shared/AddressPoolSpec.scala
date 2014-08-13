@@ -7,19 +7,6 @@ import org.specs2.matcher._
 
 class AddressPoolSpec extends mutable.Specification {
 
-  /*
-  class AddressPoolScope(network: String, startAddress: Option[String]) extends Scope {
-    val pool = AddressPool("TEST", network, startAddress, None)
-    def useAddress(address: String) = pool.useAddress(address)
-    def unuseAddress(address: String) = pool.unuseAddress(address)
-    def nextAddress(): String = pool.nextDottedAddress()
-    def useNext(n: Int) {
-      for (i <- 0 until n) pool.useAddress(nextAddress)
-    }
-    def usedAddressCount(): Int = pool.usedDottedAddresses.size
-  }
-  */
-
   val DEFAULT_NET = "172.16.16.0/24"
 
   "Address Pools" should {
