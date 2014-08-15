@@ -1,0 +1,97 @@
+<h2>Asset Type Create</h2>
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>Create a new asset type</td></tr>
+    <tr><th>Request</th><td><code>PUT /api/assettype/:name</code></td></tr>
+    <tr><th>Permission</th><td>controllers.AssetTypeApi.createAssetType</td></tr>
+    <tr>
+      <th>Parameters</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">name</th>
+              <td>String</td>
+              <td>Must be alphanumeric (but can include underscores and dashes) and unique</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">label</th>
+              <td>String</td>
+              <td>Human readable label for the asset type. 2-32 characters.</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="inlinecode">201</th>
+              <td>Asset type was successfully created</td>
+            </tr>
+            <tr>
+              <th class="inlinecode">409</th>
+              <td>Asset type with specified name already exists</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example collins-shell">
+collins-shell asset_type create --name=NAME --label=LABEL
+</div>
+
+<div class="example curl">
+curl -XPUT -u blake:admin:first --basic \
+     -d label='Service Asset Type' \
+     http://localhost:9000/api/assettype/SERVICE
+</div>
+
+<div class="accordion" id="asset-type-create-response">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-type-create-response" href="#asset-type-create-json-response">JSON Response</a>
+    </div>
+    <div id="asset-type-create-json-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>{"status":"success:created","data":{"SUCCESS":true}}</pre>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-type-create-response" href="#asset-type-create-bash-response">Bash Response</a>
+    </div>
+    <div id="asset-type-create-bash-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>SUCCESS=true;</pre>
+      </div>
+    </div>
+  </div>
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-type-create-response" href="#asset-type-create-text-response">Text Response</a>
+    </div>
+    <div id="asset-type-create-text-response" class="accordion-body collapse">
+      <div class="accordion-inner">
+        <pre>SUCCESS true</pre>
+      </div>
+    </div>
+  </div>
+</div> <!-- accordion -->

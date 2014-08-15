@@ -33,6 +33,15 @@ layout: default
             <li><a href="#api-asset-delete-section"><i class="icon-chevron-right cr-dim"></i> Delete</a></li>
           </ul>
         </li>
+        <li><a href="#asset-type"><i class="icon-chevron-right"></i> Asset Type</a>
+          <ul class="nav nav-list">
+            <li><a href="#api-asset-type-create-section"><i class="icon-chevron-right cr-dim"></i> Create</a></li>
+            <li><a href="#api-asset-type-update-section"><i class="icon-chevron-right cr-dim"></i> Update</a></li>
+            <li><a href="#api-asset-type-get-section"><i class="icon-chevron-right cr-dim"></i> Get</a></li>
+            <li><a href="#api-asset-type-get-all-section"><i class="icon-chevron-right cr-dim"></i> List</a></li>
+            <li><a href="#api-asset-type-delete-section"><i class="icon-chevron-right cr-dim"></i> Delete</a></li>
+          </ul>
+        </li>
         <li><a href="#asset-management"><i class="icon-chevron-right"></i> Asset Management API</a>
           <ul class="nav nav-list">
             <li><a href="#api-mgmt-ipmi-section"><i class="icon-chevron-right cr-dim"></i> IPMI Info</a></li>
@@ -105,6 +114,14 @@ layout: default
         </div>
         <p class="lead">CRUD operations for your assets</p>
         {% include api_assets.html %}
+      </section>
+
+      <section id="asset-type">
+        <div class="page-header">
+          <h1>Asset Type API</h1>
+        </div>
+        <p class="lead">API for asset types</p>
+        {% include api_asset_types.html %}
       </section>
 
       <section id="asset-management">
