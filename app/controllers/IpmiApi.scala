@@ -53,11 +53,18 @@ trait IpmiApi {
             val newInfo = ipmiForm.merge(asset, ipmiInfo)
             val (status, success) = newInfo.id match {
               case update if update > 0 =>
-                (Results.Ok, IpmiInfo.update(newInfo) == 1)
+                IpmiInfo.update(newInfo) match {
+                  case 0 => (Results.Conflict, false)
+                  case _ => (Results.Ok, true)
+                }
               case _ =>
                 (Results.Created, IpmiInfo.create(newInfo).id > 0)
             }
-            Right(ResponseData(status, JsObject(Seq("SUCCESS" -> JsBoolean(success)))))
+            if (status == Results.Conflict) {
+              Left(Api.getErrorMessage("Unable to update IPMI information",status))
+            } else {
+              Right(ResponseData(status, JsObject(Seq("SUCCESS" -> JsBoolean(success)))))
+            }
           } catch {
             case e: SQLException =>
               Left(Api.getErrorMessage("Possible duplicate IPMI Address",
