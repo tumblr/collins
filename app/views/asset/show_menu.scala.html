@@ -1,7 +1,7 @@
 @(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import _root_.util.AssetStateMachine
-@import _root_.util.plugins.{GraphPlugin, Maintenance, PowerManagement, Provisioner, SoftLayer}
+@import _root_.util.plugins.{GraphPlugin, MonitoringPlugin, Maintenance, PowerManagement, Provisioner, SoftLayer}
 @import _root_.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
 @import _root_.collins.provisioning.ProvisionerConfig
 @import _root_.controllers.Permissions
@@ -68,6 +68,11 @@
       </li>
       @GraphPlugin.option.map { p =>
         <li><a href="#graph-info" data-toggle="pill">Graphs</a></li>
+      }
+      @MonitoringPlugin.option.map { plugin =>
+        @if(plugin.isMonitorable(aa.asset)) {
+          <li><a href="#monitoring-info" data-toggle="pill">Monitoring</a></li>
+        }
       }
     </ul>
   </div>
