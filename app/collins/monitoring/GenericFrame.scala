@@ -6,7 +6,7 @@ import play.api.Application
 import play.api.mvc.Content
 import play.api.templates.Html
 
-case class Icinga2(override val app: Application) extends MonitoringView {
+case class GenericFrame(override val app: Application) extends MonitoringView {
 
   override def isMonitorable(asset: AssetView): Boolean = {
     asset.isServerNode && asset.getHostnameMetaValue.isDefined
@@ -21,11 +21,14 @@ case class Icinga2(override val app: Application) extends MonitoringView {
   }
 
   override def validateConfig() {
-    Icinga2Config.pluginInitialize(app.configuration)
+    GenericFrameConfig.pluginInitialize(app.configuration)
   }
 
   protected def getIframe(asset: AssetView) = {
-    collins.monitoring.templates.html.icinga2(asset.getHostnameMetaValue.get)
+    collins.monitoring.templates.html.generic(formatUrl(asset))
   }
+
+  protected def formatUrl(asset: AssetView) =
+    GenericFrameConfig.urlTemplate.format(asset.getHostnameMetaValue.get)
 
 }

@@ -8,7 +8,7 @@ object MonitoringConfig extends Configurable {
   override val referenceConfigFilename = "monitoring_reference.conf"
 
   def enabled = getBoolean("enabled", false)
-  def className = getString("class", "collins.monitoring.Icinga2")
+  def className = getString("class", "collins.monitoring.GenericFrame")
 
   override def validateConfig() {
     if (enabled) {
