@@ -13,7 +13,7 @@ import play.api.templates.Html
 case class GangliaGraphs(override val app: Application) extends GraphView {
 
   override def get(asset: AssetView): Option[Content] = {
-    if (asset.isServerNode && asset.getHostnameMetaValue.isDefined) {
+    if (isGraphable(asset)){
       Some(getIframe(generate_dynamic_view_json(asset.getHostnameMetaValue.get)))
     } else {
       None
@@ -26,6 +26,10 @@ case class GangliaGraphs(override val app: Application) extends GraphView {
 
   protected def getIframe(view_json: String) = {
     collins.graphs.templates.html.ganglia(URLEncoder.encode(view_json, "UTF-8"))
+  }
+
+  override def isGraphable(asset: AssetView): Boolean = {
+    asset.isServerNode && asset.getHostnameMetaValue.isDefined
   }
 
   def hostKey(hostname: String): String = {
