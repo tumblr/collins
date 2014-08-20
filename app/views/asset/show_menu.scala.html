@@ -72,6 +72,8 @@
       @MonitoringPlugin.option.map { plugin =>
         @if(plugin.isMonitorable(aa.asset)) {
           <li><a href="#monitoring-info" data-toggle="pill">Monitoring</a></li>
+        } else {
+          <li class="disabled" data-rel="tooltip" data-original-title="This asset is not monitorable"><a href="#">Monitoring</a></li>
         }
       }
     </ul>
