@@ -14,21 +14,19 @@ case class GenericFrame(override val app: Application) extends MonitoringView {
 
   override def getContent(asset: AssetView): Option[Content] = {
     if (isMonitorable(asset)) {
-      Some(getIframe(asset))
+      getIframe(asset)
     } else {
       None
     }
   }
 
-  override def validateConfig() {
+  override def validateConfig() =
     GenericFrameConfig.pluginInitialize(app.configuration)
-  }
 
-  protected def getIframe(asset: AssetView) = {
-    collins.monitoring.templates.html.generic(formatUrl(asset))
-  }
+  protected def getIframe(asset: AssetView) =
+    formatUrl(asset).map(a => collins.monitoring.templates.html.generic(a))
 
   protected def formatUrl(asset: AssetView) =
-    GenericFrameConfig.urlTemplate.format(asset.getHostnameMetaValue.get)
+    asset.getHostnameMetaValue.map(h => GenericFrameConfig.urlTemplate.format(h))
 
 }
