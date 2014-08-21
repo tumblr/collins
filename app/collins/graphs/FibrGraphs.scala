@@ -9,11 +9,15 @@ import play.api.templates.Html
 case class FibrGraphs(override val app: Application) extends GraphView {
 
   override def get(asset: AssetView): Option[Content] = {
-    if (asset.isServerNode && asset.getHostnameMetaValue.isDefined) {
+    if (isGraphable(asset)){
       Some(getIframe(asset.getHostnameMetaValue.get))
     } else {
       None
     }
+  }
+
+  override def isGraphable(asset: AssetView): Boolean = {
+    asset.isServerNode && asset.getHostnameMetaValue.isDefined
   }
 
   override def validateConfig() {

@@ -67,7 +67,11 @@
         </ul>
       </li>
       @GraphPlugin.option.map { p =>
-        <li><a href="#graph-info" data-toggle="pill">Graphs</a></li>
+        @if(p.isGraphable(aa.asset)) {
+          <li><a href="#graph-info" data-toggle="pill">Graphs</a></li>
+        } else {
+          <li class="disabled" data-rel="tooltip" data-original-title="This asset is not graphable"><a href="#">Graphs</a></li>
+        }
       }
       @MonitoringPlugin.option.map { plugin =>
         @if(plugin.isMonitorable(aa.asset)) {
