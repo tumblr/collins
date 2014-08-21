@@ -5,6 +5,7 @@ target
 tmp
 dist
 *.swp
+/.idea*
 tags
 *.log
 profileOfH2Tests.html
