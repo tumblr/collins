@@ -21,7 +21,7 @@ case class IpAddresses(
   def toJsValue = Json.toJson(this)
 }
 
-object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheManagement {
+object IpAddresses extends IpAddressStorage[IpAddresses] {
   import org.squeryl.PrimitiveTypeMode._
 
   override protected def createEventName: Option[String] = Some("ipAddresses_create")
@@ -56,14 +56,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
     val calc = IpAddressCalc(network, startAt)
     val gateway: Long = getGateway().getOrElse(calc.minAddressAsLong)
     val netmask: Long = calc.netmaskAsLong
-    val currentMax: Option[Long] = iteration match {
-      case norm if norm == 0 =>
-        nextAddressFromCache(scope)
-      case failed =>
-        logger.info("Address cache dirty. Failed cache lookup so using DB")
-        populateCacheIfNeeded(scope, true)
-        getCurrentLowestLocalMaxAddress(calc)
-    }
+    val currentMax: Option[Long] = getCurrentLowestLocalMaxAddress(calc)
     val address: Long = calc.nextAvailableAsLong(currentMax)
     (gateway, address, netmask)
   }
@@ -148,49 +141,6 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
     AddressConfig.flatMap(cfg => scope.flatMap(cfg.pool(_)).orElse(cfg.defaultPool))
   }
 
-  protected def populateCacheIfNeeded(opool: Option[String], force: Boolean = false) {
-    opool.foreach { pool =>
-      AddressConfig.flatMap(_.pool(pool)).foreach { ap =>
-        if (!ap.hasAddressCache || force) {
-          logger.trace("populating address cache for pool %s".format(ap.name))
-          ap.clearAddresses
-          findInPool(pool).foreach { address =>
-            try ap.useAddress(address.address) catch {
-              case e =>
-                logger.info("Error using address %s in pool %s: %s".format(address.dottedAddress, pool, e.getMessage))
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // NOTE if we find an unused address, and for some reason it is already in the DB, and the insert
-  // fails, we will recommend the exact same address for use. This happened when the
-  // ipAddresses_create callback wasn't working correctly. We need a way to detect that we're trying
-  // to use the same IP address
-  protected def nextAddressInPool(opool: Option[String]): Option[Long] = {
-    logger.trace("finding next address in pool %s".format(opool.getOrElse("UNKNOWN")))
-    opool.flatMap { pool =>
-      try {
-        logger.trace("found pool %s, looking for config".format(pool))
-        AddressConfig.flatMap(_.pool(pool)).map { ap =>
-          logger.debug("Next address in pool %s in cache is %s".format(ap.name, ap.nextDottedAddress))
-          ap.nextAddress - 1
-        }
-      } catch {
-        case e =>
-          logger.warn("Exception getting next address: %s".format(e))
-          None
-      }
-    }
-  }
-
-  protected def nextAddressFromCache(scope: Option[String]): Option[Long] = {
-    populateCacheIfNeeded(scope)
-    nextAddressInPool(scope)
-  }
-
   protected[this] def generateFindQuery(addressRow: IpAddresses, address: String): LogicalBoolean = {
     try {
       if (address.split('.').size != 4) throw new Exception("Try again later")
@@ -212,36 +162,3 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressCacheMana
   }
 }
 
-trait IpAddressCacheManagement { self: IpAddressStorage[IpAddresses] =>
-  // Callbacks to manage populating and managing the address caches
-  Callback.on("ipAddresses_create") { pce =>
-    val newAddress = pce.getNewValue.asInstanceOf[IpAddresses]
-    logger.debug("ipAddress_create pool %s".format(newAddress.pool))
-    IpAddresses.AddressConfig.flatMap(_.pool(newAddress.pool)).foreach { ap =>
-      logger.debug("Using address %s in pool %s".format(newAddress.dottedAddress, ap.name))
-      ap.useAddress(newAddress.address)
-    }
-  }
-  Callback.on("ipAddresses_update") { pce =>
-    val oldAddress = pce.getOldValue.asInstanceOf[IpAddresses]
-    val newAddress = pce.getNewValue.asInstanceOf[IpAddresses]
-    IpAddresses.AddressConfig.flatMap(_.pool(oldAddress.pool)).foreach { ap =>
-      logger.debug("Purging address %s from pool %s".format(oldAddress.dottedAddress, ap.name))
-      ap.unuseAddress(oldAddress.address)
-    }
-    IpAddresses.AddressConfig.flatMap(_.pool(newAddress.pool)).foreach { ap =>
-      logger.debug("Using address %s in pool %s".format(newAddress.dottedAddress, ap.name))
-      ap.useAddress(newAddress.address)
-    }
-  }
-  Callback.on("ipAddresses_delete") { pce =>
-    val oldAddress = pce.getOldValue.asInstanceOf[IpAddresses]
-    IpAddresses.AddressConfig.flatMap(_.pool(oldAddress.pool)).foreach { ap =>
-      logger.debug("Purging address %s from pool %s".format(oldAddress.dottedAddress, ap.name))
-      try ap.unuseAddress(oldAddress.address) catch {
-        case e =>
-          logger.info("Exception unusing old address %s: %s".format(oldAddress.address, e.getMessage))
-      }
-    }
-  }
-}
