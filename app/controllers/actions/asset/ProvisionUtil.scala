@@ -32,7 +32,7 @@ trait ProvisionUtil { self: SecureAction =>
 
   val provisionForm = Form(tuple(
         "profile" -> text,
-        "contact" -> text(3),
+        "contact" -> text,
         "suffix" -> optional(text(3)),
         "primary_role" -> optional(text),
         "pool" -> optional(text),
