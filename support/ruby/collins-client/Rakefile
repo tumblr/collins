@@ -25,7 +25,7 @@ jeweler = Jeweler::Tasks.new do |gem|
   gem.files.exclude '.gitignore'
   gem.files.exclude '.rspec'
   gem.files.exclude '.rvmrc'
-  gem.add_runtime_dependency 'httparty', '~> 0.8.3'
+  gem.add_runtime_dependency 'httparty', '~> 0.13.1'
 end
 
 task :help do
