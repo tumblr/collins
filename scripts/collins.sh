@@ -10,7 +10,7 @@
 APP_NAME="collins"
 APP_HOME="/usr/local/$APP_NAME/current"
 LOG_HOME='/var/log'
-DAEMON="/usr/local/bin/daemon"
+DAEMON="/usr/sbin/daemonize"
 LISTEN_PORT=8080
 FILE_LIMIT=8192
 COLLINS_USER="collins"
@@ -37,12 +37,11 @@ DNS_OPTS="-Dnetworkaddress.cache.ttl=1 -Dnetworkaddress.cache.negative.ttl=1"
 JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $PERMGEN_OPTS $GC_LOGGING_OPTS $GC_LOG $HEAP_OPTS $DEBUG_OPTS"
 
 pidfile="/var/run/$APP_NAME/$APP_NAME.pid"
-daemon_pidfile="/var/run/$APP_NAME/$APP_NAME-daemon.pid"
-daemon_args="-u $COLLINS_USER --env HOME=$APP_HOME --name $APP_NAME --pidfile $daemon_pidfile --core -U --chdir /"
-daemon_start_args="--stdout=${LOG_HOME}/$APP_NAME/stdout --stderr=${LOG_HOME}/$APP_NAME/error"
+lockfile="/var/run/$APP_NAME/$APP_NAME.lock"
+daemon_args="-u $COLLINS_USER -E HOME=$APP_HOME -l $lockfile -p $pidfile -o ${LOG_HOME}/$APP_NAME/stdout -e ${LOG_HOME}/$APP_NAME/error -a"
 
 function running() {
-  $DAEMON $daemon_args --running
+  ps -fp "$(cat $pidfile)" &>/dev/null
 }
 
 function find_java() {
@@ -124,12 +123,12 @@ case "$1" in
 
     ulimit -c unlimited || echo -n " (no coredump)"
     ulimit -n $FILE_LIMIT || echo -n " (could not set file limit)"
-    $DAEMON $daemon_args $daemon_start_args -- sh -c "echo "'$$'" > $pidfile; exec ${JAVA_HOME}/bin/java ${JAVA_OPTS} -cp ${APP_HOME}'/lib/*' play.core.server.NettyServer ${APP_HOME}"
+    $DAEMON $daemon_args -- ${JAVA_HOME}/bin/java ${JAVA_OPTS} -cp ${APP_HOME}'/lib/*' play.core.server.NettyServer ${APP_HOME}
     tries=0
     while ! running; do
       tries=$((tries + 1))
       if [ $tries -ge 5 ]; then
-        echo "FAIL"
+        echo "FAIL (check logs in $LOG_HOME/$APP_NAME)"
         exit 1
       fi
       sleep 1
