@@ -32,7 +32,6 @@ RUN rm -rf /build
 # set up some default options for this environment
 # And turn off the custom GC algorithm that isnt supported in JDK6
 RUN echo -e 'APP_HOME=/opt/collins\nLISTEN_PORT=9000\nCOLLINS_USER=collins\nPERMGEN_OPTS="-XX:MaxPermSize=384m -XX:+CMSClassUnloadingEnabled"' > /etc/sysconfig/collins
-ADD ./contrib/docker/default.conf /opt/collins/conf/production.conf
 
 USER collins
 EXPOSE 8080
