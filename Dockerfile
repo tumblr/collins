@@ -4,7 +4,7 @@ MAINTAINER Gabe Conradi <gabe@tumblr.com>
 
 ADD http://mirror.sfo12.us.leaseweb.net/epel/6/i386/epel-release-6-8.noarch.rpm /tmp/epel.rpm
 RUN rpm -ivh /tmp/epel.rpm
-RUN yum install -y wget zip unzip git daemonize java-1.6.0-openjdk java-1.6.0-openjdk-devel
+RUN yum install -y wget zip unzip git daemonize java-1.6.0-openjdk java-1.6.0-openjdk-devel redhat-lsb-core
 RUN useradd -Ur -d /opt/collins collins
 RUN for dir in /build /var/log/collins /var/run/collins; do mkdir $dir; chown collins $dir; done
 ENV JAVA_HOME /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/jre
