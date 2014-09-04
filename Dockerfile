@@ -26,8 +26,7 @@ RUN PLAY_CMD=../play-2.0.8/play ./scripts/package.sh
 
 # now lets deploy this build into /opt/collins
 WORKDIR /opt
-RUN cp /build/collins/target/collins.zip ./ && unzip -q collins.zip
-RUN rm -rf /build
+RUN cp /build/collins/target/collins.zip ./ && unzip -q collins.zip && rm -rf /build && chown -R collins /opt/collins
 
 # set up some default options for this environment
 # And turn off the custom GC algorithm that isnt supported in JDK6
