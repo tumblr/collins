@@ -41,7 +41,7 @@ JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $PERMGEN_OPTS $GC_LOGGING_OPTS 
 pidfile="/var/run/$APP_NAME/$APP_NAME.pid"
 
 function running() {
-  [[ ! -f $pidfile ]] && return 1
+  [[ ! -s $pidfile ]] && return 1
   ps -fp $(cat $pidfile) &>/dev/null
 }
 
@@ -64,8 +64,6 @@ initialize_db() {
   declare db_password="$2";
 
   echo "Initializing collins database on localhost..."
-  echo "Please enter mysql root password. Press <enter> for none."
-  mysql -u root -p -e 'CREATE DATABASE IF NOT EXISTS collins;'
 
   if [ -z "$db_username" ]; then
     read -p "Collins Database Username: " db_username
@@ -79,6 +77,9 @@ initialize_db() {
   else
     db_password="$3";
   fi
+
+  echo "Please enter mysql root password. Press <enter> for none."
+  mysql -u root -p -e 'CREATE DATABASE IF NOT EXISTS collins;'
 
   echo "Granting privs to collins user on localhost..."
   echo "Please enter mysql root password. Press <enter> for none."
@@ -121,7 +122,7 @@ case "$1" in
       exit 1
     fi
     if running; then
-      log_error_msg "Check if collins is not already running"
+      log_warning_msg "Check if collins is not already running"
       echo "Skipping, $APP_NAME is already running"
       exit 0
     fi
@@ -137,6 +138,7 @@ case "$1" in
     if ! running ; then
       log_failure_msg
       echo "*** Try checking the logs in ${LOG_HOME}/$APP_NAME/{stdout,error} to see what the haps are"
+      rm $pidfile
       exit 1
     fi
     log_success_msg
