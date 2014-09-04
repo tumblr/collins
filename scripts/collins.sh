@@ -129,7 +129,7 @@ case "$1" in
 
     # if we are already running as $COLLINS_USER, no need to su
     # This lets us run collins.sh as the app user, for example inside a docker container
-    java_command="${JAVA_HOME}/bin/java ${JAVA_OPTS} -cp ${APP_HOME}'/lib/*' play.core.server.NettyServer ${APP_HOME}"
+    java_command="${JAVA_HOME}/bin/java ${JAVA_OPTS} -cp ${APP_HOME}/lib/\* play.core.server.NettyServer ${APP_HOME}"
     if [[ $(whoami) = $COLLINS_USER ]] ; then
       start_command="$java_command"
     else
@@ -139,7 +139,7 @@ case "$1" in
     ulimit -c unlimited || log_warning_msg "Unable to set core ulimit to unlimited"
     ulimit -n $FILE_LIMIT || log_warning_msg "Unable to set nofiles ulimit to $FILE_LIMIT"
     echo -n "Starting $APP_NAME... "
-    nohup $start_command >>${LOG_HOME}/$APP_NAME/stdout 2>>${LOG_HOME}/$APP_NAME/error </dev/null &
+    nohup bash -c "$start_command" >>${LOG_HOME}/$APP_NAME/stdout 2>>${LOG_HOME}/$APP_NAME/error </dev/null &
     echo $! >$pidfile
     # lets chill for a sec before checking its up
     sleep 3s
