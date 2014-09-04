@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # collins - groovy kind of love
 # http://tumblr.github.io/collins/#about
 #
@@ -23,12 +23,11 @@ COLLINS_USER="collins"
 ##
 HEAP_OPTS=""
 # Play/Scala dynamic class allocation uses a lot of space
-#PERMGEN_OPTS="-XX:MaxPermSize=384m -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
+PERMGEN_OPTS="-XX:MaxPermSize=384m -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC"
 # http://blog.ragozin.info/2011/09/hotspot-jvm-garbage-collection-options.html
 # http://www.javaworld.com/javaworld/jw-01-2002/jw-0111-hotspotgc.html
 GC_LOGGING_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintTenuringDistribution -XX:+PrintHeapAtGC"
-#GC_LOG="-Xloggc:${LOG_HOME}/$APP_NAME/gc.log -XX:+UseGCLogFileRotation"
-GC_LOG="-Xloggc:${LOG_HOME}/$APP_NAME/gc.log "
+GC_LOG="-Xloggc:${LOG_HOME}/$APP_NAME/gc.log -XX:+UseGCLogFileRotation"
 JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=3333 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 DEBUG_OPTS="-XX:ErrorFile=${LOG_HOME}/$APP_NAME/java_error%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/collinsDump.hprof"
 
@@ -42,8 +41,17 @@ JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $PERMGEN_OPTS $GC_LOGGING_OPTS 
 pidfile="/var/run/$APP_NAME/$APP_NAME.pid"
 
 function running() {
-  [[ ! -f $pidfile ]] && return 1
+  [[ ! -s $pidfile ]] && return 1
   ps -fp $(cat $pidfile) &>/dev/null
+}
+
+function ensure_java_binary() {
+  local executable="${1:-$JAVA_HOME/bin/java}"
+  if [[ ! -x $executable ]]; then
+    log_failure_msg "Check $executable exists"
+    echo "*** $executable isn't executable or doesn't exist -- check JAVA_HOME?"
+    exit 1
+  fi
 }
 
 function find_java() {
@@ -65,8 +73,6 @@ initialize_db() {
   declare db_password="$2";
 
   echo "Initializing collins database on localhost..."
-  echo "Please enter mysql root password. Press <enter> for none."
-  mysql -u root -p -e 'CREATE DATABASE IF NOT EXISTS collins;'
 
   if [ -z "$db_username" ]; then
     read -p "Collins Database Username: " db_username
@@ -81,18 +87,16 @@ initialize_db() {
     db_password="$3";
   fi
 
+  echo "Please enter mysql root password. Press <enter> for none."
+  mysql -u root -p -e 'CREATE DATABASE IF NOT EXISTS collins;'
+
   echo "Granting privs to collins user on localhost..."
   echo "Please enter mysql root password. Press <enter> for none."
   mysql -u root -p -e "GRANT ALL PRIVILEGES ON collins.* to $db_username@'127.0.0.1' IDENTIFIED BY '$db_password';"
 }
 
 evolve_db() {
-    if [ ! -x $JAVA_HOME/bin/java ]; then
-      log_failure_msg "Checking for $JAVA_HOME/bin/java"
-      echo "I was unable to find $JAVA_HOME/bin/java, check your JAVA_HOME environment variable"
-      exit 1
-    fi
-
+    ensure_java_binary
     echo -n "Running migrations"
     ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/conf/evolutions/
     [[ $? -eq 0 ]] && log_success_msg || log_failure_msg
@@ -110,27 +114,33 @@ case "$1" in
   ;;
 
   start)
+    ensure_java_binary
 
     if [ ! -r $APP_HOME/lib/$APP_NAME* ]; then
       log_failure_msg "Finding $APP_HOME/lib/$APP_NAME jar"
       echo "*** $APP_NAME jar missing: $APP_HOME/lib/$APP_NAME - not starting"
       exit 1
     fi
-    if [ ! -x $JAVA_HOME/bin/java ]; then
-      log_failure_msg "Check $JAVA_HOME/bin/java exists"
-      echo "*** $JAVA_HOME/bin/java doesn't exist -- check JAVA_HOME?"
-      exit 1
-    fi
+
     if running; then
-      log_error_msg "Check if collins is not already running"
+      log_warning_msg "Check if collins is not already running"
       echo "Skipping, $APP_NAME is already running"
       exit 0
+    fi
+
+    # if we are already running as $COLLINS_USER, no need to su
+    # This lets us run collins.sh as the app user, for example inside a docker container
+    java_command="${JAVA_HOME}/bin/java ${JAVA_OPTS} -cp ${APP_HOME}/lib/\* play.core.server.NettyServer ${APP_HOME}"
+    if [[ $(whoami) = $COLLINS_USER ]] ; then
+      start_command="$java_command"
+    else
+      start_command="su $COLLINS_USER -c '$java_command'"
     fi
 
     ulimit -c unlimited || log_warning_msg "Unable to set core ulimit to unlimited"
     ulimit -n $FILE_LIMIT || log_warning_msg "Unable to set nofiles ulimit to $FILE_LIMIT"
     echo -n "Starting $APP_NAME... "
-    nohup su $COLLINS_USER -c "${JAVA_HOME}/bin/java ${JAVA_OPTS} -cp ${APP_HOME}'/lib/*' play.core.server.NettyServer ${APP_HOME}" >>${LOG_HOME}/$APP_NAME/stdout 2>>${LOG_HOME}/$APP_NAME/error </dev/null &
+    nohup bash -c "$start_command" >>${LOG_HOME}/$APP_NAME/stdout 2>>${LOG_HOME}/$APP_NAME/error </dev/null &
     echo $! >$pidfile
     # lets chill for a sec before checking its up
     sleep 3s
@@ -138,6 +148,7 @@ case "$1" in
     if ! running ; then
       log_failure_msg
       echo "*** Try checking the logs in ${LOG_HOME}/$APP_NAME/{stdout,error} to see what the haps are"
+      rm -f $pidfile
       exit 1
     fi
     log_success_msg
