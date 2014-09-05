@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 # collins - groovy kind of love
 # http://tumblr.github.io/collins/#about
 #
