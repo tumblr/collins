@@ -45,6 +45,15 @@ function running() {
   ps -fp $(cat $pidfile) &>/dev/null
 }
 
+function ensure_java_binary() {
+  executable="${1:-java}"
+  if [[ ! -x $JAVA_HOME/bin/$executable ]]; then
+    log_failure_msg "Check $JAVA_HOME/bin/java exists"
+    echo "*** $JAVA_HOME/bin/java isn't executable or doesn't exist -- check JAVA_HOME?"
+    exit 1
+  fi
+}
+
 function find_java() {
   if [ ! -z "$JAVA_HOME" ]; then
     return
@@ -87,12 +96,7 @@ initialize_db() {
 }
 
 evolve_db() {
-    if [ ! -x $JAVA_HOME/bin/java ]; then
-      log_failure_msg "Checking for $JAVA_HOME/bin/java"
-      echo "I was unable to find $JAVA_HOME/bin/java, check your JAVA_HOME environment variable"
-      exit 1
-    fi
-
+    ensure_java_binary
     echo -n "Running migrations"
     ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/conf/evolutions/
     [[ $? -eq 0 ]] && log_success_msg || log_failure_msg
@@ -110,17 +114,14 @@ case "$1" in
   ;;
 
   start)
+    ensure_java_binary
 
     if [ ! -r $APP_HOME/lib/$APP_NAME* ]; then
       log_failure_msg "Finding $APP_HOME/lib/$APP_NAME jar"
       echo "*** $APP_NAME jar missing: $APP_HOME/lib/$APP_NAME - not starting"
       exit 1
     fi
-    if [ ! -x $JAVA_HOME/bin/java ]; then
-      log_failure_msg "Check $JAVA_HOME/bin/java exists"
-      echo "*** $JAVA_HOME/bin/java doesn't exist -- check JAVA_HOME?"
-      exit 1
-    fi
+
     if running; then
       log_warning_msg "Check if collins is not already running"
       echo "Skipping, $APP_NAME is already running"
@@ -147,7 +148,7 @@ case "$1" in
     if ! running ; then
       log_failure_msg
       echo "*** Try checking the logs in ${LOG_HOME}/$APP_NAME/{stdout,error} to see what the haps are"
-      rm $pidfile
+      rm -f $pidfile
       exit 1
     fi
     log_success_msg
