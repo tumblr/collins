@@ -27,12 +27,23 @@ RUN PLAY_CMD=../play-2.0.8/play ./scripts/package.sh
 # now lets deploy this build into /opt/collins
 WORKDIR /opt
 RUN cp /build/collins/target/collins.zip ./ && unzip -q collins.zip && rm -rf /build && chown -R collins /opt/collins
+# and add in all the default configs we want in this build
+# these are the things you ought to change when vendorizing
+ADD ./conf/docker/validations.conf /opt/collins/conf/validations.conf
+ADD ./conf/docker/authentication.conf /opt/collins/conf/authentication.conf
+ADD ./conf/docker/database.conf /opt/collins/conf/database.conf
+ADD ./conf/docker/production.conf /opt/collins/conf/production.conf
+ADD ./conf/docker/users.conf /opt/collins/conf/users.conf
+ADD ./conf/docker/profiles.yaml /opt/collins/conf/profiles.yaml
+ADD ./conf/docker/permissions.yaml /opt/collins/conf/permissions.yaml
+RUN chown -R collins /opt/collins
 
 # set up some default options for this environment
 # And turn off the custom GC algorithm that isnt supported in JDK6
 RUN echo -e 'APP_HOME=/opt/collins\nLISTEN_PORT=9000\nCOLLINS_USER=collins\nPERMGEN_OPTS="-XX:MaxPermSize=384m -XX:+CMSClassUnloadingEnabled"' > /etc/sysconfig/collins
 
+WORKDIR /opt/collins
 USER collins
-EXPOSE 8080
-CMD [ "/opt/collins/scripts/collins.sh", "start" ]
+EXPOSE 9000
+CMD /opt/collins/scripts/collins.sh start && tail -f /var/log/collins/application.log
 
