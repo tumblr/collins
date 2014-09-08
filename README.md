@@ -11,7 +11,7 @@ The most recent production build of collins is available [here](http://tumblr.gi
 
 [Docker](http://tumblr.github.com/collins/#quickstart-docker)
 
-[Use a Zip](http://tumblr.github.com/collins/#quickstart-build)
+[Use a Zip](http://tumblr.github.com/collins/#quickstart-zip)
 
 [Build from Source](http://tumblr.github.com/collins/#quickstart-source)
 
