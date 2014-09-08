@@ -1,0 +1,10 @@
+# mysql DB config
+evolutionplugin=disabled
+
+db.collins.logStatements=false
+db.collins.password=""
+db.collins.driver="com.mysql.jdbc.Driver"
+db.collins.url="jdbc:mysql://db.company.net/collins?autoReconnect=true&interactiveClient=true"
+db.collins.user="collins"
+
+querylog.frontendLogging = true
