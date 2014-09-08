@@ -328,14 +328,14 @@ permalink: index.html
           <li>/opt/collins/conf/authentication.conf</li>
         </ul>
         <p>Here is an example Dockerfile that will vendorize the Tumblr build with your own configs that live in ./conf/vendor/</p>
-        <code><pre>FROM tumblr/collins
+        <pre>FROM tumblr/collins
 ADD ./conf/vendor/production.conf /opt/collins/conf/production.conf
 ADD ./conf/vendor/database.conf /opt/collins/conf/database.conf
 ADD ./conf/vendor/validations.conf /opt/collins/conf/validations.conf
 ADD ./conf/vendor/authentication.conf /opt/collins/conf/authentication.conf
 ADD ./conf/vendor/users.conf /opt/collins/conf/users.conf
 ADD ./conf/vendor/profiles.yaml /opt/collins/conf/profiles.yaml
-ADD ./conf/vendor/permissions.yaml /opt/collins/conf/permissions.yaml</pre></code>
+ADD ./conf/vendor/permissions.yaml /opt/collins/conf/permissions.yaml</pre>
         <p>Then you can <code>docker build -t omnicorpllc/collins:123 .</code> and <code>docker run -p 9000:9000 omnicorpllc/collins:123</code></p>
       </section>
 
