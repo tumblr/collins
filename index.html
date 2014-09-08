@@ -24,6 +24,7 @@ permalink: index.html
         <li><a href="#design"><i class="icon-chevron-right"></i> Design</a></li>
         <li><a href="#motivations"><i class="icon-chevron-right"></i> Motivations</a></li>
         <li><a href="#quickstart"><i class="icon-chevron-right"></i> Quickstart</a></li>
+        <li><a href="#docker"><i class="icon-chevron-right"></i> Docker</a></li>
         <li><a href="#links"><i class="icon-chevron-right"></i> Links</a></li>
         <li><a href="#thanks"><i class="icon-chevron-right"></i> Thanks</a></li>
       </ul>
@@ -167,7 +168,15 @@ permalink: index.html
           If you would like your data to persist between restarts, you should also have MySQL 5.5 (5.1 may work but is untested).
         </p>
 
-        <h3 id="quickstart-prod">Ultra Quick</h3>
+        <h3 id="quickstart-docker">Docker</h3>
+        <p>The simplest way to get started playing with Collins is to use the Docker image. Make sure you have a functioning Docker install. <a href="https://registry.hub.docker.com/u/tumblr/collins/">Docker repository</a></p>
+        <ol>
+          <li>Start the container: <code>docker run -p 9000:9000 tumblr/collins</code></li>
+          <li>Hit http://localhost:9000/ and log in with the username <code>blake</code> and password <code>admin:first</code>.</li>
+          <li>If desired, add some assets with <code>./scripts/populate.sh</code>.</li>
+        </ol>
+
+        <h3 id="quickstart-prod">Have a script build it for me</h3>
         <ol>
           <li>Download the latest collins zip from <a href="downloads.html">here</a></li>
           <li>Unpack the zip file</li>
@@ -178,7 +187,7 @@ permalink: index.html
           below which will use an in memory database.
         </p>
 
-        <h3>Software Setup</h3>
+        <h3>Get your hands dirty and build it yourself</h3>
         <ol>
           <li>Download the <a href="http://downloads.typesafe.com/play/2.0.8/play-2.0.8.zip">Play Framework</a></li>
           <li>Unpack the zip into <code>$HOME/src/play-2.0.8</code></li>
@@ -300,6 +309,36 @@ permalink: index.html
 
       </section>
 
+      <section id="docker">
+        <div class="page-header">
+          <h1>Docker</h1>
+        </div>
+        <p class="lead">
+          Vendorizing the Docker image
+        </p>
+        <p>
+          If you want to use the Docker build as the base for your production instance, you ought to vendorize the image with your own configurations. A good list of things you should override is listed below, along with a sample Dockerfile to produce your build. The Tumblr provided build uses the H2 in-memory database, development credentials, and lots of sample features turned on and configured. You will certainly want to tune the settings in the build (see <a href="https://github.com/tumblr/collins/tree/master/conf/docker">https://github.com/tumblr/collins/tree/master/conf/docker</a> for all the included configs).
+	      </p>
+        <ul>
+          <li>/opt/collins/conf/production.conf</li>
+          <li>/opt/collins/conf/users.conf</li>
+          <li>/opt/collins/conf/profiles.yaml</li>
+          <li>/opt/collins/conf/database.conf</li>
+          <li>/opt/collins/conf/permissions.yaml</li>
+          <li>/opt/collins/conf/authentication.conf</li>
+        </ul>
+        <p>Here is an example Dockerfile that will vendorize the Tumblr build with your own configs that live in ./conf/vendor/</p>
+        <code><pre>FROM tumblr/collins
+ADD ./conf/vendor/production.conf /opt/collins/conf/production.conf
+ADD ./conf/vendor/database.conf /opt/collins/conf/database.conf
+ADD ./conf/vendor/validations.conf /opt/collins/conf/validations.conf
+ADD ./conf/vendor/authentication.conf /opt/collins/conf/authentication.conf
+ADD ./conf/vendor/users.conf /opt/collins/conf/users.conf
+ADD ./conf/vendor/profiles.yaml /opt/collins/conf/profiles.yaml
+ADD ./conf/vendor/permissions.yaml /opt/collins/conf/permissions.yaml</pre></code>
+        <p>Then you can <code>docker build -t omnicorpllc/collins:123 .</code> and <code>docker run -p 9000:9000 omnicorpllc/collins:123</code></p>
+      </section>
+
       <section id="links">
         <div class="page-header">
           <h1>Links</h1>
@@ -314,6 +353,7 @@ permalink: index.html
           <li><a target="_blank" href="https://github.com/tumblr/collins">Code</a></li>
           <li><a target="_blank" href="downloads.html">Downloads</a></li>
           <li><a target="_blank" href="http://tumblr.github.com/collins">Docs</a></li>
+          <li><a target="_blank" href="https://registry.hub.docker.com/u/tumblr/collins/">Docker Repository</a></li>
 	      </ul>
       </section>
 
