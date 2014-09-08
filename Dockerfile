@@ -46,5 +46,5 @@ RUN echo -e 'APP_HOME=/opt/collins\nLISTEN_PORT=9000\nCOLLINS_USER=collins\nPERM
 WORKDIR /opt/collins
 USER collins
 EXPOSE 9000
-CMD /opt/collins/scripts/collins.sh start && tail -f /var/log/collins/application.log
+CMD /opt/collins/scripts/collins.sh start && tail -F /var/log/collins/application.log
 
