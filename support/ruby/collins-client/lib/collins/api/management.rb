@@ -58,15 +58,15 @@ module Collins; module Api
     end
 
     def ipmi_create asset_or_tag, username, password, address, gateway, netmask
-      ipmi_update asset_or_tag, :username => username, :password => password, :address => address,
+      ipmi_update asset_or_tag, :ipmiuser => username, :ipmipass => password, :address => address,
                                 :gateway => gateway, :netmask => netmask
     end
 
     def ipmi_update asset_or_tag, options = {}
       asset = get_asset_or_tag asset_or_tag
       parameters = {
-        :username => get_option(:username, options, nil),
-        :password => get_option(:password, options, nil),
+        :ipmiuser => get_option(:ipmiuser, options, nil),
+        :ipmipass => get_option(:ipmipass, options, nil),
         :address => get_option(:address, options, nil),
         :gateway => get_option(:gateway, options, nil),
         :netmask => get_option(:netmask, options, nil)

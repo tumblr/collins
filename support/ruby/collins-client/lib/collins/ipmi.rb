@@ -4,7 +4,7 @@ module Collins
 
     include Collins::Util
 
-    attr_accessor :address, :asset_id, :gateway, :id, :netmask, :password, :username
+    attr_accessor :address, :asset_id, :gateway, :id, :netmask, :ipmipass, :ipmiuser
 
     def self.from_json json
       Collins::Ipmi.new json
@@ -21,8 +21,8 @@ module Collins
       @gateway = hash[:gateway].to_s
       @id = hash[:id].to_s.to_i
       @netmask = hash[:netmask].to_s
-      @password = hash[:password].to_s
-      @username = hash[:username].to_s
+      @ipmipass = hash[:ipmipass].to_s
+      @ipmiuser = hash[:ipmiuser].to_s
     end
 
     def empty?
@@ -33,7 +33,7 @@ module Collins
       if empty? then
         "Ipmi(None)"
       else
-        "Ipmi(id = #{id}, asset_id = #{asset_id}, address = #{address}, gateway = #{gateway}, netmask = #{netmask}, username = #{username}, password = #{password})"
+        "Ipmi(id = #{id}, asset_id = #{asset_id}, address = #{address}, gateway = #{gateway}, netmask = #{netmask}, ipmiuser = #{ipmiuser}, ipmipass = #{ipmipass})"
       end
     end
 

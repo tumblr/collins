@@ -13,11 +13,11 @@ import java.sql.SQLException
 trait IpmiApi {
   this: Api with SecureController =>
 
-  case class IpmiForm(username: Option[String], password: Option[String], address: Option[String], gateway: Option[String], netmask: Option[String]) {
+  case class IpmiForm(ipmiuser: Option[String], ipmipass: Option[String], address: Option[String], gateway: Option[String], netmask: Option[String]) {
     def merge(asset: Asset, ipmi: Option[IpmiInfo]): IpmiInfo = {
       ipmi.map { info =>
-        val iu: IpmiInfo = username.map(u => info.copy(username = u)).getOrElse(info)
-        val pu: IpmiInfo = password.map(p => iu.copy(password = IpmiInfo.encryptPassword(p))).getOrElse(iu)
+        val iu: IpmiInfo = ipmiuser.map(u => info.copy(ipmiuser = u)).getOrElse(info)
+        val pu: IpmiInfo = ipmipass.map(p => iu.copy(ipmipass = IpmiInfo.encryptPassword(p))).getOrElse(iu)
         val au: IpmiInfo = address.map(a => pu.copy(address = IpAddress.toLong(a))).getOrElse(pu)
         val gu: IpmiInfo = gateway.map(g => au.copy(gateway = IpAddress.toLong(g))).getOrElse(au)
         netmask.map(n => gu.copy(netmask = IpAddress.toLong(n))).getOrElse(gu)
@@ -25,15 +25,15 @@ trait IpmiApi {
         val a = IpAddress.toLong(address.get)
         val g = IpAddress.toLong(gateway.get)
         val n = IpAddress.toLong(netmask.get)
-        val p = IpmiInfo.encryptPassword(password.get)
-        IpmiInfo(asset.getId, username.get, p, g, a, n)
+        val p = IpmiInfo.encryptPassword(ipmipass.get)
+        IpmiInfo(asset.getId, ipmiuser.get, p, g, a, n)
       }
     }
   }
   val IPMI_FORM = Form(
     mapping(
-      "username" -> optional(text(1)),
-      "password" -> optional(text(8)),
+      "ipmiuser" -> optional(text(1)),
+      "ipmipass" -> optional(text(8)),
       "address" -> optional(text(7)),
       "gateway" -> optional(text(7)),
       "netmask" -> optional(text(7))
