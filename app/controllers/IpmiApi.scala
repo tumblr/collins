@@ -17,7 +17,7 @@ trait IpmiApi {
     def merge(asset: Asset, ipmi: Option[IpmiInfo]): IpmiInfo = {
       ipmi.map { info =>
         val iu: IpmiInfo = ipmiuser.map(u => info.copy(ipmiuser = u)).getOrElse(info)
-        val pu: IpmiInfo = ipmipass.map(p => iu.copy(ipmipass = IpmiInfo.encryptipmipass(p))).getOrElse(iu)
+        val pu: IpmiInfo = ipmipass.map(p => iu.copy(ipmipass = IpmiInfo.encryptPassword(p))).getOrElse(iu)
         val au: IpmiInfo = address.map(a => pu.copy(address = IpAddress.toLong(a))).getOrElse(pu)
         val gu: IpmiInfo = gateway.map(g => au.copy(gateway = IpAddress.toLong(g))).getOrElse(au)
         netmask.map(n => gu.copy(netmask = IpAddress.toLong(n))).getOrElse(gu)
@@ -25,7 +25,7 @@ trait IpmiApi {
         val a = IpAddress.toLong(address.get)
         val g = IpAddress.toLong(gateway.get)
         val n = IpAddress.toLong(netmask.get)
-        val p = IpmiInfo.encryptipmipass(ipmipass.get)
+        val p = IpmiInfo.encryptPassword(ipmipass.get)
         IpmiInfo(asset.getId, ipmiuser.get, p, g, a, n)
       }
     }
