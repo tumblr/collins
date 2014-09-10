@@ -134,7 +134,7 @@ case "$1" in
     if [[ $(whoami) = $COLLINS_USER ]] ; then
       start_command="$java_command"
     else
-      start_command="su $COLLINS_USER -c '$java_command'"
+      start_command="su -s /bin/bash -c '$java_command' $COLLINS_USER"
     fi
 
     ulimit -c unlimited || log_warning_msg "Unable to set core ulimit to unlimited"
