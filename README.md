@@ -7,13 +7,19 @@ documentation below is for developers or people setting up a new instance.
 
 The most recent production build of collins is available [here](http://tumblr.github.com/collins/downloads.html)
 
-## Quickstart - Building Collins
+## Quickstart
 
-http://tumblr.github.com/collins/#quickstart
+[Docker](http://tumblr.github.com/collins/#quickstart-docker)
 
-## Collins for Production
+[Use a Zip](http://tumblr.github.com/collins/#quickstart-zip)
 
-http://tumblr.github.com/collins/#quickstart-prod
+[Build from Source](http://tumblr.github.com/collins/#quickstart-source)
+
+## Docker Image
+
+You can find more about using collins with Docker here:
+
+http://tumblr.github.io/collins/index.html#docker
 
 ## License
 
