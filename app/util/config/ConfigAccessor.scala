@@ -129,8 +129,6 @@ trait ConfigAccessor {
     underlying.flatMap(cfg => Option(p(cfg)))
   } catch {
     case e: ConfigException.Missing =>
-      Logger(getClass).warn("Missing value for key '%s'".format(path))
-
       None
   }
 }
