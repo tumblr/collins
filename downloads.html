@@ -24,6 +24,56 @@ desc: Collins Releases
           <h1>Downloads</h1>
         </div>
         <ul>
+	  <li>2014/09/10 - <a hfef="releases/collins-1.3.0.zip">1.3.0</a></li>
+	    <p>
+	      Moved to Play 2.0.8<br>
+	      Tumblr supported <a href="https://registry.hub.docker.com/u/tumblr/collins/">Docker image</a><br>
+	      Reworked and greatly improved init script<br>
+	      Monitoring plugin<br>
+	      Open sourced collins-auth ruby gem<br>
+	      Unit test improvements<br>
+	      Customizable intake page fields<br>
+	      Provisioning profile contact and contact_notes fields, and ability to set or remove arbitrary attributes based on provisioning profile<br>
+	      IP allocation improvements<br>
+	      Removed IP allocation caching layer<br>
+	      Mixed authentication modes<br>
+	      Added new API for asset type<br>
+	      Improved solr integration for external solr instances<br>
+	      Restrict provisioning based on hardware configuration</p>
+
+	  <p>Special thanks to <a href="https://github.com/discordianfish" class="user-mention">@discordianfish</a> <a href="https://github.com/matthiasr" class="user-mention">@matthiasr</a> <a href="https://github.com/dallasmarlow" class="user-mention">@dallasmarlow</a> <a href="https://github.com/rednuopxivrec" class="user-mention">@rednuopxivrec</a> <a href="https://github.com/skottler" class="user-mention">@skottler</a> and <a href="https://github.com/asheepapart" class="user-mention">@asheepapart</a> for their contributions! </p>
+
+	  <p>And here are all the pull requests in this release, in no particular order</p>
+
+	  <ul class="task-list">
+	    <li> Gabe dockerfile <a href="https://github.com/tumblr/collins/pull/208" class="issue-link" title="Gabe dockerfile">#208</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Gabe portable init <a href="https://github.com/tumblr/collins/pull/209" class="issue-link" title="Gabe portable init">#209</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> remove daemonize from build, isnt necessary <a href="https://github.com/tumblr/collins/pull/210" class="issue-link" title="remove daemonize from build, isnt necessary">#210</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Remove logging if the config is missing <a href="https://github.com/tumblr/collins/pull/218" class="issue-link" title="Remove logging if the config is missing">#218</a> <a href="https://github.com/Primer42" class="user-mention">@Primer42</a></li>
+	    <li> document docker usage <a href="https://github.com/tumblr/collins/pull/211" class="issue-link" title="document docker usage">#211</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> fix race when service doesnt open application.log fast enough <a href="https://github.com/tumblr/collins/pull/212" class="issue-link" title="fix race when service doesnt open application.log fast enough">#212</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Update quickstart ids <a href="https://github.com/tumblr/collins/pull/213" class="issue-link" title="Update quickstart ids">#213</a> <a href="https://github.com/Primer42" class="user-mention">@Primer42</a></li>
+	    <li> allow multiple product strings to be matched for flash disk detection <a href="https://github.com/tumblr/collins/pull/132" class="issue-link" title="allow multiple product strings to be matched for flash disk detection">#132</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a></li>
+	    <li> add documentation for lshw.flashProducts <a href="https://github.com/tumblr/collins/pull/133" class="issue-link" title="add documentation for lshw.flashProducts">#133</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Upstart scripts for collins <a href="https://github.com/tumblr/collins/pull/125" class="issue-link" title="Upstart scripts for collins">#125</a> <a href="https://github.com/funzoneq" class="user-mention">@funzoneq</a> </li>
+	    <li> populate changelog with 1.2.4 release <a href="https://github.com/tumblr/collins/pull/137" class="issue-link" title="populate changelog with 1.2.4 release">#137</a>  <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Provisioning profiles support for contact and contact_notes fields <a href="https://github.com/tumblr/collins/pull/134" class="issue-link" title="Provisioning profiles support for contact and contact_notes fields">#134</a>  <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Open sourcing collins_auth <a href="https://github.com/tumblr/collins/pull/141" class="issue-link" title="Open sourcing collins_auth">#141</a> <a href="https://github.com/funzoneq" class="user-mention">@funzoneq</a> </li>
+	    <li> Fix Dockerfile <a href="https://github.com/tumblr/collins/pull/139" class="issue-link" title="Fix Dockerfile">#139</a> <a href="https://github.com/discordianfish" class="user-mention">@discordianfish</a> </li>
+	    <li> fix collins-auth prompt <a href="https://github.com/tumblr/collins/pull/143" class="issue-link" title="fix collins-auth prompt">#143</a> <a href="https://github.com/dallasmarlow" class="user-mention">@dallasmarlow</a> </li>
+	    <li> fix reprovision action to not fail if contact is empty <a href="https://github.com/tumblr/collins/pull/140" class="issue-link" title="fix reprovision action to not fail if contact is empty">#140</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> optional user submitted config file <a href="https://github.com/tumblr/collins/pull/142" class="issue-link" title="optional user submitted config file">#142</a> <a href="https://github.com/lamping for collins-shell <a href="https://github.com/tumblr/collins/pull/150" class="issue-link" title="remove Ruby version clamping for collins"https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Will update gems <a href="https://github.com/tumblr/collins/pull/141mblr/collins/pull/163" class="issue-link" title="play 2.0.8">#163</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Support play 2.0onfiguration tunables">#165</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> add documentation for new solr tunables <a href="https://github.com/tumblr/collins/pull/166" class="issue-link" title="add documentation for new s just last a...">#168</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Bump collins-shell version <a hratthiasr" class="user-mention">@matthiasr</a>tps://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Add tests for PowerManagementConfig <a href="https://github.com/tumblr/collins/pull/92" class="issuegithub.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> fix incorrect curl <a href="https://github.com/tumblr/collins/pull/196" class="issue-link" title="fixisks with full-disk LVM <a href="https://github.com/tumblr/collins/pull/192" class="issue-link" title="recognise disks with full-disk LVM">#192</a>find ... <a href="https://github.com/tumblr/collins/pull/188" class="issue-link" title="Remove youtube screencast, because the link is bro-link" title="Avoid querying the database for an asset when adding an asset to the lis...">#180</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+            <li> Gabe more collinsauth fixing <a href="https://github.com/tumblr/collins/pull/177" class="issue-link" title="Gabe more collinsauth fixing">#177</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	    <li> Added note about problems with net-ssh versions &gt; 2.8.0 <a href="https://github.com/tumblr/collins/pull/171" class="issue-link" title="Added note about problems with net-ssh versions &gt; 2.8.0">#171</a> <a href="https://github.com/Primer42" class="user-mention">@Primer42</a></li>
+	    <li> fix for collins user with nologin <a href="https://github.com/tumblr/collins/pull/219" class="issue-link" title="fix for collins user with nologin">#219</a> <a href="https://github.com/byxorna" class="user-mention">@byxorna</a> </li>
+	  </ul>
+
 	  <li>2014/03/07 - <a href="releases/collins-1.2.4.zip">1.2.4</a></li>
 	  <ul>
 	    <li>Various documentation/labeling fixes ( #95, #94, #99, #103, #104)</li>
