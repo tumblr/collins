@@ -1,3 +1,89 @@
+1.3.0	2014/09/10
+
+	Moved to Play 2.0.8
+	Tumblr supported Docker image
+	Reworked and greatly improved init script
+	Monitoring plugin
+	Open sourced collins-auth ruby gem
+	Unit test improvements
+	Customizable intake page fields
+	Provisioning profile contact and contact_notes fields, and ability to set or remove arbitrary attributes based on provisioning profile
+	IP allocation improvements
+	Removed IP allocation caching layer
+	Mixed authentication modes
+	Added new API for asset type
+	Improved solr integration for external solr instances
+	Restrict provisioning based on hardware configuration
+
+	Special thanks to @discordianfish @matthiasr @dallasmarlow @rednuopxivrec @skottler and @asheepapart for their contributions!
+	
+	And here are all the pull requests in this release, in no particular order
+
+	* Gabe dockerfile #208 @byxorna
+    	* Gabe portable init #209 @byxorna
+	* remove daemonize from build, isnt necessary #210 @byxorna
+	* Remove logging if the config is missing #218 @Primer42
+	* document docker usage #211 @byxorna
+	* fix race when service doesnt open application.log fast enough #212 @byxorna
+	* Update quickstart ids #213 @Primer42
+	* allow multiple product strings to be matched for flash disk detection #132 @byxorna
+	* add documentation for lshw.flashProducts #133 @byxorna
+	* Upstart scripts for collins #125 @funzoneq
+	* populate changelog with 1.2.4 release #137 @byxorna
+	* Provisioning profiles support for contact and contact_notes fields #134 @byxorna
+	* Open sourcing collins_auth #141 @funzoneq
+	* Fix Dockerfile #139 @discordianfish
+	* fix collins-auth prompt #143 @dallasmarlow
+	* fix reprovision action to not fail if contact is empty #140 @byxorna
+	* optional user submitted config file #142 @dallasmarlow
+	* Show asset classification in overview page #147 @byxorna
+	* Ignoring some extra files that emacs and eclipse has put in my collins repo #148 @Primer42
+	* remove Ruby version clamping for collins-shell #150 @matthiasr
+	* update docs for additional display name nodeclassifier attribute #151 @byxorna
+	* POSIX formatted attributes are now all caps, fix tests to reflect that #153 @byxorna
+	* Gabe extra provision attributes #154 @byxorna
+	* Will update gems #144 @Primer42
+	* Gabe provision hardware restrictions #155 @byxorna
+	* docs for profiles.yaml #156 @byxorna
+	* fix misspelled required attribute #162 @byxorna
+	* play 2.0.8 #163 @byxorna
+	* Support play 2.0.8 #160 @byxorna
+	* gracefully handle missing ENV['HOME'] var #161 @rednuopxivrec
+	* add a bit of context when meta attributes dont validate #157 @byxorna
+	* Solr configuration tunables #165 @byxorna
+	* add documentation for new solr tunables #166 @byxorna
+	* Gabe tag decorators #167 @byxorna
+	* fix breakage in solr test spec #170 @byxorna
+	* fix getNextAvailableAddress to use local maximums instead of just last a... #168 @byxorna
+	* Bump collins-shell version #169 @Primer42
+	* Configurable parameters for intake page deux #172 @byxorna
+	* Configurable parameters for intake page #98 @jmackey
+	* remove minimum Contact length #201 @matthiasr
+	* (script/package) set -e to prevent the build from proceeding after a step fails #203 @skottler
+	* Gabe monitoring plugin #199 @byxorna
+	* remove AddressPool cache #195 @byxorna
+	* disable graphs pill when asset is not graphable #200 @byxorna
+	* Add tests for PowerManagementConfig #92 @asheepapart
+	* add some fields to asset_meta that are useful #198 @byxorna
+	* Fix update to 409 when setting IPMI address to conflicting IP #194 @byxorna
+	* Gabe assettype docs #197 @byxorna
+	* fix incorrect curl #196 @byxorna
+	* move collins-shell into support/ruby #193 @byxorna
+	* add capability to create asset types via API #191 @byxorna
+	* Mixed authentication modes #101 @asheepapart
+	* recognise disks with full-disk LVM #192 @matthiasr
+	* Evolve db flag #159 @asheepapart
+	* Allow sysconfig to override more defaults #158 @asheepapart
+	* Remove the youtube link from pages too #189 @Primer42
+	* Remove youtube screencast, because the link is broken, and I can't find ... #188 @Primer42
+	* Fix unit tests #185 @maddalab
+	* Gabe fix ipallocation #181 @byxorna
+	* Bhaskar cleanups #179 @maddalab
+	* Avoid querying the database for an asset when adding an asset to the lis... #180 @byxorna
+	* Gabe more collinsauth fixing #177 @byxorna
+	* Added note about problems with net-ssh versions > 2.8.0 #171 @Primer42
+	* fix for collins user with nologin #219 @byxorna
+
 1.2.4   2014/03/07
 
 	* Docs: Various documentation/labeling fixes ( #95, #94, #99, #103, #104)
@@ -16,7 +102,7 @@
 	* Housekeeping: Created a 'contrib' directory for helpful script for running and maintaining collins (Will Richard & Gabe Conradi #126)
 	* API: Ensured that variables provided when using text/x-shellscript API endpoint are valid POSIX (Will Richard & Gabe Conradi #129)
 
-1.2.3		2013/04/24
+1.2.3	2013/04/24
 
 	* LSHW: Allow a default speed to be specified via defaultNicCapacity (Benjamin VanEvery #91)
 	* Bug: Evolution 11 autoinc should work with MySQL and H2 (Benjamin VanEvery #90)
