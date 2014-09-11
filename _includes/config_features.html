@@ -48,7 +48,7 @@ feature flags are documented below.
     <tr>
       <td class="inlinecode">useWhiteListOnRepurpose</td>
       <td>Boolean</td>
-      <td>Determines which of deleteSomeMetaOnRepurpose or keepSomeMetaOnRepurpose is used</td>
+      <td>Determines which of deleteSomeMetaOnRepurpose or keepSomeMetaOnRepurpose is used. When true keepSomeMetaOnRepurpose is used.</td>
     </tr>
     <tr>
       <td class="inlinecode">deleteSomeMetaOnRepurpose</td>
@@ -58,7 +58,7 @@ feature flags are documented below.
     <tr>
       <td class="inlinecode">keepSomeMetaOnRepurpose</td>
       <td>Set[String]</td>
-      <td>If deleteMetaOnDecommission is false, this is a list of attributes to keep anyhow</td>
+      <td>If useWhiteListOnRepurpose is true, this is a list of attributes to keep</td>
     </tr>
     <tr>
       <td class="inlinecode">encryptedTags</td>
