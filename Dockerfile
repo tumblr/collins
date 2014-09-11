@@ -65,7 +65,7 @@ CMD /usr/bin/java -server \
       -XX:+PrintGCTimeStamps \
       -XX:+PrintGCDateStamps \
       -XX:+PrintTenuringDistribution \
-      -XX:+PrintHeapAtGC
+      -XX:+PrintHeapAtGC \
       -Xloggc:$LOG_HOME/gc.log \
       -XX:+UseGCLogFileRotation \
       -cp "$APP_HOME/lib/*" \
