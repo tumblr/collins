@@ -6,7 +6,7 @@
   </appender>
 
   <logger name="play" level="INFO" />
-  <logger name="application" level="TRACE" />
+  <logger name="application" level="DEBUG" />
 
   <logger name="configurable" level="DEBUG" />
 
@@ -37,7 +37,7 @@
   <logger name="javax.management" level="WARN" />
   <logger name="org.apache.solr" level="WARN" />
 
-  <root level="TRACE">
+  <root level="INFO">
     <appender-ref ref="STDOUT" />
   </root>
 
