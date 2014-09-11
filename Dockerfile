@@ -29,7 +29,11 @@ RUN git rev-parse HEAD > VERSION && \
 
 # now lets deploy this build into /opt/collins
 WORKDIR /opt
-RUN cp /build/collins/target/collins.zip ./ && unzip -q collins.zip && rm -rf /build ./collins.zip && chown -R collins /opt/collins
+RUN cp /build/collins/target/collins.zip ./ && \
+    unzip -q collins.zip && \
+    rm -rf /build ./collins.zip && \
+    chown -R collins /opt/collins
+
 # and add in all the default configs we want in this build
 # these are the things you ought to change when vendorizing
 ADD ./conf/docker/validations.conf /opt/collins/conf/validations.conf
