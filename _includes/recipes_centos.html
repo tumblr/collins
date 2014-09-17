@@ -3,11 +3,12 @@
 This will be all the dependencies needed.</br>
 rpmforge to get latest git.</br>
 ruby, mysql-server, unzip, wget is self explanatory.</br>
+redhat-lsb for new init script functionality.
 </p>
 <pre class="prettyprint">
 wget http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
 rpm -i rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
-yum install -y ruby mysql-server unzip wget
+yum install -y ruby mysql-server unzip wget redhat-lsb
 yum install -y git --enablerepo rpmforge-extras
 </pre>
 
