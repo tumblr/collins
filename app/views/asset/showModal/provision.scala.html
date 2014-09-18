@@ -26,18 +26,16 @@
       </ul>
     }
     <p>If that all sounds good, choose an appropriate profile below and provide your contact for notification</p>
-    <div class="control-group">
+    <div class="form-group">
       <label for="profile" class="control-label">Profile</label>
-      <div class="controls">
-        <select name="profile" id="profile" data-show="suffix-container,hostname-container" data-triggers="PROVISIONER_TRIGGERS">
-          <option value="" selected="selected"></option>
-          @Provisioner.pluginEnabled.map { p =>
-            @p.profiles.toSeq.map { v =>
-            <option value="@v.identifier" data-show-display="@v.allow_suffix.toString" data-aggregate-value="@v.prefix">@v.label</option>
-            }
+      <select name="profile" id="profile" data-show="suffix-container,hostname-container" data-triggers="PROVISIONER_TRIGGERS">
+        <option value="" selected="selected"></option>
+        @Provisioner.pluginEnabled.map { p =>
+          @p.profiles.toSeq.map { v =>
+          <option value="@v.identifier" data-show-display="@v.allow_suffix.toString" data-aggregate-value="@v.prefix">@v.label</option>
           }
-        </select>
-      </div>
+        }
+      </select>
     </div>
     @if(aa.asset.isIncomplete) {
     <input type="hidden" name="activate" value="true">
@@ -50,47 +48,47 @@
         "secondary_roles": @ProvisionerHelper.secondaryRolesAsJson()
       };
     </script>
-    <div class="control-group hide hideAfterClose" id="primary-role-container">
+    <div class="form-group hide hideAfterClose" id="primary-role-container">
       <label for="primary_role" class="control-label">Primary Role</label>
-      <div class="controls" data-purge="true">
+      <div data-purge="true">
       </div>
     </div>
-    <div class="control-group haveChoice hide hideAfterClose" id="pool-container">
+    <div class="form-group haveChoice hide hideAfterClose" id="pool-container">
       <label for="pool" class="control-label">Pool</label>
-      <div class="controls" data-purge="true">
+      <div data-purge="true">
       </div>
     </div>
-    <div class="control-group haveChoice hide hideAfterClose" id="secondary-role-container">
+    <div class="form-group haveChoice hide hideAfterClose" id="secondary-role-container">
       <label for="secondary_role" class="control-label">Secondary Role</label>
-      <div class="controls" data-purge="true">
+      <div data-purge="true">
       </div>
     </div>
-    <div class="control-group hide hideAfterClose" id="suffix-container">
+    <div class="form-group hide hideAfterClose" id="suffix-container">
       <label for="suffix" class="control-label">Hostname Suffix</label>
-      <div class="controls">
+      <div>
         <input type="text" name="suffix" id="suffix" data-purge="true">
 	      <span class="help-block">Optional suffix for hostname. If you provisioned a dev machine and picked mackenzie as your suffix, the hostname would be dev-mackenzie-HASH</span>
       </div>
     </div>
-    <div class="control-group hide hideAfterClose" id="hostname-container">
+    <div class="form-group hide hideAfterClose" id="hostname-container">
       <label class="control-label">Hostname</label>
-      <div class="controls">
+      <div>
         <span class="uneditable-input" data-purge="true" data-aggregate="profile,suffix"></span>
       </div>
     </div>
-    <div class="control-group">
+    <div class="form-group">
       <label for="contact" class="control-label">Notification Contact</label>
-      <div class="controls">
+      <div>
         <input type="text" name="contact" id="contact" value="@user.username">
       </div>
     </div>
-    <div id="provisionError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+    <div id="provisionError" data-purge="true" class="alert alert-block alert-danger hide hideAfterClose"></div>
   </div>
   <div class="modal-footer">
     @if(aa.asset.isIncomplete) {
-      <button type="submit" class="btn">Activate Server</button>
+      <button type="submit" class="btn btn-default">Activate Server</button>
     } else {
-      <button type="submit" class="btn">Provision Server</button>
+      <button type="submit" class="btn btn-default">Provision Server</button>
     }
     @resetButton("Go back to browsing tumblr")
   </div>

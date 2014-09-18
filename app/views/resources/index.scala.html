@@ -6,135 +6,145 @@
 @import util._
 
 @basicFormatter(asset: AssetMeta, index: Int) = {
-<input type="text" id="@asset.name" name="@asset.name" tabindex="@(index + 2)" @if(index == 0) {accesskey="r"}>
-  <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="@asset.description"></i></span>
+<input type="text" id="@asset.name" placeholder="@asset.description" class="form-control" name="@asset.name" tabindex="@(index + 2)" @if(index == 0) {accesskey="r"}>
+  @inputAddonHelpIcon(asset.description)
 }
 
 @main("Asset Search") {
 <div class="row">
-  <div class="span12">
+  <div class="col-md-12">
 
-    @notice("message", Some("notice"))
+    @notice("message", Some("info"))
     @notice("success")
-    @notice("error")
-    @notice("security", Some("error"))
+    @notice("error", Some("danger"))
+    @notice("security", Some("danger"))
 
     @form(app.routes.Resources.find(0,50,"DESC","and"), 'class -> "form-horizontal") {
 
-    <h1>Asset Search</h1>
-    <hr>
+    <div class="page-header">
+      <h1>Search <small>Query your assets by attribute.</small></h1>
+    </div>
 
     <input type="hidden" name="operation" value="and" tabindex="-1">
 
     <div class="row">
-      <div class="span6">
-        @formField {
-          @formLabel("tag", "Asset Tag")
-          @formInput {
-            <input type="text" class="focus" id="tag" name="tag" tabindex="1" autocomplete="off">
-            <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Unique identifier for asset"></i></span>
+      <div class="col-md-6">
+        @formFieldRow {
+          @formLabelInline("tag", "Asset Tag")
+          @formInputInline {
+            <input type="text" class="focus form-control" placeholder="Asset Tag" id="tag" name="tag" tabindex="1" autocomplete="off">
+            @inputAddonHelpIcon("Unique identifier for asset")
           }
         }
-        @formField {
-          @formLabel("status", "Status")
-          @formInput {
-            <select name="status" id="status" tabindex="501" accesskey="l">
+        @formFieldRow {
+          @formLabelInline("status", "Status")
+          @formInputInline {
+            <select name="status" id="status" tabindex="501" accesskey="l" class="form-control">
               <option value="" selected="selected"></option>
               @OptionSorter.sortStrings(Status.statusNames.toSeq, Some(" ")).map { v =>
               <option value="@v._1">@v._2</option>
               }
             </select>
-            <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Asset Status (New, Incomplete, etc)"></i></span>
+            @inputAddonHelpIcon("Asset Status (New, Incomplete, etc)")
           }
         }
-        @formField {
-          @formLabel("state", "State")
-          @formInput {
-            <select name="state" id="state" tabindex="502">
+        @formFieldRow {
+          @formLabelInline("state", "State")
+          @formInputInline {
+            <select name="state" id="state" tabindex="502" class="form-control">
               <option value="" selected="selected"></option>
               @State.find().sorted(State.StateOrdering).map { state =>
                 <option value="@state.name">@state.getDisplayLabel</option>
               }
             </select>
-            <span class="help-inline"><a tabindex="-1" target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="icon-question-sign"></i></a></span>
+            <div class="input-group-addon">
+              <span class="help-inline"><a tabindex="-1" target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="glyphicon glyphicon-question-sign"></i></a></span>
+            </div>
           }
         }
-        @formField {
-          @formLabel("type", "Type")
-          @formInput {
-            <select name="type" id="type" tabindex="503">
+        @formFieldRow {
+          @formLabelInline("type", "Type")
+          @formInputInline {
+            <select name="type" id="type" tabindex="503" class="form-control">
               <option value="" selected="selected"></option>
               @AssetType.find().sortBy(_.name).map { at =>
                 <option value="@at.name">@at.label</option>
               }
             </select>
-            <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="Type of Asset (Service Chassis, Server Node, etc)"></i></span>
+            @inputAddonHelpIcon("Type of Asset (Service Chassis, Server Node, etc)")
           }
         }
-        @formField {
-          @formLabel("IP_ADDRESS", "IP Address")
-          @formInput {
-            <input type="text" id="IP_ADDRESS" name="IP_ADDRESS" tabindex="504">
-            <span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="IP address of the asset. Prefix searches are also supported."></i></span>
+        @formFieldRow {
+          @formLabelInline("IP_ADDRESS", "IP Address")
+          @formInputInline {
+            <input type="text" id="IP_ADDRESS" name="IP_ADDRESS" tabindex="504" placeholder="IP Address" class="form-control">
+            @inputAddonHelpIcon("IP address of the asset. Prefix searches are also supported.")
           }
         }
-        @formField {
-          @formLabel("IPMI_ADDRESS", "IPMI Address")
-          @formInput {
-            <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS" placeholder="IPMI IP Address" tabindex="505">
+        @formFieldRow {
+          @formLabelInline("IPMI_ADDRESS", "IPMI Address")
+          @formInputInline {
+            <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS" placeholder="IPMI IP Address" tabindex="505" class="form-control">
           }
         }
-        @formField {
-          @formLabel("", "Created Between")
-          @formInput {
-            <div class="input-prepend date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2011-11-01">
-              <span class="add-on"><i class="icon-th"></i></span>
-              <input type="text" id="createdAfter" name="createdAfter" placeholder="Start" tabindex="516" readonly>
+        @formFieldRow {
+          @formLabelInline("", "Created Between")
+          @formInputInline {
+            <div class="input-group date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2011-11-01">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
+              <input type="text" id="createdAfter" name="createdAfter" placeholder="Start" tabindex="516" readonly class="form-control">
             </div>
             and
-            <div class="input-prepend date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2012-09-23">
-              <span class="add-on"><i class="icon-th"></i></span>
-              <input type="text" id="createdBefore" name="createdBefore" placeholder="End" tabindex="517" readonly>
+            <div class="input-group date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2012-09-23">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
+              <input type="text" id="createdBefore" name="createdBefore" placeholder="End" tabindex="517" readonly class="form-control">
             </div>
           }
         }
-        @formField {
-          @formLabel("", "Updated Between")
-          @formInput {
-            <div class="input-prepend date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2011-11-01">
-              <span class="add-on"><i class="icon-th"></i></span>
-              <input type="text" id="updatedAfter" name="updatedAfter" placeholder="Start" tabindex="518" readonly>
+        @formFieldRow {
+          @formLabelInline("", "Updated Between")
+          @formInputInline {
+            <div class="input-group date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2011-11-01">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
+              <input type="text" id="updatedAfter" name="updatedAfter" placeholder="Start" tabindex="518" readonly class="form-control">
             </div>
             and
-            <div class="input-prepend date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2012-09-23">
-              <span class="add-on"><i class="icon-th"></i></span>
-              <input type="text" id="updatedBefore" name="updatedBefore" placeholder="End" tabindex="519" readonly>
+            <div class="input-group date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2012-09-23">
+              <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
+              <input type="text" id="updatedBefore" name="updatedBefore" placeholder="End" tabindex="519" readonly class="form-control">
             </div>
           }
         }
 
         @if(MultiCollinsConfig.enabled) {
-          @formField {
-            @formLabel("", "")
-            <input type="checkbox" id="remoteLookup" name="remoteLookup" value="true" tabindex="506"> Remote Search <i class="icon-question-sign" data-rel="tooltip" title="Search for assets in other data-centers"></i>
+          @formFieldRow {
+            @formLabelInline("remoteLookup", "Remote Lookup")
+            @formInputInline {
+              <div class="checkbox" style="display:inline-block;">
+                <input type="checkbox" id="remoteLookup" name="remoteLookup" value="true" tabindex="506"> Remote Search
+              </div>
+              <span class="help-inline">
+                <i class="glyphicon glyphicon-question-sign" data-rel="tooltip" title="Search for assets in other data-centers"></i>
+              </span>
+            }
           }
         }
       </div>
 
-      <div class="span6">
+      <div class="col-md-6">
         @assetMeta.zipWithIndex.map { case(asset, idx) =>
-          @formField {
-            @formLabel(asset.name, asset.label)
-            @formInput {
+          @formFieldRow {
+            @formLabelInline(asset.name, asset.label)
+            @formInputInline {
               @{
-  	            asset.name match {
+                asset.name match {
                   case "DATACENTER_NAME" => optionDisplay(asset, 0, idx)
                   case "DISK_TYPE" => optionDisplay(asset, 2, idx)
                   case "DISK_STORAGE_TOTAL" => optionDisplay(asset, 1, idx)
                   case "CPU_SPEED_GHZ" => optionDisplay(asset, 3, idx)
                   case "MEMORY_SIZE_TOTAL" => optionDisplay(asset, 1, idx)
                   case "NIC_SPEED" => optionDisplay(asset, 4, idx)
-  	              case "NODECLASS" => optionDisplay(asset, 0, idx)
+                  case "NODECLASS" => optionDisplay(asset, 0, idx)
                   case "POOL" => optionDisplay(asset, 0, idx)
                   case "PRIMARY_ROLE" => optionDisplay(asset, 0, idx)
                   case "SECONDARY_ROLE" => optionDisplay(asset, 0, idx)
@@ -148,20 +158,20 @@
       </div>
     </div>
     <div class="row">
-      <div class="span12 collapsable">
+      <div class="col-md-12 collapsable">
       <h5 class="expand_header sorting_desc">Advanced Search</h5>
         <div class="expand_content">
         <p>Enter a CQL query here.  This will be AND'ed with any other search parameters you select</p>
         @formField {
-          <textarea name="query" class="span6"></textarea>
+          <textarea name="query" class="col-md-6"></textarea>
         }
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="form-actions">
+    <div class="form-group">
+      <div class="btn-group">
         <button type="submit" class="btn btn-primary" tabindex="507">Search</button>
-        <button type="reset" class="btn" tabindex="508">Reset</button>
+        <button type="reset" class="btn btn-default" tabindex="508">Reset</button>
       </div>
     </div>
     }

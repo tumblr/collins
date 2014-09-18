@@ -197,3 +197,10 @@ p { padding: 5px 0; }
   bottom: 270px;
 }
 
+.input-group {
+  max-width: 250px;
+}
+
+.collins-navbar {
+  background: black !important;
+}

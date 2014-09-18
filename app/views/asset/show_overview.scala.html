@@ -5,17 +5,6 @@
 @import _root_.util.views.{MetaValueOrderer, TagDecorator}
 
 <div class="active tab-pane" id="overview">
-<!--
-  <div class="navbar">
-    <div class="navbar-inner">
-      <ul class="nav">
-        <li class="active"><a href="#overview-section">Overview</a></li>
-        <li><a href="#hardware-summary-section">Hardware Summary</a></li>
-        <li><a href="#user-log-section">User Logs</a></li>
-      </ul>
-    </div>
-  </div>
--->
   <section id="overview-section" class="sectional">
     <h3>Asset Overview</h3>
     <table id="basicDataTable" class="table table-hover table-condensed">
@@ -72,7 +61,7 @@
           <td>@aa.asset.getType().label</td>
           <td></td>
         </tr>
-        <tr class="@if(aa.asset.isMaintenance){error}">
+        <tr class="@if(aa.asset.isMaintenance){danger}">
           <td><strong>Asset Status</strong></td>
           <td>@aa.asset.getStatus().name</td>
           @if(aa.asset.isMaintenance) {

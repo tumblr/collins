@@ -6,7 +6,7 @@
 @formatValue(value: String, display: String) = {
 <option value="^@value$">@display</option>
 }
-<select name="@assetMeta.name" id="@assetMeta.name" tabindex="@(index + 2)" @if(index == 0) {accesskey="r"}>
+<select name="@assetMeta.name" id="@assetMeta.name" class="form-control" tabindex="@(index + 2)" @if(index == 0) {accesskey="r"}>
   <option value="" selected="selected"></option>
   <option value="(none)">(None)</option>
   @{
@@ -19,4 +19,6 @@
     }
   }
 </select>
-<span class="help-inline"><i class="icon-question-sign" data-rel="tooltip" title="@assetMeta.description"></i></span>
+<div class="input-group-addon">
+  <span class="help-inline"><i class="glyphicon glyphicon-question-sign" data-rel="tooltip" title="@assetMeta.description"></i></span>
+</div>

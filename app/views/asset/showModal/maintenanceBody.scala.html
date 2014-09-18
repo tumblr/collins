@@ -45,16 +45,16 @@
               }
             }
           </select>
-          <span class="help-inline"><a target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="icon-question-sign"></i></a></span>
+          <span class="help-inline"><a target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="glyphicon glyphicon-question-sign"></i></a></span>
         }
       }
-      <div class="control-group">
+      <div class="form-group">
         <textarea name="description" id="maintenanceDescription" class="input-xxlarge" rows="3" placeholder="Description"></textarea>
       </div>
-      <div id="maintenanceError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+      <div id="maintenanceError" data-purge="true" class="alert alert-block alert-danger hide hideAfterClose"></div>
     </div>
     <div class="modal-footer">
-      <button type="submit" class="btn">@buttonText</button>
+      <button type="submit" class="btn btn-default">@buttonText</button>
       @resetButton("Go back to browsing tumblr")
     </div>
   }

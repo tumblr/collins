@@ -6,29 +6,29 @@
   @form(app.routes.CookieApi.submitLogData(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "noteError", Symbol("data-modal") -> "asset-note", Symbol("data-refresh") -> "table.log-data") {
   <div class="modal-body">
     <div class="row">
-      <div class="span1">
+      <div class="col-md-1">
         <label for="type">Note Type</label>
       </div>
-      <div class="span4">
+      <div class="col-md-4">
         @selectDisplay("type", "NOTE")
       </div>
     </div>
     <div class="row">
-      <div class="span1">
+      <div class="col-md-1">
         <label for="message">Note</label>
       </div>
-      <div class="span4">
+      <div class="col-md-4">
         <textarea name="message" id="message" class="input-xlarge focus" rows="5"></textarea>
         <span class="help-block">
           The following HTML tags are allowed: <code>a, b, blockquote, br, cite, code, dd, dl, dt, em, i, li, ol, p, pre, q, small, strike, strong, sub, sup, u, ul</code>
         </span>
       </div>
     </div>
-    <div id="noteError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+    <div id="noteError" data-purge="true" class="alert alert-block alert-danger hide hideAfterClose"></div>
     <input type="hidden" name="source" value="USER">
   </div>
   <div class="modal-footer">
-    <button type="reset" data-dismiss="modal" aria-hidden="true" class="btn">Close</button>
+    <button type="reset" data-dismiss="modal" aria-hidden="true" class="btn btn-default">Close</button>
     <button type="submit" class="btn btn-primary">Leave a Note</button>
   </div>
   }

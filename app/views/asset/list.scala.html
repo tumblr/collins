@@ -23,19 +23,19 @@
     case warn if warn.isIncomplete || warn.isNew => "warning"
     case info if info.isProvisioning || info.isProvisioned => "info"
     case ok if ok.isCancelled || ok.isDecommissioned => "success"
-    case err if err.isMaintenance => "error"
+    case err if err.isMaintenance => "danger"
     case default => ""
   }
 }
 
 @main("Asset Search Results") {
 <div class="page-header">
-  <h1>Asset Search Results <small>Displaying @(assets.offset + 1) to @(assets.offset + assets.size) of @assets.total results</small></h1>
+  <h1>Asset Search Results <small>Displaying @(assets.offset + 1) to @(assets.offset + assets.size) of @assets.total results.</small></h1>
 </div>
 <div class="row">
-  <div class="span12">
-    @notice("message", Some("notice"))
-    @notice("error")
+  <div class="col-md-12">
+    @notice("message", Some("info"))
+    @notice("error", Some("danger"))
     @notice("warning")
     <table class="table table-bordered table-hover" data-size="50">
       <thead>
@@ -73,27 +73,19 @@
     </table>
 
     <div id="pagination" class="pagination">
-      <ul>
+      <ul class="pagination">
         @assets.prev.map { page =>
-          <li class="prev">
-            <a href="@link(page)">&larr; Previous</a>
-          </li>
+          <li><a href="@link(page)">&larr; Previous</a></li>
         }.getOrElse {
-          <li class="prev disabled">
-            <a>&larr; Previous</a>
-          </li>
+          <li class="disabled"><a>&larr; Previous</a></li>
         }
-        <li class="current">
+        <li class="active">
           <a>Displaying @(assets.offset + 1) to @(assets.offset + assets.items.size) of @assets.total</a>
         </li>
         @assets.next.map { page =>
-          <li class="next">
-            <a href="@link(page)">Next &rarr;</a>
-          </li>
+          <li><a href="@link(page)">&rarr; Next</a></li>
         }.getOrElse {
-          <li class="next disabled">
-            <a>Next &rarr;</a>
-          </li>
+          <li class="disabled"><a>Next &rarr;</a></li>
         }
 
       </ul>

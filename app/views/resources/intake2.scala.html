@@ -7,11 +7,11 @@
 
 @main("Intake Step 2 - " + asset.tag) {
 <div class="page-header">
-  <h1>Asset Intake Step 2 <small>Verify Chassis Tag for @asset.tag</small></h1>
+  <h1>Intake Step 2 <small>Verify Chassis Tag for @asset.tag.</small></h1>
 </div>
 <div class="row">
-  <div class="span12">
-    @notice("error")
+  <div class="col-md-12">
+    @notice("error", Some("danger"))
     @notice("warning")
     @form(app.routes.Resources.intake(asset.getId, 2)) {
     @inputText(f(ChassisTag.toString), '_label -> "Scan the Chassis Tag", 'class -> "focus", 'autocomplete -> "off")

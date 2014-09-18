@@ -7,7 +7,7 @@
 <div class="tab-pane" id="ipmi-info">
 
   <div class="row">
-    <div class="span12">
+    <div class="col-md-12">
     @PowerManagement.pluginEnabled.map { p =>
       @form(app.routes.CookieApi.powerManagement(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "identifyError", Symbol("data-success") -> "identifySuccess") {
         <button class="btn-info btn" data-remote="/asset/@aa.asset.tag/power" data-insert="power-status" data-extract="data.MESSAGE">Power Status</button>
@@ -44,7 +44,7 @@
   </table>
   } else {
   <div class="row">
-    <div class="span12">
+    <div class="col-md-12">
       None Available
     </div>
   </div>
