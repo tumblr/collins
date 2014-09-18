@@ -3,7 +3,7 @@ MAINTAINER Gabe Conradi <gabe@tumblr.com>
 #NOTE: you should use vendorize this container by deploying your own production.conf to /opt/collins/conf/production.conf
 # as well as other configs, like profiles.yaml, permissions.yaml, users.conf, database.conf, validations.conf, and authentication.conf
 
-RUN yum install -y wget zip unzip git java-1.6.0-openjdk java-1.6.0-openjdk-devel
+RUN yum install -y wget zip unzip git java-1.6.0-openjdk java-1.6.0-openjdk-devel && yum -y clean all
 RUN useradd -Ur -d /opt/collins collins
 RUN for dir in /build /var/log/collins /var/run/collins; do mkdir $dir; chown collins $dir; done
 ENV JAVA_HOME /usr/lib/jvm/java-1.6.0-openjdk-1.6.0.0.x86_64/jre
@@ -11,27 +11,23 @@ ENV APP_HOME /opt/collins
 ENV LOG_HOME /var/log/collins
 
 WORKDIR /build
-ADD http://downloads.typesafe.com/play/2.0.8/play-2.0.8.zip /build/play-2.0.8.zip
-RUN unzip -q ./play-2.0.8.zip
-# clone collins tip into /build (we should use tagged releases instead here)
-RUN git clone https://github.com/tumblr/collins.git /build/collins
 
-# set up the JCE. In order to build this image, you need to grab the JCE zip from http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html
+# set up the JCE for runtime. To build this image, you need to grab the JCE zip from http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html
 ADD ./jce_policy-6.zip /build/jce_policy-6.zip
-RUN unzip -q jce_policy-6.zip && cp /build/jce/*jar $JAVA_HOME/lib/security/
+RUN unzip -q jce_policy-6.zip && cp /build/jce/*jar $JAVA_HOME/lib/security/ && rm -f jce_policy-6.zip
 
-WORKDIR /build/collins
-# lets make a note of what sha we are running before building
-RUN git rev-parse HEAD > VERSION && \
+# get Play, Collins, build, and deploy it to /opt/collins
+RUN git clone https://github.com/tumblr/collins.git /build/collins && \
+    echo "Fetching Play 2.0.8" && \
+    wget -q http://downloads.typesafe.com/play/2.0.8/play-2.0.8.zip -O /build/play-2.0.8.zip && \
+    unzip -q ./play-2.0.8.zip && \
+    cd /build/collins && \
+    git rev-parse HEAD > VERSION && \
     echo "Building Collins $(cat VERSION)" && \
     java -version 2>&1 && \
-    PLAY_CMD=../play-2.0.8/play ./scripts/package.sh
-
-# now lets deploy this build into /opt/collins
-WORKDIR /opt
-RUN cp /build/collins/target/collins.zip ./ && \
-    unzip -q collins.zip && \
-    rm -rf /build ./collins.zip && \
+    PLAY_CMD=/build/play-2.0.8/play ./scripts/package.sh && \
+    unzip -q /build/collins/target/collins.zip -d /opt/ && \
+    rm -rf /build && \
     chown -R collins /opt/collins
 
 # and add in all the default configs we want in this build

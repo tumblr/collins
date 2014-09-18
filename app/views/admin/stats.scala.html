@@ -5,11 +5,10 @@
 
 @main("Admin Stats") {
 <div class="page-header">
-  <h1>Admin Stats</h1>
-  Server Start Time: @Formatter.dateFormat(Stats.StartupTime)
+  <h1>Stats <small>Server Start Time: @Formatter.dateFormat(Stats.StartupTime)</small></h1>
 </div>
 <div class="row">
-  <div class="span12">
+  <div class="col-md-12">
     @appStats.map { stats =>
     <h3><a data-collapsible="@{stats.name}Stats">@{stats.name.capitalize} Stats</a></h3>
     <table id="@{stats.name}Stats" class="table table-bordered table-hover table-condensed">
@@ -30,12 +29,12 @@
 
 
 <div class="row">
-  <div class="span12">
+  <div class="col-md-12">
     <h3 style="display: inline; float: left;"><a data-collapsible="cacheStats">Cache Stats</a></h3>
     <button style="float: right" class="btn btn-primary" data-refresh='.window' data-remote="/admin/cache/clear" data-method="POST">Clear Cache</button>
   </div>
 
-  <div class="span12">
+  <div class="col-md-12">
     <table id="cacheStats" class="table table-bordered table-hover table-condensed">
       <tbody>
         <tr>

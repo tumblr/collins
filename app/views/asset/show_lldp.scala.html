@@ -2,8 +2,10 @@
 
 <!-- Start LLDP Info -->
 <div class="tab-pane" id="lldp-info">
+  <section class="sectional">
   @if(aa.lldp.interfaceCount > 0) {
-  <table class="table table-bordered table-hover table-condensed" id="lldpSummary">
+  <h3>LLDP Info <small>Network topology reported by LLDP</small></h3>
+  <table class="table table-hover table-condensed" id="lldpSummary">
     <thead>
       <tr>
         <th></th>
@@ -60,8 +62,9 @@
     </tbody>
   </table>
   } else {
-  <div>None Available</div>
+  <h3>None Available <small>Upload a LLDP report to populate this section</small></h3>
   }
+  </section>
 </div>
 <!-- END LLDP Info -->
 

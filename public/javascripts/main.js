@@ -36,7 +36,7 @@ $(document).ready(function() {
     $(this).find('input').val(isoDate.replace(/Z/, ''));
   });
 
-  $("[data-rel=tooltip]").tooltip();
+  $("[data-rel=tooltip]").tooltip({container: 'body'});
   $("[data-rel=popover]").each(function() {
     var jsFn = $(this).attr('data-source');
     if (jsFn && jsFn.search("javascript://") === 0) {
@@ -158,19 +158,20 @@ $(document).ready(function() {
 
   // Bind to a modals hide event, resetting a form if it exists, and cleaning up
   // the referenced element.
-  $('.modal').each(function() {
+  // listen for bootstrap's dismiss event, not hide like in bs2
+  // also fixes showing and hiding the modal multiple times, as the event gets unbound from the event
+  // if we dont bind on body and filter down to .modal
+  $(document).on('hidden.bs.modal','.modal',function() {
     var e = $(this);
-    e.bind('hide', function() {
-      e.children('form').each(function() { this.reset() });
-      e.find('[data-purge=true]').each(function() {
-        $(this).empty();
-        if ($(this).is("input")) {
-          $(this).val("");
-        }
-      });
-      e.find('.hideAfterClose').each(function() {
-        $(this).hide();
-      });
+    e.children('form').each(function() { this.reset() });
+    e.find('[data-purge=true]').each(function() {
+      $(this).empty();
+      if ($(this).is("input")) {
+        $(this).val("");
+      }
+    });
+    e.find('.hideAfterClose').each(function() {
+      $(this).hide();
     });
   });
 
@@ -322,19 +323,9 @@ $(document).ready(function() {
   });
 
   var fnLogProcessing = function(oTable) {
-    // fnPagingInfo resolves which object contains our paging info, since for some reason
-    // fnReloadAjax swaps it on refresh.
-    var fnPagingInfo = function(that) {
-      if (that && that.fnPagingInfo) {
-        return that.fnPagingInfo();
-      } else {
-	      return oTable().fnPagingInfo();
-      }
-    };
     return function (sSource, aoData, fnCallback) {
-      var paging = fnPagingInfo(this);
-      aoData.push( {"name": "page", "value": paging.iPage} );
-      aoData.push( {"name": "size", "value": paging.iLength} );
+      aoData.push( {"name": "page", "value": oTable().page()} );
+      aoData.push( {"name": "size", "value": oTable().page.len()} );
       var sortDir = "DESC";
       for (var i = 0; i < aoData.length; i++) {
         if (aoData[i].name == "sSortDir_0") {
@@ -358,24 +349,24 @@ $(document).ready(function() {
   };
 
   var formatLogRow = function(typeLocation, tagLocation) {
-    var errors = ["EMERGENCY", "ALERT", "CRITICAL"];
-    var warnings = ["ERROR", "WARNING"];
+    var errors = ["EMERGENCY", "ALERT", "CRITICAL", "ERROR"];
+    var warnings = ["WARNING"];
     var notices = ["NOTICE","NOTE"];
-    var success = ["INFORMATIONAL"];
+    var info = ["INFORMATIONAL"];
     return function(nRow, aData, iDisplayIndex) {
       if (typeLocation !== false) {
         var selector = 'td:eq(' + typeLocation + ')';
         var dtype = aData.TYPE;
         if ($.inArray(dtype, errors) > -1) {
-          $(selector, nRow).html(getLabelSpan(dtype, "important"));
+          $(selector, nRow).html(getLabelSpan(dtype, "danger"));
         } else if ($.inArray(dtype, warnings) > -1) {
           $(selector, nRow).html(getLabelSpan(dtype, "warning"));
         } else if ($.inArray(dtype, notices) > -1) {
-          $(selector, nRow).html(getLabelSpan(dtype, "notice"));
-        } else if ($.inArray(dtype, success) > -1) {
+          $(selector, nRow).html(getLabelSpan(dtype, "info"));
+        } else if ($.inArray(dtype, info) > -1) {
           $(selector, nRow).html(getLabelSpan(dtype, "success"));
         } else {
-          $(selector, nRow).html(getLabelSpan(dtype, ""));
+          $(selector, nRow).html(getLabelSpan(dtype, "default"));
         }
       }
       if (tagLocation !== false) {
@@ -411,6 +402,7 @@ $(document).ready(function() {
       dataSrc = window[dataSrc.slice(13)];
     }
 
+    //TODO this should all get ported away from the crazy hungarian notation settings
     oTable = e.dataTable({
       "bProcessing": true,
       "bServerSide": true,
@@ -418,19 +410,23 @@ $(document).ready(function() {
       "bFilter": false,
       "sAjaxSource": dataSrc,
       "aaSorting": [[0, "desc"]],
-      "sPaginationType": "bootstrap",
-      "sDom": "<'row'<'span6'l><'span6'f>r>t<'row'<'span6'i><'span6 pull-right'p>>",
+      "sDom": "<'row'<'col-md-6'l><'col-md-6'f>r>t<'row'<'col-md-6'i><'col-md-6 pull-right'p>>",
       "iDisplayLength": rows,
       // Need late binding for oTable since it's not assigned yet
       "fnServerData": fnLogProcessing(function() { return oTable; }),
+      "deferLoading": true,
       "sAjaxDataProp": "data.Data",
       "aoColumns": columns,
       "fnRowCallback": formatLogRow(typeLocation, tagLocation),
-    });
+    }).api();
+    // we defer loading, so load the table for the first time
+    // couldnt get initComplete to work
+    oTable.ajax.reload();
 
     // Bind a refresh event to the table
     e.bind('refresh', function() {
-      oTable.fnReloadAjax();
+      oTable.ajax.reload();
+      //oTable.fnReloadAjax();
     });
 
   });

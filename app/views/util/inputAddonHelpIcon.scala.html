@@ -1,0 +1,13 @@
+@(message: String, url: Option[String] = None)
+
+<div class="input-group-addon">
+  <span class="help-inline">
+    @if(url.isEmpty){
+    <i class="glyphicon glyphicon-question-sign" data-rel="tooltip" title="@message"></i>
+    } else {
+    <a tabindex="-1" target="_blank" href="@url.get">
+      <i class="glyphicon glyphicon-question-sign" data-rel="tooltip" title="@message"></i>
+    </a>
+    }
+  </span>
+</div>

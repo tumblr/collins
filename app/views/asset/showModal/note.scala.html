@@ -1,35 +1,35 @@
 @(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
+@import util._
 @container("asset-note", "assetNoteLabel") {
   @header("Create new note")
   @form(app.routes.CookieApi.submitLogData(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "noteError", Symbol("data-modal") -> "asset-note", Symbol("data-refresh") -> "table.log-data") {
   <div class="modal-body">
-    <div class="row">
-      <div class="span1">
-        <label for="type">Note Type</label>
-      </div>
-      <div class="span4">
+    @formFieldRow {
+      @formLabelInline("type","Note Type")
+      @formInputInline {
         @selectDisplay("type", "NOTE")
-      </div>
+      }
+    }
+    <div class="form-group">
+      <textarea name="message" placeholder="Message" id="message" class="form-control focus" rows="5"></textarea>
     </div>
     <div class="row">
-      <div class="span1">
-        <label for="message">Note</label>
-      </div>
-      <div class="span4">
-        <textarea name="message" id="message" class="input-xlarge focus" rows="5"></textarea>
-        <span class="help-block">
-          The following HTML tags are allowed: <code>a, b, blockquote, br, cite, code, dd, dl, dt, em, i, li, ol, p, pre, q, small, strike, strong, sub, sup, u, ul</code>
-        </span>
+      <div class="col-md-12">
+      <span class="help-block">
+        The following HTML tags are allowed: <code>a, b, blockquote, br, cite, code, dd, dl, dt, em, i, li, ol, p, pre, q, small, strike, strong, sub, sup, u, ul</code>
+      </span>
       </div>
     </div>
-    <div id="noteError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+    <div id="noteError" data-purge="true" class="alert alert-block alert-danger hide-loprio hideAfterClose"></div>
     <input type="hidden" name="source" value="USER">
   </div>
   <div class="modal-footer">
-    <button type="reset" data-dismiss="modal" aria-hidden="true" class="btn">Close</button>
-    <button type="submit" class="btn btn-primary">Leave a Note</button>
+    <div class="btn-group">
+      @resetButton("Go back to browsing tumblr")
+      <button type="submit" class="btn btn-primary">Leave a Note</button>
+    </div>
   </div>
   }
 
