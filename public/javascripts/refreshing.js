@@ -32,16 +32,16 @@ $(document).ready(function() {
     e.click(function() {
       if (e.attr('running') == 'true') {
         interval = resetInterval(e, interval);
-        e.html(label + " Not Running");
+        e.removeClass('active').html("Auto Refresh");
       } else {
         interval = resetInterval(e, interval);
         var count = 0;
         function doRefresh() {
           $(refreshElement).trigger('refresh');
           count += 1;
-          e.html(label + " Running (" + count + ")");
+          //e.html(label + " Running (" + count + ")");
         };
-        e.attr('running', 'true');
+        e.attr('running', 'true').addClass('active').html("Polling...");
         doRefresh();
         interval = setInterval(doRefresh, intervalTimeout);
       }
