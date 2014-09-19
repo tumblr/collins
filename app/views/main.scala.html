@@ -37,14 +37,13 @@
       </div>
       <div class="navbar-collapse collapse navbar-right">
         <ul class="nav navbar-nav">
-          <!-- FIXME need to figure out how to make the appropriate li active -->
-          <li class="active"><a href="@app.routes.Resources.index">Search</a></li>
+          <li class="@{if (req.path == app.routes.Resources.index.toString) "active" }"><a href="@app.routes.Resources.index">Search</a></li>
           @User.fromMap(req.session.data).map { u =>
             @if(Permissions.please(u, Permissions.AssetLogApi.GetAll)) {
-              <li><a href="@routes.Admin.logs">Logging</a></li>
+              <li class="@{if (req.path == routes.Admin.logs.toString) "active" }"><a href="@routes.Admin.logs">Logging</a></li>
             }
             @if(Permissions.please(u, Permissions.AssetApi.CreateAsset)) {
-            <li class="dropdown">
+            <li class="dropdown @{if (req.path contains "/asset/create") "active" }">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">Create <b class="caret"></b></a>
               <ul class="dropdown-menu">
                 @AssetType.find().filter(_.name != "SERVER_NODE").map { t =>
