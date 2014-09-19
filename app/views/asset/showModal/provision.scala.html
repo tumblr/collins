@@ -1,6 +1,7 @@
 @(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
+@import util._
 @import _root_.util.plugins.Provisioner
 @import _root_.util.views.ProvisionerHelper
 
@@ -26,17 +27,19 @@
       </ul>
     }
     <p>If that all sounds good, choose an appropriate profile below and provide your contact for notification</p>
-    <div class="form-group">
-      <label for="profile" class="control-label">Profile</label>
-      <select name="profile" id="profile" data-show="suffix-container,hostname-container" data-triggers="PROVISIONER_TRIGGERS">
+    @formFieldRow {
+      @formLabelInline("profile","Profile")
+      @formInputInline {
+        <select name="profile" id="profile" data-show="suffix-container,hostname-container" data-triggers="PROVISIONER_TRIGGERS" class="form-control">
         <option value="" selected="selected"></option>
         @Provisioner.pluginEnabled.map { p =>
           @p.profiles.toSeq.map { v =>
           <option value="@v.identifier" data-show-display="@v.allow_suffix.toString" data-aggregate-value="@v.prefix">@v.label</option>
           }
         }
-      </select>
-    </div>
+        </select>
+      }
+    }
     @if(aa.asset.isIncomplete) {
     <input type="hidden" name="activate" value="true">
     }
@@ -48,49 +51,51 @@
         "secondary_roles": @ProvisionerHelper.secondaryRolesAsJson()
       };
     </script>
-    <div class="form-group hide hideAfterClose" id="primary-role-container">
-      <label for="primary_role" class="control-label">Primary Role</label>
-      <div data-purge="true">
-      </div>
+    <div class="form-group hide-loprio hideAfterClose" id="primary-role-container">
+      @formLabelInline("primary_role","Primary Role")
+      @formInputInline { }
+      <div data-purge="true"></div>
     </div>
-    <div class="form-group haveChoice hide hideAfterClose" id="pool-container">
-      <label for="pool" class="control-label">Pool</label>
-      <div data-purge="true">
-      </div>
+    <div class="form-group haveChoice hide-loprio hideAfterClose" id="pool-container">
+      @formLabelInline("pool","Pool")
+      @formInputInline { }
+      <div data-purge="true"></div>
     </div>
-    <div class="form-group haveChoice hide hideAfterClose" id="secondary-role-container">
-      <label for="secondary_role" class="control-label">Secondary Role</label>
-      <div data-purge="true">
-      </div>
+    <div class="form-group haveChoice hide-loprio hideAfterClose" id="secondary-role-container">
+      @formLabelInline("secondary_role","Secondary Role")
+      @formInputInline { }
+      <div data-purge="true"></div>
     </div>
-    <div class="form-group hide hideAfterClose" id="suffix-container">
-      <label for="suffix" class="control-label">Hostname Suffix</label>
-      <div>
-        <input type="text" name="suffix" id="suffix" data-purge="true">
-	      <span class="help-block">Optional suffix for hostname. If you provisioned a dev machine and picked mackenzie as your suffix, the hostname would be dev-mackenzie-HASH</span>
-      </div>
+    <div class="form-group hide-loprio hideAfterClose" id="suffix-container">
+      @formLabelInline("suffix","Hostname Suffix")
+      @formInputInline {
+        <input type="text" name="suffix" id="suffix" data-purge="true" class="form-control">
+        @inputAddonHelpIcon("Optional suffix for hostname. If you provisioned a dev machine and picked mackenzie as your suffix, the hostname would be dev-mackenzie-HASH")
+      }
     </div>
-    <div class="form-group hide hideAfterClose" id="hostname-container">
-      <label class="control-label">Hostname</label>
-      <div>
-        <span class="uneditable-input" data-purge="true" data-aggregate="profile,suffix"></span>
-      </div>
+    <div class="form-group hide-loprio hideAfterClose" id="hostname-container">
+      @formLabelInline("","Hostname")
+      @formInputInline {
+        <pre><code data-purge="true" data-aggregate="profile,suffix"></code></pre>
+      }
     </div>
     <div class="form-group">
-      <label for="contact" class="control-label">Notification Contact</label>
-      <div>
-        <input type="text" name="contact" id="contact" value="@user.username">
-      </div>
+      @formLabelInline("contact","Notification Contact")
+      @formInputInline {
+        <input type="text" name="contact" id="contact" value="@user.username" class="form-control">
+      }
     </div>
-    <div id="provisionError" data-purge="true" class="alert alert-block alert-danger hide hideAfterClose"></div>
+    <div id="provisionError" data-purge="true" class="alert alert-block alert-danger hide-loprio hideAfterClose"></div>
   </div>
   <div class="modal-footer">
-    @if(aa.asset.isIncomplete) {
-      <button type="submit" class="btn btn-default">Activate Server</button>
-    } else {
-      <button type="submit" class="btn btn-default">Provision Server</button>
-    }
-    @resetButton("Go back to browsing tumblr")
+    <div class="btn-group">
+      @if(aa.asset.isIncomplete) {
+        <button type="submit" class="btn btn-default">Activate Server</button>
+      } else {
+        <button type="submit" class="btn btn-default">Provision Server</button>
+      }
+      @resetButton("Go back to browsing tumblr")
+    </div>
   </div>
   }
 }

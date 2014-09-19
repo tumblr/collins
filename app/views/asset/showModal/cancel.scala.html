@@ -14,12 +14,14 @@
       <li>48 hours later - Erase the hard disks</li>
     </ul>
     <p>If that all sounds good, provide a reason and then click the button below</p>
-    <textarea name="reason" id="cancelReason" class="input-xxlarge" rows="3" placeholder="Reason"></textarea>
-    <div id="cancelError" data-purge="true" class="alert alert-block alert-danger hide hideAfterClose"></div>
+    <textarea name="reason" id="cancelReason" class="form-control" rows="3" placeholder="Reason"></textarea>
+    <div id="cancelError" data-purge="true" class="alert alert-block alert-danger hide-loprio hideAfterClose"></div>
   </div>
   <div class="modal-footer">
-    <button type="submit" class="btn btn-warning">Cancel Server</button>
-    @resetButton("Go back to browsing tumblr")
+    <div class="btn-group">
+      <button type="submit" class="btn btn-warning">Cancel Server</button>
+      @resetButton("Go back to browsing tumblr")
+    </div>
   </div>
   }
 }

@@ -17,20 +17,20 @@ $(document).ready(function() {
   };
   function setProvisionerValue(id, profile, values, name_id, label, type) {
     var config_value = profile[name_id];
+    var input_group_selector = 'div.input-group';
     if (config_value) {
-      $(id).find('div.controls').append('<span id="'+name_id+'" class="uneditable-input">' + config_value + "</span>");
+      // prescribed value should be uneditable
+      $(id).find(input_group_selector).html('<input id="'+name_id+'" class="form-control" disabled type="text" placeholder="' + config_value + '" title="You cannot change the value of '+name_id+' for this profile"></input>');
     } else {
-      var input = $(id).find('div.controls')
+      // user can select value as they wish
+      var input = $(id).find(input_group_selector);
       input.empty();
+      var check = '';
       if ($(id).hasClass('haveChoice')) {
         var check_name = name_id + '_check';
-        var check = '';
-        if (type == 'text') {
-          check = '<input type="checkbox" checked name="'+check_name+'" value="text"> Custom ' + label;
-        } else {
-          check = '<input type="checkbox" name="'+check_name+'" value="text"> Custom ' + label;
-        }
-        check = '<div>' + check + '</div>';
+        check = '<div class="input-group"><label>';
+        check += '<input type="checkbox"' + (type == 'text' ? ' checked' : '') + ' name="'+check_name+'" value="text" class=""> Custom ' + label;
+        check += '</label></div>';
         input.append(check);
         $(id).find('input[type=checkbox][name='+check_name+']').each(function() {
           $(this).change(function() {
@@ -42,6 +42,7 @@ $(document).ready(function() {
           });
         });
       }
+
       var help = '';
       if (profile['requires_' + name_id]) {
         help = label + ' is required';
@@ -50,17 +51,26 @@ $(document).ready(function() {
       }
       help = '<span class="help-block">' + help + '</span>';
       if (type == 'text') {
-        var html = '<input type="text" name="'+name_id+'" id="'+name_id+'">';
+        var html = '<input type="text" name="'+name_id+'" id="'+name_id+'" class="form-control">';
         input.append(html);
         input.append(help);
       } else {
-        var html = '<select name="'+name_id+'" id="'+name_id+'"><option value="" selected="selected"></option>';
+        var html = '<select name="'+name_id+'" id="'+name_id+'" class="form-control"><option value="" selected="selected"></option>';
         values.forEach(function(v) {
           html += '<option value="'+v+'">'+v+'</option>'
         });
         input.append(html)
         input.append(help);
       }
+        $(id).find('input[type=checkbox][name='+check_name+']').each(function() {
+          $(this).change(function() {
+            if ($(this).is(':checked')) {
+              setProvisionerValue(id, profile, values, name_id, label, 'text');
+            } else {
+              setProvisionerValue(id, profile, values, name_id, label, 'list');
+            }
+          });
+        });
     }
   };
   function isEmpty(v) {

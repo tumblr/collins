@@ -20,18 +20,18 @@
       @if(aa.ipmi.nonEmpty || PowerManagement.powerAllowed(aa.asset)) {
       <li><a href="#ipmi-info" data-toggle="pill">IPMI Info</a></li>
       } else {
-      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not have any IPMI information"><a href="#" data-toggle="pill">IPMI Info</a></li>
+      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not have any IPMI information"><a href="#">IPMI Info</a></li>
       }
       <li><a href="#log-data" data-toggle="pill">Logs</a></li>
       @if(aa.lshw.cpuCount > 0) {
       <li><a href="#hardware-details" data-toggle="pill">Hardware Details</a></li>
       } else {
-      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any CPUs in LSHW"><a href="#" data-toggle="pill">Hardware Details</a></li>
+      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any CPUs in LSHW"><a href="#">Hardware Details</a></li>
       }
       @if(aa.lldp.interfaceCount > 0) {
       <li><a href="#lldp-info" data-toggle="pill">LLDP Info</a></li>
       } else {
-      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any interfaces in LLDP"><a href="#" data-toggle="pill">LLDP Info</a></li>
+      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any interfaces in LLDP"><a href="#">LLDP Info</a></li>
       }
       <li class="dropdown" data-dropdown="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown"><strong>Actions</strong> <b class="caret"></b></a>

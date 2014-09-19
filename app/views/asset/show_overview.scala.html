@@ -65,7 +65,7 @@
           <td><strong>Asset Status</strong></td>
           <td>@aa.asset.getStatus().name</td>
           @if(aa.asset.isMaintenance) {
-            <td><span class="label label-important">See Notes</span> @aa.asset.getStatus().description</td>
+            <td><a href="#log-data" data-toggle="pill"><span class="label label-primary">See Notes</span></a> @aa.asset.getStatus().description</td>
           } else {
             <td>@aa.asset.getStatus().description</td>
           }

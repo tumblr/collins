@@ -158,19 +158,20 @@ $(document).ready(function() {
 
   // Bind to a modals hide event, resetting a form if it exists, and cleaning up
   // the referenced element.
-  $('.modal').each(function() {
+  // listen for bootstrap's dismiss event, not hide like in bs2
+  // also fixes showing and hiding the modal multiple times, as the event gets unbound from the event
+  // if we dont bind on body and filter down to .modal
+  $(document).on('hidden.bs.modal','.modal',function() {
     var e = $(this);
-    e.bind('hide', function() {
-      e.children('form').each(function() { this.reset() });
-      e.find('[data-purge=true]').each(function() {
-        $(this).empty();
-        if ($(this).is("input")) {
-          $(this).val("");
-        }
-      });
-      e.find('.hideAfterClose').each(function() {
-        $(this).hide();
-      });
+    e.children('form').each(function() { this.reset() });
+    e.find('[data-purge=true]').each(function() {
+      $(this).empty();
+      if ($(this).is("input")) {
+        $(this).val("");
+      }
+    });
+    e.find('.hideAfterClose').each(function() {
+      $(this).hide();
     });
   });
 

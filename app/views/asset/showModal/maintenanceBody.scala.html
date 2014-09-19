@@ -16,10 +16,10 @@
         <script type="text/javascript">
           var STATE_MAP = @StateHelper.statesAsJson();
         </script>
-        @formField {
-          @formLabel("status", "Status")
-          @formInput {
-            <select name="status" id="status" data-trigger-update="#state" data-trigger-update-map="STATE_MAP">
+        @formFieldRow {
+          @formLabelInline("status", "Status")
+          @formInputInline {
+            <select name="status" class="form-control" id="status" data-trigger-update="#state" data-trigger-update-map="STATE_MAP">
               <option value="" selected="selected"></option>
               @OptionSorter.sortStrings(Status.statusNames.toSeq, Some(" ")).map { v =>
               <option value="@v._1">@v._2</option>
@@ -28,10 +28,10 @@
           }
         }
       }
-      @formField {
-        @formLabel("state", "State")
-        @formInput {
-          <select name="state" id="state">
+      @formFieldRow {
+        @formLabelInline("state", "State")
+        @formInputInline {
+          <select name="state" class="form-control" id="state">
             @if(!defaultState.isDefined) {
             <option value="" selected="selected"></option>
             }
@@ -45,17 +45,21 @@
               }
             }
           </select>
-          <span class="help-inline"><a target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="glyphicon glyphicon-question-sign"></i></a></span>
+          <div class="input-group-addon">
+            <div class="help-inline"><a target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="glyphicon glyphicon-question-sign"></i></a></div>
+          </div>
         }
       }
       <div class="form-group">
-        <textarea name="description" id="maintenanceDescription" class="input-xxlarge" rows="3" placeholder="Description"></textarea>
+        <textarea name="description" id="maintenanceDescription" class="form-control" rows="3" placeholder="Description"></textarea>
       </div>
-      <div id="maintenanceError" data-purge="true" class="alert alert-block alert-danger hide hideAfterClose"></div>
+      <div id="maintenanceError" data-purge="true" class="alert alert-block alert-danger hide-loprio hideAfterClose"></div>
     </div>
     <div class="modal-footer">
-      <button type="submit" class="btn btn-default">@buttonText</button>
-      @resetButton("Go back to browsing tumblr")
+      <div class="btn-group">
+        <button type="submit" class="btn btn-default">@buttonText</button>
+        @resetButton("Go back to browsing tumblr")
+      </div>
     </div>
   }
 }
