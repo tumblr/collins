@@ -121,13 +121,22 @@
             @formLabelInline("remoteLookup", "Remote Lookup")
             @formInputInline {
               <div class="checkbox" style="display:inline-block;">
+                <label>
                 <input type="checkbox" id="remoteLookup" name="remoteLookup" value="true" tabindex="506"> Remote Search
+                </label>
               </div>
               <span class="help-inline">
                 <i class="glyphicon glyphicon-question-sign" data-rel="tooltip" title="Search for assets in other data-centers"></i>
               </span>
             }
           }
+        }
+
+        @formFieldRow {
+          @formLabelInline("query","CQL Query")
+          <div class="col-md-9" style="padding-left:0;">
+            <textarea name="query" class="form-control" style="max-width:250px;" rows="4" title="Enter a CQL query here.  This will be AND'ed with any other search parameters you select"></textarea>
+          </div>
         }
       </div>
 
@@ -157,23 +166,13 @@
         }
       </div>
     </div>
-    <div class="row">
-      <div class="col-md-12 collapsable">
-      <h5 class="expand_header sorting_desc">Advanced Search</h5>
-        <div class="expand_content">
-        <p>Enter a CQL query here.  This will be AND'ed with any other search parameters you select</p>
-        @formField {
-          <textarea name="query" class="col-md-6"></textarea>
-        }
-        </div>
-      </div>
-    </div>
     <div class="form-group">
       <div class="btn-group">
         <button type="submit" class="btn btn-primary" tabindex="507">Search</button>
-        <button type="reset" class="btn btn-default" tabindex="508">Reset</button>
+        <button type="reset" class="btn btn-default" tabindex="509">Reset</button>
       </div>
     </div>
+
     }
   </div>
 </div>
