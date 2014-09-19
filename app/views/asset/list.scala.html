@@ -75,17 +75,17 @@
     <div id="pagination" class="pagination">
       <ul class="pagination">
         @assets.prev.map { page =>
-          <li><a href="@link(page)">&larr; Previous</a></li>
+          <li><a href="@link(page)">Previous</a></li>
         }.getOrElse {
-          <li class="disabled"><a>&larr; Previous</a></li>
+          <li class="disabled"><a>Previous</a></li>
         }
         <li class="active">
           <a>Displaying @(assets.offset + 1) to @(assets.offset + assets.items.size) of @assets.total</a>
         </li>
         @assets.next.map { page =>
-          <li><a href="@link(page)">&rarr; Next</a></li>
+          <li><a href="@link(page)">Next</a></li>
         }.getOrElse {
-          <li class="disabled"><a>Next &rarr;</a></li>
+          <li class="disabled"><a>Next</a></li>
         }
 
       </ul>
