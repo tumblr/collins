@@ -6,7 +6,7 @@
 @import util._
 
 @basicFormatter(asset: AssetMeta, index: Int) = {
-<input type="text" id="@asset.name" placeholder="@asset.description" class="form-control" name="@asset.name" tabindex="@(index + 2)" @if(index == 0) {accesskey="r"}>
+<input type="text" id="@asset.name" placeholder="@asset.label" class="form-control" name="@asset.name" tabindex="@(index + 2)" @if(index == 0) {accesskey="r"}>
   @inputAddonHelpIcon(asset.description)
 }
 
@@ -84,7 +84,7 @@
         @formFieldRow {
           @formLabelInline("IPMI_ADDRESS", "IPMI Address")
           @formInputInline {
-            <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS" placeholder="IPMI IP Address" tabindex="505" class="form-control">
+            <input type="text" id="IPMI_ADDRESS" name="IPMI_ADDRESS" placeholder="IPMI Address" tabindex="505" class="form-control">
           }
         }
         @formFieldRow {
@@ -92,12 +92,12 @@
           @formInputInline {
             <div class="input-group date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2011-11-01">
               <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
-              <input type="text" id="createdAfter" name="createdAfter" placeholder="Start" tabindex="516" readonly class="form-control">
+              <input type="text" id="createdAfter" name="createdAfter" placeholder="Start" tabindex="506" readonly class="form-control">
             </div>
             and
             <div class="input-group date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2012-09-23">
               <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
-              <input type="text" id="createdBefore" name="createdBefore" placeholder="End" tabindex="517" readonly class="form-control">
+              <input type="text" id="createdBefore" name="createdBefore" placeholder="End" tabindex="507" readonly class="form-control">
             </div>
           }
         }
@@ -106,12 +106,12 @@
           @formInputInline {
             <div class="input-group date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2011-11-01">
               <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
-              <input type="text" id="updatedAfter" name="updatedAfter" placeholder="Start" tabindex="518" readonly class="form-control">
+              <input type="text" id="updatedAfter" name="updatedAfter" placeholder="Start" tabindex="508" readonly class="form-control">
             </div>
             and
             <div class="input-group date" data-type="date" data-date-format="yyyy-mm-dd" data-date="2012-09-23">
               <span class="input-group-addon"><i class="glyphicon glyphicon-th"></i></span>
-              <input type="text" id="updatedBefore" name="updatedBefore" placeholder="End" tabindex="519" readonly class="form-control">
+              <input type="text" id="updatedBefore" name="updatedBefore" placeholder="End" tabindex="509" readonly class="form-control">
             </div>
           }
         }
@@ -122,7 +122,7 @@
             @formInputInline {
               <div class="checkbox" style="display:inline-block;">
                 <label>
-                <input type="checkbox" id="remoteLookup" name="remoteLookup" value="true" tabindex="506"> Remote Search
+                <input type="checkbox" id="remoteLookup" name="remoteLookup" value="true" tabindex="510"> Remote Search
                 </label>
               </div>
               <span class="help-inline">
@@ -135,7 +135,7 @@
         @formFieldRow {
           @formLabelInline("query","CQL Query")
           <div class="col-md-9" style="padding-left:0;">
-            <textarea name="query" class="form-control" style="max-width:250px;" rows="4" title="Enter a CQL query here.  This will be AND'ed with any other search parameters you select"></textarea>
+            <textarea name="query" class="form-control" style="max-width:250px;" rows="4" tabindex="511" title="Enter a CQL query here.  This will be AND'ed with any other search parameters you select"></textarea>
           </div>
         }
       </div>
@@ -168,8 +168,8 @@
     </div>
     <div class="form-group">
       <div class="btn-group">
-        <button type="reset" class="btn btn-default" tabindex="508">Reset</button>
-        <button type="submit" class="btn btn-primary" tabindex="509">Search</button>
+        <button type="reset" class="btn btn-default" tabindex="600">Reset</button>
+        <button type="submit" class="btn btn-primary" tabindex="601">Search</button>
       </div>
     </div>
 
