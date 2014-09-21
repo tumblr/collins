@@ -25,7 +25,7 @@ RUN git clone https://github.com/tumblr/collins.git /build/collins && \
     git rev-parse HEAD > VERSION && \
     echo "Building Collins $(cat VERSION)" && \
     java -version 2>&1 && \
-    PLAY_CMD=/build/play-2.0.8/play /build/package.sh && \
+    PLAY_CMD=/build/play-2.0.8/play ./scripts/package.sh && \
     unzip -q /build/collins/target/collins.zip -d /opt/ && \
     rm -rf /build && \
     chown -R collins /opt/collins
