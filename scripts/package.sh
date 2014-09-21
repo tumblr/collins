@@ -53,6 +53,7 @@ for conf in logger.xml permissions.yaml validations.conf; do
 done
 cp ../conf/production_starter.conf $CONF_DIR/production.conf
 
+cp ../conf/solr/solr.xml $CONF_DIR/solr/
 cp -R ../conf/solr/conf/* $CONF_DIR/solr/conf/
 cp -R ../conf/evolutions/* $CONF_DIR/evolutions/
 zip -r collins.zip collins
