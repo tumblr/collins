@@ -45,9 +45,7 @@
               }
             }
           </select>
-          <div class="input-group-addon">
-            <div class="help-inline"><a target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="glyphicon glyphicon-question-sign"></i></a></div>
-          </div>
+          @inputAddonHelpIcon("A state representing the operational state of the asset (i.e. network problem, hardware problem, IPMI problem, NOOP, etc)", Some(app.routes.HelpPage.index("default") + "#assetState"))
         }
       }
       <div class="form-group">

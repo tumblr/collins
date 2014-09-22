@@ -57,9 +57,7 @@
                 <option value="@state.name">@state.getDisplayLabel</option>
               }
             </select>
-            <div class="input-group-addon">
-              <span class="help-inline"><a tabindex="-1" target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="glyphicon glyphicon-question-sign"></i></a></span>
-            </div>
+            @inputAddonHelpIcon("Asset state represents the current operational state of an asset (i.e. new, failed, starting, running)",Some(app.routes.HelpPage.index("default") + "#assetState"))
           }
         }
         @formFieldRow {

@@ -2,6 +2,7 @@
 
 @import _root_.util.{BitStorageUnit, ByteStorageUnit}
 @import _root_.models.lshw.Disk
+@import util._
 
 @formatValue(value: String, display: String) = {
 <option value="^@value$">@display</option>
@@ -19,6 +20,4 @@
     }
   }
 </select>
-<div class="input-group-addon">
-  <span class="help-inline"><i class="glyphicon glyphicon-question-sign" data-rel="tooltip" title="@assetMeta.description"></i></span>
-</div>
+@inputAddonHelpIcon(assetMeta.description)
