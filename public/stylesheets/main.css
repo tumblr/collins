@@ -222,3 +222,7 @@ p { padding: 5px 0; }
 .hide-loprio {
   display:none;
 }
+
+.form-horizontal .form-group.slimfast {
+  margin: 0 15px 0 15px;
+}

@@ -4,7 +4,7 @@
 @import util._
 @container("asset-note", "assetNoteLabel") {
   @header("Create new note")
-  @form(app.routes.CookieApi.submitLogData(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "noteError", Symbol("data-modal") -> "asset-note", Symbol("data-refresh") -> "table.log-data") {
+  @form(app.routes.CookieApi.submitLogData(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "noteError", Symbol("data-modal") -> "asset-note", Symbol("data-refresh") -> "table.log-data", 'class -> "form-horizontal") {
   <div class="modal-body">
     <div class="row">
       @formFieldRow {
@@ -15,9 +15,9 @@
       }
     </div>
     <div class="row">
-      @formFieldRow {
+      <div class="form-group slimfast">
         <textarea name="message" placeholder="Message" id="message" class="form-control focus" rows="5"></textarea>
-      }
+      </div>
     </div>
     <div class="row">
       <div class="col-md-12">
