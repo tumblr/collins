@@ -10,18 +10,22 @@
   <div class="col-md-12">
     @notice("success")
     @notice("security", Some("danger"))
-    @loginForm.globalError.map { error =>
-    <div class="alert alert-danger">
-      <button type="button" class="close" data-dismiss="alert">x</button>
-      <strong>Unable to login</strong> @error.message
-    </div>
-    }
-    <!-- just show the first validation error -->
-    @loginForm.errors.lift(0).map { error =>
-    <div class="alert alert-danger">
-      <button type="button" class="close" data-dismiss="alert">x</button>
-      <strong>Validation failed for @error.key</strong> @Messages(error.message, error.args: _*)
-    </div>
+    @if(loginForm.globalError.isDefined){
+      @loginForm.globalError.map { error =>
+      <!-- if there is a global error, show that -->
+      <div class="alert alert-danger">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Unable to login</strong> @error.message
+      </div>
+      }
+    } else {
+      @loginForm.errors.lift(0).map { error =>
+      <!-- otherwise just show the first validation error -->
+      <div class="alert alert-danger">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Validation failed for @error.key</strong> @Messages(error.message, error.args: _*)
+      </div>
+      }
     }
 
     <div class="page-header">
@@ -34,7 +38,7 @@
           @formFieldRow {
             @formLabelInline("username","Username")
             @formInputInline {
-              <input type="text" id="username" name="username" value="@loginForm("username").value" class="form-control">
+              <input type="text" id="username" name="username" value="@loginForm("username").value" class="form-control focus">
             }
           }
           @formFieldRow {
