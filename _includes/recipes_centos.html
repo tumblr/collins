@@ -1,10 +1,7 @@
 <h2>Dependencies</h2>
-<p>
-This will be all the dependencies needed.</br>
-rpmforge to get latest git.</br>
-ruby, mysql-server, unzip, wget is self explanatory.</br>
-redhat-lsb for new init script functionality.
-</p>
+
+<p>This will be all the dependencies needed.</p>
+
 <pre class="prettyprint">
 wget http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
 rpm -i rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
@@ -12,16 +9,13 @@ yum install -y ruby mysql-server unzip wget redhat-lsb
 yum install -y git --enablerepo rpmforge-extras
 </pre>
 
-<p>
-You need Oracle Java JRE and JCE.</br>
-Since Oracle has a licence agreement they really want you to read it's hard to wget from their servers.</br>
-Download JRE from here: <a href="http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase6-419409.html#jre-6u45-oth-JPR" alt="Java JRE6">Java JRE 6</a></br>
-Download JCE from here: <a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html" alt="Java JCE 6">Java JCE 6</a></br>
-Get the files onto your box and run the following:
-</p>
+<p>You need Oracle Java JRE and JCE.</p>
+<p>Since Oracle has a licence agreement they really want you to read it's hard to wget from their servers.</p>
+<p>Download JRE from here: <a href="http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase6-419409.html#jre-6u45-oth-JPR" alt="Java JRE6">Java JRE 6</a></p>
+<p>Download JCE from here: <a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html" alt="Java JCE 6">Java JCE 6</a></p>
+<p>Get the files onto your box and run the following:</p>
 
 <pre class="prettyprint">
-
 mkdir /usr/java
 cd /usr/java
 # replace with your rpm name
@@ -32,7 +26,6 @@ cd UnlimitedJCEPolicy
 mv -f * /usr/java/latest/lib/security
 </pre>
 
-
 <h2>Preparing mysql</h2>
 <pre class="prettyprint">
 chkconfig mysqld on
@@ -41,10 +34,8 @@ service mysqld start
 </pre>
 
 <h2>Setup Security</h2>
-<p>
-Add iptables rules for collins, or turn off iptables if you don't need it on the box.</br>
-Remember to disable SELinux if you don't want to use that.
-</p>
+<p>Add iptables rules for collins, or turn off iptables if you don't need it on the box.</p>
+<p>Remember to disable SELinux if you don't want to use that.</p>
 
 <h2>Install Collins</h2>
 <p>Collins should be installed under /usr/local/collins/current</p>
@@ -64,10 +55,8 @@ cd current
 # Run the commands the setup script tells you.
 </pre>
 
-<p>
-Now remember to edit your production.conf file to have what you need.</br>
-collins_conf_dir = "/usr/local/collins/current/conf"
-</p>
+<p>Now remember to edit your production.conf file to have what you need.</p>
+<p>collins_conf_dir = "/usr/local/collins/current/conf"</p>
 
 <p>To start Collins on boot:</p>
 
