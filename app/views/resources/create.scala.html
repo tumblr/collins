@@ -12,8 +12,7 @@
       @formFieldRow {
         @formLabelInline("type", "Asset Type")
         @formInputInline {
-          <span id="type" class="uneditable-input">@atype.label</span>
-          <input type="hidden" name="type" value="@atype.name">
+          <input name="type" id="type" class="form-control" disabled type="text" placeholder="@atype.label">
         }
       }
       @formFieldRow {
