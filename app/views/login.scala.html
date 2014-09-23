@@ -2,40 +2,62 @@
 
 @import twitterBootstrap._
 @import helper._
+@import util._
 @import util.notice
 
 @main("Login", false) {
-<div class="page-header"><h1>Login <small>Enter your credentials</small></h1></div>
-<div class="container">
+<div class="">
   <div class="row">
     <div class="col-md-12">
       @notice("success")
       @notice("security", Some("danger"))
-  
-@form(routes.Application.authenticate, 'class -> "form-horizontal", 'role -> "form") {
-    <div class="form-group">
-      @inputText(loginForm("username"), '_label -> "Username", 'class -> "form-control")
-    </div>
-    <div class="form-group">
-      @inputPassword(loginForm("password"), '_label -> "Password", 'class -> "form-control")
-    </div>
-    @loginForm.globalError.map { error =>
-    <div class="alert alert-danger">
+      @loginForm.globalError.map { error =>
+      <div class="alert alert-danger">
+        <button type="button" class="close" data-dismiss="alert">x</button>
         <strong>Unable to login</strong> @error.message
       </div>
-    }
-    <div class="form-group">
-      <div class="btn-group">
-        <button type="reset" class="btn btn-default">Cancel</button>
-        <button type="submit" class="btn btn-primary">Sign in</button>
-      </div>
-      @loginForm("location").value.map { value =>
-      <input type="hidden" name="location" value="@value">
       }
-    </div>
-}
+      <!-- just show the first validation error -->
+      @loginForm.errors.lift(0).map { error =>
+      <div class="alert alert-danger">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Validation failed for @error.key</strong> @Messages(error.message, error.args: _*)
+      </div>
+      }
+
+      <div class="page-header">
+        <h1>Login <small>Enter your credentials.</small></h1>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8">
+          @form(routes.Application.authenticate, 'role -> "form") {
+            @formFieldRow {
+              @formLabelInline("username","Username")
+              @formInputInline {
+                <input type="text" id="username" name="username" value="@loginForm("username").value" class="form-control">
+              }
+            }
+            @formFieldRow {
+              @formLabelInline("password","Password")
+              @formInputInline {
+                <input type="password" id="password" name="password" value class="form-control">
+              }
+            }
+            @formFieldRow {
+            <div class="btn-group">
+              <button type="reset" class="btn btn-default">Cancel</button>
+              <button type="submit" class="btn btn-primary">Sign in</button>
+            </div>
+            }
+            @loginForm("location").value.map { value =>
+            <input type="hidden" name="location" value="@value">
+            }
+          </div>
+          }
+        </div>
+      </div>
     </div>
   </div>
-
 </div>
 }
