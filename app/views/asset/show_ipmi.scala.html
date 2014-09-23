@@ -5,50 +5,60 @@
 
 <!-- Start IPMI Info -->
 <div class="tab-pane" id="ipmi-info">
-
-  <div class="row">
-    <div class="span12">
+  <section id="ipmi-info" class="sectional">
+    <h3>IPMI Info <small>BMC network configuration and credentials</small></h3>
     @PowerManagement.pluginEnabled.map { p =>
       @form(app.routes.CookieApi.powerManagement(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "identifyError", Symbol("data-success") -> "identifySuccess") {
-        <button class="btn-info btn" data-remote="/asset/@aa.asset.tag/power" data-insert="power-status" data-extract="data.MESSAGE">Power Status</button>
-        <span id="power-status"></span>
-        <button type="submit" class="btn-info btn">Identify</button>
-        <span id="identifyError"></span>
-        <span id="identifySuccess" class="hide">Ok</span>
-        <input type="hidden" name="action" value="Identify">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="form-group">
+              <div class="btn-group">
+                <button class="btn-primary btn" data-remote="/asset/@aa.asset.tag/power" data-insert="power-status" data-extract="data.MESSAGE">Power Status</button>
+                <button type="submit" class="btn-default btn">Identify</button>
+              </div>
+              <span id="power-status"></span>
+              <span id="identifyError"></span>
+              <span id="identifySuccess" class="hide">Ok</span>
+              <input type="hidden" name="action" value="Identify">
+            </div>
+          </div>
+        </div>
       }
     }
-    </div>
-  </div>
 
-  @if(aa.ipmi.nonEmpty) {
-  <table class="table table-bordered table-hover table-condensed" id="ipmiInfo">
-    <tbody>
-      <tr>
-        <th>IPMI Address</th>
-        <td><a target="_blank" href="http://@aa.ipmi.get.dottedAddress()/">@{aa.ipmi.get.dottedAddress()}</a></td>
-      </tr>
-      <tr>
-        <th>IPMI Username</th>
-        <td>@aa.ipmi.get.username</td>
-      </tr>
-      <tr>
-        <th>IPMI Password</th>
-        <td>@aa.ipmi.get.password</td>
-      </tr>
-      <tr>
-        <th>IPMI Gateway/Netmask</th>
-        <td>@aa.ipmi.get.dottedGateway()/@aa.ipmi.get.dottedNetmask()</td>
-      </tr>
-    </tbody>
-  </table>
-  } else {
-  <div class="row">
-    <div class="span12">
-      None Available
+    @if(aa.ipmi.nonEmpty) {
+    <div class="row">
+      <div class="col-md-12">
+        <table class="table table-hover table-condensed" id="ipmiInfo">
+          <tbody>
+            <tr>
+              <th>IPMI Address</th>
+              <td><a target="_blank" href="http://@aa.ipmi.get.dottedAddress()/">@{aa.ipmi.get.dottedAddress()}</a></td>
+            </tr>
+            <tr>
+              <th>IPMI Username</th>
+              <td>@aa.ipmi.get.username</td>
+            </tr>
+            <tr>
+              <th>IPMI Password</th>
+              <td>@aa.ipmi.get.password</td>
+            </tr>
+            <tr>
+              <th>IPMI Gateway/Netmask</th>
+              <td>@aa.ipmi.get.dottedGateway()/@aa.ipmi.get.dottedNetmask()</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-  }
+    } else {
+    <div class="row">
+      <div class="col-md-12">
+        None Available
+      </div>
+    </div>
+    }
+  </section>
 </div>
 
 <!-- End IPMI Info -->

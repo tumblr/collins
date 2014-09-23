@@ -8,11 +8,15 @@ body {
   position: relative;
 }
 
+/*
 @media (max-height: 900px) {
   .modal.fade.dynamicModal.in {
     top: 37%;
   }
   .dynamicModal * .modal-body {
+    max-height: 500px;
+  }
+  .modal {
     max-height: 500px;
   }
 }
@@ -24,6 +28,9 @@ body {
   .dynamicModal * .modal-body {
     max-height: 600px;
   }
+  .modal {
+    max-height: 600px;
+  }
 }
 
 @media (min-height: 1000px) {
@@ -33,7 +40,11 @@ body {
   .dynamicModal * .modal-body {
     max-height: 700px;
   }
+  .modal {
+    max-height: 700px;
+  }
 }
+*/
 
 /* Fix for tables getting scrollbars */
 .tab-content {
@@ -197,3 +208,22 @@ p { padding: 5px 0; }
   bottom: 270px;
 }
 
+/* bootstrap hacks */
+
+.input-group {
+  max-width: 250px;
+}
+
+.collins-navbar {
+  background: black !important;
+}
+
+/* bootstrap 3 makes this !important so lets let .show() override it */
+.hide-loprio {
+  display:none;
+}
+
+.form-horizontal .control-label {
+  /* override control-label from bootstrap in form-horizontal */
+  text-align:inherit !important;
+}

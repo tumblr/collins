@@ -9,22 +9,19 @@
 @import _root_.models.IpmiInfo.Enum._
 
 @main(Titler(aa.asset)) {
-<!-- start notices -->
 <div class="row">
-  <div class="span12">
-    @notice("message", Some("notice"))
-    @notice("error")
+  <div class="col-md-12">
+    @notice("message", Some("info"))
+    @notice("error", Some("danger"))
     @notice("warning")
   </div>
 </div>
-<!-- end notices -->
 
 @show_menu(aa, user)
 
 <!-- main body -->
 <div class="row">
-  <div class="tab-content span12">
-
+  <div class="tab-content col-md-12">
 @show_overview(aa, user)
 @show_ipmi(aa, user)
 @show_lldp(aa, user)

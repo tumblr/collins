@@ -4,55 +4,56 @@
 @import _root_.util.views.Formatter.camelCase
 
 @main("Asset Creator") {
-<div class="page-header"><h1>Asset Creator <small>Create a @atype.label</small></h1></div>
-<div class="row">
-  <div class="span12">
-    @notice("error")
-    @notice("warning")
-
-    <form action="@app.routes.Resources.createAsset(atype.name)" method="post" class="form-horizontal">
-      @formField {
-        @formLabel("type", "Asset Type")
-        @formInput {
-          <span id="type" class="uneditable-input">@atype.label</span>
-          <input type="hidden" name="type" value="@atype.name">
-        }
-      }
-      @formField {
-        @formLabel("tag", "Asset Tag")
-        @formInput {
-          <input type="text" id="tag" name="tag">
-          <span class="help-inline">Asset tag, must be a unique alpha-numeric string</span>
-        }
-      }
-      @formField {
-        @formLabel("generate_ipmi", "Generate IPMI Info")
-        @formInput {
-          <select name="generate_ipmi">
-            <option value="false" selected="selected">No</option>
-            <option value="true">Yes</option>
-          </select>
-          <span class="help-inline">Whether IPMI data should be generated or not</span>
-        }
-      }
-      @formField {
-        @formLabel("status", "Asset Status")
-        @formInput {
-          <select name="status" id="status">
-            <option value="" selected="selected"></option>
-            @Status.statusNames.toSeq.map { v =>
-            <option value="@v.toString">@camelCase(v.toString, " ")</option>
+<div class="page-header"><h1>Create <small>Make a new @atype.label.</small></h1></div>
+  @notice("error",Some("danger"))
+  @notice("warning")
+  <div class="container">
+    <div class="row">
+      <div class="col-md-8">
+        <form action="@app.routes.Resources.createAsset(atype.name)" method="post" class="form-horizontal" role="form">
+          @formFieldRow {
+            @formLabelInline("type", "Asset Type")
+            @formInputInline {
+              <input name="type" id="type" class="form-control" disabled type="text" placeholder="@atype.label">
             }
-          </select>
-          <span class="help-inline">Asset Status (New, Incomplete, etc)</span>
-        }
-      }
-      
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Create @atype.label</button>
-        <button type="reset" class="btn">Reset</button>
+          }
+          @formFieldRow {
+            @formLabelInline("tag", "Asset Tag")
+            @formInputInline {
+              <input type="text" id="tag" name="tag" class="form-control">
+              @inputAddonHelpIcon("Asset tag, must be a unique alpha-numeric string")
+            }
+          }
+          @formFieldRow {
+            @formLabelInline("generate_ipmi", "Generate IPMI Info")
+            @formInputInline {
+              <select name="generate_ipmi" class="form-control">
+                <option value="false" selected="selected">No</option>
+                <option value="true">Yes</option>
+              </select>
+              @inputAddonHelpIcon("Whether IPMI data should be generated or not")
+            }
+          }
+          @formFieldRow {
+            @formLabelInline("status", "Asset Status")
+            @formInputInline {
+              <select name="status" id="status" class="form-control">
+                <option value="" selected="selected"></option>
+                @Status.statusNames.toSeq.map { v =>
+                <option value="@v.toString">@camelCase(v.toString, " ")</option>
+                }
+              </select>
+              @inputAddonHelpIcon("Asset Status (New, Incomplete, etc)")
+            }
+          }
+          <div class="form-group">
+            <div class="btn-group">
+              <button type="reset" class="btn btn-default">Reset</button>
+              <button type="submit" class="btn btn-primary">Create @atype.label</button>
+            </div>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   </div>
-</div>
 }

@@ -15,12 +15,16 @@
       <li>Delete this asset</li>
     </ul>
     <p>If that all sounds good, provide a reason below and then click the &quot;Kill Me&quot; button</p>
-    <textarea name="reason" id="deleteReason" class="input-xxlarge" rows="3" placeholder="Reason"></textarea>
-    <div id="deleteError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+    <div class="form-group">
+      <textarea name="reason" id="deleteReason" class="form-control" rows="3" placeholder="Reason"></textarea>
+    </div>
+    <div id="deleteError" data-purge="true" class="alert alert-block alert-danger hide-loprio hideAfterClose"></div>
   </div>
   <div class="modal-footer">
-    <button type="submit" class="btn">Kill Me</button>
-    @resetButton("Go back to browsing tumblr")
+    <div class="btn-group">
+      @resetButton("Go back to browsing tumblr")
+      <button type="submit" class="btn btn-danger">Kill Me</button>
+    </div>
   </div>
   }
 }

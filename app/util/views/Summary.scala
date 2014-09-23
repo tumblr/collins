@@ -45,7 +45,7 @@ case class AssetSummary(template: String) extends Summarizer[Asset] {
 
 object Summary {
   def apply(asset: Asset): Content = {
-    val template = "<h1>{assetType} Details <small>{hostname}</small></h1>"
+    val template = "<h1>{assetType} <small>{hostname}</small></h1>"
     AssetSummary(template).get(asset)
   }
 }

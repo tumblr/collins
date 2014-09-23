@@ -2,6 +2,8 @@
 
 <!-- Start Logs -->
 <div class="tab-pane" id="log-data">
+<section class="sectional">
+  <h3>Logs <small>Messages logged on this asset</small></h3>
   <script type="text/javascript">
     var logDataCols = [
       {"mDataProp": "CREATED", "sWidth": "20%"},
@@ -14,13 +16,9 @@
     ];
     var logDataUri = "/asset/@aa.asset.tag/logs";
   </script>
-  <div class="row">
-    <div class="span12">
-      <form>
-        <button id="logRefresh" class="btn" data-interval-refresh="10;#log_data">Auto Refresh</button>
-      </form>
-    </div>
-  </div>
+  <form role="form">
+    <button id="logRefresh" class="btn btn-default pull-right" data-interval-refresh="10;#log_data">Auto Refresh</button>
+  </form>
   <table id="log_data" data-size="25" class="log-data table table-hover table-condensed" data-cols="logDataCols" data-source="javascript://logDataUri">
     <thead>
       <tr>
@@ -41,6 +39,7 @@
       </tr>
     </tfoot>
   </table>
+</section>
 </div>
 <script type="text/javascript">
     jQuery(document).ready(function ($) {
