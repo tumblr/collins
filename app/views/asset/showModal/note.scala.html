@@ -4,20 +4,16 @@
 @import util._
 @container("asset-note", "assetNoteLabel") {
   @header("Create new note")
-  @form(app.routes.CookieApi.submitLogData(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "noteError", Symbol("data-modal") -> "asset-note", Symbol("data-refresh") -> "table.log-data", 'class -> "form-horizontal") {
+  @form(app.routes.CookieApi.submitLogData(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "noteError", Symbol("data-modal") -> "asset-note", Symbol("data-refresh") -> "table.log-data") {
   <div class="modal-body">
-    <div class="row">
-      @formFieldRow {
-        @formLabelInline("type","Note Type")
-        @formInputInline {
-          @selectDisplay("type", "NOTE")
-        }
+    @formFieldRow {
+      @formLabelInline("type","Note Type")
+      @formInputInline {
+        @selectDisplay("type", "NOTE")
       }
-    </div>
-    <div class="row">
-      <div class="form-group slimfast">
-        <textarea name="message" placeholder="Message" id="message" class="form-control focus" rows="5"></textarea>
-      </div>
+    }
+    <div class="form-group">
+      <textarea name="message" placeholder="Message" id="message" class="form-control focus" rows="5"></textarea>
     </div>
     <div class="row">
       <div class="col-md-12">

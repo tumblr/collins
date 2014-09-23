@@ -8,48 +8,52 @@
   @notice("error",Some("danger"))
   @notice("warning")
   <div class="container">
-    <form action="@app.routes.Resources.createAsset(atype.name)" method="post" class="form-horizontal" role="form">
-      @formFieldRow {
-        @formLabelInline("type", "Asset Type")
-        @formInputInline {
-          <input name="type" id="type" class="form-control" disabled type="text" placeholder="@atype.label">
-        }
-      }
-      @formFieldRow {
-        @formLabelInline("tag", "Asset Tag")
-        @formInputInline {
-          <input type="text" id="tag" name="tag" class="form-control">
-          @inputAddonHelpIcon("Asset tag, must be a unique alpha-numeric string")
-        }
-      }
-      @formFieldRow {
-        @formLabelInline("generate_ipmi", "Generate IPMI Info")
-        @formInputInline {
-          <select name="generate_ipmi" class="form-control">
-            <option value="false" selected="selected">No</option>
-            <option value="true">Yes</option>
-          </select>
-          @inputAddonHelpIcon("Whether IPMI data should be generated or not")
-        }
-      }
-      @formFieldRow {
-        @formLabelInline("status", "Asset Status")
-        @formInputInline {
-          <select name="status" id="status" class="form-control">
-            <option value="" selected="selected"></option>
-            @Status.statusNames.toSeq.map { v =>
-            <option value="@v.toString">@camelCase(v.toString, " ")</option>
+    <div class="row">
+      <div class="col-md-8">
+        <form action="@app.routes.Resources.createAsset(atype.name)" method="post" class="form-horizontal" role="form">
+          @formFieldRow {
+            @formLabelInline("type", "Asset Type")
+            @formInputInline {
+              <input name="type" id="type" class="form-control" disabled type="text" placeholder="@atype.label">
             }
-          </select>
-          @inputAddonHelpIcon("Asset Status (New, Incomplete, etc)")
-        }
-      }
-      <div class="form-group">
-        <div class="btn-group">
-          <button type="reset" class="btn btn-default">Reset</button>
-          <button type="submit" class="btn btn-primary">Create @atype.label</button>
-        </div>
+          }
+          @formFieldRow {
+            @formLabelInline("tag", "Asset Tag")
+            @formInputInline {
+              <input type="text" id="tag" name="tag" class="form-control">
+              @inputAddonHelpIcon("Asset tag, must be a unique alpha-numeric string")
+            }
+          }
+          @formFieldRow {
+            @formLabelInline("generate_ipmi", "Generate IPMI Info")
+            @formInputInline {
+              <select name="generate_ipmi" class="form-control">
+                <option value="false" selected="selected">No</option>
+                <option value="true">Yes</option>
+              </select>
+              @inputAddonHelpIcon("Whether IPMI data should be generated or not")
+            }
+          }
+          @formFieldRow {
+            @formLabelInline("status", "Asset Status")
+            @formInputInline {
+              <select name="status" id="status" class="form-control">
+                <option value="" selected="selected"></option>
+                @Status.statusNames.toSeq.map { v =>
+                <option value="@v.toString">@camelCase(v.toString, " ")</option>
+                }
+              </select>
+              @inputAddonHelpIcon("Asset Status (New, Incomplete, etc)")
+            }
+          }
+          <div class="form-group">
+            <div class="btn-group">
+              <button type="reset" class="btn btn-default">Reset</button>
+              <button type="submit" class="btn btn-primary">Create @atype.label</button>
+            </div>
+          </div>
+        </form>
       </div>
-    </form>
+    </div>
   </div>
 }

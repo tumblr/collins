@@ -9,7 +9,7 @@
 <!-- start asset maintenance modal -->
 @container("asset-maintenance", "assetMaintenanceLabel", true) {
   @header("Asset Maintenance", Some("Warning"))
-  @form(app.routes.CookieApi.updateAssetForMaintenance(aa.asset.tag), 'class -> "form-horizontal", Symbol("data-form") -> "true", Symbol("data-error") -> "maintenanceError", Symbol("data-modal") -> "asset-maintenance", Symbol("data-refresh") -> ".window") {
+  @form(app.routes.CookieApi.updateAssetForMaintenance(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "maintenanceError", Symbol("data-modal") -> "asset-maintenance", Symbol("data-refresh") -> ".window") {
     <div class="modal-body">
       @body
       @if(selectStatus) {
@@ -48,7 +48,7 @@
           @inputAddonHelpIcon("A state representing the operational state of the asset (i.e. network problem, hardware problem, IPMI problem, NOOP, etc)", Some(app.routes.HelpPage.index("default") + "#assetState"))
         }
       }
-      <div class="form-group slimfast">
+      <div class="form-group">
         <textarea name="description" id="maintenanceDescription" class="form-control" rows="3" placeholder="Description"></textarea>
       </div>
       <div id="maintenanceError" data-purge="true" class="alert alert-block alert-danger hide-loprio hideAfterClose"></div>

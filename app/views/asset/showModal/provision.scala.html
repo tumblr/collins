@@ -11,7 +11,7 @@
   } else {
     @header("Provision Server", Some("Warning"))
   }
-  @form(app.routes.CookieApi.provisionAsset(aa.asset.tag), 'class -> "form-horizontal", Symbol("data-form") -> "true", Symbol("data-error") -> "provisionError", Symbol("data-modal") -> "provision-server", Symbol("data-refresh") -> ".window") {
+  @form(app.routes.CookieApi.provisionAsset(aa.asset.tag), 'class -> "form-horizontalx", Symbol("data-form") -> "true", Symbol("data-error") -> "provisionError", Symbol("data-modal") -> "provision-server", Symbol("data-refresh") -> ".window") {
   <div class="modal-body">
     @if(aa.asset.isIncomplete) {
       <p>
