@@ -38,8 +38,8 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   }
   override def asJson: String = toJsValue.toString
 
-  override def getHostnameMetaValue = getMetaAttribute("HOSTNAME").map(_.getValue)
-  override def getPrimaryRoleMetaValue = getMetaAttribute("PRIMARY_ROLE").map(_.getValue)
+  override def getHostnameMetaValue = getMetaAttributeValue("HOSTNAME")
+  override def getPrimaryRoleMetaValue = getMetaAttributeValue("PRIMARY_ROLE")
   override def toJsValue() = {
     Json.toJson[AssetView](this)
   }
@@ -54,6 +54,9 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   def getType(): AssetType = {
     AssetType.findById(asset_type).get
   }
+
+  def getMetaAttributeValue(name: String): Option[String] = getMetaAttribute(name).map(_.getValue)
+
   def getMetaAttribute(name: String): Option[MetaWrapper] = {
     AssetMeta.findByName(name).flatMap { meta =>
       AssetMetaValue.findByAssetAndMeta(this, meta, 1) match {

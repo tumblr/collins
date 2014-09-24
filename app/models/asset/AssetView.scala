@@ -23,6 +23,7 @@ trait AssetView {
 
   def getHostnameMetaValue(): Option[String]
   def getPrimaryRoleMetaValue(): Option[String]
+  def getMetaAttributeValue(name: String): Option[String]
   def remoteHost: Option[String] //none if local
   def toJsValue(): JsValue
 

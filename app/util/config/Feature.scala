@@ -15,6 +15,7 @@ object Feature extends Configurable {
 
   override val namespace = "features"
   override val referenceConfigFilename = "features_reference.conf"
+  val defaultSearchResultColumns = List("TAG","HOSTNAME","PRIMARY_ROLE","STATUS","CREATED","UPDATED")
 
   def allowTagUpdates = getStringSet("allowTagUpdates")
   def allowedServerUpdateStatuses = getStringSet("allowedServerUpdateStatuses").union(Set("MAINTENANCE"))
@@ -48,6 +49,7 @@ object Feature extends Configurable {
   def noLogPurges = getStringSet("noLogPurges")
   def sloppyStatus = getBoolean("sloppyStatus", true)
   def sloppyTags = getBoolean("sloppyTags", false)
+  def searchResultColumns = getStringList("searchResultColumns", defaultSearchResultColumns).distinct.map(_.toUpperCase)
 
   protected def featureException(key: String, error: String) =
     throw new Exception("%s.%s - %s".format(namespace, key, error))
@@ -60,6 +62,7 @@ object Feature extends Configurable {
     } else {
       deleteSomeMetaOnRepurpose
     }
+    searchResultColumns
     syslogAsset
   }
 }

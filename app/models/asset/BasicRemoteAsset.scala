@@ -13,12 +13,13 @@ case class BasicRemoteAsset(hostTag: String, remoteUrl: String, json: JsObject)
 {
   private[this] val logger = Logger("BasicRemoteAsset")
 
-  private[this] def warnAboutData(): Option[String] = {
-    logger.warn("Attempting to retrieve details data on basic remote asset")
+  private[this] def warnAboutData(name: String): Option[String] = {
+    logger.warn("Attempting to retrieve %s attribute on basic remote asset, returning nothing".format(name))
     None
   }
 
-  def getHostnameMetaValue() = warnAboutData()
-  def getPrimaryRoleMetaValue() = warnAboutData()
+  def getHostnameMetaValue() = warnAboutData("HOSTNAME")
+  def getPrimaryRoleMetaValue() = warnAboutData("PRIMARY_ROLE")
+  def getMetaAttributeValue(name: String) = warnAboutData(name)
 }
- 
+
