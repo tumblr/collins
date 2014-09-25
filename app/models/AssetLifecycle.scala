@@ -117,7 +117,6 @@ object AssetLifecycle {
       val state = options.get("state").flatMap(s => State.findByName(s))
       val status = options.get("status").flatMap(s => AStatus.findByName(s)).map(_.id)
       val opts = options - "state" - "groupId" - "status"
-      logger.debug(restricted.toString)
       if (!asset.isConfiguration) {
         opts.find(kv => restricted(kv._1)).map(kv =>
           return Left(new Exception("Attribute %s is restricted".format(kv._1)))

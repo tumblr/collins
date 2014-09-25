@@ -103,8 +103,9 @@ class SolrPlugin(app: Application) extends Plugin {
     Callback.on("asset_log_update", logCallback)
   }
 
-  def populate() = Akka.future { 
-    _server.map{ server => 
+  def populate() = Akka.future {
+    _server.map{ server =>
+      logger.warn("Repopulating Solr index")
       val indexTime = new Date
 
       //Assets
@@ -136,9 +137,9 @@ class SolrPlugin(app: Application) extends Plugin {
         if (commit) {
           server.commit()
           if (items.size == 1) {
-            logger.debug(("Indexed %s: %s".format(serializer.docType.name, items.head.toString)))
+            logger.debug(("Indexed %s: %s".format(serializer.docType.name.toLowerCase, items.head.toString)))
           } else {
-            logger.info("Indexed %d %ss".format(docs.size, serializer.docType.name))
+            logger.info("Indexed %d %ss".format(docs.size, serializer.docType.name.toLowerCase))
           }
         }
       } else {
