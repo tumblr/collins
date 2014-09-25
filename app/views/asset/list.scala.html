@@ -5,6 +5,7 @@
 @import _root_.util.views.{ListHelper, Formatter, Pagination}
 @import _root_.util.config.Feature
 @import _root_.models._
+@import _root_.collins.solr._
 @import util.notice
 @import models.SortDirection._
 
@@ -29,6 +30,16 @@
     case default => ""
   }
 }
+@formatRawMetaAttribute(name: String) = @{
+  name.replaceAll("_"," ").replaceAll("-"," ").toLowerCase.capitalize
+}
+@displayMetaSortHeader(name: String, metaOpt: Option[AssetMeta]) = {
+    @if(AssetKeyResolver(name).map(p => p.isSortable).getOrElse(false)) {
+      <th><a href="@sortLink(name)" title="Sort by @name">@formatRawMetaAttribute(name)</a></th>
+    } else {
+      <th><span title="Results are not sortable by @name">@formatRawMetaAttribute(name)</span></th>
+    }
+}
 
 @main("Asset Search Results") {
 <div class="page-header">
@@ -42,8 +53,8 @@
     <table class="table table-bordered table-hover" data-size="50">
       <thead>
         <tr>
-          @Feature.searchResultColumns.map { meta =>
-          <th><a href="@sortLink(meta)">@meta.replaceAll("_"," ").replaceAll("-"," ").toLowerCase.capitalize</a></th>
+          @for(metaName <- Feature.searchResultColumns) {
+            @displayMetaSortHeader(metaName,AssetMeta.findByName(metaName))
           }
           @if(ListHelper.showSoftLayerLink(assets)) {
           <th>SL Link</th>
