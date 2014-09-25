@@ -3,6 +3,7 @@ package collins.solr
 import util.config.Configurable
 import util.MessageHelper
 import java.io.File
+import akka.util.duration._
 
 object SolrConfig extends Configurable {
   override val namespace = "solr"
@@ -25,6 +26,7 @@ object SolrConfig extends Configurable {
   def connectionTimeout = getInt("connectionTimeout",100)
   def maxTotalConnections = getInt("maxTotalConnections",100)
   def defaultMaxConnectionsPerHost = getInt("defaultMaxConnectionsPerHost",100)
+  def assetBatchUpdateWindow = getInt("assetBatchUpdateWindowMs",10) milliseconds
 
   override protected def validateConfig() {
     if (!enabled) {
