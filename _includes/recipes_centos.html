@@ -7,6 +7,9 @@ wget http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.
 rpm -i rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
 yum install -y ruby mysql-server unzip wget redhat-lsb
 yum install -y git --enablerepo rpmforge-extras
+
+wget http://libslack.org/daemon/download/daemon-0.6.4-1.x86_64.rpm
+rpm -i daemon-0.6.4-1.x86_64.rpm
 </pre>
 
 <p>
@@ -19,6 +22,7 @@ You need Oracle Java JRE and JCE.
 </p>
 
 <pre class="prettyprint">
+
 mkdir /usr/java
 cd /usr/java
 # replace with your rpm name
@@ -28,6 +32,7 @@ unzip JCE.zip
 cd UnlimitedJCEPolicy
 mv -f * /usr/java/latest/lib/security
 </pre>
+
 
 <h2>Preparing mysql</h2>
 <pre class="prettyprint">
