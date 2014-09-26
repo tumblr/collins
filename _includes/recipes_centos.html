@@ -1,24 +1,23 @@
 <h2>Dependencies</h2>
-<p>This will be all the dependencies needed.
-    rpmforge to get latest git.
-    ruby, mysql-server, unzip, wget is self explanatory.
-    daemon is for starting collins as a service.</p>
+
+<p>This will be all the dependencies needed.</p>
+
 <pre class="prettyprint">
 wget http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
 rpm -i rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
-yum install -y ruby mysql-server unzip wget
+yum install -y ruby mysql-server unzip wget redhat-lsb
 yum install -y git --enablerepo rpmforge-extras
 
 wget http://libslack.org/daemon/download/daemon-0.6.4-1.x86_64.rpm
 rpm -i daemon-0.6.4-1.x86_64.rpm
 </pre>
 
-<p>You need Oracle Java JRE and JCE.
-    Since Oracle has a licence agreement they really want you to read it's hard to wget from their servers.
-    Download JRE from here: <a href="http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase6-419409.html#jre-6u45-oth-JPR" alt="Java JRE6">Java JRE 6</a>
-    Download JCE from here: <a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html" alt="Java JCE 6">Java JCE 6</a>
-    Get the files onto your box and run the following:
-</p>
+<p>You need Oracle Java JRE and JCE.</p>
+<ul>
+<li>Download JRE from here: <a href="http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase6-419409.html#jre-6u45-oth-JPR" alt="Java JRE6">Java JRE 6</a></li>
+<li>Download JCE from here: <a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html" alt="Java JCE 6">Java JCE 6</a></li>
+<li>Get the files onto your box and run the following:</li>
+</ul>
 
 <pre class="prettyprint">
 
@@ -41,9 +40,8 @@ service mysqld start
 </pre>
 
 <h2>Setup Security</h2>
-<p>Add iptables rules for collins, or turn off iptables if you don't need it on the box.
-    Remember to disable SELinux if you don't want to use that.
-</p>
+<p>Add iptables rules for collins, or turn off iptables if you don't need it on the box.</p>
+<p>Remember to disable SELinux if you don't want to use that.</p>
 
 <h2>Install Collins</h2>
 <p>Collins should be installed under /usr/local/collins/current</p>
@@ -51,9 +49,9 @@ service mysqld start
 <pre class="prettyprint">
 adduser collins
 cd ~
-wget http://tumblr.github.io/collins/releases/collins-1.2.4.zip
+wget http://tumblr.github.io/collins/releases/collins-1.3.0.zip
 cd /usr/local
-unzip ~/collins-1.2.4.zip
+unzip ~/collins-1.3.0.zip
 cd collins
 # create current dir or make a symlink.
 mkdir current
@@ -63,9 +61,8 @@ cd current
 # Run the commands the setup script tells you.
 </pre>
 
-<p>Now remember to edit your production.conf file to have what you need.
-    collins_conf_dir = "/usr/local/collins/current/conf"
-</p>
+<p>Now remember to edit your production.conf file to have what you need.</p>
+<pre class="prettyprint">collins_conf_dir = "/usr/local/collins/current/conf"</pre>
 
 <p>To start Collins on boot:</p>
 
