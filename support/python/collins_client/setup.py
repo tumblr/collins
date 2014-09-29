@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-setup(name="collins-client",
+setup(name="collins_client",
       version="0.1.0",
       description="The python interface to the collins api.",
       author="John Bunting",
