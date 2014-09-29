@@ -8,7 +8,7 @@ To use this package:
 ```
 import collins_client
 
-client = collins_client.CollinsClient(<username>, <password>)
+client = collins_client.CollinsClient(<username>, <password>, <host>)
 ```
 
 From there you can make any of the calls needed for the functionality of the collins api. 
