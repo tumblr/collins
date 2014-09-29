@@ -6,60 +6,64 @@
 @import _root_.collins.provisioning.ProvisionerConfig
 @import _root_.controllers.Permissions
 
-<div class="row">
-  <div class="span12">
-    @Summary(aa.asset)
-  </div>
+<div class="page-header">
+  @Summary(aa.asset)
 </div>
 
 <div class="row">
-  <div class="span12">
+  <div class="col-md-12">
 
     <ul class="nav nav-pills">
       <li class="active"><a href="#overview" data-toggle="pill">Overview</a></li>
       @if(aa.ipmi.nonEmpty || PowerManagement.powerAllowed(aa.asset)) {
       <li><a href="#ipmi-info" data-toggle="pill">IPMI Info</a></li>
+      } else {
+      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not have any IPMI information"><a href="#">IPMI Info</a></li>
       }
       <li><a href="#log-data" data-toggle="pill">Logs</a></li>
       @if(aa.lshw.cpuCount > 0) {
       <li><a href="#hardware-details" data-toggle="pill">Hardware Details</a></li>
+      } else {
+      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any CPUs in LSHW"><a href="#">Hardware Details</a></li>
       }
       @if(aa.lldp.interfaceCount > 0) {
       <li><a href="#lldp-info" data-toggle="pill">LLDP Info</a></li>
+      } else {
+      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any interfaces in LLDP"><a href="#">LLDP Info</a></li>
       }
       <li class="dropdown" data-dropdown="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown"><strong>Actions</strong> <b class="caret"></b></a>
         <ul class="dropdown-menu">
-          <li>@modalLink("#asset-note", "Create Note", icon = Some("icon-comment"))</li>
+          <li>@modalLink("#asset-note", "Create Note", icon = Some("glyphicon glyphicon-comment"))</li>
           <li class="divider"></li>
           @if(Permissions.please(user, Permissions.AssetWebApi.CancelAsset) && SoftLayer.canCancel(aa.asset)) {
-            <li>@modalLink("#cancel-server", "Cancel Server", icon = Some("icon-warning-sign"))</li>
+            <li>@modalLink("#cancel-server", "Cancel Server", icon = Some("glyphicon glyphicon-warning-sign"))</li>
           }
           @if(Permissions.please(user, Permissions.AssetWebApi.DeleteAsset) && AssetStateMachine(aa.asset).canDecommission) {
-            <li>@modalLink("#delete-asset", "Delete Asset", icon = Some("icon-trash"))</li>
+            <li>@modalLink("#delete-asset", "Delete Asset", icon = Some("glyphicon glyphicon-trash"))</li>
           }
           @if(Permissions.please(user, Permissions.AssetApi.UpdateAssetForMaintenance)) {
             @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
-              <li>@modalLink("#asset-maintenance", "Maintenance Start", icon = Some("icon-wrench"))</li>
+              <li>@modalLink("#asset-maintenance", "Maintenance Start", icon = Some("glyphicon glyphicon-wrench"))</li>
             }
             @if(Maintenance.canTransitionFromMaintenance(aa.asset)) {
-              <li>@modalLink("#asset-maintenance", "Maintenance End", icon = Some("icon-wrench"))</li>
+              <li>@modalLink("#asset-maintenance", "Maintenance End", icon = Some("glyphicon glyphicon-wrench"))</li>
             }
           }
           @if(Permissions.please(user, Permissions.AssetManagementApi.PowerManagement)) {
             @PowerManagement.pluginEnabled.map { p =>
               @if(PowerManagement.powerAllowed(aa.asset)) {
-                <li>@modalLink("#power-server", "Power Management", icon = Some("icon-fire"))</li> 
+                <li>@modalLink("#power-server", "Power Management", icon = Some("glyphicon glyphicon-fire"))</li> 
               }
             }
           }
 	        @if(Permissions.please(user, Permissions.AssetManagementApi.ProvisionAsset)) {
 	          @Provisioner.pluginEnabled.map { p =>
               @if(p.canProvision(aa.asset)) {
-                <li>@modalLink("#provision-server", "Provision Server", icon = Some("icon-play"))</li>
+                <li>@modalLink("#provision-server", "Provision Server", icon = Some("glyphicon glyphicon-play"))</li>
               } else {
                 @if(SoftLayer.canActivate(aa.asset)) {
-                  <li>@modalLink("#provision-server", "Activate Server", icon = Some("icon-play"))</li>
+                  <li>@modalLink("#provision-server", "Activate Server", icon = Some("glyphicon glyphicon-play"))</li>
                 }
               }
 	          }

@@ -5,19 +5,8 @@
 @import _root_.util.views.{MetaValueOrderer, TagDecorator}
 
 <div class="active tab-pane" id="overview">
-<!--
-  <div class="navbar">
-    <div class="navbar-inner">
-      <ul class="nav">
-        <li class="active"><a href="#overview-section">Overview</a></li>
-        <li><a href="#hardware-summary-section">Hardware Summary</a></li>
-        <li><a href="#user-log-section">User Logs</a></li>
-      </ul>
-    </div>
-  </div>
--->
   <section id="overview-section" class="sectional">
-    <h3>Asset Overview</h3>
+    <h3>Asset Overview <small>System and user attributes</small></h3>
     <table id="basicDataTable" class="table table-hover table-condensed">
       <thead>
         <tr>
@@ -72,11 +61,11 @@
           <td>@aa.asset.getType().label</td>
           <td></td>
         </tr>
-        <tr class="@if(aa.asset.isMaintenance){error}">
+        <tr class="@if(aa.asset.isMaintenance){danger}">
           <td><strong>Asset Status</strong></td>
           <td>@aa.asset.getStatus().name</td>
           @if(aa.asset.isMaintenance) {
-            <td><span class="label label-important">See Notes</span> @aa.asset.getStatus().description</td>
+            <td><a href="#user-log-section"><span class="label label-primary">See Notes</span></a> @aa.asset.getStatus().description</td>
           } else {
             <td>@aa.asset.getStatus().description</td>
           }
@@ -132,7 +121,7 @@
     var userNotesUri = "/asset/@aa.asset.tag/logs?filter=" + escape(userNotesLevels.join(';'));
   </script>
   <section id="user-log-section" class="sectional">
-    <h3>User Notes <small>Important Notes</small></h3>
+    <h3>User Notes <small>Important log entries</small></h3>
     <div id="log_data_note_container">
       <table id="log_data_note" data-size="25" class="table log-data table-hover table-condensed" data-cols='userNotesCols' data-source="javascript://userNotesUri">
         <thead>
@@ -157,7 +146,7 @@
 
   @if(aa.asset.isServerNode) {
   <section id="hardware-summary-section" class="sectional">
-    <h3>Hardware Summary</h3>
+    <h3>Hardware Summary <small>Summary of system components reported by LSHW</small></h3>
     @if(aa.lshw.cpuCount > 0) {
     <table class="table table-hover table-condensed" id="hardwareSummary">
       <thead>

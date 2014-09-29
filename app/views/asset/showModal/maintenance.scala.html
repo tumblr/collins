@@ -8,7 +8,7 @@
 
 <!-- start asset maintenance modal -->
 @if(Maintenance.canTransitionToMaintenance(aa.asset)) {
-  @maintenanceBody(aa, "Asset in Maintenance Mode", false, Some("Maintenance")) {
+  @maintenanceBody(aa, "Asset in Maintenance Mode", false, "btn-danger", Some("Maintenance")) {
     <p>Asset is <em>not</em> currently in maintenance mode. Putting an asset in maintenance mode will:</p>
     <ul>
       <li>Change the asset status</li>
@@ -19,7 +19,7 @@
     <input type="hidden" name="status" value="Maintenance">
   }
 } else {
-  @maintenanceBody(aa, "Asset out of Maintenance Mode", true, None, State.Running) {
+  @maintenanceBody(aa, "Asset out of Maintenance Mode", true, "btn-primary", None, State.Running) {
     <p>Asset is currently in maintenance mode. Taking an asset out of maintenance mode will:</p>
     <ul>
       <li>Change the asset status</li>

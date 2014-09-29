@@ -1,4 +1,4 @@
-@(aa: models.asset.AllAttributes, buttonText: String, selectStatus: Boolean, limitStatesTo: Option[String] = None, defaultState: Option[State] = None)(body: Html)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: models.asset.AllAttributes, buttonText: String, selectStatus: Boolean, buttonClass: String = "btn-primary", limitStatesTo: Option[String] = None, defaultState: Option[State] = None)(body: Html)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util._
@@ -9,17 +9,17 @@
 <!-- start asset maintenance modal -->
 @container("asset-maintenance", "assetMaintenanceLabel", true) {
   @header("Asset Maintenance", Some("Warning"))
-  @form(app.routes.CookieApi.updateAssetForMaintenance(aa.asset.tag), 'class -> "form-horizontal", Symbol("data-form") -> "true", Symbol("data-error") -> "maintenanceError", Symbol("data-modal") -> "asset-maintenance", Symbol("data-refresh") -> ".window") {
+  @form(app.routes.CookieApi.updateAssetForMaintenance(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "maintenanceError", Symbol("data-modal") -> "asset-maintenance", Symbol("data-refresh") -> ".window") {
     <div class="modal-body">
       @body
       @if(selectStatus) {
         <script type="text/javascript">
           var STATE_MAP = @StateHelper.statesAsJson();
         </script>
-        @formField {
-          @formLabel("status", "Status")
-          @formInput {
-            <select name="status" id="status" data-trigger-update="#state" data-trigger-update-map="STATE_MAP">
+        @formFieldRow {
+          @formLabelInline("status", "Status")
+          @formInputInline {
+            <select name="status" class="form-control" id="status" data-trigger-update="#state" data-trigger-update-map="STATE_MAP">
               <option value="" selected="selected"></option>
               @OptionSorter.sortStrings(Status.statusNames.toSeq, Some(" ")).map { v =>
               <option value="@v._1">@v._2</option>
@@ -28,10 +28,10 @@
           }
         }
       }
-      @formField {
-        @formLabel("state", "State")
-        @formInput {
-          <select name="state" id="state">
+      @formFieldRow {
+        @formLabelInline("state", "State")
+        @formInputInline {
+          <select name="state" class="form-control" id="state">
             @if(!defaultState.isDefined) {
             <option value="" selected="selected"></option>
             }
@@ -45,17 +45,19 @@
               }
             }
           </select>
-          <span class="help-inline"><a target="_blank" href="@app.routes.HelpPage.index("default")#assetState"><i class="icon-question-sign"></i></a></span>
+          @inputAddonHelpIcon("A state representing the operational state of the asset (i.e. network problem, hardware problem, IPMI problem, NOOP, etc)", Some(app.routes.HelpPage.index("default") + "#assetState"))
         }
       }
-      <div class="control-group">
-        <textarea name="description" id="maintenanceDescription" class="input-xxlarge" rows="3" placeholder="Description"></textarea>
+      <div class="form-group">
+        <textarea name="description" id="maintenanceDescription" class="form-control" rows="3" placeholder="Description"></textarea>
       </div>
-      <div id="maintenanceError" data-purge="true" class="alert alert-block alert-error hide hideAfterClose"></div>
+      <div id="maintenanceError" data-purge="true" class="alert alert-block alert-danger hide-loprio hideAfterClose"></div>
     </div>
     <div class="modal-footer">
-      <button type="submit" class="btn">@buttonText</button>
-      @resetButton("Go back to browsing tumblr")
+      <div class="btn-group">
+        @resetButton("Go back to browsing tumblr")
+        <button type="submit" class="btn @buttonClass">@buttonText</button>
+      </div>
     </div>
   }
 }
