@@ -25,55 +25,59 @@
 
     @if(loggedIn) {
     <nav class="navbar navbar-inverse navbar-fixed-top collins-navbar" role="navigation">
-      <div class="navbar-header">
-        <button type="button" class="btn btn-navbar navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="@app.routes.Resources.index">Collins</a>
-      </div>
-      <div class="navbar-collapse collapse navbar-right">
-        <ul class="nav navbar-nav">
-          <li class="@{if (req.path == app.routes.Resources.index.toString) "active" }"><a href="@app.routes.Resources.index">Search</a></li>
-          @User.fromMap(req.session.data).map { u =>
-            @if(Permissions.please(u, Permissions.AssetLogApi.GetAll)) {
-              <li class="@{if (req.path == routes.Admin.logs.toString) "active" }"><a href="@routes.Admin.logs">Logging</a></li>
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="btn btn-navbar navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="@app.routes.Resources.index">Collins</a>
+        </div>
+        <div class="navbar-collapse collapse navbar-right">
+          <ul class="nav navbar-nav">
+            <li class="@{if (req.path == app.routes.Resources.index.toString) "active" }"><a href="@app.routes.Resources.index">Search</a></li>
+            @User.fromMap(req.session.data).map { u =>
+              @if(Permissions.please(u, Permissions.AssetLogApi.GetAll)) {
+                <li class="@{if (req.path == routes.Admin.logs.toString) "active" }"><a href="@routes.Admin.logs">Logging</a></li>
+              }
+              @if(Permissions.please(u, Permissions.AssetApi.CreateAsset)) {
+              <li class="dropdown @{if (req.path contains "/asset/create") "active" }">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Create <b class="caret"></b></a>
+                <ul class="dropdown-menu">
+                  @AssetType.find().filter(_.name != "SERVER_NODE").map { t =>
+                    <li><a href="@app.routes.Resources.displayCreateForm(t.name)">@t.label</a></li>
+                  }
+                </ul>
+              </li>
+              }
             }
-            @if(Permissions.please(u, Permissions.AssetApi.CreateAsset)) {
-            <li class="dropdown @{if (req.path contains "/asset/create") "active" }">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Create <b class="caret"></b></a>
-              <ul class="dropdown-menu">
-                @AssetType.find().filter(_.name != "SERVER_NODE").map { t =>
-                  <li><a href="@app.routes.Resources.displayCreateForm(t.name)">@t.label</a></li>
-                }
-              </ul>
-            </li>
-            }
-          }
-          <li><a href="@app.routes.HelpPage.index("default")"><i class="glyphicon glyphicon-question-sign icon-white"></i></a></li>
-          <li><a href="@routes.Application.logout">Logout</a></li>
-        </ul>
+            <li><a href="@app.routes.HelpPage.index("default")"><i class="glyphicon glyphicon-question-sign icon-white"></i></a></li>
+            <li><a href="@routes.Application.logout">Logout</a></li>
+          </ul>
+        </div>
       </div>
     </nav>
     } else {
     <nav class="navbar navbar-inverse navbar-fixed-top collins-navbar" role="navigation">
-      <div class="navbar-header">
-        <button type="button" class="btn btn-navbar navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="@app.routes.Resources.index">Collins</a>
-      </div>
-      <div class="navbar-collapse collapse navbar-right">
-        <form action="@routes.Application.authenticate" method="post" class="navbar-form" role="form">
-          <input class="input-medium form-control" type="text" name="username" placeholder="Username">
-          <input class="input-medium form-control" type="password" name="password" placeholder="Password">
-          <button class="btn btn-default" type="submit">Sign in</button>
-        </form>
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="btn btn-navbar navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="@app.routes.Resources.index">Collins</a>
+        </div>
+        <div class="navbar-collapse collapse navbar-right">
+          <form action="@routes.Application.authenticate" method="post" class="navbar-form" role="form">
+            <input class="input-medium form-control" type="text" name="username" placeholder="Username">
+            <input class="input-medium form-control" type="password" name="password" placeholder="Password">
+            <button class="btn btn-default" type="submit">Sign in</button>
+          </form>
+        </div>
       </div>
     </nav>
     }
