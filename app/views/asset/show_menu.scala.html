@@ -98,12 +98,10 @@ jQuery(document).ready(function ($) {
 
   //bind tab shows to update fragment in url
   $('a[data-toggle="pill"]').on('show.bs.tab',function(e){
-    console.log(e.target);
     var target = $(e.target).attr('href');
     if (target && target != '#') {
       var frag = target.split('#')[1];
       if (frag && frag != ''){
-        console.log("setting hash to " + frag);
         window.location.hash = frag;
       }
     }
