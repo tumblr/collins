@@ -14,7 +14,7 @@ class CollinsClient:
     This client will help you interface with Collins in a meaningful way
     giving access to all the different apis that Collins allows.
     """
-    def __init__(self, username, passwd, host="http://50.97.87.90:8080"):
+    def __init__(self, username, passwd, host):
         self.username = username
         self.passwd = passwd
         self.host = host
