@@ -3,6 +3,9 @@
 
 @import helper._
 @import _root_.util.views.{ListHelper, Formatter, Pagination}
+@import _root_.util.config.Feature
+@import _root_.models._
+@import _root_.collins.solr._
 @import util.notice
 @import models.SortDirection._
 
@@ -27,6 +30,16 @@
     case default => ""
   }
 }
+@formatRawMetaAttribute(name: String) = @{
+  name.replaceAll("_"," ").replaceAll("-"," ").toLowerCase.capitalize
+}
+@displayMetaSortHeader(name: String, metaOpt: Option[AssetMeta]) = {
+    @if(AssetKeyResolver(name).map(p => p.isSortable).getOrElse(false)) {
+      <th><a href="@sortLink(name)" title="Sort by @name">@formatRawMetaAttribute(name)</a></th>
+    } else {
+      <th><span title="Results are not sortable by @name">@formatRawMetaAttribute(name)</span></th>
+    }
+}
 
 @main("Search Results") {
 <div class="page-header">
@@ -40,14 +53,9 @@
     <table class="table table-bordered table-hover" data-size="50">
       <thead>
         <tr>
-          <th><a href="@sortLink("TAG")">Asset Tag</a></th>
-          @if(ListHelper.showHostname(assets)) {
-          <th><a href="@sortLink("HOSTNAME")">Hostname</a></th>
+          @for(metaName <- Feature.searchResultColumns) {
+            @displayMetaSortHeader(metaName,AssetMeta.findByName(metaName))
           }
-	        <th><a href="@sortLink("PRIMARY_ROLE")">Primary Role</a></th>
-          <th><a href="@sortLink("STATUS")">Status</a></th>
-          <th><a href="@sortLink("CREATED")">Created</a></th>
-          <th><a href="@sortLink("UPDATED")">Last Updated</a></th>
           @if(ListHelper.showSoftLayerLink(assets)) {
           <th>SL Link</th>
           }
@@ -56,14 +64,31 @@
       <tbody>
         @assets.items.map { asset =>
         <tr class="@rowClassFromAsset(asset)">
-          <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
-          @if(ListHelper.showHostname(assets)) {
-          <td>@asset.getHostnameMetaValue.map(v => Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>
+          @for(meta <- Feature.searchResultColumns) {
+            @meta match {
+              case "TAG" => {
+                <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
+              }
+              case "HOSTNAME" => {
+                <td>@asset.getHostnameMetaValue.map(v => Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>
+              }
+              case "STATUS" => {
+                <td>@Formatter.elipse(asset.getStatusName(), 12)</td>
+              }
+              case "STATE" => {
+                <td>@Formatter.elipse(asset.getStateName(), 12)</td>
+              }
+              case "CREATED" => {
+                <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
+              }
+              case "UPDATED" => {
+                <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
+              }
+              case _ => {
+                <td>@asset.getMetaAttributeValue(meta).map(v=>Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>
+              }
+            }
           }
-          <td>@asset.getPrimaryRoleMetaValue().getOrElse { <em>Unknown</em> }</td>
-          <td>@Formatter.elipse(asset.getStatusName(), 12)</td>
-          <td>@asset.created.format("yyyy-MM-dd HH:mm:ss")</td>
-          <td>@asset.updated.map(_.format("yyyy-MM-dd HH:mm:ss")).getOrElse { <em>Never</em> }</td>
           @if(ListHelper.showSoftLayerLink(assets)) {
             @slLink(asset)
           }
