@@ -25,7 +25,7 @@
 <iframe id="fibr-graph" src="" frameborder="0"></iframe>
 
 <script type="text/javascript">
-  $('a[data-toggle="pill"]').on('show', function(e) {
+  $('a[data-toggle="pill"]').on('show.bs.tab', function(e) {
     var target = $(e.target)
     var iframe = $('#fibr-graph')
     if (target.attr('href') === '#graph-info' && iframe.attr('src') === "") {

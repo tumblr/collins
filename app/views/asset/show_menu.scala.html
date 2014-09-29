@@ -18,21 +18,21 @@
       @if(aa.ipmi.nonEmpty || PowerManagement.powerAllowed(aa.asset)) {
       <li><a href="#ipmi-info" data-toggle="pill">IPMI Info</a></li>
       } else {
-      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not have any IPMI information"><a href="#">IPMI Info</a></li>
+      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not have any IPMI information"><a href="javascript:void(0);">IPMI Info</a></li>
       }
       <li><a href="#log-data" data-toggle="pill">Logs</a></li>
       @if(aa.lshw.cpuCount > 0) {
       <li><a href="#hardware-details" data-toggle="pill">Hardware Details</a></li>
       } else {
-      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any CPUs in LSHW"><a href="#">Hardware Details</a></li>
+      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any CPUs in LSHW"><a href="javascript:void(0);">Hardware Details</a></li>
       }
       @if(aa.lldp.interfaceCount > 0) {
       <li><a href="#lldp-info" data-toggle="pill">LLDP Info</a></li>
       } else {
-      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any interfaces in LLDP"><a href="#">LLDP Info</a></li>
+      <li class="disabled" data-rel="tooltip" data-original-title="This asset is does not report any interfaces in LLDP"><a href="javascript:void(0);">LLDP Info</a></li>
       }
       <li class="dropdown" data-dropdown="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown"><strong>Actions</strong> <b class="caret"></b></a>
+        <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown"><strong>Actions</strong> <b class="caret"></b></a>
         <ul class="dropdown-menu">
           <li>@modalLink("#asset-note", "Create Note", icon = Some("glyphicon glyphicon-comment"))</li>
           <li class="divider"></li>
@@ -74,14 +74,14 @@
         @if(p.isGraphable(aa.asset)) {
           <li><a href="#graph-info" data-toggle="pill">Graphs</a></li>
         } else {
-          <li class="disabled" data-rel="tooltip" data-original-title="This asset is not graphable"><a href="#">Graphs</a></li>
+          <li class="disabled" data-rel="tooltip" data-original-title="This asset is not graphable"><a href="javascript:void(0);">Graphs</a></li>
         }
       }
       @MonitoringPlugin.option.map { plugin =>
         @if(plugin.isMonitorable(aa.asset)) {
           <li><a href="#monitoring-info" data-toggle="pill">Monitoring</a></li>
         } else {
-          <li class="disabled" data-rel="tooltip" data-original-title="This asset is not monitorable"><a href="#">Monitoring</a></li>
+          <li class="disabled" data-rel="tooltip" data-original-title="This asset is not monitorable"><a href="javascript:void(0);">Monitoring</a></li>
         }
       }
     </ul>
@@ -89,11 +89,22 @@
 </div>
 
 <script type="text/javascript">
-    jQuery(document).ready(function ($) {
-      var anchor = location.href.split('#')[1];
-      $('a[href=#' + anchor + ']').tab('show');
-      setTimeout(function() {
-        $(window).scrollTop(0);
-       }, 0);
-    });
+jQuery(document).ready(function ($) {
+  var anchor = location.href.split('#')[1];
+  $('a[href=#' + anchor + ']').tab('show');
+  setTimeout(function() {
+    $(window).scrollTop(0);
+   }, 0);
+
+  //bind tab shows to update fragment in url
+  $('a[data-toggle="pill"]').on('show.bs.tab',function(e){
+    var target = $(e.target).attr('href');
+    if (target && target != '#') {
+      var frag = target.split('#')[1];
+      if (frag && frag != ''){
+        window.location.hash = frag;
+      }
+    }
+  });
+});
 </script>

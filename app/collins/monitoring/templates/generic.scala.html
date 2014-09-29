@@ -14,7 +14,7 @@
 <iframe id="generic-monitoring" src="" frameborder="0"></iframe>
 
 <script type="text/javascript">
-  $('a[data-toggle="pill"]').on('show', function(e) {
+  $('a[data-toggle="pill"]').on('show.bs.tab', function(e) {
     var target = $(e.target)
     var iframe = $('#generic-monitoring')
     if (target.attr('href') === '#monitoring-info' && iframe.attr('src') === "") {
