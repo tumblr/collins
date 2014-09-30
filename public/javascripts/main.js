@@ -386,7 +386,7 @@ $(document).ready(function() {
     var oTable;
     var dataSrc = e.attr('data-source');
     var columns = window[e.attr('data-cols')];
-    var rows = e.attr('data-size') || 10;
+    var rows = parseInt(e.attr('data-size'),10) || 10;
 
     var typeLocation = false;
     var tagLocation = false;
