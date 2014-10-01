@@ -28,7 +28,7 @@
     <input type="hidden" name="operation" value="and" tabindex="-1">
 
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-lg-4 col-md-5 col-sm-6">
         @formFieldRow {
           @formLabelInline("tag", "Asset Tag")
           @formInputInline {
@@ -138,7 +138,7 @@
         }
       </div>
 
-      <div class="col-md-6">
+      <div class="col-lg-4 col-md-5 col-sm-6 col-lg-offset-1 col-md-offset-1">
         @assetMeta.zipWithIndex.map { case(asset, idx) =>
           @formFieldRow {
             @formLabelInline(asset.name, asset.label)
