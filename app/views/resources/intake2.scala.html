@@ -3,6 +3,7 @@
 @import util.notice
 @import twitterBootstrap._
 @import helper._
+@import util._
 @import AssetMeta.Enum.ChassisTag
 
 @main("Intake Step 2 - " + asset.tag) {
@@ -13,13 +14,30 @@
   <div class="col-md-12">
     @notice("error", Some("danger"))
     @notice("warning")
-    @form(app.routes.Resources.intake(asset.getId, 2)) {
-    @inputText(f(ChassisTag.toString), '_label -> "Scan the Chassis Tag", 'class -> "focus", 'autocomplete -> "off")
-    <input type="hidden" name="stage" value="2">
-    <div class="actions">
-      <input type="submit" class="btn btn-primary" value="Next &rarr;">
+    <div class="alert alert-block">
+      <h4>Scan the Chassis Tag</h4>
+      <div class="row">
+        <div class="col-lg-5 col-md-6 col-sm-7 col-xs-9">
+        @form(app.routes.Resources.intake(asset.getId, 2)) {
+          @formFieldRow {
+            @formLabelInline(f(ChassisTag.toString).name, "Chassis Tag")
+            @formInputInline {
+              <input type="text" id="@f(ChassisTag.toString).name" name="@f(ChassisTag.toString).name" class="form-control focus" autocomplete="off">
+              @inputAddonHelpIcon("Chassis tag is typically a unique identified encoded into a barcode on the machine")
+            }
+          }
+          @formFieldRow {
+            <input type="hidden" name="stage" value="2">
+            <div class="form-group">
+              <div class="btn-group">
+                <button type="submit" class="btn btn-primary">Next</button>
+              </div>
+            </div>
+          }
+        }
+        </div>
+      </div>
     </div>
-    }
   </div>
 </div>
 }
