@@ -1,7 +1,6 @@
 package collins.solr
 
 import akka.actor._
-import akka.util.duration._
 import play.api.Logger
 import models.{Asset, AssetLog}
 import java.util.Collections
@@ -25,7 +24,7 @@ class AssetSolrUpdater extends Actor {
   private[this] def newAssetTagSet = Collections.newSetFromMap[String](
     new ConcurrentHashMap[String,java.lang.Boolean]()
   )
-  
+
   private[this] val assetTagsRef = new AtomicReference(newAssetTagSet)
   private[this] val logger = Logger("SolrUpdater")
 
@@ -45,10 +44,10 @@ class AssetSolrUpdater extends Actor {
     case asset: Asset =>
       assetTagsRef.get.add(asset.tag)
       if (scheduled.compareAndSet(false, true)) {
-        logger.debug("Scheduling update, saw %s".format(asset.tag))
-        context.system.scheduler.scheduleOnce(10 milliseconds, self, Reindex)
+        logger.debug("Scheduling reindex of %s within %s".format(asset.tag,SolrConfig.assetBatchUpdateWindow))
+        context.system.scheduler.scheduleOnce(SolrConfig.assetBatchUpdateWindow, self, Reindex)
       } else {
-        logger.trace("Not scheduling update, saw %s".format(asset.tag))
+        logger.trace("Ignoring already scheduled reindex of %s".format(asset.tag))
       }
     case Reindex =>
       if (scheduled.get == true) {
