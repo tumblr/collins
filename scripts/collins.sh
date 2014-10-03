@@ -76,15 +76,11 @@ initialize_db() {
 
   if [ -z "$db_username" ]; then
     read -p "Collins Database Username: " db_username
-  else
-    db_username="$2";
   fi
   if [ -z "$db_password" ]; then
     stty -echo
     read -p "Collins Database Password: " db_password; echo
     stty echo
-  else
-    db_password="$3";
   fi
 
   echo "Please enter mysql root password. Press <enter> for none."
