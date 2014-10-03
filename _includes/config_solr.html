@@ -74,6 +74,11 @@ also sort results by any tag which is nice. You can find example queries in the
       <td>Int</td>
       <td><span class="label label-info">External only</span> Solr HTTP client tunable; defaults to 100.</td>
     </tr>
+    <tr>
+      <td class="inlinecode">assetBatchUpdateWindowMs</td>
+      <td>Int</td>
+      <td>Window in ms that the Solr Updater will attempt to batch asset updates in. Defaults to 10ms. Increasing this can reduce load on Solr if intaking an asset is triggering multiple asset update tasks.</td>
+    </tr>
   </tbody>
 </table>
 
