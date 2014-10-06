@@ -8,31 +8,28 @@
 @import collins.intake.IntakeConfig
 
 @main("Intake Step 3 - " + asset.tag) {
-<div class="page-header">
-  <h1>Intake Step 3 <small>Verify Information for @asset.tag.</small></h1>
-</div>
-<div class="row">
-  <div class="col-md-12">
-    @notice("error", Some("danger"))
-    @notice("warning")
-    @if(f.globalError.isDefined){
-      @f.globalError.map { err =>
-      <!-- if there is a global error, show that -->
+  @notice("error", Some("danger"))
+  @notice("warning")
+  @if(f.globalError.isDefined){
+    @f.globalError.map { err =>
+    <!-- if there is a global error, show that -->
+    <div class="alert alert-danger">
+      <button type="button" class="close" data-dismiss="alert">x</button>
+      <strong>Unable to intake node</strong> @err.message
+    </div>
+    }
+  } else {
+    @f.errors.lift(0).map { err =>
+      <!-- otherwise just show the first validation error -->
       <div class="alert alert-danger">
         <button type="button" class="close" data-dismiss="alert">x</button>
-        <strong>Unable to intake node</strong> @err.message
+        <strong>Validation failed for @err.key</strong> @Messages(err.message, err.args: _*)
       </div>
-      }
-    } else {
-      @f.errors.lift(0).map { err =>
-        <!-- otherwise just show the first validation error -->
-        <div class="alert alert-danger">
-          <button type="button" class="close" data-dismiss="alert">x</button>
-          <strong>Validation failed for @err.key</strong> @Messages(err.message, err.args: _*)
-        </div>
-      }
     }
-  </div>
+  }
+
+<div class="page-header">
+  <h1>Intake Step 3 <small>Verify Information for @asset.tag.</small></h1>
 </div>
 <div class="row">
   <div class="col-lg-5 col-md-6 col-sm-7 col-xs-9">

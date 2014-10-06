@@ -33,14 +33,14 @@
 }
 
 @main("Search Results") {
+  @notice("message", Some("info"))
+  @notice("error", Some("danger"))
+  @notice("warning")
 <div class="page-header">
   <h1>Search Results <small>Displaying @(assets.offset + 1) to @(assets.offset + assets.size) of @assets.total results.</small></h1>
 </div>
 <div class="row">
   <div class="col-md-12">
-    @notice("message", Some("info"))
-    @notice("error", Some("danger"))
-    @notice("warning")
     <table class="table table-bordered table-hover" data-size="50">
       <thead>
         <tr>

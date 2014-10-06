@@ -7,13 +7,13 @@
 @import AssetMeta.Enum.ChassisTag
 
 @main("Intake Step 2 - " + asset.tag) {
+  @notice("error", Some("danger"))
+  @notice("warning")
 <div class="page-header">
   <h1>Intake Step 2 <small>Verify Chassis Tag for @asset.tag.</small></h1>
 </div>
 <div class="row">
   <div class="col-md-12">
-    @notice("error", Some("danger"))
-    @notice("warning")
     <h4>Scan the Chassis Tag</h4>
     <div class="row">
       <div class="col-lg-5 col-md-6 col-sm-7 col-xs-9">
