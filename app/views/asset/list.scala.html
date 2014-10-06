@@ -6,7 +6,7 @@
 @import _root_.util.config.Feature
 @import _root_.models._
 @import _root_.collins.solr._
-@import util.notice
+@import util._
 @import models.SortDirection._
 
 @link(newPage: Int) = @{
@@ -20,15 +20,6 @@
   }
   val prefix = app.routes.Resources.find(0, 50, sortDir.toString, "and", sort).toString
   Pagination.paginate(prefix, req.queryString)
-}
-@rowClassFromAsset(a: models.asset.AssetView) = @{
-  a match {
-    case warn if warn.isIncomplete || warn.isNew => "warning"
-    case info if info.isProvisioning || info.isProvisioned => "info"
-    case ok if ok.isCancelled || ok.isDecommissioned => "success"
-    case err if err.isMaintenance => "danger"
-    case default => ""
-  }
 }
 @formatRawMetaAttribute(name: String) = @{
   name.replaceAll("_"," ").replaceAll("-"," ").toLowerCase.capitalize
@@ -63,7 +54,7 @@
       </thead>
       <tbody>
         @assets.items.map { asset =>
-        <tr class="@rowClassFromAsset(asset)">
+        <tr class="@statusClassFromAsset(asset)">
           @for(meta <- Feature.searchResultColumns) {
             @meta match {
               case "TAG" => {
