@@ -210,14 +210,6 @@ p { padding: 5px 0; }
 
 /* bootstrap hacks */
 
-.input-group {
-  max-width: 250px;
-}
-
-.collins-navbar {
-  background: black !important;
-}
-
 /* bootstrap 3 makes this !important so lets let .show() override it */
 .hide-loprio {
   display:none;

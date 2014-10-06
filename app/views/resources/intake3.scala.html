@@ -8,60 +8,88 @@
 @import collins.intake.IntakeConfig
 
 @main("Intake Step 3 - " + asset.tag) {
+  @notice("error", Some("danger"))
+  @notice("warning")
+  @if(f.globalError.isDefined){
+    @f.globalError.map { err =>
+    <!-- if there is a global error, show that -->
+    <div class="alert alert-danger">
+      <button type="button" class="close" data-dismiss="alert">x</button>
+      <strong>Unable to intake node</strong> @err.message
+    </div>
+    }
+  } else {
+    @f.errors.lift(0).map { err =>
+      <!-- otherwise just show the first validation error -->
+      <div class="alert alert-danger">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        <strong>Validation failed for @err.key</strong> @Messages(err.message, err.args: _*)
+      </div>
+    }
+  }
+
 <div class="page-header">
   <h1>Intake Step 3 <small>Verify Information for @asset.tag.</small></h1>
 </div>
 <div class="row">
-  <div class="col-md-8">
-    @notice("error", Some("danger"))
-    @notice("warning")
-    @form(app.routes.Resources.intake(asset.getId, 3), 'class -> "form-horizontal") {
-    @formField {
-      @formLabel("ASSET_TAG", "Asset Tag")
-      @formInput {
-         <span id="ASSET_TAG" class="uneditable-input">@asset.tag</span>
+  <div class="col-lg-5 col-md-6 col-sm-7 col-xs-9">
+    @form(app.routes.Resources.intake(asset.getId, 3)) {
+    @formFieldRow {
+      @formLabelInline("ASSET_TAG", "Asset Tag")
+      @formInputInline {
+         <input disabled id="ASSET_TAG" class="form-control" placeholder="@asset.tag"></input>
       }
     }
-    @formField {
-      @formLabel(ServiceTag.toString, "Service Tag")
-      @formInput {
-        <span id="@ServiceTag.toString" class="uneditable-input">
-          @asset.getMetaAttribute(ServiceTag.toString).map{a => @a.getValue()}.getOrElse{<em>-</em>}
-        </span>
+    @formFieldRow {
+      @formLabelInline(ServiceTag.toString, "Service Tag")
+      @formInputInline {
+        <input disabled id="@ServiceTag.toString" class="form-control" placeholder="@asset.getMetaAttribute(ServiceTag.toString).map{a => @a.getValue()}.getOrElse{-}">
       }
     }
-    @formField {
+    @formFieldRow {
       @f.forField(ChassisTag.toString) { field =>
-        @formLabel(field.name, "Chassis Tag")
-        @formInput {
-          <span id="@field.name" class="uneditable-input">@field.value.getOrElse("")</span>
+        @formLabelInline(field.name, "Chassis Tag")
+        @formInputInline {
+          <input disabled id="@field.name" class="form-control" placeholder="@field.value.getOrElse("")">
           <input type="hidden" name="@field.name" value="@field.value.getOrElse("")">
         }
       }
     }
 
-    @inputText(f(RackPosition.toString), '_label -> "Rack Position", 'autocomplete -> "off", Symbol("enter-style") -> "tab", 'class -> "focus")
+    @formFieldRow {
+      @formLabelInline(f(RackPosition.toString).name, "Rack Position")
+      @formInputInline {
+        <input id="@RackPosition.toString" name="@RackPosition.toString" class="form-control focus" autocomplete="off" enter-style="tab" value="@f(RackPosition.toString).value">
+        @inputAddonHelpIcon("An identifier for where the asset is located in the datacenter. i.e. JFK01-R203-U34")
+      }
+    }
 
     @IntakeConfig.intake_field_names.map { (name) =>
-       @inputText(f(name), '_label -> name, 'autocomplete -> "off", Symbol("enter-style") -> "tab")
+      @formFieldRow {
+        @formLabelInline(f(name).toString, name)
+        @formInputInline {
+          <input id="@name" name="@f(name).name" class="form-control" autocomplete="off" enter-style="tab" value="@f(name).value.getOrElse("")">
+        }
       }
+    }
 
     @getPowerComponentsInOrder.map { component =>
-    @inputText(f(component.key), '_help -> "Value Required", '_label -> component.label, 'autocomplete -> "off", Symbol("enter-style") -> "tab")
+      @formFieldRow {
+        @formLabelInline(component.key,component.label)
+        @formInputInline {
+          <input id="@f(component.key).name" name="@f(component.key).name" class="form-control" autocomplete="off" enter-style="tab" value="@f(component.key).value.getOrElse("")">
+        }
+      }
     }
-    @f.globalError.map { error =>
-      <div class="alert alert-danger">
-        <strong>Unable to intake node</strong> @error.message
+    @formFieldRow {
+      <input type="hidden" name="stage" value="3">
+      <div class="btn-group">
+        <button type="submit" class="btn btn-primary">Done</button>
       </div>
     }
-    <div>
-      <input type="submit" class="btn btn-primary" value="Done &rarr;">
-      <input type="hidden" name="stage" value="3">
-      <a class="btn btn-default" href="@app.routes.Resources.intake(asset.getId, 1)">Cancel</a>
-    </div>
-    }
+  }
   </div>
-  <div class="col-md-4">
+  <div class="col-lg-5 col-lg-offset-2 col-md-5 col-md-offset-1 col-sm-5 col-xs-7">
     <h3>Overview</h3>
     <p>Scan the rack position and individual power ports of the chassis. These values will be
     associated with the node. These values are used for determining what nodes are available in

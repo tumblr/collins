@@ -35,22 +35,19 @@
     <div class="row">
       <div class="col-md-8">
         @form(routes.Application.authenticate, 'role -> "form") {
-          @formFieldRow {
-            @formLabelInline("username","Username")
-            @formInputInline {
-              <input type="text" id="username" name="username" value="@loginForm("username").value" class="form-control focus">
+          @formField {
+            @formInput {
+              <input type="text" id="username" name="username" value="@loginForm("username").value" class="form-control focus" placeholder="Username">
             }
           }
-          @formFieldRow {
-            @formLabelInline("password","Password")
-            @formInputInline {
-              <input type="password" id="password" name="password" value class="form-control">
+          @formField {
+            @formInput {
+              <input type="password" id="password" name="password" value class="form-control" placeholder="Password">
             }
           }
-          @formFieldRow {
+          @formField {
           <div class="btn-group">
-            <button type="reset" class="btn btn-default">Cancel</button>
-            <button type="submit" class="btn btn-primary">Sign in</button>
+            <button type="submit" class="btn btn-primary">Login</button>
           </div>
           }
           @loginForm("location").value.map { value =>

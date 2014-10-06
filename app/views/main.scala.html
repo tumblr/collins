@@ -24,7 +24,7 @@
   <body>
 
     @if(loggedIn) {
-    <nav class="navbar navbar-inverse navbar-fixed-top collins-navbar" role="navigation">
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="btn btn-navbar navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -83,18 +83,17 @@
     }
 
     <div class="container">
-
       <div class="content">
-        <!-- I know this is naughty, but it seems to make the gutters work -->
-        <div class="container">
-          @content
-        </div>
+        @content
       </div>
 
       <hr>
-
       <footer>
-        <p>&copy; Tumblr, 2011-2014</p>
+        <div class="row">
+          <div class="col-sm-12">
+            <p class="text-center">&copy; <a href="https://www.tumblr.com">Tumblr</a>, 2011-2014</p>
+          </div>
+        </div>
       </footer>
     </div>
 

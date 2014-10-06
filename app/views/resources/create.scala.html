@@ -4,12 +4,14 @@
 @import _root_.util.views.Formatter.camelCase
 
 @main("Asset Creator") {
-<div class="page-header"><h1>Create <small>Make a new @atype.label.</small></h1></div>
   @notice("error",Some("danger"))
   @notice("warning")
+  <div class="page-header">
+    <h1>Create <small>Make a new @atype.label.</small></h1>
+  </div>
   <div class="container">
     <div class="row">
-      <div class="col-md-8">
+      <div class="col-lg-5 col-md-6 col-sm-7 col-xs-9">
         <form action="@app.routes.Resources.createAsset(atype.name)" method="post" class="form-horizontal" role="form">
           @formFieldRow {
             @formLabelInline("type", "Asset Type")

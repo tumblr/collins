@@ -3,6 +3,7 @@
 @import _root_.util.config.{Feature, NodeclassifierConfig}
 @import _root_.util.plugins.SoftLayer
 @import _root_.util.views.{MetaValueOrderer, TagDecorator}
+@import util._
 
 <div class="active tab-pane" id="overview">
   <section id="overview-section" class="sectional">
@@ -61,7 +62,7 @@
           <td>@aa.asset.getType().label</td>
           <td></td>
         </tr>
-        <tr class="@if(aa.asset.isMaintenance){danger}">
+        <tr class="@statusClassFromAsset(aa.asset)">
           <td><strong>Asset Status</strong></td>
           <td>@aa.asset.getStatus().name</td>
           @if(aa.asset.isMaintenance) {

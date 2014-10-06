@@ -1,0 +1,9 @@
+@(a: models.asset.AssetView) = @{
+  a match {
+    case warn if warn.isIncomplete || warn.isNew => "warning"
+    case info if info.isProvisioning || info.isProvisioned => "info"
+    case ok if ok.isCancelled || ok.isDecommissioned => "success"
+    case err if err.isMaintenance => "danger"
+    case default => ""
+  }
+}

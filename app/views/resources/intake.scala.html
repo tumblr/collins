@@ -4,22 +4,18 @@
 @import util.notice
 
 @main("Intake Step 1 - " + asset.tag) {
+  @notice("message", Some("info"))
+  @notice("error", Some("danger"))
+  @notice("warning")
 <div class="page-header">
   <h1>Intake Step 1 <small>Verify IPMI Light for @asset.tag.</small></h1>
 </div>
 <div class="row">
   <div class="col-md-12">
-    @notice("message", Some("info"))
-    @notice("error", Some("danger"))
-    @notice("warning")
-    <div class="alert alert-block">
-      <h4 class="alert-heading">Did the correct light come on?</h4>
-      <p>
-      </p>
-      <p>
-        <a class="btn btn-primary" data-altkey="yes" href="@app.routes.Resources.intake(asset.getId, 1)?light=yes">Yes</a>
-        <a class="btn btn-default" data-altkey="no" href="@app.routes.HelpPage.index(Help.IpmiNoLight)#ipmiNoLight">No</a>
-      </p>
+    <h4 class="alert-heading">Did the correct light come on?</h4>
+    <div class="btn-group">
+      <a class="btn btn-default" data-altkey="no" href="@app.routes.HelpPage.index(Help.IpmiNoLight)#ipmiNoLight">No</a>
+      <a class="btn btn-primary" data-altkey="yes" href="@app.routes.Resources.intake(asset.getId, 1)?light=yes">Yes</a>
     </div>
   </div>
 </div>
