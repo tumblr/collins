@@ -125,9 +125,6 @@ class CollinsClient:
         }.get(method, "get")
 
         #TODO little more robust
-        try:
-            response = handle.open(request).read()
-            response = json.loads(response)
-            return response
-        except Exception, e:
-            pass
+        response = handle.open(request).read()
+        response = json.loads(response)
+        return response
