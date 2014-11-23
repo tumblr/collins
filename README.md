@@ -7,6 +7,8 @@ documentation below is for developers or people setting up a new instance.
 
 The most recent production build of collins is available [here](http://tumblr.github.com/collins/downloads.html)
 
+[![Build Status](https://travis-ci.org/tumblr/collins.png?branch=master)](https://travis-ci.org/tumblr/collins)
+
 ## Quickstart
 
 [Docker](http://tumblr.github.com/collins/#quickstart-docker)

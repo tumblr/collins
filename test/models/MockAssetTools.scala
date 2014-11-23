@@ -23,6 +23,7 @@ case class MockRemoteAsset(
  
   def getHostnameMetaValue(): Option[String] = None 
   def getPrimaryRoleMetaValue(): Option[String] = None 
+  def getMetaAttributeValue(name: String): Option[String] = None
   override def getStatusName(): String = "Allocated"
   override def toJsValue() = Json.toJson[AssetView](this)
 } 
