@@ -42,7 +42,9 @@ PID_DIRECTORY="/var/run/$APP_NAME"
 pidfile="$PID_DIRECTORY/$APP_NAME.pid"
 
 # Ensures the PID_DIRECTORY exists in order to survive hard reboots. 
-mkdir -p $PID_DIRECTORY 
+if [[ ! -d $PID_DIRECTORY ]] ; then
+  mkdir -p $PID_DIRECTORY 
+fi
 
 function running() {
   [[ ! -s $pidfile ]] && return 1
