@@ -8,10 +8,10 @@ Gem::Specification.new do |s|
   s.version = File.read 'VERSION'
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Blake Matheny"]
-  s.date = "2013-01-31"
-  s.description = "Send notifications via hipchat, IRC and email"
-  s.email = "bmatheny@tumblr.com"
+  s.authors = ["Blake Matheny", "Will Richard"]
+  s.date = "2015-01-06"
+  s.description = "Send notifications via hipchat, slack, IRC, and email"
+  s.email = "collins-sm@googlegroups.com"
   s.executables = ["collins-notify"]
   s.files = [
     "Gemfile",
@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
     "lib/collins_notify/adapter/helper/carried-pigeon.rb",
     "lib/collins_notify/adapter/hipchat.rb",
     "lib/collins_notify/adapter/irc.rb",
+    "lib/collins_notify/adapter/slack.rb",
     "lib/collins_notify/application.rb",
     "lib/collins_notify/command_runner.rb",
     "lib/collins_notify/configuration.rb",
@@ -37,7 +38,8 @@ Gem::Specification.new do |s|
     "templates/default_email.erb",
     "templates/default_email.html.erb",
     "templates/default_hipchat.erb",
-    "templates/default_irc.erb"
+    "templates/default_irc.erb",
+    "templates/default_slack.erb"
   ]
   s.homepage = "https://github.com/tumblr/collins/tree/master/support/ruby/collins-notify"
   s.licenses = ["MIT"]
