@@ -8,10 +8,10 @@ Gem::Specification.new do |s|
   s.version = File.read 'VERSION'
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Blake Matheny"]
-  s.date = "2013-01-31"
+  s.authors = ["Blake Matheny", "Will Richard"]
+  s.date = "2015-01-06"
   s.description = "Send notifications via hipchat, slack, IRC, and email"
-  s.email = "bmatheny@tumblr.com"
+  s.email = "collins-sm@googlegroups.com"
   s.executables = ["collins-notify"]
   s.files = [
     "Gemfile",
@@ -44,7 +44,7 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/tumblr/collins/tree/master/support/ruby/collins-notify"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.23"
+  s.rubygems_version = "1.8.24"
   s.summary = "Notifications for Collins"
 
   if s.respond_to? :specification_version then
