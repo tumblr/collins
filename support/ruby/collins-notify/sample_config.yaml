@@ -30,3 +30,5 @@
     join: true
     notice: true
     channel: "#test"
+:slack:
+    webhook_url: "some webhook url"
