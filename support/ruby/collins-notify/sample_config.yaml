@@ -32,3 +32,11 @@
     channel: "#test"
 :slack:
     webhook_url: "some webhook url"
+    # the following parameters are optional.
+    # if they are not specified, the defaults set in the slack webhook configuration will be used
+    username: "bot_username"
+    icon_emoji: ":smile:"
+    icon_url: "https://icon_url.png"
+    # channel is also optional
+    # but it can be overridden via the --recipient flag
+    channel: "#channel or @username"

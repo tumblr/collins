@@ -20,6 +20,15 @@ module CollinsNotify
       slack_hash = Hash.new
       slack_hash['text'] = get_message_body(binding)
       slack_hash['channel'] = get_channel config.adapters[:slack], to
+      optional_parameters = [:username, :icon_url, :icon_emoji]
+      optional_parameters.each do |op|
+        if config.adapters[:slack][op]
+          slack_hash[op] = config.adapters[:slack][op]
+        end
+      end
+
+      @logger.debug "slack parameters: #{slack_hash.inspect}"
+        
       if config.test? then
         @logger.info "Not sending message in test mode"
         return true
