@@ -16,16 +16,20 @@ module CollinsNotify
     end
     
     # Available in template binding:
+    # message_obj - Depends on call
+    # channel - channel sending to
     def notify! message_obj = OpenStruct.new, to = nil
       slack_hash = Hash.new
-      slack_hash['text'] = get_message_body(binding)
-      slack_hash['channel'] = get_channel config.adapters[:slack], to
+      channel = get_channel config.adapters[:slack], to
+      slack_hash['channel'] = channel
       optional_parameters = [:username, :icon_url, :icon_emoji]
       optional_parameters.each do |op|
         if config.adapters[:slack][op]
           slack_hash[op] = config.adapters[:slack][op]
         end
       end
+
+      slack_hash['text'] = get_message_body(binding)
 
       @logger.debug "slack parameters: #{slack_hash.inspect}"
         
