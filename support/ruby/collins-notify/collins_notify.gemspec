@@ -44,7 +44,7 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/tumblr/collins/tree/master/support/ruby/collins-notify"
   s.licenses = ["MIT"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.24"
+  s.rubygems_version = "1.8.23"
   s.summary = "Notifications for Collins"
 
   if s.respond_to? :specification_version then
