@@ -14,15 +14,29 @@ module CollinsNotify
       @webhook_url = config.adapters[:slack][:webhook_url]
       logger.info "Configured Slack adapter"
     end
-
     
     # Available in template binding:
     def notify! message_obj = OpenStruct.new, to = nil
       slack_hash = Hash.new
       slack_hash['text'] = get_message_body(binding)
       slack_hash['channel'] = get_channel config.adapters[:slack], to
-      @logger.debug "Posting to slack webhook: #{@webhook_url}"
-      HTTParty.post(@webhook_url, :body => JSON.dump(slack_hash))
+      if config.test? then
+        @logger.info "Not sending message in test mode"
+        return true
+      end
+
+      begin
+        @logger.debug "Posting to slack webhook: #{@webhook_url}"
+        reply = HTTParty.post(@webhook_url, :body => JSON.dump(slack_hash))
+        reply.response.value # this raises an error if the response said it was unsuccessful
+        true
+      rescue CollinsNotify::CollinsNotifyException => e
+        @logger.error "error sending slack notification - #{e}"
+        raise e
+      rescue Exception => e
+        @logger.error "#{e.class.to_s} - error sending slack notification - #{e}"
+        raise CollinsNotify::CollinsNotifyException.new e
+      end
     end
 
     protected
