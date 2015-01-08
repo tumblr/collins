@@ -73,10 +73,9 @@ module CollinsNotify
     # If the recipient isn't explicitly a user (@username) then we'll assume the string is a channel
     def make_channel chan
       @logger.debug "In make_channel, got #{chan}"
-      # see if we're DMing a user, or posting to a channel
-      chan_type_identifier = chan.start_with?('@') ? '@' : '#'
-      # ensure the channel name starts with the right character
-      chan = chan.start_with?(chan_type_identifier) ? chan : "##{chan}"
+      # If we are DMing a user (chan looks like @username), do nothing
+      # otherwise, make sure chan starts with a '#', if it doesn't already
+      chan = chan.gsub(/^(?!#|@)/,'#')
       # I can't find any specs on what characters are valid for a slack channel name or user name
       # if we ever find that there are invalid characters, they will need to be removed here
       return chan
