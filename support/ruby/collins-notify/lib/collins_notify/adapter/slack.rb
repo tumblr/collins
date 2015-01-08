@@ -75,7 +75,7 @@ module CollinsNotify
       @logger.debug "In make_channel, got #{chan}"
       # If we are DMing a user (chan looks like @username), do nothing
       # otherwise, make sure chan starts with a '#', if it doesn't already
-      chan = chan.gsub(/^(?!#|@)/,'#')
+      chan = chan.sub(/^(?!#|@)/,'#')
       # I can't find any specs on what characters are valid for a slack channel name or user name
       # if we ever find that there are invalid characters, they will need to be removed here
       return chan
