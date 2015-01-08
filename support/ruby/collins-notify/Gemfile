@@ -12,6 +12,5 @@ group :development do
   gem 'yard',         '~> 0.8.3'
   gem 'rdoc',         '~> 3.12'
   gem 'bundler',      '>= 1.2.0'
-  gem 'jeweler',      '~> 1.8.4'
   gem 'simplecov',    '~> 0.9.1'
 end
