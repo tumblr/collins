@@ -1,7 +1,7 @@
 = collins-notify
 
 CLI and library for sending templated (or not) notifications via email, hipchat,
-and IRC.
+slack, and IRC.
 
 == Exit Codes
 

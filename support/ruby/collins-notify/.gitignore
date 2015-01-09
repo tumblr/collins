@@ -6,3 +6,5 @@ rdoc
 doc
 coverage
 config.yaml
+.bundle
+vendor
