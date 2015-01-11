@@ -5,7 +5,7 @@ RUN apt-get update && apt-get install -y zip unzip && rm -r /var/lib/apt/lists/*
 
 RUN useradd -Ur -d /opt/collins collins
 RUN for dir in /build /build/collins /var/log/collins /var/run/collins; do mkdir $dir; chown collins $dir; done
-ENV APP_HOME=/opt/collins LOG_HOME=/var/log/collins LISTEN_PORT=9000
+ENV APP_HOME=/opt/collins LOG_HOME=/var/log/collins
 
 WORKDIR /build
 # get Play, Collins, build, and deploy it to /opt/collins
@@ -35,10 +35,10 @@ RUN chown -R collins /opt/collins
 
 WORKDIR /opt/collins
 USER collins
-EXPOSE $LISTEN_PORT
+EXPOSE 9000
 CMD /usr/bin/java -server \
       -Dconfig.file=$APP_HOME/conf/production.conf \
-      -Dhttp.port=$LISTEN_PORT \
+      -Dhttp.port=9000 \
       -Dlogger.file=$APP_HOME/conf/logger.xml \
       -Dnetworkaddress.cache.ttl=1 \
       -Dnetworkaddress.cache.negative.ttl=1 \
