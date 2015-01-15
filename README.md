@@ -23,6 +23,8 @@ You can find more about using collins with Docker here:
 
 http://tumblr.github.io/collins/index.html#docker
 
+tl;dr: ```docker run -p 9000:9000 tumblr/collins```
+
 ## License
 
 Copyright 2015 Tumblr, Inc.
