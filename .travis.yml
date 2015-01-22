@@ -5,18 +5,19 @@ jdk:
   - oraclejdk7
 scala:
   - 2.9.1
+# this will make sure we run each of the scala and ruby tests once
+env:
+  - RUN_SCALA=true
+  - RUN_RUBY=true
 # according to http://docs.travis-ci.com/user/ci-environment/#CI-environment-OS
 # every travis CI has a version of ruby installed
 # that's why we can do this
 before_script:
-  - gem install bundler
+  - if RUN_RUBY; then gem install bundler; fi
 script:
-  - sbt ++$TRAVIS_SCALA_VERSION test
-  - cd support/ruby/collins-state
-  - bundle install --path ./vendor/bundle; bundle exec rake
-  - cd ../collins-client
-  - bundle install --path ./vendor/bundle; bundle exec rake
-  - cd ../collins-notify
-  - bundle install --path ./vendor/bundle; bundle exec rake
+  - if RUN_SCALA; then sbt ++$TRAVIS_SCALA_VERSION test; fi
+  - if RUN_RUBY; then cd support/ruby/collins-state; bundle install --path ./vendor/bundle; bundle exec rake; fi
+  - if RUN_RUBY; then cd ../collins-client; bundle install --path ./vendor/bundle; bundle exec rake; fi
+  - if RUN_RUBY; then cd ../collins-notify; bundle install --path ./vendor/bundle; bundle exec rake; fi
 notifications:
   irc: "chat.freenode.net#collins"
