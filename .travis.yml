@@ -11,11 +11,14 @@ env:
 # arbitrarily choose to run ruby when jdk is openjdk6
 matrix:
   include:
-    - jdk: openjdk6
-      env:
+    - env:
         - RUN_RUBY=true
         - RUN_SCALA=false
         - GEM_NAME=collins-client
+    - env:
+        - RUN_RUBY=true
+	- RUN_SCALA=false
+	- GEM_NAME=collins-notify
 # according to http://docs.travis-ci.com/user/ci-environment/#CI-environment-OS
 # every travis CI has a version of ruby installed
 # that's why we can do this
