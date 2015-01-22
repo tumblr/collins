@@ -11,11 +11,13 @@ env:
 # arbitrarily choose to run ruby when jdk is openjdk6
 matrix:
   include:
-    - env:
+    - jdk: openjdk6
+      env:
         - RUN_RUBY=true
         - RUN_SCALA=false
         - GEM_NAME=collins-client
-    - env:
+    - jdk: openjdk6
+      env:
         - RUN_RUBY=true
 	- RUN_SCALA=false
 	- GEM_NAME=collins-notify
