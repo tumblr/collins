@@ -5,8 +5,8 @@ RUN apt-get update && apt-get install -y zip unzip && rm -r /var/lib/apt/lists/*
 
 RUN useradd -Ur -d /opt/collins collins
 RUN for dir in /build /build/collins /var/log/collins /var/run/collins; do mkdir $dir; chown collins $dir; done
-ENV APP_HOME=/opt/collins \
-    LOG_HOME=/var/log/collins
+ENV APP_HOME=/opt/collins
+ENV LOG_HOME=/var/log/collins
 
 WORKDIR /build
 # get Play, Collins, build, and deploy it to /opt/collins
