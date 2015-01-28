@@ -17,7 +17,7 @@ trait ConfigAccessor {
   def ns: Option[String] = None
 
   def globalError(message: String, e: Option[Throwable] = None) =
-    new PlayException("Confguration error", message, e)
+    e.map(new PlayException("Confguration error", message, _)).getOrElse(new PlayException("Confguration error", message))
 
   protected def underlying = {
     _underlying.get()
