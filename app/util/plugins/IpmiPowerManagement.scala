@@ -3,22 +3,22 @@ package plugins
 
 import models.{Asset, IpmiInfo}
 
-import scala.concurrent.duration._
 import play.api.{Application, Plugin}
 
 import collins.power._
 import collins.power.management._
 import com.twitter.util.{Future, FuturePool}
 import java.util.concurrent.{Executors, TimeUnit}
+import scala.concurrent.duration._
 
 case class IpmiPowerCommand(
   override val ipmiCommand: String,
   override val ipmiInfo: IpmiInfo,
   override val interval: Duration = 60.seconds,
   val verify: Boolean = false,
-  val userTimeout: Option[Duration] = None)
+  val userTimeout: Option[FiniteDuration] = None)
 extends IpmiCommand {
-  override def defaultTimeout = Duration(PowerManagementConfig.timeoutMs, TimeUnit.MILLISECONDS)
+  override def defaultTimeout = PowerManagementConfig.timeoutMs.milliseconds
   override val timeout = userTimeout.getOrElse(defaultTimeout)
 }
 

@@ -1,14 +1,14 @@
 package controllers
 package actors
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 import util.concurrent.BackgroundProcess
 import com.twitter.util.Future
 
-case class TestProcessor(sleepMs: Long, userTimeout: Option[Duration] = None)
+case class TestProcessor(sleepMs: Long, userTimeout: Option[FiniteDuration] = None)
   extends BackgroundProcess[Boolean]
 {
-  override def defaultTimeout: Duration = Duration("5 seconds")
+  override def defaultTimeout: FiniteDuration = 5 seconds
   val timeout = userTimeout.getOrElse(defaultTimeout)
 
   def run(): Boolean = {
