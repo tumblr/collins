@@ -36,7 +36,6 @@ class Application
   # Basic app defaults that need to be configured
   DEFAULTS = {
     :APP_HOME => [File.expand_path("..",File.dirname(__FILE__)), "The directory where the app will be installed"],
-    :DAEMON => ["/usr/local/bin/daemon", "The absolute path to the daemon binary"],
     :LISTEN_PORT => [8080, "The port to listen on"],
     :COLLINS_USER => ["nobody", "The user for collins to run is. This user must already exist"]
   }
