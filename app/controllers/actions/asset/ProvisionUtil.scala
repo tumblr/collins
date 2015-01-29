@@ -2,6 +2,8 @@ package controllers
 package actions
 package asset
 
+import scala.concurrent.Future
+
 import actors._
 import forms._
 import models.{Asset, AssetLifecycle, AssetMetaValue, Status => AStatus, Truthy}
@@ -12,8 +14,8 @@ import util.plugins.SoftLayer
 
 import play.api.data._
 import play.api.data.Forms._
-import play.api.libs.concurrent.{Akka, Promise}
 import play.api.mvc._
+import play.api.libs.concurrent.Execution.Implicits._
 
 import collins.provisioning.{ProvisionerPlugin, ProvisionerProfile, ProvisionerRequest}
 import collins.provisioning.{ProvisionerRoleData => ProvisionerRole}
@@ -213,7 +215,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
       tattler.note(definedAsset, userOption, message)
   }
 
-  protected def activateAsset(adh: ActionDataHolder): Promise[Result] = {
+  protected def activateAsset(adh: ActionDataHolder): Future[Result] = {
     val ActionDataHolder(asset, pRequest, _, attribs) = adh
     val plugin = SoftLayer.plugin.get
     val slId = plugin.softLayerId(asset).get
@@ -240,7 +242,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
     }
   }
 
-  protected def provisionAsset(adh: ActionDataHolder): Promise[Result] = {
+  protected def provisionAsset(adh: ActionDataHolder): Future[Result] = {
     import play.api.Play.current
 
     val ActionDataHolder(asset, pRequest, _, attribs) = adh
@@ -251,7 +253,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
     }.flatMap {
       case Some(err) =>
         onFailure()
-        Akka.future(err)
+        Future(err)
       case None =>
         if (attribs.nonEmpty) {
           AssetLifecycle.updateAssetAttributes(
