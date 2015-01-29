@@ -14,11 +14,11 @@ object PowerUnit {
   implicit object PowerUnitFormat extends Format[PowerUnit] {
     import Json.toJson
     import PowerComponent._
-    override def reads(json: JsValue) = PowerUnit(
+    override def reads(json: JsValue) = JsSuccess(PowerUnit(
       PowerConfiguration.get(),
       (json \ "UNIT_ID").as[Int],
       (json \ "UNITS").as[Set[PowerComponent]]
-    )
+    ))
     override def writes(unit: PowerUnit) = JsObject(Seq(
       "UNIT_ID" -> toJson(unit.id),
       "UNITS" -> toJson(unit.components.map(toJson(_)))

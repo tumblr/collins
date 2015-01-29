@@ -26,11 +26,11 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
   ))
 
   implicit object AssetTypeFormat extends Format[AssetType] {
-    override def reads(json: JsValue) = AssetType(
+    override def reads(json: JsValue) = JsSuccess(AssetType(
       (json \ "NAME").as[String],
       (json \ "LABEL").as[String],
       (json \ "ID").asOpt[Int].getOrElse(0)
-    )
+    ))
     override def writes(at: AssetType) = JsObject(Seq(
       "ID" -> Json.toJson(at.id),
       "NAME" -> Json.toJson(at.name),

@@ -5,7 +5,7 @@ import util.{LldpRepresentation, LshwRepresentation}
 import util.config.{Feature, MultiCollinsConfig, NodeclassifierConfig}
 import util.power.PowerUnits
 
-import play.api.libs.json._
+import play.api.libs.json.{Json, JsValue, JsObject, JsString}
 
 object AllAttributes {
   def get(asset: Asset): AllAttributes = {

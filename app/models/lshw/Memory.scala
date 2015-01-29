@@ -6,13 +6,13 @@ import play.api.libs.json._
 object Memory {
   import Json.toJson
   implicit object MemoryFormat extends Format[Memory] {
-    override def reads(json: JsValue) = Memory(
+    override def reads(json: JsValue) = JsSuccess(Memory(
       ByteStorageUnit((json \ "SIZE").as[Long]),
       (json \ "BANK").as[Int],
       (json \ "DESCRIPTION").as[String],
       (json \ "PRODUCT").as[String],
       (json \ "VENDOR").as[String]
-    )
+    ))
     override def writes(mem: Memory) = JsObject(Seq(
       "SIZE" -> toJson(mem.size.inBytes),
       "SIZE_S" -> toJson(mem.size.inBytes.toString),

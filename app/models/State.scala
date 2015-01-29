@@ -25,13 +25,13 @@ object State extends Schema with AnormAdapter[State] {
 
   implicit object StateFormat extends Format[State] {
     import Status.StatusFormat
-    override def reads(json: JsValue) = State(
+    override def reads(json: JsValue) = JsSuccess(State(
       (json \ "ID").asOpt[Int].getOrElse(0),
       (json \ "STATUS").asOpt[Int].getOrElse(ANY_STATUS),
       (json \ "NAME").as[String],
       (json \ "LABEL").as[String],
       (json \ "DESCRIPTION").as[String]
-    )
+    ))
     override def writes(state: State) = JsObject(Seq(
       "ID" -> toJson(state.id),
       "STATUS" -> toJson(Status.findById(state.status)),

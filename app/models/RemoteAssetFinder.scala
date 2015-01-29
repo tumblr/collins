@@ -3,7 +3,7 @@ package models
 import asset.{AssetView, BasicRemoteAsset, DetailedRemoteAsset, RemoteAsset}
 import util.RemoteCollinsHost
 import play.api.Logger
-import play.api.libs.json._
+import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import play.api._
 import play.api.cache.Cache
@@ -12,8 +12,10 @@ import play.api.Play.current
 import java.net.URLEncoder
 import java.util.concurrent.TimeoutException
 import collins.solr._
-import scala.concurrent._
+import scala.concurrent.Await
 import scala.concurrent.duration._
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsObject
 
 /**
  * Just a combination of everything needed to do a search.  Probably should

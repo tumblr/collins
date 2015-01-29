@@ -5,14 +5,14 @@ import play.api.libs.json._
 object Cpu {
   import Json._
   implicit object CpuFormat extends Format[Cpu] {
-    override def reads(json: JsValue) = Cpu(
+    override def reads(json: JsValue) = JsSuccess(Cpu(
       (json \ "CORES").as[Int],
       (json \ "THREADS").as[Int],
       (json \ "SPEED_GHZ").as[Double],
       (json \ "DESCRIPTION").as[String],
       (json \ "PRODUCT").as[String],
       (json \ "VENDOR").as[String]
-    )
+    ))
     override def writes(cpu: Cpu) = JsObject(Seq(
       "CORES" -> toJson(cpu.cores),
       "THREADS" -> toJson(cpu.threads),

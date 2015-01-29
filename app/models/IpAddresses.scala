@@ -3,7 +3,7 @@ package models
 import asset.AssetView
 import shared.{AddressPool, IpAddressConfig}
 
-import play.api.libs.json._
+import play.api.libs.json.Json
 import util.{IpAddress, IpAddressCalc}
 import util.plugins.Callback
 import org.squeryl.dsl.ast.LogicalBoolean

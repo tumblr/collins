@@ -6,13 +6,13 @@ import play.api.libs.json._
 object Nic {
   import Json.toJson
   implicit object NicFormat extends Format[Nic] {
-    override def reads(json: JsValue) = Nic(
+    override def reads(json: JsValue) = JsSuccess(Nic(
       BitStorageUnit((json \ "SPEED").as[Long]),
       (json \ "MAC_ADDRESS").as[String],
       (json \ "DESCRIPTION").as[String],
       (json \ "PRODUCT").as[String],
       (json \ "VENDOR").as[String]
-    )
+    ))
     override def writes(nic: Nic) = JsObject(Seq(
       "SPEED" -> toJson(nic.speed.inBits),
       "SPEED_S" -> toJson(nic.speed.inBits.toString),

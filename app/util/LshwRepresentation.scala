@@ -14,13 +14,13 @@ object LshwRepresentation {
     import Nic._
     import ServerBase._
     import Json.toJson
-    override def reads(json: JsValue) = LshwRepresentation(
+    override def reads(json: JsValue) = JsSuccess(LshwRepresentation(
       (json \ "CPU").as[Seq[Cpu]],
       (json \ "MEMORY").as[Seq[Memory]],
       (json \ "NIC").as[Seq[Nic]],
       (json \ "DISK").as[Seq[Disk]],
       (json \ "BASE").as[ServerBase]
-    )
+    ))
     override def writes(lshw: LshwRepresentation) = JsObject(Seq(
       "CPU" -> toJson(lshw.cpus),
       "MEMORY" -> toJson(lshw.memory),

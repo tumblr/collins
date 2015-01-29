@@ -15,13 +15,13 @@ object Disk {
   }
 
   implicit object DiskFormat extends Format[Disk] {
-    override def reads(json: JsValue) = Disk(
+    override def reads(json: JsValue) = JsSuccess(Disk(
       ByteStorageUnit((json \ "SIZE").as[Long]),
       Disk.Type.withName((json \ "TYPE").as[String]),
       (json \ "DESCRIPTION").as[String],
       (json \ "PRODUCT").as[String],
       (json \ "VENDOR").as[String]
-    )
+    ))
     override def writes(disk: Disk) = JsObject(Seq(
       "SIZE" -> toJson(disk.size.inBytes),
       "SIZE_S" -> toJson(disk.size.inBytes.toString),
