@@ -3,8 +3,7 @@ package plugins
 
 import models.{Asset, IpmiInfo}
 
-import akka.util.Duration
-import akka.util.duration._
+import scala.concurrent.duration._
 import play.api.{Application, Plugin}
 
 import collins.power._

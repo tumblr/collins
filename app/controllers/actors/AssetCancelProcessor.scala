@@ -1,7 +1,7 @@
 package controllers
 package actors
 
-import akka.util.Duration
+import scala.concurrent.duration.Duration
 import models.{Asset, AssetLifecycle, MetaWrapper, Model, Status => AStatus}
 import play.api.mvc.{AnyContent, Request}
 import util.plugins.SoftLayer
@@ -11,7 +11,7 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
   extends BackgroundProcess[Either[ResponseData,Long]]
 {
   override def defaultTimeout: Duration =
-    Duration.parse("10 seconds")
+    Duration("10 seconds")
 
   val timeout = userTimeout.getOrElse(defaultTimeout)
   def run(): Either[ResponseData,Long] = {

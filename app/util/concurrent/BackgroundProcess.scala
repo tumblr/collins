@@ -1,7 +1,7 @@
 package util
 package concurrent
 
-import akka.util.Duration
+import scala.concurrent.duration.Duration
 import java.util.concurrent.TimeUnit
 
 trait BackgroundProcess[T] {

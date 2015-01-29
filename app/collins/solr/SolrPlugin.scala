@@ -1,7 +1,7 @@
 package collins.solr
 
 import akka.actor._
-import akka.util.duration._
+import scala.concurrent.duration._
 
 import java.util.Date
 

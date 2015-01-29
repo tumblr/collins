@@ -1,7 +1,7 @@
 package util
 package concurrent
 
-import akka.util.Duration
+import scala.concurrent.duration.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.locks.ReentrantLock
 
@@ -40,7 +40,7 @@ object RateLimit {
       case e =>
         throw new IllegalArgumentException("Expected '%s' to be an integer".format(actionsAllowed))
     }
-    val duration: Long = try Duration.parse(timeUnit).toMillis catch {
+    val duration: Long = try Duration(timeUnit).toMillis catch {
       case e =>
         throw new IllegalArgumentException(
           "Expected '%s' to be a duration such as '10 seconds'".format(timeUnit)

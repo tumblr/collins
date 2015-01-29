@@ -4,7 +4,7 @@ package concurrent
 import akka.actor._
 import akka.pattern.ask
 import akka.routing.RoundRobinRouter
-import akka.util.Duration
+import scala.concurrent.duration.Duration
 
 import play.api.libs.concurrent._
 
