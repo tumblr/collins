@@ -1,6 +1,5 @@
 package util
 
-import anorm.Id
 import models.{AssetMeta, IpmiInfo}
 
 object AttributeResolver extends MessageHelper("attributeresolver") {
