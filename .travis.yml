@@ -5,6 +5,24 @@ jdk:
   - oraclejdk7
 scala:
   - 2.9.1
-script: sbt ++$TRAVIS_SCALA_VERSION test
+# this will make sure we run each of the scala and ruby tests once
+env:
+  - RUN_SCALA=true RUN_RUBY=false
+# arbitrarily choose to run ruby when jdk is openjdk6
+matrix:
+  include:
+    - jdk: openjdk6
+      env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-client
+    - jdk: openjdk6
+      env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-state
+# according to http://docs.travis-ci.com/user/ci-environment/#CI-environment-OS
+# every travis CI has a version of ruby installed
+# that's why we can do this
+before_script:
+  - if $RUN_RUBY; then gem install bundler; fi
+# arbitrarily choose to	  run ruby when jdk is set to openjdk6
+script:
+  - if $RUN_SCALA; then sbt ++$TRAVIS_SCALA_VERSION test; fi
+  - if $RUN_RUBY; then cd support/ruby/$GEM_NAME; bundle install --path ./vendor/bundle; bundle exec rake; fi
 notifications:
   irc: "chat.freenode.net#collins"
