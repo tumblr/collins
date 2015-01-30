@@ -11,12 +11,12 @@ ENV LOG_HOME /var/log/collins
 WORKDIR /build
 # get Play, Collins, build, and deploy it to /opt/collins
 COPY . /build/collins
-RUN echo "Fetching Play 2.0.8" && \
-    wget -q http://downloads.typesafe.com/play/2.0.8/play-2.0.8.zip -O /build/play-2.0.8.zip && \
-    unzip -q ./play-2.0.8.zip && \
+RUN echo "Fetching Play 2.1.5" && \
+    wget -q http://downloads.typesafe.com/play/2.1.5/play-2.1.5.zip -O /build/play-2.1.5.zip && \
+    unzip -q ./play-2.1.5.zip && \
     cd collins && \
     java -version 2>&1 && \
-    PLAY_CMD=/build/play-2.0.8/play ./scripts/package.sh && \
+    PLAY_CMD=/build/play-2.1.5/play ./scripts/package.sh && \
     unzip -q /build/collins/target/collins.zip -d /opt/ && \
     cd / && rm -rf /build && \
     chown -R collins /opt/collins
