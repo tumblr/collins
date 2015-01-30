@@ -13,9 +13,9 @@ class VersionRouterSpec extends mutable.Specification {
     case `1.2` => "B"
   }
 
-  case class FakeHeaders(headers: Map[String, Seq[String]]) extends Headers {
-    def getAll(key: String) = headers(key)
-    def keys = headers.keys.toSet
+  case class FakeHeaders(headers: Map[String, Seq[String]], val data: Seq[(String, Seq[String])] = Seq.empty) extends Headers {
+    override def getAll(key: String) = headers(key)
+    override def keys = headers.keys.toSet
   }
 
   "version router" should {

@@ -69,7 +69,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
           "CHASSIS_TAG" -> Seq("abbacadabra")
         ), dummy, Nil, Nil)
         val body = AnyContentAsMultipartFormData(mdf)
-        val request = FakeRequest("POST", assetUrl).copy(body = body)
+        val request = FakeRequest("POST", assetUrl, body)
         val result = Extract.from(api.updateAsset(assetTag).apply(request))
         result must haveStatus(200)
         result must haveJsonData.which { s =>
@@ -90,7 +90,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
           rp -> Seq("rack 1"),
           "attribute" -> Seq("foo;bar","fizz;buzz")
         ) ++ powerMap)
-        val req = FakeRequest("POST", assetUrl).copy(body = body)
+        val req = FakeRequest("POST", assetUrl, body)
         val result = Extract.from(api.updateAsset(assetTag).apply(req))
         result must haveStatus(200)
         result must haveJsonData.which { txt =>

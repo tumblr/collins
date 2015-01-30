@@ -15,8 +15,8 @@ object FakeRequestHeader {
     uri = req.uri,
     headers = req.headers
   )
-  def withAcceptHeader(value: String) = {
-    FakeRequestHeader(FakeRequest()).copy(headers = FakeHeaders(Map(HeaderNames.ACCEPT -> Seq(value))))
+  def withAcceptHeader(value: String): FakeRequestHeader = {
+    FakeRequestHeader(headers = FakeHeaders(Seq(HeaderNames.ACCEPT -> Seq(value))))
   }
 }
 
@@ -25,6 +25,9 @@ case class FakeRequestHeader(
   uri: String = "/",
   headers: FakeHeaders = FakeHeaders()
 ) extends RequestHeader {
+  def id: Long = 667L
+  def tags: Map[String,String] = Map()
+  def version: String = "HTTP/1.1"
   lazy val path = uri.split('?').take(1).mkString
   lazy val queryString = play.core.parsers.FormUrlEncodedParser.parse(rawQueryString)
   val remoteAddress = "127.0.0.1"
@@ -38,13 +41,17 @@ case class FakeRequestHeader(
 }
 
 object FakeRequest {
-  def apply(): PlayFakeRequest[AnyContent] = {
+  def apply(): PlayFakeRequest[AnyContentAsEmpty.type] = {
     PlayFakeRequest()
   }
-  def apply(method: String, uri: String): PlayFakeRequest[AnyContent] = {
+  def apply(method: String, uri: String): PlayFakeRequest[AnyContentAsEmpty.type] = {
     PlayFakeRequest(method, uri)
   }
-  def apply[A](body: A) = PlayFakeRequest().copy(body = body)
+  def apply[A](method: String, uri: String, body: A) = {
+    PlayFakeRequest(method, uri, FakeHeaders(), body)
+  }  
+  def apply[A](body: A) = 
+    PlayFakeRequest("GET", "/", FakeHeaders(), body)
 }
 
 object ResultType {
@@ -101,7 +108,7 @@ trait ResponseMatchHelpers {
         val outerResult = outer.apply(a)
         if (outerResult.isSuccess) {
           val txt = a.value._3
-          outerResult and result(f(txt), "ok", "ko", a)
+          result(f(txt), "ok", "ko", a)
         } else {
           outerResult
         }
