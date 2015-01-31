@@ -8,6 +8,7 @@ import com.twitter.util.Future
 import play.api.mvc.{AnyContent, Request}
 import util.concurrent.BackgroundProcess
 import util.plugins.Provisioner
+import com.twitter.util.Await
 
 sealed trait ProvisionerStatus
 sealed trait ProvisionerFailure extends ProvisionerStatus
@@ -28,12 +29,12 @@ case class ProvisionerTest(request: ProvisionerRequest, userTimeout: Option[Fini
   val timeout = userTimeout.getOrElse(defaultTimeout)
 
   def run(): ProvisionerResult = Provisioner.pluginEnabled { plugin =>
-    plugin.test(request).map { res =>
+    Await.result(plugin.test(request).map { res =>
       if (res.exitCode == 0)
         ProvisionerResult(ProvisionerStatus.TestSucceeded, res)
       else
         ProvisionerResult(ProvisionerStatus.TestFailed, res)
-    }.get()
+    })
   }.getOrElse(ProvisionerResult(ProvisionerStatus.PluginDisabled, CommandResult(-2, "Provisioner plugin not enabled")))
 }
 
@@ -43,8 +44,8 @@ case class ProvisionerRun(request: ProvisionerRequest, userTimeout: Option[Finit
   val timeout = userTimeout.getOrElse(defaultTimeout)
 
   def run(): ProvisionerResult = Provisioner.pluginEnabled { plugin =>
-    plugin.provision(request).map { cmd =>
+    Await.result(plugin.provision(request).map { cmd =>
       ProvisionerResult(ProvisionerStatus.CommandExecuted, cmd)
-    }.get()
+    })
   }.getOrElse(ProvisionerResult(ProvisionerStatus.PluginDisabled, CommandResult(-2, "Provisioner plugin not enabled")))
 }

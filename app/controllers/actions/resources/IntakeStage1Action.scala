@@ -3,19 +3,17 @@ package actions
 package resources
 
 import forms._
-
 import models.Truthy
 import util.IpmiCommand
 import util.concurrent.BackgroundProcessor
 import util.plugins.{IpmiPowerCommand, PowerManagement}
 import util.security.SecuritySpecification
-
 import collins.power.Identify
 import collins.power.management.{PowerManagement, PowerManagementConfig}
-
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc.AsyncResult
+import com.twitter.util.Await
 
 case class IntakeStage1Action(
   assetId: Long,
@@ -73,11 +71,13 @@ case class IntakeStage1Action(
   protected def defaultView =
     Status.Ok(views.html.resources.intake(definedAsset)(flash, request))
 
-  protected def verifyIpmiReachable(plugin: PowerManagement, errorString: String) =
-    plugin.verify(definedAsset)() match {
+  protected def verifyIpmiReachable(plugin: PowerManagement, errorString: String) = {
+    val ps = Await.result(plugin.verify(definedAsset))
+    ps match {
       case reachable if reachable.isSuccess =>
         Status.Ok(views.html.help(Help.IpmiError, errorString)(flash, request))
       case unreachable if !unreachable.isSuccess =>
         Status.Ok(views.html.help(Help.IpmiUnreachable, errorString)(flash, request))
     }
+  }
 }

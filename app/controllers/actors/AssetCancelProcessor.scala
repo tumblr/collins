@@ -6,6 +6,7 @@ import models.{Asset, AssetLifecycle, MetaWrapper, Model, Status => AStatus}
 import play.api.mvc.{AnyContent, Request}
 import util.plugins.SoftLayer
 import util.concurrent.BackgroundProcess
+import com.twitter.util.Await
 
 case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration] = None)(implicit req: Request[AnyContent])
   extends BackgroundProcess[Either[ResponseData,Long]]
@@ -22,7 +23,7 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration]
             case None =>
               Left(Api.getErrorMessage("Asset is not a softlayer asset"))
             case Some(n) =>
-              plugin.cancelServer(n, reason)() match {
+              Await.result(plugin.cancelServer(n, reason)) match {
                 case 0L =>
                   Left(Api.getErrorMessage("There was an error cancelling this server"))
                 case ticketId =>
@@ -30,7 +31,7 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration]
                     MetaWrapper.createMeta(asset, Map("CANCEL_TICKET" -> ticketId.toString))
                     AssetLifecycle.updateAssetStatus(asset, AStatus.Cancelled, None, reason)
                   }
-                  plugin.setNote(n, "Cancelled: %s".format(reason))()
+                  Await.result(plugin.setNote(n, "Cancelled: %s".format(reason)))
                   Right(ticketId)
               }
           }
