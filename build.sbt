@@ -18,9 +18,7 @@ scalacOptions += "-language:implicitConversions"
 
 libraryDependencies ++= Seq(
   "org.specs2" %% "specs2" % "1.7.1" % "test",
-  "org.mockito" % "mockito-all" % "1.9.0" % "test",
   "com.google.guava" % "guava" % "15.0",
-  "com.google.code.findbugs" % "jsr305" % "1.3.9",
   "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
   "nl.grons" %% "metrics-scala" % "2.2.0",
   "com.addthis.metrics" % "reporter-config" % "2.1.0",
@@ -32,13 +30,11 @@ libraryDependencies ++= Seq(
   "org.apache.httpcomponents" % "httpmime" % "4.2.1", 
   "javax.servlet" % "servlet-api" % "2.5",
   "commons-net" % "commons-net" % "3.1",
-  "org.apache.commons" % "commons-lang3" % "3.1",
   "org.bouncycastle" % "bcprov-jdk16" % "1.46",
   "com.twitter" %% "util-core" % "6.19.0",
   "com.twitter" %% "finagle-http" % "6.20.0",
   "org.jsoup" % "jsoup" % "1.6.1",
   "org.squeryl" %% "squeryl" % "0.9.5-7",
-  "org.yaml" % "snakeyaml" % "1.11",
   "com.gilt" %% "jerkson" % "0.6.6",
   "play" %% "play-jdbc" % "2.1.5"
 )
