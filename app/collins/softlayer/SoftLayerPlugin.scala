@@ -155,7 +155,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
   protected def makeRequest(request: HttpRequest): Future[HttpResponse] = {
     val client: Service[HttpRequest,HttpResponse] = clientSpec.build()
     client(request) ensure {
-      client.release()
+      client.close()
     }
   }
 

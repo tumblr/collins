@@ -31,6 +31,7 @@ class CollinsQueryParser private(val docTypes: List[SolrDocType]) extends JavaTo
       Left("Unexpected stuff after query at position %s: %s, parsed %s".format(next.pos.toString, next.first, exp.toString))
     }
     case Failure(wtf, _) => Left("Error parsing query: %s".format(wtf.toString))
+    case Error(wtf, _) => Left("Error parsing query: %s".format(wtf.toString))
   }
 
   def clean(rawInput: String) = {

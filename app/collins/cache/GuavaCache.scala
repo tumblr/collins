@@ -24,11 +24,11 @@ class GuavaCache(override val timeoutInSeconds: java.lang.Integer) extends Cache
 
   override def getOrElseUpdate[T <: AnyRef](key: String, op: => T)(implicit m: Manifest[T]): T = {
     val value = cache.get(key, op)
-    if (m.erasure.isAssignableFrom(value.getClass))
+    if (m.runtimeClass.isAssignableFrom(value.getClass))
       value.asInstanceOf[T]
     else
       throw new IllegalArgumentException("%s not assignable to %s".format(
-        m.erasure.getClass.toString,
+        m.runtimeClass.getClass.toString,
         value.getClass.toString
       ))
   }
@@ -36,7 +36,7 @@ class GuavaCache(override val timeoutInSeconds: java.lang.Integer) extends Cache
   override def get[T <: AnyRef](key: String)(implicit m: Manifest[T]): Option[T] = {
     cache.getIfPresent(key) match {
       case n if n == null => None
-      case s if !m.erasure.isAssignableFrom(s.getClass) => None
+      case s if !m.runtimeClass.isAssignableFrom(s.getClass) => None
       case v => Some(v.asInstanceOf[T])
     }
   }
