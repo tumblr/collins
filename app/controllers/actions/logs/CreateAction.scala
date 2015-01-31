@@ -139,7 +139,7 @@ case class CreateAction(
     try {
       Some(f(s.toUpperCase))
     } catch {
-      case e => None
+      case e: Throwable => None
     }
   }
 

@@ -62,7 +62,7 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
 
   override def onStop() {
     try executor.shutdown() catch {
-      case _ => // swallow this
+      case _: Throwable => // swallow this
     }
   }
 

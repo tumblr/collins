@@ -33,7 +33,7 @@ class FindAction(
       pageParams.validate()
       AssetFinderDataHolder.processRequest(request())
     } catch {
-      case e =>
+      case e: Throwable =>
         Left(RequestDataHolder.error400(e.getMessage))
     }
   }
@@ -56,7 +56,7 @@ class FindAction(
             "Error executing search: " + timeout.getMessage
           ))
         }
-        case e =>
+        case e: Throwable =>
           logger.error("Error finding assets: %s".format(e.getMessage), e)
           handleError(RequestDataHolder.error500(
             "Error executing search: " + e.getMessage

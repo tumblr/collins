@@ -104,7 +104,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
         case e: RuntimeException =>
           logger.info("createAddressWithRetry attempt %d: %s".format((i + 1), e.getMessage))
           res = None
-        case e =>
+        case e: Throwable =>
           logger.warn("Uncaught exception %s".format(e.getMessage), e)
           throw e
       } finally {

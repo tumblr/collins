@@ -18,7 +18,7 @@ case class FileUserLoader(users: FileUserMap) extends CacheLoader[String,FileUse
       File.requireFileIsReadable(filename)
       FileUserLoader.fromFile(new IoFile(filename))
     } catch {
-      case e =>
+      case e: Throwable =>
         logger.error("There is a problem with the users file %s: %s".format(
           filename, e.getMessage
         ))

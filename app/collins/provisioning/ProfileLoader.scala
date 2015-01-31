@@ -18,7 +18,7 @@ case class ProfileLoader(profiles: Set[ProvisionerProfile])
     try {
       ProfileLoader.fromFile(new IoFile(filename))
     } catch {
-      case e =>
+      case e: Throwable =>
         logger.error("There is a problem with the profiles file %s: %s".format(
           filename, e.getMessage
         ))

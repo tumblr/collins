@@ -103,7 +103,7 @@ object StringValueFormat {
     try {
       SolrStringValue(rawStr.substring(strim, rawStr.length - (etrim)).trim(), format)
     } catch {
-      case e =>
+      case e: Throwable =>
         logger.error("Error converting %s to SolrString: %s".format(rawStr, e.getMessage), e)
         throw e
     }

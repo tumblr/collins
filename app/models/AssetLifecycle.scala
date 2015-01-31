@@ -65,7 +65,7 @@ object AssetLifecycle {
       Asset.flushCache(res._1)
       Right(res)
     } catch {
-      case e =>
+      case e: Throwable =>
         SystemTattler.safeError("Failed to create asset %s: %s".format(tag, e.getMessage))
         Left(e)
     }
@@ -85,7 +85,7 @@ object AssetLifecycle {
       }
       Right(true)
     } catch {
-      case e => Left(e)
+      case e: Throwable => Left(e)
     }
   }
 
@@ -285,7 +285,7 @@ object AssetLifecycle {
         LogSource.Internal
       ).withException(e).create()
     } catch {
-      case ex =>
+      case ex: Throwable =>
         logger.error("Database problems", ex)
         SystemTattler.safeError("Database problems: %s".format(ex.getMessage))
     }

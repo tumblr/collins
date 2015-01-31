@@ -215,7 +215,7 @@ trait SolrSimpleExpr extends SolrExpression {
       case SolrStringValue(stringValue, _) => try {
         e.lookupById(java.lang.Integer.parseInt(stringValue)) 
       } catch {
-        case _ => e.lookupByName(stringValue)
+        case _: Throwable => e.lookupByName(stringValue)
       }      
       case SolrIntValue(id) => e.lookupById(id)
     }) match {

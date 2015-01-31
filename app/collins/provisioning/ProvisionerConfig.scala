@@ -41,7 +41,7 @@ object ProvisionerConfig extends Configurable {
 
   protected def tryOption(name: String, fn: => AnyRef) {
     try fn catch {
-      case e =>
+      case e: Throwable =>
         throw globalError("provisioner.%s must be specified".format(name))
     }
   }

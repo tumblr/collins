@@ -37,7 +37,7 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
             None
         }.flatten, results.getNumFound))
       } catch {
-        case e => Left(e.getMessage + "(query %s)".format(queryString))
+        case e: Throwable => Left(e.getMessage + "(query %s)".format(queryString))
       }
     }
   }.getOrElse(Left("Solr Plugin not initialized!"))

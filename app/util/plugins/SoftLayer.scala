@@ -27,7 +27,7 @@ object SoftLayer {
       try {
         Some(p.ticketUrl(id.toLong))
       } catch {
-        case _ => None
+        case _: Throwable => None
       }
     }
   }

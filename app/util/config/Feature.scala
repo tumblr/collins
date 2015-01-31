@@ -26,7 +26,7 @@ object Feature extends Configurable {
     try {
       LogMessageType.withName(lts)
     } catch {
-      case e =>
+      case e:Throwable =>
         featureException("defaultLogType", "%s is not a valid log type".format(lts))
     }
   }

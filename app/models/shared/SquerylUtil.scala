@@ -122,7 +122,7 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
       }
       1
     } catch {
-      case _ => 0
+      case _: Throwable => 0
     }
   }
 

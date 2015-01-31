@@ -109,7 +109,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     val addressAsLong = try {
       IpAddress.toLong(address)
     } catch {
-      case e => return None
+      case e: Throwable => return None
     }
     from(tableDef, Asset.tableDef)((i,a) =>
       where(
@@ -146,7 +146,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
       if (address.split('.').size != 4) throw new Exception("Try again later")
       (addressRow.address === IpAddress.toLong(address))
     } catch {
-      case e =>
+      case e: Throwable =>
         try {
           val padded = IpAddress.padRight(address, "0")
           val netmask = IpAddress.netmaskFromPad(padded, "0")
@@ -154,7 +154,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
           (addressRow.address gte calc.minAddressAsLong) and
           (addressRow.address lte calc.maxAddressAsLong)
         } catch {
-          case ev =>
+          case _: Throwable =>
             logger.warn("Totally invalid address: %s".format(address), e)
             throw e
         }

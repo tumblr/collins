@@ -17,7 +17,7 @@ object Cache {
       import play.api.Play.current
       current
     } catch {
-      case e =>
+      case e: Throwable =>
         new DefaultApplication(new File("."), this.getClass.getClassLoader, None, Mode.Dev)
     }
     CachePlugin.getInstance(app, timeoutInSeconds)

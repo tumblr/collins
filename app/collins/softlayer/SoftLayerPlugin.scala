@@ -46,7 +46,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
     case true => try {
       Some(asset.tag.split("-", 2).last.toLong)
     } catch {
-      case _ => None
+      case _: Throwable => None
     }
     case false => None
   }

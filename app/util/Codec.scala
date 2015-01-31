@@ -88,7 +88,7 @@ class CryptoCodec(privateKey: String, saltSize: Int = 8, iterations: Int = 100) 
         Array.copy(plainTemp, 0, plain, 0, plain.length)
         Some(new String(plain))
       } catch {
-        case _ => None
+        case _: Throwable => None
       }
     }
   }

@@ -90,7 +90,7 @@ object conversions {
         try {
           Json.parse(log.message)
         } catch {
-          case e => toJson("Error parsing JSON: %s".format(e.getMessage))
+          case e: Throwable => toJson("Error parsing JSON: %s".format(e.getMessage))
         }
       } else {
         toJson(log.message)

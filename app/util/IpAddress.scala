@@ -26,14 +26,14 @@ object IpAddress {
   def toOptLong(_address: String): Option[Long] = try {
     Some(IpAddress.toLong(_address))
   } catch {
-    case e => None
+    case e: Throwable => None
   }
 
   def toLong(_address: String): Long = {
     val address = try {
       InetAddress.getByName(_address)
     } catch {
-      case e => throw new IllegalArgumentException("Could not parse address: " + e.getMessage)
+      case e: Throwable => throw new IllegalArgumentException("Could not parse address: " + e.getMessage)
     }
     val addressBytes = address.getAddress
     val bb = ByteBuffer.allocate(8)
@@ -141,7 +141,7 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
         )
       }
     } catch {
-      case e => 
+      case e: Throwable => 
         throw new RuntimeException(
           "Next available address %s is not a valid address in %s".format(
             nextAddressString, network

@@ -45,17 +45,17 @@ case class AssetMeta(
     case AssetMeta.ValueType.Integer => try {
       Some(SolrIntValue(Integer.parseInt(value)))
     } catch {
-      case _ => None
+      case _: Throwable => None
     }
     case AssetMeta.ValueType.Boolean => try {
       Some(SolrBooleanValue((new Truthy(value)).isTruthy))
     } catch {
-      case _ => None
+      case _: Throwable => None
     }
     case AssetMeta.ValueType.Double => try {
       Some(SolrDoubleValue(java.lang.Double.parseDouble(value)))
     } catch {
-      case _ => None
+      case _: Throwable => None
     }
     case _ => Some(SolrStringValue(value))
   }

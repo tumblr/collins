@@ -57,7 +57,7 @@ object Registry {
     val meth = klass.getDeclaredMethod("once")
     meth.invoke(null)
   } catch {
-    case e =>
+    case e: Throwable =>
       logger.info("Error calling once method on %s: %s".format(klass.getName, e.getMessage), e)
   }
 
@@ -65,7 +65,7 @@ object Registry {
   protected def getClassFromName(name: String) = try {
     Some(Class.forName(name))
   } catch {
-    case e =>
+    case e: Throwable =>
       logger.info("Class name %s is invalid".format(name))
       None
   }
