@@ -10,6 +10,12 @@ parallelExecution in IntegrationTest := false
 
 scalaVersion := "2.10.3"
 
+scalacOptions += "-feature"
+
+scalacOptions += "-language:postfixOps"
+
+scalacOptions += "-language:implicitConversions"
+
 libraryDependencies ++= Seq(
   "org.specs2" %% "specs2" % "1.7.1" % "test",
   "org.mockito" % "mockito-all" % "1.9.0" % "test",

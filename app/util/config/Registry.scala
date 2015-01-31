@@ -62,8 +62,8 @@ object Registry {
   }
 
   // Given a class name return the class
-  protected def getClassFromName(name: String) = try {
-    Some(Class.forName(name))
+  protected def getClassFromName(name: String): Option[Class[_ <: Configurable]] = try {
+    Some(Class.forName(name).asInstanceOf[Class[Configurable]])
   } catch {
     case e: Throwable =>
       logger.info("Class name %s is invalid".format(name))
