@@ -13,4 +13,5 @@ group :development do
   gem 'rdoc',         '~> 3.12'
   gem 'bundler',      '>= 1.2.0'
   gem 'simplecov',    '~> 0.9.1'
+  gem 'rake'
 end
