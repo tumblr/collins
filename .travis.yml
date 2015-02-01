@@ -1,7 +1,11 @@
 language: scala
+# according to http://docs.travis-ci.com/user/ci-environment/#CI-environment-OS
+# every travis CI has a version of ruby installed
+# that's why we can do this
 before_script:
   - wget http://downloads.typesafe.com/play/2.1.5/play-2.1.5.zip
   - unzip -q play-2.1.5.zip
+  - if $RUN_RUBY; then gem install bundler; fi
 jdk:
   - openjdk7
   - oraclejdk7
@@ -17,11 +21,6 @@ matrix:
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-client
     - jdk: openjdk7
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-state
-# according to http://docs.travis-ci.com/user/ci-environment/#CI-environment-OS
-# every travis CI has a version of ruby installed
-# that's why we can do this
-before_script:
-  - if $RUN_RUBY; then gem install bundler; fi
 # arbitrarily choose to	  run ruby when jdk is set to openjdk7
 script:
   - if $RUN_SCALA; then play-2.1.5/play test; fi
