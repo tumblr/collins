@@ -24,7 +24,7 @@ before_script:
   - if $RUN_RUBY; then gem install bundler; fi
 # arbitrarily choose to	  run ruby when jdk is set to openjdk7
 script:
-  - if $RUN_SCALA; then play-${PLAY_VERSION}/play test; fi
+  - if $RUN_SCALA; then play-2.1.5/play test; fi
   - if $RUN_RUBY; then cd support/ruby/$GEM_NAME; bundle install --path ./vendor/bundle; bundle exec rake; fi
 notifications:
   irc: "chat.freenode.net#collins"
