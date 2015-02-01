@@ -17,7 +17,7 @@ scalacOptions += "-language:postfixOps"
 scalacOptions += "-language:implicitConversions"
 
 libraryDependencies ++= Seq(
-  "org.specs2" %% "specs2" % "1.7.1" % "test",
+  "org.specs2" %% "specs2" % "1.9.2" % "test",
   "com.google.guava" % "guava" % "18.0",
   "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
   "nl.grons" %% "metrics-scala" % "2.2.0",

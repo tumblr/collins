@@ -77,7 +77,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         }
         getAsset() must haveJsonData.which { txt =>
           txt must /("data") */("ATTRIBS") */("0") */("CHASSIS_TAG" -> "abbacadabra")
-          txt must /("data") */("ASSET")/("STATUS" -> "New")
+          Json.parse(txt) \ "data" \ "ASSET" \ "STATUS" mustEqual JsString("New")
         }
       }
       "Update the status after getting rack position and such" in new asset {
@@ -98,7 +98,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
         }
         val amf = AssetMeta.findByName("FOO")
         getAsset() must haveJsonData.which { txt =>
-          txt must /("data") */("ASSET")/("STATUS" -> "Unallocated")
+          Json.parse(txt) \ "data" \ "ASSET" \ "STATUS" mustEqual JsString("Unallocated")
           txt must /("data") */("POWER") */("UNITS") */("TYPE" -> "POWER_PORT")
           txt must /("data") */("POWER") */("UNITS") */("VALUE" -> "PORT 0")
           txt must /("data") */("POWER") */("UNITS") */("TYPE" -> "POWER_OUTLET")
@@ -190,7 +190,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
           txt must /("data") */("SUCCESS" -> true)
         }
         getAsset() must haveJsonData.which { txt =>
-          txt must /("data") */("ASSET")/("STATUS" -> "Decommissioned")
+          Json.parse(txt) \ "data" \ "ASSET" \ "STATUS" mustEqual JsString("Decommissioned")
         }
       }
       "For Incomplete assets" in new ResponseScope {
