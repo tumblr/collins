@@ -219,3 +219,9 @@ p { padding: 5px 0; }
   /* override control-label from bootstrap in form-horizontal */
   text-align:inherit !important;
 }
+.page-header h4 {
+  /* position the label in the top right of the page-header only on asset show_menu view*/
+  position:absolute;
+  top:0;
+  right:0;
+}
