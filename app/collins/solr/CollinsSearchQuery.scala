@@ -26,7 +26,7 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
       q.setQuery(queryString)
       q.setStart(page.offset)
       q.setRows(page.size)
-      q.addSortField(sortKey.resolvedName, getSortDirection)
+      q.addSort(new SolrQuery.SortClause(sortKey.resolvedName, getSortDirection))
       try {
         val response = server.query(q)
         val results = response.getResults
