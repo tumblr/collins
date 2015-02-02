@@ -36,6 +36,7 @@ libraryDependencies ++= Seq(
   "org.jsoup" % "jsoup" % "1.8.1",
   "org.squeryl" %% "squeryl" % "0.9.5-7",
   "com.gilt" %% "jerkson" % "0.6.6",
+  "org.yaml" % "snakeyaml" % "1.14",
   "play" %% "play-jdbc" % "2.1.5"
 )
 
