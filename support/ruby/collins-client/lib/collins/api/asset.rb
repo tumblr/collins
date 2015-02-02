@@ -132,11 +132,11 @@ module Collins; module Api
       # create a copy so that we do not modify the original options array
       options = options.dup
 
-      if options.include? "size" or options.include? "page"
+      if options.include? :size or options.include? :page
         raise ExpectationFailedError.new "Do not specify 'size' or 'page' options when counting assets"
       else
-        options["size"] = 1
-        options["page"] = 0
+        options[:size] = 1
+        options[:page] = 0
       end
 
       query = asset_hash_to_find_query options
