@@ -80,7 +80,7 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
         case n if n.isEmpty => ByteStorageUnit(0)
         case n => ByteStorageUnit(n.toLong)
       }
-      val bank: Int = try { (n \ "@id" text).split(":").last.toInt } catch { case _ => -1 }
+      val bank: Int = try { (n \ "@id" text).split(":").last.toInt } catch { case _: Throwable => -1 }
       Memory(size, bank, asset.description, asset.product, asset.vendor)
   }
 

@@ -1,15 +1,17 @@
 package util
 package concurrent
 
+import akka.util.Timeout.durationToTimeout
 import akka.actor._
 import akka.pattern.ask
 import akka.routing.RoundRobinRouter
-import akka.util.Duration
-
+import scala.concurrent.duration.Duration
 import play.api.libs.concurrent._
-
 import java.util.concurrent.TimeoutException
-//import scala.collection.immutable.Vector
+import play.api.libs.concurrent.Execution.Implicits._
+import scala.util.Success
+import scala.util.Failure
+
 
 class BackgroundProcessorActor extends Actor {
   def receive = {
@@ -36,14 +38,17 @@ object BackgroundProcessor {
 
   type SendType[T] = Tuple2[Option[Throwable], Option[T]]
   def send[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]) = {
-    ask(ref, cmd)(cmd.timeout).mapTo[PROC_RES].asPromise.extend1 {
-      case Redeemed(v) => result(Tuple2(None, Some(v)))
-      case Thrown(e) => e match {
+    val p = Promise[RESPONSE]()
+    
+    ask(ref, cmd)(cmd.timeout).mapTo[PROC_RES].onComplete {
+      case Success(v: PROC_RES) => p success result(Tuple2(None, Some(v)))
+      case Failure(e) => e match {
         case t: TimeoutException =>
-          result(Tuple2(Some(SexyTimeoutException(cmd.timeout)), None))
+          p success result(Tuple2(Some(SexyTimeoutException(cmd.timeout)), None))
         case _ =>
-          result(Tuple2(Some(e), None))
+          p success result(Tuple2(Some(e), None))
       }
     }
+    p.future
   }
 }

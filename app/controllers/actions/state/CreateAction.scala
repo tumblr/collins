@@ -96,7 +96,7 @@ case class CreateAction(
           Api.statusResponse(false, Status.InternalServerError)
       }
     } catch {
-      case e =>
+      case e: Throwable =>
         Api.errorResponse("Failed to add state", Status.InternalServerError, Some(e))
     }
   }

@@ -75,7 +75,7 @@ case class DeleteAction(
       AssetType.delete(atype)
       ResponseData(Status.Accepted, JsObject(Seq("DELETED" -> JsNumber(1))))
     } catch {
-      case e =>
+      case e: Throwable =>
         Api.errorResponse(
           "Failed to delete asset type %s".format(atype.name),
           Status.InternalServerError,

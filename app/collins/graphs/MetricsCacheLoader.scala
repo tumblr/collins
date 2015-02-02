@@ -16,7 +16,7 @@ case class MetricsCacheLoader() extends CacheLoader[MetricsQuery, Set[String]] {
     val hasMatch = try {
       solrQueryMatches(query)
     } catch {
-      case e =>
+      case e: Throwable =>
         logger.error("Error querying solr for %s".format(query), e)
         false
     }

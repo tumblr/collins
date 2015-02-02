@@ -5,11 +5,11 @@ import play.api.libs.json._
 object ServerBase {
   import Json._
   implicit object ServerbaseFormat extends Format[ServerBase] {
-    override def reads(json: JsValue) = ServerBase(
+    override def reads(json: JsValue) = JsSuccess(ServerBase(
       (json \ "DESCRIPTION").as[String],
       (json \ "PRODUCT").as[String],
       (json \ "VENDOR").as[String]
-    )
+    ))
     override def writes(serverbase: ServerBase) = JsObject(Seq(
       "DESCRIPTION" -> toJson(serverbase.description),
       "PRODUCT" -> toJson(serverbase.product),

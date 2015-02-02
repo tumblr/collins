@@ -14,7 +14,7 @@ object CryptoConfig extends MessageHelper("crypto") with Configurable {
     try {
       CryptoCodec(key).Encode("fizz")
     } catch {
-      case e =>
+      case e: Throwable =>
         throw globalError(message("missingJCE"))
     }
   }

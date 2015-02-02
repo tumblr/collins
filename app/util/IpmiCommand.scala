@@ -5,7 +5,7 @@ import models.{Asset, IpmiInfo}
 import concurrent.BackgroundProcess
 import collins.shell.CommandResult
 
-import akka.util.Duration
+import scala.concurrent.duration.Duration
 import play.api.{Logger, Mode}
 import java.util.concurrent.TimeUnit
 import scala.collection.mutable.StringBuilder

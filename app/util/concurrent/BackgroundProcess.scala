@@ -1,11 +1,11 @@
 package util
 package concurrent
 
-import akka.util.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import java.util.concurrent.TimeUnit
 
 trait BackgroundProcess[T] {
-  val timeout: Duration
+  val timeout: FiniteDuration
   def run(): T
 
   protected def defaultTimeout: Duration = Duration(ConcurrencyConfig.timeoutMs, TimeUnit.MILLISECONDS)

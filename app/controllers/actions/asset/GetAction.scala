@@ -28,7 +28,7 @@ case class GetAction(
             val collinsHost = RemoteCollinsHost(host)
             Right(RedirectDataHolder(collinsHost))
           } catch {
-            case e =>
+            case e: Throwable =>
               Left(RequestDataHolder.error500("Invalid LOCATION url for asset %s: %s".format(
                 locationTag, e.getMessage
               )))

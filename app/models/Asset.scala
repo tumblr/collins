@@ -233,7 +233,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
             val remoteHost = RemoteCollinsHost(location)
             Some(new HttpRemoteAssetClient(locationAsset.tag, remoteHost))
           } catch {
-            case e =>
+            case e: Throwable =>
               logger.error("Invalid location %s".format(e.getMessage))
               None
           }

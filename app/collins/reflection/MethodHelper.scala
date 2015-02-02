@@ -15,7 +15,7 @@ trait MethodHelper extends MethodArguments with MethodReturnType {
       try {
         Some(v.getClass().getMethod(method))
       } catch {
-        case e =>
+        case _: Throwable =>
           None
       }
     }
@@ -31,7 +31,7 @@ trait MethodHelper extends MethodArguments with MethodReturnType {
               None
             }
           } catch {
-            case e =>
+            case e: Throwable =>
               handleFailure("Failed to invoke %s on value: %s".format(
                 method.toString, e.getMessage
               ))

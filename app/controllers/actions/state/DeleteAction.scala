@@ -76,7 +76,7 @@ case class DeleteAction(
       State.delete(state)
       ResponseData(Status.Accepted, JsObject(Seq("DELETED" -> JsNumber(deletes + 1))))
     } catch {
-      case e =>
+      case e: Throwable =>
         Api.errorResponse(
           "Failed to delete state %s".format(state.name),
           Status.InternalServerError,

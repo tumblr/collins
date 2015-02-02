@@ -82,7 +82,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
       succ => try {
         Right(fromForm(succ, data))
       } catch {
-        case e =>
+        case e: Throwable =>
           logger.debug("Error finding assets", e)
           Left(RequestDataHolder.error400(e.getMessage))
       }

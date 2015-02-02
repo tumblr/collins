@@ -18,7 +18,7 @@ class LoggingPlugin(app: Application) extends Plugin {
   }
 
   protected def setupLogging() {
-    if (Play.isDev(app)) {
+    if (Play.isDev(app) || Play.isTest(app)) {
       Option(this.getClass.getClassLoader.getResource("dev_logger.xml"))
         .map(_.getFile())
         .foreach { file =>

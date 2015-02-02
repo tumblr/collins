@@ -16,7 +16,7 @@ case class AddressPool(
     try {
       IpAddress.toLong(startAddress.get)
     } catch {
-      case e => throw new IllegalArgumentException("%s is not a valid IPv4 address".format(
+      case e: Throwable => throw new IllegalArgumentException("%s is not a valid IPv4 address".format(
         startAddress.get
       ))
     }
@@ -24,7 +24,7 @@ case class AddressPool(
   val ipCalc = try {
     IpAddressCalc(network, startAddress)
   } catch {
-    case e => throw new IllegalArgumentException("%s%s is not a valid network%s".format(
+    case e: Throwable => throw new IllegalArgumentException("%s%s is not a valid network%s".format(
       network,
       startAddress.map(s => ":%s".format(s)).getOrElse(""),
       startAddress.map(_ => "/startAddress").getOrElse("")

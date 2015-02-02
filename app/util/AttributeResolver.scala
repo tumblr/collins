@@ -1,6 +1,5 @@
 package util
 
-import anorm.Id
 import models.{AssetMeta, IpmiInfo}
 
 object AttributeResolver extends MessageHelper("attributeresolver") {
@@ -54,7 +53,7 @@ object AttributeResolver extends MessageHelper("attributeresolver") {
   private def asIpmi(key: String): Option[IpmiInfo.Enum] = try {
     Some(IpmiInfo.Enum.withName(key))
   } catch {
-    case _ => None
+    case _: Throwable => None
   }
   private def asAssetMeta(key: String): Option[AssetMeta] = AssetMeta.findByName(key)
   private def isIpAddress(key: String): Boolean = {

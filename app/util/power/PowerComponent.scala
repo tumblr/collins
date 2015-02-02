@@ -58,13 +58,13 @@ object PowerComponent {
   }
   implicit object PowerComponentFormat extends Format[PowerComponent] {
     import Json.toJson
-    override def reads(json: JsValue) = PowerComponentValue(
+    override def reads(json: JsValue) = JsSuccess(PowerComponentValue(
       Symbol(unidentify((json \ "TYPE").as[String])),
       PowerConfiguration.get(),
       unkey((json \ "KEY").as[String]),
       (json \ "POSITION").as[Int],
       (json \ "VALUE").asOpt[String]
-    )
+    ))
 
     override def writes(pc: PowerComponent) = JsObject(Seq(
       "KEY" -> toJson(pc.key),

@@ -1,17 +1,17 @@
 package controllers
 package actors
 
-import akka.util.Duration
+import scala.concurrent.duration._
 import models.{Asset, AssetLifecycle, MetaWrapper, Model, Status => AStatus}
 import play.api.mvc.{AnyContent, Request}
 import util.plugins.SoftLayer
 import util.concurrent.BackgroundProcess
+import com.twitter.util.Await
 
-case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = None)(implicit req: Request[AnyContent])
+case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration] = None)(implicit req: Request[AnyContent])
   extends BackgroundProcess[Either[ResponseData,Long]]
 {
-  override def defaultTimeout: Duration =
-    Duration.parse("10 seconds")
+  override def defaultTimeout = 10 seconds
 
   val timeout = userTimeout.getOrElse(defaultTimeout)
   def run(): Either[ResponseData,Long] = {
@@ -23,7 +23,7 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
             case None =>
               Left(Api.getErrorMessage("Asset is not a softlayer asset"))
             case Some(n) =>
-              plugin.cancelServer(n, reason)() match {
+              Await.result(plugin.cancelServer(n, reason)) match {
                 case 0L =>
                   Left(Api.getErrorMessage("There was an error cancelling this server"))
                 case ticketId =>
@@ -31,7 +31,7 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[Duration] = Non
                     MetaWrapper.createMeta(asset, Map("CANCEL_TICKET" -> ticketId.toString))
                     AssetLifecycle.updateAssetStatus(asset, AStatus.Cancelled, None, reason)
                   }
-                  plugin.setNote(n, "Cancelled: %s".format(reason))()
+                  Await.result(plugin.setNote(n, "Cancelled: %s".format(reason)))
                   Right(ticketId)
               }
           }

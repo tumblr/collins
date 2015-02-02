@@ -61,7 +61,7 @@ case class FindSimilarAction(
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = assetFromTag(assetTag) match {
     case None => Left(assetNotFound(assetTag))
     case Some(asset) => try SimilarDataHolder.processRequest(asset, request()) catch {
-      case other => Right(RequestDataHolder.error500(other.getMessage))
+      case other: Throwable => Right(RequestDataHolder.error500(other.getMessage))
     }
   }
 

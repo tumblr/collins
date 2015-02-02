@@ -13,6 +13,8 @@ import play.api.db._
 import play.api.libs.json._
 import play.api.mvc._
 
+import play.api.libs.concurrent.Execution.Implicits._
+
 trait AdminApi {
   this: Api with SecureController =>
   

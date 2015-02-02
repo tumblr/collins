@@ -64,7 +64,7 @@ case class CreateAction(
     } catch {
       case e: SQLException =>
         handleError(RequestDataHolder.error409("Possible duplicate IP address"))
-      case e =>
+      case e: Throwable =>
         handleError(
           RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage), e)
         )

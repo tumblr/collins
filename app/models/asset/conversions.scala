@@ -8,7 +8,7 @@ import java.sql.Timestamp
 object conversions {
   import models.State.StateFormat
   implicit object AssetFormat extends Format[AssetView] {
-    override def reads(json: JsValue) = Asset(
+    override def reads(json: JsValue) = JsSuccess(Asset(
       (json \ "TAG").as[String],
       Status.findByName((json \ "STATUS").as[String]).map(_.id).get,
       AssetType.findByName((json \ "TYPE").as[String]).map(_.id).get,
@@ -17,7 +17,7 @@ object conversions {
       (json \ "DELETED").asOpt[Timestamp],
       (json \ "ID").as[Long],
       (json \ "STATE").asOpt[State].map(_.id).getOrElse(0)
-    )
+    ))
     override def writes(asset: AssetView): JsObject = JsObject(Seq(
       "ID" -> JsNumber(asset.id),
       "TAG" -> JsString(asset.tag),

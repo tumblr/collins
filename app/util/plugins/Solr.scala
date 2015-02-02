@@ -41,12 +41,11 @@ object Solr {
 
   private[solr] def getNewEmbeddedServer = {
     val solrHome = SolrConfig.embeddedSolrHome
-    val coreContainer = new CoreContainer(solrHome)
     val file = new File(solrHome, "solr.xml")
     if (!file.exists()) {
       throw new IllegalArgumentException("Could not find solr configuration file in %s".format(solrHome))
     }
-    coreContainer.load(solrHome, file)
+    val coreContainer = CoreContainer.createAndLoad(solrHome, file)
     Logger.logger.debug("Booting embedded Solr Server with solrhome " + solrHome)
     new EmbeddedSolrServer(coreContainer, "")
   }

@@ -69,7 +69,7 @@ trait IpmiApi {
             case e: SQLException =>
               Left(Api.getErrorMessage("Possible duplicate IPMI Address",
                 Results.Status(StatusValues.CONFLICT)))
-            case e =>
+            case e: Throwable =>
               Left(Api.getErrorMessage("Incomplete form submission: %s".format(e.getMessage)))
           }
         }

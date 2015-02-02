@@ -67,7 +67,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     try {
       Feature.encryptedTags.map(_.name).contains(v.getMeta().name)
     } catch {
-      case e =>
+      case e: Throwable =>
         logger.error("Caught exception trying to determine whether to encrypt", v)
         false
     }
@@ -81,7 +81,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
       tableDef.insert(mvs)
       mvs.size
     } catch {
-      case e =>
+      case e: Throwable =>
         logger.error("Caught exception trying to insert rows: %s".format(e.getMessage), e)
         0
     }

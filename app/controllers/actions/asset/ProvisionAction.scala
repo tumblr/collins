@@ -51,7 +51,7 @@ case class ProvisionAction(
           else
             provisionAsset(adh)
         } catch {
-          case e =>
+          case e: Throwable =>
             onFailure()
             throw e
         }

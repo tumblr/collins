@@ -9,9 +9,9 @@ object LldpRepresentation {
     new LldpRepresentation(Seq())
   }
   implicit object LldpFormat extends Format[LldpRepresentation] {
-    override def reads(json: JsValue) = LldpRepresentation(
+    override def reads(json: JsValue) = JsSuccess(LldpRepresentation(
       (json \ "INTERFACES").as[Seq[Interface]]
-    )
+    ))
     override def writes(lldp: LldpRepresentation) = JsObject(Seq(
       "INTERFACES" -> Json.toJson(lldp.interfaces)
     ))

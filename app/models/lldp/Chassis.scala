@@ -5,11 +5,11 @@ import play.api.libs.json._
 object Chassis {
   import ChassisId._
   implicit object ChassisFormat extends Format[Chassis] {
-    override def reads(json: JsValue) = Chassis(
+    override def reads(json: JsValue) = JsSuccess(Chassis(
       (json \ "NAME").as[String],
       (json \ "ID").as[ChassisId],
       (json \ "DESCRIPTION").as[String]
-    )
+    ))
     override def writes(chassis: Chassis) = JsObject(Seq(
       "NAME" -> Json.toJson(chassis.name),
       "ID" -> Json.toJson(chassis.id),

@@ -8,31 +8,36 @@ parallelExecution in Test := false
 
 parallelExecution in IntegrationTest := false
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.10.3"
+
+scalacOptions += "-feature"
+
+scalacOptions += "-language:postfixOps"
+
+scalacOptions += "-language:implicitConversions"
 
 libraryDependencies ++= Seq(
-  "org.specs2" %% "specs2" % "1.7.1" % "test",
-  "org.mockito" % "mockito-all" % "1.9.0" % "test",
-  "com.google.guava" % "guava" % "15.0",
-  "com.google.code.findbugs" % "jsr305" % "1.3.9",
+  "org.specs2" %% "specs2" % "1.9.2" % "test",
+  "com.google.guava" % "guava" % "18.0",
   "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
   "nl.grons" %% "metrics-scala" % "2.2.0",
   "com.addthis.metrics" % "reporter-config" % "2.1.0",
-  "mysql" % "mysql-connector-java" % "5.1.19",
-  "com.h2database" % "h2" % "1.3.158",
-  "org.apache.solr" % "solr-solrj" % "3.6.1",
-  "org.apache.solr" % "solr-core"  % "3.6.1",
-  "org.apache.httpcomponents" % "httpclient" % "4.2.1", 
-  "org.apache.httpcomponents" % "httpmime" % "4.2.1", 
+  "mysql" % "mysql-connector-java" % "5.1.34",
+  "com.h2database" % "h2" % "1.4.185",
+  "org.apache.solr" % "solr-solrj" % "4.10.3",
+  "org.apache.solr" % "solr-core"  % "4.10.3",
+  "org.apache.httpcomponents" % "httpclient" % "4.3.6", 
+  "org.apache.httpcomponents" % "httpmime" % "4.3.6", 
   "javax.servlet" % "servlet-api" % "2.5",
-  "commons-net" % "commons-net" % "3.1",
-  "org.apache.commons" % "commons-lang3" % "3.1",
+  "commons-net" % "commons-net" % "3.3",
   "org.bouncycastle" % "bcprov-jdk16" % "1.46",
-  "com.twitter" %% "util-core" % "1.12.12",
-  "com.twitter" %% "finagle-http" % "1.10.0",
-  "org.jsoup" % "jsoup" % "1.6.1",
-  "org.squeryl" %% "squeryl" % "0.9.5",
-  "org.yaml" % "snakeyaml" % "1.11" 
+  "com.twitter" %% "util-core" % "6.23.0",
+  "com.twitter" %% "finagle-http" % "6.24.0",
+  "org.jsoup" % "jsoup" % "1.8.1",
+  "org.squeryl" %% "squeryl" % "0.9.5-7",
+  "com.gilt" %% "jerkson" % "0.6.6",
+  "org.yaml" % "snakeyaml" % "1.14",
+  "play" %% "play-jdbc" % "2.1.5"
 )
 
 

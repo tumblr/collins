@@ -13,13 +13,13 @@ object AssetLogKeyResolver extends SolrKeyResolver {
     def lookupById(id: Int) = try {
       Some(LogMessageType(id).toString)
     } catch {
-      case _ => None
+      case _: Throwable => None
     }
 
     def lookupByName(name: String) = try {
       Some(LogMessageType.withName(name.toUpperCase).toString)
     } catch {
-      case _ => None
+      case _: Throwable => None
     }
   }
 

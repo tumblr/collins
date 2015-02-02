@@ -19,7 +19,7 @@ class IpmiInfoSpec extends ApplicationSpecification {
     try {
       Asset.create(asset)
     } catch {
-      case e =>
+      case e: Throwable =>
         println("Caught creating asset with tag %s".format(tag))
         throw e
     }

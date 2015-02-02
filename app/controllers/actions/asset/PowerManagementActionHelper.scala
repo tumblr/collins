@@ -61,7 +61,7 @@ abstract class PowerManagementActionHelper(
       } catch {
         case ex: IllegalStateException =>
           Left(RequestDataHolder.error400(ex.getMessage, ex))
-        case ex =>
+        case ex: Throwable =>
           Left(RequestDataHolder.error500(
             "Unexpected error: %s".format(ex.getMessage), ex
           ))

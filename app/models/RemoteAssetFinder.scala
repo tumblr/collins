@@ -2,19 +2,20 @@ package models
 
 import asset.{AssetView, BasicRemoteAsset, DetailedRemoteAsset, RemoteAsset}
 import util.RemoteCollinsHost
-
 import play.api.Logger
-import play.api.libs.json._
+import play.api.libs.json.Json
 import play.api.libs.ws.WS
 import play.api._
 import play.api.cache.Cache
 import play.api.mvc._
 import play.api.Play.current
-
 import java.net.URLEncoder
 import java.util.concurrent.TimeoutException
-
 import collins.solr._
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsObject
 
 /**
  * Just a combination of everything needed to do a search.  Probably should
@@ -97,7 +98,7 @@ class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) 
   def getRemoteAssets(params: AssetSearchParameters, page: PageParams) = {
     Logger.logger.debug("retrieving assets from %s: Pagination %s".format(host, page.toString))
 
-    //manually build the query string becuase the Play(Ning) queryString is a
+    //manually build the query string because the Play(Ning) queryString is a
     //Map[String, String] and obviously cannot have two values with the same
     //key name, which is required for attributes
     val queryString = RemoteAssetClient.createQueryString(params.toSeq ++ page.toSeq)
@@ -106,7 +107,7 @@ class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) 
       auth = Some(authenticationTuple)
     )
 
-    val result = try request.get.await.get catch {
+    val result = try Await.result(request.get, 5 minutes) catch {
       case t: TimeoutException => throw new TimeoutException("Timed out in remote query to %s".format(queryUrl))
       case i: IllegalArgumentException => throw new IllegalArgumentException("Error with remote asset find:" + i.getMessage)
     }

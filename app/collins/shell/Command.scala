@@ -20,7 +20,7 @@ case class Command(command: Seq[String], logger: Logger) {
         e => stderr.append(e + "\n")
       )
     } catch {
-      case e =>
+      case e: Throwable =>
         stderr.append(e.getMessage)
         -1
     }

@@ -33,7 +33,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
   // overrides Plugin.onStop
   override def onStop() {
     try executor.shutdown() catch {
-      case _ => // swallow this
+      case _: Throwable => // swallow this
     }
   }
 
@@ -61,7 +61,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   override def test(request: ProvisionerRequest): Future[CommandResult] = {
     val cmd = try command(request, ProvisionerConfig.checkCommand) catch {
-      case _ => return Future(CommandResult(0,"No check command specified"))
+      case _: Throwable => return Future(CommandResult(0,"No check command specified"))
     }
     pool[CommandResult] {
       val result = runCommand(cmd)

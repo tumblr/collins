@@ -4,6 +4,7 @@ package plugins
 import collins.cache.{Cache => CacheInterface, CachePlugin}
 import play.api.{Application, Mode, Play}
 import java.io.File
+import play.api.DefaultApplication
 
 object Cache {
 
@@ -16,8 +17,8 @@ object Cache {
       import play.api.Play.current
       current
     } catch {
-      case e =>
-        new Application(new File("."), this.getClass.getClassLoader, None, Mode.Dev)
+      case e: Throwable =>
+        new DefaultApplication(new File("."), this.getClass.getClassLoader, None, Mode.Dev)
     }
     CachePlugin.getInstance(app, timeoutInSeconds)
   }

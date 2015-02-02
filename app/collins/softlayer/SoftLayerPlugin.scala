@@ -46,7 +46,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
     case true => try {
       Some(asset.tag.split("-", 2).last.toLong)
     } catch {
-      case _ => None
+      case _: Throwable => None
     }
     case false => None
   }
@@ -155,7 +155,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
   protected def makeRequest(request: HttpRequest): Future[HttpResponse] = {
     val client: Service[HttpRequest,HttpResponse] = clientSpec.build()
     client(request) ensure {
-      client.release()
+      client.close()
     }
   }
 

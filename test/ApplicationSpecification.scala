@@ -21,7 +21,6 @@ trait ApplicationSpecification extends mutable.Specification with ResourceFinder
       )
 
     Play.start(app)
-    evolutionFor("collins")
   }
 
   def applicationTeardown = {

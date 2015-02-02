@@ -30,11 +30,11 @@ object Status extends Schema with AnormAdapter[Status] {
   def Unallocated = Status.findByName("Unallocated")
 
   implicit object StatusFormat extends Format[Status] {
-    override def reads(json: JsValue) = Status(
+    override def reads(json: JsValue) = JsSuccess(Status(
       (json \ "NAME").as[String],
       (json \ "DESCRIPTION").as[String],
       (json \ "ID").as[Int]
-    )
+    ))
     override def writes(status: Status) = JsObject(Seq(
       "ID" -> JsNumber(status.id),
       "NAME" -> JsString(status.name),

@@ -54,14 +54,14 @@ object SystemTattler extends Tattler(LogSource.System, Some("System")) {
     try {
       error(Feature.syslogAsset, None, msg)
     } catch {
-      case e =>
+      case e: Throwable =>
     }
   }
   def safeWarning(msg: String) {
     try {
       warning(Feature.syslogAsset, None, msg)
     } catch {
-      case e =>
+      case e: Throwable =>
     }
   }
 }
