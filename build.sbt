@@ -32,7 +32,6 @@ libraryDependencies ++= Seq(
   "commons-net" % "commons-net" % "3.3",
   "org.bouncycastle" % "bcprov-jdk16" % "1.46",
   "com.twitter" %% "util-core" % "6.23.0",
-  "com.twitter" %% "finagle-http" % "6.24.0",
   "org.jsoup" % "jsoup" % "1.8.1",
   "org.squeryl" %% "squeryl" % "0.9.5-7",
   "com.gilt" %% "jerkson" % "0.6.6",
