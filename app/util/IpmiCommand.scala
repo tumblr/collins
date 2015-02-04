@@ -1,12 +1,12 @@
 package util
 
 import config.AppConfig
-import models.{Asset, IpmiInfo}
+import models.IpmiInfo
 import concurrent.BackgroundProcess
 import collins.shell.CommandResult
 
 import scala.concurrent.duration.Duration
-import play.api.{Logger, Mode}
+import play.api.Logger
 import java.util.concurrent.TimeUnit
 import scala.collection.mutable.StringBuilder
 import scala.sys.process._

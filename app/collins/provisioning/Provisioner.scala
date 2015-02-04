@@ -2,7 +2,7 @@ package collins.provisioning
 
 import models.Asset
 import play.api.Logger
-import com.twitter.util.Future
+import scala.concurrent.Future
 import collins.shell.CommandResult
 
 trait Provisioner {
