@@ -9,6 +9,7 @@ import util.concurrent.BackgroundProcessor
 
 import play.api.mvc._
 import play.api.libs.json._
+import play.api.libs.concurrent.Execution.Implicits._
 
 trait AssetWebApi {
   this: Api with SecureController =>

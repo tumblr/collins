@@ -4,7 +4,7 @@ import collins.power.management.PowerManagement
 import models.Asset
 
 import play.api.Logger
-import com.twitter.util.Future
+import scala.concurrent.Future
 import java.net.URL
 
 trait SoftLayer extends PowerManagement {

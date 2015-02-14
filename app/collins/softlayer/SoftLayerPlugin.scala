@@ -10,11 +10,13 @@ import play.api.libs.json._
 import com.twitter.finagle.Service
 import com.twitter.finagle.builder.ClientBuilder
 import com.twitter.finagle.http.{Http, RequestBuilder, Response}
-import com.twitter.util.Future
+import com.twitter.util.{Future => TFuture, Throw => TThrow, Return => TReturn}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import org.jboss.netty.buffer.ChannelBuffers
 import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse, QueryStringEncoder}
 import org.jboss.netty.util.CharsetUtil.UTF_8
 import scala.util.control.Exception.allCatch
+import play.api.libs.concurrent.Execution.Implicits._
 
 class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
   type ClientSpec = ClientBuilder.Complete[HttpRequest, HttpResponse]
@@ -76,7 +78,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
             case _ => 0L
           }
       }
-    } handle {
+    } recover  {
       case e => 0L
     }
   }
@@ -108,10 +110,10 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
     doPowerOperation(e, "/SoftLayer_Hardware_Server/%d/rebootSoft.json")
   }
   override def verify(e: Asset): PowerStatus = {
-    Future.value(Failure("verify not implemented for softlayer"))
+    Future.successful(Failure("verify not implemented for softlayer"))
   }
   override def identify(e: Asset): PowerStatus = {
-    Future.value(Failure("identify not implemented for softlayer"))
+    Future.successful(Failure("identify not implemented for softlayer"))
   }
 
   override def activateServer(id: Long): Future[Boolean] = {
@@ -130,7 +132,7 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
         case JsBoolean(v) => v
         case o => false
       }
-    } handle {
+    } recover {
       case e => false
     }
   }
@@ -147,16 +149,27 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
       .buildPut(value)
     makeRequest(request) map { r =>
       true
-    } handle {
+    } recover {
       case e => false
     }
   }
 
   protected def makeRequest(request: HttpRequest): Future[HttpResponse] = {
     val client: Service[HttpRequest,HttpResponse] = clientSpec.build()
-    client(request) ensure {
+    val f = client(request) ensure {
       client.close()
     }
+    convert(f)
+  }
+
+  protected def convert[T](f : TFuture[T]) : Future[T] = {
+    val p = Promise[T]()
+    f respond {
+      case TReturn(a) => p.success(a)
+      case TThrow(e) => p.failure(e)
+    }
+
+    p.future
   }
 
   private def doPowerOperation(e: Asset, url: String, captureFn: Option[String => String] = None): PowerStatus = {
@@ -174,10 +187,10 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
             case Some(fn) => Success(fn(responseString))
           }
         }
-      } handle { 
-        case e => Failure("IPMI may not be enabled, internal error")
+      } recover {
+        case ex => Failure("IPMI may not be enabled, internal error")
       }
-    }.getOrElse(Future(Failure("Asset can not be managed with SoftLayer API")))
+    }.getOrElse(Future.successful(Failure("Asset can not be managed with SoftLayer API")))
   }
 
 }

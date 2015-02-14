@@ -6,7 +6,7 @@ import models.Asset
 
 import play.api.{Application, Plugin}
 
-import com.twitter.util.{Future, FuturePool}
+import scala.concurrent.{ExecutionContext, Future, future}
 import java.util.concurrent.Executors
 
 class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
@@ -15,7 +15,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
     ConfigCache.create(ProvisionerConfig.cacheTimeout, ProfileLoader())
 
   protected[this] val executor = Executors.newCachedThreadPool()
-  protected[this] val pool = FuturePool(executor)
+  protected[this] implicit val ec = ExecutionContext.fromExecutor(executor)
 
   // overrides Plugin.enabled
   override def enabled: Boolean = {
@@ -49,7 +49,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   // overrides ProvisionerInterface.provision
   override def provision(request: ProvisionerRequest): Future[CommandResult] = {
-    pool[CommandResult] {
+    future[CommandResult] {
       val result = runCommand(command(request, ProvisionerConfig.command))
       if (result.exitCode != 0) {
         logger.warn("Command executed: %s".format(command(request, ProvisionerConfig.command)))
@@ -63,7 +63,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
     val cmd = try command(request, ProvisionerConfig.checkCommand) catch {
       case _: Throwable => return Future(CommandResult(0,"No check command specified"))
     }
-    pool[CommandResult] {
+    future[CommandResult] {
       val result = runCommand(cmd)
       if (result.exitCode != 0) {
         logger.warn("Command code: %d, output %s".format(result.exitCode, result.stdout))

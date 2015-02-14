@@ -4,15 +4,12 @@ import actors._
 import models.Asset
 import util._
 import util.concurrent.BackgroundProcessor
-import util.plugins.Callback
 import util.views.Formatter.dateFormat
 
-import play.api._
-import play.api.data._
 import play.api.libs.json._
 import play.api.mvc._
-import java.io.File
 import java.util.Date
+
 
 private[controllers] case class ResponseData(status: Results.Status, data: JsValue, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
   def asResult(implicit req: Request[AnyContent]): Result =
@@ -87,6 +84,7 @@ object Api {
       }
     }
   }
+
 
   def statusResponse(status: Boolean, code: Results.Status = Results.Ok) =
     ResponseData(code, JsObject(Seq("SUCCESS" -> JsBoolean(status))))
