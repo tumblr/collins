@@ -3,19 +3,16 @@ package collins.provisioning
 import collins.cache.ConfigCache
 import collins.shell.{Command, CommandResult}
 import models.Asset
-
 import play.api.{Application, Plugin}
-
 import scala.concurrent.{ExecutionContext, Future, future}
 import java.util.concurrent.Executors
+import play.libs.Akka
+
 
 class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   lazy protected[this] val profileCache =
     ConfigCache.create(ProvisionerConfig.cacheTimeout, ProfileLoader())
-
-  protected[this] val executor = Executors.newCachedThreadPool()
-  protected[this] implicit val ec = ExecutionContext.fromExecutor(executor)
 
   // overrides Plugin.enabled
   override def enabled: Boolean = {
@@ -32,9 +29,6 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   // overrides Plugin.onStop
   override def onStop() {
-    try executor.shutdown() catch {
-      case _: Throwable => // swallow this
-    }
   }
 
   // overrides ProvisionerInterface.profiles
@@ -49,6 +43,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   // overrides ProvisionerInterface.provision
   override def provision(request: ProvisionerRequest): Future[CommandResult] = {
+    implicit val ec = Akka.system.dispatchers.lookup("default-dispatcher")
     future[CommandResult] {
       val result = runCommand(command(request, ProvisionerConfig.command))
       if (result.exitCode != 0) {
@@ -60,6 +55,7 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
   }
 
   override def test(request: ProvisionerRequest): Future[CommandResult] = {
+    implicit val ec = Akka.system.dispatchers.lookup("background-dispatcher")
     val cmd = try command(request, ProvisionerConfig.checkCommand) catch {
       case _: Throwable => return Future(CommandResult(0,"No check command specified"))
     }
