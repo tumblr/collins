@@ -17,7 +17,7 @@ object SolrConfig extends Configurable {
   }
 
   def embeddedSolrHome = getString("embeddedSolrHome", "NONE")
-  def enabled = true
+  def enabled = getBoolean("enabled", false)
   def externalUrl = getUrl("externalUrl")
   def reactToUpdates = getBoolean("reactToUpdates", true)
   def repopulateOnStartup = getBoolean("repopulateOnStartup", false)
