@@ -55,7 +55,6 @@ object Solr {
     //http://wiki.apache.org/solr/Solrj#Changing_other_Connection_Settings
     Logger.logger.debug("Using external Solr Server")
     val server = new HttpSolrServer(SolrConfig.externalUrl.get.toString);
-    Logger.logger.debug("test")
     server.setSoTimeout(SolrConfig.socketTimeout);
     server.setConnectionTimeout(SolrConfig.connectionTimeout);
     server.setDefaultMaxConnectionsPerHost(SolrConfig.defaultMaxConnectionsPerHost);
