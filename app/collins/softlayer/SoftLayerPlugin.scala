@@ -1,30 +1,16 @@
 package collins.softlayer
 
-import collins.power._
-import collins.power.management._
 import models.Asset
+import play.api.libs.ws.WS
 
 import play.api.{Application, Plugin}
 import play.api.libs.json._
-
-import com.twitter.finagle.Service
-import com.twitter.finagle.builder.ClientBuilder
-import com.twitter.finagle.http.{Http, RequestBuilder, Response}
-import com.twitter.util.{Future => TFuture, Throw => TThrow, Return => TReturn}
-import scala.concurrent.{ExecutionContext, Future, Promise}
-import org.jboss.netty.buffer.ChannelBuffers
-import org.jboss.netty.handler.codec.http.{HttpRequest, HttpResponse, QueryStringEncoder}
-import org.jboss.netty.util.CharsetUtil.UTF_8
+import scala.concurrent.Future
+import org.jboss.netty.handler.codec.http.QueryStringEncoder
 import scala.util.control.Exception.allCatch
 import play.api.libs.concurrent.Execution.Implicits._
 
 class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
-  type ClientSpec = ClientBuilder.Complete[HttpRequest, HttpResponse]
-  protected[this] val clientSpec: ClientSpec = ClientBuilder()
-    .tlsWithoutValidation()
-    .codec(Http())
-    .hosts(SOFTLAYER_API_HOST)
-    .hostConnectionLimit(1)
 
   override def enabled: Boolean = {
     SoftLayerConfig.pluginInitialize(app.configuration)
@@ -54,19 +40,18 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
   }
 
   private[this] val TicketExtractor = "^.* ([0-9]+).*$".r
+
   override def cancelServer(id: Long, reason: String = "No longer needed"): Future[Long] = {
+
     val encoder = new QueryStringEncoder(cancelServerPath(id))
     encoder.addParam("attachmentId", id.toString)
     encoder.addParam("reason", "No longer needed")
     encoder.addParam("content", reason)
-    val url = softLayerUrl(encoder.toString())
-    val request = RequestBuilder()
-                    .url(url)
-                    .buildGet();
+    val url = softLayerUrl(encoder.toString)
 
-    makeRequest(request) map { r =>
-      val response = Response(r)
-      val json = Json.parse(response.contentString)
+
+    WS.url(url.toString).get().map{ response =>
+      val json = response.json
       (json \ "error" ) match {
         case JsString(value) => allCatch[Long].opt {
           val TicketExtractor(number) = value
@@ -78,8 +63,8 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
             case _ => 0L
           }
       }
-    } recover  {
-      case e => 0L
+    }.recover {
+      case e : Throwable => 0L
     }
   }
 
@@ -120,20 +105,16 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
     val url = softLayerUrl("/SoftLayer_Hardware_Server/%d/sparePool.json".format(id))
     val query = JsObject(Seq("parameters" -> JsArray(List(JsString("activate")))))
     val queryString = Json.stringify(query)
-    val value = ChannelBuffers.copiedBuffer(queryString, UTF_8)
-    val request = RequestBuilder()
-      .url(url)
-      .setHeader("Content-Type", "application/json")
-      .setHeader("Content-Length", queryString.length.toString)
-      .buildPost(value)
-    makeRequest(request) map { r =>
-      val response = Response(r)
-      Json.parse(response.contentString) match {
+
+    val wsUrl = WS.url(url.toString).withHeaders("Content-Type"->"application/json", "Content-Length"-> queryString.length.toString)
+
+    wsUrl.post(query).map{ res =>
+      res.json match {
         case JsBoolean(v) => v
         case o => false
       }
-    } recover {
-      case e => false
+    }.recover {
+      case e : Throwable => false
     }
   }
 
@@ -141,45 +122,21 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
     val url = softLayerUrl("/SoftLayer_Hardware_Server/%d/editObject.json".format(id))
     val query = JsObject(Seq("parameters" -> JsArray(List(JsObject(Seq("notes" -> JsString(note)))))))
     val queryString = Json.stringify(query)
-    val value = ChannelBuffers.copiedBuffer(queryString, UTF_8)
-    val request = RequestBuilder()
-      .url(url)
-      .setHeader("Content-Type", "application/json")
-      .setHeader("Content-Length", queryString.length.toString)
-      .buildPut(value)
-    makeRequest(request) map { r =>
+
+    val request = WS.url(url.toString).withHeaders("Content-Type"->"application/json", "Content-Length"-> queryString.length.toString)
+    request.put(query).map { r =>
       true
-    } recover {
-      case e => false
+    }.recover {
+      case e : Throwable => false
     }
-  }
-
-  protected def makeRequest(request: HttpRequest): Future[HttpResponse] = {
-    val client: Service[HttpRequest,HttpResponse] = clientSpec.build()
-    val f = client(request) ensure {
-      client.close()
-    }
-    convert(f)
-  }
-
-  protected def convert[T](f : TFuture[T]) : Future[T] = {
-    val p = Promise[T]()
-    f respond {
-      case TReturn(a) => p.success(a)
-      case TThrow(e) => p.failure(e)
-    }
-
-    p.future
   }
 
   private def doPowerOperation(e: Asset, url: String, captureFn: Option[String => String] = None): PowerStatus = {
     softLayerId(e).map { id =>
-      val request = RequestBuilder()
-        .url(softLayerUrl(url.format(id)))
-        .setHeader("Accept", "application/json")
-        .buildGet();
-      makeRequest(request).map { r =>
-        Response(r).contentString.toLowerCase match {
+
+      val request = WS.url(softLayerUrl(url.format(id)).toString).withHeaders("Accept"->"application/json")
+      request.get().map { res =>
+        res.body.toLowerCase match {
           case rl if rl.contains("at this time") => RateLimit
           case err if err.contains("error") => Failure()
           case responseString => captureFn match {
@@ -187,8 +144,8 @@ class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
             case Some(fn) => Success(fn(responseString))
           }
         }
-      } recover {
-        case ex => Failure("IPMI may not be enabled, internal error")
+      }.recover {
+        case e : Throwable => Failure("IPMI may not be enabled, internal error")
       }
     }.getOrElse(Future.successful(Failure("Asset can not be managed with SoftLayer API")))
   }
