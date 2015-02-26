@@ -1,0 +1,43 @@
+<configuration>
+
+    <appender name="FILE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date - [%level] - from %logger in %thread %message%n%xException{100}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="play" level="INFO" />
+    <logger name="application" level="INFO" />
+
+    <!-- Off these ones as they are annoying, and anyway we manage configuration ourself -->
+    <logger name="com.avaje.ebean.config.PropertyMapLoader" level="OFF" />
+    <logger name="com.avaje.ebeaninternal.server.core.XmlConfigLoader" level="OFF" />
+    <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
+    <logger name="util.security.AuthenticationProvider" level="INFO" />
+
+    <root level="ERROR">
+        <appender-ref ref="FILE" />
+    </root>
+    <logger name="org.apache" level="WARN" />
+    <logger name="org.apache.axis2" level="WARN" />
+    <logger name="org.apache.axiom" level="WARN" />
+    <logger name="org.apache.httpclient.wire" level="WARN" />
+    <logger name="org.apache.httpclient.wire.content" level="WARN" />
+    <logger name="org.apache.http.wire" level="WARN" />
+    <logger name="org.apache.http.wire.content" level="WARN" />
+    <logger name="org.apache.commons.httpclient" level="WARN" />
+    <logger name="org.apache.commons.httpclient.wire" level="WARN" />
+    <logger name="org.apache.commons.httpclient.wire.content" level="WARN" />
+    <logger name="org.apache.commons.http" level="WARN" />
+    <logger name="org.apache.commons.http.wire" level="WARN" />
+    <logger name="org.apache.commons.http.wire.content" level="WARN" />
+    <logger name="httpclient.wire.content" level="WARN" />
+    <logger name="httpclient.wire.header" level="WARN" />
+    <logger name="httpclient.wire" level="WARN" />
+    <logger name="org.apache.http.impl.client" level="WARN" />
+    <logger name="org.apache.http.impl.client.wire" level="WARN" />
+    <logger name="org.apache.http.impl.client.wire.content" level="WARN" />
+    <logger name="org.apache.http.impl.client.Wire" level="WARN" />
+    <logger name="org.apache.http.impl.client.Wire.content" level="WARN" />
+
+</configuration>
