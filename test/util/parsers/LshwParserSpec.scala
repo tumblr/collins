@@ -49,6 +49,21 @@ class LshwParserSpec extends mutable.Specification {
           rep.base.vendor mustEqual "Winbond Electronics"
         }
       } // with a 10-gig card
+      
+      "quad nic missing capacity having size" in new LshwParserHelper("lshw-size.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.nicCount mustEqual 4
+          rep.hasGbNic must beTrue
+          rep.has10GbNic must beTrue
+          rep.macAddresses must have length 4
+          rep.macAddresses must beNonEmptyStringSeq
+
+          rep.base.product mustEqual "PowerEdge C6220 II (N/A)"
+          rep.base.vendor mustEqual "Dell Inc."
+        }
+      }
 
       "basic" in new LshwParserHelper("lshw-basic.xml") {
         val parseResults = parsed()
