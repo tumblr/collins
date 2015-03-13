@@ -66,7 +66,7 @@ case class CreateAction(
     case ActionDataHolder(log) =>
       AssetLog.create(log) match {
         case ok if ok.id > 0 =>
-          ResponseData(Status.Created, Seq("SUCCESS" -> JsBoolean(true)) ++ Seq("LOG" -> ok.toJsValue()))
+          ResponseData(Status.Created, Seq("SUCCESS" -> JsBoolean(true)) ++ Seq("LOG" -> log.toJsValue()))
         case bad =>
           Api.statusResponse(false, Status.BadRequest)
       }
