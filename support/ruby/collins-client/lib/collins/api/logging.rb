@@ -61,7 +61,7 @@ module Collins; module Api
     # @return [OpenStruct] true if logged successfully
     # @raise [Collins::ExpectationFailed] the specified level was invalid
     # @raise [Collins::RequestError,Collins::UnexpectedResponseError] if the asset or message invalid
-    def log! asset_or_tag, message, level = nil, return_struct = false
+    def log! asset_or_tag, message, level = nil
       asset = get_asset_or_tag asset_or_tag
       parameters = {
         :message => message,
