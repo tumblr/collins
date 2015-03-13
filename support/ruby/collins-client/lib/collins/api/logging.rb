@@ -136,6 +136,20 @@ module Collins; module Api
       end
     end
 
+    # Get a log, given its id
+    # @param [Int] id The log id to retrieve
+    # @return [OpenStruct] The log openstruct
+    # @raise [Collins::UnexpectedResponseError] on a non-200 response
+    def get_log id
+      logger.debug("Fetching log #{id}")
+      http_get("/api/log/#{id}") do |response|
+        puts response.inspect
+        parse_response response, :as => :data, :default => nil, :raise => strict?, :expects => 200 do |json|
+          OpenStruct.new(symbolize_hash(json))
+        end
+      end
+    end
+
     private
     def log_level_from_string level
       return nil if (level.nil? || level.empty?)
