@@ -23,7 +23,7 @@ case class GetAction(
     case ActionDataHolder(log_id) =>
       AssetLog.findById(log_id) match {
         case Some(log) =>
-          ResponseData(Status.Ok, Seq("SUCCESS" -> JsBoolean(true)) ++ Seq("Data" -> log.toJsValue()))
+          ResponseData(Status.Ok, Seq("SUCCESS" -> JsBoolean(true), "Data" -> log.toJsValue()))
         case default =>
           Api.statusResponse(false, Status.NotFound)
       }
