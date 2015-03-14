@@ -28,7 +28,7 @@ permalink: configuration.html
         <li><a href="#graphs"><i class="icon-chevron-right"></i> Graphs</a></li>
         <li><a href="#ipam"><i class="icon-chevron-right"></i> IP Address</a></li>
         <li><a href="#ipmi"><i class="icon-chevron-right"></i> IPMI</a></li>
-	<li><a href="#monitoring"><i class="icon-chevron-right"></i> Monitoring</a></li>
+        <li><a href="#monitoring"><i class="icon-chevron-right"></i> Monitoring</a></li>
         <li><a href="#multicollins"><i class="icon-chevron-right"></i> MultiCollins</a></li>
         <li><a href="#nodeclassifier"><i class="icon-chevron-right"></i> Nodeclassifier</a></li>
         <li><a href="#powerconfig"><i class="icon-chevron-right"></i> Power Configuration</a></li>
@@ -76,7 +76,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Configuration options that don't fit anywhere else</p>
         {% include config_general.html %}
-      </section> <!-- general --> 
+      </section> <!-- general -->
 
       <section id="auth">
         <div class="page-header">
@@ -84,7 +84,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Setting up user authentication and authorization</p>
         {% include config_authentication.html %}
-      </section> <!-- auth --> 
+      </section> <!-- auth -->
 
       <section id="cache">
         <div class="page-header">
@@ -92,7 +92,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Making Collins faster</p>
         {% include config_cache.html %}
-      </section> <!-- cache --> 
+      </section> <!-- cache -->
 
       <section id="callbacks">
         <div class="page-header">
@@ -100,7 +100,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Hooking into lifecycle events in collins</p>
         {% include config_callbacks.html %}
-      </section> <!-- callbacks --> 
+      </section> <!-- callbacks -->
 
       <section id="features">
         <div class="page-header">
@@ -108,7 +108,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Collins feature flags</p>
         {% include config_features.html %}
-      </section> <!-- features --> 
+      </section> <!-- features -->
 
       <section id="graphs">
         <div class="page-header">
@@ -116,7 +116,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Display trending data</p>
         {% include config_graphs.html %}
-      </section> <!-- graphs --> 
+      </section> <!-- graphs -->
 
       <section id="ipam">
         <div class="page-header">
@@ -124,7 +124,7 @@ permalink: configuration.html
         </div>
         <p class="lead">IPAM Configuration</p>
         {% include config_ipam.html %}
-      </section> <!-- ipam --> 
+      </section> <!-- ipam -->
 
       <section id="ipmi">
         <div class="page-header">
@@ -132,16 +132,25 @@ permalink: configuration.html
         </div>
         <p class="lead">Configuring your IPMI network and authentication setup</p>
         {% include config_ipmi.html %}
-      </section> <!-- ipmi --> 
+      </section> <!-- ipmi -->
 
       <section id="monitoring">
-	<div class="page-header">
-	  <h1>Monitoring</h1>
-	</div>
-	<p class="lead">Monitoring Collins</p>
-	
-	{% include config_monitoring.html %}
+      	<div class="page-header">
+      	  <h1>Monitoring</h1>
+      	</div>
+      	<p class="lead">Monitoring Collins</p>
+
+      	{% include config_monitoring.html %}
       </section><!-- monitoring -->
+
+      <section id="thread-pools">
+        <div class="page-header">
+          <h1>Thread Pools</h1>
+        </div>
+        <p class="lead">Thread Pool</p>
+
+        {% include config_thread_pools.html %}
+      </section> <!-- thread pools -->
 
 
       <section id="multicollins">
@@ -150,7 +159,7 @@ permalink: configuration.html
         </div>
         <p class="lead">For when a single data center just isn't enough</p>
         {% include config_multicollins.html %}
-      </section> <!-- multicollins --> 
+      </section> <!-- multicollins -->
 
       <section id="nodeclassifier">
         <div class="page-header">
@@ -158,7 +167,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Find similar assets</p>
         {% include config_nodeclassifier.html %}
-      </section> <!-- nodeclassifier --> 
+      </section> <!-- nodeclassifier -->
 
       <section id="powerconfig">
         <div class="page-header">
@@ -166,7 +175,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Power requirements for assets</p>
         {% include config_powerconfiguration.html %}
-      </section> <!-- powerconfig --> 
+      </section> <!-- powerconfig -->
 
       <section id="powermanagement">
         <div class="page-header">
@@ -174,7 +183,7 @@ permalink: configuration.html
         </div>
         <p class="lead">With great power, comes great responsibility</p>
         {% include config_powermgmt.html %}
-      </section> <!-- powermanagement --> 
+      </section> <!-- powermanagement -->
 
       <section id="provisioning">
         <div class="page-header">
@@ -182,7 +191,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Setup provisioning for your environment</p>
         {% include config_provisioning.html %}
-      </section> <!-- provisioning --> 
+      </section> <!-- provisioning -->
 
       <section id="softlayer">
         <div class="page-header">
@@ -190,7 +199,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Working with SoftLayer</p>
         {% include config_softlayer.html %}
-      </section> <!-- softlayer --> 
+      </section> <!-- softlayer -->
 
       <section id="solr">
         <div class="page-header">
@@ -198,7 +207,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Better search</p>
         {% include config_solr.html %}
-      </section> <!-- solr --> 
+      </section> <!-- solr -->
 
       <section id="tagdecorators">
         <div class="page-header">
@@ -206,7 +215,7 @@ permalink: configuration.html
         </div>
         <p class="lead">Taking sexy back</p>
         {% include config_tag_decorators.html %}
-      </section> <!-- tagdecorators --> 
+      </section> <!-- tagdecorators -->
     </div> <!-- span9 -->
   </div> <!-- row -->
 </div> <!-- container -->

@@ -1,0 +1,37 @@
+<p>
+<span class="label label-info">Namespace</span><span class="inlinecode"> akka</span>
+</p>
+
+<p>
+Configuring Collins akka pools is relatively straightforward. See the akka documentation for details. Collins makes use of a single akka dispatcher which can be configured in <code>akka.actor.default-dispatcher</code>. The dispatcher is shared for background processes and solr updates
+</p>
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">background-processor</td>
+      <td>Configure for background processes, for instance ipmi invocations</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">solr_asset_updater</td>
+      <td>Configure for solr updates on asset modification</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">solr_asset_log_updater</td>
+      <td>Configure for updates on asset log modification</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>metricsreporter {
+
+  enabled= false
+  configFile = "conf/metrics-reporter-config.yaml"
+
+}</pre
+</div>
