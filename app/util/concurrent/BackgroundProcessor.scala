@@ -26,14 +26,7 @@ case class SexyTimeoutException(timeout: Duration) extends Exception("Command ti
 object BackgroundProcessor {
   import play.api.Play.current
 
-  lazy val ref = {
-    val routees = (0 until 128).map { _ =>
-      Akka.system.actorOf(Props[BackgroundProcessorActor])
-    }
-    Akka.system.actorOf(
-      Props[BackgroundProcessorActor].withRouter(RoundRobinRouter(routees))
-    )
-  }
+  lazy val ref = Akka.system.actorOf(Props[BackgroundProcessorActor], name = "background-processor")
 
   type SendType[T] = (Option[Throwable], Option[T])
 

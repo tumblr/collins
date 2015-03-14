@@ -49,10 +49,6 @@ class SolrPlugin(app: Application) extends Plugin {
   val assetSerializer = new AssetSerializer
   val assetLogSerializer = new AssetLogSerializer
 
-  //this must be lazy so it gets called after the system exists
-  lazy val updater = Akka.system.actorOf(Props[AssetSolrUpdater], name = "solr_asset_updater")
-  lazy val logUpdater = Akka.system.actorOf(Props[AssetLogSolrUpdater], name = "solr_asset_log_updater")
-
   override def onStart() {
     if (enabled) {
       System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
@@ -87,6 +83,9 @@ class SolrPlugin(app: Application) extends Plugin {
    * properly reindex the updated asset in Solr
    */
   private def initializeCallbacks() {
+    val updater = Akka.system.actorOf(Props[AssetSolrUpdater], name = "solr_asset_updater")
+    val logUpdater = Akka.system.actorOf(Props[AssetLogSolrUpdater], name = "solr_asset_log_updater")
+
     val callback = SolrAssetCallbackHandler(server, updater)
     Callback.on("asset_update", callback)
     Callback.on("asset_create", callback)
