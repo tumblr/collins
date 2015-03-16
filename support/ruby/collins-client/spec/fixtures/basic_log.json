@@ -1,0 +1,1 @@
+{"status":"success:ok","data":{"Pagination":{"PreviousPage":0,"CurrentPage":0,"NextPage":1,"TotalResults":1},"Data":[{"ID":42,"ASSET_TAG":"sl-102313","CREATED":"2012-02-08T04:05:06","FORMAT":"text/plain","SOURCE":"API","TYPE":"DEBUG","MESSAGE":"hello world log"}]}}
