@@ -58,7 +58,7 @@ module Collins; module Api
     # @param [String,Collins::Asset] asset_or_tag
     # @param [String] message
     # @param [Severity] level severity level to use
-    # @return [Boolean] true if logged successfully
+    # @return [OpenStruct] The log struct created
     # @raise [Collins::ExpectationFailed] the specified level was invalid
     # @raise [Collins::RequestError,Collins::UnexpectedResponseError] if the asset or message invalid
     def log! asset_or_tag, message, level = nil
@@ -70,7 +70,9 @@ module Collins; module Api
       parameters = select_non_empty_parameters parameters
       logger.debug("Logging to #{asset.tag} with parameters #{parameters.inspect}")
       http_put("/api/asset/#{asset.tag}/log", parameters, asset.location) do |response|
-        parse_response response, :as => :status, :expects => 201
+        parse_response response, :as => :paginated, :expects => 201 do |json|
+          json.map{|j| OpenStruct.new(symbolize_hash(j))}.first
+        end
       end
     end
 
@@ -84,7 +86,7 @@ module Collins; module Api
     # @option options [Fixnum] :size (25) Number of results to retrieve
     # @option options [String] :sort (DESC) Sort ordering for results
     # @option options [String] :filter Semicolon separated list of severity levels to include or exclude
-    # @option options [String] :all_tag If specified, an asset tag is this value, proxy to the all_logs method
+    # @option options [String] :all_tag If specified, and asset tag is set to :all_tag, proxy to the all_logs method
     # @note To exclude a level via a filter it must be prepended with a `!`
     # @return [Array<OpenStruct>] Array of log objects
     # @raise [Collins::UnexpectedResponseError] on a non-200 response
@@ -144,7 +146,7 @@ module Collins; module Api
       logger.debug("Fetching log #{id}")
       http_get("/api/log/#{id}") do |response|
         parse_response response, :as => :paginated, :default => nil, :raise => strict?, :expects => 200 do |json|
-          OpenStruct.new(symbolize_hash(json))
+          OpenStruct.new(symbolize_hash(json.first))
         end
       end
     end
