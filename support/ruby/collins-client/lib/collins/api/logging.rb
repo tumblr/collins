@@ -143,8 +143,7 @@ module Collins; module Api
     def get_log id
       logger.debug("Fetching log #{id}")
       http_get("/api/log/#{id}") do |response|
-        puts response.inspect
-        parse_response response, :as => :data, :default => nil, :raise => strict?, :expects => 200 do |json|
+        parse_response response, :as => :paginated, :default => nil, :raise => strict?, :expects => 200 do |json|
           OpenStruct.new(symbolize_hash(json))
         end
       end
