@@ -57,8 +57,8 @@ module Collins; module Api
     # Log a message against an asset using the specified level
     # @param [String,Collins::Asset] asset_or_tag
     # @param [String] message
-    # @param options [Severity] :level (nil) severity level to use
-    # @return [OpenStruct] true if logged successfully
+    # @param [Severity] level severity level to use
+    # @return [Boolean] true if logged successfully
     # @raise [Collins::ExpectationFailed] the specified level was invalid
     # @raise [Collins::RequestError,Collins::UnexpectedResponseError] if the asset or message invalid
     def log! asset_or_tag, message, level = nil
@@ -70,7 +70,7 @@ module Collins; module Api
       parameters = select_non_empty_parameters parameters
       logger.debug("Logging to #{asset.tag} with parameters #{parameters.inspect}")
       http_put("/api/asset/#{asset.tag}/log", parameters, asset.location) do |response|
-        parse_response response, :as => :data, :expects => 201
+        parse_response response, :as => :status, :expects => 201
       end
     end
 
@@ -100,7 +100,7 @@ module Collins; module Api
       parameters = select_non_empty_parameters parameters
       logger.debug("Fetching logs for #{asset.tag} with parameters #{parameters.inspect}")
       http_get("/api/asset/#{asset.tag}/logs", parameters, asset.location) do |response|
-        parse_response response, :as => :data, :default => [], :raise => strict?, :expects => 200 do |json|
+        parse_response response, :as => :paginated, :default => [], :raise => strict?, :expects => 200 do |json|
           json.map{|j| OpenStruct.new(symbolize_hash(j))}
         end
       end
@@ -115,7 +115,7 @@ module Collins; module Api
       parameters = select_non_empty_parameters parameters
       logger.debug("Fetching logs for all assets with parameters #{parameters.inspect}")
       http_get("/api/assets/logs/search", parameters) do |response|
-        parse_response response, :as => :data, :default => [], :raise => strict?, :expects => 200 do |json|
+        parse_response response, :as => :paginated, :default => [], :raise => strict?, :expects => 200 do |json|
           json.map{|j| OpenStruct.new(symbolize_hash(j))}
         end
       end
@@ -130,7 +130,7 @@ module Collins; module Api
       parameters = select_non_empty_parameters parameters
       logger.debug("Fetching logs for all assets with parameters #{parameters.inspect}")
       http_get("/api/assets/logs", parameters) do |response|
-        parse_response response, :as => :data, :default => [], :raise => strict?, :expects => 200 do |json|
+        parse_response response, :as => :paginated, :default => [], :raise => strict?, :expects => 200 do |json|
           json.map{|j| OpenStruct.new(symbolize_hash(j))}
         end
       end

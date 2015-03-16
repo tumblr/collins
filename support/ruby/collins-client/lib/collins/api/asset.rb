@@ -90,7 +90,7 @@ module Collins; module Api
       end.reject{|s| s.empty?}
       logger.debug("Finding assets using params #{params.inspect}")
       http_get("/api/assets", params) do |response|
-        parse_response response, :expects => 200, :as => :data do |json|
+        parse_response response, :expects => 200, :as => :paginated do |json|
           json.map { |j| Collins::Asset.from_json(j) }
         end
       end
@@ -117,7 +117,7 @@ module Collins; module Api
       }
       logger.debug("Finding similar assets for #{asset.tag}")
       http_get("/api/asset/#{asset.tag}/similar", params) do |response|
-        parse_response response, :expects => 200, :as => :data do |json|
+        parse_response response, :expects => 200, :as => :paginated do |json|
           json.map { |j| Collins::Asset.from_json(j) }
         end
       end

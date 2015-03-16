@@ -25,11 +25,13 @@ module Collins; module Api; module Util
         when :bare_asset
           json = Collins::Asset.from_json(json, true)
         when :data
-          json = json["data"]["Data"]
+          json = json["data"]
         when :status
           json = json["data"]["SUCCESS"]
         when :message
           json = json["data"]["MESSAGE"]
+        when :paginated
+          json = json["data"]["Data"]
         end
       end
       if block_given? then
