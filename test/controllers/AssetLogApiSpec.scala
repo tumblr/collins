@@ -19,7 +19,6 @@ class AssetLogApiSpec extends ApplicationSpecification with ControllerSpec {
     "Support creating logs" in new log {
       val reqCreate = FakeRequest("PUT", assetCreateLogUrl)
       val resCreate = Extract.from(api.submitLogData(assetId).apply(reqCreate))
-      println(resCreate)
       resCreate must haveStatus(201)
       resCreate must haveJsonData.which { s =>
         s must /("data") */("SUCCESS"   -> true)
