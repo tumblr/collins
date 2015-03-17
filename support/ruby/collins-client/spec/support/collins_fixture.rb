@@ -21,12 +21,14 @@ module CollinsFixture
   def status_response_false json = false
     get_fixture_data 'status_response_false.json', json
   end
-
   def full_asset_w_state json = false
     get_fixture_data 'full_asset_w_state.json', json
   end
   def partial_asset_no_state json = false
     get_fixture_data 'partial_asset_no_state.json', json
+  end
+  def basic_log json=false
+    get_fixture_data 'basic_log.json', json
   end
 
   def data name

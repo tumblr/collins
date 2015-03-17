@@ -11,9 +11,10 @@ GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?=
 
 GET     /asset/create/:assetType    app.Resources.displayCreateForm(assetType: String)
 POST    /asset/create/:assetType    app.Resources.createAsset(assetType: String)
-GET     /asset/:tag/logs            app.CookieApi.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+GET     /asset/:tag/logs            app.CookieApi.getAssetLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 GET     /assets/logs                app.CookieApi.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
 POST    /asset/:tag/log             app.CookieApi.submitLogData(tag: String)
+GET     /log/:id                    app.CookieApi.getLogData(id: Int)
 GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
 POST    /asset/:tag/maintenance     app.CookieApi.updateAssetForMaintenance(tag: String)
 POST    /asset/:tag/cancel          app.CookieApi.cancelAsset(tag: String)
@@ -57,9 +58,10 @@ DELETE  /api/asset/:tag/addresses            app.Api.purgeAddresses(tag: String)
 
 # Log API
 PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
-GET     /api/asset/:tag/logs        app.Api.getLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+GET     /api/asset/:tag/logs        app.Api.getAssetLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
 GET     /api/assets/logs            app.Api.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
 GET     /api/assets/logs/search     app.Api.searchLogs(page: Int ?=0, size: Int ?= 100, sortField: String ?="CREATED", sort: String ?= "DESC", query: String ?= "*")
+GET     /api/log/:id                app.Api.getLogData(id: Int)
 
 # Asset management API
 POST    /api/asset/:tag/ipmi        app.Api.updateIpmi(tag: String)
