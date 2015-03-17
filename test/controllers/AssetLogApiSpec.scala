@@ -32,7 +32,7 @@ class AssetLogApiSpec extends ApplicationSpecification with ControllerSpec {
       val reqGet = FakeRequest("GET", logGetUrl)
       val resGet = Extract.from(api.getLogData(logId).apply(reqGet))
       resGet must haveStatus(200)
-      resCreate must haveJsonData.which { s =>
+      resGet must haveJsonData.which { s =>
         s must /("data") */("SUCCESS"   -> true)
         s must /("data") */("ID"        -> logId)
         s must /("data") */("ASSET_TAG" -> assetId)
