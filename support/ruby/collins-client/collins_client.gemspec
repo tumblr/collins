@@ -8,10 +8,10 @@ Gem::Specification.new do |s|
   s.version = File.read 'VERSION'
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Blake Matheny", "Gabe Conradi"]
-  s.date = "2014-08-08"
+  s.authors = ["Blake Matheny", "Gabe Conradi", "Will Richard"]
+  s.date = "2015-03-17"
   s.description = "Provides ruby support for interacting with the Collins API"
-  s.email = ["bmatheny@tumblr.com","gabe@tumblr.com"]
+  s.email = ["accounts@tumblr.com","gabe@tumblr.com","will@tumblr.com"]
   s.extra_rdoc_files = [
     "README.md"
   ]
