@@ -71,7 +71,8 @@ module Collins; module Api
       logger.debug("Logging to #{asset.tag} with parameters #{parameters.inspect}")
       http_put("/api/asset/#{asset.tag}/log", parameters, asset.location) do |response|
         parse_response response, :as => :paginated, :expects => 201 do |json|
-          json.map{|j| OpenStruct.new(symbolize_hash(j))}.first
+          puts json
+          OpenStruct.new(symbolize_hash(json))
         end
       end
     end
@@ -146,7 +147,7 @@ module Collins; module Api
       logger.debug("Fetching log #{id}")
       http_get("/api/log/#{id}") do |response|
         parse_response response, :as => :paginated, :default => nil, :raise => strict?, :expects => 200 do |json|
-          OpenStruct.new(symbolize_hash(json.first))
+          OpenStruct.new(symbolize_hash(json))
         end
       end
     end
