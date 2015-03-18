@@ -71,7 +71,6 @@ module Collins; module Api
       logger.debug("Logging to #{asset.tag} with parameters #{parameters.inspect}")
       http_put("/api/asset/#{asset.tag}/log", parameters, asset.location) do |response|
         parse_response response, :as => :paginated, :expects => 201 do |json|
-          puts json
           OpenStruct.new(symbolize_hash(json))
         end
       end
