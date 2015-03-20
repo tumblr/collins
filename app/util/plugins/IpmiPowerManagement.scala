@@ -2,13 +2,14 @@ package util
 package plugins
 
 import models.{Asset, IpmiInfo}
+
 import play.api.{Application, Plugin}
+
 import collins.power._
 import collins.power.management._
 import java.util.concurrent.Executors
+import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
-import util.concurrent.BackgroundProcessor
-import play.api.libs.concurrent.Execution.Implicits._
 
 case class IpmiPowerCommand(
   override val ipmiCommand: String,
@@ -47,6 +48,10 @@ object IpmiPowerCommand {
 
 class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement {
 
+  protected[this] val executor = Executors.newCachedThreadPool()
+
+  protected[this] implicit val ec = ExecutionContext.fromExecutor(executor)
+
   override def enabled: Boolean = {
     PowerManagementConfig.pluginInitialize(app.configuration)
     val isEnabled = PowerManagementConfig.enabled
@@ -58,6 +63,9 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
   }
 
   override def onStop() {
+    try executor.shutdown() catch {
+      case _: Throwable => // swallow this
+    }
   }
 
   def powerOff(e: Asset): PowerStatus = run(e, PowerOff)
@@ -69,19 +77,15 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
   def identify(e: Asset): PowerStatus = run(e, Identify)
   def verify(e: Asset): PowerStatus = run(e, Verify)
 
-  protected[this] def run(e: Asset, action: PowerAction): PowerStatus = {
-    BackgroundProcessor.send(IpmiPowerCommand.fromPowerAction(getAsset(e), action))(result => result match {
-      case (Some(error), None) => 
-	    Failure("Error running command for %s".format(error.getMessage()))
-      case (None, Some(statusOpt)) => statusOpt match { 
+  protected[this] def run(e: Asset, action: PowerAction): PowerStatus =
+    Future{
+      IpmiPowerCommand.fromPowerAction(getAsset(e), action).run() match {
+        case None => Failure("powermanagement not enabled or available in environment")
         case Some(status) => status.isSuccess match {
           case true => Success(status.stdout)
           case false => Failure(status.stderr.getOrElse("Error running command for %s".format(action)))
         }
-        case _ => Success("Command for %s succeeded".format(action))
       }
-      case _ => Failure("Error running command for %s".format(action))
-    })
   }
   protected[this] def getAsset(e: Asset): Asset = Asset.findByTag(e.tag) match {
     case Some(a) => a
