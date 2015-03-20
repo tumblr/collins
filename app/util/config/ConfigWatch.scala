@@ -36,9 +36,9 @@ object ConfigWatch extends AppConfig {
     }.toMap
   }
 
-  private val timer = new Timer("config-watcher")
+  private val timer = new Timer()
 
-  Runtime.getRuntime().addShutdownHook(new Thread("config-watch-reaper") {
+  Runtime.getRuntime().addShutdownHook(new Thread() {
     override def run() {
       try {
         timer.cancel

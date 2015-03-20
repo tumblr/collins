@@ -2,13 +2,14 @@ package util
 package plugins
 
 import models.{Asset, IpmiInfo}
+
 import play.api.{Application, Plugin}
+
 import collins.power._
 import collins.power.management._
 import java.util.concurrent.Executors
-import scala.concurrent.{ExecutionContext, future}
+import scala.concurrent.{Future, ExecutionContext}
 import scala.concurrent.duration._
-import play.libs.Akka
 
 case class IpmiPowerCommand(
   override val ipmiCommand: String,
@@ -47,6 +48,10 @@ object IpmiPowerCommand {
 
 class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement {
 
+  protected[this] val executor = Executors.newCachedThreadPool()
+
+  protected[this] implicit val ec = ExecutionContext.fromExecutor(executor)
+
   override def enabled: Boolean = {
     PowerManagementConfig.pluginInitialize(app.configuration)
     val isEnabled = PowerManagementConfig.enabled
@@ -58,6 +63,9 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
   }
 
   override def onStop() {
+    try executor.shutdown() catch {
+      case _: Throwable => // swallow this
+    }
   }
 
   def powerOff(e: Asset): PowerStatus = run(e, PowerOff)
@@ -69,9 +77,8 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
   def identify(e: Asset): PowerStatus = run(e, Identify)
   def verify(e: Asset): PowerStatus = run(e, Verify)
 
-  protected[this] def run(e: Asset, action: PowerAction): PowerStatus = {
-    implicit val ec = Akka.system.dispatchers.lookup("background-dispatcher")
-    future {
+  protected[this] def run(e: Asset, action: PowerAction): PowerStatus =
+    Future{
       IpmiPowerCommand.fromPowerAction(getAsset(e), action).run() match {
         case None => Failure("powermanagement not enabled or available in environment")
         case Some(status) => status.isSuccess match {
@@ -79,7 +86,6 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
           case false => Failure(status.stderr.getOrElse("Error running command for %s".format(action)))
         }
       }
-    }
   }
   protected[this] def getAsset(e: Asset): Asset = Asset.findByTag(e.tag) match {
     case Some(a) => a
