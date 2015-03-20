@@ -246,7 +246,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
     import play.api.Play.current
 
     val ActionDataHolder(asset, pRequest, _, attribs) = adh
-    BackgroundProcessor.send(ProvisionerTest(pRequest)) { res =>
+    BackgroundProcessor.send(ProvisionerTest(pRequest)(request, defaultContext)) { res =>
       processProvisionAction(res) { result =>
         processProvision(result)
       }
@@ -261,7 +261,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
           )
           setAsset(Asset.findById(asset.getId))
         }
-        BackgroundProcessor.send(ProvisionerRun(pRequest)) { res =>
+        BackgroundProcessor.send(ProvisionerRun(pRequest)(request, defaultContext)) { res =>
           processProvisionAction(res) { result =>
             processProvision(result).map { err =>
               tattle("Provisioning failed. Exit code %d\n%s".format(result.commandResult.exitCode,
