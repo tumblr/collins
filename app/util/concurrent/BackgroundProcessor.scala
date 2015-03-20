@@ -7,9 +7,10 @@ import akka.pattern.ask
 import akka.routing.RoundRobinRouter
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-import play.api.libs.concurrent._
+import play.api.libs.concurrent.Akka
 import java.util.concurrent.TimeoutException
 import play.api.libs.concurrent.Execution.Implicits._
+import akka.actor.Props
 
 
 class BackgroundProcessorActor extends Actor {
