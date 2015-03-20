@@ -72,7 +72,7 @@ abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
     Some(cr)
   }
 
-  override protected def defaultTimeout = Duration(2, TimeUnit.MILLISECONDS)
+  override protected def defaultTimeout: Duration = Duration(2, TimeUnit.MILLISECONDS)
 
   protected def substitute(cmd: String): String = {
     cmd.replace("<host>", address)
