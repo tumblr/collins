@@ -7,9 +7,11 @@ import akka.pattern.ask
 import akka.routing.RoundRobinRouter
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
-import play.api.libs.concurrent._
+import play.api.libs.concurrent.Akka
 import java.util.concurrent.TimeoutException
 import play.api.libs.concurrent.Execution.Implicits._
+import akka.actor.Props
+import akka.routing.FromConfig
 
 
 class BackgroundProcessorActor extends Actor {
@@ -26,14 +28,8 @@ case class SexyTimeoutException(timeout: Duration) extends Exception("Command ti
 object BackgroundProcessor {
   import play.api.Play.current
 
-  lazy val ref = {
-    val routees = (0 until 128).map { _ =>
-      Akka.system.actorOf(Props[BackgroundProcessorActor])
-    }
-    Akka.system.actorOf(
-      Props[BackgroundProcessorActor].withRouter(RoundRobinRouter(routees))
-    )
-  }
+  lazy val ref = Akka.system.actorOf(Props[BackgroundProcessorActor].
+      withRouter(FromConfig()), name = "background-processor")
 
   type SendType[T] = (Option[Throwable], Option[T])
 

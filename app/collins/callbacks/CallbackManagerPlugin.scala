@@ -4,14 +4,16 @@ package callbacks
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
 import play.api.{Application, Configuration, Logger, Plugin}
 import play.api.Play.current
-import play.api.libs.concurrent._
+import play.api.libs.concurrent.Akka
 import akka.actor.Props
+import akka.routing.FromConfig
 
 class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackManager {
   override protected val logger = Logger("CallbackManagerPlugin")
 
   //this must be lazy so it gets called after the system exists
-  override lazy val changeQueue = Akka.system.actorOf(Props(CallbackMessageQueue(pcs)), name = "change_queue_processor")
+  override lazy val changeQueue = Akka.system.actorOf(Props(CallbackMessageQueue(pcs)).
+      withRouter(FromConfig()), name = "change_queue_processor")
 
   override def enabled: Boolean = {
     CallbackConfig.pluginInitialize(app.configuration)
