@@ -4,7 +4,7 @@ package callbacks
 import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
 import play.api.{Application, Configuration, Logger, Plugin}
 import play.api.Play.current
-import play.api.libs.concurrent._
+import play.api.libs.concurrent.Akka
 import akka.actor.Props
 
 class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackManager {

@@ -6,9 +6,9 @@ import play.api.{Application, Plugin}
 import collins.power._
 import collins.power.management._
 import java.util.concurrent.Executors
-import scala.concurrent.{ExecutionContext, future}
 import scala.concurrent.duration._
-import play.libs.Akka
+import util.concurrent.BackgroundProcessor
+import play.api.libs.concurrent.Execution.Implicits._
 
 case class IpmiPowerCommand(
   override val ipmiCommand: String,
@@ -70,16 +70,18 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
   def verify(e: Asset): PowerStatus = run(e, Verify)
 
   protected[this] def run(e: Asset, action: PowerAction): PowerStatus = {
-    implicit val ec = Akka.system.dispatchers.lookup("background-dispatcher")
-    future {
-      IpmiPowerCommand.fromPowerAction(getAsset(e), action).run() match {
-        case None => Failure("powermanagement not enabled or available in environment")
+    BackgroundProcessor.send(IpmiPowerCommand.fromPowerAction(getAsset(e), action))(result => result match {
+      case (Some(error), None) => 
+	    Failure("Error running command for %s".format(error.getMessage()))
+      case (None, Some(statusOpt)) => statusOpt match { 
         case Some(status) => status.isSuccess match {
           case true => Success(status.stdout)
           case false => Failure(status.stderr.getOrElse("Error running command for %s".format(action)))
         }
+        case _ => Success("Command for %s succeeded".format(action))
       }
-    }
+      case _ => Failure("Error running command for %s".format(action))
+    })
   }
   protected[this] def getAsset(e: Asset): Asset = Asset.findByTag(e.tag) match {
     case Some(a) => a

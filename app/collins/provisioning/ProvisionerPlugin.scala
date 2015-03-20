@@ -4,9 +4,8 @@ import collins.cache.ConfigCache
 import collins.shell.{Command, CommandResult}
 import models.Asset
 import play.api.{Application, Plugin}
-import scala.concurrent.{ExecutionContext, Future, future}
-import java.util.concurrent.Executors
-import play.libs.Akka
+import play.api.libs.concurrent.Akka
+import play.api.Play.current
 
 
 class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
@@ -42,30 +41,24 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
   }
 
   // overrides ProvisionerInterface.provision
-  override def provision(request: ProvisionerRequest): Future[CommandResult] = {
-    implicit val ec = Akka.system.dispatchers.lookup("default-dispatcher")
-    future[CommandResult] {
-      val result = runCommand(command(request, ProvisionerConfig.command))
-      if (result.exitCode != 0) {
-        logger.warn("Command executed: %s".format(command(request, ProvisionerConfig.command)))
-        logger.warn("Command code: %d, output %s".format(result.exitCode, result.stdout))
-      }
-      result
+  override def provision(request: ProvisionerRequest): CommandResult = {
+    val result = runCommand(command(request, ProvisionerConfig.command))
+    if (result.exitCode != 0) {
+      logger.warn("Command executed: %s".format(command(request, ProvisionerConfig.command)))
+      logger.warn("Command code: %d, output %s".format(result.exitCode, result.stdout))
     }
+    result
   }
 
-  override def test(request: ProvisionerRequest): Future[CommandResult] = {
-    implicit val ec = Akka.system.dispatchers.lookup("background-dispatcher")
+  override def test(request: ProvisionerRequest): CommandResult = {
     val cmd = try command(request, ProvisionerConfig.checkCommand) catch {
-      case _: Throwable => return Future(CommandResult(0,"No check command specified"))
+      case _: Throwable => return CommandResult(0,"No check command specified")
     }
-    future[CommandResult] {
-      val result = runCommand(cmd)
-      if (result.exitCode != 0) {
-        logger.warn("Command code: %d, output %s".format(result.exitCode, result.stdout))
-      }
-      result
+    val result = runCommand(cmd)
+    if (result.exitCode != 0) {
+      logger.warn("Command code: %d, output %s".format(result.exitCode, result.stdout))
     }
+    result
   }
 
   protected def runCommand(cmd: String): CommandResult = {
