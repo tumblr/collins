@@ -1,11 +1,10 @@
 package models
 
-import test.ApplicationSpecification
-
 import org.specs2._
 import specification._
+import play.api.test.WithApplication
 
-class StatusSpec extends ApplicationSpecification {
+class StatusSpec extends mutable.Specification {
   
   "Status Model Specification".title
 
@@ -13,7 +12,7 @@ class StatusSpec extends ApplicationSpecification {
 
   "The Status Model" should {
 
-    "Handle validation" in {
+    "Handle validation" in new WithApplication {
       "Disallow empty names" in {
         Status("", "Description").validate() must throwA[IllegalArgumentException]
         Status.create(Status("", "Description")) must throwA[IllegalArgumentException]
@@ -24,7 +23,7 @@ class StatusSpec extends ApplicationSpecification {
       }
     }
 
-    "Support find methods" in {
+    "Support find methods" in new WithApplication {
       "findById" in {
         Status.findById(1) must beSome[Status]
         Status.findById(0) must beNone
@@ -35,7 +34,7 @@ class StatusSpec extends ApplicationSpecification {
       }
     }
 
-    "Support CRUD Operations" in {
+    "Support CRUD Operations" in new WithApplication {
       val status = Status("test1", "New test")
 
       "CREATE" in {

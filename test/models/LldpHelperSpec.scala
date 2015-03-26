@@ -4,13 +4,14 @@ import util._
 import util.parsers.LldpParser
 import org.specs2._
 import specification._
+import play.api.test.WithApplication
 
-class LldpHelperSpec extends test.ApplicationSpecification {
+class LldpHelperSpec extends mutable.Specification {
 
   "LLDP Helper Specification".title
 
   "The LLDP Helper" should {
-    "Parse and reconstruct data" in {
+    "Parse and reconstruct data" in new WithApplication {
       "with one network interface" in new LldpCommonHelper("lldpctl-single.xml") {
         val lldp = parsed()
         lldp.interfaceCount mustEqual(1)

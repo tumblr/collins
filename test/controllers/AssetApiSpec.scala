@@ -2,20 +2,22 @@ package controllers
 
 import util.power.PowerUnits
 import models.AssetMeta.Enum.RackPosition
-
 import models._
 import test._
-
 import play.api.libs.json._
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc._
 import play.api.mvc.MultipartFormData._
-
 import org.specs2._
 import specification._
 import matcher.Matcher
+import play.api.test.WithApplication
+import play.api.test.WithApplication
+import play.api.test.WithApplication
+import play.api.test.WithApplication
+import play.api.test.WithApplication
 
-class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
+class AssetApiSpec extends mutable.Specification with ControllerSpec with ResourceFinder {
 
   "Asset API Specification".title
 
@@ -25,25 +27,27 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
   val api = getApi(user)
 
   "Create a meta" should {
-    "for outlets" in {
+    "for outlets" in new WithApplication {
       AssetMeta.findOrCreateFromName("OUTLET").name === "OUTLET"
     }
   }
 
-  "Asset Validation" should {
-    "Reject empty asset tags" in new ResponseScope {
-      val request = FakeRequest("GET", "/api/asset/")
-      Extract.from(api.createAsset("").apply(request)) must haveStatus(400)
-    }
-    "Reject Non alpha-num tags" in new ResponseScope {
-      val request = FakeRequest("GET", "/api/asset/")
-      Extract.from(api.updateAsset("^*$lkas$").apply(request)) must haveStatus(400)
-    }
-  }
 
   "The REST API" should {
+ 
+    "During Asset Validation" in new WithApplication {
+      "Reject empty asset tags" in new ResponseScope  {
+        val request = FakeRequest("GET", "/api/asset/")
+        Extract.from(api.createAsset("").apply(request)) must haveStatus(400)
+    }
 
-    "Support Multi-step intake" in {
+     "Reject Non alpha-num tags" in new ResponseScope {
+       val request = FakeRequest("GET", "/api/asset/")
+       Extract.from(api.updateAsset("^*$lkas$").apply(request)) must haveStatus(400)
+     }
+    }
+
+    "Support Multi-step intake" in new WithApplication {
       "Create an asset via a PUT" in new asset {
         val request = FakeRequest("PUT", assetUrl)
         val result = Extract.from(api.createAsset(assetTag).apply(request))
@@ -114,7 +118,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
      * NOTE (DS) - If these tests suddenly start failing, try clearing the Solr index by shutting down solr and deleting the SOLR_HOME/data
      * directory
      */
-    "Support find" in {
+    "Support find" in new WithApplication {
       "by custom attribute" in new asset {
         val req = FakeRequest("GET", findUrl + "?attribute=foo;bar")
         val result = Extract.from(api.getAssets(0, 10, "", "TAG", "").apply(req))
@@ -183,7 +187,7 @@ class AssetApiSpec extends ApplicationSpecification with ControllerSpec {
     } // Support various find mechanisms
 
 
-    "Handle asset decommission" in {
+    "Handle asset decommission" in new WithApplication {
       "For Unallocated assets" in new asset {
         val req = FakeRequest("DELETE", assetUrl)
         Extract.from(api.deleteAsset(assetTag).apply(req)) must haveJsonData.which { txt =>

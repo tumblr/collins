@@ -13,7 +13,7 @@ import play.api.mvc.MultipartFormData._
 
 import test._
 
-class ApiSpec extends ApplicationSpecification with ControllerSpec {
+class ApiSpec extends mutable.Specification with ControllerSpec {
 
   args(sequential = true)
   val user = getLoggedInUser("infra")

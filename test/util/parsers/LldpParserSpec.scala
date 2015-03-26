@@ -59,7 +59,7 @@ class LldpParserSpec extends mutable.Specification {
      * Easy peasy, there isn't a play application that already exists.
      * 
      * Why do we have these comments?
-     * For someone smarter than me to come in and fix the damn test.
+     * For someone smarter than me to come in and fix the damn test.*/
     "missing vlan config ok" in new LldpParserHelper("lldpctl-no-name.xml") {
       val config = Map(
         "requireVlanName" -> "false"
@@ -72,7 +72,6 @@ class LldpParserSpec extends mutable.Specification {
         rep.vlanIds.toSet mustEqual(Set(100,101))
       }
     }
-    */
     
     "Parse XML with four network interfaces" in new LldpParserHelper("lldpctl-four-nic.xml") {
       val parseResult = parsed()

@@ -2,16 +2,18 @@ package models
 
 import util._
 import util.parsers.LshwParser
-
 import org.specs2._
 import specification._
+import play.api.test.WithApplication
+import play.api.test.WithApplication
+import play.api.test.WithApplication
 
-class LshwHelperSpec extends test.ApplicationSpecification {
+class LshwHelperSpec extends mutable.Specification {
 
   "LSHW Helper Specification".title
 
   "The LSHW Helper" should {
-    "Parse and reconstruct data" in {
+    "Parse and reconstruct data" in new WithApplication {
       "containing a 10-gig card" in new LshwCommonHelper("lshw-10g.xml") {
         val lshw = parsed()
         val stub = getStub()
@@ -77,7 +79,7 @@ class LshwHelperSpec extends test.ApplicationSpecification {
       }
     }
 
-    "update asset meta tags" in {
+    "update asset meta tags" in new WithApplication {
       "create asset" in new AssetUpdateHelper("lshw-basic.xml") {
         val asset = Asset.create(Asset(assetTag, Status.Incomplete.get, AssetType.ServerNode.get))
         LshwHelper.updateAsset(asset, parsed())
@@ -93,7 +95,7 @@ class LshwHelperSpec extends test.ApplicationSpecification {
     }
   }
 
-  class LshwCommonHelper(txt: String) extends Scope with test.models.CommonHelperSpec[LshwRepresentation] {
+  class LshwCommonHelper(txt: String) extends WithApplication with Scope with test.models.CommonHelperSpec[LshwRepresentation] {
     def getParser(str: String) = new LshwParser(str)
     override def parsed(): LshwRepresentation = getParsed(txt)
   }
