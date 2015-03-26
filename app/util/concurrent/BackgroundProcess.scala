@@ -8,5 +8,5 @@ trait BackgroundProcess[T] {
   val timeout: FiniteDuration
   def run(): T
 
-  protected def defaultTimeout: Duration = Duration(ConcurrencyConfig.timeoutMs, TimeUnit.MILLISECONDS)
+  protected def defaultTimeout = Duration(ConcurrencyConfig.timeoutMs, TimeUnit.MILLISECONDS)
 }
