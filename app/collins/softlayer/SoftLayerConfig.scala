@@ -13,6 +13,8 @@ object SoftLayerConfig extends Configurable {
   def allowedCancelStatus = getStringSet("allowedCancelStatus", Status.statusNames).map { s =>
     Status.findByName(s).get.id
   }
+  def cancelRequestTimeoutMs = getMilliseconds("cancelRequestTimeout").getOrElse(10000L)
+  def activationRequestTimeoutMs = getMilliseconds("activationRequestTimeout").getOrElse(10000L)
 
   override def validateConfig() {
     if (enabled) {

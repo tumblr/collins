@@ -6,6 +6,9 @@ import collins.provisioning.ProvisionerRequest
 import collins.shell.CommandResult
 import util.concurrent.BackgroundProcess
 import util.plugins.Provisioner
+import scala.concurrent.duration.Duration
+import collins.provisioning.ProvisionerConfig
+import java.util.concurrent.TimeUnit
 
 sealed trait ProvisionerStatus
 sealed trait ProvisionerFailure extends ProvisionerStatus
@@ -22,7 +25,7 @@ case class ProvisionerResult(status: ProvisionerStatus, commandResult: CommandRe
 
 case class ProvisionerTest(request: ProvisionerRequest, userTimeout: Option[FiniteDuration] = None) extends BackgroundProcess[ProvisionerResult]
 {
-  val timeout = userTimeout.getOrElse(defaultTimeout)
+  val timeout = userTimeout.getOrElse(Duration(ProvisionerConfig.checkCommandTimeoutMs, TimeUnit.MILLISECONDS))
   
   def run(): ProvisionerResult = {
     Provisioner.pluginEnabled { plugin =>
@@ -37,7 +40,7 @@ case class ProvisionerTest(request: ProvisionerRequest, userTimeout: Option[Fini
 
 case class ProvisionerRun(request: ProvisionerRequest, userTimeout: Option[FiniteDuration] = None) extends BackgroundProcess[ProvisionerResult]
 {
-  val timeout = userTimeout.getOrElse(defaultTimeout)
+  val timeout = userTimeout.getOrElse(Duration(ProvisionerConfig.commandTimeoutMs, TimeUnit.MILLISECONDS))
 
   def run(): ProvisionerResult = {
     Provisioner.pluginEnabled { plugin =>

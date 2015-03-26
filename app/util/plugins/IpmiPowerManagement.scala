@@ -9,6 +9,7 @@ import java.util.concurrent.Executors
 import scala.concurrent.duration._
 import util.concurrent.BackgroundProcessor
 import play.api.libs.concurrent.Execution.Implicits._
+import java.util.concurrent.TimeUnit
 
 case class IpmiPowerCommand(
   override val ipmiCommand: String,
@@ -17,8 +18,7 @@ case class IpmiPowerCommand(
   verify: Boolean = false,
   userTimeout: Option[FiniteDuration] = None)
 extends IpmiCommand {
-  override def defaultTimeout = PowerManagementConfig.timeoutMs.milliseconds
-  override val timeout = userTimeout.getOrElse(defaultTimeout)
+  override val timeout = userTimeout.getOrElse(Duration(PowerManagementConfig.timeoutMs, TimeUnit.MILLISECONDS))
 }
 
 object IpmiPowerCommand {

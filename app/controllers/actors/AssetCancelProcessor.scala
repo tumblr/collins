@@ -7,13 +7,13 @@ import play.api.mvc.{AnyContent, Request}
 import util.plugins.SoftLayer
 import util.concurrent.BackgroundProcess
 import scala.concurrent.{Await, ExecutionContext}
+import collins.softlayer.SoftLayerConfig
+import java.util.concurrent.TimeUnit
 
 case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration] = None)(implicit req: Request[AnyContent], ec : ExecutionContext)
   extends BackgroundProcess[Either[ResponseData,Long]]
 {
-  override def defaultTimeout = 10 seconds
-
-  val timeout = userTimeout.getOrElse(defaultTimeout)
+  val timeout = userTimeout.getOrElse(Duration(SoftLayerConfig.cancelRequestTimeoutMs, TimeUnit.MILLISECONDS))
 
   private val noReason : Either[ResponseData,Long] = Left(Api.getErrorMessage("No reason specified for cancellation"))
 
