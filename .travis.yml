@@ -27,7 +27,7 @@ matrix:
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-state
 # arbitrarily choose to	  run ruby when jdk is set to openjdk7
 script:
-  - if $RUN_SCALA; then play-2.1.5/play -J-Xmx1G test; fi
+  - if $RUN_SCALA; then play-2.1.5/play -J-Xmx512m test; fi
   - if $RUN_RUBY; then cd support/ruby/$GEM_NAME; bundle install --path ./vendor/bundle; bundle exec rake; fi
 notifications:
   irc: "chat.freenode.net#collins"
