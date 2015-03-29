@@ -4,9 +4,6 @@ package models
 import org.specs2._
 import specification._
 import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
 
 class AssetMetaSpec extends mutable.Specification {
 

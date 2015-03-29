@@ -6,7 +6,6 @@ import AssetSortType._
 import SortDirection._
 import java.sql.Timestamp
 import play.api.test.WithApplication
-import play.api.test.WithApplication
 
 class AssetDistanceSorterSpec extends mutable.Specification {
 

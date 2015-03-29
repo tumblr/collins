@@ -4,7 +4,6 @@ import test._
 import org.specs2._
 import specification._
 import play.api.test.WithApplication
-import play.api.test.WithApplication
 
 class AssetLogApiSpec extends mutable.Specification with ControllerSpec {
 

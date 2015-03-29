@@ -5,8 +5,6 @@ import util.parsers.LshwParser
 import org.specs2._
 import specification._
 import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
 
 class LshwHelperSpec extends mutable.Specification {
 

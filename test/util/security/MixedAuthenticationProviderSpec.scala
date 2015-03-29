@@ -6,11 +6,6 @@ import util.config.ConfigurationException
 import org.specs2.mutable.Specification
 import test.ResourceFinder
 import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
 
 class MixedAuthenticationProviderSpec extends Specification with ResourceFinder {
   

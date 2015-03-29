@@ -12,10 +12,6 @@ import org.specs2._
 import specification._
 import matcher.Matcher
 import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
-import play.api.test.WithApplication
 
 class AssetApiSpec extends mutable.Specification with ControllerSpec with ResourceFinder {
 
