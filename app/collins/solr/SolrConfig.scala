@@ -16,7 +16,7 @@ object SolrConfig extends Configurable {
       messageWithDefault("invalidUrl", "solr.externalUrl %s is invalid".format(t), t)
   }
 
-  # defaults taken from http://wiki.apache.org/solr/Solrj#Changing_other_Connection_Settings
+  // defaults taken from http://wiki.apache.org/solr/Solrj#Changing_other_Connection_Settings
   def embeddedSolrHome = getString("embeddedSolrHome", "NONE")
   def enabled = getBoolean("enabled", true)
   def externalUrl = getUrl("externalUrl")
