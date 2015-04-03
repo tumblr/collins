@@ -7,8 +7,7 @@ import util.concurrent.BackgroundProcess
 case class TestProcessor(sleepMs: Long, userTimeout: Option[FiniteDuration] = None)
   extends BackgroundProcess[Boolean]
 {
-  override def defaultTimeout: FiniteDuration = 5 seconds
-  val timeout = userTimeout.getOrElse(defaultTimeout)
+  val timeout = userTimeout.getOrElse(5 seconds)
 
   def run(): Boolean = {
       println("Sleeping for %d millis".format(sleepMs))

@@ -116,7 +116,10 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
       val mac = (n \ "serial" text)
       val speed = (n \ "capacity" text) match {
         case cap if cap.nonEmpty => BitStorageUnit(cap.toLong)
-        case empty => getDefaultNicStorage(asset)
+        case empty => (n \ "size" text) match {
+          case size if size.nonEmpty => BitStorageUnit(size.toLong)
+          case empty => getDefaultNicStorage(asset)
+        }
       }
       Nic(speed, mac, asset.description, asset.product, asset.vendor)
     }

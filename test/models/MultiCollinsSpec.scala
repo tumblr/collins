@@ -1,7 +1,6 @@
 package models
 
-import test.ApplicationSpecification
-import org.specs2._ /** check up on this */
+import org.specs2._ 
 import specification._
 
 class MultiCollinsSpec extends mutable.Specification {

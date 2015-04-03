@@ -12,6 +12,7 @@ import validators.ParamValidation
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json._
+import play.api.mvc.Results
 
 import org.jsoup.Jsoup
 import org.jsoup.safety.Whitelist
@@ -65,7 +66,7 @@ case class CreateAction(
     case ActionDataHolder(log) =>
       AssetLog.create(log) match {
         case ok if ok.id > 0 =>
-          Api.statusResponse(true, Status.Created)
+          ResponseData(Status.Created, Seq("SUCCESS" -> JsBoolean(true), "Data" -> log.toJsValue()))
         case bad =>
           Api.statusResponse(false, Status.BadRequest)
       }

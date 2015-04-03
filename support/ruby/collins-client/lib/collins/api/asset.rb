@@ -123,6 +123,40 @@ module Collins; module Api
       end
     end
 
+    # Count number of assets matching the specified criteria
+    #
+    # @param [Hash] options Query options (same as in the "find" method)
+    # @return integer The number of assets matching the query
+    # @raise [UnexpectedResponseError] If the HTTP response code is not a 200
+    def count options = {}
+      # create a copy so that we do not modify the original options array
+      options = options.dup
+
+      if options.include? :size or options.include? :page
+        raise ExpectationFailedError.new "Do not specify 'size' or 'page' options when counting assets"
+      else
+        options[:size] = 1
+        options[:page] = 0
+      end
+
+      query = asset_hash_to_find_query options
+      params = query.to_a.map do |param|
+        key, val = param
+        if val.is_a?(Array)
+          val.map{|v| "#{key}=#{asset_escape_attribute(v)}"}.join("&")
+        else
+          "#{key}=#{asset_escape_attribute(val)}"
+        end
+      end.reject{|s| s.empty?}
+
+      logger.debug("Counting assets using params #{params.inspect}")
+      http_get("/api/assets", params) do |response|
+        parse_response response, :expects => 200, :as => :data do |json|
+          json["Pagination"]["TotalResults"].to_i
+        end
+      end
+    end
+
     private
     def asset_escape_attribute value
       URI.escape(value.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))

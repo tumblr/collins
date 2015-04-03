@@ -119,6 +119,18 @@ describe Collins::Api::Asset do
     end
   end
 
+  context "#count" do
+    include_context "collins api"
+    def method; :get end
+    def uri; "/api/assets?page=0&size=1" end
+
+    it "basic use-case" do
+      api.returns 200, CollinsFixture.data('find_no_details.json')
+      total = subject.count
+      total.should == 3
+    end
+  end
+
   context "#get" do
     include_context "collins api"
     def method; :get end

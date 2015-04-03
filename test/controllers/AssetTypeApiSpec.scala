@@ -9,8 +9,9 @@ import play.api.mvc.MultipartFormData._
 import org.specs2._
 import specification._
 import matcher.Matcher
+import play.api.test.WithApplication
 
-class AssetTypeApiSpec extends ApplicationSpecification with ControllerSpec {
+class AssetTypeApiSpec extends mutable.Specification with ControllerSpec {
 
   "Asset Type API Specification".title
 
@@ -19,16 +20,15 @@ class AssetTypeApiSpec extends ApplicationSpecification with ControllerSpec {
   val user = getLoggedInUser("infra")
   val api = getApi(user)
 
-  "Asset Type Validation" should {
-    "Reject empty asset tags" in new ResponseScope {
-      val request = FakeRequest("GET", "/api/assettype/")
-      Extract.from(api.createAssetType("").apply(request)) must haveStatus(400)
-    }
-  }
-
   "The REST API" should {
 
-    "Support creation" in {
+	"Asset Type Validation" in new WithApplication {
+      "Reject empty asset tags" in new ResponseScope {
+        val request = FakeRequest("GET", "/api/assettype/")
+        Extract.from(api.createAssetType("").apply(request)) must haveStatus(400)
+      }
+    }
+    "Support creation" in new WithApplication {
       "via PUT" in new assetType {
         val request = FakeRequest("PUT", assetTypeUrl + "?label=testlabel")
         val result = Extract.from(api.createAssetType(aname).apply(request))
@@ -44,7 +44,7 @@ class AssetTypeApiSpec extends ApplicationSpecification with ControllerSpec {
       }
     }
 
-    "Support updating" in {
+    "Support updating" in new WithApplication {
       "via POST" in new assetType {
         val request = FakeRequest("POST", assetTypeUrl + "?label=updatedlabel")
         val result = Extract.from(api.updateAssetType(aname).apply(request))
@@ -55,7 +55,7 @@ class AssetTypeApiSpec extends ApplicationSpecification with ControllerSpec {
       }
     }
 
-    "Support getting" in {
+    "Support getting" in new WithApplication {
       "all asset types" in new assetType {
         val req2 = FakeRequest("GET", findUrl)
         val result2 = Extract.from(api.getAssetTypes.apply(req2))
@@ -76,7 +76,7 @@ class AssetTypeApiSpec extends ApplicationSpecification with ControllerSpec {
     }
 
 
-    "Support deleting" in {
+    "Support deleting" in new WithApplication {
       "by name" in new assetType {
         val req = FakeRequest("DELETE", assetTypeUrl)
         Extract.from(api.deleteAssetType(aname).apply(req)) must haveJsonData.which { txt =>

@@ -1,24 +1,35 @@
 package util.security
 
-import org.specs2.Specification
-import org.specs2.specification.Fragments
 import play.api.Configuration
 import models.User
 import util.config.ConfigurationException
+import org.specs2.mutable.Specification
+import test.ResourceFinder
+import play.api.test.WithApplication
 
-/**
- * Please provide a concise description
- */
-class MixedAuthenticationProviderSpec extends Specification with _root_.test.ResourceFinder {
-  def is: Fragments =
-    "The " + classOf[MixedAuthenticationProviderSpec] + " should" ^
-      "Authenticate users in htaccess type files" ! authUser() ^
-      "Stop iterating if a user is found"         ! shortCircuit() ^
-      "Return None if no method succeeds"         ! authBadUser() ^
-      "Attempt each method in order"              ! allTypes() ^
-      "Fail because ldap is not stubbed out"      ! attemptLdap() ^
-      "Fail when bad type specified"              ! enforceKnownTypes() ^
-    end
+class MixedAuthenticationProviderSpec extends Specification with ResourceFinder {
+  
+  "Authentication" should {
+    "Authenticate users in htaccess type files" in new WithApplication {
+      authUser()
+    }
+    
+    "Stop iterating if a user is found" in new WithApplication {
+      shortCircuit()
+    }
+    
+    "Return None if no method succeeds" in new WithApplication {
+      authBadUser()
+    }
+    
+    "Attempt each method in order" in new WithApplication {
+      allTypes()
+    }
+    
+    "Fail when bad type specified" in new WithApplication {
+      enforceKnownTypes()
+    }
+  }
 
   def configure() {
     val authFile = findResource("htpasswd_users")
@@ -63,12 +74,6 @@ class MixedAuthenticationProviderSpec extends Specification with _root_.test.Res
     val user = prov.authenticate("blake", "admin:first")
 
     (user must beSome[User]) and (user.get.username must_== "blake")
-  }
-
-  def attemptLdap() = {
-    // The first two will fail, and then it will attemp ldap and fail
-    val prov = new MixedAuthenticationProvider("file, default, ldap")
-    prov.authenticate("ldapuser", "doesntmatter") must throwA[ConfigurationException](message = "Required configuration authentication.ldap.host not found")
   }
 
   def enforceKnownTypes() = {

@@ -24,6 +24,8 @@ object ProvisionerConfig extends Configurable {
   def enabled = getBoolean("enabled", false)
   def profilesFile = getString("profiles")(ConfigValue.Required).filter(_.nonEmpty).get
   def rate = getString("rate", "1/10 seconds")
+  def checkCommandTimeoutMs = getMilliseconds("checkCommandTimeout").getOrElse(40000L)
+  def commandTimeoutMs = getMilliseconds("commandTimeout").getOrElse(40000L)
 
   override def validateConfig() {
     if (enabled) {

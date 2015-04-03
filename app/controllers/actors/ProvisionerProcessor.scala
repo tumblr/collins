@@ -1,13 +1,14 @@
 package controllers
 package actors
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
 import collins.provisioning.ProvisionerRequest
 import collins.shell.CommandResult
-import scala.concurrent.{ExecutionContext, Future, Await}
-import play.api.mvc.{AnyContent, Request}
 import util.concurrent.BackgroundProcess
 import util.plugins.Provisioner
+import scala.concurrent.duration.Duration
+import collins.provisioning.ProvisionerConfig
+import java.util.concurrent.TimeUnit
 
 sealed trait ProvisionerStatus
 sealed trait ProvisionerFailure extends ProvisionerStatus
@@ -22,33 +23,29 @@ object ProvisionerStatus {
 
 case class ProvisionerResult(status: ProvisionerStatus, commandResult: CommandResult)
 
-case class ProvisionerTest(request: ProvisionerRequest, userTimeout: Option[FiniteDuration] = None)(implicit req: Request[AnyContent], ec : ExecutionContext) extends BackgroundProcess[ProvisionerResult]
+case class ProvisionerTest(request: ProvisionerRequest, userTimeout: Option[FiniteDuration] = None) extends BackgroundProcess[ProvisionerResult]
 {
-  override def defaultTimeout = 90 seconds
-  val timeout = userTimeout.getOrElse(defaultTimeout)
-
+  val timeout = userTimeout.getOrElse(Duration(ProvisionerConfig.checkCommandTimeoutMs, TimeUnit.MILLISECONDS))
+  
   def run(): ProvisionerResult = {
     Provisioner.pluginEnabled { plugin =>
-      Await.result(plugin.test(request).map { res =>
-        if (res.exitCode == 0)
-          ProvisionerResult(ProvisionerStatus.TestSucceeded, res)
-        else
-          ProvisionerResult(ProvisionerStatus.TestFailed, res)
-      }, timeout)
+      val res = plugin.test(request)
+      if (res.exitCode == 0)
+        ProvisionerResult(ProvisionerStatus.TestSucceeded, res)
+      else
+        ProvisionerResult(ProvisionerStatus.TestFailed, res)
     }.getOrElse(ProvisionerResult(ProvisionerStatus.PluginDisabled, CommandResult(-2, "Provisioner plugin not enabled")))
   }
 }
 
-case class ProvisionerRun(request: ProvisionerRequest, userTimeout: Option[FiniteDuration] = None)(implicit req: Request[AnyContent], ec : ExecutionContext) extends BackgroundProcess[ProvisionerResult]
+case class ProvisionerRun(request: ProvisionerRequest, userTimeout: Option[FiniteDuration] = None) extends BackgroundProcess[ProvisionerResult]
 {
-  override def defaultTimeout = 90 seconds
-  val timeout = userTimeout.getOrElse(defaultTimeout)
+  val timeout = userTimeout.getOrElse(Duration(ProvisionerConfig.commandTimeoutMs, TimeUnit.MILLISECONDS))
 
   def run(): ProvisionerResult = {
-    Provisioner.pluginEnabled{ plugin =>
-      Await.result(plugin.provision(request).map { cmd =>
-        ProvisionerResult(ProvisionerStatus.CommandExecuted, cmd)
-      }, timeout)
-      }
+    Provisioner.pluginEnabled { plugin =>
+	  val cmd = plugin.provision(request)
+	  ProvisionerResult(ProvisionerStatus.CommandExecuted, cmd)
     }.getOrElse(ProvisionerResult(ProvisionerStatus.PluginDisabled, CommandResult(-2, "Provisioner plugin not enabled")))
+  }
 }

@@ -3,19 +3,15 @@ package collins.provisioning
 import collins.cache.ConfigCache
 import collins.shell.{Command, CommandResult}
 import models.Asset
-
 import play.api.{Application, Plugin}
+import play.api.libs.concurrent.Akka
+import play.api.Play.current
 
-import scala.concurrent.{ExecutionContext, Future, future}
-import java.util.concurrent.Executors
 
 class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   lazy protected[this] val profileCache =
     ConfigCache.create(ProvisionerConfig.cacheTimeout, ProfileLoader())
-
-  protected[this] val executor = Executors.newCachedThreadPool()
-  protected[this] implicit val ec = ExecutionContext.fromExecutor(executor)
 
   // overrides Plugin.enabled
   override def enabled: Boolean = {
@@ -32,9 +28,6 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   // overrides Plugin.onStop
   override def onStop() {
-    try executor.shutdown() catch {
-      case _: Throwable => // swallow this
-    }
   }
 
   // overrides ProvisionerInterface.profiles
@@ -48,28 +41,24 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
   }
 
   // overrides ProvisionerInterface.provision
-  override def provision(request: ProvisionerRequest): Future[CommandResult] = {
-    future[CommandResult] {
-      val result = runCommand(command(request, ProvisionerConfig.command))
-      if (result.exitCode != 0) {
-        logger.warn("Command executed: %s".format(command(request, ProvisionerConfig.command)))
-        logger.warn("Command code: %d, output %s".format(result.exitCode, result.stdout))
-      }
-      result
+  override def provision(request: ProvisionerRequest): CommandResult = {
+    val result = runCommand(command(request, ProvisionerConfig.command))
+    if (result.exitCode != 0) {
+      logger.warn("Command executed: %s".format(command(request, ProvisionerConfig.command)))
+      logger.warn("Command code: %d, output %s".format(result.exitCode, result.stdout))
     }
+    result
   }
 
-  override def test(request: ProvisionerRequest): Future[CommandResult] = {
+  override def test(request: ProvisionerRequest): CommandResult = {
     val cmd = try command(request, ProvisionerConfig.checkCommand) catch {
-      case _: Throwable => return Future(CommandResult(0,"No check command specified"))
+      case _: Throwable => return CommandResult(0,"No check command specified")
     }
-    future[CommandResult] {
-      val result = runCommand(cmd)
-      if (result.exitCode != 0) {
-        logger.warn("Command code: %d, output %s".format(result.exitCode, result.stdout))
-      }
-      result
+    val result = runCommand(cmd)
+    if (result.exitCode != 0) {
+      logger.warn("Command code: %d, output %s".format(result.exitCode, result.stdout))
     }
+    result
   }
 
   protected def runCommand(cmd: String): CommandResult = {

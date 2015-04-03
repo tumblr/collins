@@ -1,11 +1,11 @@
 package models
 
-import test.ApplicationSpecification
 
 import org.specs2._
 import specification._
+import play.api.test.WithApplication
 
-class AssetMetaSpec extends ApplicationSpecification {
+class AssetMetaSpec extends mutable.Specification {
 
   "AssetMeta Model Specification".title
 
@@ -13,7 +13,7 @@ class AssetMetaSpec extends ApplicationSpecification {
 
   "The AssetMeta Model" should {
 
-    "Handle validation" in {
+    "Handle validation" in new WithApplication {
       "Disallow empty or bad names" in {
         val ams = Seq(
           AssetMeta("", -1, "Foo", "Description"),
@@ -33,7 +33,7 @@ class AssetMetaSpec extends ApplicationSpecification {
       }
     }
 
-    "Support CRUD Operations" in {
+    "Support CRUD Operations" in new WithApplication {
 
       "CREATE" in new mockassetmeta {
         val result = AssetMeta.create(newMeta)
@@ -59,7 +59,7 @@ class AssetMetaSpec extends ApplicationSpecification {
       }
     }
 
-    "Support getters/finders" in {
+    "Support getters/finders" in new WithApplication {
 
       "findByTag" in new concreteassetmeta {
         AssetMeta.findByName(metaName) must beSome[AssetMeta]
@@ -71,7 +71,7 @@ class AssetMetaSpec extends ApplicationSpecification {
 
     } // support getters/finders
 
-    "Support value typeing enforcement" in {
+    "Support value typeing enforcement" in new WithApplication {
       "create typed meta" in new numberassetmeta {
         val result = AssetMeta.create(newMeta)
         result.id must beGreaterThan(1L)

@@ -1,20 +1,18 @@
 package models
 
-import test.ApplicationSpecification
 import org.specs2._
 import specification._
-
 import AssetSortType._
 import SortDirection._
-
 import java.sql.Timestamp
+import play.api.test.WithApplication
 
-class AssetDistanceSorterSpec extends ApplicationSpecification {
+class AssetDistanceSorterSpec extends mutable.Specification {
 
   args(sequential = true)
 
   "Create a meta" should {
-    "for outlets" in {
+    "for outlets" in new WithApplication {
       val ms = new mocksorter {}
       ms.assetValues.foreach { case(assetTag, metaList) =>
         Asset.findByTag(assetTag.toString.toLowerCase).getOrElse {
@@ -34,30 +32,30 @@ class AssetDistanceSorterSpec extends ApplicationSpecification {
           }
         }
       }
-      true
     }
   }
 
-  "AssetDistanceSorter" should {
+  "Asset distance sorter" should {
+    "during sorting" in new WithApplication {
+      "using sparse" in new mocksorter {
+        val expected = List("e","b","d","c","a")
+        val sortedAssets = AssetDistanceSorter.distributionSort(
+          targetAsset, 
+          similarAssets, 
+          SortAsc,
+          sortConfig) 
+        sortedAssets.map{_.tag} must_== expected
+      }
 
-    "sparse" in new mocksorter {
-      val expected = List("e","b","d","c","a")
-      val sortedAssets = AssetDistanceSorter.distributionSort(
-        targetAsset, 
-        similarAssets, 
-        SortAsc,
-        sortConfig) 
-      sortedAssets.map{_.tag} must_== expected
-    }
-
-    "dense" in new mocksorter {
-      val expected = List("a","b","c","d","e")
-      val sortedAssets = AssetDistanceSorter.distributionSort(
-        targetAsset, 
-        similarAssets, 
-        SortDesc,
-        sortConfig) 
-      sortedAssets.map{_.tag} must_== expected
+      "using dense" in new mocksorter {
+        val expected = List("a","b","c","d","e")
+        val sortedAssets = AssetDistanceSorter.distributionSort(
+          targetAsset, 
+          similarAssets, 
+          SortDesc,
+          sortConfig) 
+        sortedAssets.map{_.tag} must_== expected
+      }
     }
   }
 
