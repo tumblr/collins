@@ -6,7 +6,7 @@ import org.specs2.specification.Scope
 import org.specs2.mutable._
 import org.specs2.matcher.DataTables
 
-class PowerUnitSpec extends test.ApplicationSpecification with DataTables {
+class PowerUnitSpec extends Specification with DataTables {
 
   val DefaultUnitsRequired = 2
   val Strip = 'STRIP
@@ -178,7 +178,7 @@ class PowerUnitSpec extends test.ApplicationSpecification with DataTables {
       val (u1sk, u1ok, u1pk, u2sk, u2ok, u2pk) = ck
       val map = mapFromKeys(ck) - u2ok
       PowerUnits.validateMap(map, config) must throwA[InvalidPowerConfigurationException].like {
-        case InvalidPowerConfigurationException(msg, key) => msg must contain("OUTLET")
+        case InvalidPowerConfigurationException(msg, key) => msg must contain("Missing")
       }
     }
     "fail if duplicate values on a unique component are found" in new PowerUnitScope() {
@@ -186,7 +186,7 @@ class PowerUnitSpec extends test.ApplicationSpecification with DataTables {
       val (u1sk, u1ok, u1pk, u2sk, u2ok, u2pk) = ck
       val map = mapFromKeys(ck) + (u2sk -> "strip 1")
       PowerUnits.validateMap(map, config) must throwA[InvalidPowerConfigurationException].like {
-        case InvalidPowerConfigurationException(msg, key) => msg must contain("STRIP")
+        case InvalidPowerConfigurationException(msg, key) => msg must contain("Duplicate")
       }
     }
     "succeed when all is cool" in new PowerUnitScope() {

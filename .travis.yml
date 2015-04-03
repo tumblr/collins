@@ -1,7 +1,3 @@
-# enable container based builds
-# http://blog.travis-ci.com/2014-12-17-faster-builds-with-container-based-infrastructure/
-sudo: false
-
 language: scala
 # according to http://docs.travis-ci.com/user/ci-environment/#CI-environment-OS
 # every travis CI has a version of ruby installed
@@ -11,21 +7,18 @@ before_script:
   - unzip -q play-2.1.5.zip
   - if $RUN_RUBY; then gem install bundler; fi
 jdk:
-  - openjdk7
   - oraclejdk7
 scala:
   - 2.10.3
 # this will make sure we run each of the scala and ruby tests once
 env:
   - RUN_SCALA=true RUN_RUBY=false
-# arbitrarily choose to run ruby when jdk is openjdk7
 matrix:
   include:
-    - jdk: openjdk7
+    - jdk: oraclejdk7
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-client
-    - jdk: openjdk7
+    - jdk: oraclejdk7
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-state
-# arbitrarily choose to	  run ruby when jdk is set to openjdk7
 script:
   - if $RUN_SCALA; then play-2.1.5/play test; fi
   - if $RUN_RUBY; then cd support/ruby/$GEM_NAME; bundle install --path ./vendor/bundle; bundle exec rake; fi

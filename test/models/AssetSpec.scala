@@ -1,11 +1,10 @@
 package models
 
-import test.ApplicationSpecification
-
 import org.specs2._
 import specification._
+import play.api.test.WithApplication
 
-class AssetSpec extends ApplicationSpecification {
+class AssetSpec extends mutable.Specification {
 
   "Asset Model Specification".title
 
@@ -13,7 +12,7 @@ class AssetSpec extends ApplicationSpecification {
 
   "The Asset Model" should {
 
-    "Support CRUD Operations" in {
+    "Support CRUD Operations" in new WithApplication {
 
       "CREATE" in new mockasset {
         val result = Asset.create(newAsset)
@@ -38,7 +37,7 @@ class AssetSpec extends ApplicationSpecification {
       }
     }
 
-    "Support nodeclass" in {
+    "Support nodeclass" in new WithApplication {
       
       "nodeClass" in new mocknodeclass {
         val nodeclass = Asset.create(Asset(nodeclassTag, nodeclassStatus,nodeclassType))
@@ -69,7 +68,7 @@ class AssetSpec extends ApplicationSpecification {
     } //support nodeclass
         
 
-    "Support getters/finders" in {
+    "Support getters/finders" in new WithApplication {
 
       "findByTag" in new concreteasset {
         Asset.findByTag(assetTag) must beSome[Asset]

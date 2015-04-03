@@ -1,81 +1,84 @@
 package models
 
 import models.logs._
-import test.ApplicationSpecification
-
 import org.specs2._
 import specification._
+import play.api.test.WithApplication
 
-class AssetLogSpec extends ApplicationSpecification {
+class AssetLogSpec extends mutable.Specification {
 
   "AssetLog Model Specification".title
 
   args(sequential = true)
 
   "The AssetLog Model" should {
-
-    "CREATE" in new mocklog {
-      val result = AssetLog.create(newLog)
-      result.id must be_>(0L)
+    
+    "should create" in new WithApplication {
+      "scoped" in new mocklog {
+        val result = AssetLog.create(newLog)
+        result.id must be_>(0L)
+      }
     }
 
-    "Support getters/finders" in {
+    "The api should" in {
+      "Support getters/finders" in new WithApplication {
 
-      "find with an asset" in new concretelog {
-        val logs = AssetLog.list(Some(asset))
-        logs.total mustEqual 1
-        logs.items(0).getFormat.id mustEqual format
-        logs.items(0).message mustEqual message
-      }
+        "find with an asset" in new concretelog {
+          val logs = AssetLog.list(Some(asset))
+          logs.total mustEqual 1
+          logs.items(0).getFormat.id mustEqual format
+          logs.items(0).message mustEqual message
+        }
 
-      "find with another asset" in new mocklog {
-        val logs = AssetLog.list(Some(asset))
-        logs.total mustEqual 1
-        logs.items(0).getFormat mustEqual format
-        logs.items(0).message mustEqual msg
-      }
+        "find with another asset" in new mocklog {
+          val logs = AssetLog.list(Some(asset))
+          logs.total mustEqual 1
+          logs.items(0).getFormat mustEqual format
+          logs.items(0).message mustEqual msg
+        }
 
-      "find with a filter and no asset" in new concretelog {
-        val alert = AssetLog.list(None,0,10,"DESC","Alert")
-        alert.total mustEqual 1
-        alert.items(0).isAlert must beTrue
-        val info = AssetLog.list(None,0,10,"DESC","Informational")
-        info.total must be_>=(1L)
-        info.items(0).isInformational must beTrue
-      }
+        "find with a filter and no asset" in new concretelog {
+          val alert = AssetLog.list(None,0,10,"DESC","Alert")
+          alert.total mustEqual 1
+          alert.items(0).isAlert must beTrue
+          val info = AssetLog.list(None,0,10,"DESC","Informational")
+          info.total must be_>=(1L)
+          info.items(0).isInformational must beTrue
+        }
 
-      "find with a filter and an asset" in new concretelog {
-        AssetLog.list(Some(asset),0,10,"DESC","Alert").total mustEqual 0
-        val info = AssetLog.list(Some(asset),0,10,"DESC","Informational")
-        info.total mustEqual 1
-        info.items(0).getAssetId mustEqual asset_id
-      }
+        "find with a filter and an asset" in new concretelog {
+          AssetLog.list(Some(asset),0,10,"DESC","Alert").total mustEqual 0
+          val info = AssetLog.list(Some(asset),0,10,"DESC","Informational")
+          info.total mustEqual 1
+          info.items(0).getAssetId mustEqual asset_id
+        }
 
-      "find with a negating filter and no asset" in new concretelog {
-        val alert = AssetLog.list(None,0,10,"DESC","!Informational")
-        alert.total mustEqual 1
-        alert.items(0).isAlert must beTrue
-        val info = AssetLog.list(None,0,10,"DESC","!Alert")
-        info.total must be_>=(1L)
-        info.items(0).isInformational must beTrue
-      }
+        "find with a negating filter and no asset" in new concretelog {
+          val alert = AssetLog.list(None,0,10,"DESC","!Informational")
+          alert.total mustEqual 1
+          alert.items(0).isAlert must beTrue
+          val info = AssetLog.list(None,0,10,"DESC","!Alert")
+          info.total must be_>=(1L)
+          info.items(0).isInformational must beTrue
+        }
 
-      "find with a negating filter and an asset" in new mocklog {
-        val alert = AssetLog.list(Some(asset),0,10,"DESC","!Informational")
-        alert.total mustEqual 1
-        alert.items(0).isAlert must beTrue
-        alert.items(0).getAssetId mustEqual asset_id
-        AssetLog.list(Some(asset),0,10,"DESC","!Alert").total mustEqual 0
-      }
+        "find with a negating filter and an asset" in new mocklog {
+          val alert = AssetLog.list(Some(asset),0,10,"DESC","!Informational")
+          alert.total mustEqual 1
+          alert.items(0).isAlert must beTrue
+          alert.items(0).getAssetId mustEqual asset_id
+          AssetLog.list(Some(asset),0,10,"DESC","!Alert").total mustEqual 0
+        }
 
-      "find with a sort" in {
-        val desc = AssetLog.list(None, 0, 10, "DESC")
-        desc.items(0).getId must be_>(desc.items(1).getId)
-        val asc = AssetLog.list(None, 0, 10, "ASC")
-        asc.items(0).getId must be_<(asc.items(1).getId)
-      }
+        "find with a sort" in {
+          val desc = AssetLog.list(None, 0, 10, "DESC")
+          desc.items(0).getId must be_>(desc.items(1).getId)
+          val asc = AssetLog.list(None, 0, 10, "ASC")
+          asc.items(0).getId must be_<(asc.items(1).getId)
+        }
 
-    } // support getters/finders
+      } // support getters/finders
+    }
   } // Asset should
 
   trait mocklog extends Scope {

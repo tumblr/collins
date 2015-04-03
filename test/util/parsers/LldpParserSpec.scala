@@ -2,15 +2,17 @@ package util
 package parsers
 
 import test.util.parsers.CommonParserSpec
-
 import org.specs2._
 import specification._
+import play.api.test.WithApplication
+import play.api.test.FakeApplication
 
 class LldpParserSpec extends mutable.Specification {
 
-  class LldpParserHelper(val filename: String) extends Scope with CommonParserSpec[LldpRepresentation] {
+  class LldpParserHelper(val filename: String, val ac: Map[String, _ <: Any] = Map.empty) 
+  	extends WithApplication(FakeApplication(additionalConfiguration = ac)) with Scope with CommonParserSpec[LldpRepresentation] {
     override def getParser(txt: String) = new LldpParser(txt)
-    def parsed(options: Map[String,String] = Map.empty) = getParseResults(filename, options)
+    def parsed() = getParseResults(filename)
   }
 
   "The Lldp Parser" should {
@@ -47,24 +49,8 @@ class LldpParserSpec extends mutable.Specification {
       parseResult must beLeft
     }
 
-    /*
-     * Why is this test commented out?
-     * Some of the tests in this project require a running play application
-     * which is set up in ApplicationSpecification. The logic in the AppConfig
-     * trait insists on using the running play application config if it is
-     * available. The running play config has requireVlanName use the default
-     * valye i.e. true causing this test to fail
-     * 
-     * Why does this spec succeed in isolation?
-     * Easy peasy, there isn't a play application that already exists.
-     * 
-     * Why do we have these comments?
-     * For someone smarter than me to come in and fix the damn test.
-    "missing vlan config ok" in new LldpParserHelper("lldpctl-no-name.xml") {
-      val config = Map(
-        "requireVlanName" -> "false"
-      )
-      val parseResult = parsed(config)
+    "missing vlan config ok" in new LldpParserHelper("lldpctl-no-name.xml", Map("lldp.requireVlanName" -> "false")) {
+      val parseResult = parsed()
       parseResult must beRight
       parseResult.right.toOption must beSome.which { rep =>
         rep.interfaceCount mustEqual(2)
@@ -72,7 +58,6 @@ class LldpParserSpec extends mutable.Specification {
         rep.vlanIds.toSet mustEqual(Set(100,101))
       }
     }
-    */
     
     "Parse XML with four network interfaces" in new LldpParserHelper("lldpctl-four-nic.xml") {
       val parseResult = parsed()
@@ -104,7 +89,7 @@ class LldpParserSpec extends mutable.Specification {
 
     "Fail to parse invalid XML" in new LldpParserHelper("lldpctl-bad.xml") {
       val invalidXml = getResource(filename)
-      override def getParseResults(data: String, opts: Map[String,String] = Map.empty): Either[Throwable,LldpRepresentation] = {
+      override def getParseResults(data: String): Either[Throwable,LldpRepresentation] = {
         getParser(data).parse()
       }
 
