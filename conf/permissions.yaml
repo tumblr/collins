@@ -42,6 +42,12 @@ permissions:
     - "g=sre"
     - "u=admins"
     - "u=tools"
+  controllers.AssetApi.updateAssetStatus:
+    - "g=infra"
+    - "g=ops"
+    - "g=sre"
+    - "u=admins"
+    - "u=tools"
   controllers.AssetApi.updateAssetForMaintenance:
     - "g=infra"
     - "g=ops"
