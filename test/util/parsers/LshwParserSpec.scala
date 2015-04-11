@@ -50,6 +50,7 @@ class LshwParserSpec extends mutable.Specification {
 
           rep.base.product mustEqual "PowerEdge C6105 (N/A)"
           rep.base.vendor mustEqual "Winbond Electronics"
+          rep.base.serial mustEqual "FZ1NXQ1"
         }
       } // with a 10-gig card
       
@@ -94,6 +95,7 @@ class LshwParserSpec extends mutable.Specification {
           rep.has10GbNic must beFalse
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
+
         }
       } // basic
 
@@ -293,6 +295,7 @@ class LshwParserSpec extends mutable.Specification {
 
           rep.base.product mustEqual "PowerEdge C6105 (N/A)"
           rep.base.vendor mustEqual "Dell Inc."
+
         }
       }
     }
