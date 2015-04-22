@@ -16,17 +16,18 @@ object SolrConfig extends Configurable {
       messageWithDefault("invalidUrl", "solr.externalUrl %s is invalid".format(t), t)
   }
 
+  // defaults taken from http://wiki.apache.org/solr/Solrj#Changing_other_Connection_Settings
   def embeddedSolrHome = getString("embeddedSolrHome", "NONE")
-  def enabled = getBoolean("enabled", false)
+  def enabled = getBoolean("enabled", true)
   def externalUrl = getUrl("externalUrl")
   def reactToUpdates = getBoolean("reactToUpdates", true)
   def repopulateOnStartup = getBoolean("repopulateOnStartup", false)
   def useEmbeddedServer = getBoolean("useEmbeddedServer", true)
   def socketTimeout = getInt("socketTimeout",1000)
-  def connectionTimeout = getInt("connectionTimeout",100)
-  def maxTotalConnections = getInt("maxTotalConnections",100)
-  def defaultMaxConnectionsPerHost = getInt("defaultMaxConnectionsPerHost",100)
-  def assetBatchUpdateWindow = getInt("assetBatchUpdateWindowMs",10) milliseconds
+  def connectionTimeout = getInt("connectionTimeout", 5000)
+  def maxTotalConnections = getInt("maxTotalConnections", 100)
+  def defaultMaxConnectionsPerHost = getInt("defaultMaxConnectionsPerHost", 100)
+  def assetBatchUpdateWindow = getInt("assetBatchUpdateWindowMs", 10) milliseconds
 
   override protected def validateConfig() {
     if (!enabled) {
