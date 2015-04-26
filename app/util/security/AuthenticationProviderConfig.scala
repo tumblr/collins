@@ -53,6 +53,10 @@ object LdapAuthenticationProviderConfig extends Configurable {
   def searchbase = getString("searchbase")(ConfigValue.Required).get
   def usersub = getString("usersub")(ConfigValue.Required).get
   def useSsl = getBoolean("ssl").getOrElse(false)
+  def anonymous = getBoolean("anonymous").getOrElse(false)
+  def binddn = getString("binddn").getOrElse("")
+  def bindpwd = getString("bindpwd").getOrElse("")
+  def userAttribute = getString("userAttribute").getOrElse("uid")
 
   def isRfc2307 = schema == RFC_2307
   def isRfc2307Bis = schema == RFC_2307_BIS
@@ -69,6 +73,7 @@ object LdapAuthenticationProviderConfig extends Configurable {
       usersub
       groupsub
       groupAttribute
+      searchbase
     }
   }
 }
