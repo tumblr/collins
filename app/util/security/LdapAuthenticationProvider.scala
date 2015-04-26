@@ -29,6 +29,8 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
   def binddn = config.binddn
   def bindpwd = config.bindpwd
   def anonymous = config.anonymous
+  def groupnameattrib = config.groupNameAttribute
+  def usernumattrib = config.userNumberAttribute
 
   // setup for LDAP
   protected def env = Map(
@@ -38,9 +40,9 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
 
   protected def groupQuery(dn: String, username: String): String = {
     if (config.isRfc2307Bis)
-      "(&(cn=*)(%s=%s))".format(groupattrib, dn)
+      "(&(%s=*)(%s=%s))".format(groupnameattrib, groupattrib, dn)
     else
-      "(&(cn=*)(%s=%s))".format(groupattrib, username)
+      "(&(%s=*)(%s=%s))".format(groupnameattrib, groupattrib, username)
   }
 
   logger.debug("LDAP URL: %s".format(url))
@@ -107,7 +109,7 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
             val uid = getUid(dn, uctx)
             require(uid > 0, "Unable to find UID for user")
             val groups = getGroups(dn, username, uctx)
-            val user = UserImpl(username, "*", groups.map { _._2 }.toSet, uid, true)
+            val user = UserImpl(username, "*", groups.toSet, uid, true)
             logger.trace("Succesfully authenticated %s".format(username))
             user
           } finally {
@@ -129,13 +131,13 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
     val ctrl = new SearchControls
     ctrl.setSearchScope(SearchControls.OBJECT_SCOPE)
     val attribs = ctx.getAttributes(dn)
-    attribs.get("uidNumber") match {
+    attribs.get(usernumattrib) match {
       case null => -1
       case attrib => attrib.get.asInstanceOf[String].toInt
     }
   }
 
-  protected def getGroups(dn: String, username: String, ctx: InitialDirContext): Seq[(Int,String)] = {
+  protected def getGroups(dn: String, username: String, ctx: InitialDirContext): Seq[String] = {
     val ctrl = new SearchControls
     ctrl.setSearchScope(SearchControls.SUBTREE_SCOPE)
     val query = groupQuery(dn, username)
@@ -143,11 +145,9 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
     val it = for (
          result <- ctx.search(searchRoot, query, ctrl);
          attribs = result.asInstanceOf[SearchResult].getAttributes();
-         if attribs.get("cn") != null;
-         if attribs.get("gidNumber") != null;
-         cn = attribs.get("cn").get.asInstanceOf[String];
-         gidNumber = attribs.get("gidNumber").get.asInstanceOf[String].toInt
-       ) yield(gidNumber, cn)
+         if attribs.get(groupnameattrib) != null;
+         groupname = attribs.get(groupnameattrib).get.asInstanceOf[String]
+       ) yield groupname
     it.toSeq
   }
 }

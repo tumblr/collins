@@ -57,6 +57,8 @@ object LdapAuthenticationProviderConfig extends Configurable {
   def binddn = getString("binddn").getOrElse("")
   def bindpwd = getString("bindpwd").getOrElse("")
   def userAttribute = getString("userAttribute").getOrElse("uid")
+  def userNumberAttribute = getString("userNumberAttribute").getOrElse("uidNumber")
+  def groupNameAttribute = getString("groupNameAttribute").getOrElse("cn")
 
   def isRfc2307 = schema == RFC_2307
   def isRfc2307Bis = schema == RFC_2307_BIS
