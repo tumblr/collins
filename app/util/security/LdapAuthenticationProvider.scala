@@ -9,7 +9,7 @@ import java.util.{Hashtable => JHashTable}
 import javax.naming._
 import javax.naming.directory._
 
-class LdapAuthenticationProvider() extends AuthenticationProvider {
+class LdapAuthenticationProvider extends AuthenticationProvider {
 
   val config = LdapAuthenticationProviderConfig
   override val authType = "ldap"
@@ -21,10 +21,16 @@ class LdapAuthenticationProvider() extends AuthenticationProvider {
     case true => "ldaps"
     case _ => "ldap"
   }
-  def url = "%s://%s/%s".format(useSsl, host, searchbase)
+  def url = "%s://%s".format(useSsl, host)
   def usersub = config.usersub
   def groupsub = config.groupsub
   def groupattrib = config.groupAttribute
+  def userattrib = config.userAttribute
+  def binddn = config.binddn
+  def bindpwd = config.bindpwd
+  def anonymous = config.anonymous
+  def groupnameattrib = config.groupNameAttribute
+  def usernumattrib = config.userNumberAttribute
 
   // setup for LDAP
   protected def env = Map(
@@ -32,76 +38,116 @@ class LdapAuthenticationProvider() extends AuthenticationProvider {
     Context.PROVIDER_URL -> url,
     Context.SECURITY_AUTHENTICATION -> "simple")
 
-  // returns uid=USERNAME,ou=people
-  protected def getPrincipal(username: String): String = {
-    "uid=%s,%s".format(username, usersub)
-  }
-
-  // returns uid=USERNAME,ou=people,dc=example,dc=org
-  protected def getSecurityPrincipal(username: String): String = {
-    "%s,%s".format(getPrincipal(username), searchbase)
-  }
-
-  // returns (&cn=*)(uniqueMember=uid=USERNAME,ou=people,dc=example,dc=org)
-  protected def groupQuery(username: String): String = {
+  protected def groupQuery(dn: String, username: String): String = {
     if (config.isRfc2307Bis)
-      "(&(cn=*)(%s=%s))".format(groupattrib, getSecurityPrincipal(username))
+      "(&(%s=*)(%s=%s))".format(groupnameattrib, groupattrib, dn)
     else
-      "(&(cn=*)(%s=%s))".format(groupattrib, username)
+      "(&(%s=*)(%s=%s))".format(groupnameattrib, groupattrib, username)
   }
 
   logger.debug("LDAP URL: %s".format(url))
+  
+  private def getInitialContext() : Option[InitialDirContext] = {
+    try {
+      if (anonymous) {
+        Some(new InitialDirContext(new JHashTable[String, String](env.asJava)))
+      } else {
+        Some(new InitialDirContext(new JHashTable[String, String](
+          Map(
+            Context.SECURITY_PRINCIPAL -> binddn,
+            Context.SECURITY_CREDENTIALS -> bindpwd) ++ env
+        )))
+      }
+    } catch {
+      case e: AuthenticationException =>
+        logger.error("Failed to create directory context, authentication failed", e)
+        None
+      case e: Throwable =>
+        logger.error("Failed to create directory context", e)
+        None
+    }
+  }
+    
+  private def findDn(ctx: InitialDirContext, username: String): Option[String] = {
+    val searchControls = new SearchControls
+    searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE)
+    val filter = "%s=%s".format(userattrib, username)
+    val searchRoot = "%s,%s".format(usersub, searchbase)
+    val res = ctx.search(searchRoot, filter, searchControls)
+    
+    if (res.hasMoreElements()) {
+      val sr = res.nextElement()
+      
+      if (res.hasMoreElements()) {
+        logger.warn("Multiple search results when authenticating %s".format(username))
+        None
+      } else {
+        Some(sr.getNameInNamespace())
+      }
+    } else {
+      logger.warn("No search results when authentication %s".format(username))
+      None
+    }
+  }
+  
+  // creating a initial dir context will fail to indicate an authentication error
+  private def getUserContext(dn: String,  password: String) = {
+    new InitialDirContext(new JHashTable[String, String](
+      Map(
+        Context.SECURITY_PRINCIPAL -> dn,
+        Context.SECURITY_CREDENTIALS -> password) ++ env
+    ))
+  }
 
   // Authenticate via LDAP
   override def authenticate(username: String, password: String): Option[User] = {
-    val userEnv = Map(
-      Context.SECURITY_PRINCIPAL -> getSecurityPrincipal(username),
-      Context.SECURITY_CREDENTIALS -> password) ++ env
-
-    var ctx: InitialDirContext = null
-    try {
-      ctx = new InitialDirContext(new JHashTable[String,String](userEnv.asJava))
-      val uid = getUid(getPrincipal(username), ctx)
-      require(uid > 0, "Unable to find UID for user")
-      val groups = getGroups(username, ctx)
-      val user = UserImpl(username, "*", groups.map { _._2 }.toSet, uid, true)
-      logger.trace("Succesfully authenticated %s".format(username))
-      Some(user)
-    } catch {
-      case e: AuthenticationException =>
-        logger.info("Failed authentication for user %s with error %s".format(username, e.getMessage))
-        None
-      case e: Throwable =>
-        logger.info("Failed authentication", e)
-        None
-    } finally {
-      if (ctx != null) ctx.close
-    }
+    getInitialContext().flatMap (ctx => {
+      try {
+        findDn(ctx, username).map(dn => {
+          val uctx = getUserContext(dn, password)
+          try {
+            val uid = getUid(dn, uctx)
+            require(uid > 0, "Unable to find UID for user")
+            val groups = getGroups(dn, username, uctx)
+            val user = UserImpl(username, "*", groups.toSet, uid, true)
+            logger.trace("Succesfully authenticated %s".format(username))
+            user
+          } finally {
+            uctx.close
+          }
+        })
+      } catch {
+        case e: AuthenticationException =>
+          logger.info("Failed authentication for user %s", e)
+          None        
+      } finally {
+    	ctx.close
+      }
+    })
   }
 
   // Return UUID
-  protected def getUid(search: String, ctx: InitialDirContext): Int = {
+  protected def getUid(dn: String, ctx: InitialDirContext): Int = {
     val ctrl = new SearchControls
     ctrl.setSearchScope(SearchControls.OBJECT_SCOPE)
-    val attribs = ctx.getAttributes(search)
-    attribs.get("uidNumber") match {
+    val attribs = ctx.getAttributes(dn)
+    attribs.get(usernumattrib) match {
       case null => -1
       case attrib => attrib.get.asInstanceOf[String].toInt
     }
   }
 
-  protected def getGroups(username: String, ctx: InitialDirContext): Seq[(Int,String)] = {
+  protected def getGroups(dn: String, username: String, ctx: InitialDirContext): Seq[String] = {
     val ctrl = new SearchControls
     ctrl.setSearchScope(SearchControls.SUBTREE_SCOPE)
-    val query = groupQuery(username)
+    val query = groupQuery(dn, username)
+    val searchRoot = "%s,%s".format(groupsub, searchbase)
     val it = for (
-         result <- ctx.search("", query, ctrl);
+         result <- ctx.search(searchRoot, query, ctrl);
          attribs = result.asInstanceOf[SearchResult].getAttributes();
-         if attribs.get("cn") != null;
-         if attribs.get("gidNumber") != null;
-         cn = attribs.get("cn").get.asInstanceOf[String];
-         gidNumber = attribs.get("gidNumber").get.asInstanceOf[String].toInt
-       ) yield(gidNumber, cn)
+         if attribs.get(groupnameattrib) != null;
+         groupname = attribs.get(groupnameattrib).get.asInstanceOf[String]
+       ) yield groupname
     it.toSeq
   }
 }
