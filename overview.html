@@ -17,34 +17,34 @@ desc: An overview and walkthrough of collins
 <div class="container">
   <div class="row">
 
-    <div class="span3 sidebar">
+    <div class="col-md-3 sidebar">
       <ul class="nav nav-list sidenav">
-        <li><a href="#basics"><i class="icon-chevron-right"></i> Basics</a></li>
-        <li><a href="#login"><i class="icon-chevron-right"></i> Login</a></li>
-        <li><a href="#search"><i class="icon-chevron-right"></i> Search</a></li>
-        <li><a href="#asset-details"><i class="icon-chevron-right"></i> Asset Details</a></li>
-        <li><a href="#asset-actions"><i class="icon-chevron-right"></i> Asset Actions</a>
+        <li><a href="#basics"><i class="glyphicon glyphicon-chevron-right"></i> Basics</a></li>
+        <li><a href="#login"><i class="glyphicon glyphicon-chevron-right"></i> Login</a></li>
+        <li><a href="#search"><i class="glyphicon glyphicon-chevron-right"></i> Search</a></li>
+        <li><a href="#asset-details"><i class="glyphicon glyphicon-chevron-right"></i> Asset Details</a></li>
+        <li><a href="#asset-actions"><i class="glyphicon glyphicon-chevron-right"></i> Asset Actions</a>
           <ul class="nav nav-list">
-            <li><a href="#asset-provisioning"><i class="icon-chevron-right cr-dim"></i> Provisioning</a></li>
-            <li><a href="#asset-maintenance"><i class="icon-chevron-right cr-dim"></i> Maintenance</a></li>
-            <li><a href="#asset-cancel"><i class="icon-chevron-right cr-dim"></i> Cancellation</a></li>
-            <li><a href="#asset-delete"><i class="icon-chevron-right cr-dim"></i> Deletion</a></li>
-            <li><a href="#asset-powermanagement"><i class="icon-chevron-right cr-dim"></i> Power Management</a></li>
-            <li><a href="#asset-logs"><i class="icon-chevron-right cr-dim"></i> Logs</a></li>
-            <li><a href="#asset-activation"><i class="icon-chevron-right cr-dim"></i> Activation</a></li>
+            <li><a href="#asset-provisioning"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Provisioning</a></li>
+            <li><a href="#asset-maintenance"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Maintenance</a></li>
+            <li><a href="#asset-cancel"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Cancellation</a></li>
+            <li><a href="#asset-delete"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Deletion</a></li>
+            <li><a href="#asset-powermanagement"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Power Management</a></li>
+            <li><a href="#asset-logs"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Logs</a></li>
+            <li><a href="#asset-activation"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Activation</a></li>
           </ul>
         </li>
-        <li><a href="#admin"><i class="icon-chevron-right"></i> Admin</a>
+        <li><a href="#admin"><i class="glyphicon glyphicon-chevron-right"></i> Admin</a>
           <ul class="nav nav-list">
-            <li><a href="#admin-logs"><i class="icon-chevron-right cr-dim"></i> Logs</a></li>
-            <li><a href="#stats"><i class="icon-chevron-right cr-dim"></i> Stats</a></li>
-            <li><a href="#create"><i class="icon-chevron-right cr-dim"></i> Create</a></li>
+            <li><a href="#admin-logs"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Logs</a></li>
+            <li><a href="#stats"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Stats</a></li>
+            <li><a href="#create"><i class="glyphicon glyphicon-chevron-right cr-dim"></i> Create</a></li>
           </ul>
         </li>
       </ul>
     </div>
 
-    <div class="span9">
+    <div class="col-md-9">
       <section id="basics">
         <div class="page-header">
           <h1>Basics</h1>
@@ -83,7 +83,7 @@ desc: An overview and walkthrough of collins
           When you first go to collins you will be presented with an interface like the following.
         </p>
         <ul class="thumbnails">
-          <li class="span9">
+          <li class="col-md-9">
             <a href="img/collins_login.png" target="_blank" class="thumbnail">
               <img src="img/collins_login.png" alt="Account Login">
             </a>
@@ -109,7 +109,7 @@ desc: An overview and walkthrough of collins
           fields on the left are fixed, the search fields on the right can be configured by your collins administrator.
         </p>
         <ul class="thumbnails">
-          <li class="span9">
+          <li class="col-md-9">
             <a href="img/collins_search.png" target="_blank" class="thumbnail">
               <img src="img/collins_search.png" alt="Search Page">
             </a>
@@ -121,7 +121,7 @@ desc: An overview and walkthrough of collins
           A sample search results page is below.
         </p>
         <ul class="thumbnails">
-          <li class="span9">
+          <li class="col-md-9">
             <a href="img/collins_search_results.png" target="_blank" class="thumbnail">
               <img src="img/collins_search_results.png" alt="Search Page">
             </a>
@@ -130,7 +130,7 @@ desc: An overview and walkthrough of collins
         <p>
           The search results page is color coded to reflect the status of the asset. Incomplete and new assets are <span class="text-warning">yellow</span>,
           provisioning and provisioned assets are <span class="text-info">blue</span>, cancelled and decommissioned assets are <span class="text-success">green</span>,
-          and maintenance assets are <span class="text-error">red</span>. People usually ask why allocated/unallocated assets aren't green. Since allocated and
+          and maintenance assets are <span class="text-danger">red</span>. People usually ask why allocated/unallocated assets aren't green. Since allocated and
           unallocated are the default states, using green resulted in an all green search results page. No color was just better.
         </p>
       </section>
@@ -216,7 +216,7 @@ desc: An overview and walkthrough of collins
         </div>
         <p class="lead">Ways you can break some stuff</p>
         <div class="row">
-          <div class="span6">
+          <div class="col-md-6">
             <p>
               The collins web UI tries to expose most of the actions you can take on an asset. Things like host provisioning, maintenance,
               logging and power management are all available to you. Which actions are available depends on the asset type, the asset status,
@@ -226,12 +226,12 @@ desc: An overview and walkthrough of collins
             </p>
             <p>
               <span class="label label-info">Note</span> Everything below the divider line
-              in the drop down is a potentially destructive or disruptive action and will be 
-              called out as such in the UI. 
+              in the drop down is a potentially destructive or disruptive action and will be
+              called out as such in the UI.
             </p>
           </div>
           <ul class="thumbnails">
-            <li class="span3">
+            <li class="col-md-3">
               <div class="thumbnail">
                 <img src="img/asset_actions.png" alt="Asset Actions">
                 <div class="caption">
@@ -255,7 +255,7 @@ desc: An overview and walkthrough of collins
           like the following:
           </p>
           <ul class="thumbnails">
-            <li class="span6">
+            <li class="col-md-6">
               <a href="img/asset_provision.png" target="_blank" class="thumbnail">
                 <img src="img/asset_provision.png" alt="Host Provisioning">
               </a>
@@ -293,7 +293,7 @@ desc: An overview and walkthrough of collins
           mode you can reprovision the host if needed. If you're unsure, ask the person listed under the contact tag.
           </p>
           <ul class="thumbnails">
-            <li class="span6">
+            <li class="col-md-6">
               <a href="img/asset_maintenance.png" target="_blank" class="thumbnail">
                 <img src="img/asset_maintenance.png" alt="Asset Maintenance">
               </a>
@@ -315,7 +315,7 @@ desc: An overview and walkthrough of collins
             teams.
           </p>
           <ul class="thumbnails">
-            <li class="span6">
+            <li class="col-md-6">
               <a href="img/asset_cancel.png" target="_blank" class="thumbnail">
                 <img src="img/asset_cancel.png" alt="Asset Cancellation">
               </a>
@@ -336,7 +336,7 @@ desc: An overview and walkthrough of collins
             destructive act and should generally not be done.
           </p>
           <ul class="thumbnails">
-            <li class="span6">
+            <li class="col-md-6">
               <a href="img/asset_delete.png" target="_blank" class="thumbnail">
                 <img src="img/asset_delete.png" alt="Asset Deletion">
               </a>
@@ -357,7 +357,7 @@ desc: An overview and walkthrough of collins
             when an asset is allocated is configurable, so some power actions may not be available.
           </p>
           <ul class="thumbnails">
-            <li class="span6">
+            <li class="col-md-6">
               <a href="img/asset_powermanagement.png" target="_blank" class="thumbnail">
                 <img src="img/asset_powermanagement.png" alt="Power Management">
               </a>
@@ -382,7 +382,7 @@ desc: An overview and walkthrough of collins
             as well as changes in tag values.
           </p>
           <ul class="thumbnails">
-            <li class="span6">
+            <li class="col-md-6">
               <a href="img/asset_note.png" target="_blank" class="thumbnail">
                 <img src="img/asset_note.png" alt="Asset Notes">
               </a>
@@ -402,7 +402,7 @@ desc: An overview and walkthrough of collins
             <h2>Activation</h2>
           </div>
           <div class="row">
-            <div class="span6">
+            <div class="col-md-6">
               <p>
               If an activation plugin has been configured you will be able to provision virtual assets.
               These hosts will have a status of Incomplete. Activation will move the host into New until
@@ -411,7 +411,7 @@ desc: An overview and walkthrough of collins
               </p>
             </div>
             <ul class="thumbnails">
-              <li class="span3">
+              <li class="col-md-3">
                 <div class="thumbnail">
                   <img src="img/asset_activate.png" alt="Asset Activation">
                   <div class="caption">
@@ -458,7 +458,7 @@ desc: An overview and walkthrough of collins
             something in the DB and want the cache to refresh.
           </p>
           <ul class="thumbnails">
-            <li class="span9">
+            <li class="col-md-9">
               <a href="img/admin_stats.png" target="_blank" class="thumbnail">
                 <img src="img/admin_stats.png" alt="Statistics">
               </a>
@@ -475,13 +475,13 @@ desc: An overview and walkthrough of collins
             <h2>Create</h2>
           </div>
           <div class="row">
-            <div class="span6">
+            <div class="col-md-6">
               <p>
                 It is possible as an adminstrator to create assets (not servers) from the web UI. Really this
                 is pretty much only useful for configuration assets, but the functionality is there.
               </p>
               <ul class="thumbnails">
-                <li class="span6">
+                <li class="col-md-6">
                   <a href="img/admin_create.png" target="_blank" class="thumbnail">
                     <img src="img/admin_create.png" alt="Asset Creation">
                   </a>
@@ -494,7 +494,7 @@ desc: An overview and walkthrough of collins
               </p>
             </div>
             <ul class="thumbnails">
-              <li class="span3">
+              <li class="col-md-3">
               <div class="thumbnail">
                 <img src="img/admin_create_menu.png" alt="Asset Create">
                 <div class="caption">
