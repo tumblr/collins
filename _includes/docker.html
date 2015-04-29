@@ -1,0 +1,24 @@
+<p class="lead">
+  Vendorizing the Docker image
+</p>
+<p>
+  If you want to use the Docker build as the base for your production instance, you ought to vendorize the image with your own configurations. A good list of things you should override is listed below, along with a sample Dockerfile to produce your build. The Tumblr provided build uses the H2 in-memory database, development credentials, and lots of sample features turned on and configured. You will certainly want to tune the settings in the build (see <a href="https://github.com/tumblr/collins/tree/master/conf/docker">https://github.com/tumblr/collins/tree/master/conf/docker</a> for all the included configs).
+</p>
+<ul>
+  <li>/opt/collins/conf/production.conf</li>
+  <li>/opt/collins/conf/users.conf</li>
+  <li>/opt/collins/conf/profiles.yaml</li>
+  <li>/opt/collins/conf/database.conf</li>
+  <li>/opt/collins/conf/permissions.yaml</li>
+  <li>/opt/collins/conf/authentication.conf</li>
+</ul>
+<p>Here is an example Dockerfile that will vendorize the Tumblr build with your own configs that live in ./conf/vendor/</p>
+<pre>FROM tumblr/collins
+  ADD ./conf/vendor/production.conf /opt/collins/conf/production.conf
+  ADD ./conf/vendor/database.conf /opt/collins/conf/database.conf
+  ADD ./conf/vendor/validations.conf /opt/collins/conf/validations.conf
+  ADD ./conf/vendor/authentication.conf /opt/collins/conf/authentication.conf
+  ADD ./conf/vendor/users.conf /opt/collins/conf/users.conf
+  ADD ./conf/vendor/profiles.yaml /opt/collins/conf/profiles.yaml
+  ADD ./conf/vendor/permissions.yaml /opt/collins/conf/permissions.yaml</pre>
+<p>Then you can <code>docker build -t omnicorpllc/collins:123 .</code> and <code>docker run -p 9000:9000 omnicorpllc/collins:123</code></p>

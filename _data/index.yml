@@ -1,0 +1,12 @@
+---
+title: Collins
+subtitle: Infrastructure management for engineers
+sections:
+  about: about.html
+  features: features.html
+  design: design.html
+  motivation: motivation.html
+  quickstart: quickstart.html
+  docker: docker.html
+  links: links.html
+  thanks: thanks.html

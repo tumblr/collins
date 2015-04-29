@@ -1,0 +1,25 @@
+<p class="lead">
+  Collins exists to drive infrastructure automation.
+</p>
+<p>
+  Someone recently asked me to describe collins in a sentence. At Tumblr, it's the infrastructure
+  source of truth and knowledge. Everything about Tumblr production environments is stored and
+  encoded in Collins, and that data is used to drive all of our automation. Sometimes people refer
+  to systems like this as a CMDB, or Configuration Management DataBase.
+</p>
+<p>
+  Collins started as a system to manage all of the physical servers, switches,
+  racks, etc in Tumblr production environments. As we started to
+  inventory hardware, IP addresses, software, and so on, we found the API and
+  data gave us an excellent way to drive automation processes. Today Collins can
+  do push button cluster (HBase, Hadoop, web, etc) deployment, drive configuration
+  generation when hardware cluster topologies change, drive infrastructure updates
+  when software configuration changes, and help manage software deploys.
+</p>
+<p>
+  Because of the loosely coupled design of Collins, consistently applied
+  conventions are a system requirement. This document serves as a guide
+  to those conventions as well as the basic core concepts of the collins system.
+  If you're just interested in the basic howto or screenshots, click
+  <a href="overview.html">here</a>.
+</p>
