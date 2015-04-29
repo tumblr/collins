@@ -55,13 +55,13 @@ collins-shell ip_address assets DEV
 <div class="example curl">
 curl --basic -u blake:admin:first http://localhost:9000/api/assets/with/addresses/in/DEV
 </div>
-<div class="accordion" id="ipam-assets-in-pool-response">
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#ipam-assets-in-pool-response" href="#ipam-assets-in-pool-json-response">JSON Response</a>
+<div class="panel-group" id="ipam-assets-in-pool-response">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapse" data-toggle="collapse" data-target="#ipam-assets-in-pool-json-response" href="#ipam-assets-in-pool-json-response">JSON Response</a>
     </div>
-    <div id="ipam-assets-in-pool-json-response" class="accordion-body collapse">
-      <div class="accordion-inner">
+    <div id="ipam-assets-in-pool-json-response" class="panel-collapse collapse">
+      <div class="panel-body">
         <pre>{
   "status": "success:ok",
   "data": {
@@ -82,4 +82,4 @@ curl --basic -u blake:admin:first http://localhost:9000/api/assets/with/addresse
       </div>
     </div>
   </div>
-</div> <!-- accordion -->
+</div>

@@ -42,13 +42,13 @@ collins-shell provision list
 <div class="example curl">
 curl -u blake:admin:first --basic http://localhost:9000/api/provision/profiles
 </div>
-<div class="accordion" id="assetmgmt-provision-profiles-response">
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#assetmgmt-provision-profiles-response" href="#assetmgmt-provision-profiles-json-response">JSON Response</a>
+<div class="panel-group" id="assetmgmt-provision-profiles-response">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapsed" data-toggle="collapse" data-target="#assetmgmt-provision-profiles-json-response" href="#assetmgmt-provision-profiles-json-response">JSON Response</a>
     </div>
-    <div id="assetmgmt-provision-profiles-json-response" class="accordion-body collapse">
-      <div class="accordion-inner">
+    <div id="assetmgmt-provision-profiles-json-response" class="panel-collapse collapse">
+      <div class="panel-body">
         <pre>{
     "status": "success:ok",
     "data": {
@@ -107,4 +107,4 @@ curl -u blake:admin:first --basic http://localhost:9000/api/provision/profiles
       </div>
     </div>
   </div>
-</div> <!-- accordion -->
+</div>

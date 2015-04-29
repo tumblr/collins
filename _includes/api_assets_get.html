@@ -56,13 +56,13 @@ collins-shell asset get TAG
 curl --basic -u blake:admin:first http://localhost:9000/api/asset/tumblrtag30
 </div>
 
-<div class="accordion" id="asset-get-response">
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-get-response" href="#asset-get-json-response">JSON Response</a>
+<div class="panel-group" id="asset-get-response">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapsed" data-toggle="collapse" data-target="#asset-get-json-response" href="#asset-get-json-response">JSON Response</a>
     </div>
-    <div id="asset-get-json-response" class="accordion-body collapse">
-      <div class="accordion-inner">
+    <div id="asset-get-json-response" class="panel-collapse collapse">
+      <div class="panel-body">
         <pre>{
   "status": "success:ok",
   "data": {
@@ -351,7 +351,7 @@ curl --basic -u blake:admin:first http://localhost:9000/api/asset/tumblrtag30
       "ID": 2
     },
     "ADDRESSES": [
-      
+
     ],
     "POWER": [
       {
@@ -413,4 +413,4 @@ curl --basic -u blake:admin:first http://localhost:9000/api/asset/tumblrtag30
       </div>
     </div>
   </div>
-</div> <!-- accordion -->
+</div>

@@ -52,13 +52,13 @@ collins-shell asset find_similar 001367
 <div class="example curl">
 curl --basic -u blake:admin:first 'http://localhost:9000/api/asset/001367/similar'
 </div>
-<div class="accordion" id="asset-find-similar-response">
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-find-similar-response" href="#asset-find-similar-json-response">JSON Response</a>
+<div class="panel-group" id="asset-find-similar-response">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapsed" data-toggle="collapse" data-target="#asset-find-similar-json-response" href="#asset-find-similar-json-response">JSON Response</a>
     </div>
-    <div id="asset-find-similar-json-response" class="accordion-body collapse">
-      <div class="accordion-inner">
+    <div id="asset-find-similar-json-response" class="panel-collapse collapse">
+      <div class="panel-body">
         <pre>{
   "status": "success:ok",
   "data": {
@@ -105,4 +105,4 @@ curl --basic -u blake:admin:first 'http://localhost:9000/api/asset/001367/simila
       </div>
     </div>
   </div>
-</div> <!-- accordion -->
+</div>

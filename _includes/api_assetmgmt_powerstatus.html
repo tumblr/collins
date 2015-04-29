@@ -68,13 +68,13 @@ collins-shell power_status --tag=tumblrtag1
 <div class="example curl">
 curl -v -u blake:admin:first --basic http://localhost:9000/api/asset/tumblrtag1/power
 </div>
-<div class="accordion" id="assetmgmt-powerstatus-response">
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#assetmgmt-powerstatus-response" href="#assetmgmt-powerstatus-json-response">JSON Response</a>
+<div class="panel-group" id="assetmgmt-powerstatus-response">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapsed" data-toggle="collapse" data-target="#assetmgmt-powerstatus-json-response" href="#assetmgmt-powerstatus-json-response">JSON Response</a>
     </div>
-    <div id="assetmgmt-powerstatus-json-response" class="accordion-body collapse">
-      <div class="accordion-inner">
+    <div id="assetmgmt-powerstatus-json-response" class="panel-collapse collapse">
+      <div class="panel-body">
         <pre>{
   "status": "success:ok",
   "data": {
@@ -84,4 +84,4 @@ curl -v -u blake:admin:first --basic http://localhost:9000/api/asset/tumblrtag1/
       </div>
     </div>
   </div>
-</div> <!-- accordion -->
+</div>

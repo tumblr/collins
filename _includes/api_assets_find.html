@@ -104,13 +104,13 @@ collins-shell asset find --selector=NODECLASS:web status:Unallocated
 <div class="example curl">
 curl --basic -u blake:admin:first 'http://localhost:9000/api/assets?attribute=NODECLASS%3Bweb&amp;status=Unallocated'
 </div>
-<div class="accordion" id="asset-find-response">
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#asset-find-response" href="#asset-find-json-response">JSON Response</a>
+<div class="panel-group" id="asset-find-response">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapsed" data-toggle="collapse" data-taregt="#asset-find-json-response" href="#asset-find-json-response">JSON Response</a>
     </div>
-    <div id="asset-find-json-response" class="accordion-body collapse">
-      <div class="accordion-inner">
+    <div id="asset-find-json-response" class="panel-collapse collapse">
+      <div class="panel-body">
         <pre>{
   "status": "success:ok",
   "data": {
@@ -175,4 +175,4 @@ curl --basic -u blake:admin:first 'http://localhost:9000/api/assets?attribute=NO
       </div>
     </div>
   </div>
-</div> <!-- accordion -->
+</div>

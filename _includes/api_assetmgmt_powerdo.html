@@ -122,13 +122,13 @@ curl -v -u blake:admin:first --basic \<br>
 <span class="tab4"></span>-d action=rebootSoft \<br>
 <span class="tab4"></span>http://localhost:9000/api/asset/tumblrtag1/power<br>
 </div>
-<div class="accordion" id="assetmgmt-powerdo-response">
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#assetmgmt-powerdo-response" href="#assetmgmt-powerdo-json-response">JSON Response</a>
+<div class="panel-group" id="assetmgmt-powerdo-response">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapsed" data-toggle="collapse" data-target="#assetmgmt-powerdo-json-response" href="#assetmgmt-powerdo-json-response">JSON Response</a>
     </div>
-    <div id="assetmgmt-powerdo-json-response" class="accordion-body collapse">
-      <div class="accordion-inner">
+    <div id="assetmgmt-powerdo-json-response" class="panel-collapse collapse">
+      <div class="panel-body">
         <pre>{
   "status": "success:ok",
   "data": {
@@ -138,4 +138,4 @@ curl -v -u blake:admin:first --basic \<br>
       </div>
     </div>
   </div>
-</div> <!-- accordion -->
+</div>

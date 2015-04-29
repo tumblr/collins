@@ -108,13 +108,13 @@ curl --basic -u blake:admin:first \<br>
 <span class="tab4"></span>-d password=fizzbuzz23 \<br>
 <span class="tab4"></span>http://localhost:9000/api/asset/tumblrtag3/ipmi
 </div>
-<div class="accordion" id="assetmgmt-ipmi-response">
-  <div class="accordion-group">
-    <div class="accordion-heading">
-      <a class="accordion-toggle" data-toggle="collapse" data-parent="#assetmgmt-ipmi-response" href="#assetmgmt-ipmi-json-response">JSON Response</a>
+<div class="panel-group" id="assetmgmt-ipmi-response">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapsed" data-toggle="collapse" data-target="#assetmgmt-ipmi-json-response" href="#assetmgmt-ipmi-json-response">JSON Response</a>
     </div>
-    <div id="assetmgmt-ipmi-json-response" class="accordion-body collapse">
-      <div class="accordion-inner">
+    <div id="assetmgmt-ipmi-json-response" class="panel-collapse collapse">
+      <div class="panel-body">
         <pre>{
   "status": "success:created",
   "data": {
@@ -130,4 +130,4 @@ curl --basic -u blake:admin:first \<br>
       </div>
     </div>
   </div>
-</div> <!-- accordion -->
+</div>
