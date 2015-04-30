@@ -1,0 +1,19 @@
+---
+title: Collins Concepts
+subtitle: Stuff to know before getting started
+sections:
+  overview:
+    content: concepts/overview.html
+  assets:
+    content: concepts/assets.html
+  tags:
+    content: concepts/tags.html
+    subsections:
+      managed: concepts/managed.html
+      automated: concepts/automated.html
+  "status & state":
+    content: concepts/status_and_state.html
+  logs:
+    content: concepts/logs.html
+  addresses:
+    content: concepts/addresses.html

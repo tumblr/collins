@@ -1,0 +1,23 @@
+<p class="lead">An asset in collins describes a thing, usually a piece of hardware or a configuration.</p>
+<p>
+  Assets themselves are very simple internally and only have a handful of meaningful attributes. An asset consists of a:
+</p>
+<dl>
+  <dt class="inlinecode">tag</dt>
+  <dd>A tag is a unique, immutable, alphanumeric sequence of characters associated with the asset. These are arbitrary but nearly all API calls for interacting with asset\
+    s will reference this tag.</dd>
+
+  <dt class="inlinecode">status</dt>
+  <dd>Indicates the current lifecycle phase of the asset. More details in the next section.</dd>
+
+  <dt class="inlinecode">state</dt>
+  <dd>Indicates a phase (status) specific state of the asset. More details in the next section.</dd>
+
+  <dt class="inlinecode">type</dt>
+  <dd>Current supported types include: Configuration, Data Center, Power Circuit, Power Strip, Rack, Router, Server Node and Switch. Of primary interest to most users wil\
+    l be server nodes and configurations.</dd>
+</dl>
+<p>
+  New asset types are fairly easy to create but can not be created via the API (although this is on the roadmap). Status values are not generally added/changed, typically\
+  a new state is used instead.
+</p>
