@@ -2,11 +2,19 @@
 title: Collins
 subtitle: Infrastructure management for engineers
 sections:
-  about: about.html
-  features: features.html
-  design: design.html
-  motivation: motivation.html
-  quickstart: quickstart.html
-  docker: docker.html
-  links: links.html
-  thanks: thanks.html
+  about:
+    content: index/about.html
+  features:
+    content: index/features.html
+  design:
+    content: index/design.html
+  motivation:
+    content: index/motivation.html
+  quickstart:
+    content: index/quickstart.html
+  docker:
+    content: index/docker.html
+  links:
+    content: index/links.html
+  thanks:
+    content: index/thanks.html

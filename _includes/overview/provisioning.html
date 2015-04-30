@@ -1,0 +1,31 @@
+<p>
+  For provisioning purposes you'll want to search for hosts that are unallocated. Do not allocate hosts in any other state.
+</p>
+<p>
+  To provision a host just click the 'Provision Server' link in the actions drop down. You will be presented with a dialog
+  like the following:
+</p>
+<div class="row">
+  <div class="col-md-6">
+    <a href="img/asset_provision.png" target="_blank" class="thumbnail">
+      <img src="img/asset_provision.png" alt="Host Provisioning">
+    </a>
+  </div>
+</div>
+<p>
+  Depending on the profile you choose (web, database, etc) you will have a different set of configurable options made
+  available to you. The profile and options you specify will dictate what role in the environment the host will eventually
+  play. If something is optional (such as secondary role in this dialog) and you're unsure, just leave it unspecified.
+</p>
+<p>
+  When you're ready just click the 'Provision Server' button. This takes 30-60 seconds to return. During this process we
+  verify any required settings for the specified host and reboot it onto a reinstall image. Once control is returned to
+  you, the dialog will close and you should notice that the primary role, pool, nodeclass, contact and some other options
+  have been changed to reflect the settings you specified. Also note that the status has changed from Incomplete to Provisioning.
+</p>
+<p>
+  Once the initial provisioning has successfully completed (the remaining steps, such as puppet and func cleanup), you'll
+  see a hipchat notification in the builds room. Once the machine is fully provisioned, the status will change automatically
+  to provisioned. In the near future we'll use the contact tag to again notify you that the machine has finished the
+  provisioning process.
+</p>

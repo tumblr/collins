@@ -1,0 +1,19 @@
+<p>
+  On occasion you will need to put an asset into maintenance. In our environment, once you do that this triggers a few events
+  such as pulling the host out of any upstream proxy configurations or potentially re-generating DNS. This should generally
+  be something performed by people on the operations team, however there may be times when you need a machine that has had some
+  kind of provisioning problem occur go into maintenance so you can reprovision it. In that case, again in the actions drop down,
+  you can just click the start maintenance button to change the status of the machine to maintenance mode. Once in maintenance
+  mode you can reprovision the host if needed. If you're unsure, ask the person listed under the contact tag.
+</p>
+<div class="row">
+  <div class="col-md-6">
+    <a href="img/asset_maintenance.png" target="_blank" class="thumbnail">
+      <img src="img/asset_maintenance.png" alt="Asset Maintenance">
+    </a>
+  </div>
+</row>
+<p>
+  In EWR, putting a host into maintenance mode will cause a JIRA ticket to be generated if the maintenance type you select is
+  HARDWARE_PROBLEM, IPMI_PROBLEM, or NETWORK_PROBLEM so choose a state accordingly.
+</p>

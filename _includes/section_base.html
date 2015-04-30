@@ -18,6 +18,11 @@ Read more about liquid and include params here: http://jekyllrb.com/docs/templat
       <ul class="nav nav-list sidenav">
         {% for section in include.data.sections %}
         <li><a href="#{{ section[0] | downcase }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ section[0] | capitalize }}</a></li>
+        <ul class="nav nav-list">
+          {% for subsection in section[1].subsections %}
+          <li><a href="#{{ subsection[0] | downcase }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ subsection[0] | capitalize }}</a></li>
+          {% endfor %}
+        </ul>
         {% endfor %}
       </ul>
     </div>
@@ -26,9 +31,18 @@ Read more about liquid and include params here: http://jekyllrb.com/docs/templat
       {% for section in include.data.sections %}
       <section id="{{ section[0] | downcase }}">
         <h1>{{ section[0] || capitalize }}</h1>
-        {% assign section_include=section[1] %}
+        {% assign section_include=section[1].content %}
         <!-- include does not like section[1] -->
         {% include {{section_include}} %}
+        {% for subsection in section[1].subsections %}
+        <section id="{{ subsection[0] | downcase }}">
+          <div class="page-header">
+            <h2>{{ subsection[0] || capitalize }}</h2>
+          </div>
+          {% assign subsection_iclude=subsection[1] %}
+          {% include {{ subsection_iclude }} %}
+        </section>
+        {% endfor %}
       </section>
       {% endfor %}
     </div>
