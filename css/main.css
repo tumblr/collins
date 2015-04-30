@@ -10,10 +10,15 @@ section > ul li {
   padding-left: 20px;
 }
 
-a.carousel-control.asset {
-  position: absolute;
-  top: 100px !important;
+.carousel-caption {
+    color: #000000;
+    bottom: -150px;
 }
+
+.carousel-inner {
+    padding-bottom: 150px
+}
+
 
 .inlinecode {
   font-family: Monaco, Menlo, Consolas, "Courier New", monospace;

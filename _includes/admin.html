@@ -1,0 +1,76 @@
+<p class="lead">Administrative functionality</p>
+<p>
+  There are a few features that are for admins only. You have to be in a configured
+  admin group in order to see or use them.
+</p>
+
+<section id="admin-logs">
+  <div class="page-header">
+    <h2>Logs</h2>
+  </div>
+  <p>
+    If you are an administrator you should find a link named 'Logging'. This will show you
+    an up to date view of all logged activity in the system. Clicking the auto refresh button
+    will cause the UI to refresh periodically and display any new log entries.
+  </p>
+</section>
+
+<section id="stats">
+  <div class="page-header">
+    <h2>Stats</h2>
+  </div>
+  <p>
+    There is no link to this page but if you are an administrator you can get to it at
+    <code>/admin/stats</code> This will show you various stat information and also allow
+    you to clear the cache. The clear cache button only exists in case you manually modify
+    something in the DB and want the cache to refresh.
+  </p>
+  <div class="row">
+    <div class="col-md-9">
+      <a href="img/admin_stats.png" target="_blank" class="thumbnail">
+        <img src="img/admin_stats.png" alt="Statistics">
+      </a>
+    </div>
+  </div>
+  <p>
+    This page displays the server start time, API and web stats for requests and latency,
+    authentication related statistics, and cache statistics.
+  </p>
+</section>
+
+<section id="create">
+  <div class="page-header">
+    <h2>Create</h2>
+  </div>
+  <div class="row">
+    <div class="col-md-6">
+      <p>
+        It is possible as an adminstrator to create assets (not servers) from the web UI. Really this
+        is pretty much only useful for configuration assets, but the functionality is there.
+      </p>
+      <div class="row">
+        <div class="col-md-6">
+          <a href="img/admin_create.png" target="_blank" class="thumbnail">
+            <img src="img/admin_create.png" alt="Asset Creation">
+          </a>
+        </div>
+      </div>
+      <p>
+        The creation interface requires that you specify a tag, whether IPMI information
+        should be generated or not, and the asset status. It is not possible to specify
+        any additional information via this interface.
+      </p>
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+        <div class="thumbnail">
+          <img src="img/admin_create_menu.png" alt="Asset Create">
+          <div class="caption">
+            <h3>Asset Create</h3>
+            <p>You can find the list of asset types that can be created in the create drop down</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

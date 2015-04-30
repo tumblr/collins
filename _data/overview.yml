@@ -1,0 +1,10 @@
+---
+title: Collins Overview
+subtitle: A screenshot tour of the basics
+sections:
+  basics: basics.html
+  login: login.html
+  search: search.html
+  "asset details": asset_details.html
+  "asset actions": asset_actions.html
+  admin: admin.html
