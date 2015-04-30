@@ -110,3 +110,9 @@ permissions:
     - "g=platform"
     - "u=admins"
     - "u=tools"
+  controllers.IpmiApi.updateIpmi:
+    - "g=infra"
+    - "g=ops"
+    - "g=sre"
+    - "u=admins"
+    - "u=tools"
