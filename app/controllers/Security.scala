@@ -78,8 +78,6 @@ trait SecureController extends Controller {
   /** Where to go if a request can't be authenticated */
   def onUnauthorized: Action[AnyContent]
 
-  def getUser(request: RequestHeader): User
-
   def Authenticated(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification) =
     SecureController.Authenticated(authenticate, onUnauthorized, authorize)(action)
 
@@ -91,8 +89,6 @@ trait SecureController extends Controller {
 trait SecureWebController extends SecureController {
   val unauthorizedRoute = routes.Application.login.url
   def securityMessage(req: RequestHeader) = ("security" -> "The specified resource requires additional authorization")
-
-  override def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
 
   override def onUnauthorized = Action { implicit request =>
     // If user is not logged in and accesses a page, store the location so they can be redirected
@@ -128,8 +124,6 @@ trait SecureApiController extends SecureController {
   override def onUnauthorized = Action { implicit request =>
     Results.Unauthorized(Txt("Invalid Username/Password specified"))
   }
-
-  override def getUser(request: RequestHeader): User = User.fromMap(request.session.data).get
 
   /** Do not use session storage for authenticate */
   override def authenticate(request: RequestHeader): Option[User] = {
