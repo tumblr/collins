@@ -1,9 +1,10 @@
 package collins.callbacks
 
-import play.api.Logger
-import akka.actor._
-
 import java.beans.PropertyChangeSupport
+
+import play.api.Logger
+
+import akka.actor.Actor
 
 case class CallbackMessageQueue(pcs: PropertyChangeSupport) extends Actor {
   private[this] val logger = Logger("CallbackMessageQueue")

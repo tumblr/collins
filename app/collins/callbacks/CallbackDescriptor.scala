@@ -1,10 +1,13 @@
-package collins
-package callbacks
-
-import util.config.{ConfigAccessor, ConfigSource, ConfigValue, TypesafeConfiguration}
-import com.typesafe.config.ConfigValueType
+package collins.callbacks
 
 import play.api.Logger
+
+import com.typesafe.config.ConfigValueType
+
+import collins.util.config.ConfigAccessor
+import collins.util.config.ConfigSource
+import collins.util.config.ConfigValue
+import collins.util.config.TypesafeConfiguration
 
 case class MatchConditional(name: String, state: Option[String], states: List[String])
 case class CallbackConditional(previous: MatchConditional, current: MatchConditional)

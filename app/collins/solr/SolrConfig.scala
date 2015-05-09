@@ -1,9 +1,11 @@
 package collins.solr
 
-import util.config.Configurable
-import util.MessageHelper
 import java.io.File
-import scala.concurrent.duration._
+
+import scala.concurrent.duration.DurationInt
+
+import collins.util.MessageHelper
+import collins.util.config.Configurable
 
 object SolrConfig extends Configurable {
   override val namespace = "solr"

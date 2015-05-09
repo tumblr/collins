@@ -14,7 +14,6 @@ package collins.solr
  * need from it, this should be expanded to fit in more with regular scala
  * collections
  */
-
 case class MultiSet[T] private(val items: Map[T, Int]) {
   def +(v: T) = new MultiSet[T](items.get(v) match {
     case Some(c) => items + (v -> (c + 1))

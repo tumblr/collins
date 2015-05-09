@@ -1,15 +1,14 @@
-@(aa: models.asset.AllAttributes, buttonText: String, selectStatus: Boolean, buttonClass: String = "btn-primary", limitStatesTo: Option[String] = None, defaultState: Option[State] = None)(body: Html)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: AllAttributes, buttonText: String, selectStatus: Boolean, buttonClass: String = "btn-primary", limitStatesTo: Option[String] = None, defaultState: Option[State] = None)(body: Html)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util._
-@import _root_.models.State
-@import _root_.util.plugins.Maintenance
-@import _root_.util.views.{OptionSorter, StateHelper}
+@import collins.util.plugins.Maintenance
+@import collins.util.views.{OptionSorter, StateHelper}
 
 <!-- start asset maintenance modal -->
 @container("asset-maintenance", "assetMaintenanceLabel", true) {
   @header("Asset Maintenance", Some("Warning"))
-  @form(app.routes.CookieApi.updateAssetForMaintenance(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "maintenanceError", Symbol("data-modal") -> "asset-maintenance", Symbol("data-refresh") -> ".window") {
+  @form(collins.app.routes.CookieApi.updateAssetForMaintenance(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "maintenanceError", Symbol("data-modal") -> "asset-maintenance", Symbol("data-refresh") -> ".window") {
     <div class="modal-body">
       @body
       @if(selectStatus) {
@@ -45,7 +44,7 @@
               }
             }
           </select>
-          @inputAddonHelpIcon("A state representing the operational state of the asset (i.e. network problem, hardware problem, IPMI problem, NOOP, etc)", Some(app.routes.HelpPage.index("default") + "#assetState"))
+          @inputAddonHelpIcon("A state representing the operational state of the asset (i.e. network problem, hardware problem, IPMI problem, NOOP, etc)", Some(collins.app.routes.HelpPage.index("default") + "#assetState"))
         }
       }
       <div class="form-group">

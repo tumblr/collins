@@ -1,8 +1,8 @@
 @(assetMeta: Seq[AssetMeta])(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.views.OptionSorter
-@import _root_.util.config.MultiCollinsConfig
+@import collins.util.views.OptionSorter
+@import collins.util.config.MultiCollinsConfig
 @import util._
 
 @basicFormatter(asset: AssetMeta, index: Int) = {
@@ -17,7 +17,7 @@
     @notice("error", Some("danger"))
     @notice("security", Some("danger"))
 
-    @form(app.routes.Resources.find(0,50,"DESC","and"), 'class -> "form-horizontal") {
+    @form(collins.app.routes.Resources.find(0,50,"DESC","and"), 'class -> "form-horizontal") {
 
     <div class="page-header">
       <h1>Search <small>Query your assets by attribute.</small></h1>
@@ -57,7 +57,7 @@
                   <option value="@state.name">@state.getDisplayLabel</option>
                 }
               </select>
-              @inputAddonHelpIcon("Asset state represents the current operational state of an asset (i.e. new, failed, starting, running)",Some(app.routes.HelpPage.index("default") + "#assetState"))
+              @inputAddonHelpIcon("Asset state represents the current operational state of an asset (i.e. new, failed, starting, running)",Some(collins.app.routes.HelpPage.index("default") + "#assetState"))
             }
           }
           @formFieldRow {

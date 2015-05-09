@@ -1,10 +1,10 @@
 package collins.graphs
 
-import models.asset.AssetView
-import util.config.TypesafeConfiguration
-
-import play.api.{Application, Plugin}
+import play.api.Application
+import play.api.Plugin
 import play.api.mvc.Content
+
+import collins.models.asset.AssetView
 
 class GraphPlugin(override val app: Application) extends GraphView with Plugin {
 

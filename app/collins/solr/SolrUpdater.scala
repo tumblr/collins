@@ -1,15 +1,20 @@
 package collins.solr
 
-import akka.actor._
-import play.api.Logger
-import models.{Asset, AssetLog}
 import java.util.Collections
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.collection.JavaConverters._
 import java.util.concurrent.atomic.AtomicReference
-import play.api.libs.concurrent.Execution.Implicits._
+
+import scala.collection.JavaConverters.asScalaSetConverter
+
+import play.api.Logger
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+import collins.models.Asset
+import collins.models.AssetLog
+
+import akka.actor.Actor
 
 //TODO: refactor all this
 

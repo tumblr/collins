@@ -1,5 +1,4 @@
-package collins.power
-package management
+package collins.power.management
 
 import play.api.Plugin
 

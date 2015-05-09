@@ -1,10 +1,7 @@
-package collins
-package callbacks
-package runners
+package collins.callbacks.runners
 
-import scala.collection.mutable.StringBuilder
-import scala.sys.process._
-
+import collins.callbacks.CallbackActionRunner
+import collins.callbacks.MethodReplacement
 import collins.shell.Command
 
 case class ExecActionRunner(command: Seq[String]) extends CallbackActionRunner[Seq[String]] {

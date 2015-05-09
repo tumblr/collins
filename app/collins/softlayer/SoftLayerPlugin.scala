@@ -1,14 +1,22 @@
 package collins.softlayer
 
-import models.Asset
+import scala.concurrent.Future
+import scala.util.control.Exception.allCatch
+
+import org.jboss.netty.handler.codec.http.QueryStringEncoder
+
+import play.api.Application
+import play.api.Plugin
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.JsArray
+import play.api.libs.json.JsBoolean
+import play.api.libs.json.JsNumber
+import play.api.libs.json.JsObject
+import play.api.libs.json.JsString
+import play.api.libs.json.Json
 import play.api.libs.ws.WS
 
-import play.api.{Application, Plugin}
-import play.api.libs.json._
-import scala.concurrent.Future
-import org.jboss.netty.handler.codec.http.QueryStringEncoder
-import scala.util.control.Exception.allCatch
-import play.api.libs.concurrent.Execution.Implicits._
+import collins.models.Asset
 
 class SoftLayerPlugin(app: Application) extends Plugin with SoftLayer {
 

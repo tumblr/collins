@@ -1,6 +1,10 @@
 package com.tumblr.play.interop;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+
 import org.yaml.snakeyaml.Yaml;
 
 public class PrivilegedHelper {

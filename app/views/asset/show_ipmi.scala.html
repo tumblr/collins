@@ -1,14 +1,14 @@
-@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.plugins.PowerManagement
+@import collins.util.plugins.PowerManagement
 
 <!-- Start IPMI Info -->
 <div class="tab-pane" id="ipmi-info">
   <section id="ipmi-info" class="sectional">
     <h3>IPMI Info <small>BMC network configuration and credentials</small></h3>
     @PowerManagement.pluginEnabled.map { p =>
-      @form(app.routes.CookieApi.powerManagement(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "identifyError", Symbol("data-success") -> "identifySuccess") {
+      @form(collins.app.routes.CookieApi.powerManagement(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "identifyError", Symbol("data-success") -> "identifySuccess") {
         <div class="row">
           <div class="col-md-12">
             <div class="form-group">

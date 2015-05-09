@@ -1,6 +1,6 @@
-@(asset: models.asset.AssetView, text: String = "SL")
+@(asset: AssetView, text: String = "SL")
 
-@import _root_.util.plugins.SoftLayer
+@import collins.util.plugins.SoftLayer
 
 @formatUrl(url: String) = {
   <a href="@url" target="_blank">@text</a>

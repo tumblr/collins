@@ -1,8 +1,8 @@
-package collins
-package callbacks
+package collins.callbacks
+
+import java.beans.PropertyChangeEvent
 
 import play.api.Logger
-import java.beans.PropertyChangeEvent
 
 trait CallbackActionRunner[T] extends CallbackActionHandler {
   protected val logger = Logger("CallbackActionHandler")

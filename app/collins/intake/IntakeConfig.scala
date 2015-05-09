@@ -1,6 +1,6 @@
 package collins.intake
 
-import util.config.Configurable
+import collins.util.config.Configurable
 
 object IntakeConfig extends Configurable {
 
@@ -10,7 +10,6 @@ object IntakeConfig extends Configurable {
   def intake_field_names = getStringSet("params")
 
   override protected def validateConfig() {
-
       intake_field_names
   }
 

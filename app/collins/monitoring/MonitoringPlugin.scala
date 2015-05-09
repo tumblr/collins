@@ -1,10 +1,10 @@
 package collins.monitoring
 
-import models.asset.AssetView
-import util.config.TypesafeConfiguration
-
-import play.api.{Application, Plugin}
+import play.api.Application
+import play.api.Plugin
 import play.api.mvc.Content
+
+import collins.models.asset.AssetView
 
 class MonitoringPlugin(override val app: Application) extends MonitoringView with Plugin {
 

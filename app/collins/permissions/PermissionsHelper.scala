@@ -1,9 +1,13 @@
 package collins.permissions
 
-import com.tumblr.play.interop.PrivilegedHelper
+import java.util.{List => JList}
+import java.util.{Map => JMap}
 
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.mutable.HashMap
-import java.util.{List => JList, Map => JMap}
+
+import com.tumblr.play.interop.PrivilegedHelper
 
 object PermissionsHelper {
   import scala.collection.JavaConverters._

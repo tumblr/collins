@@ -1,10 +1,11 @@
 package collins.power.management
 
 import org.specs2._
+import collins.ResourceFinder
 import collins.power.PowerAction
 import play.api.test.FakeApplication
 
-class PowerManagementConfigSpec extends Specification with test.ResourceFinder {
+class PowerManagementConfigSpec extends Specification with ResourceFinder {
 
   def is = "PowerManagementConfig should" ^
     "load the verify command"                       ! spec().loadVerifyConfig ^

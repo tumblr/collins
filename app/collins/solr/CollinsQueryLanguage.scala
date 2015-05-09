@@ -1,17 +1,13 @@
 package collins.solr
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, State, Status, Truthy}
-import models.asset.AssetView
-import models.IpmiInfo.Enum._
-
-
-import Solr.AssetSolrDocument
-import AssetMeta.ValueType
-import AssetMeta.ValueType._
-
-import play.api.Logger
-
-
+import collins.models.AssetMeta.ValueType
+import collins.models.AssetMeta.ValueType.Boolean
+import collins.models.AssetMeta.ValueType.Double
+import collins.models.AssetMeta.ValueType.Integer
+import collins.models.AssetMeta.ValueType.String
+import collins.models.Truthy
+import collins.solr.UpperCaseString.UppercaseString2String
+import collins.solr.UpperCaseString.string2UpperCaseString
 
 /**
  * The top-level object parsed from a CQL expression

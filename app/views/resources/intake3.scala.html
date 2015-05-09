@@ -2,7 +2,7 @@
 
 @import twitterBootstrap._
 @import helper._
-@import _root_.util.views.ListHelper.getPowerComponentsInOrder
+@import collins.util.views.ListHelper.getPowerComponentsInOrder
 @import util._
 @import AssetMeta.Enum.{ChassisTag, RackPosition, ServiceTag}
 @import collins.intake.IntakeConfig
@@ -33,7 +33,7 @@
 </div>
 <div class="row">
   <div class="col-lg-5 col-md-6 col-sm-7 col-xs-9">
-    @form(app.routes.Resources.intake(asset.getId, 3)) {
+    @form(collins.app.routes.Resources.intake(asset.getId, 3)) {
     @formFieldRow {
       @formLabelInline("ASSET_TAG", "Asset Tag")
       @formInputInline {

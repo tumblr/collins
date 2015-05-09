@@ -1,18 +1,12 @@
 
 package collins.solr
 
-import collins.solr._
-import util.views.Formatter
-
 import java.util.Date
 
-import models.{Asset, AssetMeta, AssetMetaValue, AssetLog, IpAddresses, IpmiInfo, MetaWrapper, Truthy}
-import AssetMeta.ValueType
-import AssetMeta.ValueType._
-
-import Solr._
-import SolrKeyFlag._
-
+import collins.models.AssetLog
+import collins.solr.Solr.AssetSolrDocument
+import collins.solr.UpperCaseString.string2UpperCaseString
+import collins.util.views.Formatter
 
 class AssetLogSerializer extends SolrSerializer[AssetLog](AssetLogDocType) {
 

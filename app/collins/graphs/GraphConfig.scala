@@ -1,7 +1,7 @@
 package collins.graphs
 
-import util.config.Configurable
 import collins.cache.ConfigCache
+import collins.util.config.Configurable
 
 object GraphConfig extends Configurable {
   override val namespace = "graph"

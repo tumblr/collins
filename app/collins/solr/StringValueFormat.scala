@@ -1,8 +1,6 @@
 package collins.solr
 
-
 import play.api.Logger
-
 
 /**
  * StringValueFormat determines how wildcards are used on string values.  We

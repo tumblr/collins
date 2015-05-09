@@ -1,20 +1,12 @@
 package collins.solr
 
-import java.util.Date
+import scala.Left
+import scala.Right
+import scala.util.parsing.combinator.JavaTokenParsers
 
 import play.api.PlayException
 
-import scala.util.parsing.combinator._
-
-import util.views.Formatter
-
-import Solr.AssetSolrDocument
-
-
-
 class CollinsQueryException(m: String) extends PlayException("CQL", m)
-
-
 
 /** 
  * Parses CQL strings into a SolrExpression AST

@@ -1,13 +1,20 @@
 package collins.solr
 
-import models.{AssetMeta, AssetType, State, Status}
-import models.IpmiInfo.Enum._
+import collins.models.AssetMeta
+import collins.models.AssetMeta.ValueType.Integer
+import collins.models.AssetMeta.ValueType.String
+import collins.models.AssetType
+import collins.models.IpmiInfo.Enum.IpmiAddress
+import collins.models.IpmiInfo.Enum.IpmiGateway
+import collins.models.IpmiInfo.Enum.IpmiNetmask
+import collins.models.IpmiInfo.Enum.IpmiPassword
+import collins.models.IpmiInfo.Enum.IpmiUsername
+import collins.models.State
+import collins.models.Status
+import collins.solr.UpperCaseString.UppercaseString2String
+import collins.solr.UpperCaseString.string2UpperCaseString
 
-import Solr.AssetSolrDocument
-import AssetMeta.ValueType
-import AssetMeta.ValueType._
-
-import SolrKeyFlag._
+import collins.solr.SolrKeyFlag._
 
 object AssetKeyResolver extends SolrKeyResolver{
 

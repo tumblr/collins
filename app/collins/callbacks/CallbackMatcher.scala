@@ -1,10 +1,10 @@
-package collins
-package callbacks
+package collins.callbacks
 
-import models.State
-import models.asset.AssetView
-import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
-import reflection.MethodHelper
+import java.beans.PropertyChangeEvent
+
+import collins.models.State
+import collins.models.asset.AssetView
+import collins.reflection.MethodHelper
 
 /**
  * Given a matchMethod, apply it to the PCE.

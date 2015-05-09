@@ -1,10 +1,10 @@
-@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 
 @container("cancel-server", "cancelServerLabel") {
   @header("Cancel Server", Some("Warning"))
-  @form(app.routes.CookieApi.cancelAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "cancelError", Symbol("data-modal") -> "cancel-server", Symbol("data-refresh") -> ".window") {
+  @form(collins.app.routes.CookieApi.cancelAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "cancelError", Symbol("data-modal") -> "cancel-server", Symbol("data-refresh") -> ".window") {
   <div class="modal-body">
     <p>Cancelling this server will</p>
     <ul>

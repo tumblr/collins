@@ -1,5 +1,4 @@
-package collins
-package reflection
+package collins.reflection
 
 import java.lang.reflect.Method
 

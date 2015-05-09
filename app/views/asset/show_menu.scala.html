@@ -1,10 +1,10 @@
-@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
-@import _root_.util.AssetStateMachine
-@import _root_.util.plugins.{GraphPlugin, MonitoringPlugin, Maintenance, PowerManagement, Provisioner, SoftLayer}
-@import _root_.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
-@import _root_.collins.provisioning.ProvisionerConfig
-@import _root_.controllers.Permissions
+@import collins.util.AssetStateMachine
+@import collins.util.plugins.{GraphPlugin, MonitoringPlugin, Maintenance, PowerManagement, Provisioner, SoftLayer}
+@import collins.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
+@import collins.provisioning.ProvisionerConfig
+@import collins.controllers.Permissions
 
 <div class="page-header" style="position:relative;">
   @Summary(aa.asset)

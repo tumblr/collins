@@ -1,24 +1,22 @@
 
-@(assets: Page[models.asset.AssetView], sortDirection: SortDirection = SortDirection.SortAsc, sortField: Option[String] = None, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
+@(assets: Page[AssetView], sortDirection: SortDirection = SortDirection.SortAsc, sortField: Option[String] = None, paginateLink: Option[Int => String] = None)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.views.{ListHelper, Formatter, Pagination}
-@import _root_.util.config.Feature
-@import _root_.models._
+@import collins.util.views.{ListHelper, Formatter, Pagination}
+@import collins.util.config.Feature
 @import _root_.collins.solr._
-@import util._
-@import models.SortDirection._
+@import util.{notice, statusClassFromAsset}
 
 @link(newPage: Int) = @{
-  Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(app.routes.Resources.find(newPage, 50, "ASC", "and").toString), req.queryString)
+  Pagination.paginate(paginateLink.map{f => f(newPage)}.getOrElse(collins.app.routes.Resources.find(newPage, 50, "ASC", "and").toString), req.queryString)
 }
 @sortLink(sort: String) = @{
   val sortDir = if (sortField.map{_ != sort}.getOrElse(true)) {
-    SortAsc
+    SortDirection.SortAsc
   } else {
     ! sortDirection
   }
-  val prefix = app.routes.Resources.find(0, 50, sortDir.toString, "and", sort).toString
+  val prefix = collins.app.routes.Resources.find(0, 50, sortDir.toString, "and", sort).toString
   Pagination.paginate(prefix, req.queryString)
 }
 @formatRawMetaAttribute(name: String) = @{
@@ -58,7 +56,7 @@
           @for(meta <- Feature.searchResultColumns) {
             @meta match {
               case "TAG" => {
-                <td><a href="@(asset.remoteHost.getOrElse("") + app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
+                <td><a href="@(asset.remoteHost.getOrElse("") + collins.app.routes.CookieApi.getAsset(asset.tag))">@asset.tag</a></td>
               }
               case "HOSTNAME" => {
                 <td>@asset.getHostnameMetaValue.map(v => Formatter.elipse(v)).getOrElse { <em>Unknown</em> }</td>

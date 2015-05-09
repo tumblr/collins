@@ -17,7 +17,7 @@
     <h4>Scan the Chassis Tag</h4>
     <div class="row">
       <div class="col-lg-5 col-md-6 col-sm-7 col-xs-9">
-      @form(app.routes.Resources.intake(asset.getId, 2)) {
+      @form(collins.app.routes.Resources.intake(asset.getId, 2)) {
         @formFieldRow {
           @formLabelInline(f(ChassisTag.toString).name, "Chassis Tag")
           @formInputInline {

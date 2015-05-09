@@ -1,7 +1,5 @@
 @(name: String, selected: String)
 
-@import _root_.models.logs.LogMessageType
-
 @formatValue(value: String, display: String) = {
 <option value="@value" @if(value == selected) {selected="selected"}>@display</option>
 }

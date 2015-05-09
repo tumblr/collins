@@ -1,7 +1,5 @@
 package collins.solr
 
-import play.api.Logger
-
 sealed trait SolrDocType {
   def name: String
   def keyResolver: SolrKeyResolver
