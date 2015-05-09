@@ -79,10 +79,6 @@ trait SecureController extends Controller {
   def onUnauthorized: Action[AnyContent]
 
   def getUser(request: RequestHeader): User
-  def setUser(user: Option[User]): Option[User] = {
-    AppConfig.setUser(user)
-    user
-  }
 
   def Authenticated(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification) =
     SecureController.Authenticated(authenticate, onUnauthorized, authorize)(action)
@@ -116,14 +112,14 @@ trait SecureWebController extends SecureController {
   override def authenticate(request: RequestHeader) = User.fromMap(request.session.data) match {
     case Some(user) => user.isAuthenticated match {
       case true =>
-        setUser(Some(user))
+        Some(user)
       case false =>
         logger.debug("SecureWebController.authenticate: user found, not authenticated")
-        setUser(None)
+        None
     }
     case None =>
       logger.debug("SecureWebController.authenticate: user not found, session data not found")
-      setUser(None)
+      None
   }
 }
 
@@ -140,21 +136,21 @@ trait SecureApiController extends SecureController {
     request.headers.get(HeaderNames.AUTHORIZATION) match {
       case None =>
         logger.debug("Got API request with no auth header")
-        setUser(None)
+        None
       case Some(header) =>
         try {
           parseAuthHeader(header) match {
             case None =>
               logger.debug("Failed to authenticate request")
-              setUser(None)
+              None
             case Some(u) =>
               logger.debug("Logged in user %s".format(u.username))
-              setUser(Some(u))
+              Some(u)
           }
         } catch {
           case e: Throwable =>
             logger.warn("Caught exception authenticating user: " + e.getMessage)
-            setUser(None)
+            None
         }
     }
   }

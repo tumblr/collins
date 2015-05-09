@@ -4,6 +4,8 @@ resolvers += "Twitter Repository" at "http://maven.twttr.com/"
 
 resolvers += "Sonatype-public" at "http://oss.sonatype.org/content/groups/public"
 
+resolvers += "Restlet repository" at "http://maven.restlet.org"
+
 parallelExecution in Test := false
 
 Keys.fork in Test := true

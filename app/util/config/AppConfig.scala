@@ -5,10 +5,7 @@ import models.{Asset, User}
 import play.api.{Logger, Mode, Play}
 
 object AppConfig {
-  var globalConfig: Option[PlayConfiguration] = None
-  private val UserSession = new ThreadLocal[Option[User]] {
-    override def initialValue(): Option[User] = None
-  }
+  var globalConfig: Option[PlayConfiguration] = None 
 
   // Ignore asset for dangerous commands
   def ignoredAssets = Feature.ignoreDangerousCommands.map(_.toUpperCase)
@@ -22,11 +19,6 @@ object AppConfig {
       app.mode
     }.getOrElse(Mode.Dev)
   }
-
-  def setUser(user: Option[User]) = UserSession.set(user)
-  def getUser(): Option[User] = UserSession.get()
-  def removeUser() = UserSession.remove()
-
 }
 
 trait AppConfig {

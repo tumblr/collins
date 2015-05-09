@@ -23,7 +23,6 @@ object Application extends SecureWebController {
   )
 
   def login = Action { implicit req =>
-    setUser(None)
     req.queryString.get("location") match {
       case None =>
         Ok(html.login(loginForm))
@@ -33,7 +32,6 @@ object Application extends SecureWebController {
   }
 
   def authenticate = Action { implicit req =>
-    setUser(None)
     loginForm.bindFromRequest.fold(
       formWithErrors => {
         val tmp: Map[String,String] = formWithErrors.data - "password"
@@ -52,7 +50,6 @@ object Application extends SecureWebController {
   }
 
   def logout = SecureAction { implicit req =>
-    setUser(None)
     Redirect(routes.Application.login).withNewSession.flashing(
       "success" -> "You have been logged out"
     )

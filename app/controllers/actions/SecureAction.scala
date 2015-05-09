@@ -71,7 +71,6 @@ abstract class SecureAction(
   def execute(rd: RequestDataHolder): Result
 
   def executeAsync(rd: RequestDataHolder): Future[Result] = Future{
-    AppConfig.setUser(userOption)
     execute(rd)
   }
 
