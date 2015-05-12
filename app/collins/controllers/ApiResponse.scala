@@ -13,13 +13,14 @@ import play.api.mvc.AnyContent
 import play.api.mvc.Controller
 import play.api.mvc.Request
 import play.api.mvc.Results
-
 import collins.util.BashOutput
 import collins.util.HtmlOutput
 import collins.util.JsonOutput
 import collins.util.OutputType
 import collins.util.OutputType.contentTypeWithCharset
 import collins.util.TextOutput
+import scala.concurrent.Future
+import play.api.mvc.SimpleResult
 
 object ApiResponse extends ApiResponse {
   import OutputType.contentTypeWithCharset
@@ -49,7 +50,7 @@ object ApiResponse extends ApiResponse {
     formatJsonMessage("error", JsObject(message ++ optional))
   }
 
-  def bashError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]) = {
+  def bashError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]): Future[SimpleResult] = {
     val exSeq = ex.map { e => formatException(e) }.getOrElse(Seq())
     val exMsg = exSeq.map { case(k,v) =>
       """DATA_EXCEPTION_%s='%s';""".format(k.toUpperCase, v)
@@ -59,7 +60,7 @@ object ApiResponse extends ApiResponse {
 DATA_MESSAGE='%s';
 %s
 """.format(msg, exMsg)
-    status(output).as(contentTypeWithCharset(BashOutput()))
+    Future.successful(status(output).as(contentTypeWithCharset(BashOutput())))
   }
 
   def statusToString(status: Results.Status): String = {
@@ -83,12 +84,12 @@ DATA_MESSAGE='%s';
     }
   }
 
-  def jsonError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]) = {
+  def jsonError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]): Future[SimpleResult] = {
     val output: JsValue = formatJsonMessage(status, formatJsonError(msg, ex))
-    status(output).as(contentTypeWithCharset(JsonOutput()))
+    Future.successful(status(output).as(contentTypeWithCharset(JsonOutput())))
   }
 
-  def textError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]) = {
+  def textError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]): Future[SimpleResult] = {
     val exSeq = ex.map { e => formatException(e) }.getOrElse(Seq())
     val exMsg = exSeq.map { case(k,v) => """
 Exception %s  %s""".format(k, v.replace("\n","\n\t\t"))
@@ -102,7 +103,7 @@ Message       %s
 
 %s
 """.format(msg, exMsg)
-    status(output).as(contentTypeWithCharset(TextOutput()))
+    Future.successful(status(output).as(contentTypeWithCharset(TextOutput())))
   }
 
   private def formatException(ex: Throwable): Seq[(String,String)] = {
@@ -140,7 +141,7 @@ trait ApiResponse extends Controller {
     def formatBasic(jsvalue: JsValue): String = {
       jsvalue match {
         case JsNull => ""
-        case JsUndefined(error) => "\"%s\"".format(error)
+        case und: JsUndefined => "\"%s\"".format(und.error)
         case JsBoolean(value) => value match {
           case true => "true"
           case false => "false"
@@ -197,7 +198,7 @@ trait ApiResponse extends Controller {
     def formatBasic(jsvalue: JsValue): String = {
       jsvalue match {
         case JsNull => "null"
-        case JsUndefined(error) => error
+        case und: JsUndefined => "\"%s\"".format(und.error)
         case JsBoolean(value) => value.toString
         case JsNumber(number) => number.toString
         case JsString(s) => s

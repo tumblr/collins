@@ -16,7 +16,7 @@ package object conversions {
   class JsValueWrapper(js: JsValue) {
     def value: Any = js match {
       case JsNull => null
-      case JsUndefined(error) => error
+      case und: JsUndefined => und.error
       case JsBoolean(v) => v
       case JsNumber(v) => v
       case JsString(v) => v

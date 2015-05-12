@@ -94,7 +94,7 @@ case class CreateAction(
   protected def validateJson(asset: Asset, js: JsValue): Validation = {
     val otype = (js \ "Type").asOpt[String]
     val omessage = (js \ "Message") match {
-      case JsUndefined(none) => None
+      case _: JsUndefined => None
       case other => Some(other.toString) // Want string representation of JSON
     }
     val osource = None

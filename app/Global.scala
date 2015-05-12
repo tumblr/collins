@@ -7,7 +7,6 @@ import play.api.mvc.Handler
 import play.api.mvc.RequestHeader
 import play.api.mvc.Result
 import play.api.mvc.Results
-
 import collins.controllers.ApiResponse
 import collins.database.DatabasePlugin
 import collins.util.BashOutput
@@ -20,6 +19,8 @@ import collins.util.config.CryptoConfig
 import collins.util.security.AuthenticationAccessor
 import collins.util.security.AuthenticationProvider
 import collins.util.security.AuthenticationProviderConfig
+import scala.concurrent.Future
+import play.api.mvc.SimpleResult
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
@@ -48,7 +49,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     response
   }
 
-  override def onError(request: RequestHeader, ex: Throwable): Result = {
+  override def onError(request: RequestHeader, ex: Throwable): Future[SimpleResult] = {
     logger.warn("Unhandled exception", ex)
     val debugOutput = Play.maybeApplication.map {
       case app if app.mode == Mode.Dev => true
@@ -65,7 +66,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  override def onHandlerNotFound(request: RequestHeader): Result = {
+  override def onHandlerNotFound(request: RequestHeader): Future[SimpleResult] = {
     logger.info("Unhandled URI: " + request.uri)
     val msg = "The specified path was invalid: " + request.path
     val status = Results.NotFound
@@ -79,7 +80,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  override def onBadRequest(request: RequestHeader, error: String): Result = {
+  override def onBadRequest(request: RequestHeader, error: String): Future[SimpleResult] = {
     val msg = "Bad Request, parsing failed. " + error
     val status = Results.BadRequest
     val err = None

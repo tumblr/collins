@@ -34,7 +34,7 @@ object SecureController {
     authenticate: RequestHeader => Option[User],
     onUnauthorized: Action[AnyContent],
     authorize: (User, SecuritySpecification) => Boolean)(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification): Action[AnyContent] = {
-    val newAction = Action { request =>
+    val newAction = Action.async { request =>
       spec.isSecure match {
         case false =>
           logger.debug("No authentication required, processing action")
