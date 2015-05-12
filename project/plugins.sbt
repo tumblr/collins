@@ -4,5 +4,5 @@ resolvers ++= Seq(
     "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 )
 
-addSbtPlugin("play" % "sbt-plugin" % Option(System.getProperty("play.version")).getOrElse("2.1.5"))
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % Option(System.getProperty("play.version")).getOrElse("2.2.6"))
 
