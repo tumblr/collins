@@ -7,7 +7,7 @@ import play.api.data.Forms.optional
 import play.api.data.Forms.tuple
 import play.api.mvc.AnyContent
 import play.api.mvc.Request
-import play.api.mvc.Result
+import play.api.mvc.SimpleResult
 
 import collins.controllers.SecureController
 import collins.controllers.actions.AssetAction
@@ -86,7 +86,7 @@ case class FindSimilarAction(
   }
 
 
-  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
+  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean): SimpleResult = {
     p.size match {
       case 0 =>
         Status.Redirect(collins.app.routes.CookieApi.getAsset(assetTag)).flashing("message" -> AssetMessages.noMatch)

@@ -30,7 +30,7 @@ object UpdateRequestRouter {
     }
   }
 
-  def apply(matcher: PartialFunction[Matcher,SecureAction]): Action[AnyContent] = Action { implicit req =>
+  def apply(matcher: PartialFunction[Matcher,SecureAction]): Action[AnyContent] = Action.async { implicit req =>
     matcher(getMatchType(req))(req)
   }
 }

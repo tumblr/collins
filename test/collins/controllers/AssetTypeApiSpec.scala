@@ -4,9 +4,9 @@ import collins.{FakeRequest, ResponseScope, ResponseMatchHelpers}
 import play.api.libs.Files.TemporaryFile
 import org.specs2._
 import specification.Scope
-
 import matcher.Matcher
 import play.api.test.WithApplication
+import org.specs2.matcher.JsonMatchers
 
 class AssetTypeApiSpec extends mutable.Specification with ControllerSpec {
 
@@ -84,7 +84,7 @@ class AssetTypeApiSpec extends mutable.Specification with ControllerSpec {
 
   }
 
-  trait assetType extends Scope with ResponseMatchHelpers {
+  trait assetType extends Scope with ResponseMatchHelpers with JsonMatchers {
     val aname = "SERVICE"
     val assetTypeUrl = "/api/assettype/%s.json".format(aname)
     val findUrl = "/api/assettypes"

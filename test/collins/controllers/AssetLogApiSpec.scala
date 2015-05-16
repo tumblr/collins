@@ -4,6 +4,7 @@ import collins._
 import org.specs2._
 import specification._
 import play.api.test.WithApplication
+import org.specs2.matcher.JsonMatchers
 
 class AssetLogApiSpec extends mutable.Specification with ControllerSpec {
 
@@ -57,7 +58,7 @@ class AssetLogApiSpec extends mutable.Specification with ControllerSpec {
     }
   }
 
-  trait log extends Scope with ResponseMatchHelpers {
+  trait log extends Scope with ResponseMatchHelpers with JsonMatchers {
     val logId              = 2
     val assetId            = "tumblrtag1"
     val message            = "hello world"

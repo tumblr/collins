@@ -1,7 +1,5 @@
 package collins.solr
 
-import scala.Left
-import scala.Right
 import scala.util.parsing.combinator.JavaTokenParsers
 
 import play.api.PlayException

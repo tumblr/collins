@@ -1,5 +1,7 @@
 package collins.util
 
+import scala.concurrent.Future
+
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
 import play.api.mvc.Headers
@@ -63,12 +65,12 @@ object VersionRouter {
     route => route
   )
 
-  def apply(routes: Function1[ApiVersion, SecureAction]): Action[AnyContent] = Action{implicit request =>
+  def apply(routes: Function1[ApiVersion, SecureAction]): Action[AnyContent] = Action.async {implicit request =>
     routeEither(request.headers)(routes).fold(
       err => if (OutputType.isHtml(request)) {
-        Results.Redirect(collins.app.routes.Resources.index).flashing("error" -> err)
+        Future.successful(Results.Redirect(collins.app.routes.Resources.index).flashing("error" -> err))
       } else {
-        Results.BadRequest(ApiResponse.formatJsonError(err, None))
+        Future.successful(Results.BadRequest(ApiResponse.formatJsonError(err, None)))
       },
       action => action(request)
     )

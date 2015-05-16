@@ -150,7 +150,7 @@ class PowerUnitSpec extends Specification with DataTables {
       }
       val unshuffled = PowerUnits(shuffled)
       val powerIds = for (unit <- unshuffled; component <- unit) yield(unit.id)
-      powerIds must contain(0, 1, 2, 3, 4, 5, 6, 7, 8, 9).only.inOrder
+      powerIds must contain(exactly(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)).inOrder
     }
   }
 

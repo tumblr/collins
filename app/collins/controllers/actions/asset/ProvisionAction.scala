@@ -1,5 +1,10 @@
 package collins.controllers.actions.asset
 
+import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
+import play.api.mvc.SimpleResult
 import play.api.mvc.AsyncResult
 
 import collins.controllers.Permissions
@@ -41,15 +46,15 @@ case class ProvisionAction(
     )
   }
 
-  override def execute(rd: RequestDataHolder) = AsyncResult {
+  override def execute(rd: RequestDataHolder) = {
     rd match {
       case adh@ActionDataHolder(_, _, activate, _) =>
         rateLimiter.tick(user.id.toString) // we will reset on error
         try {
           if (activate)
-            activateAsset(adh)
+            Await.result(activateAsset(adh), 5 seconds)
           else
-            provisionAsset(adh)
+            Await.result(provisionAsset(adh), 5 seconds)
         } catch {
           case e: Throwable =>
             onFailure()

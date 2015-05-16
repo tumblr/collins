@@ -2,7 +2,9 @@ package collins.controllers.actions
 
 import java.util.concurrent.atomic.AtomicReference
 
+import scala.util.Success
 import scala.concurrent.Future
+import scala.concurrent.Promise
 
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -11,15 +13,15 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
-import play.api.mvc.AsyncResult
 import play.api.mvc.BodyParser
 import play.api.mvc.BodyParsers
 import play.api.mvc.Call
 import play.api.mvc.Flash
-import play.api.mvc.PlainResult
 import play.api.mvc.Request
 import play.api.mvc.Result
+import play.api.mvc.SimpleResult
 import play.api.mvc.Results
+import play.api.mvc.Action
 
 import collins.controllers.Api
 import collins.controllers.ResponseData
@@ -29,7 +31,6 @@ import collins.util.OutputType
 import collins.util.security.SecuritySpecification
 
 import ActionHelper.DummyRequest
-
 
 // Override execute and validate, optionally handleError or handleWebError (if you support HTML
 // views)
@@ -47,8 +48,8 @@ abstract class SecureAction(
   def Redirect(call: Call) = Results.Redirect(call)
 
   // Convert response data to a result
-  implicit def rd2res(rd: ResponseData): Result = rd.asResult(request())
-  implicit def prd2pres(prd: Future[ResponseData]): Future[Result] = prd.map { r =>
+  implicit def rd2res(rd: ResponseData): SimpleResult = rd.asResult(request())
+  implicit def prd2pres(prd: Future[ResponseData]): Future[SimpleResult] = prd.map { r =>
     r.asResult(request())
   }
   implicit def jss2jso(jss: Seq[(String, JsValue)]): JsObject = JsObject(jss)
@@ -72,17 +73,17 @@ abstract class SecureAction(
   def validateDelete(): Option[Validation] = None
   def validate(): Validation
 
-  def executeRead(rd: RequestDataHolder): Option[Future[Result]] = None
-  def executeWrite(rd: RequestDataHolder): Option[Future[Result]] = None
-  def executeCreate(rd: RequestDataHolder): Option[Future[Result]] = None
-  def executeDelete(rd: RequestDataHolder): Option[Future[Result]] = None
-  def execute(rd: RequestDataHolder): Result
+  def executeRead(rd: RequestDataHolder): Option[Future[SimpleResult]] = None
+  def executeWrite(rd: RequestDataHolder): Option[Future[SimpleResult]] = None
+  def executeCreate(rd: RequestDataHolder): Option[Future[SimpleResult]] = None
+  def executeDelete(rd: RequestDataHolder): Option[Future[SimpleResult]] = None
+  def execute(rd: RequestDataHolder): SimpleResult
 
-  def executeAsync(rd: RequestDataHolder): Future[Result] = Future{
+  def executeAsync(rd: RequestDataHolder): Future[SimpleResult] = Future{
     execute(rd)
   }
 
-  def handleError(rd: RequestDataHolder): Result = {
+  def handleError(rd: RequestDataHolder): SimpleResult = {
     val htmlOutput = isHtml match {
       case true => handleWebError(rd)
       case false => None
@@ -96,13 +97,13 @@ abstract class SecureAction(
     )
   }
 
-  def handleWebError(rd: RequestDataHolder): Option[Result] = None
+  def handleWebError(rd: RequestDataHolder): Option[SimpleResult] = None
 
   final override def parser: BodyParser[AnyContent] = BodyParsers.parse.anyContent
-  final override def apply(req: Request[AnyContent]): AsyncResult = AsyncResult {
+  final override def apply(req: Request[AnyContent]) =  {
     setRequest(req)
     checkAuthorization() match {
-      case Left(res) => PurePromise(res)
+      case Left(res) => res
       case Right(user) => {
         setUser(user)
         run()
@@ -120,7 +121,7 @@ abstract class SecureAction(
   protected def isCreateRequest(): Boolean = request.method == "PUT"
   protected def isDeleteRequest(): Boolean = request.method == "DELETE"
 
-  private def checkAuthorization(): Either[Result,User] = {
+  private def checkAuthorization(): Either[Future[SimpleResult],User] = {
     val path = request.path
     if (securitySpecification.isSecure) {
       securityHandler.authenticate(request) match {
@@ -164,7 +165,7 @@ abstract class SecureAction(
         None
     validationResults.getOrElse(validate())
   }
-  private def handleExecution(rd: RequestDataHolder): Future[Result] = {
+  private def handleExecution(rd: RequestDataHolder): Future[SimpleResult] = {
     val executionResults =
       if (isReadRequest)
         executeRead(rd)
@@ -178,10 +179,10 @@ abstract class SecureAction(
         None
     executionResults.getOrElse(executeAsync(rd))
   }
-  private def run(): Future[Result] = handleValidation() match {
-    case Left(rd) => PurePromise(handleError(rd))
+  private def run(): Future[SimpleResult] = handleValidation() match {
+    case Left(rd) => Promise.successful(handleError(rd)).future
     case Right(rd) => handleExecution(rd) map {
-      case p: PlainResult => p.withHeaders(getHeaders:_*)
+      case p: SimpleResult => p.withHeaders(getHeaders:_*)
       case o => o
     }
   }

@@ -9,6 +9,7 @@ import play.api.data.Forms.text
 import play.api.data.Forms.tuple
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc.Result
+import play.api.mvc.SimpleResult
 
 import collins.controllers.Api
 import collins.controllers.actions.AssetAction
@@ -229,7 +230,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
       tattler.note(definedAsset, userOption, message)
   }
 
-  protected def activateAsset(adh: ActionDataHolder): Future[Result] = {
+  protected def activateAsset(adh: ActionDataHolder): Future[SimpleResult] = {
     val ActionDataHolder(asset, pRequest, _, attribs) = adh
     val plugin = SoftLayer.plugin.get
     val slId = plugin.softLayerId(asset).get
@@ -256,7 +257,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
     }
   }
 
-  protected def provisionAsset(adh: ActionDataHolder): Future[Result] = {
+  protected def provisionAsset(adh: ActionDataHolder): Future[SimpleResult] = {
     import play.api.Play.current
 
     val ActionDataHolder(asset, pRequest, _, attribs) = adh
@@ -298,7 +299,7 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
   }
 
   type BackgroundResult[T] = BackgroundProcessor.SendType[T]
-  type ErrorCheck = Option[Result]
+  type ErrorCheck = Option[SimpleResult]
   protected def processProvisionAction[T, A](res: BackgroundResult[T])(f: T => ErrorCheck): ErrorCheck = res match {
     case (Some(ex), _) =>
       tattle("Exception provisioning asset: %s".format(ex.getMessage), true)

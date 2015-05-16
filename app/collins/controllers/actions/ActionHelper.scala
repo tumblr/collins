@@ -16,7 +16,7 @@ object ActionHelper {
     val queryString = Map.empty[String, Seq[String]]
     val remoteAddress = "127.0.0.1"
     val headers = new Headers {
-      protected def data = Seq.empty[(String, Seq[String])]
+      protected val data = Seq.empty[(String, Seq[String])]
     }
     val body = AnyContentAsEmpty
   }

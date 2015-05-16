@@ -1,15 +1,17 @@
 package collins.controllers
 
-import play.api.mvc.AsyncResult
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import akka.util.Timeout
+
+import play.api.mvc.SimpleResult
 import play.api.mvc.Result
 import play.api.test.{Helpers => TestHelper}
 
+
 object Extract {
-  def from(r: Result): (Int, Map[String,String], String) = {
-    val newRes = r match {
-      case AsyncResult(promise) => TestHelper.await(promise)
-      case _ => r
-    }
-    (TestHelper.status(newRes), TestHelper.headers(newRes), TestHelper.contentAsString(newRes))
+  def from(r: Future[SimpleResult]): (Int, Map[String,String], String) = {
+    implicit val timeout = Timeout(5000)
+    (TestHelper.status(r), TestHelper.headers(r), TestHelper.contentAsString(r))
   }
 }

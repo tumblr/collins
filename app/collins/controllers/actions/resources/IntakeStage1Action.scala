@@ -1,6 +1,9 @@
 package collins.controllers.actions.resources
 
 import scala.concurrent.Future
+import scala.concurrent.Await
+
+import scala.concurrent.duration._
 
 import play.api.data.Form
 import play.api.data.Forms.of
@@ -53,9 +56,8 @@ case class IntakeStage1Action(
     case dummy => PowerManagement.pluginEnabled match {
       case None =>
         Status.Ok(views.html.help(Help.PowerManagementDisabled)(flash, request))
-      case Some(plugin) => AsyncResult {
-        identifyAsset(plugin)
-      }
+      case Some(plugin) => 
+        Await.result(identifyAsset(plugin), 5 seconds)
     }
   }
 
@@ -63,7 +65,7 @@ case class IntakeStage1Action(
     Redirect(collins.app.routes.Resources.intake(assetId, 1)).flashing("error" -> rd.toString)
   )
 
-  protected def identifyAsset(plugin: PowerManagement) : Future[SimpleResult[Html]] = {
+  protected def identifyAsset(plugin: PowerManagement) : Future[SimpleResult] = {
     val cmd = IpmiPowerCommand.fromPowerAction(definedAsset, Identify)
     BackgroundProcessor.flatSend(cmd) { result =>
       IpmiCommand.fromResult(result) match {
@@ -80,7 +82,7 @@ case class IntakeStage1Action(
   protected def defaultView =
     Status.Ok(views.html.resources.intake(definedAsset)(flash, request))
 
-  protected def verifyIpmiReachable(plugin: PowerManagement, errorString: String): Future[SimpleResult[Html]] = {
+  protected def verifyIpmiReachable(plugin: PowerManagement, errorString: String): Future[SimpleResult] = {
     val ps = plugin.verify(definedAsset)
     ps.map {
       case reachable if reachable.isSuccess =>

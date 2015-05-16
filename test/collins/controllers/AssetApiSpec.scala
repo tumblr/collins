@@ -6,16 +6,16 @@ import collins.models.AssetMeta
 import collins.{ResourceFinder, ResponseMatchHelpers, FakeRequest, ResponseScope}
 import play.api.libs.json.Json
 import play.api.libs.json.JsString
-
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc.AnyContentAsMultipartFormData
 import play.api.mvc.AnyContentAsFormUrlEncoded
 import play.api.mvc.MultipartFormData
 import play.api.mvc.MultipartFormData.FilePart
-import org.specs2._
-import specification._
-import matcher.Matcher
 import play.api.test.WithApplication
+import org.specs2._
+import org.specs2.specification._
+import org.specs2.matcher.Matcher
+import org.specs2.matcher.JsonMatchers
 
 class AssetApiSpec extends mutable.Specification with ControllerSpec with ResourceFinder {
 
@@ -205,7 +205,7 @@ class AssetApiSpec extends mutable.Specification with ControllerSpec with Resour
 
   } // The REST API
 
-  trait asset extends Scope with ResponseMatchHelpers {
+  trait asset extends Scope with ResponseMatchHelpers with JsonMatchers {
     val assetTag = "testAsset123"
     val assetUrl = "/api/asset/%s.json".format(assetTag)
     val findUrl = "/api/assets.json"

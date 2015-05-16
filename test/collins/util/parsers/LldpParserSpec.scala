@@ -34,10 +34,10 @@ class LldpParserSpec extends mutable.Specification {
       parseResult must beRight
       parseResult.right.toOption must beSome.which { rep =>
         rep.interfaceCount mustEqual(2)
-        rep.macAddresses must contain("78:19:f7:88:60:c0", "5c:5e:ab:68:a5:80").only
-        rep.interfaceNames must contain("eth0", "eth1").only
+        rep.macAddresses must contain(exactly("78:19:f7:88:60:c0", "5c:5e:ab:68:a5:80"))
+        rep.interfaceNames must contain(exactly("eth0", "eth1"))
         rep.localPorts.toSet mustEqual(Set(608))
-        rep.chassisNames must contain("core01.dfw01", "core02.dfw01").only
+        rep.chassisNames must contain(exactly("core01.dfw01", "core02.dfw01"))
         rep.vlanNames.toSet mustEqual(Set("DFW-LOGGING"))
         rep.vlanIds.toSet mustEqual(Set(106))
       }
@@ -63,12 +63,12 @@ class LldpParserSpec extends mutable.Specification {
       parseResult must beRight
       parseResult.right.toOption must beSome.which { rep =>
         rep.interfaceCount mustEqual(3)
-        rep.macAddresses must contain(
-          "2c:21:72:96:93:00", "28:c0:da:b9:5b:f0", "84:18:88:9c:57:f0").only
-        rep.interfaceNames must contain("eth0", "eth4", "eth5").only
+        rep.macAddresses must contain(exactly(
+          "2c:21:72:96:93:00", "28:c0:da:b9:5b:f0", "84:18:88:9c:57:f0"))
+        rep.interfaceNames must contain(exactly("eth0", "eth4", "eth5"))
         rep.localPorts.toSet mustEqual(Set(588,2113,1488))
-        rep.chassisNames must contain(
-          "oob-switch013.ewr01", "re0.access-switch01.ewr01", "re0.access-switch02.ewr01").only
+        rep.chassisNames must contain(exactly(
+          "oob-switch013.ewr01", "re0.access-switch01.ewr01", "re0.access-switch02.ewr01"))
         rep.vlanNames.toSet mustEqual(Set("EWR-PROVISIONING","OOB-NETWORK","OOB-POWER","OOB-SERVERS"))
         rep.vlanIds.toSet mustEqual(Set(104,115,114,108))
       }

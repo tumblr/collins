@@ -1,7 +1,9 @@
 package collins.controllers.actions.asset
 
-import play.api.mvc.AsyncResult
-import play.api.mvc.Result
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
+import play.api.mvc.SimpleResult
 import play.api.mvc.Results
 
 import collins.controllers.Api
@@ -40,8 +42,8 @@ abstract class PowerManagementActionHelper(
   )
   val PowerMessages = PowerManagementConfig.Messages
 
-  override def execute(rd: RequestDataHolder): Result = rd match {
-    case PowerStatusRd(cmd) => AsyncResult { runCommand(cmd) }
+  override def execute(rd: RequestDataHolder): SimpleResult = rd match {
+    case PowerStatusRd(cmd) => Await.result(runCommand(cmd), 5 seconds)
   }
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {

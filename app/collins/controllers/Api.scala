@@ -14,6 +14,7 @@ import play.api.mvc.AnyContent
 import play.api.mvc.AsyncResult
 import play.api.mvc.Request
 import play.api.mvc.Result
+import play.api.mvc.SimpleResult
 import play.api.mvc.Results
 
 import collins.controllers.actors.TestProcessor
@@ -27,7 +28,7 @@ import collins.util.concurrent.BackgroundProcessor
 import collins.util.views.Formatter
 
 private[controllers] case class ResponseData(status: Results.Status, data: JsValue, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
-  def asResult(implicit req: Request[AnyContent]): Result =
+  def asResult(implicit req: Request[AnyContent]): SimpleResult =
     ApiResponse.formatResponseData(this)(req)
 }
 

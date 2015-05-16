@@ -1,6 +1,6 @@
 package collins.controllers.actions.resources
 
-import play.api.mvc.Result
+import play.api.mvc.SimpleResult
 
 import collins.controllers.SecureController
 import collins.controllers.actions.ActionHelper
@@ -28,7 +28,7 @@ case class FindAction(
   }
 
   // WARNING - Do not change the logic around the Redirect to intake without knowing what it does
-  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
+  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean): SimpleResult = {
     p.size match {
       case 0 =>
         Redirect(collins.app.routes.Resources.index).flashing("message" -> AssetMessages.noMatch)
@@ -46,7 +46,7 @@ case class FindAction(
     }
   }
 
-  override def handleWebError(rd: RequestDataHolder): Option[Result] = Some(
+  override def handleWebError(rd: RequestDataHolder): Option[SimpleResult] = Some(
     Redirect(collins.app.routes.Resources.index).flashing("error" -> rd.toString)
   )
 
