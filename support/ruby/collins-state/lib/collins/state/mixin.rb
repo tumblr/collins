@@ -127,11 +127,11 @@ module Collins; module State; module Mixin
     updated = asset_from_cache asset
     result = updated.send(attribute_name.to_sym)
     if result then
-      res = JSON.parse(result) rescue nil
-      if res.nil? then # for backwards compatibility
-        res = JSON.parse(result, :create_additions => false)
+      res = JSON.parse(result, :create_additions => false) rescue nil
+      if not res.nil? then
         res = ::Collins::State::Specification.json_create(res) if (res.is_a?(Hash) and res.key?('data'))
       end
+
       if res.is_a?(::Collins::State::Specification) then
         res
       else
