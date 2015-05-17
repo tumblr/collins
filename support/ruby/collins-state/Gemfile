@@ -1,15 +1,16 @@
-source :rubygems
+source 'https://rubygems.org'
 
 Encoding.default_external = Encoding::UTF_8
-gem 'collins_client', '~> 0.2.9'
-gem 'escape',         '~> 0.0.4'
+gem 'collins_client'
+gem 'escape'
 
 group :development do
-  gem "rspec", "~> 2.10.0"
-  gem "yard", "~> 0.8"
+  gem 'rspec', '~> 2.99'
+  gem 'yard'
   gem 'redcarpet'
   gem 'webmock'
-  gem "bundler", "~> 1.2.1"
   gem "jeweler", "~> 1.8.4"
+  gem 'bundler'
   gem 'simplecov'
+  gem 'rake'
 end
