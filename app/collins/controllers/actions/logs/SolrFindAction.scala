@@ -1,7 +1,10 @@
 package collins.controllers.actions.logs
 
+import scala.concurrent.Future
+
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -36,13 +39,15 @@ case class SolrFindAction(
       expr => Right(ActionDataHolder(pageParams, expr))
     )
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case adh@ActionDataHolder(params, query) =>
-      val logs = getLogs(adh)
-      val pageMap = getPaginationMap(logs)
-      ResponseData(Status.Ok, JsObject(pageMap ++ Seq(
-        "Data" -> Json.toJson(logs.items)
-      )), logs.getPaginationHeaders)
+  override def execute(rd: RequestDataHolder) = Future {
+    rd match {
+      case adh@ActionDataHolder(params, query) =>
+        val logs = getLogs(adh)
+        val pageMap = getPaginationMap(logs)
+        ResponseData(Status.Ok, JsObject(pageMap ++ Seq(
+          "Data" -> Json.toJson(logs.items)
+        )), logs.getPaginationHeaders)
+    }
   }
 
   protected def getLogs(adh: ActionDataHolder): Page[AssetLog] = {

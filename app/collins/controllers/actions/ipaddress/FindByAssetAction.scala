@@ -1,5 +1,9 @@
 package collins.controllers.actions.ipaddress
 
+import scala.concurrent.Future
+
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.AssetAction
@@ -22,9 +26,11 @@ case class FindByAssetAction(
     Right(ActionDataHolder(asset))
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case ActionDataHolder(asset) =>
-      val addresses = IpAddresses.findAllByAsset(asset).toJson
-      ResponseData(Status.Ok, addresses)
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case ActionDataHolder(asset) =>
+        val addresses = IpAddresses.findAllByAsset(asset).toJson
+        ResponseData(Status.Ok, addresses)
+    }
   }
 }

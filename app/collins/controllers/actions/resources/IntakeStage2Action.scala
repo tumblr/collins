@@ -1,7 +1,10 @@
 package collins.controllers.actions.resources
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.data.Forms.single
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder
@@ -37,12 +40,13 @@ case class IntakeStage2Action(
       )
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
+  override def execute(rd: RequestDataHolder) = Future { rd match {
     case ActionDataHolder(chassisTag) =>
       val form = IntakeStage3Action.formFromChassisTag(chassisTag)
       Status.Ok(
         Stage3Template(definedAsset, form)(flash, request)
       )
+    }
   }
 
   override def handleWebError(rd: RequestDataHolder) = Some(Status.Ok(

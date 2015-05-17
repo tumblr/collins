@@ -1,7 +1,10 @@
 package collins.controllers.actions.assettype
 
+import scala.concurrent.Future
+
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.ResponseData
@@ -72,17 +75,19 @@ case class DeleteAction(
     }
   }
 
-  override def execute(rdh: RequestDataHolder) = rdh match {
-    case ActionDataHolder(atype) => try {
-      AssetType.delete(atype)
-      ResponseData(Status.Accepted, JsObject(Seq("DELETED" -> JsNumber(1))))
-    } catch {
-      case e: Throwable =>
-        Api.errorResponse(
-          "Failed to delete asset type %s".format(atype.name),
-          Status.InternalServerError,
-          Some(e)
-        )
+  override def execute(rdh: RequestDataHolder) = Future {
+    rdh match {
+      case ActionDataHolder(atype) => try {
+        AssetType.delete(atype)
+        ResponseData(Status.Accepted, JsObject(Seq("DELETED" -> JsNumber(1))))
+      } catch {
+        case e: Throwable =>
+          Api.errorResponse(
+            "Failed to delete asset type %s".format(atype.name),
+            Status.InternalServerError,
+            Some(e)
+          )
+      }
     }
   }
 }

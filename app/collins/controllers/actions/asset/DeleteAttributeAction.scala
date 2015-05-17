@@ -1,8 +1,11 @@
 package collins.controllers.actions.asset
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.data.Forms.number
 import play.api.data.Forms.optional
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.SecureController
@@ -41,7 +44,7 @@ case class DeleteAttributeAction(
     }
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
+  override def execute(rd: RequestDataHolder) = Future { rd match {
     case adh@ActionDataHolder(attribute, gid) =>
       AssetLifecycle.updateAssetAttributes(definedAsset, mapForUpdates(adh)) match {
         case Left(throwable) =>
@@ -49,6 +52,7 @@ case class DeleteAttributeAction(
         case Right(status) =>
           Api.statusResponse(status, Status.Accepted)
       }
+    }
   }
 
   protected def mapForUpdates(adh: ActionDataHolder): Map[String,String] = {

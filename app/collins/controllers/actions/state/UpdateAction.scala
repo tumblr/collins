@@ -1,18 +1,20 @@
 package collins.controllers.actions.state
 
+import scala.concurrent.Future
+
+import play.api.data.Form
+import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
 import collins.controllers.validators.ParamValidation
 import collins.controllers.SecureController
 import collins.controllers.Api
-
 import collins.controllers.actions.SecureAction
 import collins.controllers.actions.RequestDataHolder
-
 import collins.validation.StringUtil
 import collins.models.{State, Status => AStatus}
 import collins.util.security.SecuritySpecification
 
-import play.api.data.Form
-import play.api.data.Forms.tuple
 
 /**
  * Update a state
@@ -85,10 +87,12 @@ case class UpdateAction(
     }
   )
 
-  override def execute(rdh: RequestDataHolder) = rdh match {
-    case ActionDataHolder(state) => State.update(state) match {
-      case ok if ok >= 0 => Api.statusResponse(true, Status.Ok)
-      case notok => Api.statusResponse(false, Status.InternalServerError)
+  override def execute(rdh: RequestDataHolder) = Future { 
+    rdh match {
+      case ActionDataHolder(state) => State.update(state) match {
+        case ok if ok >= 0 => Api.statusResponse(true, Status.Ok)
+        case notok => Api.statusResponse(false, Status.InternalServerError)
+      }
     }
   }
 

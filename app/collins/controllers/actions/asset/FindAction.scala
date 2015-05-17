@@ -2,6 +2,10 @@ package collins.controllers.actions.asset
 
 import java.util.concurrent.TimeoutException
 
+import scala.concurrent.Future
+
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
 import collins.controllers.SecureController
 import collins.controllers.actions.AssetAction
 import collins.controllers.actions.AssetResultsAction
@@ -34,7 +38,7 @@ class FindAction(
     }
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
+  override def execute(rd: RequestDataHolder) = Future { rd match {
     case afdh: AssetFinderDataHolder =>
       val AssetFinderDataHolder(af, ra, op, de, rl) = afdh
       try {
@@ -58,6 +62,7 @@ class FindAction(
             "Error executing search: " + e.getMessage
           ))
       }
+    }
   }
 
 }

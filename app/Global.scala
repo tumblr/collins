@@ -5,7 +5,6 @@ import play.api.Mode
 import play.api.Play
 import play.api.mvc.Handler
 import play.api.mvc.RequestHeader
-import play.api.mvc.Result
 import play.api.mvc.Results
 import collins.controllers.ApiResponse
 import collins.database.DatabasePlugin

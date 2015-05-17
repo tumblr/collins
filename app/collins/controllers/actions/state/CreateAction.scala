@@ -1,12 +1,11 @@
 package collins.controllers.actions.state
 
-import scala.Left
-import scala.Right
-import scala.annotation.implicitNotFound
+import scala.concurrent.Future
 
 import play.api.data.Form
 import play.api.data.Forms.ignored
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.SecureController
@@ -95,17 +94,19 @@ case class CreateAction(
     }
   )
 
-  override def execute(rdh: RequestDataHolder) = rdh match {
-    case ActionDataHolder(state) => try {
-      State.create(state) match {
-        case ok if ok.id > 0 =>
-          Api.statusResponse(true, Status.Created)
-        case bad =>
-          Api.statusResponse(false, Status.InternalServerError)
+  override def execute(rdh: RequestDataHolder) = Future { 
+    rdh match {
+      case ActionDataHolder(state) => try {
+        State.create(state) match {
+          case ok if ok.id > 0 =>
+            Api.statusResponse(true, Status.Created)
+          case bad =>
+            Api.statusResponse(false, Status.InternalServerError)
+        }
+      } catch {
+        case e: Throwable =>
+          Api.errorResponse("Failed to add state", Status.InternalServerError, Some(e))
       }
-    } catch {
-      case e: Throwable =>
-        Api.errorResponse("Failed to add state", Status.InternalServerError, Some(e))
     }
   }
 

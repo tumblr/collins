@@ -1,7 +1,10 @@
 package collins.controllers.actions.state
 
+import scala.concurrent.Future
+
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.ResponseData
@@ -73,18 +76,20 @@ case class DeleteAction(
     }
   }
 
-  override def execute(rdh: RequestDataHolder) = rdh match {
-    case ActionDataHolder(state) => try {
-      val deletes = Asset.resetState(state, 0)
-      State.delete(state)
-      ResponseData(Status.Accepted, JsObject(Seq("DELETED" -> JsNumber(deletes + 1))))
-    } catch {
-      case e: Throwable =>
-        Api.errorResponse(
-          "Failed to delete state %s".format(state.name),
-          Status.InternalServerError,
-          Some(e)
-        )
+  override def execute(rdh: RequestDataHolder) = Future {
+    rdh match {
+      case ActionDataHolder(state) => try {
+        val deletes = Asset.resetState(state, 0)
+        State.delete(state)
+        ResponseData(Status.Accepted, JsObject(Seq("DELETED" -> JsNumber(deletes + 1))))
+      } catch {
+        case e: Throwable =>
+          Api.errorResponse(
+            "Failed to delete state %s".format(state.name),
+            Status.InternalServerError,
+            Some(e)
+          )
+      }
     }
   }
 }

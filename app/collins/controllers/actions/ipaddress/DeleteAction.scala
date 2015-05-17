@@ -1,8 +1,11 @@
 package collins.controllers.actions.ipaddress
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -36,10 +39,12 @@ case class DeleteAction(
     Right(ActionDataHolder(asset, pool))
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case ActionDataHolder(asset, pool) =>
-      val deleted = IpAddresses.deleteByAssetAndPool(asset, pool)
-      ApiTattler.notice(asset, userOption, "Deleted %d IP addresses".format(deleted))
-      ResponseData(Status.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case ActionDataHolder(asset, pool) =>
+        val deleted = IpAddresses.deleteByAssetAndPool(asset, pool)
+        ApiTattler.notice(asset, userOption, "Deleted %d IP addresses".format(deleted))
+        ResponseData(Status.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
+    }
   }
 }

@@ -11,9 +11,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
-import play.api.mvc.AsyncResult
 import play.api.mvc.Request
-import play.api.mvc.Result
 import play.api.mvc.SimpleResult
 import play.api.mvc.Results
 
@@ -71,12 +69,10 @@ IpAddressApi with AssetStateApi with AdminApi {
     ))))
   }
 
-  def asyncPing(sleepMs: Long) = Action { implicit req =>
-    AsyncResult {
-      BackgroundProcessor.send(TestProcessor(sleepMs)) { case(ex, res) =>
-        println("Got result %s".format(res.toString))
-        formatResponseData(Api.statusResponse(res.getOrElse(false)))
-      }
+  def asyncPing(sleepMs: Long) = Action.async { implicit req =>
+    BackgroundProcessor.send(TestProcessor(sleepMs)) { case(ex, res) =>
+      println("Got result %s".format(res.toString))
+      formatResponseData(Api.statusResponse(res.getOrElse(false)))
     }
   }
 

@@ -1,9 +1,12 @@
 package collins.controllers.actions.ipaddress
 
+import scala.concurrent.Future
+
 import java.sql.SQLException
 
 import play.api.data.Form
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.SecureController
@@ -65,26 +68,28 @@ case class UpdateAction(
     )
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case adh@ActionDataHolder(asset, old, address, gateway, netmask, pool) =>
-      val addressInfo = IpAddresses.findAllByAsset(asset)
-                                    .find(_.address == old.getOrElse(0L))
-      val newAddress = adh.merge(addressInfo)
-      validateUpdatedAddress(newAddress) match {
-        case Left(err) => handleError(err)
-        case Right(_) =>
-          try {
-            val (status, success) = update(asset, newAddress)
-            Api.statusResponse(success, status)
-          } catch {
-            case e: SQLException =>
-              handleError(RequestDataHolder.error409("Possible duplicate IP address"))
-            case e: Throwable =>
-              handleError(
-                RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage), e)
-              )
-          }
-      }
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case adh@ActionDataHolder(asset, old, address, gateway, netmask, pool) =>
+        val addressInfo = IpAddresses.findAllByAsset(asset)
+                                      .find(_.address == old.getOrElse(0L))
+        val newAddress = adh.merge(addressInfo)
+        validateUpdatedAddress(newAddress) match {
+          case Left(err) => handleError(err)
+          case Right(_) =>
+            try {
+              val (status, success) = update(asset, newAddress)
+              Api.statusResponse(success, status)
+            } catch {
+              case e: SQLException =>
+                handleError(RequestDataHolder.error409("Possible duplicate IP address"))
+              case e: Throwable =>
+                handleError(
+                  RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage), e)
+                )
+            }
+        }
+    }
   }
 
   protected def update(asset: Asset, address: IpAddresses) = address.id match {

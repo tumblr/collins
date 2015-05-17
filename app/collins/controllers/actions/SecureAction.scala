@@ -8,7 +8,6 @@ import scala.concurrent.Promise
 
 import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.libs.concurrent.PurePromise
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
@@ -18,7 +17,6 @@ import play.api.mvc.BodyParsers
 import play.api.mvc.Call
 import play.api.mvc.Flash
 import play.api.mvc.Request
-import play.api.mvc.Result
 import play.api.mvc.SimpleResult
 import play.api.mvc.Results
 import play.api.mvc.Action
@@ -77,11 +75,7 @@ abstract class SecureAction(
   def executeWrite(rd: RequestDataHolder): Option[Future[SimpleResult]] = None
   def executeCreate(rd: RequestDataHolder): Option[Future[SimpleResult]] = None
   def executeDelete(rd: RequestDataHolder): Option[Future[SimpleResult]] = None
-  def execute(rd: RequestDataHolder): SimpleResult
-
-  def executeAsync(rd: RequestDataHolder): Future[SimpleResult] = Future{
-    execute(rd)
-  }
+  def execute(rd: RequestDataHolder): Future[SimpleResult]
 
   def handleError(rd: RequestDataHolder): SimpleResult = {
     val htmlOutput = isHtml match {
@@ -177,7 +171,7 @@ abstract class SecureAction(
         executeDelete(rd)
       else
         None
-    executionResults.getOrElse(executeAsync(rd))
+    executionResults.getOrElse(execute(rd))
   }
   private def run(): Future[SimpleResult] = handleValidation() match {
     case Left(rd) => Promise.successful(handleError(rd)).future

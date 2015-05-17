@@ -2,6 +2,8 @@ package collins.solr
 
 import java.util.Date
 
+import scala.concurrent.Future
+
 import org.apache.solr.client.solrj.SolrServer
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.common.SolrInputDocument
@@ -11,6 +13,7 @@ import play.api.Logger
 import play.api.Play.current
 import play.api.Plugin
 import play.api.libs.concurrent.Akka
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.models.Asset
 import collins.models.AssetLog
@@ -93,7 +96,7 @@ class SolrPlugin(app: Application) extends Plugin {
     Callback.on("asset_log_update", logCallback)
   }
 
-  def populate() = Akka.future {
+  def populate() = Future {
     _server.map{ server =>
       logger.warn("Repopulating Solr index")
       val indexTime = new Date

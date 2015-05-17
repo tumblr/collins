@@ -1,8 +1,11 @@
 package collins.controllers.actions.asset
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.data.Forms.optional
 import play.api.data.Forms.text
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.SecureController
@@ -42,7 +45,7 @@ case class DeleteAction(
     }
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
+  override def execute(rd: RequestDataHolder) = Future { rd match {
     case ActionDataHolder(options) =>
       AssetLifecycle.decommissionAsset(definedAsset, options) match {
         case Left(throwable) =>
@@ -60,6 +63,7 @@ case class DeleteAction(
             Api.statusResponse(status)
           }
       }
+    }
   }
 
 }

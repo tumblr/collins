@@ -1,8 +1,11 @@
 package collins.controllers.actions.assettype
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.data.Forms.ignored
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.SecureController
@@ -80,17 +83,19 @@ case class CreateAction(
     }
   )
 
-  override def execute(rdh: RequestDataHolder) = rdh match {
-    case ActionDataHolder(assettype) => try {
-      AssetType.create(assettype) match {
-        case ok if ok.id > 0 =>
-          Api.statusResponse(true, Status.Created)
-        case bad =>
-          Api.statusResponse(false, Status.InternalServerError)
+  override def execute(rdh: RequestDataHolder) = Future { 
+    rdh match {
+      case ActionDataHolder(assettype) => try {
+        AssetType.create(assettype) match {
+          case ok if ok.id > 0 =>
+            Api.statusResponse(true, Status.Created)
+          case bad =>
+            Api.statusResponse(false, Status.InternalServerError)
+        }
+      } catch {
+        case e: Throwable =>
+          Api.errorResponse("Failed to add asset type", Status.InternalServerError, Some(e))
       }
-    } catch {
-      case e: Throwable =>
-        Api.errorResponse("Failed to add asset type", Status.InternalServerError, Some(e))
     }
   }
 

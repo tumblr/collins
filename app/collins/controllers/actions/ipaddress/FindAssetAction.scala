@@ -1,5 +1,9 @@
 package collins.controllers.actions.ipaddress
 
+import scala.concurrent.Future
+
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.AssetAction
@@ -21,14 +25,16 @@ case class FindAssetAction(
     Right(ActionDataHolder(validAddress))
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case ActionDataHolder(validAddress) =>
-      IpAddresses.findByAddress(validAddress) match {
-        case Some(asset) =>
-          ResponseData(Status.Ok, asset.toJsValue)
-        case None =>
-          handleError(RequestDataHolder.error404("No assets found with specified address"))
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case ActionDataHolder(validAddress) =>
+        IpAddresses.findByAddress(validAddress) match {
+          case Some(asset) =>
+            ResponseData(Status.Ok, asset.toJsValue)
+          case None =>
+            handleError(RequestDataHolder.error404("No assets found with specified address"))
       }
+    }
   }
 
 }

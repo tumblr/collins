@@ -1,6 +1,9 @@
 package collins.controllers.actions.assettype
 
+import scala.concurrent.Future
+
 import play.api.libs.json.Json
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -61,12 +64,14 @@ case class GetAction(
     Right(ActionDataHolder(None))
   }
 
-  override def execute(rdh: RequestDataHolder) = rdh match {
-    case ActionDataHolder(atype) => atype match {
-      case None =>
-        ResponseData(Status.Ok, Json.toJson(AssetType.find()))
-      case Some(atype) =>
-        ResponseData(Status.Ok, Json.toJson(atype))
+  override def execute(rdh: RequestDataHolder) = Future { 
+    rdh match {
+      case ActionDataHolder(atype) => atype match {
+        case None =>
+          ResponseData(Status.Ok, Json.toJson(AssetType.find()))
+        case Some(atype) =>
+          ResponseData(Status.Ok, Json.toJson(atype))
+      }
     }
   }
 }

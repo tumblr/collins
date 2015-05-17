@@ -1,11 +1,14 @@
 package collins.controllers.actions.asset
 
+import scala.concurrent.Future
+
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsBoolean
 import play.api.libs.json.JsNull
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -30,10 +33,12 @@ case class GetProvisioningProfilesAction(
       Right(ActionDataHolder(plugin.profiles))
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case ActionDataHolder(profiles) =>
-      val obj = JsObject(Seq("PROFILES" -> formatProfiles(profiles)))
-      ResponseData(Status.Ok, obj)
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case ActionDataHolder(profiles) =>
+        val obj = JsObject(Seq("PROFILES" -> formatProfiles(profiles)))
+        ResponseData(Status.Ok, obj)
+    }
   }
 
   protected def formatProfiles(profiles: Set[ProvisionerProfile]) = JsArray(

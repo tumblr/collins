@@ -1,12 +1,14 @@
 package collins.controllers.actions.asset
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.data.Forms.of
 import play.api.data.Forms.optional
 import play.api.data.Forms.text
 import play.api.data.Forms.tuple
-import play.api.mvc.Result
 import play.api.mvc.SimpleResult
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -79,7 +81,7 @@ case class CreateAction(
     }
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
+  override def execute(rd: RequestDataHolder) = Future { rd match {
     case ActionDataHolder(assetTag, genIpmi, assetType, assetStatus) =>
       AssetLifecycle.createAsset(assetTag, assetType, genIpmi, assetStatus) match {
         case Left(throwable) =>
@@ -88,6 +90,7 @@ case class CreateAction(
           )
         case Right((asset, ipmi)) => handleSuccess(asset, ipmi)
       }
+    }
   }
 
   override def handleWebError(rd: RequestDataHolder) = if(rd.string(rd.ErrorKey).isDefined) {

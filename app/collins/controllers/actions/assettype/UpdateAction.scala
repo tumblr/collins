@@ -1,7 +1,10 @@
 package collins.controllers.actions.assettype
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.SecureController
@@ -80,10 +83,12 @@ case class UpdateAction(
     }
   )
 
-  override def execute(rdh: RequestDataHolder) = rdh match {
-    case ActionDataHolder(atype) => AssetType.update(atype) match {
-      case ok if ok >= 0 => Api.statusResponse(true, Status.Ok)
-      case notok => Api.statusResponse(false, Status.InternalServerError)
+  override def execute(rdh: RequestDataHolder) = Future { 
+    rdh match {
+      case ActionDataHolder(atype) => AssetType.update(atype) match {
+        case ok if ok >= 0 => Api.statusResponse(true, Status.Ok)
+        case notok => Api.statusResponse(false, Status.InternalServerError)
+      }
     }
   }
 

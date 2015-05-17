@@ -1,5 +1,7 @@
 package collins.controllers.actions.asset
 
+import scala.concurrent.Future
+
 import play.api.Logger
 import play.api.data.Form
 import play.api.data.Forms.of
@@ -8,6 +10,7 @@ import play.api.data.Forms.tuple
 import play.api.mvc.AnyContent
 import play.api.mvc.Request
 import play.api.mvc.SimpleResult
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.SecureController
 import collins.controllers.actions.AssetAction
@@ -73,15 +76,17 @@ case class FindSimilarAction(
   }
 
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case SimilarDataHolder(asset, details, only, sortType) => {
-      Logger.logger.debug(only.toString)
-      val finder = AssetFinder.empty.copy(
-        status = if(only.map{_.isTruthy}.getOrElse(true)) AssetStatus.Unallocated else None,
-        assetType = AssetType.ServerNode
-      )
-      Logger.logger.debug(finder.status.toString)
-      handleSuccess(Asset.findSimilar(asset, page, finder, sortType.getOrElse(AssetSort.Distribution)),details.map{_.isTruthy}.getOrElse(false))
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case SimilarDataHolder(asset, details, only, sortType) => {
+        Logger.logger.debug(only.toString)
+        val finder = AssetFinder.empty.copy(
+          status = if(only.map{_.isTruthy}.getOrElse(true)) AssetStatus.Unallocated else None,
+          assetType = AssetType.ServerNode
+        )
+        Logger.logger.debug(finder.status.toString)
+        handleSuccess(Asset.findSimilar(asset, page, finder, sortType.getOrElse(AssetSort.Distribution)),details.map{_.isTruthy}.getOrElse(false))
+      }
     }
   }
 

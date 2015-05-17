@@ -2,11 +2,14 @@ package collins.controllers.actions.ipaddress
 
 import java.sql.SQLException
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.data.Forms.number
 import play.api.data.Forms.optional
 import play.api.data.Forms.text
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -55,26 +58,28 @@ case class CreateAction(
     )
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case ActionDataHolder(asset, pool, count) => try {
-      val poolName = pool.isEmpty match {
-        case true =>
-          // if default pool being used, store that pool name if the pool name isn't DEFAULT
-          val addressConfig = IpAddresses.AddressConfig.get
-          addressConfig.defaultPoolName.filter(_ != IpAddressConfig.DefaultPoolName)
-                                        .getOrElse("")
-        case false => pool
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case ActionDataHolder(asset, pool, count) => try {
+        val poolName = pool.isEmpty match {
+          case true =>
+            // if default pool being used, store that pool name if the pool name isn't DEFAULT
+            val addressConfig = IpAddresses.AddressConfig.get
+            addressConfig.defaultPoolName.filter(_ != IpAddressConfig.DefaultPoolName)
+                                          .getOrElse("")
+          case false => pool
+        }
+        val created = IpAddresses.createForAsset(asset, count, Some(poolName))
+        ApiTattler.notice(asset, userOption, "Created %d IP addresses".format(created.size))
+        ResponseData(Status.Created, created.toJson)
+      } catch {
+        case e: SQLException =>
+          handleError(RequestDataHolder.error409("Possible duplicate IP address"))
+        case e: Throwable =>
+          handleError(
+            RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage), e)
+          )
       }
-      val created = IpAddresses.createForAsset(asset, count, Some(poolName))
-      ApiTattler.notice(asset, userOption, "Created %d IP addresses".format(created.size))
-      ResponseData(Status.Created, created.toJson)
-    } catch {
-      case e: SQLException =>
-        handleError(RequestDataHolder.error409("Possible duplicate IP address"))
-      case e: Throwable =>
-        handleError(
-          RequestDataHolder.error500("Unable to update address: %s".format(e.getMessage), e)
-        )
     }
   }
 }

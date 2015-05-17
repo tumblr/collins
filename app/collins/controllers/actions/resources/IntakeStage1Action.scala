@@ -1,15 +1,11 @@
 package collins.controllers.actions.resources
 
 import scala.concurrent.Future
-import scala.concurrent.Await
-
-import scala.concurrent.duration._
 
 import play.api.data.Form
 import play.api.data.Forms.of
 import play.api.data.Forms.single
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.mvc.AsyncResult
 import play.api.mvc.SimpleResult
 import play.api.templates.Html
 
@@ -50,14 +46,14 @@ case class IntakeStage1Action(
 
   override def execute(rd: RequestDataHolder) = rd match {
     case ActionDataHolder(light) if light.toBoolean =>
-      Status.Ok(
+      Future {  Status.Ok(
         views.html.resources.intake2(definedAsset, IntakeStage2Action.dataForm)(flash, request)
-      )
+      ) }
     case dummy => PowerManagement.pluginEnabled match {
       case None =>
-        Status.Ok(views.html.help(Help.PowerManagementDisabled)(flash, request))
+        Future { Status.Ok(views.html.help(Help.PowerManagementDisabled)(flash, request)) }
       case Some(plugin) => 
-        Await.result(identifyAsset(plugin), 5 seconds)
+        identifyAsset(plugin)
     }
   }
 

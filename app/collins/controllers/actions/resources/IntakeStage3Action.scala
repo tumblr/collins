@@ -2,9 +2,12 @@ package collins.controllers.actions.resources
 
 import java.util.concurrent.atomic.AtomicReference
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.data.FormError
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder
@@ -80,27 +83,29 @@ case class IntakeStage3Action(
     case left => left
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case IntakeDataHolder(chassisTag, rackPosition, customFieldMap, powerMap) => {
-      val basicMap = Map(
-        ChassisTag.toString -> chassisTag,
-        RackPosition.toString -> rackPosition
-      )
-
-      val updateMap = basicMap ++ customFieldMap ++ powerMap
-      // Asset Lifecycle business
-      AssetLifecycle.updateAsset(definedAsset, updateMap) match {
-
-        case Left(error) =>
-          handleError(RequestDataHolder.error400(error.getMessage))
-        case Right(ok) if ok =>
-          Redirect(collins.app.routes.Resources.index).flashing(
-             "success" -> rootMessage("asset.intake.success", definedAsset.tag)
-          )
-        case Right(ok) if !ok =>
-          handleError(RequestDataHolder.error400(
-            rootMessage("asset.intake.failed", definedAsset.tag)
-          ))
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case IntakeDataHolder(chassisTag, rackPosition, customFieldMap, powerMap) => {
+        val basicMap = Map(
+          ChassisTag.toString -> chassisTag,
+          RackPosition.toString -> rackPosition
+        )
+  
+        val updateMap = basicMap ++ customFieldMap ++ powerMap
+        // Asset Lifecycle business
+        AssetLifecycle.updateAsset(definedAsset, updateMap) match {
+  
+          case Left(error) =>
+            handleError(RequestDataHolder.error400(error.getMessage))
+          case Right(ok) if ok =>
+            Redirect(collins.app.routes.Resources.index).flashing(
+               "success" -> rootMessage("asset.intake.success", definedAsset.tag)
+            )
+          case Right(ok) if !ok =>
+            handleError(RequestDataHolder.error400(
+              rootMessage("asset.intake.failed", definedAsset.tag)
+            ))
+        }
       }
     }
   }

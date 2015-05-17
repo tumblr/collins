@@ -17,12 +17,12 @@ trait AdminApi {
    * waitForCompletion, if truthy, the response is synchronous, otherwise it returns immediately
    */
   def repopulateSolr(waitForCompletion: String) = SecureAction { implicit req =>
-    Solr.populate().map{future => 
-      if ((new Truthy(waitForCompletion)).isTruthy) Async {
-        future.map{ _ => Ok(ApiResponse.formatJsonMessage(Results.Ok, JsString("ok")))}
-      }
-      else Ok("ok(async)")
-    }.getOrElse(Results.NotImplemented(ApiResponse.formatJsonError("Solr plugin not enabled!", None)))
+    if ((new Truthy(waitForCompletion)).isTruthy) {
+      Solr.populate().map { _ => Ok(ApiResponse.formatJsonMessage(Results.Ok, JsString("ok"))) }
+        .getOrElse(Results.NotImplemented(ApiResponse.formatJsonError("Solr plugin not enabled!", None)))
+    } else {
+      Ok("ok(async)")
+    }
   }(Permissions.Admin.ClearCache)
 
   def reindexAsset(tag: String) = SecureAction { implicit req => 

@@ -1,7 +1,10 @@
 package collins.controllers.actions.ipaddress
 
+import scala.concurrent.Future
+
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -23,16 +26,18 @@ case class FindAssetsByPoolAction(
   override def validate(): Validation =
     Right(ActionDataHolder(convertPoolName(pool)))
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case ActionDataHolder(cleanPool) =>
-      IpAddresses.findInPool(cleanPool) match {
-        case Nil =>
-          handleError(
-            RequestDataHolder.error404("No such pool or no assets in pool")
-          )
-        case list =>
-          val jsList = list.map(e => Asset.findById(e.asset_id).get.toJsValue).toList
-          ResponseData(Status.Ok, JsObject(Seq("ASSETS" -> JsArray(jsList))))
-      }
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case ActionDataHolder(cleanPool) =>
+        IpAddresses.findInPool(cleanPool) match {
+          case Nil =>
+            handleError(
+              RequestDataHolder.error404("No such pool or no assets in pool")
+            )
+          case list =>
+            val jsList = list.map(e => Asset.findById(e.asset_id).get.toJsValue).toList
+            ResponseData(Status.Ok, JsObject(Seq("ASSETS" -> JsArray(jsList))))
+        }
+    }
   }
 }

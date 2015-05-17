@@ -1,6 +1,9 @@
 package collins.controllers.actions.logs
 
+import scala.concurrent.Future
+
 import play.api.libs.json.JsBoolean
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.ResponseData
@@ -22,13 +25,15 @@ case class GetAction(
     Right(ActionDataHolder(id))
   }
 
-  override def execute(rdh: RequestDataHolder) = rdh match {
-    case ActionDataHolder(log_id) =>
-      AssetLog.findById(log_id) match {
-        case Some(log) =>
-          ResponseData(Status.Ok, Seq("SUCCESS" -> JsBoolean(true), "Data" -> log.toJsValue()))
-        case default =>
-          Api.statusResponse(false, Status.NotFound)
-      }
+  override def execute(rdh: RequestDataHolder) = Future { 
+    rdh match {
+      case ActionDataHolder(log_id) =>
+        AssetLog.findById(log_id) match {
+          case Some(log) =>
+            ResponseData(Status.Ok, Seq("SUCCESS" -> JsBoolean(true), "Data" -> log.toJsValue()))
+          case default =>
+            Api.statusResponse(false, Status.NotFound)
+        }
+    }
   }
 }

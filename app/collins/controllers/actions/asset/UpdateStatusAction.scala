@@ -1,9 +1,12 @@
 package collins.controllers.actions.asset
 
+import scala.concurrent.Future
+
 import play.api.data.Form
 import play.api.data.Forms.of
 import play.api.data.Forms.optional
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.SecureController
@@ -90,12 +93,14 @@ case class UpdateStatusAction(
     }
   )
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case ActionDataHolder(status, state, reason) =>
-      AssetLifecycle.updateAssetStatus(definedAsset, status, state, reason).fold(
-        e => Api.errorResponse("Error updating status", Status.InternalServerError, Some(e)),
-        b => Api.statusResponse(b)
-      )
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case ActionDataHolder(status, state, reason) =>
+        AssetLifecycle.updateAssetStatus(definedAsset, status, state, reason).fold(
+          e => Api.errorResponse("Error updating status", Status.InternalServerError, Some(e)),
+          b => Api.statusResponse(b)
+        )
+    }
   }
 
   protected def checkStateConflict(

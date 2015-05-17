@@ -8,7 +8,6 @@ import play.api.data.Forms.optional
 import play.api.data.Forms.text
 import play.api.data.Forms.tuple
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.mvc.Result
 import play.api.mvc.SimpleResult
 
 import collins.controllers.Api

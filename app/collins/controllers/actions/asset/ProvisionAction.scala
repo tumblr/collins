@@ -1,8 +1,6 @@
 package collins.controllers.actions.asset
 
 import scala.concurrent.Future
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 import play.api.mvc.SimpleResult
 import play.api.mvc.AsyncResult
@@ -52,9 +50,9 @@ case class ProvisionAction(
         rateLimiter.tick(user.id.toString) // we will reset on error
         try {
           if (activate)
-            Await.result(activateAsset(adh), 5 seconds)
+            activateAsset(adh)
           else
-            Await.result(provisionAsset(adh), 5 seconds)
+            provisionAsset(adh)
         } catch {
           case e: Throwable =>
             onFailure()

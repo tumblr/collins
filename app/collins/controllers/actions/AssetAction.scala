@@ -4,7 +4,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
-import play.api.mvc.Result
 import play.api.mvc.SimpleResult
 
 import collins.controllers.Api

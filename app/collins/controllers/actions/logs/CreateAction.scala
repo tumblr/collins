@@ -1,5 +1,7 @@
 package collins.controllers.actions.logs
 
+import scala.concurrent.Future
+
 import org.jsoup.Jsoup
 import org.jsoup.safety.Whitelist
 
@@ -8,6 +10,7 @@ import play.api.data.Forms.tuple
 import play.api.libs.json.JsBoolean
 import play.api.libs.json.JsUndefined
 import play.api.libs.json.JsValue
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.ResponseData
@@ -69,14 +72,16 @@ case class CreateAction(
     }
   }
 
-  override def execute(rdh: RequestDataHolder) = rdh match {
-    case ActionDataHolder(log) =>
-      AssetLog.create(log) match {
-        case ok if ok.id > 0 =>
-          ResponseData(Status.Created, Seq("SUCCESS" -> JsBoolean(true), "Data" -> log.toJsValue()))
-        case bad =>
-          Api.statusResponse(false, Status.BadRequest)
-      }
+  override def execute(rdh: RequestDataHolder) = Future {
+    rdh match {
+      case ActionDataHolder(log) =>
+        AssetLog.create(log) match {
+          case ok if ok.id > 0 =>
+            ResponseData(Status.Created, Seq("SUCCESS" -> JsBoolean(true), "Data" -> log.toJsValue()))
+          case bad =>
+            Api.statusResponse(false, Status.BadRequest)
+        }
+    }
   }
 
   // Validate a submitted form

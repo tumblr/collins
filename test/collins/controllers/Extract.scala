@@ -5,7 +5,6 @@ import scala.concurrent.duration._
 import akka.util.Timeout
 
 import play.api.mvc.SimpleResult
-import play.api.mvc.Result
 import play.api.test.{Helpers => TestHelper}
 
 

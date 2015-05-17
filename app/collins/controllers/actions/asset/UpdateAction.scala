@@ -1,5 +1,6 @@
 package collins.controllers.actions.asset
 
+import scala.concurrent.Future
 import scala.collection.immutable.DefaultMap
 import scala.collection.mutable.HashMap
 
@@ -7,6 +8,7 @@ import play.api.data.Form
 import play.api.data.Forms.longNumber
 import play.api.data.Forms.optional
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.SecureController
@@ -98,23 +100,25 @@ case class UpdateAction(
     }
   }
 
-  override def execute(rd: RequestDataHolder) = rd match {
-    case adh@ActionDataHolder(map) =>
-      val results: collins.models.AssetLifecycle.Status[Boolean] =
-        if (onlyAttributes)
-          AssetLifecycle.updateAssetAttributes(definedAsset, map)
-        else
-          AssetLifecycle.updateAsset(definedAsset, map)
-      results match {
-        case Left(exception) =>
-          handleError(
-            RequestDataHolder.error500("Error updating asset: %s".format(exception.getMessage))
-          )
-        case Right(false) =>
-          handleError(RequestDataHolder.error400("Error updating asset"))
-        case Right(true) =>
-          Api.statusResponse(true)
-      }
+  override def execute(rd: RequestDataHolder) = Future { 
+    rd match {
+      case adh@ActionDataHolder(map) =>
+        val results: collins.models.AssetLifecycle.Status[Boolean] =
+          if (onlyAttributes)
+            AssetLifecycle.updateAssetAttributes(definedAsset, map)
+          else
+            AssetLifecycle.updateAsset(definedAsset, map)
+        results match {
+          case Left(exception) =>
+            handleError(
+              RequestDataHolder.error500("Error updating asset: %s".format(exception.getMessage))
+            )
+          case Right(false) =>
+            handleError(RequestDataHolder.error400("Error updating asset"))
+          case Right(true) =>
+            Api.statusResponse(true)
+        }
+    }
   }
 
   protected def fieldError(f: Form[_]) = f match {
