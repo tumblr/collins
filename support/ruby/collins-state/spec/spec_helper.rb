@@ -3,10 +3,6 @@ SimpleCov.start do
   add_filter "/spec/"
 end
 
-if RUBY_VERSION !~ /^1\.9/ then
-  raise Exception.new("We require ruby 1.9.x")
-end
-
 $:.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $:.unshift(File.dirname(__FILE__))
 require 'rspec'
