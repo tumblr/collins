@@ -13,7 +13,7 @@ object AuthenticationProviderConfig extends Configurable {
   def cacheTimeout = getMilliseconds("cacheTimeout").getOrElse(0L)
   def cachePermissionsTimeout = getMilliseconds("cachePermissionsTimeout").getOrElse(30000L)
   def permissionsFile = getString("permissionsFile")(ConfigValue.Required).get
-  def authType = getString("type", "default").toLowerCase
+  def authType = getString("type", "default").split(",").map(_.trim.toLowerCase)
 
   override protected def validateConfig() {
     File.requireFileIsReadable(permissionsFile)
@@ -30,7 +30,7 @@ object FileAuthenticationProviderConfig extends Configurable {
   def userfile = getString("userfile")(ConfigValue.Required).get
 
   override protected def validateConfig() {
-    if (AuthenticationProviderConfig.authType == "file") {
+    if (AuthenticationProviderConfig.authType.contains("file")) {
       logger.debug("User authentication file " + userfile)
       File.requireFileIsReadable(userfile)
     }
@@ -64,7 +64,7 @@ object LdapAuthenticationProviderConfig extends Configurable {
   def isRfc2307Bis = schema == RFC_2307_BIS
 
   override protected def validateConfig() {
-    if (AuthenticationProviderConfig.authType == "ldap") {
+    if (AuthenticationProviderConfig.authType.contains("ldap")) {
       host
       if (!ValidSchemas.contains(schema)) {
         throw globalError("%s is not one of %s".format(

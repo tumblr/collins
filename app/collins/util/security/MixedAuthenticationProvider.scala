@@ -10,17 +10,12 @@ class AuthenticationException(msg: String) extends Exception(msg)
 /**
  * Provides authentication by a variety of methods
  */
-class MixedAuthenticationProvider(types: String) extends AuthenticationProvider {
+class MixedAuthenticationProvider(types: Array[String]) extends AuthenticationProvider {
 
   /**
    * @return The authorization type provided by this class
    */
-  def authType: String = types
-
-  /**
-   * Ordered list of permitted authentication types
-   */
-  private val configuredTypes = types.split(",").toSeq.map(_.trim)
+  def authType = types
 
   /**
    * Attempt to authenticate user by each method specified in :types
@@ -30,7 +25,7 @@ class MixedAuthenticationProvider(types: String) extends AuthenticationProvider 
     logger.debug("Beginning to try authentication types")
 
     // Iterate over the types lazily, such that if one method passes, iteration stops
-    configuredTypes.view.flatMap({
+    authType.flatMap({
       case "default" => {
         logger.trace("mock authentication type")
         val defaultProvider = AuthenticationProvider.Default

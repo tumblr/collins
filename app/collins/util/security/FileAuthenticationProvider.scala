@@ -11,7 +11,7 @@ import sun.misc.BASE64Encoder
 class FileAuthenticationProvider() extends AuthenticationProvider {
 
   def userfile = FileAuthenticationProviderConfig.userfile
-  override val authType = "file"
+  override val authType = Array("file")
 
   lazy private val userCache = ConfigCache.create(10000L, FileUserLoader())
 

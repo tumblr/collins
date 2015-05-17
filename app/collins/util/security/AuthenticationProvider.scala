@@ -26,7 +26,7 @@ trait AuthenticationProvider {
                                     }
                                   }
                                 )
-  def authType: String
+  def authType: Array[String]
   def authenticate(username: String, password: String): Option[User]
   def useCachedCredentials: Boolean = AuthenticationProviderConfig.cacheCredentials
   def cacheTimeout: Long = AuthenticationProviderConfig.cacheTimeout
@@ -55,8 +55,8 @@ object AuthenticationProvider {
   lazy private val permissionsCache =
     ConfigCache.create(AuthenticationProviderConfig.cachePermissionsTimeout, PermissionsLoader())
 
-  def get(name: String): AuthenticationProvider = {
-    new MixedAuthenticationProvider(name)
+  def get(types: Array[String]): AuthenticationProvider = {
+    new MixedAuthenticationProvider(types)
   }
 
   def permissions(concern: String): Option[Set[String]] = {

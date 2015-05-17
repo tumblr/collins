@@ -4,7 +4,7 @@ import collins.models.User
 import collins.models.UserImpl
 
 class MockAuthenticationProvider extends AuthenticationProvider {
-  override val authType = "default"
+  override val authType = Array("default")
 
   val users = Map(
     "blake" -> UserImpl("blake", "admin:first", Set("engineering","Infra","ops"), 1024, false),

@@ -19,7 +19,7 @@ object AuthenticationProviderSpec extends Specification with collins.ResourceFin
     "work with file based auth" in new WithApplication(FakeApplication(additionalConfiguration=Map(
         "authentication.file.userfile" -> authFile.getAbsolutePath
       ))) {
-      val provider = AuthenticationProvider.get("file")
+      val provider = AuthenticationProvider.get(Array("file"))
 
       val users = Seq(
         ("blake", "password123", Set("engineering")),
