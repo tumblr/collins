@@ -9,7 +9,6 @@ group :development do
   gem 'yard'
   gem 'redcarpet'
   gem 'webmock'
-  gem "jeweler", "~> 1.8.4"
   gem 'bundler'
   gem 'simplecov'
   gem 'rake'
