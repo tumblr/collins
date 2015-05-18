@@ -1,4 +1,4 @@
-scalacOptions ++= Seq("-deprecation","-unchecked")
+scalacOptions ++= Seq("-deprecation","-unchecked", "-feature")
 
 resolvers += "Twitter Repository" at "http://maven.twttr.com/"
 
