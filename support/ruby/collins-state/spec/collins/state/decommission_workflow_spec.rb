@@ -51,32 +51,32 @@ describe Collins::DecommissionWorkflow do
       p = get_process
       asset = json_asset_with_state descriptor(:start, Time.now)
       api.returns 200, asset
-      p.start?(tag).should be_true
-      p.respond_to?(:start).should be_true
-      p.respond_to?(:start?).should be_true
-      p.respond_to?(:slkj).should be_false
-      p.finished?(tag).should be_false
-      p.power_on_for_cleaning?(tag).should be_false
+      p.start?(tag).should be true
+      p.respond_to?(:start).should be true
+      p.respond_to?(:start?).should be true
+      p.respond_to?(:slkj).should be false
+      p.finished?(tag).should be false
+      p.power_on_for_cleaning?(tag).should be false
     end
 
     it "false when does not exist" do
       p = get_process
-      p.fizz?("thing").should be_false
+      p.fizz?("thing").should be false
     end
 
     it "false when specified and different" do
       p = get_process
       asset = json_asset_with_state descriptor(:power_on_for_cleaning, time(5, :hours))
       api.returns 200, asset
-      p.start?(tag).should be_false
-      p.power_on_for_cleaning?(tag).should be_true
-      p.power_off_after_cleaning?(tag).should be_false
+      p.start?(tag).should be false
+      p.power_on_for_cleaning?(tag).should be true
+      p.power_off_after_cleaning?(tag).should be false
     end
     it "false when unspecified" do
       p = get_process
       asset = CollinsFixture.full_asset
       api.returns 200, asset
-      p.start?(tag).should be_false
+      p.start?(tag).should be false
     end
   end
 
@@ -90,19 +90,19 @@ describe Collins::DecommissionWorkflow do
       p = get_process
       asset = json_asset_with_state descriptor(:start, time(-36, :hours))
       api.returns 200, asset
-      p.expired?(tag).should be_true
+      p.expired?(tag).should be true
     end
     it "false when timestamp + expiration >= now" do
       p = get_process
       asset = json_asset_with_state descriptor(:start, time(5, :minutes))
       api.returns 200, asset
-      p.expired?(tag).should be_false
+      p.expired?(tag).should be false
     end
     it "handle very old timestamps" do
       p = get_process
       asset = json_asset_with_state descriptor(:start, Time.at(0))
       api.returns 200, asset
-      p.expired?(tag).should be_true
+      p.expired?(tag).should be true
     end
   end
 
@@ -129,7 +129,7 @@ describe Collins::DecommissionWorkflow do
                     .then.returns(200, response_with_attempts(:start, time(-36, :hours), 2))
                     .then.returns(200, response_with_attempts(:start, time(-36, :hours), 3))
 
-      p.expired?(tag).should be_true
+      p.expired?(tag).should be true
 
       power_off = api(:post, url("#{uri}/power"))
         .with(:body => body(:action => "powerOff"))
@@ -156,7 +156,7 @@ describe Collins::DecommissionWorkflow do
       p = get_process
       get_request = stub_get_request(:start, time(-1, :hours))
 
-      p.expired?(tag).should be_false
+      p.expired?(tag).should be false
       p.transition(tag).name == :start
       get_request.should have_been_made.once
     end
@@ -165,7 +165,7 @@ describe Collins::DecommissionWorkflow do
       p = get_process
       get_request = api(:get).returns(200, CollinsFixture.full_asset)
 
-      p.expired?(tag).should be_true
+      p.expired?(tag).should be true
       get_request.should have_been_made.once
 
       update_asset = api(:post).returns(200, CollinsFixture.status_response)
@@ -179,7 +179,7 @@ describe Collins::DecommissionWorkflow do
       p = get_process
       get_request = stub_get_request(:start, time(-36, :hours))
 
-      p.expired?(tag).should be_true
+      p.expired?(tag).should be true
       get_request.should have_been_made.once
 
       power_off = api(:post, url("#{uri}/power"))
@@ -198,7 +198,7 @@ describe Collins::DecommissionWorkflow do
       p = get_process
 
       get_request = stub_get_request(:initial_power_off, time(-26, :hours))
-      p.expired?(tag).should be_true
+      p.expired?(tag).should be true
       get_request.should have_been_made.once
 
       power_on = api(:post, url("#{uri}/power"))
@@ -215,7 +215,7 @@ describe Collins::DecommissionWorkflow do
       p = get_process
 
       get_request = stub_get_request(:power_on_for_cleaning, time(-3, :hours))
-      p.expired?(tag).should be_true
+      p.expired?(tag).should be true
       get_request.should have_been_made.once
 
       provision = api(:post, url("/api/provision/#{tag}"))
@@ -235,7 +235,7 @@ describe Collins::DecommissionWorkflow do
                     .then.returns(200, json_asset_with_state(descriptor(:power_off_after_cleaning, time(-1, :minute))))
                     .then.returns(200, json_asset_with_state(descriptor(:done, time(-1, :minute))))
 
-      p.expired?(tag).should be_true
+      p.expired?(tag).should be true
 
       power_off = api(:post, url("#{uri}/power"))
         .with(:body => body(:action => 'powerOff'))
@@ -243,9 +243,9 @@ describe Collins::DecommissionWorkflow do
       update_asset = api(:post).returns(200, CollinsFixture.status_response)
 
       p.transition(tag).name.should == :done
-      p.finished?(tag).should be_true
+      p.finished?(tag).should be true
       get_request.should have_been_made.times(3)
-      p.done?(tag).should be_true
+      p.done?(tag).should be true
       power_off.should have_been_made.once
       update_asset.should have_been_made.twice
     end
@@ -256,13 +256,13 @@ describe Collins::DecommissionWorkflow do
       get_request = stub_get_request(:done, time(-1, :hour))
       del_req = api(:delete, url("#{uri}/attribute/#{process_key.downcase}")).returns(202, CollinsFixture.status_response)
 
-      p.expired?(tag).should be_true
+      p.expired?(tag).should be true
       get_request.should have_been_made.once
 
       p.transition(tag).name.should == :done
-      p.finished?(tag).should be_true
-      p.done?(tag).should be_true
-      p.reset!(tag).should be_true
+      p.finished?(tag).should be true
+      p.done?(tag).should be true
+      p.reset!(tag).should be true
       del_req.should have_been_made.once
     end
   end
