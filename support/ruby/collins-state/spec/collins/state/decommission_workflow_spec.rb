@@ -36,7 +36,7 @@ describe Collins::DecommissionWorkflow do
     it "to_json/from_json" do
       spec = Collins::State::Specification.new "spec name", "specification description then", 0
       json_s = JSON.dump(spec)
-      spec_from_json = JSON.parse(json_s)
+      spec_from_json = JSON.parse(json_s, :create_additions => true)
       spec.should == spec_from_json
     end
   end

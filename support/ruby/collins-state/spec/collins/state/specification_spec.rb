@@ -147,7 +147,7 @@ describe Collins::State::Specification do
     it "#to_json" do
       i = instance
       json = JSON.dump(i)
-      JSON.parse(json).should == i
+      JSON.parse(json, :create_additions => true).should == i
     end
 
     it "#to_option" do
