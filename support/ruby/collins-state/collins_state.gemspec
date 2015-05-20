@@ -17,7 +17,6 @@ Gem::Specification.new do |s|
     "README.md",
     "Rakefile",
     "VERSION",
-    "collins_state.gemspec",
     "lib/collins/persistent_state.rb",
     "lib/collins/state/mixin.rb",
     "lib/collins/state/mixin_class_methods.rb",
