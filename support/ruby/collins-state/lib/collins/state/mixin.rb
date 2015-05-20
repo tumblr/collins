@@ -128,8 +128,8 @@ module Collins; module State; module Mixin
     result = updated.send(attribute_name.to_sym)
     if result then
       res = JSON.parse(result, :create_additions => false) rescue nil
-      if not res.nil? then
-        res = ::Collins::State::Specification.json_create(res) if (res.is_a?(Hash) and res.key?('data'))
+      if res.is_a?(Hash) and res.key?('data') then
+        res = ::Collins::State::Specification.json_create(res)
       end
 
       if res.is_a?(::Collins::State::Specification) then
