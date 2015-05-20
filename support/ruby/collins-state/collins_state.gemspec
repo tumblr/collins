@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.authors = ["Blake Matheny"]
   s.date = "2015-05-20"
   s.description = "Provides basic framework for managing stateful processes with collins"
-  s.email = "bmatheny@tumblr.com"
+  s.email = "collins-sm@googlegroups.com"
   s.extra_rdoc_files = [
     "README.md"
   ]
