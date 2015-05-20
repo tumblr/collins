@@ -29,8 +29,10 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.summary = "Collins based state management"
 
-  s.add_runtime_dependency 'collins_client'
-  s.add_runtime_dependency 'escape'
+  spec.required_ruby_version = '>= 1.9.2'
+
+  s.add_runtime_dependency 'collins_client', '~> 0.2.7'
+  s.add_runtime_dependency 'escape', '~> 0.0.4'
 
   s.add_development_dependency 'rspec', '~> 2.99'
   s.add_development_dependency 'yard'
