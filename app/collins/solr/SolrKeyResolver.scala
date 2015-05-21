@@ -1,14 +1,25 @@
 package collins.solr
 
-import models.{Asset, AssetFinder, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, State, Status, Truthy}
-import models.asset.AssetView
-import models.IpmiInfo.Enum._
-
 import play.api.Logger
 
-import Solr.AssetSolrDocument
-import AssetMeta.ValueType
-import AssetMeta.ValueType._
+import collins.models.Asset
+import collins.models.AssetFinder
+import collins.models.AssetMeta
+import collins.models.AssetMetaValue
+import collins.models.AssetType
+import collins.models.IpAddresses
+import collins.models.MetaWrapper
+import collins.models.State
+import collins.models.Status
+import collins.models.Truthy
+import collins.models.shared.Page
+import collins.models.shared.PageParams
+import collins.models.asset.AssetView
+import collins.models.IpmiInfo.Enum._
+import collins.models.AssetMeta.ValueType
+import collins.models.AssetMeta.ValueType._
+
+import collins.solr.Solr.AssetSolrDocument
 
 //some light DSL's for making solr key flags easier to read
 

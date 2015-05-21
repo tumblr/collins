@@ -1,10 +1,14 @@
 package collins.graphs
 
-import models.{PageParams, SortDirection}
-import collins.solr.{CollinsQueryParser, AssetSearchQuery, AssetDocType}
-
 import play.api.Logger
+
 import com.google.common.cache.CacheLoader
+
+import collins.models.shared.PageParams
+import collins.models.shared.SortDirection
+import collins.solr.AssetDocType
+import collins.solr.AssetSearchQuery
+import collins.solr.CollinsQueryParser
 
 case class MetricsQuery(query: String, metrics: Set[String])
 case class MetricsCacheLoader() extends CacheLoader[MetricsQuery, Set[String]] {

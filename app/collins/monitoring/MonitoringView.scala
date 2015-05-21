@@ -1,8 +1,9 @@
 package collins.monitoring
 
-import models.asset.AssetView
 import play.api.Application
 import play.api.mvc.Content
+
+import collins.models.asset.AssetView
 
 trait MonitoringView {
   val app: Application

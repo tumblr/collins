@@ -34,7 +34,7 @@
 
     <div class="row">
       <div class="col-md-8">
-        @form(routes.Application.authenticate, 'role -> "form") {
+        @form(collins.controllers.routes.Application.authenticate, 'role -> "form") {
           @formField {
             @formInput {
               <input type="text" id="username" name="username" value="@loginForm("username").value" class="form-control focus" placeholder="Username">

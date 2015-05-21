@@ -1,18 +1,24 @@
 
 package collins.solr
 
-import collins.solr._
-import util.views.Formatter
-
 import java.util.Date
 
-import models.{Asset, AssetMeta, AssetMetaValue, AssetLog, IpAddresses, IpmiInfo, MetaWrapper, Truthy}
-import AssetMeta.ValueType
-import AssetMeta.ValueType._
+import collins.models.Asset
+import collins.models.AssetMeta.ValueType.Boolean
+import collins.models.AssetMeta.ValueType.Double
+import collins.models.AssetMeta.ValueType.Integer
+import collins.models.AssetMeta.ValueType.String
+import collins.models.AssetMetaValue
+import collins.models.IpAddresses
+import collins.models.IpmiInfo
+import collins.models.MetaWrapper
+import collins.models.Truthy
+import collins.solr.UpperCaseString.UppercaseString2String
+import collins.solr.UpperCaseString.string2UpperCaseString
+import collins.util.views.Formatter
 
-import Solr._
-import SolrKeyFlag._
-
+import collins.solr.Solr.AssetSolrDocument
+import collins.solr.SolrKeyFlag._
 
 /**
  * asset meta values are all converted into strings with the meta name as the

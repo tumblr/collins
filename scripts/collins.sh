@@ -100,7 +100,7 @@ initialize_db() {
 evolve_db() {
     ensure_java_binary
     echo -n "Running migrations"
-    ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" DbUtil $APP_HOME/conf/evolutions/
+    ${JAVA_HOME}/bin/java ${APP_OPTS} -cp "$APP_HOME/lib/*" collins.DbUtil $APP_HOME/conf/evolutions/
     [[ $? -eq 0 ]] && log_success_msg || log_failure_msg
     echo "Database initialization attempted" >> /var/run/$APP_NAME/install.log
 }

@@ -3,105 +3,105 @@
 # ~~~~
 
 # Home page
-GET     /                           app.Resources.index
+GET     /                           collins.app.Resources.index
 
 # Resources/Assets
-GET     /resources                  app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "ASC", operation: String ?= "and", sortField: String ?= "TAG")
-GET     /resource/:id               app.Resources.intake(id: Long, stage: Int ?= 1)
+GET     /resources                  collins.app.Resources.find(page: Int ?= 0, size: Int ?= 50, sort: String ?= "ASC", operation: String ?= "and", sortField: String ?= "TAG")
+GET     /resource/:id               collins.app.Resources.intake(id: Long, stage: Int ?= 1)
 
-GET     /asset/create/:assetType    app.Resources.displayCreateForm(assetType: String)
-POST    /asset/create/:assetType    app.Resources.createAsset(assetType: String)
-GET     /asset/:tag/logs            app.CookieApi.getAssetLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
-GET     /assets/logs                app.CookieApi.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
-POST    /asset/:tag/log             app.CookieApi.submitLogData(tag: String)
-GET     /log/:id                    app.CookieApi.getLogData(id: Int)
-GET     /asset/:tag                 app.CookieApi.getAsset(tag: String)
-POST    /asset/:tag/maintenance     app.CookieApi.updateAssetForMaintenance(tag: String)
-POST    /asset/:tag/cancel          app.CookieApi.cancelAsset(tag: String)
-POST    /asset/:tag/delete          app.CookieApi.realDeleteAsset(tag: String)
-POST    /asset/:tag/provision       app.CookieApi.provisionAsset(tag: String)
-POST    /asset/:tag/power           app.CookieApi.powerManagement(tag: String)
-GET     /asset/:tag/power           app.CookieApi.powerStatus(tag: String)
-GET     /asset/:tag/similar         app.Resources.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
+GET     /asset/create/:assetType    collins.app.Resources.displayCreateForm(assetType: String)
+POST    /asset/create/:assetType    collins.app.Resources.createAsset(assetType: String)
+GET     /asset/:tag/logs            collins.app.CookieApi.getAssetLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+GET     /assets/logs                collins.app.CookieApi.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
+POST    /asset/:tag/log             collins.app.CookieApi.submitLogData(tag: String)
+GET     /log/:id                    collins.app.CookieApi.getLogData(id: Int)
+GET     /asset/:tag                 collins.app.CookieApi.getAsset(tag: String)
+POST    /asset/:tag/maintenance     collins.app.CookieApi.updateAssetForMaintenance(tag: String)
+POST    /asset/:tag/cancel          collins.app.CookieApi.cancelAsset(tag: String)
+POST    /asset/:tag/delete          collins.app.CookieApi.realDeleteAsset(tag: String)
+POST    /asset/:tag/provision       collins.app.CookieApi.provisionAsset(tag: String)
+POST    /asset/:tag/power           collins.app.CookieApi.powerManagement(tag: String)
+GET     /asset/:tag/power           collins.app.CookieApi.powerStatus(tag: String)
+GET     /asset/:tag/similar         collins.app.Resources.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
 
 # Admin pages
-GET     /admin/stats                controllers.Admin.stats
-GET     /admin/logs                 controllers.Admin.logs
-POST    /admin/cache/clear          controllers.Admin.clearCache
-GET     /admin/solr                 controllers.Admin.populateSolr
+GET     /admin/stats                collins.controllers.Admin.stats
+GET     /admin/logs                 collins.controllers.Admin.logs
+POST    /admin/cache/clear          collins.controllers.Admin.clearCache
+GET     /admin/solr                 collins.controllers.Admin.populateSolr
 
 # Help
-GET     /help                       app.HelpPage.index(t: String ?= controllers.Help.Default)
+GET     /help                       collins.app.HelpPage.index(t: String ?= collins.controllers.Help.Default)
 
 # Authentication
-GET     /login                      controllers.Application.login
-POST    /login                      controllers.Application.authenticate
-GET     /logout                     controllers.Application.logout
+GET     /login                      collins.controllers.Application.login
+POST    /login                      collins.controllers.Application.authenticate
+GET     /logout                     collins.controllers.Application.logout
 
 # API
 
 # Generic Functionality
-GET     /api/timestamp                       app.Api.timestamp
+GET     /api/timestamp                       collins.app.Api.timestamp
 
 # Admin API
-GET     /api/admin/solr                          app.Api.repopulateSolr(waitForCompletion: String ?= "true")
-GET     /api/admin/solr/asset/:tag               app.Api.reindexAsset(tag: String)
+GET     /api/admin/solr                          collins.app.Api.repopulateSolr(waitForCompletion: String ?= "true")
+GET     /api/admin/solr/asset/:tag               collins.app.Api.reindexAsset(tag: String)
 
 # IP Address API
-GET     /api/address/pools                   app.Api.getAddressPools(all: String ?= "true")
-GET     /api/asset/:tag/addresses            app.Api.getForAsset(tag: String)
-GET     /api/asset/with/address/:address     app.Api.assetFromAddress(address: String)
-GET     /api/assets/with/addresses/in/:pool  app.Api.assetsFromPool(pool: String)
-PUT     /api/asset/:tag/address              app.Api.allocateAddress(tag: String)
-POST    /api/asset/:tag/address              app.Api.updateAddress(tag: String)
-DELETE  /api/asset/:tag/addresses            app.Api.purgeAddresses(tag: String)
+GET     /api/address/pools                   collins.app.Api.getAddressPools(all: String ?= "true")
+GET     /api/asset/:tag/addresses            collins.app.Api.getForAsset(tag: String)
+GET     /api/asset/with/address/:address     collins.app.Api.assetFromAddress(address: String)
+GET     /api/assets/with/addresses/in/:pool  collins.app.Api.assetsFromPool(pool: String)
+PUT     /api/asset/:tag/address              collins.app.Api.allocateAddress(tag: String)
+POST    /api/asset/:tag/address              collins.app.Api.updateAddress(tag: String)
+DELETE  /api/asset/:tag/addresses            collins.app.Api.purgeAddresses(tag: String)
 
 # Log API
-PUT     /api/asset/:tag/log         app.Api.submitLogData(tag: String)
-GET     /api/asset/:tag/logs        app.Api.getAssetLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
-GET     /api/assets/logs            app.Api.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
-GET     /api/assets/logs/search     app.Api.searchLogs(page: Int ?=0, size: Int ?= 100, sortField: String ?="CREATED", sort: String ?= "DESC", query: String ?= "*")
-GET     /api/log/:id                app.Api.getLogData(id: Int)
+PUT     /api/asset/:tag/log         collins.app.Api.submitLogData(tag: String)
+GET     /api/asset/:tag/logs        collins.app.Api.getAssetLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")
+GET     /api/assets/logs            collins.app.Api.getAllLogData(page: Int ?= 0, size: Int ?= 100, sort: String ?= "DESC", filter: String ?= "")
+GET     /api/assets/logs/search     collins.app.Api.searchLogs(page: Int ?=0, size: Int ?= 100, sortField: String ?="CREATED", sort: String ?= "DESC", query: String ?= "*")
+GET     /api/log/:id                collins.app.Api.getLogData(id: Int)
 
 # Asset management API
-POST    /api/asset/:tag/ipmi        app.Api.updateIpmi(tag: String)
-POST    /api/asset/:tag/power       app.Api.powerManagement(tag: String)
-GET     /api/asset/:tag/power       app.Api.powerStatus(tag: String)
-POST    /api/provision/:tag         app.Api.provisionAsset(tag: String)
-GET     /api/provision/profiles     app.Api.getProvisioningProfiles
+POST    /api/asset/:tag/ipmi        collins.app.Api.updateIpmi(tag: String)
+POST    /api/asset/:tag/power       collins.app.Api.powerManagement(tag: String)
+GET     /api/asset/:tag/power       collins.app.Api.powerStatus(tag: String)
+POST    /api/provision/:tag         collins.app.Api.provisionAsset(tag: String)
+GET     /api/provision/profiles     collins.app.Api.getProvisioningProfiles
 
 # Asset API
-DELETE  /api/asset/:tag/attribute/:attribute   app.Api.deleteAssetAttribute(tag: String, attribute: String)
-POST    /api/asset/:tag/status      app.Api.updateAssetStatus(tag: String)
-PUT     /api/asset/:tag             app.Api.createAsset(tag: String)
-POST    /api/asset/:tag             app.Api.updateAsset(tag: String)
-DELETE  /api/asset/:tag             app.Api.deleteAsset(tag: String)
-GET     /api/asset/:tag             app.Api.getAsset(tag: String, location: Option[String])
-GET     /api/assets                 app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", sortField: String ?= "TAG", details: String ?= "true")
-GET     /api/asset/:tag/similar     app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
+DELETE  /api/asset/:tag/attribute/:attribute   collins.app.Api.deleteAssetAttribute(tag: String, attribute: String)
+POST    /api/asset/:tag/status      collins.app.Api.updateAssetStatus(tag: String)
+PUT     /api/asset/:tag             collins.app.Api.createAsset(tag: String)
+POST    /api/asset/:tag             collins.app.Api.updateAsset(tag: String)
+DELETE  /api/asset/:tag             collins.app.Api.deleteAsset(tag: String)
+GET     /api/asset/:tag             collins.app.Api.getAsset(tag: String, location: Option[String])
+GET     /api/assets                 collins.app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", sortField: String ?= "TAG", details: String ?= "true")
+GET     /api/asset/:tag/similar     collins.app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")
 
 # Asset Type API
-GET     /api/assettypes             app.Api.getAssetTypes
-GET     /api/assettype/:name        app.Api.getAssetType(name: String)
-DELETE  /api/assettype/:name        app.Api.deleteAssetType(name: String)
-PUT     /api/assettype/:name        app.Api.createAssetType(name: String)
-POST    /api/assettype/:name        app.Api.updateAssetType(name: String)
+GET     /api/assettypes             collins.app.Api.getAssetTypes
+GET     /api/assettype/:name        collins.app.Api.getAssetType(name: String)
+DELETE  /api/assettype/:name        collins.app.Api.deleteAssetType(name: String)
+PUT     /api/assettype/:name        collins.app.Api.createAssetType(name: String)
+POST    /api/assettype/:name        collins.app.Api.updateAssetType(name: String)
 
 # State Management API
-PUT     /api/state/:name            app.Api.createState(name: String)
-POST    /api/state/:name            app.Api.updateState(name: String)
-DELETE  /api/state/:name            app.Api.deleteState(name: String)
-GET     /api/state/:name            app.Api.getState(name: String)
-GET     /api/states                 app.Api.getStates
+PUT     /api/state/:name            collins.app.Api.createState(name: String)
+POST    /api/state/:name            collins.app.Api.updateState(name: String)
+DELETE  /api/state/:name            collins.app.Api.deleteState(name: String)
+GET     /api/state/:name            collins.app.Api.getState(name: String)
+GET     /api/states                 collins.app.Api.getStates
 
 # Tag management API
-GET     /api/tags                   app.Api.getTags
-GET     /api/tag/:tag               app.Api.getTagValues(tag: String)
+GET     /api/tags                   collins.app.Api.getTags
+GET     /api/tag/:tag               collins.app.Api.getTagValues(tag: String)
 
 # For testing
-GET     /api/asyncPing              app.Api.asyncPing(sleepMs: Long ?= 1000)
-GET     /api/ping                   app.Api.ping
-GET     /api/errorPing              app.Api.errorPing(id: Int ?= 1)
+GET     /api/asyncPing              collins.app.Api.asyncPing(sleepMs: Long ?= 1000)
+GET     /api/ping                   collins.app.Api.ping
+GET     /api/errorPing              collins.app.Api.errorPing(id: Int ?= 1)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)

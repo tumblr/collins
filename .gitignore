@@ -27,7 +27,8 @@ Gemfile.lock
 .settings/*
 .externalToolBuilders/
 _includes/*
-
+.cache
+.tmpBin/
 /bin
 
 #emacs files
@@ -36,3 +37,4 @@ _includes/*
 
 # jenv java version mgmt
 .java-version
+/.target/

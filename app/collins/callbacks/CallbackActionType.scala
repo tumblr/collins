@@ -1,5 +1,4 @@
-package collins
-package callbacks
+package collins.callbacks
 
 abstract sealed class CallbackActionType
 object CallbackActionType {

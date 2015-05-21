@@ -1,6 +1,6 @@
-@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
-@import _root_.util.plugins.MonitoringPlugin
+@import collins.util.plugins.MonitoringPlugin
 
 @MonitoringPlugin.option.map { plugin =>
 @if(plugin.isMonitorable(aa.asset)) {

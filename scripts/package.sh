@@ -10,7 +10,7 @@ else
 fi
 
 if [ -z "$PLAY_CMD" ]; then
-  PLAY_CMD="$HOME/src/play-2.1.5/play";
+  PLAY_CMD="$HOME/src/play-2.2.6/play";
 fi
 
 if [ ! -f $PLAY_CMD ]; then
@@ -19,7 +19,7 @@ if [ ! -f $PLAY_CMD ]; then
 fi
 
 if [ $DEBUG -eq 0 ]; then
-  rm -rf targed/staged
+  rm -rf target/universal
   $PLAY_CMD clean compile stage
 fi
 
@@ -35,7 +35,7 @@ for dir in $CONF_DIR/solr/conf $CONF_DIR/solr/data; do
   mkdir -p $dir
 done
 
-cp staged/* collins/lib
+cp universal/stage/lib/* collins/lib
 
 # Copy over test data for use with populate.sh
 mkdir -p collins/test/resources

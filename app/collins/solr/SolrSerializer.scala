@@ -1,14 +1,11 @@
 package collins.solr
 
-import collins.solr._
-
 import java.util.Date
 
-import models.Asset
+import collins.solr.UpperCaseString.string2UpperCaseString
+import collins.util.views.Formatter
 
-import util.views.Formatter
-
-import Solr._
+import collins.solr.Solr.AssetSolrDocument
 
 
 abstract class SolrSerializer[T](val docType: SolrDocType) {

@@ -1,6 +1,7 @@
 package collins.callbacks
 
-import akka.actor._
+import akka.actor.ActorRef
+import akka.actor.actorRef2Scala
 
 trait AsyncCallbackManager extends CallbackManager {
   protected def changeQueue: ActorRef

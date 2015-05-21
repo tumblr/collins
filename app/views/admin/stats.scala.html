@@ -1,7 +1,7 @@
-@(cacheStats: collins.cache.CacheStats, appStats: List[_root_.util.AppStats])(implicit flash: Flash, req: Request[AnyContent])
+@(cacheStats: collins.cache.CacheStats, appStats: List[collins.util.AppStats])(implicit flash: Flash, req: Request[AnyContent])
 
-@import _root_.util.views.Formatter
-@import _root_.util.Stats
+@import collins.util.views.Formatter
+@import collins.util.Stats
 
 @main("Admin Stats") {
 <div class="page-header">

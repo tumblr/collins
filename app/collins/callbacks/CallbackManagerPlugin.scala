@@ -1,10 +1,13 @@
-package collins
-package callbacks
+package collins.callbacks
 
-import java.beans.{PropertyChangeEvent, PropertyChangeListener, PropertyChangeSupport}
-import play.api.{Application, Configuration, Logger, Plugin}
+import java.beans.PropertyChangeEvent
+
+import play.api.Application
+import play.api.Logger
 import play.api.Play.current
+import play.api.Plugin
 import play.api.libs.concurrent.Akka
+
 import akka.actor.Props
 import akka.routing.FromConfig
 

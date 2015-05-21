@@ -1,7 +1,7 @@
 @(atype: AssetType)(implicit flash: Flash, req: Request[AnyContent])
 
 @import util._
-@import _root_.util.views.Formatter.camelCase
+@import collins.util.views.Formatter.camelCase
 
 @main("Asset Creator") {
   @notice("error",Some("danger"))
@@ -12,7 +12,7 @@
   <div class="container">
     <div class="row">
       <div class="col-lg-5 col-md-6 col-sm-7 col-xs-9">
-        <form action="@app.routes.Resources.createAsset(atype.name)" method="post" class="form-horizontal" role="form">
+        <form action="@collins.app.routes.Resources.createAsset(atype.name)" method="post" class="form-horizontal" role="form">
           @formFieldRow {
             @formLabelInline("type", "Asset Type")
             @formInputInline {

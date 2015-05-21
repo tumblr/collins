@@ -1,8 +1,11 @@
-package collins
-package logging
+package collins.logging
 
-import play.api.{Application, Logger, Play, Plugin}
 import java.io.File
+
+import play.api.Application
+import play.api.Logger
+import play.api.Play
+import play.api.Plugin
 
 class LoggingPlugin(app: Application) extends Plugin {
 

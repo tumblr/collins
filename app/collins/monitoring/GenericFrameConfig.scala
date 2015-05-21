@@ -1,6 +1,7 @@
 package collins.monitoring
 
-import util.config.{Configurable, ConfigValue}
+import collins.util.config.ConfigValue
+import collins.util.config.Configurable
 
 object GenericFrameConfig extends Configurable {
 

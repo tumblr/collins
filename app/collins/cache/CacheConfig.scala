@@ -1,7 +1,6 @@
-package collins
-package cache
+package collins.cache
 
-import util.config.Configurable
+import collins.util.config.Configurable
 
 object CacheConfig extends Configurable {
   override val namespace = "cache"

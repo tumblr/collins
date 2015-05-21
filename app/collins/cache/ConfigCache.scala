@@ -1,7 +1,10 @@
 package collins.cache
 
-import com.google.common.cache.{CacheBuilder, CacheLoader, LoadingCache}
 import java.util.concurrent.TimeUnit
+
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 
 /**
  * Creates a cache suitable for configuration file caching.

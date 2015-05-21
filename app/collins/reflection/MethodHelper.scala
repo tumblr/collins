@@ -1,9 +1,10 @@
-package collins
-package reflection
+package collins.reflection
 
 import java.lang.reflect.Method
+
 import play.api.Logger
-import util.SystemTattler
+
+import collins.util.SystemTattler
 
 trait MethodHelper extends MethodArguments with MethodReturnType {
 

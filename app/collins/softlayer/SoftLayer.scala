@@ -1,11 +1,13 @@
 package collins.softlayer
 
-import collins.power.management.PowerManagement
-import models.Asset
+import java.net.URL
+
+import scala.concurrent.Future
 
 import play.api.Logger
-import scala.concurrent.Future
-import java.net.URL
+
+import collins.models.Asset
+import collins.power.management.PowerManagement
 
 trait SoftLayer extends PowerManagement {
   val SOFTLAYER_API_HOST = "api.softlayer.com:443"

@@ -1,9 +1,10 @@
-package collins
-package cache
+package collins.cache
 
-import play.api.{Application, PlayException, Plugin}
-import com.google.common.cache.{Cache => GuavaCacheImpl, CacheBuilder, CacheStats => GuavaCacheStats}
-import java.util.concurrent.{Callable, TimeUnit}
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
+
+import com.google.common.cache.{Cache => GuavaCacheImpl}
+import com.google.common.cache.CacheBuilder
 
 class GuavaCache(override val timeoutInSeconds: java.lang.Integer) extends Cache {
 

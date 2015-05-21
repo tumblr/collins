@@ -1,7 +1,7 @@
 package collins.softlayer
 
-import models.Status
-import util.config.Configurable
+import collins.models.Status
+import collins.util.config.Configurable
 
 object SoftLayerConfig extends Configurable {
   override val namespace = "softlayer"

@@ -1,28 +1,28 @@
 package collins.solr
 
-import akka.actor._
-import scala.concurrent.duration._
 import java.util.Date
-import models.{Asset, AssetFinder, AssetLog, AssetMeta, AssetMetaValue, AssetType, IpAddresses, MetaWrapper, Page, PageParams, Status, Truthy}
-import models.asset.AssetView
-import models.IpmiInfo.Enum._
-import models.SortDirection._
-import org.apache.solr.client.solrj.{SolrServer, SolrQuery}
+
+import scala.concurrent.Future
+
+import org.apache.solr.client.solrj.SolrServer
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
-import org.apache.solr.common.{SolrDocument, SolrInputDocument}
-import org.apache.solr.core.CoreContainer
-import org.apache.solr.client.solrj.impl.{HttpSolrServer, XMLResponseParser}
-import play.api.{Application, Logger, Play, PlayException, Plugin}
-import play.api.libs.concurrent.Akka
+import org.apache.solr.common.SolrInputDocument
+
+import play.api.Application
+import play.api.Logger
 import play.api.Play.current
+import play.api.Plugin
+import play.api.libs.concurrent.Akka
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+import collins.models.Asset
+import collins.models.AssetLog
+import collins.solr.CollinsQueryDSL.str2collins
+import collins.solr.Solr.AssetSolrDocument
+import collins.util.plugins.Callback
+import collins.util.views.Formatter
+
 import akka.actor.Props
-import util.AttributeResolver
-import util.plugins.Callback
-import util.views.Formatter
-import AssetMeta.ValueType
-import AssetMeta.ValueType._
-import CollinsQueryDSL._
-import Solr.AssetSolrDocument
 import akka.routing.FromConfig
 
 class SolrPlugin(app: Application) extends Plugin {
@@ -96,7 +96,7 @@ class SolrPlugin(app: Application) extends Plugin {
     Callback.on("asset_log_update", logCallback)
   }
 
-  def populate() = Akka.future {
+  def populate() = Future {
     _server.map{ server =>
       logger.warn("Repopulating Solr index")
       val indexTime = new Date

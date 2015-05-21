@@ -1,11 +1,12 @@
 package collins.provisioning
 
+import play.api.Application
+import play.api.Plugin
+
 import collins.cache.ConfigCache
-import collins.shell.{Command, CommandResult}
-import models.Asset
-import play.api.{Application, Plugin}
-import play.api.libs.concurrent.Akka
-import play.api.Play.current
+import collins.models.Asset
+import collins.shell.Command
+import collins.shell.CommandResult
 
 
 class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {

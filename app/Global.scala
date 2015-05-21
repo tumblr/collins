@@ -1,12 +1,25 @@
-import play.api._
-import play.api.mvc._
+import play.api.Application
+import play.api.GlobalSettings
+import play.api.Logger
+import play.api.Mode
+import play.api.Play
+import play.api.mvc.Handler
+import play.api.mvc.RequestHeader
+import play.api.mvc.Results
+import collins.controllers.ApiResponse
 import collins.database.DatabasePlugin
-
-import controllers.ApiResponse
-import util.{CryptoAccessor, Stats}
-import util.{BashOutput, HtmlOutput, JsonOutput, OutputType, TextOutput}
-import util.config.CryptoConfig
-import util.security.{AuthenticationAccessor, AuthenticationProvider, AuthenticationProviderConfig}
+import collins.util.BashOutput
+import collins.util.CryptoAccessor
+import collins.util.JsonOutput
+import collins.util.OutputType
+import collins.util.Stats
+import collins.util.TextOutput
+import collins.util.config.CryptoConfig
+import collins.util.security.AuthenticationAccessor
+import collins.util.security.AuthenticationProvider
+import collins.util.security.AuthenticationProviderConfig
+import scala.concurrent.Future
+import play.api.mvc.SimpleResult
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
@@ -35,7 +48,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     response
   }
 
-  override def onError(request: RequestHeader, ex: Throwable): Result = {
+  override def onError(request: RequestHeader, ex: Throwable): Future[SimpleResult] = {
     logger.warn("Unhandled exception", ex)
     val debugOutput = Play.maybeApplication.map {
       case app if app.mode == Mode.Dev => true
@@ -52,7 +65,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  override def onHandlerNotFound(request: RequestHeader): Result = {
+  override def onHandlerNotFound(request: RequestHeader): Future[SimpleResult] = {
     logger.info("Unhandled URI: " + request.uri)
     val msg = "The specified path was invalid: " + request.path
     val status = Results.NotFound
@@ -66,7 +79,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  override def onBadRequest(request: RequestHeader, error: String): Result = {
+  override def onBadRequest(request: RequestHeader, error: String): Future[SimpleResult] = {
     val msg = "Bad Request, parsing failed. " + error
     val status = Results.BadRequest
     val err = None

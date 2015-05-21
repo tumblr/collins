@@ -1,6 +1,6 @@
-@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
-@import _root_.util.plugins.GraphPlugin
+@import collins.util.plugins.GraphPlugin
 
 @GraphPlugin.option.map { p =>
 @if(p.isGraphable(aa.asset)){

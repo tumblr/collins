@@ -1,8 +1,9 @@
 package com.tumblr.play.interop;
-import java.util.Map;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.Map;
 
 public class JProfile implements java.io.Serializable {
     static final long serialVersionUID = -3055921821909895808L;

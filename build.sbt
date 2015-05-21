@@ -1,4 +1,4 @@
-scalacOptions ++= Seq("-deprecation","-unchecked")
+scalacOptions ++= Seq("-deprecation","-unchecked", "-feature")
 
 resolvers += "Twitter Repository" at "http://maven.twttr.com/"
 
@@ -14,7 +14,7 @@ javaOptions in Test := Seq("-Dconfig.file=conf/test.conf")
 
 parallelExecution in IntegrationTest := false
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.10.5"
 
 scalacOptions += "-feature"
 
@@ -42,7 +42,9 @@ libraryDependencies ++= Seq(
   "org.squeryl" %% "squeryl" % "0.9.5-7",
   "com.gilt" %% "jerkson" % "0.6.6",
   "org.yaml" % "snakeyaml" % "1.14",
-  "play" %% "play-jdbc" % "2.1.5"
+  "com.typesafe.play" %% "play-jdbc" % "2.2.6",
+  "com.typesafe.play" %% "play-cache" % "2.2.6",
+  "com.google.code.findbugs" % "jsr305" % "3.0.0"
 )
 
 

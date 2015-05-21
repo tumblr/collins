@@ -1,12 +1,11 @@
-@(aa: models.asset.AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
+@(aa: AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import helper._
 @import util.notice
-@import _root_.util.conversions._
-@import _root_.util.config.Feature
-@import _root_.util.plugins.{Maintenance, PowerManagement, Provisioner, SoftLayer}
-@import _root_.util.views.{ListHelper, OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
-@import _root_.models.IpmiInfo.Enum._
+@import collins.util.conversions._
+@import collins.util.config.Feature
+@import collins.util.plugins.{Maintenance, PowerManagement, Provisioner, SoftLayer}
+@import collins.util.views.{ListHelper, OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
 
 @main(Titler(aa.asset)) {
 <div class="row">
@@ -42,5 +41,5 @@
 @showModal.power(aa, user)
 @showModal.cancel(aa, user)
 
-<script src="@routes.Assets.at("javascripts/asset_show.js")" type="text/javascript"></script>
+<script src="@controllers.routes.Assets.at("javascripts/asset_show.js")" type="text/javascript"></script>
 }

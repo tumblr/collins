@@ -1,9 +1,5 @@
 package collins.solr
 
-
-/**
- * needs some work, currently only a few tests use this.
- */
 object CollinsQueryDSL {
   class CollinsQueryString(val s: String) {
     lazy val query: CQLQuery = CollinsQueryParser(List(AssetDocType, AssetLogDocType)).parseQuery(s).fold(

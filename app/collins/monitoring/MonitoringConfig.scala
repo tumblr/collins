@@ -1,7 +1,6 @@
 package collins.monitoring
 
-import util.config.Configurable
-import collins.cache.ConfigCache
+import collins.util.config.Configurable
 
 object MonitoringConfig extends Configurable {
   override val namespace = "monitoring"

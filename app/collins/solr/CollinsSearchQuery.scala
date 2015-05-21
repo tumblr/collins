@@ -1,14 +1,16 @@
 package collins.solr
 
-import models.{Asset, AssetLog, Page, PageParams, SortDirection}
-import models.asset.AssetView
-
-import play.api.Logger
-import org.apache.solr.client.solrj.{SolrQuery, SolrServerException}
+import org.apache.solr.client.solrj.SolrQuery
 import org.apache.solr.common.SolrDocument
 
-import Solr._
-import SortDirection._
+import play.api.Logger
+
+import collins.models.Asset
+import collins.models.AssetLog
+import collins.models.shared.Page
+import collins.models.shared.PageParams
+import collins.models.shared.SortDirection.SortAsc
+import collins.solr.UpperCaseString.string2UpperCaseString
 
 /**
  * This class is a full search query, which includes an expression along with

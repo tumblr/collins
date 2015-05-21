@@ -1,8 +1,10 @@
 package collins.shell
 
-import play.api.Logger
 import scala.collection.mutable.StringBuilder
-import scala.sys.process._
+import scala.sys.process.Process
+import scala.sys.process.ProcessLogger
+
+import play.api.Logger
 
 case class Command(command: Seq[String], logger: Logger) {
   def run(): CommandResult = {

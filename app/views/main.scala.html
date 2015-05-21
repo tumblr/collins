@@ -1,8 +1,8 @@
 @(title: String, loggedIn: Boolean = true)(content: Html)(implicit req: Request[AnyContent])
 
 @import helper._
-@import _root_.util.views.Formatter
-@import _root_.controllers.Permissions
+@import collins.util.views.Formatter
+@import collins.controllers.Permissions
 
 <!DOCTYPE html>
 <html lang="en">
@@ -12,13 +12,13 @@
 
     <title>@title</title>
 
-    <link rel="stylesheet" href="@routes.Assets.at("stylesheets/bootstrap.min.css")"> 
-    <link rel="stylesheet" href="@routes.Assets.at("stylesheets/main.css")">
-    <link rel="stylesheet" href="@routes.Assets.at("stylesheets/datepicker.css")">
+    <link rel="stylesheet" href="@controllers.routes.Assets.at("stylesheets/bootstrap.min.css")"> 
+    <link rel="stylesheet" href="@controllers.routes.Assets.at("stylesheets/main.css")">
+    <link rel="stylesheet" href="@controllers.routes.Assets.at("stylesheets/datepicker.css")">
 
-    <script src="@routes.Assets.at("javascripts/jquery-latest.js")" type="text/javascript"></script>
+    <script src="@controllers.routes.Assets.at("javascripts/jquery-latest.js")" type="text/javascript"></script>
 
-    <link rel="shortcut icon" type="image/gif" href="@routes.Assets.at("images/favicon.ico")">
+    <link rel="shortcut icon" type="image/gif" href="@controllers.routes.Assets.at("images/favicon.ico")">
   </head>
 
   <body>
@@ -33,28 +33,28 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="@app.routes.Resources.index">Collins</a>
+          <a class="navbar-brand" href="@collins.app.routes.Resources.index">Collins</a>
         </div>
         <div class="navbar-collapse collapse navbar-right">
           <ul class="nav navbar-nav">
-            <li class="@{if (req.path == app.routes.Resources.index.toString) "active" }"><a href="@app.routes.Resources.index">Search</a></li>
+            <li class="@{if (req.path == collins.app.routes.Resources.index.toString) "active" }"><a href="@collins.app.routes.Resources.index">Search</a></li>
             @User.fromMap(req.session.data).map { u =>
               @if(Permissions.please(u, Permissions.AssetLogApi.GetAll)) {
-                <li class="@{if (req.path == routes.Admin.logs.toString) "active" }"><a href="@routes.Admin.logs">Logging</a></li>
+                <li class="@{if (req.path == collins.controllers.routes.Admin.logs.toString) "active" }"><a href="@collins.controllers.routes.Admin.logs">Logging</a></li>
               }
               @if(Permissions.please(u, Permissions.AssetApi.CreateAsset)) {
               <li class="dropdown @{if (req.path contains "/asset/create") "active" }">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Create <b class="caret"></b></a>
                 <ul class="dropdown-menu">
                   @AssetType.find().filter(_.name != "SERVER_NODE").map { t =>
-                    <li><a href="@app.routes.Resources.displayCreateForm(t.name)">@t.label</a></li>
+                    <li><a href="@collins.app.routes.Resources.displayCreateForm(t.name)">@t.label</a></li>
                   }
                 </ul>
               </li>
               }
             }
-            <li><a href="@app.routes.HelpPage.index("default")"><i class="glyphicon glyphicon-question-sign icon-white"></i></a></li>
-            <li><a href="@routes.Application.logout">Logout</a></li>
+            <li><a href="@collins.app.routes.HelpPage.index("default")"><i class="glyphicon glyphicon-question-sign icon-white"></i></a></li>
+            <li><a href="@collins.controllers.routes.Application.logout">Logout</a></li>
           </ul>
         </div>
       </div>
@@ -69,10 +69,10 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="@app.routes.Resources.index">Collins</a>
+          <a class="navbar-brand" href="@collins.app.routes.Resources.index">Collins</a>
         </div>
         <div class="navbar-collapse collapse navbar-right">
-          <form action="@routes.Application.authenticate" method="post" class="navbar-form" role="form">
+          <form action="@collins.controllers.routes.Application.authenticate" method="post" class="navbar-form" role="form">
             <input class="input-medium form-control" type="text" name="username" placeholder="Username">
             <input class="input-medium form-control" type="password" name="password" placeholder="Password">
             <button class="btn btn-default" type="submit">Sign in</button>
@@ -97,13 +97,13 @@
       </footer>
     </div>
 
-    <script src="@routes.Assets.at("javascripts/jquery.dataTables.min.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap.min.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/bootstrap-datepicker.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/dataTables.reloadAjax.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/dataTables.bootstrap.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
-    <script src="@routes.Assets.at("javascripts/refreshing.js")" type="text/javascript"></script>
+    <script src="@controllers.routes.Assets.at("javascripts/jquery.dataTables.min.js")" type="text/javascript"></script>
+    <script src="@controllers.routes.Assets.at("javascripts/bootstrap.min.js")" type="text/javascript"></script>
+    <script src="@controllers.routes.Assets.at("javascripts/bootstrap-datepicker.js")" type="text/javascript"></script>
+    <script src="@controllers.routes.Assets.at("javascripts/dataTables.reloadAjax.js")" type="text/javascript"></script>
+    <script src="@controllers.routes.Assets.at("javascripts/dataTables.bootstrap.js")" type="text/javascript"></script>
+    <script src="@controllers.routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
+    <script src="@controllers.routes.Assets.at("javascripts/refreshing.js")" type="text/javascript"></script>
 
   </body>
 </html>

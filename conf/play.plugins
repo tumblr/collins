@@ -1,11 +1,11 @@
 3800:collins.logging.LoggingPlugin
 3900:collins.database.DatabasePlugin
 4000:collins.config.ConfigPlugin
-4010:util.plugins.MetricsReporterPlugin
+4010:collins.util.plugins.MetricsReporterPlugin
 4100:collins.cache.CachePlugin
 4200:collins.callbacks.CallbackManagerPlugin
 4300:collins.solr.SolrPlugin
-4400:util.plugins.IpmiPowerManagement
+4400:collins.util.plugins.IpmiPowerManagement
 4500:collins.softlayer.SoftLayerPlugin
 4600:collins.provisioning.ProvisionerPlugin
 4700:collins.graphs.GraphPlugin
