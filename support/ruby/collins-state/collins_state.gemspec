@@ -13,7 +13,6 @@ Gem::Specification.new do |s|
   ]
   s.files = [
     "Gemfile",
-    "Gemfile.lock",
     "README.md",
     "Rakefile",
     "VERSION",
@@ -29,7 +28,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.summary = "Collins based state management"
 
-  spec.required_ruby_version = '>= 1.9.2'
+  s.required_ruby_version = '>= 1.9.2'
 
   s.add_runtime_dependency 'collins_client', '~> 0.2.7'
   s.add_runtime_dependency 'escape', '~> 0.0.4'
