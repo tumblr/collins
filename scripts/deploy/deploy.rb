@@ -35,10 +35,8 @@ namespace :publish do
     upload_target_location = File.join '/tmp', release_file_name
     upload release_location, upload_target_location, hosts: [release_server]
 
-    sudo [
-      "mv #{upload_target_location} #{remote_release_location}",
-      "ln -fs #{File.join(remote_release_location, release_file_name)} #{File.join(remote_release_location, 'collins.zip')}"
-    ].join(' && '), hosts: [release_server]
+    sudo "mv #{upload_target_location} #{remote_release_location}", hosts: [release_server]
+    sudo "ln -fs #{File.join(remote_release_location, release_file_name)} #{File.join(remote_release_location, 'collins.zip')}", hosts: [release_server]
   end
 end
 
