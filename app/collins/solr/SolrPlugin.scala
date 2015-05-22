@@ -4,7 +4,7 @@ import java.util.Date
 
 import scala.concurrent.Future
 
-import org.apache.solr.client.solrj.SolrServer
+import org.apache.solr.client.solrj.SolrClient
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.common.SolrInputDocument
 
@@ -27,7 +27,7 @@ import akka.routing.FromConfig
 
 class SolrPlugin(app: Application) extends Plugin {
 
-  private[this] var _server: Option[SolrServer] = None
+  private[this] var _server: Option[SolrClient] = None
   private[this] val logger = Logger("SolrPlugin")
 
   def server = _server match {
@@ -151,7 +151,7 @@ class SolrPlugin(app: Application) extends Plugin {
   }
 
   override def onStop() {
-    _server.foreach{case s: EmbeddedSolrServer => s.shutdown}
+    _server.foreach{case s: EmbeddedSolrServer => s.getCoreContainer.shutdown()}
   }
 
   def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {

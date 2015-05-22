@@ -13,7 +13,7 @@ test.rb
 *.db
 _site
 RUNNING_PID
-conf/solr/data/
+conf/solr/cores/collins/data
 .DS_Store
 Gemfile.lock
 
