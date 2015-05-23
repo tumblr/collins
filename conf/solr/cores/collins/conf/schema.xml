@@ -100,16 +100,56 @@
    -->
    <field name="_root_" type="string" indexed="true" stored="false"/>
 
-   <!-- Only remove the "id" field if you have a very good reason to. While not strictly
-     required, it is highly recommended. A <uniqueKey> is present in almost all Solr 
-     installations. See the <uniqueKey> declaration below where <uniqueKey> is set to "id".
-     Do NOT change the type and apply index-time analysis to the <uniqueKey> as it will likely 
-     make routing in SolrCloud and document replacement in general fail. Limited _query_ time
-     analysis is possible as long as the indexing process is guaranteed to index the term
-     in a compatible way. Any analysis applied to the <uniqueKey> should _not_ produce multiple
-     tokens
-   -->   
-   <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" /> 
+  <!-- COLLINS FIELDS - ALL-DOC FIELDS -->
+  <field name="DOC_TYPE" type="string" indexed="true" stored="true" required="true"/>
+  <field name="UUID" type="strict_string" indexed="true" stored="true" required="true"/>
+  <field name="LAST_INDEXED" type="tdate" indexed="true" stored="true" required="true"/>
+
+
+   <!-- ASSET FIELDS -->
+   <field name="TAG" type="string" indexed="true" stored="true" required="false" /> 
+   <field name="TYPE" type="string" indexed="true" stored="true" required="false"/>
+   <field name="STATUS" type="string" indexed="true" stored="true" required="false"/>
+   <field name="ID" type="int" indexed="true" stored="true" required="false" />
+   <field name="STATE" type="string" indexed="true" stored="true" required="false"/>
+   <field name="CREATED" type="tdate" indexed="true" stored="true" required="false"/>
+   <field name="UPDATED" type="tdate" indexed="true" stored="true" required="false"/>
+   <field name="DELETED" type="tdate" indexed="true" stored="true" required="false"/>
+   <field name="IP_ADDRESS" type="string" indexed="true" stored="true" required="false" multiValued="true"/>
+
+   <!-- 
+        these fields were added to allow sorting on them in the web app, since you cannot sort
+        on multivalued fields.  These should be removed if/when we can specify
+        in collins which attributes can be multivalued, which we should do to allow sorting on more fields 
+   -->
+   <field name="PRIMARY_ROLE" type="string" indexed="true" stored="false" required="false" multiValued="false"/>
+   <field name="HOSTNAME" type="string" indexed="true" stored="false" required="false" multiValued="false"/>
+
+
+   <!-- catch-all dynamic fields for attributes
+        
+        Notice that these are all multivalued, even though we store
+        single-valued attributes in these, but this doesn't matter since we use
+        the *_sort fields for sorting
+   -->
+
+   <dynamicField name="*_meta_i"  type="tint"    indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_meta_s"  type="string"  indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_meta_b"  type="boolean" indexed="true"  stored="true" multiValued="true"/>
+   <dynamicField name="*_meta_d"  type="tdouble" indexed="true"  stored="true" multiValued="true"/>
+
+   <!-- ASSET LOG FIELDS -->
+   <field name="MESSAGE" type="text_en_splitting" indexed="true" stored="false" multiValued = "false"/>
+   <field name="MESSAGE_TYPE" type="string" indexed="true" stored="false" multiValued = "false"/>
+   <field name="ASSET_TAG" type="string" indexed="true" stored="false" multiValued="false"/>
+
+   <!-- all sort fields use this dynamic field -->
+
+   <dynamicField name = "*_SORT" type="sort" indexed="true" stored="false" multiValued="false"/>
+
+   <!-- catchall field, containing all other searchable text fields (implemented
+        via copyField further on in this schema  -->
+   <field name="text" type="string" indexed="true" stored="false" multiValued="true"/>
 
    <!-- Dynamic field definitions allow using convention over configuration
        for fields via the specification of patterns to match field names. 
@@ -163,7 +203,7 @@
  <!-- Field to use to determine and enforce document uniqueness. 
       Unless this field is marked with required="false", it will be a required field
    -->
- <uniqueKey>id</uniqueKey>
+ <uniqueKey>UUID</uniqueKey>
 
   <!-- copyField commands copy one field to another at the time a document
         is added to the index.  It's used either to index the same field differently,
@@ -344,7 +384,7 @@
                 words="lang/stopwords_en.txt"
                 />
         <filter class="solr.LowerCaseFilterFactory"/>
-	<filter class="solr.EnglishPossessiveFilterFactory"/>
+        <filter class="solr.EnglishPossessiveFilterFactory"/>
         <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
 	<!-- Optionally you may want to use this less aggressive stemmer instead of PorterStemFilterFactory:
         <filter class="solr.EnglishMinimalStemFilterFactory"/>
@@ -359,7 +399,7 @@
                 words="lang/stopwords_en.txt"
                 />
         <filter class="solr.LowerCaseFilterFactory"/>
-	<filter class="solr.EnglishPossessiveFilterFactory"/>
+        <filter class="solr.EnglishPossessiveFilterFactory"/>
         <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
 	<!-- Optionally you may want to use this less aggressive stemmer instead of PorterStemFilterFactory:
         <filter class="solr.EnglishMinimalStemFilterFactory"/>
@@ -368,14 +408,32 @@
       </analyzer>
     </fieldType>
 
+    <!-- field for sort keys, removes all non-alphanum characters -->
+    <fieldType name="sort" class="solr.TextField" sortMissingLast="true">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+        <filter class="solr.LowerCaseFilterFactory"/>
+        <filter class="solr.PatternReplaceFilterFactory"
+          pattern="([^a-z0-9])" replacement="" replace="all"
+        />
+      </analyzer>
+    </fieldType>
+
+    <!-- field for uuid -->
+    <fieldType name="strict_string" class="solr.TextField" sortMissingLast="true">
+      <analyzer type="index">
+        <tokenizer class="solr.KeywordTokenizerFactory"/>
+      </analyzer>
+    </fieldType>
+
     <!-- A text field with defaults appropriate for English, plus
-	 aggressive word-splitting and autophrase features enabled.
-	 This field is just like text_en, except it adds
-	 WordDelimiterFilter to enable splitting and matching of
-	 words on case-change, alpha numeric boundaries, and
-	 non-alphanumeric chars.  This means certain compound word
-	 cases will work, for example query "wi fi" will match
-	 document "WiFi" or "wi-fi".
+	  aggressive word-splitting and autophrase features enabled.
+	  This field is just like text_en, except it adds
+	  WordDelimiterFilter to enable splitting and matching of
+	  words on case-change, alpha numeric boundaries, and
+	  non-alphanumeric chars.  This means certain compound word
+	  cases will work, for example query "wi fi" will match
+	  document "WiFi" or "wi-fi".
         -->
     <fieldType name="text_en_splitting" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
       <analyzer type="index">
