@@ -6,6 +6,7 @@ import org.specs2._
 import collins.models.{Asset, AssetFinder, AssetType, AssetMeta, AssetSearchParameters, IpAddresses, IpmiInfo, State, Status, AssetMetaValue}
 import collins.util.views.Formatter
 import play.api.test.WithApplication
+import play.api.test.FakeApplication
 
 
 class MultiSetSpec extends mutable.Specification {
@@ -637,34 +638,23 @@ class SolrQuerySpec extends mutable.Specification {
         SolrKeyVal("assetType", SolrIntValue(AssetType.ServerNode.get.id))
       ))
       val p = AssetSearchParameters(resultTuple, afinder)
-      /*
-      println(p.toSolrExpression.toSolrQueryString)
-      println("---")
-      println(expected.toSolrQueryString)
-      */
       p.toSolrExpression must_== expected
-
-
     }
-
   }
-        
-
 }
 
 class SolrServerSpecification extends mutable.Specification {
 
   def home = SolrConfig.embeddedSolrHome
 
-  lazy val server = Solr.getNewEmbeddedServer
-
   "solr server" should {
     "get solrhome config" in new WithApplication {
       home mustNotEqual "NONE"
     }
 
-    "launch embedded server without crashing" in {
-      val s = server
+    "launch embedded server without crashing" in new WithApplication(FakeApplication(additionalConfiguration = Map(
+      "solr.enabled" -> true
+    ))) {
       true must_== true
     }
   }
