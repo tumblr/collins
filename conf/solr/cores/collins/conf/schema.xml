@@ -4,8 +4,10 @@
 
    <!-- Valid attributes for fields:
      name: mandatory - the name for the field
+     
      type: mandatory - the name of a field type from the 
        <types> fieldType section
+       
      indexed: true if this field should be indexed (searchable or sortable)
      stored: true if this field should be retrievable
      docValues: true if this field should have doc values. Doc values are
@@ -37,50 +39,59 @@
        when adding a document.
    -->
 
-   <!-- field names should consist of alphanumeric or underscore characters only and
-      not start with a digit.  This is not currently strictly enforced,
-      but other field names will not have first class support from all components
-      and back compatibility is not guaranteed.  Names with both leading and
-      trailing underscores (e.g. _version_) are reserved.
-   -->
+	<!-- field names should consist of alphanumeric or underscore characters 
+		only and not start with a digit. This is not currently strictly enforced, 
+		but other field names will not have first class support from all components 
+		and back compatibility is not guaranteed. Names with both leading and trailing 
+		underscores (e.g. _version_) are reserved. -->
 
-   <!-- If you remove this field, you must _also_ disable the update log in 
-      solrconfig.xml or Solr won't start. _version_ and update log are required 
-      for SolrCloud
-   --> 
-   <field name="_version_" type="long" indexed="true" stored="true"/>
-   
-   <!-- points to the root document of a block of nested documents. Required for 
-      nested document support, may be removed otherwise
-   -->
-   <field name="_root_" type="string" indexed="true" stored="false"/>
+	<!-- If you remove this field, you must _also_ disable the update log in 
+		solrconfig.xml or Solr won't start. _version_ and update log are required 
+		for SolrCloud -->
+	<field name="_version_" type="long" indexed="true" stored="true" />
+
+	<!-- points to the root document of a block of nested documents. Required 
+		for nested document support, may be removed otherwise -->
+	<field name="_root_" type="string" indexed="true" stored="false" />
   
-   <!----------------------------------- COLLINS  ----------------------------------->
-   <!------------------------------- ALL-DOC FIELDS --------------------------------->
-   <field name="DOC_TYPE" type="string" indexed="true" stored="true" required="true"/>
-   <field name="UUID" type="strict_string" indexed="true" stored="true" required="true"/>
-   <field name="LAST_INDEXED" type="tdate" indexed="true" stored="true" required="true"/>
+   <!-- COLLINS  -->
+   <!-- ALL-DOC FIELDS -->
+	<field name="DOC_TYPE" type="string" indexed="true" stored="true"
+		required="true" />
+	<field name="UUID" type="strict_string" indexed="true" stored="true"
+		required="true" />
+	<field name="LAST_INDEXED" type="tdate" indexed="true" stored="true"
+		required="true" />
 
-
-   <!--------------------------------- ASSET FIELDS --------------------------------->
-   <field name="TAG" type="string" indexed="true" stored="true" required="false" /> 
-   <field name="TYPE" type="string" indexed="true" stored="true" required="false"/>
-   <field name="STATUS" type="string" indexed="true" stored="true" required="false"/>
-   <field name="ID" type="int" indexed="true" stored="true" required="false" />
-   <field name="STATE" type="string" indexed="true" stored="true" required="false"/>
-   <field name="CREATED" type="tdate" indexed="true" stored="true" required="false"/>
-   <field name="UPDATED" type="tdate" indexed="true" stored="true" required="false"/>
-   <field name="DELETED" type="tdate" indexed="true" stored="true" required="false"/>
-   <field name="IP_ADDRESS" type="string" indexed="true" stored="true" required="false" multiValued="true"/>
+   <!-- ASSET FIELDS -->
+	<field name="TAG" type="string" indexed="true" stored="true"
+		required="false" />
+	<field name="TYPE" type="string" indexed="true" stored="true"
+		required="false" />
+	<field name="STATUS" type="string" indexed="true" stored="true"
+		required="false" />
+	<field name="ID" type="int" indexed="true" stored="true"
+		required="false" />
+	<field name="STATE" type="string" indexed="true" stored="true"
+		required="false" />
+	<field name="CREATED" type="tdate" indexed="true" stored="true"
+		required="false" />
+	<field name="UPDATED" type="tdate" indexed="true" stored="true"
+		required="false" />
+	<field name="DELETED" type="tdate" indexed="true" stored="true"
+		required="false" />
+	<field name="IP_ADDRESS" type="string" indexed="true" stored="true"
+		required="false" multiValued="true" />
 
    <!-- 
         these fields were added to allow sorting on them in the web app, since you cannot sort
         on multivalued fields.  These should be removed if/when we can specify
         in collins which attributes can be multivalued, which we should do to allow sorting on more fields 
    -->
-   <field name="PRIMARY_ROLE" type="string" indexed="true" stored="false" required="false" multiValued="false"/>
-   <field name="HOSTNAME" type="string" indexed="true" stored="false" required="false" multiValued="false"/>
-
+	<field name="PRIMARY_ROLE" type="string" indexed="true" stored="false"
+		required="false" multiValued="false" />
+	<field name="HOSTNAME" type="string" indexed="true" stored="false"
+		required="false" multiValued="false" />
 
    <!-- catch-all dynamic fields for attributes
         
@@ -88,69 +99,96 @@
         single-valued attributes in these, but this doesn't matter since we use
         the *_sort fields for sorting
    -->
+	<dynamicField name="*_meta_i" type="tint" indexed="true"
+		stored="true" multiValued="true" />
+	<dynamicField name="*_meta_s" type="string" indexed="true"
+		stored="true" multiValued="true" />
+	<dynamicField name="*_meta_b" type="boolean" indexed="true"
+		stored="true" multiValued="true" />
+	<dynamicField name="*_meta_d" type="tdouble" indexed="true"
+		stored="true" multiValued="true" />
 
-   <dynamicField name="*_meta_i"  type="tint"    indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="*_meta_s"  type="string"  indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="*_meta_b"  type="boolean" indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="*_meta_d"  type="tdouble" indexed="true"  stored="true" multiValued="true"/>
+    <!-- ASSET LOG FIELDS -->
+	<field name="MESSAGE" type="text_en_splitting" indexed="true"
+		stored="false" multiValued="false" />
+	<field name="MESSAGE_TYPE" type="string" indexed="true" stored="false"
+		multiValued="false" />
+	<field name="ASSET_TAG" type="string" indexed="true" stored="false"
+		multiValued="false" />
+	<!-- COLLINS -->
 
-   <!---------------------------- ASSET LOG FIELDS ---------------------------------->
-   <field name="MESSAGE" type="text_en_splitting" indexed="true" stored="false" multiValued = "false"/>
-   <field name="MESSAGE_TYPE" type="string" indexed="true" stored="false" multiValued="false"/>
-   <field name="ASSET_TAG" type="string" indexed="true" stored="false" multiValued="false"/>
+	<!-- all sort fields use this dynamic field -->
+	<dynamicField name="*_SORT" type="sort" indexed="true"
+		stored="false" multiValued="false" />
 
-   <!-- all sort fields use this dynamic field -->
-   <dynamicField name = "*_SORT" type="sort" indexed="true" stored="false" multiValued="false"/>
+	<!-- Dynamic field definitions allow using convention over configuration 
+		for fields via the specification of patterns to match field names. EXAMPLE: 
+		name="*_i" will match any field ending in _i (like myid_i, z_i) RESTRICTION: 
+		the glob-like pattern in the name attribute must have a "*" only at the start 
+		or the end. -->
 
-   <!-- Dynamic field definitions allow using convention over configuration
-       for fields via the specification of patterns to match field names. 
-       EXAMPLE:  name="*_i" will match any field ending in _i (like myid_i, z_i)
-       RESTRICTION: the glob-like pattern in the name attribute must have
-       a "*" only at the start or the end.  -->
-   
-   <dynamicField name="*_i"  type="int"    indexed="true"  stored="true"/>
-   <dynamicField name="*_is" type="int"    indexed="true"  stored="true"  multiValued="true"/>
-   <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" />
-   <dynamicField name="*_ss" type="string"  indexed="true"  stored="true" multiValued="true"/>
-   <dynamicField name="*_l"  type="long"   indexed="true"  stored="true"/>
-   <dynamicField name="*_ls" type="long"   indexed="true"  stored="true"  multiValued="true"/>
-   <dynamicField name="*_b"  type="boolean" indexed="true" stored="true"/>
-   <dynamicField name="*_bs" type="boolean" indexed="true" stored="true"  multiValued="true"/>
-   <dynamicField name="*_f"  type="float"  indexed="true"  stored="true"/>
-   <dynamicField name="*_fs" type="float"  indexed="true"  stored="true"  multiValued="true"/>
-   <dynamicField name="*_d"  type="double" indexed="true"  stored="true"/>
-   <dynamicField name="*_ds" type="double" indexed="true"  stored="true"  multiValued="true"/>
+	<dynamicField name="*_i" type="int" indexed="true" stored="true" />
+	<dynamicField name="*_is" type="int" indexed="true"
+		stored="true" multiValued="true" />
+	<dynamicField name="*_s" type="string" indexed="true"
+		stored="true" />
+	<dynamicField name="*_ss" type="string" indexed="true"
+		stored="true" multiValued="true" />
+	<dynamicField name="*_l" type="long" indexed="true"
+		stored="true" />
+	<dynamicField name="*_ls" type="long" indexed="true"
+		stored="true" multiValued="true" />
+	<dynamicField name="*_b" type="boolean" indexed="true"
+		stored="true" />
+	<dynamicField name="*_bs" type="boolean" indexed="true"
+		stored="true" multiValued="true" />
+	<dynamicField name="*_f" type="float" indexed="true"
+		stored="true" />
+	<dynamicField name="*_fs" type="float" indexed="true"
+		stored="true" multiValued="true" />
+	<dynamicField name="*_d" type="double" indexed="true"
+		stored="true" />
+	<dynamicField name="*_ds" type="double" indexed="true"
+		stored="true" multiValued="true" />
 
 
    <!-- some trie-coded dynamic fields for faster range queries -->
-   <dynamicField name="*_ti" type="tint"    indexed="true"  stored="true"/>
-   <dynamicField name="*_tl" type="tlong"   indexed="true"  stored="true"/>
-   <dynamicField name="*_tf" type="tfloat"  indexed="true"  stored="true"/>
-   <dynamicField name="*_td" type="tdouble" indexed="true"  stored="true"/>
-   <dynamicField name="*_tdt" type="tdate"  indexed="true"  stored="true"/>
+	<dynamicField name="*_ti" type="tint" indexed="true"
+		stored="true" />
+	<dynamicField name="*_tl" type="tlong" indexed="true"
+		stored="true" />
+	<dynamicField name="*_tf" type="tfloat" indexed="true"
+		stored="true" />
+	<dynamicField name="*_td" type="tdouble" indexed="true"
+		stored="true" />
+	<dynamicField name="*_tdt" type="tdate" indexed="true"
+		stored="true" />
 
- <!-- Field to use to determine and enforce document uniqueness. 
-      Unless this field is marked with required="false", it will be a required field
-   -->
- <uniqueKey>UUID</uniqueKey>
+	<!-- Field to use to determine and enforce document uniqueness. Unless this 
+		field is marked with required="false", it will be a required field -->
+	<uniqueKey>UUID</uniqueKey>
 
-  
-    <!-- field type definitions. The "name" attribute is
-       just a label to be used by field definitions.  The "class"
-       attribute and any other attributes determine the real
-       behavior of the fieldType.
-         Class names starting with "solr" refer to java classes in a
-       standard package such as org.apache.solr.analysis
-    -->
 
-    <!-- The StrField type is not analyzed, but indexed/stored verbatim.
-       It supports doc values but in that case the field needs to be
-       single-valued and either required or have a default value.
-      -->
-    <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
+	<!-- field type definitions. The "name" attribute is just a label to be 
+		used by field definitions. The "class" attribute and any other attributes 
+		determine the real behavior of the fieldType. 
+		
+		Class names starting with "solr" 
+		refer to java classes in a standard package such as org.apache.solr.analysis -->
+
+	<fieldType name="string" class="solr.TextField"
+		sortMissingLast="true">
+		<analyzer type="index">
+			<tokenizer class="solr.KeywordTokenizerFactory" />
+			<filter class="solr.LowerCaseFilterFactory" />
+			<filter class="solr.ReversedWildcardFilterFactory"
+				withOriginal="true" />
+		</analyzer>
+	</fieldType>
 
     <!-- boolean type: "true" or "false" -->
-    <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
+	<fieldType name="boolean" class="solr.BoolField"
+		sortMissingLast="true" />
 
     <!-- sortMissingLast and sortMissingFirst attributes are optional attributes are
          currently supported on types that are sorted internally as strings
@@ -174,10 +212,14 @@
       These fields support doc values, but they require the field to be
       single-valued and either be required or have a default value.
     -->
-    <fieldType name="int" class="solr.TrieIntField" precisionStep="0" positionIncrementGap="0"/>
-    <fieldType name="float" class="solr.TrieFloatField" precisionStep="0" positionIncrementGap="0"/>
-    <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
-    <fieldType name="double" class="solr.TrieDoubleField" precisionStep="0" positionIncrementGap="0"/>
+	<fieldType name="int" class="solr.TrieIntField"
+		precisionStep="0" positionIncrementGap="0" />
+	<fieldType name="float" class="solr.TrieFloatField"
+		precisionStep="0" positionIncrementGap="0" />
+	<fieldType name="long" class="solr.TrieLongField"
+		precisionStep="0" positionIncrementGap="0" />
+	<fieldType name="double" class="solr.TrieDoubleField"
+		precisionStep="0" positionIncrementGap="0" />
 
     <!--
      Numeric field types that index each value at various levels of precision
@@ -189,10 +231,14 @@
      indexed per value, slightly larger index size, and faster range queries.
      A precisionStep of 0 disables indexing at different precision levels.
     -->
-    <fieldType name="tint" class="solr.TrieIntField" precisionStep="8" positionIncrementGap="0"/>
-    <fieldType name="tfloat" class="solr.TrieFloatField" precisionStep="8" positionIncrementGap="0"/>
-    <fieldType name="tlong" class="solr.TrieLongField" precisionStep="8" positionIncrementGap="0"/>
-    <fieldType name="tdouble" class="solr.TrieDoubleField" precisionStep="8" positionIncrementGap="0"/>
+	<fieldType name="tint" class="solr.TrieIntField"
+		precisionStep="8" positionIncrementGap="0" />
+	<fieldType name="tfloat" class="solr.TrieFloatField"
+		precisionStep="8" positionIncrementGap="0" />
+	<fieldType name="tlong" class="solr.TrieLongField"
+		precisionStep="8" positionIncrementGap="0" />
+	<fieldType name="tdouble" class="solr.TrieDoubleField"
+		precisionStep="8" positionIncrementGap="0" />
 
     <!-- The format for this date field is of the form 1995-12-31T23:59:59Z, and
          is a more restricted form of the canonical representation of dateTime
@@ -216,10 +262,12 @@
 
          Note: For faster range queries, consider the tdate type
       -->
-    <fieldType name="date" class="solr.TrieDateField" precisionStep="0" positionIncrementGap="0"/>
+	<fieldType name="date" class="solr.TrieDateField"
+		precisionStep="0" positionIncrementGap="0" />
 
     <!-- A Trie based date field for faster date range queries and date faceting. -->
-    <fieldType name="tdate" class="solr.TrieDateField" precisionStep="6" positionIncrementGap="0"/>
+	<fieldType name="tdate" class="solr.TrieDateField"
+		precisionStep="6" positionIncrementGap="0" />
 
     <!-- solr.TextField allows the specification of custom text analyzers
          specified as a tokenizer and a list of token filters. Different
@@ -242,22 +290,23 @@
     -->
 
     <!-- field for sort keys, removes all non-alphanum characters -->
-    <fieldType name="sort" class="solr.TextField" sortMissingLast="true">
-      <analyzer type="index">
-        <tokenizer class="solr.KeywordTokenizerFactory"/>
-        <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.PatternReplaceFilterFactory"
-          pattern="([^a-z0-9])" replacement="" replace="all"
-        />
-      </analyzer>
-    </fieldType>
+    <fieldType name="sort" class="solr.TextField"
+	sortMissingLast="true">
+	<analyzer type="index">
+		<tokenizer class="solr.KeywordTokenizerFactory" />
+		<filter class="solr.LowerCaseFilterFactory" />
+		<filter class="solr.PatternReplaceFilterFactory" pattern="([^a-z0-9])"
+			replacement="" replace="all" />
+	</analyzer>
+</fieldType>
 
     <!-- field for uuid -->
-    <fieldType name="strict_string" class="solr.TextField" sortMissingLast="true">
-      <analyzer type="index">
-        <tokenizer class="solr.KeywordTokenizerFactory"/>
-      </analyzer>
-    </fieldType>
+	<fieldType name="strict_string" class="solr.TextField"
+		sortMissingLast="true">
+		<analyzer type="index">
+			<tokenizer class="solr.KeywordTokenizerFactory" />
+		</analyzer>
+	</fieldType>
 
     <!-- A text field with defaults appropriate for English, plus
 	  aggressive word-splitting and autophrase features enabled.
@@ -268,35 +317,32 @@
 	  cases will work, for example query "wi fi" will match
 	  document "WiFi" or "wi-fi".
         -->
-    <fieldType name="text_en_splitting" class="solr.TextField" positionIncrementGap="100" autoGeneratePhraseQueries="true">
-      <analyzer type="index">
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-        <!-- in this example, we will only use synonyms at query time
-        <filter class="solr.SynonymFilterFactory" synonyms="index_synonyms.txt" ignoreCase="true" expand="false"/>
-        -->
-        <!-- Case insensitive stop word removal.
-        -->
-        <filter class="solr.StopFilterFactory"
-                ignoreCase="true"
-                words="lang/stopwords_en.txt"
-                />
-        <filter class="solr.WordDelimiterFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="1" catenateNumbers="1" catenateAll="0" splitOnCaseChange="1"/>
-        <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
-        <filter class="solr.PorterStemFilterFactory"/>
-      </analyzer>
-      <analyzer type="query">
-        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
-        <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt" ignoreCase="true" expand="true"/>
-        <filter class="solr.StopFilterFactory"
-                ignoreCase="true"
-                words="lang/stopwords_en.txt"
-                />
-        <filter class="solr.WordDelimiterFilterFactory" generateWordParts="1" generateNumberParts="1" catenateWords="0" catenateNumbers="0" catenateAll="0" splitOnCaseChange="1"/>
-        <filter class="solr.LowerCaseFilterFactory"/>
-        <filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt"/>
-        <filter class="solr.PorterStemFilterFactory"/>
-      </analyzer>
-    </fieldType>
+	<fieldType name="text_en_splitting" class="solr.TextField"
+		positionIncrementGap="100" autoGeneratePhraseQueries="true">
+		<analyzer type="index">
+			<tokenizer class="solr.WhitespaceTokenizerFactory" />
+			<filter class="solr.StopFilterFactory" ignoreCase="true"
+				words="lang/stopwords_en.txt" />
+			<filter class="solr.WordDelimiterFilterFactory"
+				generateWordParts="1" generateNumberParts="1" catenateWords="1"
+				catenateNumbers="1" catenateAll="0" splitOnCaseChange="1" />
+			<filter class="solr.LowerCaseFilterFactory" />
+			<filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt" />
+			<filter class="solr.PorterStemFilterFactory" />
+		</analyzer>
+		<analyzer type="query">
+			<tokenizer class="solr.WhitespaceTokenizerFactory" />
+			<filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt"
+				ignoreCase="true" expand="true" />
+			<filter class="solr.StopFilterFactory" ignoreCase="true"
+				words="lang/stopwords_en.txt" />
+			<filter class="solr.WordDelimiterFilterFactory"
+				generateWordParts="1" generateNumberParts="1" catenateWords="0"
+				catenateNumbers="0" catenateAll="0" splitOnCaseChange="1" />
+			<filter class="solr.LowerCaseFilterFactory" />
+			<filter class="solr.KeywordMarkerFilterFactory" protected="protwords.txt" />
+			<filter class="solr.PorterStemFilterFactory" />
+		</analyzer>
+	</fieldType>
 
 </schema>
