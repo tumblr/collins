@@ -64,7 +64,7 @@ class SolrSpec extends mutable.Specification {
     }
 
     "serialize an asset" in new WithApplication {
-      val assetTag = "solr%d".format(scala.util.Random.nextInt)
+      val assetTag = "solr1"
       val assetType = AssetType.ServerNode.get
       val status = Status.Allocated.get
       val state = State.Running.get
@@ -143,17 +143,15 @@ class SolrSpec extends mutable.Specification {
     "must find asset with state filter" in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
-        "solr.useEmbeddedServer" -> true,
-        "solr.repopulateOnStartup" -> true,
-        "solr.embeddedSolrHome" -> "conf/solr/"))) {
+        "solr.repopulateOnStartup" -> true))) {
 
       // create the asset that matches the search
-      val assetTag = "solr-state-search-%d".format(scala.util.Random.nextInt)
+      val assetTag = "asset1"
       val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, List(), State.Running.get)
 
       // this asset is not included in the results
-      val assetTag2 = "solr-state-search-%d".format(scala.util.Random.nextInt)
-      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Allocated.get, List(), State.Starting.get)
+      val assetTag2 = "asset2"
+      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Provisioned.get, List(), State.Starting.get)
       
       // repopulate solr - HARD CODED TIME - DO THIS BETTER
       Solr.inPlugin { p =>
@@ -174,25 +172,17 @@ class SolrSpec extends mutable.Specification {
     "must find asset with meta fields " in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
-        "solr.useEmbeddedServer" -> true,
-        "solr.repopulateOnStartup" -> true,
-        "solr.embeddedSolrHome" -> "conf/solr/"))) {
+        "solr.repopulateOnStartup" -> true))) {
 
       val meta = List(
-        ("A", String, 0, "a"),
-        ("B", String, 0, "b"),
-        ("A", String, 1, "a1"),
-        ("int", Integer, 0, "1135"),
-        ("double", Double, 0, "3.1415"),
-        ("bool", Boolean, 0, "false"),
-        ("HOSTNAME", String, 0, "my_hostname"))
+        ("HOST", String, 0, "my_host"))
         
       // create the asset that matches the search
-      val assetTag = "solr-state-search-%d".format(scala.util.Random.nextInt)
+      val assetTag = "asset3"
       val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
 
       // this asset is not included in the results
-      val assetTag2 = "solr-state-search-%d".format(scala.util.Random.nextInt)
+      val assetTag2 = "asset4"
       val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Allocated.get, List(), State.New.get)
       
       // repopulate solr - HARD CODED TIME - DO THIS BETTER
@@ -201,8 +191,40 @@ class SolrSpec extends mutable.Specification {
       }
       
       val pageParam = PageParams(0, 10, "DESC", "TAG")
-      val finder = AssetFinder(None, None, None, None, None, None, None, State.New, None)
-      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("HOSTNAME", "my_hostname")
+      val finder = AssetFinder(None, None, None, None, None, None, None, None, None)
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("HOST", "my_host")
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder, None)
+      page.items.size mustEqual 1
+      page.items.headOption must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+      }
+    }
+    
+    "must find asset with meta and regular fields " in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      val meta = List(
+        ("ATTR", String, 0, "ATTRV"))
+        
+      // create the asset that matches the search
+      val assetTag = "asset5"
+      val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
+
+      // this asset is not included in the results
+      val assetTag2 = "asset6"
+      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
+      
+      // repopulate solr - HARD CODED TIME - DO THIS BETTER
+      Solr.inPlugin { p =>
+        Await.result(p.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
+      }
+      
+      val pageParam = PageParams(0, 10, "DESC", "TAG")
+      val finder = AssetFinder(None, Status.Allocated, None, None, None, None, None, None, None)
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("ATTR", "ATTRV")
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder, None)
       page.items.size mustEqual 1
       page.items.headOption must beSome.which { asset =>
@@ -214,21 +236,19 @@ class SolrSpec extends mutable.Specification {
     "must find asset with and'ing conditional " in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
-        "solr.useEmbeddedServer" -> true,
-        "solr.repopulateOnStartup" -> true,
-        "solr.embeddedSolrHome" -> "conf/solr/"))) {
+        "solr.repopulateOnStartup" -> true))) {
 
       val meta = List(
         ("X", String, 0, "X"),
         ("Y", String, 0, "Y"))
         
       // create the asset that matches the search
-      val assetTag = "solr-state-search-%d".format(scala.util.Random.nextInt)
+      val assetTag = "asset7"
       val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
 
       // this asset is not included in the results
-      val assetTag2 = "solr-state-search-%d".format(scala.util.Random.nextInt)
-      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Allocated.get, List(), State.New.get)
+      val assetTag2 = "asset8"
+      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
       
       // repopulate solr - HARD CODED TIME - DO THIS BETTER
       Solr.inPlugin { p =>
@@ -249,16 +269,14 @@ class SolrSpec extends mutable.Specification {
     "must find asset with or'ing conditional " in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
-        "solr.useEmbeddedServer" -> true,
-        "solr.repopulateOnStartup" -> true,
-        "solr.embeddedSolrHome" -> "conf/solr/"))) {
+        "solr.repopulateOnStartup" -> true))) {
 
       // create the asset that matches the search
-      val assetTag = "solr-state-search-%d".format(scala.util.Random.nextInt)
+      val assetTag = "asset9"
       val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, List(("T", String, 0, "T")), State.New.get)
 
       // this asset is not included in the results
-      val assetTag2 = "solr-state-search-%d".format(scala.util.Random.nextInt)
+      val assetTag2 = "asset10"
       val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Provisioned.get, List(("U", String, 0, "U")), State.New.get)
       
       // repopulate solr - HARD CODED TIME - DO THIS BETTER
@@ -290,8 +308,7 @@ class SolrSpec extends mutable.Specification {
     val asset = Asset.create(Asset(tag, status, assetType))
     Asset.partialUpdate(asset, None, None, Some(state))
     metaValues.foreach{case (name, value_type, group_id, value) =>
-      AssetMeta.findOrCreateFromName(name, value_type)
-      val meta = AssetMeta.findByName(name).get
+      val meta = AssetMeta.findOrCreateFromName(name, value_type)
       try {
         AssetMetaValue.create(AssetMetaValue(asset.id, meta.id, group_id, value))
       } catch {
