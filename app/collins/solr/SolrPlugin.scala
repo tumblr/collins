@@ -30,10 +30,7 @@ class SolrPlugin(app: Application) extends Plugin {
   private[this] var _server: Option[SolrClient] = None
   private[this] val logger = Logger("SolrPlugin")
 
-  def server = _server match {
-    case Some(server) => server
-    case None => throw new RuntimeException("Attempted to get Solr server when no server is initialized")
-  }
+  def server = _server.getOrElse(throw new RuntimeException("No Solr server is initialized"))
 
   override def enabled = true
 
@@ -66,6 +63,7 @@ class SolrPlugin(app: Application) extends Plugin {
     }
     _server = Some(server)
   }
+  
   /**
    * Setup callbacks on all operations that modify asset data, so we can
    * properly reindex the updated asset in Solr
