@@ -37,9 +37,6 @@ class SolrPlugin(app: Application) extends Plugin {
 
   override def enabled = true
 
-  val assetSerializer = new AssetSerializer
-  val assetLogSerializer = new AssetLogSerializer
-
   override def onStart() {
     if (SolrConfig.enabled) {
       System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
@@ -140,11 +137,11 @@ class SolrPlugin(app: Application) extends Plugin {
   }
 
   def updateAssets(assets: Seq[Asset], indexTime: Date, commit: Boolean = true) {
-    updateItems[Asset](assets, assetSerializer, indexTime, commit)
+    updateItems[Asset](assets, AssetSerializer, indexTime, commit)
   }
 
   def updateAssetLogs(logs: Seq[AssetLog], indexTime: Date, commit: Boolean = true) {
-    updateItems[AssetLog](logs, assetLogSerializer, indexTime,commit)
+    updateItems[AssetLog](logs, AssetLogSerializer, indexTime,commit)
   }
 
   override def onStop() {
