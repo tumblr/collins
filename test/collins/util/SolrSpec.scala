@@ -7,9 +7,19 @@ import scala.concurrent.duration.Duration
 
 import Solr._
 import org.specs2._
-import collins.models.{Asset, AssetFinder, AssetType, AssetMeta, AssetSearchParameters, IpAddresses, IpmiInfo, State, Status, AssetMetaValue}
+import collins.models.Asset
+import collins.models.AssetFinder
+import collins.models.AssetType
+import collins.models.AssetMeta
+import collins.models.AssetSearchParameters
+import collins.models.IpAddresses
+import collins.models.IpmiInfo
+import collins.models.State
+import collins.models.Status
+import collins.models.AssetMetaValue
 import collins.models.shared.PageParams
 import collins.util.views.Formatter
+
 import play.api.test.WithApplication
 import play.api.test.FakeApplication
 
@@ -140,6 +150,14 @@ class SolrSpec extends mutable.Specification {
   }
 
   "search" should {
+    val pageParam = PageParams(0, 10, "DESC", "TAG")
+    def reindex() {
+      // repopulate solr - HARD CODED TIME - DO THIS BETTER
+      Solr.inPlugin { p =>
+        Await.result(p.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
+      }
+    }
+    
     "must find asset with state filter" in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
@@ -147,19 +165,14 @@ class SolrSpec extends mutable.Specification {
 
       // create the asset that matches the search
       val assetTag = "asset1"
-      val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, List(), State.Running.get)
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, Nil, State.Running.get)
 
       // this asset is not included in the results
-      val assetTag2 = "asset2"
-      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Provisioned.get, List(), State.Starting.get)
+      generateAsset("asset2", AssetType.ServerNode.get, Status.Provisioned.get, Nil, State.Starting.get)
       
-      // repopulate solr - HARD CODED TIME - DO THIS BETTER
-      Solr.inPlugin { p =>
-        Await.result(p.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
-      }
+      reindex()
       
-      val pageParam = PageParams(0, 10, "DESC", "TAG")
-      val finder = AssetFinder(None, None, None, None, None, None, None, State.Running, None)
+      val finder = AssetFinder.empty.copy(state = State.Running)
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder)
       page.items.size mustEqual 1
@@ -179,21 +192,41 @@ class SolrSpec extends mutable.Specification {
         
       // create the asset that matches the search
       val assetTag = "asset3"
-      val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
 
       // this asset is not included in the results
-      val assetTag2 = "asset4"
-      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Allocated.get, List(), State.New.get)
+      generateAsset("asset4", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
       
-      // repopulate solr - HARD CODED TIME - DO THIS BETTER
-      Solr.inPlugin { p =>
-        Await.result(p.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
-      }
+      reindex()
       
-      val pageParam = PageParams(0, 10, "DESC", "TAG")
-      val finder = AssetFinder(None, None, None, None, None, None, None, None, None)
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("HOST", "my_host")
-      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder, None)
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, None)
+      page.items.size mustEqual 1
+      page.items.headOption must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+      }
+    }
+    
+    "must find asset with meta fields ignoring case" in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      val meta = List(
+        ("CaSe_IgNoRe", String, 0, "Ignore_THIS_case"))
+        
+      // create the asset that matches the search
+      val assetTag = "asset5"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
+
+      // this asset is not included in the results
+      generateAsset("asset6", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
+      
+      reindex()
+      
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("case_ignore", "IGNORE_THIS_case")
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, None)
       page.items.size mustEqual 1
       page.items.headOption must beSome.which { asset =>
         asset.tag mustEqual assetTag
@@ -206,24 +239,18 @@ class SolrSpec extends mutable.Specification {
         "solr.enabled" -> true,
         "solr.repopulateOnStartup" -> true))) {
 
-      val meta = List(
-        ("ATTR", String, 0, "ATTRV"))
+      val meta = List(("ATTR", String, 0, "ATTRV"))
         
       // create the asset that matches the search
-      val assetTag = "asset5"
-      val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
+      val assetTag = "asset7"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
 
       // this asset is not included in the results
-      val assetTag2 = "asset6"
-      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
+      generateAsset("asset8", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
       
-      // repopulate solr - HARD CODED TIME - DO THIS BETTER
-      Solr.inPlugin { p =>
-        Await.result(p.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
-      }
+      reindex()
       
-      val pageParam = PageParams(0, 10, "DESC", "TAG")
-      val finder = AssetFinder(None, Status.Allocated, None, None, None, None, None, None, None)
+      val finder = AssetFinder.empty.copy(status = Status.Allocated)
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("ATTR", "ATTRV")
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder, None)
       page.items.size mustEqual 1
@@ -238,27 +265,20 @@ class SolrSpec extends mutable.Specification {
         "solr.enabled" -> true,
         "solr.repopulateOnStartup" -> true))) {
 
-      val meta = List(
-        ("X", String, 0, "X"),
+      val meta = List(("X", String, 0, "X"),
         ("Y", String, 0, "Y"))
         
       // create the asset that matches the search
-      val assetTag = "asset7"
+      val assetTag = "asset9"
       val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
 
       // this asset is not included in the results
-      val assetTag2 = "asset8"
-      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
+      generateAsset("asset10", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
       
-      // repopulate solr - HARD CODED TIME - DO THIS BETTER
-      Solr.inPlugin { p =>
-        Await.result(p.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
-      }
+      reindex()
       
-      val pageParam = PageParams(0, 10, "DESC", "TAG")
-      val finder = AssetFinder.empty
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("X", "X").withMeta("Y", "Y")
-      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder, Some("and"))
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, Some("and"))
       page.items.size mustEqual 1
       page.items.headOption must beSome.which { asset =>
         asset.tag mustEqual assetTag
@@ -272,22 +292,17 @@ class SolrSpec extends mutable.Specification {
         "solr.repopulateOnStartup" -> true))) {
 
       // create the asset that matches the search
-      val assetTag = "asset9"
-      val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, List(("T", String, 0, "T")), State.New.get)
+      val assetTag = "asset11"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, List(("T", String, 0, "T")), State.New.get)
 
-      // this asset is not included in the results
-      val assetTag2 = "asset10"
-      val asset2 = generateAsset(assetTag2, AssetType.ServerNode.get, Status.Provisioned.get, List(("U", String, 0, "U")), State.New.get)
+      // this asset is *also* included in the results
+      val assetTag2 = "asset12"
+      generateAsset(assetTag2, AssetType.ServerNode.get, Status.Provisioned.get, List(("U", String, 0, "U")), State.New.get)
       
-      // repopulate solr - HARD CODED TIME - DO THIS BETTER
-      Solr.inPlugin { p =>
-        Await.result(p.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
-      }
+      reindex()
       
-      val pageParam = PageParams(0, 10, "DESC", "TAG")
-      val finder = AssetFinder.empty
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("T", "T").withMeta("U", "U")
-      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder, Some("or"))
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, Some("or"))
       page.items.size mustEqual 2
       page.items.find { a => a.tag == assetTag } must beSome.which { asset =>
         asset.tag mustEqual assetTag
@@ -300,6 +315,30 @@ class SolrSpec extends mutable.Specification {
         asset.status mustEqual Status.Provisioned.get.getId()
         asset.getMetaAttributeValue("T") mustEqual None
         asset.getMetaAttributeValue("U") mustEqual Some("U")
+      }
+    }
+    
+    "must find asset with partial attribute match " in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      // create the asset that matches the search
+      val assetTag = "asset13"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, List(("SPECIFICATION", String, 0, "WEB SERVICE FURY HADOOP")), State.New.get)
+
+      // this asset is not included in the results
+      generateAsset("asset14", AssetType.ServerNode.get, Status.Provisioned.get, Nil, State.New.get)
+      
+      reindex()
+      
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("SPECIFICATION", "FURY")
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty)
+      page.items.size mustEqual 1
+      page.items.find { a => a.tag == assetTag } must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+         asset.getMetaAttributeValue("SPECIFICATION") mustEqual Some("WEB SERVICE FURY HADOOP")
       }
     }
   }
