@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2" % "1.9.2" % "test",
   "com.google.guava" % "guava" % "18.0",
   "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
-  "nl.grons" %% "metrics-scala" % "2.2.0",
+  "nl.grons" %% "metrics-scala" % "3.5.1_a2.2",
   "com.addthis.metrics" % "reporter-config" % "2.3.1",
   "mysql" % "mysql-connector-java" % "5.1.35",
   "com.h2database" % "h2" % "1.4.187",
