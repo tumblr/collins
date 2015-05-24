@@ -24,7 +24,7 @@ import collins.solr.SolrKeyFlag._
  * asset meta values are all converted into strings with the meta name as the
  * solr key, using group_id to group values in to multi-valued keys
  */
-class AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
+object AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
 
   val generatedFields = SolrKey("NUM_DISKS", Integer, Dynamic, SingleValued, Sortable) :: SolrKey("KEYS", String, Dynamic, MultiValued, NotSortable) :: Nil
 

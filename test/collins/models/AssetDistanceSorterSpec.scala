@@ -59,7 +59,7 @@ class AssetDistanceSorterSpec extends mutable.Specification {
   }
 
   trait mocksorter extends Scope {
-    val sortParams = List("A", "B", "C")
+    val sortParams = List("G", "H", "I")
     val sortValues = List(
       ("t",List(0,0,0)),
       ("a",List(0,0,1)),

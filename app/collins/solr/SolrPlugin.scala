@@ -4,7 +4,7 @@ import java.util.Date
 
 import scala.concurrent.Future
 
-import org.apache.solr.client.solrj.SolrServer
+import org.apache.solr.client.solrj.SolrClient
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.common.SolrInputDocument
 
@@ -27,24 +27,15 @@ import akka.routing.FromConfig
 
 class SolrPlugin(app: Application) extends Plugin {
 
-  private[this] var _server: Option[SolrServer] = None
+  private[this] var _server: Option[SolrClient] = None
   private[this] val logger = Logger("SolrPlugin")
 
-  def server = _server match {
-    case Some(server) => server
-    case None => throw new RuntimeException("Attempted to get Solr server when no server is initialized")
-  }
+  def server = _server.getOrElse(throw new RuntimeException("No Solr server is initialized"))
 
-  override def enabled = {
-    SolrConfig.pluginInitialize(app.configuration)
-    SolrConfig.enabled
-  }
-
-  val assetSerializer = new AssetSerializer
-  val assetLogSerializer = new AssetLogSerializer
+  override def enabled = true
 
   override def onStart() {
-    if (enabled) {
+    if (SolrConfig.enabled) {
       System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
       System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
       System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "WARN");
@@ -72,6 +63,7 @@ class SolrPlugin(app: Application) extends Plugin {
     }
     _server = Some(server)
   }
+  
   /**
    * Setup callbacks on all operations that modify asset data, so we can
    * properly reindex the updated asset in Solr
@@ -143,15 +135,15 @@ class SolrPlugin(app: Application) extends Plugin {
   }
 
   def updateAssets(assets: Seq[Asset], indexTime: Date, commit: Boolean = true) {
-    updateItems[Asset](assets, assetSerializer, indexTime, commit)
+    updateItems[Asset](assets, AssetSerializer, indexTime, commit)
   }
 
   def updateAssetLogs(logs: Seq[AssetLog], indexTime: Date, commit: Boolean = true) {
-    updateItems[AssetLog](logs, assetLogSerializer, indexTime,commit)
+    updateItems[AssetLog](logs, AssetLogSerializer, indexTime,commit)
   }
 
   override def onStop() {
-    _server.foreach{case s: EmbeddedSolrServer => s.shutdown}
+    _server.foreach{case s: EmbeddedSolrServer => s.getCoreContainer.shutdown()}
   }
 
   def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {

@@ -20,7 +20,8 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
 
   private[this] val logger = Logger("CollinsSearchQuery")
 
-  def getResults(): Either[String, (Seq[T], Long)] = Solr.server.map{server =>
+  def getResults(): Either[String, (Seq[T], Long)] = Solr.inPlugin { plugin => 
+    val server = plugin.server
     val q = new SolrQuery
     val queryString = query.toSolrQueryString
     docType.keyResolver.either(page.sortField).right.flatMap{k => k.sortKey.map{Right(_)}.getOrElse(Left("Cannot sort on " + k.name))}.right.flatMap { sortKey =>
@@ -42,7 +43,7 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
         case e: Throwable => Left(e.getMessage + "(query %s)".format(queryString))
       }
     }
-  }.getOrElse(Left("Solr Plugin not initialized!"))
+  }.getOrElse(Left("Solr is not initialized!"))
 
   def getPage(): Either[String, Page[T]] = getResults().right.map{case (results, total) =>
     Page(results, page.page, page.page * page.size, total)

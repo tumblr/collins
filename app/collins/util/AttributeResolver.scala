@@ -19,16 +19,6 @@ object AttributeResolver extends MessageHelper("attributeresolver") {
 
   val EmptyResolvedAttributes = ResolvedAttributes(Nil, Nil, None)
 
-  //TODO: refactor and get rid of the tuple and conversions
-  object ResolvedAttributes {
-
-    /*
-    implicit def resultTuple2ResolvedAttributes(t: ResultTuple): ResolvedAttributes = 
-      ResolvedAttributes(t._1, t._2, t._3)
-*/
-    //implicit def resolvedAttributes2resultTuple(a: ResolvedAttributes): ResultTuple = (a.ipmi, a.assetMeta, a.ipAddress)
-  }
-
   def apply(map: Map[String,String]): ResultTuple = {
     val init: ResultTuple = (Seq[IpmiTuple](), Seq[AssetMetaTuple](), Seq[String]())
     map.foldLeft(init) { case(total, kv) =>

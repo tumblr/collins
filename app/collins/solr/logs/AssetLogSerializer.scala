@@ -8,7 +8,7 @@ import collins.solr.Solr.AssetSolrDocument
 import collins.solr.UpperCaseString.string2UpperCaseString
 import collins.util.views.Formatter
 
-class AssetLogSerializer extends SolrSerializer[AssetLog](AssetLogDocType) {
+object AssetLogSerializer extends SolrSerializer[AssetLog](AssetLogDocType) {
 
   val generatedFields = Nil
 

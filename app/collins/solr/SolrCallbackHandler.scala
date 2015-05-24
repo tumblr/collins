@@ -2,7 +2,7 @@ package collins.solr
 
 import java.beans.PropertyChangeEvent
 
-import org.apache.solr.client.solrj.SolrServer
+import org.apache.solr.client.solrj.SolrClient
 
 import play.api.Logger
 
@@ -20,7 +20,7 @@ import akka.actor.actorRef2Scala
 // creates fire with null old value, some new value
 // deletes fire with some old value, null new value
 // updates fire with both
-case class SolrAssetCallbackHandler(server: SolrServer, updater: ActorRef) extends CallbackActionHandler {
+case class SolrAssetCallbackHandler(server: SolrClient, updater: ActorRef) extends CallbackActionHandler {
 
   private[this] val logger = Logger("SolrCallbackHandler")
 
@@ -63,7 +63,7 @@ case class SolrAssetCallbackHandler(server: SolrServer, updater: ActorRef) exten
 
 }
 
-case class SolrAssetLogCallbackHandler(server: SolrServer, updater: ActorRef) extends CallbackActionHandler {
+case class SolrAssetLogCallbackHandler(server: SolrClient, updater: ActorRef) extends CallbackActionHandler {
 
   private[this] val logger = Logger("SolrAssetLogCallbackHandler")
 

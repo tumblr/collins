@@ -1,11 +1,27 @@
 package collins.solr
 
 import java.util.Date
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+
 import Solr._
 import org.specs2._
-import collins.models.{Asset, AssetFinder, AssetType, AssetMeta, AssetSearchParameters, IpAddresses, IpmiInfo, State, Status, AssetMetaValue}
+import collins.models.Asset
+import collins.models.AssetFinder
+import collins.models.AssetType
+import collins.models.AssetMeta
+import collins.models.AssetSearchParameters
+import collins.models.IpAddresses
+import collins.models.IpmiInfo
+import collins.models.State
+import collins.models.Status
+import collins.models.AssetMetaValue
+import collins.models.shared.PageParams
 import collins.util.views.Formatter
+
 import play.api.test.WithApplication
+import play.api.test.FakeApplication
 
 
 class MultiSetSpec extends mutable.Specification {
@@ -42,99 +58,287 @@ class SolrSpec extends mutable.Specification {
   import AssetMeta.ValueType
 
   args(sequential = true)
-
-  "serialization" should {
-    "during serialization" in new WithApplication {
-      def eqHelper[T](actualSet: Set[T], expectedSet: Set[T]) {
-        if (expectedSet != actualSet) {
-          println("== EXPECTED ==")
-          expectedSet.foreach{e => println(e.toString)}
-          println("== ACTUAL ==")
-          actualSet.foreach{a => println(a.toString)}
-          println("== expected - actual ==")
-          (expectedSet diff actualSet).foreach{e => println(e.toString)}
-          println("== actual - expected ==")
-          (actualSet diff expectedSet).foreach{e => println(e.toString)}
-        }
+  
+  "during serialization" should {
+    def eqHelper[T](actualSet: Set[T], expectedSet: Set[T]) {
+      if (expectedSet != actualSet) {
+        println("== EXPECTED ==")
+        expectedSet.foreach { e => println(e.toString) }
+        println("== ACTUAL ==")
+        actualSet.foreach { a => println(a.toString) }
+        println("== expected - actual ==")
+        (expectedSet diff actualSet).foreach { e => println(e.toString) }
+        println("== actual - expected ==")
+        (actualSet diff expectedSet).foreach { e => println(e.toString) }
       }
+    }
 
-      "serialize an asset" in {
-        val assetTag = "solr%d".format(scala.util.Random.nextInt)
-        val assetType = AssetType.ServerNode.get
-        val status = Status.Allocated.get
-        val state = State.Running.get
-        val meta = List(
-          ("A",String, 0,"a"),
-          ("B",String, 0,"b"),
-          ("A",String, 1,"a1"),
-          ("int", Integer, 0, "1135"),
-          ("double", Double, 0, "3.1415"),
-          ("bool", Boolean, 0, "false"),
-          ("HOSTNAME", String, 0, "my_hostname")
-        )
-        val asset = generateAsset(assetTag, assetType, status, meta, state)
-        val indexTime = new Date
-        val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
-        val ipmi = IpmiInfo.createForAsset(asset)
+    "serialize an asset" in new WithApplication {
+      val assetTag = "solr1"
+      val assetType = AssetType.ServerNode.get
+      val status = Status.Allocated.get
+      val state = State.Running.get
+      val meta = List(
+        ("A", String, 0, "a"),
+        ("B", String, 0, "b"),
+        ("A", String, 1, "a1"),
+        ("int", Integer, 0, "1135"),
+        ("double", Double, 0, "3.1415"),
+        ("bool", Boolean, 0, "false"),
+        ("HOSTNAME", String, 0, "my_hostname"))
+      val asset = generateAsset(assetTag, assetType, status, meta, state)
+      val indexTime = new Date
+      val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
+      val ipmi = IpmiInfo.createForAsset(asset)
 
-        //alldoc keys are not added to the KEYS field
-        val allDoc = Map(
-          SolrKey("DOC_TYPE", String, false, false, true) -> SolrStringValue("ASSET", StrictUnquoted),
-          SolrKey("LAST_INDEXED", String, false, false, true) -> SolrStringValue(Formatter.solrDateFormat(indexTime), StrictUnquoted),
-          SolrKey("UUID", String, false, false, true) -> SolrStringValue("ASSET_" + asset.id, StrictUnquoted)
-        )
-        val almostExpected = Map(
-          SolrKey("ID", Integer, false, false,true) -> SolrIntValue(asset.id.toInt),
-          SolrKey("TAG", String, false, false, true) -> SolrStringValue(assetTag, StrictUnquoted),
-          SolrKey("STATUS", String, false, false, true) -> SolrStringValue(status.name, StrictUnquoted),
-          SolrKey("STATE", String, false, false, true) -> SolrStringValue(state.name, StrictUnquoted),
-          SolrKey("TYPE", String, false, false, true, Set("ASSETTYPE")) -> SolrStringValue(assetType.name, StrictUnquoted),
-          SolrKey("CREATED", String, false, false, true) -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted),
-          SolrKey("A", String, true, true, false) -> SolrMultiValue(MultiSet(SolrStringValue("a", StrictUnquoted), SolrStringValue("a1", StrictUnquoted))),
-          SolrKey("B", String, true, true, false) -> SolrStringValue("b", StrictUnquoted),
-          SolrKey("INT", Integer, true, true, false) -> SolrIntValue(1135),
-          SolrKey("DOUBLE", Double, true, true, false) -> SolrDoubleValue(3.1415),
-          SolrKey("BOOL", Boolean, true, true, false) -> SolrBooleanValue(false),
-          SolrKey("IP_ADDRESS", String, false, true, false) -> SolrMultiValue(MultiSet.fromSeq(addresses.map{a => SolrStringValue(a.dottedAddress, StrictUnquoted)})),
-          SolrKey("HOSTNAME", String, false, false, true) -> SolrStringValue("my_hostname", StrictUnquoted),
-          SolrKey("IPMI_ADDRESS", String, true, false, true) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
-        )
+      //alldoc keys are not added to the KEYS field
+      val allDoc = Map(
+        SolrKey("DOC_TYPE", String, false, false, true) -> SolrStringValue("ASSET", StrictUnquoted),
+        SolrKey("LAST_INDEXED", String, false, false, true) -> SolrStringValue(Formatter.solrDateFormat(indexTime), StrictUnquoted),
+        SolrKey("UUID", String, false, false, true) -> SolrStringValue("ASSET_" + asset.id, StrictUnquoted))
+      val almostExpected = Map(
+        SolrKey("ID", Integer, false, false, true) -> SolrIntValue(asset.id.toInt),
+        SolrKey("TAG", String, false, false, true) -> SolrStringValue(assetTag, StrictUnquoted),
+        SolrKey("STATUS", String, false, false, true) -> SolrStringValue(status.name, StrictUnquoted),
+        SolrKey("STATE", String, false, false, true) -> SolrStringValue(state.name, StrictUnquoted),
+        SolrKey("TYPE", String, false, false, true, Set("ASSETTYPE")) -> SolrStringValue(assetType.name, StrictUnquoted),
+        SolrKey("CREATED", String, false, false, true) -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted),
+        SolrKey("A", String, true, true, false) -> SolrMultiValue(MultiSet(SolrStringValue("a", StrictUnquoted), SolrStringValue("a1", StrictUnquoted))),
+        SolrKey("B", String, true, true, false) -> SolrStringValue("b", StrictUnquoted),
+        SolrKey("INT", Integer, true, true, false) -> SolrIntValue(1135),
+        SolrKey("DOUBLE", Double, true, true, false) -> SolrDoubleValue(3.1415),
+        SolrKey("BOOL", Boolean, true, true, false) -> SolrBooleanValue(false),
+        SolrKey("IP_ADDRESS", String, false, true, false) -> SolrMultiValue(MultiSet.fromSeq(addresses.map { a => SolrStringValue(a.dottedAddress, StrictUnquoted) })),
+        SolrKey("HOSTNAME", String, false, false, true) -> SolrStringValue("my_hostname", StrictUnquoted),
+        SolrKey("IPMI_ADDRESS", String, true, false, true) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted))
 
-        val sortKeys = Map(
-          SolrKey("DOC_TYPE_SORT", String, false, false, true) -> SolrStringValue("ASSET", StrictUnquoted),
-          SolrKey("LAST_INDEXED_SORT", String, false, false, true) -> SolrStringValue(Formatter.solrDateFormat(indexTime), StrictUnquoted),
-          SolrKey("UUID_SORT", String, false, false, true) -> SolrStringValue("ASSET_" + asset.id, StrictUnquoted),
-          SolrKey("ID_SORT", String, false,false, true) -> SolrStringValue(asset.id.toString, StrictUnquoted),
-          SolrKey("TAG_SORT", String, false,false, true) -> SolrStringValue(assetTag, StrictUnquoted),
-          SolrKey("STATUS_SORT", String, false,false, true) -> SolrStringValue(status.name, StrictUnquoted),
-          SolrKey("STATE_SORT", String, false,false, true) -> SolrStringValue(state.name, StrictUnquoted),
-          SolrKey("TYPE_SORT", String, false,false, true) -> SolrStringValue(assetType.name, StrictUnquoted),
-          SolrKey("CREATED_SORT", String, false,false, true) -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted),
-          SolrKey("HOSTNAME_SORT", String, false,false, true) -> SolrStringValue("my_hostname", StrictUnquoted),
-          SolrKey("IPMI_ADDRESS_SORT", String, false,false, true) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
-        )
+      val sortKeys = Map(
+        SolrKey("DOC_TYPE_SORT", String, false, false, true) -> SolrStringValue("ASSET", StrictUnquoted),
+        SolrKey("LAST_INDEXED_SORT", String, false, false, true) -> SolrStringValue(Formatter.solrDateFormat(indexTime), StrictUnquoted),
+        SolrKey("UUID_SORT", String, false, false, true) -> SolrStringValue("ASSET_" + asset.id, StrictUnquoted),
+        SolrKey("ID_SORT", String, false, false, true) -> SolrStringValue(asset.id.toString, StrictUnquoted),
+        SolrKey("TAG_SORT", String, false, false, true) -> SolrStringValue(assetTag, StrictUnquoted),
+        SolrKey("STATUS_SORT", String, false, false, true) -> SolrStringValue(status.name, StrictUnquoted),
+        SolrKey("STATE_SORT", String, false, false, true) -> SolrStringValue(state.name, StrictUnquoted),
+        SolrKey("TYPE_SORT", String, false, false, true) -> SolrStringValue(assetType.name, StrictUnquoted),
+        SolrKey("CREATED_SORT", String, false, false, true) -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted),
+        SolrKey("HOSTNAME_SORT", String, false, false, true) -> SolrStringValue("my_hostname", StrictUnquoted),
+        SolrKey("IPMI_ADDRESS_SORT", String, false, false, true) -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted))
 
-        val expected = allDoc
-          .++(almostExpected)
-          .++(sortKeys)
-          .+((SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(MultiSet.fromSeq(almostExpected.map{case(k,v) => SolrStringValue(k.name, StrictUnquoted)}.toSeq), String)))
-        val actual = (new AssetSerializer).serialize(asset, indexTime) 
-        val actualSet: Set[(SolrKey, SolrValue)] = actual.toSet
-        val expectedSet: Set[(SolrKey, SolrValue)] = expected.toSet
-        eqHelper(actualSet, expectedSet)
-        actualSet must_== expectedSet
+      val expected = allDoc
+        .++(almostExpected)
+        .++(sortKeys)
+        .+((SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(MultiSet.fromSeq(almostExpected.map { case (k, v) => SolrStringValue(k.name, StrictUnquoted) }.toSeq), String)))
+      val actual = AssetSerializer.serialize(asset, indexTime)
+      val actualSet: Set[(SolrKey, SolrValue)] = actual.toSet
+      val expectedSet: Set[(SolrKey, SolrValue)] = expected.toSet
+      eqHelper(actualSet, expectedSet)
+      actualSet must_== expectedSet
+    }
+
+    "post-process number of disks" in new WithApplication {
+      val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true, true, false) -> SolrMultiValue(MultiSet(SolrStringValue("123", StrictUnquoted), SolrStringValue("123", StrictUnquoted))))
+      val expected = m +
+        (SolrKey("NUM_DISKS", Integer, true, false, true) -> SolrIntValue(2)) +
+        (SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(MultiSet(SolrStringValue("DISK_SIZE_BYTES", StrictUnquoted), SolrStringValue("NUM_DISKS", StrictUnquoted))))
+      val actual = AssetSerializer.postProcess(m)
+      val actualSet = actual.toSet
+      val expectedSet = expected.toSet
+      eqHelper(actualSet, expectedSet)
+      actualSet must_== expectedSet
+    }
+  }
+
+  "search" should {
+    val pageParam = PageParams(0, 10, "DESC", "TAG")
+    def reindex() {
+      // repopulate solr - HARD CODED TIME - DO THIS BETTER
+      Solr.inPlugin { p =>
+        Await.result(p.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
       }
-   
-      "post-process number of disks" in {
-        val m = Map[SolrKey, SolrValue](SolrKey("DISK_SIZE_BYTES", String, true, true,false) -> SolrMultiValue(MultiSet(SolrStringValue("123", StrictUnquoted), SolrStringValue("123", StrictUnquoted))))
-        val expected = m + 
-          (SolrKey("NUM_DISKS", Integer, true, false, true) -> SolrIntValue(2)) + 
-          (SolrKey("KEYS", String, true, true, false) -> SolrMultiValue(MultiSet(SolrStringValue("DISK_SIZE_BYTES", StrictUnquoted), SolrStringValue("NUM_DISKS", StrictUnquoted))))
-        val actual = (new AssetSerializer).postProcess(m)
-        val actualSet = actual.toSet
-        val expectedSet = expected.toSet
-        eqHelper(actualSet, expectedSet)
-        actualSet must_== expectedSet
+    }
+    
+    "must find asset with state filter" in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      // create the asset that matches the search
+      val assetTag = "asset1"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, Nil, State.Running.get)
+
+      // this asset is not included in the results
+      generateAsset("asset2", AssetType.ServerNode.get, Status.Provisioned.get, Nil, State.Starting.get)
+      
+      reindex()
+      
+      val finder = AssetFinder.empty.copy(state = State.Running)
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder)
+      page.items.size mustEqual 1
+      page.items.headOption must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+      }
+    }
+    
+    "must find asset with meta fields " in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      val meta = List(
+        ("HOST", String, 0, "my_host"))
+        
+      // create the asset that matches the search
+      val assetTag = "asset3"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
+
+      // this asset is not included in the results
+      generateAsset("asset4", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
+      
+      reindex()
+      
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("HOST", "my_host")
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, None)
+      page.items.size mustEqual 1
+      page.items.headOption must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+      }
+    }
+    
+    "must find asset with meta fields ignoring case" in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      val meta = List(
+        ("CaSe_IgNoRe", String, 0, "Ignore_THIS_case"))
+        
+      // create the asset that matches the search
+      val assetTag = "asset5"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
+
+      // this asset is not included in the results
+      generateAsset("asset6", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
+      
+      reindex()
+      
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("case_ignore", "IGNORE_THIS_case")
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, None)
+      page.items.size mustEqual 1
+      page.items.headOption must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+      }
+    }
+    
+    "must find asset with meta and regular fields " in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      val meta = List(("ATTR", String, 0, "ATTRV"))
+        
+      // create the asset that matches the search
+      val assetTag = "asset7"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
+
+      // this asset is not included in the results
+      generateAsset("asset8", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
+      
+      reindex()
+      
+      val finder = AssetFinder.empty.copy(status = Status.Allocated)
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("ATTR", "ATTRV")
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder, None)
+      page.items.size mustEqual 1
+      page.items.headOption must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+      }
+    }
+    
+    "must find asset with and'ing conditional " in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      val meta = List(("X", String, 0, "X"),
+        ("Y", String, 0, "Y"))
+        
+      // create the asset that matches the search
+      val assetTag = "asset9"
+      val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
+
+      // this asset is not included in the results
+      generateAsset("asset10", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
+      
+      reindex()
+      
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("X", "X").withMeta("Y", "Y")
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, Some("and"))
+      page.items.size mustEqual 1
+      page.items.headOption must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+      }
+    }
+    
+    "must find asset with or'ing conditional " in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      // create the asset that matches the search
+      val assetTag = "asset11"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, List(("T", String, 0, "T")), State.New.get)
+
+      // this asset is *also* included in the results
+      val assetTag2 = "asset12"
+      generateAsset(assetTag2, AssetType.ServerNode.get, Status.Provisioned.get, List(("U", String, 0, "U")), State.New.get)
+      
+      reindex()
+      
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("T", "T").withMeta("U", "U")
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, Some("or"))
+      page.items.size mustEqual 2
+      page.items.find { a => a.tag == assetTag } must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+        asset.getMetaAttributeValue("T") mustEqual Some("T")
+        asset.getMetaAttributeValue("U") mustEqual None
+      }
+      page.items.find { a => a.tag == assetTag2 } must beSome.which { asset =>
+        asset.tag mustEqual assetTag2
+        asset.status mustEqual Status.Provisioned.get.getId()
+        asset.getMetaAttributeValue("T") mustEqual None
+        asset.getMetaAttributeValue("U") mustEqual Some("U")
+      }
+    }
+    
+    "must find asset with partial attribute match " in new WithApplication(FakeApplication(
+      additionalConfiguration = Map(
+        "solr.enabled" -> true,
+        "solr.repopulateOnStartup" -> true))) {
+
+      // create the asset that matches the search
+      val assetTag = "asset13"
+      generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, List(("SPECIFICATION", String, 0, "WEB SERVICE FURY HADOOP")), State.New.get)
+
+      // this asset is not included in the results
+      generateAsset("asset14", AssetType.ServerNode.get, Status.Provisioned.get, Nil, State.New.get)
+      
+      reindex()
+      
+      val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("SPECIFICATION", "FURY")
+      val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty)
+      page.items.size mustEqual 1
+      page.items.find { a => a.tag == assetTag } must beSome.which { asset =>
+        asset.tag mustEqual assetTag
+        asset.status mustEqual Status.Allocated.get.getId()
+         asset.getMetaAttributeValue("SPECIFICATION") mustEqual Some("WEB SERVICE FURY HADOOP")
       }
     }
   }
@@ -143,8 +347,7 @@ class SolrSpec extends mutable.Specification {
     val asset = Asset.create(Asset(tag, status, assetType))
     Asset.partialUpdate(asset, None, None, Some(state))
     metaValues.foreach{case (name, value_type, group_id, value) =>
-      AssetMeta.findOrCreateFromName(name, value_type)
-      val meta = AssetMeta.findByName(name).get
+      val meta = AssetMeta.findOrCreateFromName(name, value_type)
       try {
         AssetMetaValue.create(AssetMetaValue(asset.id, meta.id, group_id, value))
       } catch {
@@ -637,34 +840,23 @@ class SolrQuerySpec extends mutable.Specification {
         SolrKeyVal("assetType", SolrIntValue(AssetType.ServerNode.get.id))
       ))
       val p = AssetSearchParameters(resultTuple, afinder)
-      /*
-      println(p.toSolrExpression.toSolrQueryString)
-      println("---")
-      println(expected.toSolrQueryString)
-      */
       p.toSolrExpression must_== expected
-
-
     }
-
   }
-        
-
 }
 
 class SolrServerSpecification extends mutable.Specification {
 
   def home = SolrConfig.embeddedSolrHome
 
-  lazy val server = Solr.getNewEmbeddedServer
-
   "solr server" should {
     "get solrhome config" in new WithApplication {
       home mustNotEqual "NONE"
     }
 
-    "launch embedded server without crashing" in {
-      val s = server
+    "launch embedded server without crashing" in new WithApplication(FakeApplication(additionalConfiguration = Map(
+      "solr.enabled" -> true
+    ))) {
       true must_== true
     }
   }
