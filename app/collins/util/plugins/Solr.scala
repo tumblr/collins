@@ -16,13 +16,11 @@ import collins.models.Asset
 
 object Solr {
 
-  def plugin: Option[SolrPlugin] = Play.maybeApplication.flatMap{a => a.plugin[SolrPlugin]}.filter{_.enabled}
-
-  protected def inPlugin[A](f: SolrPlugin => A): Option[A] = {
-    Play.maybeApplication.flatMap { app =>
-      app.plugin[SolrPlugin].map{plugin=>
-        f(plugin)
-      }
+  def inPlugin[A](f: SolrPlugin => A): Option[A] = {
+    if (SolrConfig.enabled) {
+      Play.maybeApplication.flatMap{ _.plugin[SolrPlugin] }.filter{_.enabled}.map{ f(_) }
+    } else {
+      None
     }
   }
 
@@ -36,10 +34,6 @@ object Solr {
 
   //TODO: Rename
   type AssetSolrDocument = Map[SolrKey, SolrValue]
-
-  def server: Option[SolrClient] = Play.maybeApplication.flatMap { app =>
-    app.plugin[SolrPlugin].filter(_.enabled).map{_.server}
-  }
 
   private[solr] def getNewEmbeddedServer = {
     val solrHome = SolrConfig.embeddedSolrHome

@@ -35,16 +35,13 @@ class SolrPlugin(app: Application) extends Plugin {
     case None => throw new RuntimeException("Attempted to get Solr server when no server is initialized")
   }
 
-  override def enabled = {
-    SolrConfig.pluginInitialize(app.configuration)
-    SolrConfig.enabled
-  }
+  override def enabled = true
 
   val assetSerializer = new AssetSerializer
   val assetLogSerializer = new AssetLogSerializer
 
   override def onStart() {
-    if (enabled) {
+    if (SolrConfig.enabled) {
       System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
       System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
       System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "WARN");

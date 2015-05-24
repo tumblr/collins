@@ -61,7 +61,7 @@ class AssetSolrUpdater extends Actor {
         val indexTime = new Date
         val assets = assetTags.map(t => Asset.findByTag(t)).flatMap(a => a)
         logger.debug("Got Reindex task, working on %d assets".format(assetTags.size))
-        Solr.plugin.foreach(_.updateAssets(assets, indexTime))
+        Solr.inPlugin { _.updateAssets(assets, indexTime) }
         scheduled.set(false)
       }
   }
@@ -70,7 +70,7 @@ class AssetSolrUpdater extends Actor {
 class AssetLogSolrUpdater extends Actor {
 
   def receive = {
-    case log: AssetLog => Solr.plugin.foreach{_.updateAssetLogs(List(log), new Date)}
+    case log: AssetLog => Solr.inPlugin { _.updateAssetLogs(List(log), new Date)}
   }
 
 }
