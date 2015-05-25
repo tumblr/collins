@@ -1,1 +1,1 @@
-import collins_client.client
+from collins_client.client import CollinsClient
