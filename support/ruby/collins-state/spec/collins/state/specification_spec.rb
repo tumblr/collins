@@ -8,10 +8,10 @@ describe Collins::State::Specification do
 
   context "#empty" do
     it "empty?" do
-      Collins::State::Specification.empty.empty?.should be_true
+      Collins::State::Specification.empty.empty?.should be true
     end
     it "defined?" do
-      Collins::State::Specification.empty.defined?.should be_false
+      Collins::State::Specification.empty.defined?.should be false
     end
   end
 
@@ -72,8 +72,8 @@ describe Collins::State::Specification do
       subject[:lkajsd].should be_nil
     end
     it "#key?" do
-      subject.key?(:thing).should be_true
-      subject.key?(:lkajsd).should be_false
+      subject.key?(:thing).should be true
+      subject.key?(:lkajsd).should be false
     end
     it "#fetch" do
       subject.fetch(:thing, :stuff).should == :thung
@@ -147,12 +147,12 @@ describe Collins::State::Specification do
     it "#to_json" do
       i = instance
       json = JSON.dump(i)
-      JSON.parse(json).should == i
+      JSON.parse(json, :create_additions => true).should == i
     end
 
     it "#to_option" do
-      instance.to_option.defined?.should be_true
-      Collins::State::Specification.empty.to_option.defined?.should be_false
+      instance.to_option.defined?.should be true
+      Collins::State::Specification.empty.to_option.defined?.should be false
     end
 
     it "#to_s" do

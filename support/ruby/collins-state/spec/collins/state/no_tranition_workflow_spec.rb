@@ -52,8 +52,8 @@ describe Collins::NoTransitionWorkflow do
       p = get_process
       get_request = api(:get).returns(200, CollinsFixture.full_asset)
 
-      p.expired?(tag).should be_true
-      p.start?(tag).should be_false
+      p.expired?(tag).should be true
+      p.start?(tag).should be false
 
       update_asset = api(:post).returns(200, CollinsFixture.status_response)
       p.start(tag).name.should == :start
@@ -65,8 +65,8 @@ describe Collins::NoTransitionWorkflow do
       p = get_process
       get_request = stub_get_request(:start, time(-31, :minutes))
 
-      p.expired?(tag).should be_true
-      p.start?(tag).should be_true
+      p.expired?(tag).should be true
+      p.start?(tag).should be true
 
       p_args = Hash[
         :profile => 'adminwebnode', :contact => 'crushing', :primary_role => 'TUMBLR_APP',
@@ -90,8 +90,8 @@ describe Collins::NoTransitionWorkflow do
                     .then.returns(200, json_asset_with_state(descriptor(:done, time(-1, :minute))))
       update_asset = api(:post).returns(200, CollinsFixture.status_response)
 
-      p.expired?(tag).should be_true
-      p.start?(tag).should be_false
+      p.expired?(tag).should be true
+      p.start?(tag).should be false
 
       p.start(tag)
       p.vlan_moved_to_provisioning(tag)
@@ -106,7 +106,7 @@ describe Collins::NoTransitionWorkflow do
       p.use_client.vlan_move_to_production(tag)
       p.reachable_by_ip(tag)
       p.done(tag)
-      p.finished?(tag).should be_true
+      p.finished?(tag).should be true
       get_request.should have_been_made.times(10)
       update_asset.should have_been_made.times(7)
     end
