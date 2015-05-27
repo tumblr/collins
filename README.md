@@ -5,7 +5,7 @@
 There is good documentation available at http://tumblr.github.com/collins. The
 documentation below is for developers or people setting up a new instance.
 
-The most recent production build of collins is available [here](http://tumblr.github.com/collins/downloads.html)
+The most recent release of collins is available [here](http://tumblr.github.com/collins/downloads.html)
 
 [![Build Status](https://travis-ci.org/tumblr/collins.png?branch=master)](https://travis-ci.org/tumblr/collins)
 [![Dependency Status](https://www.versioneye.com/user/projects/555e7598393564000d040000/badge.svg?style=flat)](https://www.versioneye.com/user/projects/555e7598393564000d040000)
