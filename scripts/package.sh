@@ -31,7 +31,7 @@ rm -rf collins
 for dir in collins collins/lib collins/scripts $CONF_DIR; do
   mkdir $dir
 done
-for dir in $CONF_DIR/solr/conf $CONF_DIR/solr/data; do
+for dir in $CONF_DIR/solr/cores $CONF_DIR/solr/data; do
   mkdir -p $dir
 done
 
@@ -54,6 +54,6 @@ done
 cp ../conf/production_starter.conf $CONF_DIR/production.conf
 
 cp ../conf/solr/solr.xml $CONF_DIR/solr/
-cp -R ../conf/solr/conf/* $CONF_DIR/solr/conf/
+cp -R ../conf/solr/cores/* $CONF_DIR/solr/cores/
 cp -R ../conf/evolutions/* $CONF_DIR/evolutions/
 zip -r collins.zip collins
