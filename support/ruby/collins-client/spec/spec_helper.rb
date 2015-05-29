@@ -8,10 +8,6 @@ require 'rspec/core'
 require 'json'
 require 'webmock/rspec'
 
-if RUBY_VERSION !~ /^1\.9/ then
-  raise Exception.new("We require ruby 1.9.x")
-end
-
 $:.unshift File.expand_path(File.join('..', 'lib'))
 require 'collins_client'
 
