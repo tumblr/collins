@@ -56,5 +56,11 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.summary = "Client library for Collins API"
 
-  s.add_runtime_dependency(%q<httparty>, ["~> 0.13.1"])
+  s.add_runtime_dependency 'httparty', '~> 0.13.1'
+
+  s.add_development_dependency 'yard'
+  s.add_development_dependency 'redcarpet'
+  s.add_development_dependency 'rspec', '~> 2.99'
+  s.add_development_dependency 'webmock'
+  s.add_development_dependency 'simplecov'
 end
