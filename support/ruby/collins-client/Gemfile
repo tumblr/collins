@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem 'httparty',      '~> 0.8.3'
+gem 'httparty',      '~> 0.13.1'
 
 group :development do
   gem 'yard'
@@ -8,7 +8,7 @@ group :development do
 end
 
 group :test do
-  gem 'rspec'
+  gem 'rspec', '~> 2.99.0'
   gem 'webmock'
   gem 'simplecov'
 end
