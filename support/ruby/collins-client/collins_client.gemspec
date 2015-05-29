@@ -56,6 +56,8 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.summary = "Client library for Collins API"
 
+  s.required_ruby_version = '>= 1.9.2'
+
   s.add_runtime_dependency 'httparty', '~> 0.11.0'
 
   s.add_development_dependency 'yard'
