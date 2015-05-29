@@ -8,7 +8,10 @@ documentation below is for developers or people setting up a new instance.
 The most recent release of collins is available [here](http://tumblr.github.com/collins/downloads.html)
 
 [![Build Status](https://travis-ci.org/tumblr/collins.png?branch=master)](https://travis-ci.org/tumblr/collins)
+
 [![Dependency Status](https://www.versioneye.com/user/projects/555e7598393564000d040000/badge.svg?style=flat)](https://www.versioneye.com/user/projects/555e7598393564000d040000)
+
+[![Docker Container Status](http://dockeri.co/image/tumblr/collins)
 
 ## Quickstart
 
@@ -20,9 +23,7 @@ The most recent release of collins is available [here](http://tumblr.github.com/
 
 ## Docker Image
 
-You can find more about using collins with Docker here:
-
-http://tumblr.github.io/collins/index.html#docker
+Details about the docker container and building your own container are available in the [documentation](http://tumblr.github.io/collins/index.html#docker)
 
 tl;dr: ```docker run -p 9000:9000 tumblr/collins```
 
