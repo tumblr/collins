@@ -16,11 +16,11 @@ describe Collins::SimpleCallback do
     get_cb(:fizz, :opt1 => "val", :block => Proc.new{}).options.should == {:opt1 => "val"}
   end
   it "#empty" do
-    Collins::SimpleCallback.empty.empty?.should be_true
-    Collins::SimpleCallback.empty.defined?.should be_false
+    Collins::SimpleCallback.empty.empty?.should be true
+    Collins::SimpleCallback.empty.defined?.should be false
   end
   it "#defined?" do
-    get_cb(:foo).defined?.should be_true
+    get_cb(:foo).defined?.should be true
   end
 
   context "#arity" do

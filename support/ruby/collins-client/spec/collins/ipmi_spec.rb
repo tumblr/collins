@@ -9,7 +9,7 @@ describe Collins::Ipmi do
   it_behaves_like "flexible initializer", :id => 23, :address => "hello"
 
   it "#empty?" do
-    subject.empty?.should be_false
+    subject.empty?.should be false
   end
 
   it "#address" do

@@ -51,11 +51,11 @@ describe Collins::Api::Asset do
     it "supports using a reason" do
       args = Hash[:reason => 'Angry gods']
       api.with(:body => body(args)).returns 200, CollinsFixture.status_response(false)
-      subject.delete!(tag, args).should be_true
+      subject.delete!(tag, args).should be true
     end
     it "supports not using a reason" do
       api.returns 200, CollinsFixture.status_response(false)
-      subject.delete!(tag).should be_true
+      subject.delete!(tag).should be true
     end
     it "raises a RequestError if the status is >= 400" do
       api.returns 409, CollinsFixture.delete_conflict
@@ -63,7 +63,7 @@ describe Collins::Api::Asset do
     end
     it "does not raise an error if !strict" do
       api.returns 409, CollinsFixture.delete_conflict
-      subject(false).delete!(tag).should be_false
+      subject(false).delete!(tag).should be false
     end
   end
 
@@ -74,23 +74,23 @@ describe Collins::Api::Asset do
 
     it "return false on 404" do
       api.returns 404, CollinsFixture.no_such_asset(false)
-      subject(false).exists?("sl-129278").should be_false
+      subject(false).exists?("sl-129278").should be false
     end
     it "return false on 404 even when strict" do
       api.returns 404, CollinsFixture.no_such_asset(false)
-      subject.exists?("sl-129278").should be_false
+      subject.exists?("sl-129278").should be false
     end
     it "return true on 200" do
       api.returns 200, CollinsFixture.full_asset(false)
-      subject.exists?("sl-129278").should be_true
+      subject.exists?("sl-129278").should be true
     end
     it "return true on 200 when status is specified" do
       api.returns 200, CollinsFixture.full_asset(false)
-      subject.exists?("sl-129278", "Allocated").should be_true
+      subject.exists?("sl-129278", "Allocated").should be true
     end
     it "return false on 200 when status is specified but not same" do
       api.returns 200, CollinsFixture.full_asset(false)
-      subject.exists?("sl-129278", "Incomplete").should be_false
+      subject.exists?("sl-129278", "Incomplete").should be false
     end
   end
 
@@ -138,7 +138,7 @@ describe Collins::Api::Asset do
 
     it "returns false if asset does not exist and not strict" do
       api.returns 500, CollinsFixture.no_such_asset(false)
-      subject(false).get("sl-129278").should be_false
+      subject(false).get("sl-129278").should be false
     end
 
     it "throws an exception if asset does not exist and strict" do

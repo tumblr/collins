@@ -78,17 +78,17 @@ describe Collins::Option do
       none = get_none
       none.exists? { |v|
         code.work(v)
-      }.should be_false
+      }.should be false
     end
     it "false and execute when some" do
       get_some("henry").exists? { |v|
         v != "henry"
-      }.should be_false
+      }.should be false
     end
     it "true and execute when some" do
       get_some("henry").exists? { |v|
         v == "henry"
-      }.should be_true
+      }.should be true
     end
   end
 
