@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.authors = ["Blake Matheny", "Gabe Conradi", "Will Richard"]
   s.date = "2015-03-17"
   s.description = "Provides ruby support for interacting with the Collins API"
-  s.email = ["accounts@tumblr.com","gabe@tumblr.com","will@tumblr.com"]
+  s.email = ["collins-sm@googlegroups.com","gabe@tumblr.com","will@tumblr.com"]
   s.extra_rdoc_files = [
     "README.md"
   ]
@@ -54,19 +54,8 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/tumblr/collins/tree/master/support/ruby/collins-client"
   s.licenses = ["APL 2.0"]
   s.require_paths = ["lib"]
-  s.rubygems_version = "1.8.23"
   s.summary = "Client library for Collins API"
 
-  if s.respond_to? :specification_version then
-    s.specification_version = 3
-
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<httparty>, ["~> 0.8.3"])
-    else
-      s.add_dependency(%q<httparty>, ["~> 0.8.3"])
-    end
-  else
-    s.add_dependency(%q<httparty>, ["~> 0.8.3"])
-  end
+  s.add_runtime_dependency(%q<httparty>, ["~> 0.8.3"])
 end
 
