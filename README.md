@@ -11,7 +11,7 @@ The most recent release of collins is available [here](http://tumblr.github.com/
 
 [![Dependency Status](https://www.versioneye.com/user/projects/555e7598393564000d040000/badge.svg?style=flat)](https://www.versioneye.com/user/projects/555e7598393564000d040000)
 
-[![Docker Container Status](http://dockeri.co/image/tumblr/collins)
+[Docker Container Status](http://dockeri.co/image/tumblr/collins)
 
 ## Quickstart
 
