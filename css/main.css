@@ -252,7 +252,7 @@ section > ul li {
 }
 
 .collins-shell:after {
-  content: "Collins Shell Usage";
+  content: "Collins Shell Example";
   position: absolute;
   top: -1px;
   left: -1px;

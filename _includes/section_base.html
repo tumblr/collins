@@ -22,6 +22,9 @@ Read more about liquid and include params here: http://jekyllrb.com/docs/templat
           {% for subsection in section[1].subsections %}
           <li><a href="#{{ section[0] | downcase}}-{{ subsection[0] | downcase }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ subsection[0] | capitalize }}</a></li>
           {% endfor %}
+          {% for api in section[1].api_sections %}
+          <li><a href="#api-{{ section[0] | downcase }}-{{ api[0] | slugify }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ api[0] | capitalize  }}</a></li>
+          {% endfor %}
         </ul>
         {% endfor %}
       </ul>
@@ -39,8 +42,16 @@ Read more about liquid and include params here: http://jekyllrb.com/docs/templat
           <div class="page-header">
             <h2>{{ subsection[0] || capitalize }}</h2>
           </div>
-          {% assign subsection_iclude=subsection[1] %}
-          {% include {{ subsection_iclude }} %}
+          {% assign subsection_include=subsection[1] %}
+          {% include {{ subsection_include }} %}
+        </section>
+        {% endfor %}
+        {% for api in section[1].api_sections %}
+        <section id="api-{{ section[0] | downcase }}-{{ api[0] | slugify }}">
+          <h2>{{ api[0] || capitalize }}</h2>
+          {% assign template_title=api[0] %}
+          {% assign template_data=api[1] %}
+          {% include api/api_template.html data=template_data title=template_title %}
         </section>
         {% endfor %}
       </section>
