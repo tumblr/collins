@@ -60,9 +60,9 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'httparty', '~> 0.11.0'
 
-  s.add_development_dependency 'yard'
+  s.add_development_dependency 'yard', '~> 0.8'
   s.add_development_dependency 'rspec', '~> 2.99'
-  s.add_development_dependency 'webmock'
-  s.add_development_dependency 'simplecov'
-  s.add_development_dependency 'rake'
+  s.add_development_dependency 'webmock', '~> 1.21'
+  s.add_development_dependency 'simplecov', '~> 0.10'
+  s.add_development_dependency 'rake', '~> 10.4'
 end
