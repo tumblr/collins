@@ -44,28 +44,10 @@ Gem::Specification.new do |s|
   s.rubygems_version = "1.8.23"
   s.summary = "Notifications for Collins"
 
-  if s.respond_to? :specification_version then
-    s.specification_version = 3
-
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<addressable>, ["~> 2.3.2"])
-      s.add_runtime_dependency(%q<collins_client>, ["~> 0.2.10"])
-      s.add_runtime_dependency(%q<hipchat>, ["~> 0.7.0"])
-      s.add_runtime_dependency(%q<mail>, ["~> 2.4.4"])
-      s.add_runtime_dependency(%q<nokogiri>, ["~> 1.5.2"])
-    else
-      s.add_dependency(%q<addressable>, ["~> 2.3.2"])
-      s.add_dependency(%q<collins_client>, ["~> 0.2.10"])
-      s.add_dependency(%q<hipchat>, ["~> 0.7.0"])
-      s.add_dependency(%q<mail>, ["~> 2.4.4"])
-      s.add_dependency(%q<nokogiri>, ["~> 1.5.2"])
-    end
-  else
-    s.add_dependency(%q<addressable>, ["~> 2.3.2"])
-    s.add_dependency(%q<collins_client>, ["~> 0.2.10"])
-    s.add_dependency(%q<hipchat>, ["~> 0.7.0"])
-    s.add_dependency(%q<mail>, ["~> 2.4.4"])
-    s.add_dependency(%q<nokogiri>, ["~> 1.5.2"])
-  end
+  s.add_runtime_dependency('addressable', '~> 2.3.2')
+  s.add_runtime_dependency('collins_client', '~> 0.2.10')
+  s.add_runtime_dependency('hipchat', '~> 0.7.0')
+  s.add_runtime_dependency('mail', '~> 2.4.4')
+  s.add_runtime_dependency('nokogiri', '~> 1.5.2')
 end
 
