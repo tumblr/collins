@@ -44,12 +44,12 @@ module CollinsNotify; module ConfigurationMixin
       end
 
       # Format value if a formatter exists
-      if respond_to?(formatter_name) then
+      if respond_to?(formatter_name, true) then
         value = send(formatter_name, value)
       end
 
       validator_name = "valid_#{kname}?".to_sym
-      unless respond_to?(validator_name) then
+      unless respond_to?(validator_name, true) then
         raise NotImplementedError.new "ConfigurationMixin##{validator_name} must be implemented"
       end
       if send(validator_name, value) then
