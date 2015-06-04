@@ -65,7 +65,7 @@ describe Collins::Asset do
       subject.backend_ip_address.should == "10.80.97.233"
     end
     it "#backend_address?" do
-      subject.backend_address?.should be_true
+      subject.backend_address?.should be true
     end
     it "#backend_ip_addresses" do
       subject.backend_ip_addresses.length.should == 1
@@ -99,16 +99,16 @@ describe Collins::Asset do
   context "Update" do
     it "lshw is not an attribute" do
       ["lshw","LSHW"].each do |name|
-        ::Collins::Asset::Update.is_attribute?(name).should be_false
+        ::Collins::Asset::Update.is_attribute?(name).should be false
         ::Collins::Asset::Update.get_param(name).should === "lshw"
-        ::Collins::Asset::Update.is_file_param?(name).should be_true
+        ::Collins::Asset::Update.is_file_param?(name).should be true
       end
     end
     it "chassis_tag is not an attribute" do
       ["CHASSIS_TAG","chassis_tag"].each do |name|
-        ::Collins::Asset::Update.is_attribute?(name).should be_false
+        ::Collins::Asset::Update.is_attribute?(name).should be false
         ::Collins::Asset::Update.get_param(name).should === "CHASSIS_TAG"
-        ::Collins::Asset::Update.is_file_param?(name).should be_false
+        ::Collins::Asset::Update.is_file_param?(name).should be false
       end
     end
     it "file params support reading from files" do
@@ -123,9 +123,9 @@ describe Collins::Asset do
       }.to raise_error(::Collins::ExpectationFailedError)
     end
     it "foo is an attribute" do
-      ::Collins::Asset::Update.is_attribute?("foo").should be_true
+      ::Collins::Asset::Update.is_attribute?("foo").should be true
       ::Collins::Asset::Update.get_param("foo").should === "foo"
-      ::Collins::Asset::Update.is_attribute?("FOO").should be_true
+      ::Collins::Asset::Update.is_attribute?("FOO").should be true
       ::Collins::Asset::Update.get_param("FOO").should === "FOO"
     end
   end

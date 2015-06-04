@@ -9,25 +9,25 @@ describe Collins::Power do
   it_behaves_like "flexible initializer", :unit_id => 23
 
   context "#normalize_action" do
-    it "Off" do example.description.should have_power_action "powerOff" end
-    it "PowerOff" do example.description.should have_power_action "powerOff" end
+    it "Off" do |example| example.description.should have_power_action "powerOff" end
+    it "PowerOff" do |example| example.description.should have_power_action "powerOff" end
 
-    it "On" do example.description.should have_power_action "powerOn" end
-    it "PowerOn" do example.description.should have_power_action "powerOn" end
+    it "On" do |example| example.description.should have_power_action "powerOn" end
+    it "PowerOn" do |example| example.description.should have_power_action "powerOn" end
 
-    it "PowerSoft" do example.description.should have_power_action "powerSoft" end
+    it "PowerSoft" do |example| example.description.should have_power_action "powerSoft" end
 
-    it "Soft" do example.description.should have_power_action "rebootSoft" end
-    it "RebootSoft" do example.description.should have_power_action "rebootSoft" end
+    it "Soft" do |example| example.description.should have_power_action "rebootSoft" end
+    it "RebootSoft" do |example| example.description.should have_power_action "rebootSoft" end
 
-    it "Hard" do example.description.should have_power_action "rebootHard" end
-    it "RebootHard" do example.description.should have_power_action "rebootHard" end
+    it "Hard" do |example| example.description.should have_power_action "rebootHard" end
+    it "RebootHard" do |example| example.description.should have_power_action "rebootHard" end
 
-    it "Status" do example.description.should have_power_action "powerState" end
-    it "PowerState" do example.description.should have_power_action "powerState" end
+    it "Status" do |example| example.description.should have_power_action "powerState" end
+    it "PowerState" do |example| example.description.should have_power_action "powerState" end
 
-    it "Verify" do example.description.should have_power_action "verify" end
-    it "Identify" do example.description.should have_power_action "identify" end
+    it "Verify" do |example| example.description.should have_power_action "verify" end
+    it "Identify" do |example| example.description.should have_power_action "identify" end
   end
 
   it "#keys" do

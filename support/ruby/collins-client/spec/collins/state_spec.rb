@@ -8,11 +8,11 @@ describe Collins::AssetState do
     }
 
     it "is_a?(Collins::AssetState)" do
-      subject.is_a?(Collins::AssetState).should be_true
+      subject.is_a?(Collins::AssetState).should be true
     end
 
     it "#empty?" do
-      subject.empty?.should be_true
+      subject.empty?.should be true
     end
 
     it "#description" do
@@ -33,11 +33,11 @@ describe Collins::AssetState do
     }
 
     it "is_a?(Collins::AssetState)" do
-      subject.is_a?(Collins::AssetState).should be_true
+      subject.is_a?(Collins::AssetState).should be true
     end
 
     it "#empty?" do
-      subject.empty?.should be_false
+      subject.empty?.should be false
     end
 
     it "#description" do
