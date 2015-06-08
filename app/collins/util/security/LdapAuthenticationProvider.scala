@@ -96,38 +96,50 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
   }
   
   // creating a initial dir context will fail to indicate an authentication error
-  private def getUserContext(dn: String,  password: String) = {
-    new InitialDirContext(new JHashTable[String, String](
-      Map(
-        Context.SECURITY_PRINCIPAL -> dn,
-        Context.SECURITY_CREDENTIALS -> password) ++ env
-    ))
+  private def getUserContext(dn: String,  password: String): Option[InitialDirContext] = {
+    try {
+      Some(new InitialDirContext(new JHashTable[String, String](
+        Map(
+          Context.SECURITY_PRINCIPAL -> dn,
+          Context.SECURITY_CREDENTIALS -> password) ++ env
+      )))
+    } catch {
+      case e: AuthenticationException =>
+          logger.info("Failed authentication for user %s", e)
+          None
+    }
+  }
+  
+  def withCtxt[A](ctx: InitialDirContext) (f: InitialDirContext => Option[A]) (onException: Throwable => Option[A]): Option[A] = {
+    try { 
+      f(ctx) 
+    } catch {
+      case t : Throwable => onException(t)
+    } finally { 
+      ctx.close() 
+    }
   }
 
+  
   // Authenticate via LDAP
   override def authenticate(username: String, password: String): Option[User] = {
-    getInitialContext().flatMap (ctx => {
-      try {
-        findDn(ctx, username).map(dn => {
-          val uctx = getUserContext(dn, password)
-          try {
-            val uid = getUid(dn, uctx)
-            require(uid > 0, "Unable to find UID for user")
-            val groups = getGroups(dn, username, uctx)
-            val user = UserImpl(username, "*", groups.toSet, uid, true)
-            logger.trace("Succesfully authenticated %s".format(username))
-            user
-          } finally {
-            uctx.close
-          }
+    getInitialContext().flatMap (withCtxt(_) { ctx =>
+      findDn(ctx, username).flatMap(dn => {
+        getUserContext(dn, password).flatMap(withCtxt(_) { uctx =>
+          val uid = getUid(dn, uctx)
+          require(uid > 0, "Unable to find UID for user")
+          val groups = getGroups(dn, username, uctx)
+          val user = UserImpl(username, "*", groups.toSet, uid, true)
+          logger.info("Succesfully authenticated %s".format(username))
+          Some(user)
+        } { t =>
+          logger.warn("Failed to get groups for user %s".format(username))
+          None
         })
-      } catch {
-        case e: AuthenticationException =>
-          logger.info("Failed authentication for user %s", e)
-          None        
-      } finally {
-    	ctx.close
-      }
+      })
+    } { t =>
+      logger.error("Failed to bind to ldap server, please verify ldap configuration")
+      None
     })
   }
 
