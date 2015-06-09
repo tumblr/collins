@@ -133,12 +133,12 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
           logger.info("Succesfully authenticated %s".format(username))
           Some(user)
         } { t =>
-          logger.warn("Failed to get groups for user %s".format(username))
+          logger.warn("Failed to get groups for user %s".format(username), t)
           None
         })
       })
     } { t =>
-      logger.error("Failed to bind to ldap server, please verify ldap configuration")
+      logger.error("Failed to bind to ldap server, please verify ldap configuration", t)
       None
     })
   }
