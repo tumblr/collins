@@ -30,6 +30,7 @@ section > ul li {
           border-radius: 3px;
 }
 
+
 /* Base class
 ------------------------- */
 .jumbotron {
@@ -78,7 +79,6 @@ section > ul li {
 
 /* Sidenav for Docs
 -------------------------------------------------- */
-
 .sidenav {
   width: 228px;
   margin: 30px -10px 0;
@@ -89,7 +89,7 @@ section > ul li {
           border-radius: 6px;
   -webkit-box-shadow: 0 1px 4px rgba(0,0,0,.065);
      -moz-box-shadow: 0 1px 4px rgba(0,0,0,.065);
-          box-shadow: 0 1px 4px rgba(0,0,0,.065);
+     box-shadow: 0 1px 4px rgba(0,0,0,.065);
 }
 .sidenav > li > a {
   display: block;
@@ -98,6 +98,7 @@ section > ul li {
   padding: 8px 14px;
   border: 1px solid #e5e5e5;
 }
+
 .sidenav > li:first-child > a {
   -webkit-border-radius: 6px 6px 0 0;
      -moz-border-radius: 6px 6px 0 0;
@@ -108,18 +109,9 @@ section > ul li {
      -moz-border-radius: 0 0 6px 6px;
           border-radius: 0 0 6px 6px;
 }
-.sidenav > .active > a {
-  position: relative;
-  z-index: 2;
-  padding: 9px 15px;
-  border: 0;
-  text-shadow: 0 1px 0 rgba(0,0,0,.15);
-  -webkit-box-shadow: inset 1px 0 0 rgba(0,0,0,.1), inset -1px 0 0 rgba(0,0,0,.1);
-     -moz-box-shadow: inset 1px 0 0 rgba(0,0,0,.1), inset -1px 0 0 rgba(0,0,0,.1);
-          box-shadow: inset 1px 0 0 rgba(0,0,0,.1), inset -1px 0 0 rgba(0,0,0,.1);
-}
+
 /* Chevrons */
-.sidenav .icon-chevron-right {
+.sidenav .glyphicon-chevron-right {
   float: right;
   margin-top: 2px;
   margin-right: -6px;
@@ -128,36 +120,28 @@ section > ul li {
 .sidenav > li > a:hover {
   background-color: #f5f5f5;
 }
-.sidenav a:hover .icon-chevron-right {
+.sidenav a:hover .glyphicon-chevron-right {
   opacity: .5;
 }
-.sidenav .active .icon-chevron-right,
-.sidenav .active a:hover .icon-chevron-right {
-  background-image: url(../img/glyphicons-halflings-white.png);
-  opacity: 1;
-}
+
 .sidenav.affix {
   top: 40px;
 }
+
 .sidenav.affix-bottom {
   position: absolute;
   top: auto;
   bottom: 270px;
 }
 
-.sidenav .icon-chevron-right.cr-dim {
+.sidenav .glyphicon-chevron-right {
   float: right;
   margin-top: 2px;
   margin-right: -6px;
   opacity: .12;
 }
-.sidenav a:hover .icon-chevron-right.cr-dim {
+.sidenav a:hover .glyphicon-chevron-right {
   opacity: .25;
-}
-.sidenav .active .icon-chevron-right.cr-dim,
-.sidenav .active a:hover .icon-chevron-right.cr-dim {
-  background-image: url(../img/glyphicons-halflings-white.png);
-  opacity: .5;
 }
 
 /* Footer
@@ -327,147 +311,6 @@ section > ul li {
 .docs + .prettyprint {
   margin-top: -20px;
   padding-top: 15px;
-}
-
-/* Responsive
--------------------------------------------------- */
-
-/* Desktop large
-------------------------- */
-@media (min-width: 1200px) {
-  .sidenav {
-    width: 258px;
-  }
-}
-
-/* Desktop
-------------------------- */
-@media (max-width: 980px) {
-  /* Unfloat brand */
-  body > .navbar-fixed-top .brand {
-    float: left;
-    margin-left: 0;
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-  /* Inline-block quick links for more spacing */
-  .quick-links li {
-    display: inline-block;
-    margin: 5px;
-  }
-
-  /* When affixed, space properly */
-  .sidenav {
-    top: 0;
-    margin-top: 30px;
-    margin-right: 0;
-  }
-}
-
-/* Tablet to desktop
-------------------------- */
-@media (min-width: 768px) and (max-width: 980px) {
-  /* Remove any padding from the body */
-  body {
-    padding-top: 0;
-  }
-  /* Widen masthead and social buttons to fill body padding */
-  .jumbotron {
-    margin-top: -20px; /* Offset bottom margin on .navbar */
-  }
-  /* Adjust sidenav width */
-  .sidenav {
-    width: 166px;
-    margin-top: 20px;
-  }
-  .sidenav.affix {
-    top: 0;
-  }
-}
-
-/* Tablet
-------------------------- */
-@media (max-width: 767px) {
-  /* Remove any padding from the body */
-  body {
-    padding-top: 0;
-  }
-
-  /* Widen masthead and social buttons to fill body padding */
-  .jumbotron {
-    padding: 40px 20px;
-    margin-top:   -20px; /* Offset bottom margin on .navbar */
-    margin-right: -20px;
-    margin-left:  -20px;
-  }
-
-  /* Sidenav */
-  .sidenav {
-    width: auto;
-    margin-bottom: 20px;
-  }
-  .sidenav.affix {
-    position: static;
-    width: auto;
-    top: 0;
-  }
-
-  /* Unfloat the back to top link in footer */
-  .footer {
-    margin-left: -20px;
-    margin-right: -20px;
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-  .footer p {
-    margin-bottom: 9px;
-  }
-}
-
-/* Landscape phones
-------------------------- */
-@media (max-width: 480px) {
-  /* Remove padding above jumbotron */
-  body {
-    padding-top: 0;
-  }
-
-  /* Change up some type stuff */
-  h2 small {
-    display: block;
-  }
-
-  /* Downsize the jumbotrons */
-  .jumbotron h1 {
-    font-size: 60px;
-  }
-  .jumbotron p,
-  .jumbotron .btn {
-    font-size: 20px;
-  }
-  .jumbotron .btn {
-    display: block;
-    margin: 0 auto;
-  }
-
-  /* center align subhead text like the masthead */
-  .subhead h1,
-  .subhead p {
-    text-align: center;
-  }
-
-  /* Do our best to make tables work in narrow viewports */
-  table code {
-    white-space: normal;
-    word-wrap: break-word;
-    word-break: break-all;
-  }
-
-  /* Unfloat the back to top in footer to prevent odd text wrapping */
-  .footer .pull-right {
-    float: none;
-  }
 }
 
 .hll { background-color: #ffffcc }

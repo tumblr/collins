@@ -14,21 +14,25 @@ Read more about liquid and include params here: http://jekyllrb.com/docs/templat
 
 <div class="container">
   <div class="row">
-    <div class="col-md-3 sidebar">
-      <ul class="nav nav-list sidenav">
+    <nav class="col-md-3">
+      <ul class="nav nav-sidebar sidenav" > <!--data-spy="affix" data-offset-top="60"> -->
         {% for section in include.data.sections %}
-        <li><a href="#{{ section[0] | downcase }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ section[0] | capitalize }}</a></li>
-        <ul class="nav nav-list">
-          {% for subsection in section[1].subsections %}
-          <li><a href="#{{ section[0] | downcase}}-{{ subsection[0] | downcase }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ subsection[0] | capitalize }}</a></li>
-          {% endfor %}
-          {% for api in section[1].api_sections %}
-          <li><a href="#api-{{ section[0] | downcase }}-{{ api[0] | slugify }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ api[0] | capitalize  }}</a></li>
-          {% endfor %}
-        </ul>
+        <li>
+          <a href="#{{ section[0] | downcase }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ section[0] | capitalize }}</a>
+          <ul class="nav nav-sidebar">
+            {% if section[1].subsections or section[1].api_sections %}
+            {% for subsection in section[1].subsections %}
+            <li><a href="#{{ section[0] | downcase}}-{{ subsection[0] | downcase }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ subsection[0] | capitalize }}</a></li>
+            {% endfor %}
+            {% for api in section[1].api_sections %}
+            <li><a href="#api-{{ section[0] | downcase }}-{{ api[0] | slugify }}"><i class="glyphicon glyphicon-chevron-right"></i>{{ api[0] | capitalize  }}</a></li>
+            {% endfor %}
+            {% endif %}
+          </ul>
+        </li>
         {% endfor %}
       </ul>
-    </div>
+    </nav>
 
     <div class="col-md-9">
       {% for section in include.data.sections %}
