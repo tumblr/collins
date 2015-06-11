@@ -1,0 +1,244 @@
+<p class="lead">Setup provisioning for your environment</p>
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">provisioner</span>
+</p>
+
+<p>
+The provisioner plugin adds asset provisioning capabilities to collins which can
+be driven via the API or the web UI.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">allowedStatus</td>
+      <td>Set[String]</td>
+      <td>Only machines that have a status listed here can be provisioned. Defaults to [Unallocated, Maintenance, Provisioning, Provisioned]</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">allowedType</td>
+      <td>Set[String]</td>
+      <td>Only assets with this type can be provisioned. Defaults to [SERVER_NODE, SERVER_CHASSIS]</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">enabled</td>
+      <td>Boolean</td>
+      <td>Defaults to false</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">cacheTimeout</td>
+      <td>Duration</td>
+      <td>How long to wait before reloading profiles from disk. Defaults to 30 seconds.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">checkCommand</td>
+      <td>String</td>
+      <td>A command that runs before the actual provison, should return 0 if provisioning can proceed or 1 otherwise. Defaults to /bin/true.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">command</td>
+      <td>String</td>
+      <td>
+        The command to run. Substitutions are of the form &lt;foo&gt; where foo is a
+        supported substitution. Available substitutions are &lt;tag&gt;, &lt;profile-id&gt;,
+        &lt;notify&gt;, &lt;suffix&gt; and &lt;logfile&gt;. Defaults to /bin/false
+      </td>
+    </tr>
+    <tr>
+      <td class="inlinecode">profiles</td>
+      <td>String</td>
+      <td>A YAML file containing all available provisioning profiles.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">rate</td>
+      <td>String</td>
+      <td>
+        How frequently users can provision hosts unless they are setup with the features.noRateLimit permission.
+        Defaults to once every 10 seconds.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>provisioner {
+
+  allowedStatus = [Unallocated, Maintenance, Provisioning, Provisioned]
+
+  allowedType = [SERVER_NODE, SERVER_CHASSIS]
+
+  enabled = false
+
+  cacheTimeout = 30 seconds
+
+  checkCommand = "/bin/true"
+
+  command = "/bin/false"
+
+  profiles = "test/resources/profiles.yaml"
+
+  rate = "1/10 seconds"
+}</pre>
+</div>
+
+<h2>Provisioning Rates</h2>
+<p>
+Rates are expressed in terms of the number of successful requests per time period that a user can
+make. Specified as <code>#/duration</code> where <code>#</code> is an integer and <code>duration</code>
+is the duration. Examples:
+</p>
+
+<ul>
+  <li><code>1/30 seconds</code> - once per 30 seconds</li>
+  <li><code>5/1 minute</code> - five times per minute (same as <code>1/20 seconds</code>)</li>
+  <li><code>1/0 seconds</code> - no rate limit</li>
+  <li><code>0/0 seconds</code> - disallowed</li>
+</ul>
+
+<h2>Substitutions in Commands</h2>
+<p>
+A few substitutions are available in the <code>command</code> and <code>checkCommand</code>
+</p>
+<ul>
+  <li><code>&lt;tag&gt;</code> - the asset tag being provisioned</li>
+  <li><code>&lt;profile-id&gt;</code> - the id of the profile being used for provisioning</li>
+  <li><code>&lt;notify&gt;</code> - the contact information supplied by the user doing the provisioning</li>
+  <li><code>&lt;suffix&gt;</code> - any suffix to append to the hostname as provided by the user (if allowed)</li>
+  <li><code>&lt;logfile&gt;</code> - a logfile to use, defaults to <code>/tmp/&lt;tag&gt;-&lt;profile-id&gt;.log</code></li>
+</ul>
+
+<h2>Provisioner Profile</h2>
+<p>
+The provisioner profiles file is what tells collins what types of assets can be
+provisioned. It is a fairly simple format and leaves most actual work up to the
+command and check command configured CLI tools. At Tumblr we have implemented a
+variety of simple CLI tools to handle a variety of provisioning scenarios. Our
+infrastructure automation framework is called visioner, some sample visions will
+be distributed so you can see how some of our provisioning works.
+</p>
+
+<p>
+The keys in the reference file below (databasenode, devnode, webnode) are
+automatically set to be the NODECLASS tag of the asset in collins. This key is
+also reference above as <code>&lt;profile-id&gt;</code> and is how the provision
+process knows what configuration to use. A profile can have any number of
+key/values associated with them of any type, but has a few reserved key/value
+pairs.
+</p>
+
+<div class="example reference-config">
+  <pre>profiles:
+  databasenode:
+    label: "Database Server"
+    prefix: "db"
+    primary_role: "DATABASE"
+    requires_pool: false
+    contact: dbteam@company.com
+    contact_notes: http://wiki.company.com/servers/databasenode
+    clear_attributes:
+    - TEST_DATABASE
+    - DONT_WANT_THIS_ATTRIBUTE_EITHER
+  devnode:
+    label: "Dev Machine"
+    prefix: "dev"
+    allow_suffix: true
+    primary_role: "DEVEL"
+    pool: "DEVEL"
+    attributes:
+      DEV_MODE: true
+  hadoopnode:
+    label: "Hadoop Server"
+    prefix: "hadoop"
+    allowed_classes:
+    - storage_class
+    - service_class
+  webnode:
+    label: "Web Server"
+    prefix: "web"
+    requires_secondary_role: true</pre>
+</div>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">label</td>
+      <td>String</td>
+      <td>Label to show in the UI. Should be unique.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">prefix</td>
+      <td>String</td>
+      <td>The prefix to use in the hostname. This (semi-readable hostnames) helps with viewing error logs and such.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">primary_role</td>
+      <td>Option[String]</td>
+      <td>The primary role to set on the asset in collins. The primary role drives automation and other tasks. If this value is set, the user can not select it.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">secondary_role</td>
+      <td>Option[String]</td>
+      <td>The secondary role to set on the asset in collins. If this value is set, the end user can not select it.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">pool</td>
+      <td>Option[String]</td>
+      <td>The pool to set on the asset in collins. If this value is set, the end user can not select it.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">requires_primary_role</td>
+      <td>Boolean</td>
+      <td>Whether a primary role is required or not, defaults to true. If <code>primary_role</code> is not specified, the user must select one. If this is set to false, the user does not have to select one.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">requires_secondary_role</td>
+      <td>Boolean</td>
+      <td>Whether a secondary role is required or not, defaults to false. If <code>secondary_role</code> is not specified and this value is true, the user must specify one. If this value is false, the user is not required to specify the value.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">requires_pool</td>
+      <td>Boolean</td>
+      <td>Whether a pool is required or not, defaults to true. If <code>pool</code> is not specified and this value is true the user must specify one.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">allow_suffix</td>
+      <td>Boolean</td>
+      <td>Whether a user may specify an additional suffix for the hostname, defaults to false. If this is set to true, and the user for instance specifies a value of "foo" and the prefix was set to "dev", the generated hostname will be something like "dev-foo".</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">contact</td>
+      <td>Option[String]</td>
+      <td>If specified, this value is set on the <code>CONTACT</code> attribute at provision time. Useful to map responsible parties to nodeclasses. If not specified, <code>CONTACT</code> is cleared on the asset.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">contact_notes</td>
+      <td>Option[String]</td>
+      <td>Similar to <code>contact</code>, this field can be used to store some kind of information about the nodeclass, i.e. a link to a wiki page about the node profile, or services running on the machine. If not specified, this will be cleared at provision time.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">attributes</td>
+      <td>Map[String,Object]</td>
+      <td>If specified, any key value pair here will be set as attributes on the asset at provision time. You can use any value types that YAML supports; the parsed representation will be turned into a string when setting the attribute. These attributes have a lower precedence than attributes set by collins, such as nodeclass and primary_role.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">clear_attributes</td>
+      <td>List[String]</td>
+      <td>If specified, any attribute in this list will be cleared on provision. These attributes have a lower precedence than any attributes set in <code>attributes</code>, and wont clear any attributes set by collins itsself (nodeclass, primary_role, etc)</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">allowed_classes</td>
+      <td>Option[List[String]]</td>
+      <td>A list of asset classification tags that an asset must be classified as to allow provisioning. The list is ORed, so an asset matching any of the classifications will be provisionable. If omitted, there are no restrictions placed on what asset can be used to provision this profile (any classified/unclassified asset will provision). This is useful to restrict certain nodeclasses to certain hardware profiles, i.e. hadoopnode requires storage_class assets. See <a href="#nodeclassifier">docs on asset classification</a> for details on how this works.</td>
+    </tr>
+  </tbody>
+</table>

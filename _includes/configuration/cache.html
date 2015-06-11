@@ -1,0 +1,27 @@
+<p class="lead">Making Collins faster</p>
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">cache.class</td>
+      <td>String</td>
+      <td>Defaults to collins.cache.GuavaCache. Other implementations should be available soon.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">cache.timeout</td>
+      <td>Duration</td>
+      <td>Defaults to 10 minutes. Collins ensures an extremely reasonable level of cache coherency, the default should be fine.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>cache {
+  class = "collins.cache.GuavaCache"
+  timeout = 10 minutes
+}</pre>
+</div>

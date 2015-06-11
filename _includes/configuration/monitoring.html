@@ -1,0 +1,36 @@
+<p class="lead">Monitoring Collins</p>
+<p>
+<span class="label label-info">Namespace</span><span class="inlinecode"> metricsreporter</span>
+</p>
+
+<p>
+Monitoring Collins using Coda Hale's <a href="http://github.com/codahale/metrics">Metrics</a> and Chris Burrough's <a href="https://github.com/addthis/metrics-reporter-config">metrics-reporter-config</a> project is relatively straightforward.  See Metrics' documentation for how to report specific metrics, and the metrics-reporter-config documentation for how the configuration file should be formatted.
+</p>
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">enabled</td>
+      <td>Boolean</td>
+      <td><code>true</code> to enable, <code>false</code> to disable. <code>false</code> by default.
+    </tr>
+    <tr>
+      <td class="inlinecode">configFile</td>
+      <td>String</td>
+      <td>The cofig file passed to <code>metrics-reporter-config</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>metricsreporter {
+
+  enabled= false
+  configFile = "conf/metrics-reporter-config.yaml"
+
+}</pre
+</div>

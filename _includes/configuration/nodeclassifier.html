@@ -1,0 +1,71 @@
+<p class="lead">Find similar assets</p>
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">nodeclassifier</span>
+</p>
+
+<p>
+A pretty common thing to want to be able to do is ask collins to tell you what other assets are like
+another. At Tumblr we use this for bulk provisioning, where I might want to be able to do something
+like say 'provisioning me 100 servers that are just like this one'. This is the problem that is solved
+with the node classifier. A node classifier describes a node class (e.g. web, queue, database, etc) and
+allows you to query for assets described by the classifier.
+</p>
+
+<p>
+Much like with the MultiCollins configuration, we reuse assets to configure our node classifiers.
+In order to create a node classifier create a new asset (we prefer Configuration assets), and set
+tags on it that describe the traits of similar assets. For instance you might create a Configuration
+asset named <code>web_classifier</code> and set the NIC_SPEED to 10000000000, the MEMORY_SIZE_TOTAL to
+34359738368, and the TOTAL_DISK_STORAGE to 500107862016. This configuration now describes a web class host with
+a 1Gb NIC, 32GB of RAM, and a 500GB disk. Be sure to set an IS_NODECLASS tag to true on the asset.
+</p>
+
+<p>
+With the above configuration specified you can now use the find similar API endpoint. You also in the web
+UI should find links for finding similar assets.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">assetType</td>
+      <td>String</td>
+      <td>The asset type for classifiers. Defaults to CONFIGURATION.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">identifyingMetaTag</td>
+      <td>String</td>
+      <td>The tag that indicates that the asset is indeed a classifier. Defaults to IS_NODECLASS.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">excludeMetaTags</td>
+      <td>Set[String]</td>
+      <td>A set of tags to exclude from finding similar assets. IS_NODECLASS and NOTE are included by default.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">displayNameAttribute</td>
+      <td>String</td>
+      <td>What attribute to use for a friendly name for this classification, instead of the tag of the classification asset. Defaults to NAME.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">sortKeys</td>
+      <td>Set[String]</td>
+      <td>Tags to be used for sorting. This is useful for instance for specifying that ROW, followed by RACK should be used for location based ordering of results. We use this at Tumblr to provide good distribution when provisioning.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>nodeclassifier {
+  assetType = CONFIGURATION
+  identifyingMetaTag = IS_NODECLASS
+  displayNameAttribute = NAME
+  excludeMetaTags = [IS_NODECLASS, NOTE]
+  sortKeys = []
+}</pre>
+</div>
