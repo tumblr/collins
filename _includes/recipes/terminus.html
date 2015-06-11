@@ -1,3 +1,4 @@
+<p class="lead">Use Collins as your puppet node classifier and fact terminus</p>
 <p>
 At Tumblr we use <a href="http://puppetlabs.com/">puppet</a> to manage our
 running systems. Typically with puppet you map nodes (hosts) to puppet classes
@@ -53,7 +54,7 @@ are collins specific and environment is the puppet environment.
       <span class="n">manifest</span><span class="o">.</span><span class="n">merge!</span><span class="p">({</span>
         <span class="s1">&#39;parameters&#39;</span>  <span class="o">=&gt;</span> <span class="p">{</span>
           <span class="s1">&#39;collins&#39;</span> <span class="o">=&gt;</span> <span class="n">node</span><span class="o">.</span><span class="n">extras</span><span class="o">[</span><span class="s1">&#39;ATTRIBS&#39;</span><span class="o">].</span><span class="n">values</span><span class="o">.</span><span class="n">first</span><span class="p">,</span>
-        <span class="p">},</span>      
+        <span class="p">},</span>
       <span class="p">})</span>
     <span class="k">end</span>
 
