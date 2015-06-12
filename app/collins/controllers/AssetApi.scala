@@ -50,7 +50,7 @@ trait AssetApi {
   )
 
   // DELETE /api/asset/:tag
-  def deleteAsset(tag: String, realDelete: Boolean) = DeleteAction(tag, realDelete, Permissions.AssetApi.DeleteAsset, this)
+  def deleteAsset(tag: String, nuke: Boolean) = DeleteAction(tag, nuke, Permissions.AssetApi.DeleteAsset, this)
 
   //GET /api/asset/:tag/similar
   def similar(tag: String, page: Int, size: Int, sort: String) =
