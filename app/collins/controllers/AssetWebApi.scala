@@ -3,7 +3,6 @@ package collins.controllers
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
 import play.api.mvc.Action
-import play.api.mvc.AsyncResult
 import play.api.mvc.Results
 
 import collins.controllers.actions.asset.DeleteAction
@@ -20,14 +19,13 @@ trait AssetWebApi {
     DeleteAction(tag, true, Permissions.AssetWebApi.DeleteAsset, this)
 
   // POST /asset/:tag/cancel
-  def cancelAsset(tag: String) = Authenticated { user => Action { implicit req =>
+  def cancelAsset(tag: String) = Authenticated { user => 
     if (AppConfig.ignoreAsset(tag)) {
-      formatResponseData(
+      Action { implicit req => formatResponseData(
         Api.getErrorMessage("Specified asset has been configured to not permit this operation")
-      )
+      ) }
     } else {
-      val asset = Asset.findByTag(tag)
-      AsyncResult {
+      Action.async { implicit req => val asset = Asset.findByTag(tag)
         BackgroundProcessor.send(AssetCancelProcessor(tag)) { case(ex,res) =>
           val rd: ResponseData = ex.map { err =>
             Api.getErrorMessage(err.getMessage)
@@ -41,8 +39,7 @@ trait AssetWebApi {
           }.get
           formatResponseData(rd)
         }
-      }
     }
-  }}(Permissions.AssetWebApi.CancelAsset)
+    }}(Permissions.AssetWebApi.CancelAsset)
 
 }
