@@ -3,7 +3,6 @@ package collins.controllers.actions.asset
 import scala.concurrent.Future
 
 import play.api.mvc.SimpleResult
-import play.api.mvc.AsyncResult
 
 import collins.controllers.Permissions
 import collins.controllers.SecureController
