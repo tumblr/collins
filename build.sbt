@@ -23,10 +23,10 @@ scalacOptions += "-language:postfixOps"
 scalacOptions += "-language:implicitConversions"
 
 libraryDependencies ++= Seq(
-  "org.specs2" %% "specs2" % "1.9.2" % "test",
+  "org.specs2" %% "specs2" % "2.3.13" % "test",
   "com.google.guava" % "guava" % "18.0",
   "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
-  "nl.grons" %% "metrics-scala" % "2.2.0",
+  "nl.grons" %% "metrics-scala" % "2.1.5",
   "com.addthis.metrics" % "reporter-config" % "2.3.1",
   "mysql" % "mysql-connector-java" % "5.1.35",
   "com.h2database" % "h2" % "1.4.187",
@@ -41,8 +41,8 @@ libraryDependencies ++= Seq(
   "org.squeryl" %% "squeryl" % "0.9.5-7",
   "com.gilt" %% "jerkson" % "0.6.6",
   "org.yaml" % "snakeyaml" % "1.15",
-  "com.typesafe.play" %% "play-jdbc" % "2.2.6",
-  "com.typesafe.play" %% "play-cache" % "2.2.6",
+  "com.typesafe.play" %% "play-jdbc" % "2.3.9",
+  "com.typesafe.play" %% "play-cache" % "2.3.9",
   "com.google.code.findbugs" % "jsr305" % "3.0.0"
 )
 
