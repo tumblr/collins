@@ -1,6 +1,6 @@
 package collins.util.views
 
-import play.api.mvc.Content
+import play.twirl.api.Content
 import play.api.templates.Html
 
 import collins.models.Asset

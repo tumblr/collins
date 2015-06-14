@@ -7,6 +7,7 @@ import org.jboss.netty.handler.codec.http.QueryStringEncoder
 
 import play.api.Application
 import play.api.Plugin
+import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsBoolean
