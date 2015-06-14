@@ -12,18 +12,6 @@ import collins.shell.CommandResult
 import collins.util.concurrent.BackgroundProcess
 import collins.util.config.AppConfig
 
-object IpmiCommand {
-  type BackgroundResult = Tuple2[Option[Throwable], Option[Option[CommandResult]]]
-  def fromResult(r: BackgroundResult): Either[Throwable,Option[CommandResult]] = r match {
-    case (None, None) =>
-      Left(new Exception("No command result AND no throwable"))
-    case (Some(ex), _) =>
-      Left(ex)
-    case (None, Some(res)) =>
-      Right(res)
-  }
-}
-
 abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
   val interval: Duration
   var debug: Boolean = false

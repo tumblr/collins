@@ -109,7 +109,7 @@ abstract class PowerManagementActionHelper(
   }
 
   protected def runCommand(cmd: IpmiPowerCommand) = BackgroundProcessor.send(cmd) { result =>
-    IpmiCommand.fromResult(result) match {
+    result match {
       case Left(throwable) =>
         onError(throwable)
       case Right(None) =>

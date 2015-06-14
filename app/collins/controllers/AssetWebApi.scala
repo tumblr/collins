@@ -10,6 +10,7 @@ import collins.controllers.actors.AssetCancelProcessor
 import collins.models.Asset
 import collins.util.UserTattler
 import collins.util.concurrent.BackgroundProcessor
+import collins.util.concurrent.BackgroundProcessor.SendType
 import collins.util.config.AppConfig
 
 trait AssetWebApi {
@@ -26,19 +27,16 @@ trait AssetWebApi {
       ) }
     } else {
       Action.async { implicit req => val asset = Asset.findByTag(tag)
-        BackgroundProcessor.send(AssetCancelProcessor(tag)) { case(ex,res) =>
-          val rd: ResponseData = ex.map { err =>
-            Api.getErrorMessage(err.getMessage)
-          }.orElse{
-            res.get match {
-              case Left(err) => Some(err)
+        val processor = (r: SendType[Either[ResponseData,Long]]) => r match {
+            case Left(ex) => Api.getErrorMessage(ex.getMessage).asResult
+            case Right(res) => res match {
+              case Left(err) => err.asResult
               case Right(success) =>
                 UserTattler.notice(asset.get, user, "Server cancelled")
-                Some(ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(success)))))
+                ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(success)))).asResult
             }
-          }.get
-          formatResponseData(rd)
         }
+        BackgroundProcessor.send(AssetCancelProcessor(tag)) { processor(_) }
     }
     }}(Permissions.AssetWebApi.CancelAsset)
 
