@@ -1,5 +1,3 @@
-scalacOptions ++= Seq("-deprecation","-unchecked", "-feature")
-
 resolvers += "Twitter Repository" at "http://maven.twttr.com/"
 
 resolvers += "Sonatype-public" at "http://oss.sonatype.org/content/groups/public"
@@ -14,7 +12,9 @@ javaOptions in Test := Seq("-Dconfig.file=conf/test.conf")
 
 parallelExecution in IntegrationTest := false
 
-scalaVersion := "2.10.5"
+scalaVersion := "2.11.1"
+
+scalacOptions ++= Seq("-deprecation","-unchecked", "-feature")
 
 scalacOptions += "-feature"
 

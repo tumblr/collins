@@ -5,7 +5,7 @@ resolvers ++= Seq(
     "Sontype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 
-addSbtPlugin("com.typesafe.play" % "sbt-plugin" % Option(System.getProperty("play.version")).getOrElse("2.2.6"))
+addSbtPlugin("com.typesafe.play" % "sbt-plugin" % Option(System.getProperty("play.version")).getOrElse("2.3.6"))
 
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.6.0")
 
