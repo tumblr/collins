@@ -1,18 +1,22 @@
 package collins.util.parsers
 
-import collins.util.config.LshwConfig
 import org.specs2._
-import specification._
-import matcher.Matcher
+import org.specs2.specification.Scope
+import org.specs2.matcher.Matcher
+
 import play.api.test.WithApplication
 import play.api.test.FakeApplication
+
 import com.typesafe.config.ConfigFactory
+
 import collins.util.LshwRepresentation
 
 class LshwParserSpec extends mutable.Specification {
 
-  def beNonEmptyStringSeq: Matcher[Seq[String]] = have(s => s.nonEmpty && s.size >= 5)
-
+  def beNonEmptyStringSeq: Matcher[Seq[String]] = { s:Seq[String] =>
+    s.forall { x => x.nonEmpty && x.size >= 5 }
+  }
+  
   class LshwParserHelper(val filename: String, val ac: Map[String, _ <: Any] = Map.empty) 
     extends WithApplication(FakeApplication(additionalConfiguration = ac)) with Scope with CommonParserSpec[LshwRepresentation] {
     override def getParser(txt: String) =
@@ -94,7 +98,6 @@ class LshwParserSpec extends mutable.Specification {
           rep.has10GbNic must beFalse
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
-
         }
       } // basic
 

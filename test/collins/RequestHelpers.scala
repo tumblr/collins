@@ -36,6 +36,7 @@ case class FakeRequestHeader(
   lazy val path = uri.split('?').take(1).mkString
   lazy val queryString = play.core.parsers.FormUrlEncodedParser.parse(rawQueryString)
   val remoteAddress = "127.0.0.1"
+  def secure = false
   def asRequest(body: AnyContent = AnyContentAsEmpty) =
     PlayFakeRequest(
       this.method,

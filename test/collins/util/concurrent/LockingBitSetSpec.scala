@@ -38,7 +38,7 @@ class LockingBitSetSpec extends Specification {
     "Provide an iterator over set values" in new BitSetScope(128) {
       val results = run(initSize)
       val set = results.filter(_._2).map(_._1)
-      bitSet.indexIterator.toList must haveTheSameElementsAs(set)
+      bitSet.indexIterator.toList must contain(exactly(set:_*))
     }
   }
 
