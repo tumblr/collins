@@ -36,5 +36,7 @@ sections:
     content: configuration/provisioning.html
   softlayer:
     content: configuration/softlayer.html
+  solr:
+    content: configuration/solr.html
   "tag decorators":
     content: configuration/tag_decorators.html

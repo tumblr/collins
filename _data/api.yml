@@ -650,7 +650,7 @@ sections:
         description: Find assets similar to another
         request: GET /api/asset/:tag/similar
         permission: controllers.AssetApi.getAssets
-        note: This depends on having a proper nodeclassifer setup. See the <a href="configuration.html#nodeclassifier">nodeclassifier</a> section of the configuration documentation.
+        note: This depends on having a proper nodeclassifer setup. See the <a href="configuration.html#node classifier">nodeclassifier</a> section of the configuration documentation.
         paginated: true
         parameters:
           tag:
@@ -1533,7 +1533,7 @@ sections:
         description: Create one or more addresses in a pool
         request: PUT /api/asset/:tag/address
         permission: controllers.IpAddressApi.allocateAddress
-        note: By default no pools are configured. Your Collins administrator must tell you what pools are available for allocation or you can use the <a href="api.html#api-ipam-pools-section">pools API endpoint</a>.
+        note: By default no pools are configured. Your Collins administrator must tell you what pools are available for allocation or you can use the <a href="api.html#api-ipam-get-address-pools">pools API endpoint</a>.
         parameters:
           tag:
             type: String
