@@ -46,6 +46,7 @@ libraryDependencies ++= Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.0",
   "org.webjars" %% "webjars-play" % "2.3.0-3",
   "org.webjars" % "bootstrap" % "3.3.4",
+  "org.webjars" % "bootswatch-cerulean" % "3.3.1+2",
   "org.webjars" % "bootstrap-datepicker" % "1.4.0",
   "org.webjars" % "datatables" % "1.10.7",
   "org.webjars" % "datatables-bootstrap" % "2-20120202-2",
