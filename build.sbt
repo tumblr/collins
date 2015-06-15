@@ -22,8 +22,6 @@ scalacOptions += "-language:postfixOps"
 
 scalacOptions += "-language:implicitConversions"
 
-libraryDependencies += ws
-
 libraryDependencies ++= Seq(
   "org.specs2" %% "specs2" % "2.3.13" % "test",
   "com.google.guava" % "guava" % "18.0",
@@ -45,7 +43,14 @@ libraryDependencies ++= Seq(
   "org.yaml" % "snakeyaml" % "1.15",
   "com.typesafe.play" %% "play-jdbc" % "2.3.9",
   "com.typesafe.play" %% "play-cache" % "2.3.9",
-  "com.google.code.findbugs" % "jsr305" % "3.0.0"
+  "com.google.code.findbugs" % "jsr305" % "3.0.0",
+  "org.webjars" %% "webjars-play" % "2.3.0-3",
+  "org.webjars" % "bootstrap" % "3.3.4",
+  "org.webjars" % "bootstrap-datepicker" % "1.4.0",
+  "org.webjars" % "datatables" % "1.10.7",
+  "org.webjars" % "datatables-bootstrap" % "2-20120202-2",
+  "org.webjars" % "jquery" % "2.1.4",
+  ws
 )
 
 
