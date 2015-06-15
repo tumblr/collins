@@ -64,7 +64,7 @@ case class IntakeStage1Action(
   protected def identifyAsset(plugin: PowerManagement) : Future[SimpleResult] = {
     val cmd = IpmiPowerCommand.fromPowerAction(definedAsset, Identify)
     BackgroundProcessor.flatSend(cmd) { result =>
-      IpmiCommand.fromResult(result) match {
+      result match {
         case Left(throwable) =>
           verifyIpmiReachable(plugin, throwable.toString)
         case Right(None) => Future.successful(defaultView)

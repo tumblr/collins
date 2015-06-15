@@ -75,9 +75,9 @@ class IpmiPowerManagement(app: Application) extends Plugin with PowerManagement 
 
   protected[this] def run(e: Asset, action: PowerAction): PowerStatus = {
     BackgroundProcessor.send(IpmiPowerCommand.fromPowerAction(getAsset(e), action))(result => result match {
-      case (Some(error), None) => 
+      case Left(error) => 
 	    Failure("Error running command for %s".format(error.getMessage()))
-      case (None, Some(statusOpt)) => statusOpt match { 
+      case Right(statusOpt) => statusOpt match { 
         case Some(status) => status.isSuccess match {
           case true => Success(status.stdout)
           case false => Failure(status.stderr.getOrElse("Error running command for %s".format(action)))
