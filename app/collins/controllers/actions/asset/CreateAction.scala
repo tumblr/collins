@@ -7,7 +7,7 @@ import play.api.data.Forms.of
 import play.api.data.Forms.optional
 import play.api.data.Forms.text
 import play.api.data.Forms.tuple
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
@@ -108,7 +108,7 @@ case class CreateAction(
     
   
 
-  protected def handleSuccess(asset: Asset, ipmi: Option[IpmiInfo]): SimpleResult = isHtml match {
+  protected def handleSuccess(asset: Asset, ipmi: Option[IpmiInfo]): Result = isHtml match {
     case true =>
       Redirect(collins.app.routes.Resources.index).flashing("success" -> "Asset successfully created")
     case false =>

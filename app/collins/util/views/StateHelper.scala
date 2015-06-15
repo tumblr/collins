@@ -2,7 +2,7 @@ package collins.util.views
 
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
-import play.api.templates.Html
+import play.twirl.api.Html
 
 import collins.models.State
 import collins.models.Status
