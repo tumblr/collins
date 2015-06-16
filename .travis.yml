@@ -1,4 +1,7 @@
 language: scala
+# Activator & Travis image SBT conflicts
+# https://github.com/travis-ci/travis-ci/issues/3140
+before_install: unset SBT_OPTS JVM_OPTS
 # according to http://docs.travis-ci.com/user/ci-environment/#CI-environment-OS
 # every travis CI has a version of ruby installed
 # that's why we can do this
