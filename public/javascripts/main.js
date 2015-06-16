@@ -417,6 +417,7 @@ $(document).ready(function() {
       "deferLoading": true,
       "sAjaxDataProp": "data.Data",
       "aoColumns": columns,
+      "pagingType": "full_numbers",
       "fnRowCallback": formatLogRow(typeLocation, tagLocation),
     }).api();
     // we defer loading, so load the table for the first time
