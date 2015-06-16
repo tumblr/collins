@@ -30,6 +30,7 @@ import collins.provisioning.{ProvisionerRoleData => ProvisionerRole}
 import collins.util.ApiTattler
 import collins.util.UserTattler
 import collins.util.concurrent.BackgroundProcessor
+import collins.util.concurrent.BackgroundProcessor.SendType
 import collins.util.config.Feature
 import collins.util.plugins.SoftLayer
 
@@ -297,26 +298,18 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
     }
   }
 
-  type BackgroundResult[T] = BackgroundProcessor.SendType[T]
-  type ErrorCheck = Option[Result]
-  protected def processProvisionAction[T, A](res: BackgroundResult[T])(f: T => ErrorCheck): ErrorCheck = res match {
-    case (Some(ex), _) =>
+  protected def processProvisionAction[T, A](res: SendType[T])(f: T => Option[Result]): Option[Result] = res match {
+    case Left(ex) =>
       tattle("Exception provisioning asset: %s".format(ex.getMessage), true)
       logger.error("Exception provisioning %s".format(getAsset), ex)
       Some(handleError(RequestDataHolder.error500(
         "There was an exception processing your request: %s".format(ex.getMessage),
         ex
       )))
-    case (_, result) => result match {
-      case None =>
-        tattle("Timeout provisioning asset", true)
-        Some(handleError(RequestDataHolder.error504("Timeout provisioning asset")))
-      case Some(value) =>
-        f(value)
-    }
+    case Right(result) => f(result)
   }
 
-  protected def processProvision(result: ProvisionerResult): ErrorCheck = result match {
+  protected def processProvision(result: ProvisionerResult): Option[Result] = result match {
     case success if success.commandResult.exitCode == 0 =>
       None
     case failure if failure.commandResult.exitCode != 0 =>

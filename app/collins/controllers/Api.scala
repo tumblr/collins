@@ -70,10 +70,10 @@ IpAddressApi with AssetStateApi with AdminApi {
   }
 
   def asyncPing(sleepMs: Long) = Action.async { implicit req =>
-    BackgroundProcessor.send(TestProcessor(sleepMs)) { case(ex, res) =>
-      println("Got result %s".format(res.toString))
-      formatResponseData(Api.statusResponse(res.getOrElse(false)))
-    }
+    BackgroundProcessor.send(TestProcessor(sleepMs)) { r => r match {
+      case Left(_) => formatResponseData(Api.statusResponse(false))
+      case Right(res) => formatResponseData(Api.statusResponse(res))
+    }}
   }
 
   def errorPing(id: Int) = Action { implicit req =>
