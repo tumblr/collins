@@ -1,7 +1,7 @@
 package collins.util.views
 
-import play.api.mvc.Content
-import play.api.templates.Html
+import play.twirl.api.Content
+import play.twirl.api.Html
 
 import collins.models.MetaWrapper
 

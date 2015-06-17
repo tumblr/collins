@@ -6,7 +6,7 @@ import play.api.data.Form
 import play.api.data.Forms.of
 import play.api.data.Forms.single
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.templates.Html
 
 import collins.controllers.Help
@@ -61,7 +61,7 @@ case class IntakeStage1Action(
     Redirect(collins.app.routes.Resources.intake(assetId, 1)).flashing("error" -> rd.toString)
   )
 
-  protected def identifyAsset(plugin: PowerManagement) : Future[SimpleResult] = {
+  protected def identifyAsset(plugin: PowerManagement) : Future[Result] = {
     val cmd = IpmiPowerCommand.fromPowerAction(definedAsset, Identify)
     BackgroundProcessor.flatSend(cmd) { result =>
       result match {
@@ -78,7 +78,7 @@ case class IntakeStage1Action(
   protected def defaultView =
     Status.Ok(views.html.resources.intake(definedAsset)(flash, request))
 
-  protected def verifyIpmiReachable(plugin: PowerManagement, errorString: String): Future[SimpleResult] = {
+  protected def verifyIpmiReachable(plugin: PowerManagement, errorString: String): Future[Result] = {
     val ps = plugin.verify(definedAsset)
     ps.map {
       case reachable if reachable.isSuccess =>

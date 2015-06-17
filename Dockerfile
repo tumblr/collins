@@ -11,12 +11,12 @@ ENV LOG_HOME /var/log/collins
 WORKDIR /build
 # get Play, Collins, build, and deploy it to /opt/collins
 COPY . /build/collins
-RUN echo "Fetching Play 2.2.6" && \
-    wget -q http://downloads.typesafe.com/play/2.2.6/play-2.2.6.zip -O /build/play-2.2.6.zip && \
-    unzip -q ./play-2.2.6.zip && \
+RUN echo "Fetching Play 2.3.9" && \
+    wget -q http://downloads.typesafe.com/typesafe-activator/1.3.4/typesafe-activator-1.3.4-minimal.zip -O /build/typesafe-activator-1.3.4-minimal.zip && \
+    unzip -q ./typesafe-activator-1.3.4-minimal.zip && \
     cd collins && \
     java -version 2>&1 && \
-    PLAY_CMD=/build/play-2.2.6/play ./scripts/package.sh && \
+    PLAY_CMD=/build/activator-1.3.4-minimal/activator ./scripts/package.sh && \
     unzip -q /build/collins/target/collins.zip -d /opt/ && \
     cd / && rm -rf /build && \
     chown -R collins /opt/collins

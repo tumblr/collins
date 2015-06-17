@@ -6,7 +6,7 @@ import play.api.mvc.Action
 import play.api.mvc.Results
 
 import play.api.http.HeaderNames
-import play.api.templates.Txt
+import play.twirl.api.Txt
 
 trait ControllerSpec {
   def getApi(user: Option[User]) = new Api with SecureController {

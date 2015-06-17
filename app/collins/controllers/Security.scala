@@ -9,9 +9,9 @@ import play.api.mvc.AnyContent
 import play.api.mvc.Controller
 import play.api.mvc.Request
 import play.api.mvc.RequestHeader
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.mvc.Results
-import play.api.templates.Txt
+import play.twirl.api.Txt
 
 import collins.models.User
 import collins.util.security.AuthenticationProvider
@@ -83,7 +83,7 @@ trait SecureController extends Controller {
   def Authenticated(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification) =
     SecureController.Authenticated(authenticate, onUnauthorized, authorize)(action)
 
-  def SecureAction(block: Request[AnyContent] => SimpleResult)(implicit spec: SecuritySpecification) =
+  def SecureAction(block: Request[AnyContent] => Result)(implicit spec: SecuritySpecification) =
     Authenticated(_ => Action(block))
 }
 

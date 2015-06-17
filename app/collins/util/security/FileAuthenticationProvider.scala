@@ -28,7 +28,7 @@ class FileAuthenticationProvider() extends AuthenticationProvider {
   }
 
   protected def user(username: String): Option[UserImpl] = {
-    userCache.get(userfile).get(username)
+    userCache.get(userfile).data.get(username)
   }
 
   // This is consistent with how apache encrypts SHA1

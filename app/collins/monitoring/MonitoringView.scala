@@ -1,7 +1,7 @@
 package collins.monitoring
 
 import play.api.Application
-import play.api.mvc.Content
+import play.twirl.api.Content
 
 import collins.models.asset.AssetView
 

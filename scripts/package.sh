@@ -10,7 +10,7 @@ else
 fi
 
 if [ -z "$PLAY_CMD" ]; then
-  PLAY_CMD="$HOME/src/play-2.2.6/play";
+  PLAY_CMD="$HOME/src/activator-1.3.4-minimal/activator";
 fi
 
 if [ ! -f $PLAY_CMD ]; then
