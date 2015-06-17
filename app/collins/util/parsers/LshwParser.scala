@@ -83,7 +83,7 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
   }
 
   val memMatcher: PartialFunction[NodeSeq,Memory] = {
-    case n if (n \ "@class" text) == "memory" && (n \ "@id" text).contains("bank:") =>
+    case n if (n \ "@class" text) == "memory" && (n \ "@id" text).contains("bank") =>
       val asset = getAsset(n)
       val size = (n \ "size" text) match {
         case n if n.isEmpty => ByteStorageUnit(0)
