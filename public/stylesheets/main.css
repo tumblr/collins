@@ -1,12 +1,46 @@
+/*
+ * Global body styles
+ */
 body {
-  padding-top: 60px;
-  padding-bottom: 40px;
-  position: relative;
+    padding-top: 60px;
+    padding-bottom: 40px;
+    position: relative;
 }
 
-/* Remove the Datatable sort indicator in favor of the bootstrap one */
+p { 
+    padding: 5px 0; 
+}
+
+/* 
+ * Remove the Datatable sort indicator in favor of the bootstrap one 
+ */
 table.dataTable thead .sorting, 
 table.dataTable thead .sorting_asc, 
 table.dataTable thead .sorting_desc {
     background : none;
+}
+
+/*
+ * Asset overview table styles
+ */
+.tab-content {
+    display: table;
+    width: 100%;
+}
+
+/* bootstrap 3 makes this !important so lets let .show() override it */
+.hide-loprio {
+   display:none;
+}
+
+.form-horizontal .control-label {
+    /* override control-label from bootstrap in form-horizontal */
+    text-align:inherit !important;
+}
+
+.page-header .asset-status-label {
+    /* position the label in the top right of the page-header only on asset show_menu view*/
+    position:absolute;
+    top:0;
+    right:0;
 }
