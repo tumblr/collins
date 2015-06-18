@@ -12,10 +12,11 @@
 
     <title>@title</title>
 
-    <link rel="stylesheet" href="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("bootswatch-cerulean", "bootstrap.min.css"))">
-    <link rel="stylesheet" href="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("DT_bootstrap.css"))">
-    <link rel="stylesheet" href="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("jquery.dataTables.css"))">
+    <link rel="stylesheet" href="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("bootswatch-sandstone", "bootstrap.min.css"))">
+    <link rel="stylesheet" href="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("3/dataTables.bootstrap.css"))">
+    <link rel="stylesheet" href="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("jquery.dataTables.min.css"))">
     <link rel="stylesheet" href="@controllers.routes.Assets.at("stylesheets/main.css")">
+    <link rel="stylesheet" href="@controllers.routes.Assets.at("stylesheets/help.css")">
     <link rel="stylesheet" href="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-datepicker.min.css"))"> 
 
     <script type='text/javascript' src='@controllers.routes.WebJarAssets.at(WebJarAssets.locate("jquery.min.js"))'></script>
@@ -26,7 +27,7 @@
   <body>
 
     @if(loggedIn) {
-    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="btn btn-navbar navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -62,7 +63,7 @@
       </div>
     </nav>
     } else {
-    <nav class="navbar navbar-inverse navbar-fixed-top collins-navbar" role="navigation">
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="btn btn-navbar navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -99,10 +100,10 @@
       </footer>
     </div>
 
-    <script type='text/javascript' src='@controllers.routes.WebJarAssets.at(WebJarAssets.locate("bootswatch-cerulean", "bootstrap.min.js"))'></script>
-    <script type='text/javascript' src='@controllers.routes.WebJarAssets.at(WebJarAssets.locate("jquery.dataTables.min.js"))'></script>
-    <script type='text/javascript' src='@controllers.routes.WebJarAssets.at(WebJarAssets.locate("DT_bootstrap.js"))'></script>
-    <script type='text/javascript' src='@controllers.routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-datepicker.min.js"))'></script>
+    <script type='text/javascript' src="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("bootswatch-sandstone", "bootstrap.min.js"))"></script>
+    <script type='text/javascript' src="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("jquery.dataTables.min.js"))"></script>
+    <script type='text/javascript' src="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("3/dataTables.bootstrap.min.js"))"></script>
+    <script type='text/javascript' src="@controllers.routes.WebJarAssets.at(WebJarAssets.locate("bootstrap-datepicker.min.js"))"></script>
 
     <script src="@controllers.routes.Assets.at("javascripts/dataTables.reloadAjax.js")" type="text/javascript"></script>
     <script src="@controllers.routes.Assets.at("javascripts/main.js")" type="text/javascript"></script>
