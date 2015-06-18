@@ -12,8 +12,8 @@ task :ewr01 do
   role :app, 'collins.ewr01.tumblr.net'
 end
 
-task :d2 do
-  role :app, 'collins.d2.tumblr.net'
+task :hostname do
+  role :app, "#{host}"
 end
 
 load 'deploy'
