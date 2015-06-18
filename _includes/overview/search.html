@@ -1,0 +1,36 @@
+<p class="lead">Find the stuff you're looking for, fast</p>
+<p>
+  Once you have authenticated to collins you should be presented with a search UI. The elements on the left in this interface
+  are asset attributes (e.g. status, tag, etc) while the elements on the right are tags (e.g. hostname, pool, etc). The search
+  fields on the left are fixed, the search fields on the right can be configured by your collins administrator.
+</p>
+<div class="row">
+  <div class="col-md-6">
+    <a href="img/collins_search.png" target="_blank" class="thumbnail">
+      <img src="img/collins_search.png" alt="Search Page">
+    </a>
+  </div>
+  <div class="col-md-6">
+    <a href="img/collins_search.png" target="_blank" class="thumbnail">
+      <img src="img/collins_search.png" alt="Search Page">
+    </a>
+  </div>
+</div>
+<p>
+  In this interface you can search for assets that match the criteria you specify. Since we're looking for a server to provision,
+  we're going to look for unallocated server nodes. Due to the current collins configuration, you can only provision Unallocated hosts.
+  A sample search results page is below.
+</p>
+<div class="row">
+  <div class="col-md-10">
+    <a href="#" class="thumbnail">
+      <img src="img/collins_search_results.png" alt="Search Page">
+    </a>
+  </div>
+</div>
+<p>
+  The search results page is color coded to reflect the status of the asset. Incomplete and new assets are <span class="text-warning">yellow</span>,
+  provisioning and provisioned assets are <span class="text-info">blue</span>, cancelled and decommissioned assets are <span class="text-success">green</span>,
+  and maintenance assets are <span class="text-danger">red</span>. People usually ask why allocated/unallocated assets aren't green. Since allocated and
+  unallocated are the default states, using green resulted in an all green search results page. No color was just better.
+</p>

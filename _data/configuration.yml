@@ -1,0 +1,42 @@
+---
+title: Collins Configuration
+subtitle: Making Collins yours, a groovy kind of love
+sections:
+  overview:
+    content: configuration/overview.html
+  general:
+    content: configuration/general.html
+  authentication:
+    content: configuration/authentication.html
+  cache:
+    content: configuration/cache.html
+  callbacks:
+    content: configuration/callbacks.html
+  features:
+    content: configuration/features.html
+  graphs:
+    content: configuration/graphs.html
+  "ip address":
+    content: configuration/ipam.html
+  ipmi:
+    content: configuration/ipmi.html
+  monitoring:
+    content: configuration/monitoring.html
+  "thread pools":
+    content: configuration/thread_pools.html
+  multicollins:
+    content: configuration/multicollins.html
+  "node classifier":
+    content: configuration/nodeclassifier.html
+  "power configuration":
+    content: configuration/powerconfiguration.html
+  "power managment":
+    content: configuration/powermgmt.html
+  provisioning:
+    content: configuration/provisioning.html
+  softlayer:
+    content: configuration/softlayer.html
+  solr:
+    content: configuration/solr.html
+  "tag decorators":
+    content: configuration/tag_decorators.html

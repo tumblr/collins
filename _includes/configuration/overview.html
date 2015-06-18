@@ -1,0 +1,22 @@
+<p class="lead">Things to know before you configure</p>
+<p>
+  Collins configuration files are type safe. That is, you can't create a configuration that will lead to a runtime
+  error. If collins detects a configuration error it will fail to start. If you modify a config after the system
+  starts and that config is invalid, it will not load and collins will complain loudly. If this is not the case,
+  please file a bug.
+</p>
+<p>
+  Every type of configuration comes with a reference config. Reference configuration files can be found in
+  <a href="https://github.com/tumblr/collins/tree/master/conf/reference" target="_blank">the github repo</a>.
+  Reference files are not modified by users, they serve to provide Collins with default values as well as to
+  tell it what the appropriate value types are (lists, strings, etc). Most reference configurations come with
+  some level of documentation as well. In general you should use and make modifications to <code>conf/application.conf</code>.
+</p>
+<p>
+  The configuration file that you create for collins is overriding the values found in the reference configs.
+  There is a sample configuration in the github repo for you to use as a starting point.
+</p>
+<p>
+  You can pass your configuration file to collins by using a system property. Pass <code>-Dconfig.file=/path/to/file</code>
+  will cause that file to be used for the application.
+</p>

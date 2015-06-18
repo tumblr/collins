@@ -1,0 +1,2073 @@
+---
+title: Collins API
+subtitle: Getting RESTful with your assets
+sections:
+  overview:
+    content: api/overview.html
+  "asset":
+    content: api/asset.html
+    api_sections:
+      "asset create":
+        description: Create a new asset
+        request: PUT /api/asset/:tag
+        permission: controllers.AssetApi.createAsset
+        parameters:
+          tag:
+            type: String
+            description: Must by alphanumeric (but can include underscores and dashes) and unique
+          generate_ipmi:
+            type: Option[Boolean]
+            description: "True or false. Defaults to true if <code>asset_type</code> is <code>SERVER_NODE</code>"
+          status:
+            type: Option[Status]
+            description: A valid status, if specified. Defaults to Incomplete.
+          type:
+            type: Option[AssetType]
+            description: One of SERVER_NODE, SERVER_CHASSIS, RACK, SWITCH, ROUTER, POWER_CIRCUIT or POWER_STRIP. Defaults to SERVER_NODE. If additional asset types are added to the database, they can also be specified.
+        response_codes:
+          201: Asset was successfully created
+          409: Asset with specified tag already exists
+        examples:
+          collins-shell:  collins-shell asset create --tag=TAG [--ipmi=(true|false) --status=STATUS --type=TYPE]
+          curl:  curl --basic -u blake:admin:first -X PUT http://localhost:9000/api/asset/tumblrtag30
+        responses:
+          json: |
+            {
+              "status": "success:created",
+              "data": {
+                "ASSET": {
+                  "ID": 2,
+                  "TAG": "tumblrtag30",
+                  "STATE": null,
+                  "STATUS": "Incomplete",
+                  "TYPE": "Server Node",
+                  "CREATED": "2012-09-16T18:30:55",
+                  "UPDATED": null,
+                  "DELETED": null
+                 }
+               "IPMI": {
+                 "ASSET_ID": 2,
+                 "ASSET_TAG": "tumblrtag30",
+                 "IPMI_USERNAME": "root",
+                 "IPMI_PASSWORD": "WqbXjuqWd5MZ01fD",
+                 "IPMI_GATEWAY": "172.16.32.1",
+                 "IPMI_ADDRESS": "172.16.32.20",
+                 "IPMI_NETMASK": "255.255.240.0",
+                 "ID": 2
+               }
+            }
+          bash: |
+            ASSET_ID=3;
+            ASSET_CREATED="2012-09-16T18:42:21";
+            ASSET_TAG="tumblrtag31";
+            ASSET_STATUS="Incomplete";
+            ASSET_DELETED=;
+            ASSET_UPDATED=;
+            ASSET_STATE=;
+            ASSET_TYPE="Server Node";
+            IPMI_IPMI_USERNAME="root";
+            IPMI_ID=3;
+            IPMI_IPMI_ADDRESS="172.16.32.21";
+            IPMI_IPMI_NETMASK="255.255.240.0";
+            IPMI_ASSET_ID=3;
+            IPMI_ASSET_TAG="tumblrtag31";
+            IPMI_IPMI_GATEWAY="172.16.32.1";
+            IPMI_IPMI_PASSWORD="zqkWfV9baxlrJa5Y";
+          text: |
+            ASSET
+              ID      4
+              CREATED 2012-09-16T18:43:35
+              TAG     tumblrtag32
+              STATUS  Incomplete
+              DELETED null
+              UPDATED null
+              STATE   null
+              TYPE    Server Node
+            IPMI
+              IPMI_USERNAME   root
+              ID      4
+              IPMI_ADDRESS    172.16.32.22
+              IPMI_NETMASK    255.255.240.0
+              ASSET_ID        4
+              ASSET_TAG       tumblrtag32
+              IPMI_GATEWAY    172.16.32.1
+              IPMI_PASSWORD   BCGHWinJlme9g9x0
+      "asset update":
+        description: Update an asset
+        request: POST /api/asset/:tag
+        permission: controllers.AssetApi.updateAsset
+        parameters:
+          lshw:
+            type: String
+            description: Only accepted when the asset is Incomplete, Maintenance, or states specified in allowedServerUpdateStatuses. Should be the XML output from running the lshw command on the asset.
+          lldp:
+            type: String
+            description: Only accepted when the asset is Incomplete, Maintenance, or states specified in allowedServerUpdateStatuses. Should be the XML output from running the lldp command on the asset.
+          groupId:
+            type: Option[Int]
+            description: The dimension of the specified tag. Can only be combined with attribute
+          attribute:
+            type: Option[String]
+            description: Specified a key/value pair to associated with the asset where the key isn't a managed tag. The key/value pair should be formatted as keyname;valuename
+          CHASSIS_TAG:
+            type: Option[String]
+            description: Only accepted for Incomplete assets during the intake phase, Maintenance, or states specified in allowedServerUpdateStatuses.
+          RACK_POSITION:
+            type: Option[String]
+            description: Only accepted for New assets during the web based intake process
+          'POWER_PORT_{S}':
+            type: Option[String]
+            description: 'Only accepted for New assets during the web based intake process. The parameters allowed here depend on the <a href="configuration.html#powerconfig">power configuration</a>'
+        response_codes:
+          200: Asset updated successfully
+          404: The specified asset was not found
+        examples:
+          collins-shell: collins-shell asset set_attribute TAG_NAME TAG_VALUE --tag=TAG
+          curl: |
+            curl --basic -u blake:admin:first \
+              --data-urlencode "lldp@./test/resources/lldpctl-two-nic.xml" \
+              --data-urlencode "lshw@./test/resources/lshw-basic.xml" \
+              --data-urlencode 'CHASSIS_TAG=chassistag123' \
+              --data-urlencode 'attribute=NODECLASS;web' \
+              http://localhost:9000/api/asset/tumblrtag30
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+          bash: SUCCESS=true;
+          text: SUCCESS true
+      "asset update status":
+        description: Update the status or state of an asset
+        request: POST /api/asset/:tag/status
+        permission: controllers.AssetApi.updateAssetStatus
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and unique
+          reason:
+            type: String
+            description: The reason for the status or state change
+          status:
+            type: Option[Status]
+            description: The new status of the specified asset
+          state:
+            type: Option[State]
+            description: The new state of the specified asset
+        response_codes:
+          200: State and/or status was successfully updated
+          400: Neither state nor status specified, missing reason, or invalid status/state
+          409: Update would cause a conflict between state and status
+        examples:
+          collins-shell: collins-shell asset set_status --reason=REASON [--state=STATE --status=STATUS]
+          curl: |
+            curl --basic -u blake:admin:first \
+              -d status=Unallocated \
+              -d state=Running \
+              -d reason='Ready for action' \
+              http://localhost:9000/api/asset/tumblrtag30/status
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+      "asset get":
+        description: Get an asset by tag
+        request: GET /api/asset/:tag
+        permission: controllers.AssetApi.getAsset
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and unique
+        response_codes:
+          200: Asset was found
+          404: Asset could not be found
+        examples:
+          collins-shell: collins-shell asset get TAG
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/asset/tumblrtag30
+        responses:
+          json: |
+            {
+               "status": "success:ok",
+               "data": {
+                 "ASSET": {
+                   "ID": 2,
+                   "TAG": "tumblrtag30",
+                   "STATE": {
+                     "ID": 1,
+                     "STATUS": null,
+                     "NAME": "NEW",
+                     "LABEL": "New",
+                     "DESCRIPTION": "A service in this state is inactive. It does minimal work and consumes minimal resources."
+                    },
+                    "STATUS": "New",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-09-16T18:30:55",
+                    "UPDATED": "2012-09-16T18:46:41",
+                    "DELETED": null
+                  },
+                  "HARDWARE": {
+                    "CPU": [
+                      {
+                        "CORES": 6,
+                        "THREADS": 6,
+                        "SPEED_GHZ": 2.3,
+                        "DESCRIPTION": "AMD Opteron(tm) Processor 4174 HE Hynix Semiconductor (Hyundai Electronics)",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "CORES": 6,
+                        "THREADS": 6,
+                        "SPEED_GHZ": 2.3,
+                        "DESCRIPTION": "AMD Opteron(tm) Processor 4174 HE Hynix Semiconductor (Hyundai Electronics)",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      }
+                    ],
+                    "MEMORY": [
+                      {
+                        "SIZE": 0,
+                        "SIZE_S": "0",
+                        "SIZE_HUMAN": "0 Bytes",
+                        "BANK": 0,
+                        "DESCRIPTION": "Empty Memory Bank",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 0,
+                        "SIZE_S": "0",
+                        "SIZE_HUMAN": "0 Bytes",
+                        "BANK": 1,
+                        "DESCRIPTION": "Empty Memory Bank",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 8589934592,
+                        "SIZE_S": "8589934592",
+                        "SIZE_HUMAN": "8.00 GB",
+                        "BANK": 2,
+                        "DESCRIPTION": "DIMM DDR3 Synchronous 1333 MHz (0.8 ns) - Hyundai HMT31GR7BFR4A-H9",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 0,
+                        "SIZE_S": "0",
+                        "SIZE_HUMAN": "0 Bytes",
+                        "BANK": 3,
+                        "DESCRIPTION": "Empty Memory Bank",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 0,
+                        "SIZE_S": "0",
+                        "SIZE_HUMAN": "0 Bytes",
+                        "BANK": 4,
+                        "DESCRIPTION": "Empty Memory Bank",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 8589934592,
+                        "SIZE_S": "8589934592",
+                        "SIZE_HUMAN": "8.00 GB",
+                        "BANK": 5,
+                        "DESCRIPTION": "DIMM DDR3 Synchronous 1333 MHz (0.8 ns) - Hyundai HMT31GR7BFR4A-H9",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 0,
+                        "SIZE_S": "0",
+                        "SIZE_HUMAN": "0 Bytes",
+                        "BANK": 6,
+                        "DESCRIPTION": "Empty Memory Bank",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 0,
+                        "SIZE_S": "0",
+                        "SIZE_HUMAN": "0 Bytes",
+                        "BANK": 7,
+                        "DESCRIPTION": "Empty Memory Bank",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 8589934592,
+                        "SIZE_S": "8589934592",
+                        "SIZE_HUMAN": "8.00 GB",
+                        "BANK": 8,
+                        "DESCRIPTION": "DIMM DDR3 Synchronous 1333 MHz (0.8 ns) - Hyundai HMT31GR7BFR4A-H9",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 0,
+                        "SIZE_S": "0",
+                        "SIZE_HUMAN": "0 Bytes",
+                        "BANK": 9,
+                        "DESCRIPTION": "Empty Memory Bank",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 0,
+                        "SIZE_S": "0",
+                        "SIZE_HUMAN": "0 Bytes",
+                        "BANK": 10,
+                        "DESCRIPTION": "Empty Memory Bank",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 8589934592,
+                        "SIZE_S": "8589934592",
+                        "SIZE_HUMAN": "8.00 GB",
+                        "BANK": 11,
+                        "DESCRIPTION": "DIMM DDR3 Synchronous 1333 MHz (0.8 ns) - Hyundai HMT31GR7BFR4A-H9",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      }
+                    ],
+                    "NIC": [
+                      {
+                        "SPEED": 1000000000,
+                        "SPEED_S": "1000000000",
+                        "SPEED_HUMAN": "1.00 Gb",
+                        "MAC_ADDRESS": "e8:9a:8f:23:15:72",
+                        "DESCRIPTION": "82576 Gigabit Network Connection - Intel Corporation",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SPEED": 1000000000,
+                        "SPEED_S": "1000000000",
+                        "SPEED_HUMAN": "1.00 Gb",
+                        "MAC_ADDRESS": "e8:9a:8f:23:15:72",
+                        "DESCRIPTION": "82576 Gigabit Network Connection - Intel Corporation",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      }
+                    ],
+                    "DISK": [
+                      {
+                        "SIZE": 1000204886016,
+                        "SIZE_S": "1000204886016",
+                        "SIZE_HUMAN": "931.51 GB",
+                        "TYPE": "SCSI",
+                        "DESCRIPTION": "Seagate ST91000640NS",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 1000204886016,
+                        "SIZE_S": "1000204886016",
+                        "SIZE_HUMAN": "931.51 GB",
+                        "TYPE": "SCSI",
+                        "DESCRIPTION": "Seagate ST91000640NS",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 1000204886016,
+                        "SIZE_S": "1000204886016",
+                        "SIZE_HUMAN": "931.51 GB",
+                        "TYPE": "SCSI",
+                        "DESCRIPTION": "Seagate ST91000640NS",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 1000204886016,
+                        "SIZE_S": "1000204886016",
+                        "SIZE_HUMAN": "931.51 GB",
+                        "TYPE": "SCSI",
+                        "DESCRIPTION": "Seagate ST91000640NS",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 1000204886016,
+                        "SIZE_S": "1000204886016",
+                        "SIZE_HUMAN": "931.51 GB",
+                        "TYPE": "SCSI",
+                        "DESCRIPTION": "Seagate ST91000640NS",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      },
+                      {
+                        "SIZE": 1000204886016,
+                        "SIZE_S": "1000204886016",
+                        "SIZE_HUMAN": "931.51 GB",
+                        "TYPE": "SCSI",
+                        "DESCRIPTION": "Seagate ST91000640NS",
+                        "PRODUCT": "",
+                        "VENDOR": ""
+                      }
+                    ]
+                  },
+                  "LLDP": {
+                    "INTERFACES": [
+                      {
+                        "NAME": "eth0",
+                        "CHASSIS": {
+                          "NAME": "core01.dfw01",
+                          "ID": {
+                            "TYPE": "mac",
+                            "VALUE": "78:19:f7:88:60:c0"
+                          },
+                          "DESCRIPTION": "Juniper Networks, Inc. ex4500-40f , version 11.1S1 Build date: 2011-04-21 08:03:12 UTC "
+                        },
+                        "PORT": {
+                          "ID": {
+                            "TYPE": "local",
+                            "VALUE": "608"
+                          },
+                          "DESCRIPTION": "ge-0\/0\/3.0"
+                        },
+                        "VLANS": [
+                          {
+                            "ID": 106,
+                            "NAME": "DFW-LOGGING"
+                          }
+                        ]
+                      },
+                      {
+                        "NAME": "eth1",
+                        "CHASSIS": {
+                          "NAME": "core02.dfw01",
+                          "ID": {
+                            "TYPE": "mac",
+                            "VALUE": "5c:5e:ab:68:a5:80"
+                          },
+                          "DESCRIPTION": "Juniper Networks, Inc. ex4500-40f , version 11.1R1.10 Build date: 2011-03-16 08:17:03 UTC "
+                        },
+                        "PORT": {
+                          "ID": {
+                            "TYPE": "local",
+                            "VALUE": "608"
+                          },
+                          "DESCRIPTION": "ge-0\/0\/3.0"
+                        },
+                        "VLANS": [
+                          {
+                            "ID": 106,
+                            "NAME": "DFW-LOGGING"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "IPMI": {
+                    "ASSET_ID": 2,
+                    "ASSET_TAG": "tumblrtag30",
+                    "IPMI_USERNAME": "root",
+                    "IPMI_PASSWORD": "WqbXjuqWd5MZ01fD",
+                    "IPMI_GATEWAY": "172.16.32.1",
+                    "IPMI_ADDRESS": "172.16.32.20",
+                    "IPMI_NETMASK": "255.255.240.0",
+                    "ID": 2
+                  },
+                  "ADDRESSES": [
+                  ],
+                  "POWER": [
+                    {
+                      "UNIT_ID": 0,
+                      "UNITS": [
+                        {
+                          "KEY": "POWER_PORT_A",
+                          "VALUE": "plug a",
+                          "TYPE": "POWER_PORT",
+                          "LABEL": "Plug Strip A",
+                          "POSITION": 0,
+                          "IS_REQUIRED": true,
+                          "UNIQUE": true
+                        },
+                        {
+                          "KEY": "POWER_OUTLET_A",
+                          "VALUE": "outlet a",
+                          "TYPE": "POWER_OUTLET",
+                          "LABEL": "Outlet A",
+                          "POSITION": 1,
+                          "IS_REQUIRED": true,
+                          "UNIQUE": false
+                        }
+                      ]
+                    },
+                    {
+                      "UNIT_ID": 1,
+                      "UNITS": [
+                        {
+                          "KEY": "POWER_PORT_B",
+                          "VALUE": "plug b",
+                          "TYPE": "POWER_PORT",
+                          "LABEL": "Plug Strip B",
+                          "POSITION": 0,
+                          "IS_REQUIRED": true,
+                          "UNIQUE": true
+                        },
+                        {
+                          "KEY": "POWER_OUTLET_B",
+                          "VALUE": "outlet b",
+                          "TYPE": "POWER_OUTLET",
+                          "LABEL": "Outlet B",
+                          "POSITION": 1,
+                          "IS_REQUIRED": true,
+                          "UNIQUE": false
+                        }
+                      ]
+                    }
+                  ],
+                  "ATTRIBS": {
+                    "0": {
+                      "DISK_STORAGE_TOTAL": "6001229316096",
+                      "NODECLASS": "web",
+                      "CHASSIS_TAG": "chassistag123"
+                    }
+                  }
+                }
+              }
+      "asset find":
+        description: Find specified assets
+        request: GET /api/assets
+        permission: controllers.AssetApi.getAssets
+        paginated: true
+        parameters:
+          details:
+            type: Option[Boolean]
+            description: True to return full assets, false to return partials. Defaults to false.
+          remoteLookup:
+            type: Option[Boolean]
+            description: True to search remote datacenters as well. See the <a href="configuration.html#multicollins">MultiCollins</a> documentation.
+          operation:
+            type: Option[String]
+            description: '"AND" or "OR", defaults to "OR".'
+          type:
+            type: Option[AssetType]
+            description: A valid asset type (e.g. SERVER_NODE)
+          status:
+            type: Option[Status]
+            description: A valid asset status (e.g. Unallocated)
+          state:
+            type: Option[State]
+            description: A valid asset state (e.g. RUNNING)
+          createdBefore:
+            type: Option[DateTime]
+            description: ISO8601 formatted
+          createdAfter:
+            type: Option[DateTime]
+            description: ISO8601 formatted
+          updatedBefore:
+            type: Option[DateTime]
+            description: ISO8601 formatted
+          updatedAfter:
+            type: Option[DateTime]
+            description: ISO8601 formatted
+          attribute:
+            type: Option[String]
+            description: Specified as tagname;tagvalue. tagname can be a reserved tag such as CPU_COUNT, MEMORY_SIZE_BYTES, etc. Leave tagvalue blank to find assets missing a particular attribute.
+        response_codes:
+          200: Zero or more assets successfully found
+        examples:
+          collins-shell: collins-shell asset find --selector=NODECLASS:web status:Unallocated
+          curl: curl --basic -u blake:admin:first 'http://localhost:9000/api/assets?attribute=NODECLASS%3Bweb&status=Unallocated'
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "Pagination": {
+                  "PreviousPage": 0,
+                  "CurrentPage": 0,
+                  "NextPage": 0,
+                  "TotalResults": 3
+                },
+                "Data": [
+                  {
+                    "ID": 4,
+                    "TAG": "tumblrtag32",
+                    "STATE": {
+                      "ID": 3,
+                      "STATUS": null,
+                      "NAME": "RUNNING",
+                      "LABEL": "Running",
+                      "DESCRIPTION": "A service in this state is operational."
+                    },
+                    "STATUS": "Unallocated",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-09-16T19:49:31",
+                    "UPDATED": "2012-09-16T19:50:05",
+                    "DELETED": null
+                  },
+                  {
+                    "ID": 2,
+                    "TAG": "tumblrtag30",
+                    "STATE": {
+                      "ID": 3,
+                      "STATUS": null,
+                      "NAME": "RUNNING",
+                      "LABEL": "Running",
+                      "DESCRIPTION": "A service in this state is operational."
+                    },
+                    "STATUS": "Unallocated",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-09-16T19:49:24",
+                    "UPDATED": "2012-09-16T19:49:57",
+                    "DELETED": null
+                  },
+                  {
+                    "ID": 3,
+                    "TAG": "tumblrtag31",
+                    "STATE": {
+                      "ID": 3,
+                      "STATUS": null,
+                      "NAME": "RUNNING",
+                      "LABEL": "Running",
+                      "DESCRIPTION": "A service in this state is operational."
+                    },
+                    "STATUS": "Unallocated",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-09-16T19:49:28",
+                    "UPDATED": "2012-09-16T19:50:02",
+                    "DELETED": null
+                  }
+                ]
+              }
+            }
+      "asset find similar":
+        description: Find assets similar to another
+        request: GET /api/asset/:tag/similar
+        permission: controllers.AssetApi.getAssets
+        note: This depends on having a proper nodeclassifer setup. See the <a href="configuration.html#node classifier">nodeclassifier</a> section of the configuration documentation.
+        paginated: true
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and unique
+        response_codes:
+          200: Zero or more assets successfully found
+        examples:
+          collins-shell: collins-shell asset find_similar 001367
+          curl: curl --basic -u blake:admin:first 'http://localhost:9000/api/asset/001367/similar'
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "Pagination": {
+                "PreviousPage": 0,
+                "CurrentPage": 0,
+                "NextPage": 1,
+                "TotalResults": 435
+              },
+              "Data": [
+                {
+                  "ID": 388,
+                  "TAG": "000915",
+                  "STATE": null,
+                  "STATUS": "Unallocated",
+                  "TYPE": "Server Node",
+                  "CREATED": "2012-04-05T23:40:42",
+                  "UPDATED": "2012-09-14T16:59:53",
+                  "DELETED": null
+                },
+                {
+                  "ID": 437,
+                  "TAG": "000919",
+                  "STATE": null,
+                  "STATUS": "Unallocated",
+                  "TYPE": "Server Node",
+                  "CREATED": "2012-04-05T23:42:33",
+                  "UPDATED": "2012-09-14T17:12:22",
+                  "DELETED": null
+                },
+                {
+                  "ID": 391,
+                  "TAG": "000923",
+                  "STATE": null,
+                  "STATUS": "Unallocated",
+                  "TYPE": "Server Node",
+                  "CREATED": "2012-04-05T23:41:03",
+                  "UPDATED": "2012-09-14T17:09:11",
+                  "DELETED": null
+                }
+              ]
+            }
+      "asset delete tag":
+        description: Delete a tag associated with an asset
+        request: DELETE /api/asset/:tag/attribute/:attribute
+        permission: controllers.AssetApi.deleteAssetAttribute
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and unique
+          attribute:
+            type: String
+            description: The attribute to be deleted, e.g. HOSTNAME
+          groupId:
+            type: Option[Integer]
+            description: Used for deleting specific values from a multi-dimensional tag
+        response_codes:
+          202: Accepted for delete
+          404: Asset not found
+        examples:
+          collins-shell: collins-shell asset delete_attribute NODECLASS --tag=tumblrtag30
+          curl: curl --basic -u blake:admin:first -X DELETE http://localhost:9000/api/asset/tumblrtag30/attribute/NODECLASS
+        responses:
+          json: |
+            {
+              "status": "success:accepted",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+      "asset delete":
+        description: Decommission the specified asset
+        request: DELETE /api/asset/:tag
+        permission: controllers.AssetApi.deleteAsset
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and unique
+          reason:
+            type: String
+            description: The reason the asset is being decommissioned
+        response_codes:
+          200: Asset has been decommissioned
+          404: Asset not found
+          409: Asset not in appropriate status (Cancelled, etc)
+        examples:
+          collins-shell: collins-shell asset delete --reason='Done with you' --tag=tumblrtag30
+          curl:  curl --basic -u blake:admin:first -X DELETE http://localhost:9000/api/asset/tumblrtag30
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+  "asset type":
+    content: api/asset_type.html
+    api_sections:
+      "asset type create":
+        description: Create a new asset type
+        request: PUT /api/assettype/:name
+        permission: controllers.AssetTypeApi.createAssetType
+        parameters:
+          name:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and unique
+          label:
+            type: String
+            description: Human readable label for the asset type. 2-32 characters.
+        response_codes:
+          201: Asset type was successfully created
+          409: Asset type with specified name already exists
+        examples:
+          collins-shell: collins-shell asset_type create --name=NAME --label=LABEL
+          curl: curl -XPUT -u blake:admin:first --basic \ -d label='Service Asset Type' \ http://localhost:9000/api/assettype/SERVICE
+        responses:
+          json: {"status":"success:created","data":{"SUCCESS":true}}
+          bash: SUCCESS=true;
+          text: SUCCESS true
+      "asset type update":
+        description: Update an asset type
+        request: POST /api/assettype/:tag
+        permission: controllers.AssetTypeApi.updateAssetType
+        parameters:
+          name:
+            type: String
+            description: New name of the asset type (i.e. SERVICE). All uppercase, 2-32 chars.
+          label:
+            type: String
+            description: New label of the asset type. 2-32 chars.
+        response_codes:
+          200: Asset type updated successfully
+          404: The specified asset type was not found
+        examples:
+          collins-shell: collins-shell asset_type update OLDNAME [--name=NAME --label=LABEL]
+          curl: curl -v -u blake:admin:first --basic -d name='NEW_NAME' http://localhost:9000/api/assettype/OLD_NAME
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+          bash: SUCCESS=true;
+          text: SUCCESS=true;
+      "asset type get":
+        description: Get an asset type by name
+        request: GET /api/assettype/:name
+        permission: controllers.AssetTypeApi.getAssetType
+        parameters:
+          name:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and unique
+        response_codes:
+          200: Asset type was found
+          404: Asset type could not be found
+        examples:
+          collins-shell: collins-shell asset_type get NAME
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/assettype/tumblrtag30
+        responses:
+          json: |
+            {
+              "status":"success:ok",
+              "data":{
+                "ID":1,
+                "NAME":"SERVER_NODE",
+                "LABEL":"Server Node"
+              }
+            }
+      "asset type list":
+        description: Get all asset types
+        request: GET /api/assettypes
+        permission: controllers.AssetTypeApi.getAssetType
+        response_codes:
+          200: Success
+          404: Asset types could not be found
+        examples:
+          collins-shell: collins-shell asset_type list
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/assettypes
+        responses:
+          json: |
+            {
+              "status":"success:ok",
+              "data":[
+                { "ID":1,
+                  "NAME":"SERVER_NODE",
+                  "LABEL":"Server Node"
+                },
+                { "ID":2,
+                  "NAME":"SERVER_CHASSIS",
+                  "LABEL":"Server Chassis"
+                },
+                { "ID":3,
+                  "NAME":"RACK",
+                  "LABEL":"Rack"
+                },
+                { "ID":4,
+                  "NAME":"SWITCH",
+                  "LABEL":"Switch"
+                },
+                { "ID":5,
+                  "NAME":"ROUTER",
+                  "LABEL":"Router"
+                },
+                { "ID":6,
+                  "NAME":"POWER_CIRCUIT",
+                  "LABEL":"Power Circuit"
+                },
+                { "ID":7,
+                  "NAME":"POWER_STRIP",
+                  "LABEL":"Power Strip"
+                },
+                { "ID":8,
+                  "NAME":"DATA_CENTER",
+                  "LABEL":"Data Center"
+                },
+                { "ID":9,
+                  "NAME":"CONFIGURATION",
+                  "LABEL":"Configuration"
+                }
+              ]
+            }
+      "asset type delete":
+        description: Delete the specified asset type
+        request: DELETE /api/assettype/:name
+        permission: controllers.AssetTypeApi.deleteAssetType
+        parameters:
+          name:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and unique
+        response_codes:
+          200: Asset type has been deleted
+          404: Asset type not found
+          409: System asset types cannot be deleted
+          500: Asset type unable to be deleted (Assets of this type still exist?)
+        examples:
+          collins-shell: collins-shell asset_type delete NAME
+          curl: curl --basic -u blake:admin:first -X DELETE http://localhost:9000/api/assettype/NAME
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "DELETED": 1
+              }
+            }
+  "asset managment":
+    content: api/asset_mgmt.html
+    api_sections:
+      "ipmi managment":
+        description: Create or update IPMI data
+        request: POST /api/asset/:tag/ipmi
+        permission: controllers.IpmiApi.updateIpmi
+        note:  This is one of the few API endpoints that will both create and/or update a resource. This will likely change in the future (PUT for create, POST for update). If you are creating IPMI info, all parameters below are required. If you are updating IPMI info, at least one parameter must be specified.
+        parameters:
+          username:
+            type: Option[String]
+            description: The IPMI username - must be at least 1 character
+          password:
+            type: Option[String]
+            description: The IPMI password - must be at least 8 characters
+          address:
+            type: Option[String]
+            description: IPMI address - dotted quad (IPv4) and unused
+          gateway:
+            type: Option[String]
+            description: IPMI gateway address - dotted quad (IPv4)
+          netmask:
+            type: Option[String]
+            description: IPMI netmask - dotted quad (IPv4)
+        response_codes:
+          200: IPMI information successfully updated
+          201: IPMI information successfully created
+          404: Asset not found
+          409: Duplicate IPMI address
+        examples:
+          collins-shell: |
+            collins-shell ipmi create \
+            --address=172.168.0.33 \
+            --gateway=172.168.0.1 \
+            --netmask=255.255.255.0 \
+            --ipmi-username=root \
+            --ipmi-password=fizzbuzz \
+            --tag=tumblrtag2
+
+            collins-shell ipmi update --ipmi-password=fizzbuzz23 --tag=tumblrtag2
+          curl: |
+            curl --basic -u blake:admin:first \
+            -d address=172.168.0.34 \
+            -d gateway=172.168.0.1 \
+            -d netmask=255.255.255.0 \
+            -d username=root \
+            -d password=fizzbuzz http://localhost:9000/api/asset/tumblrtag3/ipmi
+
+            curl --basic -u blake:admin:first \
+            -d password=fizzbuzz23 \
+            http://localhost:9000/api/asset/tumblrtag3/ipmi
+        responses:
+          json: |
+            {
+              "status": "success:created",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+            {
+              "status": "success:ok",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+      "power managment":
+        description: Send a power management event to an asset.
+        request: POST /api/asset/:tag/power
+        permission: controllers.AssetManagementApi.powerManagement
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes)
+          action:
+            type: String
+            description: |
+              One of powerOff, powerOn, powerSoft, powerState, rebootHard, rebootSoft, identify, verify.
+              <table class="table table-hover tabel-condensed">
+                <thead>
+                  <tr> <td>Action</td> <td>Description</td> </tr>
+                </thead>
+                <tbody>
+                  <tr> <td><code>powerOff</code></td> <td>Power off the asset, without grace (like pressing the power button)</td> </tr>
+                  <tr> <td><code>powerOn</code></td> <td>Power up the asset</td> </tr>
+                  <tr> <td><code>powerSoft</code></td> <td>Initiate soft shutdown of OS via ACPI</td> </tr>
+                  <tr> <td><code>powerState</code></td> <td>Status of power (on, off, unknown)</td> </tr>
+                  <tr> <td><code>rebootSoft</code></td> <td>Graceful reboot via IPMI, uses ACPI to notify OS</td> </tr>
+                  <tr> <td><code>rebootHard</code></td> <td>This is equivalent to pressing the reset button</td> </tr>
+                  <tr> <td><code>identify</code></td> <td>Turn on the IPMI light</td> </tr>
+                  <tr> <td><code>verify</code></td> <td>Detect whether the IPMI interface is reachable</td> </tr>
+                </table>
+        response_codes:
+          200: Successfully performed power operation
+          403: |
+            Forbidden by configuration
+            <ul>
+            <li><code>features.ignoreDangerousCommands</code> - forbids managing power state</li>
+            <li><code>powermanagement.allowAssetTypes</code> - forbids power managing this asset type</li>
+            <li><code>powermanagement.disallowStatus</code> - forbids managing power state of asset with this status</li>
+            <li><code>powermanagement.disallowWhenAllocated</code> - forbids using this power action when asset is Allocated</li>
+            </ul>
+          404: Asset not found
+          501: Plugin not enabled
+        examples:
+          collins-shell:  collins-shell power rebootSoft --reason='Need to restart for maintenance' --tag=tumblrtag1
+          curl:    curl -v -u blake:admin:first --basic -d action=rebootSoft http://localhost:9000/api/asset/tumblrtag1/power
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+      "power status":
+        description: Determine the power status for a machine (on, off, unknown)
+        request: GET /api/asset/:tag/power
+        permission: controllers.AssetManagementApi.powerStatus
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes)
+        response_codes:
+          200: Successfully retrieved power status
+          403: |
+            Forbidden by configuration
+            <p>
+            <code>powermanagement.allowAssetTypes</code> - forbids power managing this asset type
+          404: Asset not found
+          501: Plugin not enabled
+        examples:
+          collins-shell: collins-shell power_status --tag=tumblrtag1
+          curl: curl -v -u blake:admin:first --basic http://localhost:9000/api/asset/tumblrtag1/power
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "MESSAGE": "on"
+              }
+            }
+      "provision an asset":
+        description: Provision the specified asset using the specified parameters.
+        request: POST /api/provision/:tag
+        permission: controllers.AssetManagementApi.provisionAsset
+        note: This API call may take a long time (depending on the configured provisioning backend). Client implementations should account for this with an appropriate timeout.
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes)
+          profile:
+            type: String
+            description: The provisioning profile to use. This is the <code>PROFILE</code> key from the get provisioning profiles response.
+          contact:
+            type: String
+            description: The contact (username) for the provisioned host. This will be used later on for notification purposes.
+          suffix:
+            type: Option[String]
+            description: If <code>SUFFIX_ALLOWED</code> is true for the specified profile, this may be supplied. This will be part of the hostname.
+          primary_role:
+            type: Option[String]
+            description: If <code>REQUIRES_PRIMARY_ROLE</code> is true for the specified profile, and <code>PRIMARY_ROLE</code> is null, this value must be supplied.
+          secondary_role:
+            type: Option[String]
+            description: If <code>REQUIRES_SECONDARY_ROLE</code> is true for the specified profile, and <code>SECONDARY_ROLE</code> is null, this value must be supplied.
+          pool:
+            type: String
+            description: If <code>REQUIRES_POOL</code> is true for the specified profile, and <code>POOL</code> is null, this value must be supplied.
+          activate:
+            type: Option[Boolean]
+            description: If the activation plugin is enabled and appropriate for the asset, this value must be true. This is primarily used in on-demand environments where you pull assets from a spare or on-demand pool.
+        response_codes:
+          200: Asset has successfully started the provisioning process
+          403: |
+            Forbidden by configuration
+            <ul>
+            <li><code>features.ignoreDangerousCommands</code> - forbids managing power state</li>
+            <li><code>provisioner.allowedStatus</code> - forbids asset with this status from being provisioned</li>
+            <ul>
+          404: Asset not found
+          429: You have exceeded the configured provisioning rate limit
+          501: Plugin not enabled
+        examples:
+          collin-shell: collins-shell provision host tumblrtag1 devnode blake --suffix=blake
+          curl: |
+            curl -v -u blake:admin:first --basic \
+            -d profile=devnode \
+            -d contact=blake \
+            -d suffix=blake \
+            http://localhost:9000/api/provision/tumblrtag1
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "PROFILES": [
+                  {
+                    "PROFILE": "aaacanode",
+                    "LABEL": "AAA/CA Server",
+                    "PREFIX": "aaa",
+                    "SUFFIX_ALLOWED": true,
+                    "PRIMARY_ROLE": "INFRA",
+                    "REQUIRES_PRIMARY_ROLE": true,
+                    "POOL": null,
+                    "REQUIRES_POOL": true,
+                    "SECONDARY_ROLE": null,
+                    "REQUIRES_SECONDARY_ROLE": false
+                  },
+                  {
+                    "PROFILE": "adminwebnode",
+                    "LABEL": "Admin Web Server",
+                    "PREFIX": "adminweb",
+                    "SUFFIX_ALLOWED": false,
+                    "PRIMARY_ROLE": "TUMBLR_APP",
+                    "REQUIRES_PRIMARY_ROLE": true,
+                    "POOL": "ADMIN_POOL",
+                    "REQUIRES_POOL": true,
+                    "SECONDARY_ROLE": "ALL",
+                    "REQUIRES_SECONDARY_ROLE": false
+                  },
+                  {
+                    "PROFILE": "appcronnode",
+                    "LABEL": "App Cron Server",
+                    "PREFIX": "app-cron",
+                    "SUFFIX_ALLOWED": false,
+                    "PRIMARY_ROLE": "TUMBLR_APP",
+                    "REQUIRES_PRIMARY_ROLE": true,
+                    "POOL": "UTIL",
+                    "REQUIRES_POOL": true,
+                    "SECONDARY_ROLE": null,
+                    "REQUIRES_SECONDARY_ROLE": false
+                  },
+                  {
+                    "PROFILE": "assetnode",
+                    "LABEL": "Asset Server",
+                    "PREFIX": "assets",
+                    "SUFFIX_ALLOWED": false,
+                    "PRIMARY_ROLE": null,
+                    "REQUIRES_PRIMARY_ROLE": true,
+                    "POOL": null,
+                    "REQUIRES_POOL": true,
+                    "SECONDARY_ROLE": null,
+                    "REQUIRES_SECONDARY_ROLE": false
+                  }
+                ]
+              }
+            }
+  "asset log":
+    content: api/asset_log.html
+    api_sections:
+      "log create":
+        description: Create a new log entry for the specified asset
+        request: PUT /api/asset/:tag/log
+        permission: controllers.AssetLogApi.submitLogData
+        note: It is also possible to specify these parameters as the body of the PUT request with a <code>Content-Type</code> header of <code>application/json</code>. In this case, the body is a JSON encoded object with the keys <code>Message</code> (arbitrary JSON value) and <code>Type</code> (one of the strings specified above). This is useful for logging structured data.
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes)
+          message:
+            type: String
+            description: The message to log
+          type:
+            type: Option[String]
+            description: The default is <code>INFORMATIONAL</code>
+        response_codes:
+          201: Log entry was successfully created
+          404: Asset not found
+        examples:
+          collins-shell: collins-shell log 'Hello World' --severity=DEBUG --tag=tumblrtag1
+          curl:  curl --basic -u blake:admin:first -X PUT -d message='Hello World' -d type=DEBUG http://localhost:9000/api/asset/tumblrtag1/log
+        responses:
+          json: |
+            {
+              "status": "success:created",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+      "log get":
+        description: Get logs associated with an asset
+        request: GET /api/asset/:tag/logs
+        permission: controllers.AssetLogApi.getLogData
+        paginated: true
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes)
+          filter:
+            type: Option[String]
+            description: A semicolon (;) list of log types to fetch. Prefix a type with a ! to exclude that type.
+        response_codes:
+          200: Zero or more logs were successfully retrieved
+          404: Asset not found
+        examples:
+          collins-shell: collins-shell logs tumblrtag1
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/asset/tumblrtag1/logs
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "Pagination": {
+                  "PreviousPage": 0,
+                  "CurrentPage": 0,
+                  "NextPage": 0,
+                  "TotalResults": 3
+                },
+                "Data": [
+                  {
+                    "ID": 3,
+                    "ASSET_TAG": "tumblrtag1",
+                    "CREATED": "2012-09-17T13:04:52",
+                    "FORMAT": "text\/plain",
+                    "SOURCE": "API",
+                    "TYPE": "DEBUG",
+                    "MESSAGE": "User blake: Hello World"
+                  },
+                  {
+                    "ID": 2,
+                    "ASSET_TAG": "tumblrtag1",
+                    "CREATED": "2012-09-17T12:53:15",
+                    "FORMAT": "text\/plain",
+                    "SOURCE": "API",
+                    "TYPE": "DEBUG",
+                    "MESSAGE": "User blake: Hello World"
+                  },
+                  {
+                    "ID": 1,
+                    "ASSET_TAG": "tumblrtag1",
+                    "CREATED": "2012-09-17T12:53:07",
+                    "FORMAT": "text\/plain",
+                    "SOURCE": "INTERNAL",
+                    "TYPE": "INFORMATIONAL",
+                    "MESSAGE": "Automatically created by database migration"
+                  }
+                ]
+              }
+            }
+      "log get all":
+        description: Get all log data, not bound to a specific asset
+        request: GET /api/assets/logs
+        permission: controllers.AssetLogApi.getAllLogData
+        paginated: true
+        parameters:
+          filter:
+            type: Option[String]
+            description: A semicolon (;) list of log types to fetch. Prefix a type with a ! to exclude that type.
+        response_codes:
+          200: Zero or more logs were successfully retrieved
+        examples:
+          collins-shell: collins-shell logs all
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/assets/logs
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "Pagination": {
+                  "PreviousPage": 0,
+                  "CurrentPage": 0,
+                  "NextPage": 0,
+                  "TotalResults": 3
+                },
+                "Data": [
+                  {
+                    "ID": 3,
+                    "ASSET_TAG": "tumblrtag1",
+                    "CREATED": "2012-09-17T13:04:52",
+                    "FORMAT": "text\/plain",
+                    "SOURCE": "API",
+                    "TYPE": "DEBUG",
+                    "MESSAGE": "User blake: Hello World"
+                  },
+                  {
+                    "ID": 2,
+                    "ASSET_TAG": "tumblrtag1",
+                    "CREATED": "2012-09-17T12:53:15",
+                    "FORMAT": "text\/plain",
+                    "SOURCE": "API",
+                    "TYPE": "DEBUG",
+                    "MESSAGE": "User blake: Hello World"
+                  },
+                  {
+                    "ID": 1,
+                    "ASSET_TAG": "tumblrtag1",
+                    "CREATED": "2012-09-17T12:53:07",
+                    "FORMAT": "text\/plain",
+                    "SOURCE": "INTERNAL",
+                    "TYPE": "INFORMATIONAL",
+                    "MESSAGE": "Automatically created by database migration"
+                  }
+                ]
+              }
+            }
+  tag:
+    content: api/tag.html
+    api_sections:
+      "list tags":
+        description: List all tags that are in use
+        request: GET /api/tags
+        permission: controllers.TagApi.getTags
+        response_codes:
+          200: Zero or more tags successfully found
+        examples:
+          collins-shell: collins-shell tag list
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/tags
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "tags": [
+                  {
+                    "name": "CHASSIS_TAG",
+                    "label": "Chassis Tag",
+                    "description": "Tag for asset chassis"
+                  },
+                  {
+                    "name": "CPU_CORES",
+                    "label": "CPU Cores",
+                    "description": "Number of cores per physical CPU"
+                  },
+                  {
+                    "name": "CPU_COUNT",
+                    "label": "CPU Count",
+                    "description": "Number of physical CPUs in asset"
+                  },
+                  {
+                    "name": "CPU_DESCRIPTION",
+                    "label": "CPU Description",
+                    "description": "CPU description, vendor labels"
+                  },
+                  {
+                    "name": "CPU_SPEED_GHZ",
+                    "label": "CPU Speed",
+                    "description": "CPU Speed in GHz"
+                  },
+                  {
+                    "name": "CPU_THREADS",
+                    "label": "CPU Threads",
+                    "description": "Number of threads per CPU core"
+                  },
+                  {
+                    "name": "DISK_DESCRIPTION",
+                    "label": "Disk Description",
+                    "description": "Vendor labels for disk"
+                  },
+                  {
+                    "name": "DISK_SIZE_BYTES",
+                    "label": "Disk Size",
+                    "description": "Disk size in bytes"
+                  },
+                  {
+                    "name": "DISK_STORAGE_TOTAL",
+                    "label": "Total disk storage",
+                    "description": "Total amount of available storage"
+                  },
+                  {
+                    "name": "DISK_TYPE",
+                    "label": "Inferred disk type",
+                    "description": "Inferred disk type: SCSI, IDE or FLASH"
+                  },
+                  {
+                    "name": "INTERFACE_ADDRESS",
+                    "label": "IP Address",
+                    "description": "Address on interface, e.g. 10.0.0.1"
+                  },
+                  {
+                    "name": "INTERFACE_NAME",
+                    "label": "Interface Name",
+                    "description": "Name of physical interface, e.g. eth0"
+                  },
+                  {
+                    "name": "LLDP_CHASSIS_DESCRIPTION",
+                    "label": "LLDP Chassis Description",
+                    "description": "Chassis Description reported by lldpctl"
+                  },
+                  {
+                    "name": "LLDP_CHASSIS_ID_TYPE",
+                    "label": "LLDP Chassis ID Type",
+                    "description": "Chassis ID Type reported by lldpctl"
+                  },
+                  {
+                    "name": "LLDP_CHASSIS_ID_VALUE",
+                    "label": "LLDP Chassis ID Value",
+                    "description": "Chassis ID Value reported by lldpctl"
+                  },
+                  {
+                    "name": "LLDP_CHASSIS_NAME",
+                    "label": "LLDP Chassis Name",
+                    "description": "Chassis name reported by lldpctl"
+                  },
+                  {
+                    "name": "LLDP_INTERFACE_NAME",
+                    "label": "LLDP Interface Name",
+                    "description": "Interface name reported by lldpctl"
+                  },
+                  {
+                    "name": "LLDP_PORT_DESCRIPTION",
+                    "label": "LLDP Port Description",
+                    "description": "Port Description reported by lldpctl"
+                  },
+                  {
+                    "name": "LLDP_PORT_ID_TYPE",
+                    "label": "LLDP Port ID Type",
+                    "description": "Port ID Type reported by lldpctl"
+                  },
+                  {
+                    "name": "LLDP_PORT_ID_VALUE",
+                    "label": "LLDP Port ID Value",
+                    "description": "Port ID Value reported by lldpctl"
+                  },
+                  {
+                    "name": "LLDP_VLAN_ID",
+                    "label": "LLDP VLAN ID",
+                    "description": "VLAN ID reported by lldpctl"
+                  },
+                  {
+                    "name": "LLDP_VLAN_NAME",
+                    "label": "LLDP VLANE Name",
+                    "description": "VLAN name reported by lldpctl"
+                  },
+                  {
+                    "name": "MAC_ADDRESS",
+                    "label": "MAC Address",
+                    "description": "MAC Address of NIC"
+                  },
+                  {
+                    "name": "MEMORY_BANKS_TOTAL",
+                    "label": "Memory Banks",
+                    "description": "Total number of memory banks"
+                  },
+                  {
+                    "name": "MEMORY_DESCRIPTION",
+                    "label": "Memory Description",
+                    "description": "Memory description, vendor label"
+                  },
+                  {
+                    "name": "MEMORY_SIZE_BYTES",
+                    "label": "Memory",
+                    "description": "Size of Memory Stick"
+                  },
+                  {
+                    "name": "MEMORY_SIZE_TOTAL",
+                    "label": "Memory Total",
+                    "description": "Total amount of available memory in bytes"
+                  },
+                  {
+                    "name": "NIC_DESCRIPTION",
+                    "label": "NIC Description",
+                    "description": "Vendor labels for NIC"
+                  },
+                  {
+                    "name": "NIC_SPEED",
+                    "label": "NIC Speed",
+                    "description": "Speed of nic, stored as bits per second"
+                  },
+                  {
+                    "name": "POWER_OUTLET",
+                    "label": "Power_outlet",
+                    "description": "POWER_OUTLET"
+                  },
+                  {
+                    "name": "POWER_PORT",
+                    "label": "Power Port",
+                    "description": "Power port of asset"
+                  },
+                  {
+                    "name": "RACK_POSITION",
+                    "label": "Rack Position",
+                    "description": "Position of asset in rack"
+                  },
+                  {
+                    "name": "SERVICE_TAG",
+                    "label": "Service Tag",
+                    "description": "Vendor supplied service tag"
+                  },
+                  {
+                    "name": "SWITCH_PORT",
+                    "label": "Switch Port",
+                    "description": "Switch port that asset is connected to"
+                  },
+                  {
+                    "name": "SYSTEM_PASSWORD",
+                    "label": "System_password",
+                    "description": "SYSTEM_PASSWORD"
+                  }
+                ]
+              }
+            }
+      "list tag values":
+        description: List all the unique values given a specific tag
+        request: GET /api/tag/:tag
+        permission: controllers.TagApi.getTagValues
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and exist
+        response_codes:
+          200: One or more tag values successfully found
+          404: No such tag
+        examples:
+          collins-shell: collins-shell tag values CHASSIS_TAG
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/tag/CHASSIS_TAG
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "values": [
+                  "chassis tag abc"
+                ]
+              }
+            }
+  ipam:
+    content: api/ipam.html
+    api_sections:
+      "allocate an address":
+        description: Create one or more addresses in a pool
+        request: PUT /api/asset/:tag/address
+        permission: controllers.IpAddressApi.allocateAddress
+        note: By default no pools are configured. Your Collins administrator must tell you what pools are available for allocation or you can use the <a href="api.html#api-ipam-get-address-pools">pools API endpoint</a>.
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes)
+          count:
+            type: Option[Integer]
+            description: Number of addresses to allocate. Must be between 1 and 10 if specified. Defaults to 1.
+          pool:
+            type: Option[String]
+            description: The pool to allocate from. Values that are acceptable here depend on what address pool have been configured but common values would be none/empy (default pool), public (publicly routable IP address), backend (private addresses used for backend connectivity) or management (private addresses used for management connectivity)
+        response_codes:
+          201: Address created
+          404: Invalid asset specified
+        examples:
+          collins-shell: collins-shell ip_address allocate DEV --tag=tumblrtag1
+          curl: curl --basic -u blake:admin:first -X PUT -d pool=DEV http://localhost:9000/api/asset/tumblrtag1/address
+        responses:
+          json: |
+            {
+              "status": "success:created",
+              "data": {
+                "ADDRESSES": [
+                  {
+                    "ASSET_ID": 1,
+                    "ASSET_TAG": "tumblrtag1",
+                    "GATEWAY": "172.16.5.1",
+                    "ADDRESS": "172.16.5.4",
+                    "NETMASK": "255.255.255.0",
+                    "POOL": "DEV",
+                    "ID": 1
+                  }
+                ]
+              }
+            }
+      "update an address":
+        description: Update IP address information
+        request: POST /api/asset/:tag/address
+        permission: controllers.IpAddressApi.updateAddress
+        note: If all address information is supplied (address, gateway, and netmask), but no old_address is specified, Collins will attempt to create the address.
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes)
+          old_address:
+            type: Option[String]
+            description: Optional for creating an address and required for updating an address
+          address:
+            type: Option[String]
+            description: Optional for update and required for create
+          gateway:
+            type: Option[String]
+            description: Optional for update and required for create
+          netmask:
+            type: Option[String]
+            description: Optional for update and required for create
+          pool:
+            type: Option[String]
+            description: Optional for update and required for create
+        response_codes:
+          200: Address updated
+          201: Address created
+          404: Invalid asset specified
+        examples:
+          collins-shell: collins-shell ip_address update 172.16.5.4 --tag=tumblrtag1 --address=172.16.5.5
+          curl: |
+             curl --basic -u blake:admin:first -X POST \
+             -d address=172.16.5.5 \
+             -d old_address=172.16.5.4 \
+             http://localhost:9000/api/asset/tumblrtag1/address
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+      "delete an address":
+        description: Delete all addresses associated with a given tag, optionally associated with a pool
+        request: DELETE /api/asset/:tag/addresses
+        permission: controllers.IpAddressApi.purgeAddresses
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes)
+          pool:
+            type: Option[String]
+            description: If specified, only addresses associated with the given pool are deleted. Otherwise, all addresses are deleted.
+        response_codes:
+          200: Address deleted
+          404: Invalid asset specified
+        examples:
+          collins-shell: collins-shell ip_address delete DEV --tag=tumblrtag1
+          curl: |
+             curl --basic -u blake:admin:first -X DELETE \
+             -d pool=DEV \
+             http://localhost:9000/api/asset/tumblrtag1/addresses
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "DELETED": 1
+              }
+            }
+      "get address pools":
+        description: Return pools that are in use or configured
+        request: GET /api/address/pools
+        permission: controllers.IpAddressApi.getAddressPools
+        parameters:
+          all:
+            type: Option[Boolean]
+            description: If false, only return pools with allocated assets. Defaults to true.
+        response_codes:
+          200: Pools found
+        examples:
+          collins-shell: collins-shell ip_address pools
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/address/pools
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "POOLS": [
+                  {
+                    "NAME": "ADMIN-OPS",
+                    "NETWORK": "172.16.56.0\/24",
+                    "START_ADDRESS": "172.16.56.5",
+                    "SPECIFIED_GATEWAY": "Unspecified",
+                    "GATEWAY": "172.16.56.1",
+                    "BROADCAST": "172.16.56.255",
+                    "POSSIBLE_ADDRESSES": 254
+                  },
+                  {
+                    "NAME": "WEB-EDIT",
+                    "NETWORK": "172.16.64.0\/24",
+                    "START_ADDRESS": "172.16.64.5",
+                    "SPECIFIED_GATEWAY": "Unspecified",
+                    "GATEWAY": "172.16.64.1",
+                    "BROADCAST": "172.16.64.255",
+                    "POSSIBLE_ADDRESSES": 254
+                  },
+                  {
+                    "NAME": "DEV",
+                    "NETWORK": "172.16.5.0\/24",
+                    "START_ADDRESS": "172.16.5.4",
+                    "SPECIFIED_GATEWAY": "Unspecified",
+                    "GATEWAY": "172.16.5.1",
+                    "BROADCAST": "172.16.5.255",
+                    "POSSIBLE_ADDRESSES": 254
+                  },
+                  {
+                    "NAME": "WEB-SECURE",
+                    "NETWORK": "172.16.73.0\/28",
+                    "START_ADDRESS": "172.16.73.5",
+                    "SPECIFIED_GATEWAY": "Unspecified",
+                    "GATEWAY": "172.16.73.1",
+                    "BROADCAST": "172.16.73.15",
+                    "POSSIBLE_ADDRESSES": 14
+                  },
+                  {
+                    "NAME": "AAA",
+                    "NETWORK": "172.16.4.0\/28",
+                    "START_ADDRESS": "172.16.4.4",
+                    "SPECIFIED_GATEWAY": "Unspecified",
+                    "GATEWAY": "172.16.4.1",
+                    "BROADCAST": "172.16.4.15",
+                    "POSSIBLE_ADDRESSES": 14
+                  }
+                ]
+              }
+            }
+      "asset addresses":
+         description: Return addresses associated with an asset
+         request: GET /api/asset/:tag/addresses
+         permission: controllers.IpAddressApi.getForAsset
+         parameters:
+           tag:
+             type: String
+             Description: Must be alphanumeric (but can include underscores and dashes)
+         response_codes:
+           200: Zero or more addresses found
+         examples:
+           collins-shell: collins-shell asset get tumblrtag1
+           curl: curl --basic -u blake:admin:first http://localhost:9000/api/asset/tumblrtag1/addresses
+         responses:
+           json: |
+             {
+               "status": "success:ok",
+               "data": {
+                 "ADDRESSES": [
+                   {
+                     "ASSET_ID": 1,
+                     "ASSET_TAG": "tumblrtag1",
+                     "GATEWAY": "172.16.5.1",
+                     "ADDRESS": "172.16.5.4",
+                     "NETMASK": "255.255.255.0",
+                     "POOL": "DEV",
+                     "ID": 2
+                   }
+                 ]
+               }
+             }
+
+      "asset from address":
+        description: Get the asset associated with a specific address
+        request: GET /api/asset/with/address/:address
+        permission: controllers.IpAddressApi.assetFromAddress
+        parameters:
+          address:
+            type: String
+            description: IPv4 address to find an asset for
+        response_codes:
+          200: Found an asset with the specified address
+          404: No asset found with the specified address
+        examples:
+          collins-shell: collins-shell ip_address find 172.16.5.4
+  state:
+    content: api/state.html
+    api_sections:
+      "state create":
+        description: Create a new asset state
+        request: PUT /api/state/:name
+        permission: controllers.AssetStateApi.createState
+        parameters:
+          name:
+            type: String
+            description: A unique name between 2 and 32 characters, must be upper case
+          label:
+            type: String
+            description: A friendly display label between 2 and 32 characters
+          description:
+            type: String
+            description: A longer description of the state between 2 and 255 characters
+          status:
+            type: Option[String]
+            description: Name of the status to bind this state to (e.g. Incomplete, Maintenance, etc), or Any to bind to all status. Any is the default.
+        response_codes:
+          201: State was successfully created
+          409: State name already in use
+        examples:
+          collins-shell: |
+            collins-shell state create --name=HW_ON_FIRE \
+              --label='Hardware on Fire' \
+              --description='Use this state if hardware has caught on fire' \
+              --status=Maintenance
+          curl: |
+            curl --basic -u blake:admin:first \
+              -X PUT \
+              -d label='Hardware on Fire' \
+              -d description='Use this state if hardware has caught on fire' \
+              -d status=Maintenance \
+              http://localhost:9000/api/state/HW_ON_FIRE
+        responses:
+          json: |
+            {
+              "status": "success:created",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+      "state update":
+        description: Update a state
+        request: POST /api/state/:old_name
+        permission: controllers.AssetStateApi.updateState
+        parameters:
+          old_name:
+            type: String
+            description: The old name of the state
+          name:
+            type: Option[String]
+            description: A new name, must be unique and between 2 and 32 characters
+          label:
+            type: Option[String]
+            description: A friendly display label between 2 and 32 characters
+          description:
+            type: Option[String]
+            description: A longer description of the state between 2 and 255 characters
+          status:
+            type: Option[String]
+            description: Name of the status to bind this state to (e.g. Incomplete, Maintenance, etc), or Any to bind to all status.
+        response_codes:
+          200: State successfully updated
+          404: Invalid old_name specified
+          409: Name already in use or trying to modify a system name
+        examples:
+          collins-shell: collins-shell state update HW_ON_FIRE --label='Hardware on Fire!'
+          curl: curl -v --basic -u blake:admin:first -d label='Hardware on Fire!' http://localhost:9000/api/state/HW_ON_FIRE
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+      "state delete":
+        description: Delete a state
+        request: DELETE /api/state/:name
+        permission: controllers.AssetStateApi.deleteState
+        parameters:
+          name:
+            type: String
+            description: Name of the state to delete
+        response_codes:
+          202: State accepted for deletion
+          404: Invalid name specified
+          409: Trying to modify a system name
+        examples:
+          collins-shell: collins-shell state delete HW_ON_FIRE
+          curl:  curl -v --basic -u blake:admin:first -X DELETE http://localhost:9000/api/state/HW_ON_FIRE
+        responses:
+          json: |
+            {
+              "status": "success:accepted",
+              "data": {
+                "DELETED": 2
+              }
+            }
+      "state get":
+        description: Get a state by name
+        request: GET /api/state/:name
+        permission: controllers.AssetStateApi.getState
+        parameters:
+          name:
+            type: String
+            description: Name of the state to fetch
+        response_codes:
+          200: Found the named state
+          404: Invalid name specified
+        examples:
+          collins-shell: collins-shell state get HW_ON_FIRE
+          curl: curl -v --basic -u blake:admin:first http://localhost:9000/api/state/HW_ON_FIRE
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "ID": 15,
+                "STATUS": {
+                  "ID": 5,
+                  "NAME": "Maintenance",
+                  "DESCRIPTION": "Asset is scheduled for maintenance"
+                },
+                "NAME": "HW_ON_FIRE",
+                "LABEL": "Hardware on Fire!",
+                "DESCRIPTION": "Use this state if hardware has caught on fire"
+              }
+            }
+      "state get all":
+        description: Get all available states
+        request: GET /api/states
+        permission: controllers.AssetStateApi.getState
+        response_codes:
+          200: Found some states
+        examples:
+          collins-shell: collins-shell state list
+          curl: curl -v --basic -u blake:admin:first http://localhost:9000/api/states
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": [
+                {
+                  "ID": 1,
+                  "STATUS": null,
+                  "NAME": "NEW",
+                  "LABEL": "New",
+                  "DESCRIPTION": "A service in this state is inactive. It does minimal work and consumes minimal resources."
+                },
+                {
+                  "ID": 2,
+                  "STATUS": null,
+                  "NAME": "STARTING",
+                  "LABEL": "Starting",
+                  "DESCRIPTION": "A service in this state is transitioning to Running."
+                },
+                {
+                  "ID": 3,
+                  "STATUS": null,
+                  "NAME": "RUNNING",
+                  "LABEL": "Running",
+                  "DESCRIPTION": "A service in this state is operational."
+                },
+                {
+                  "ID": 4,
+                  "STATUS": null,
+                  "NAME": "STOPPING",
+                  "LABEL": "Stopping",
+                  "DESCRIPTION": "A service in this state is transitioning to Terminated."
+                },
+                {
+                  "ID": 5,
+                  "STATUS": null,
+                  "NAME": "TERMINATED",
+                  "LABEL": "Terminated",
+                  "DESCRIPTION": "A service in this state has completed execution normally. It does minimal work and consumes minimal resources."
+                },
+                {
+                  "ID": 6,
+                  "STATUS": null,
+                  "NAME": "FAILED",
+                  "LABEL": "Failed",
+                  "DESCRIPTION": "A service in this state has encountered a problem and may not be operational. It cannot be started nor stopped."
+                },
+                {
+                  "ID": 7,
+                  "STATUS": {
+                    "ID": 5,
+                    "NAME": "Maintenance",
+                    "DESCRIPTION": "Asset is scheduled for maintenance"
+                  },
+                  "NAME": "RELOCATION",
+                  "LABEL": "Relocation",
+                  "DESCRIPTION": "An asset is being physically relocated."
+                },
+                {
+                  "ID": 8,
+                  "STATUS": {
+                    "ID": 5,
+                    "NAME": "Maintenance",
+                    "DESCRIPTION": "Asset is scheduled for maintenance"
+                  },
+                  "NAME": "IPMI_PROBLEM",
+                  "LABEL": "IPMI Problem",
+                  "DESCRIPTION": "An asset is experiencing IPMI issues and needs to be examined. It needs investigation."
+                },
+                {
+                  "ID": 9,
+                  "STATUS": {
+                    "ID": 5,
+                    "NAME": "Maintenance",
+                    "DESCRIPTION": "Asset is scheduled for maintenance"
+                  },
+                  "NAME": "HARDWARE_PROBLEM",
+                  "LABEL": "Hardware Problem",
+                  "DESCRIPTION": "An asset is experiencing a non-IPMI issue and needs to be examined. It needs investigation."
+                },
+                {
+                  "ID": 10,
+                  "STATUS": {
+                    "ID": 5,
+                    "NAME": "Maintenance",
+                    "DESCRIPTION": "Asset is scheduled for maintenance"
+                  },
+                  "NAME": "NETWORK_PROBLEM",
+                  "LABEL": "Network Problem",
+                  "DESCRIPTION": "An asset is experiencing a network problem that may or may not be hardware related. It needs investigation."
+                },
+                {
+                  "ID": 11,
+                  "STATUS": {
+                    "ID": 5,
+                    "NAME": "Maintenance",
+                    "DESCRIPTION": "Asset is scheduled for maintenance"
+                  },
+                  "NAME": "HARDWARE_UPGRADE",
+                  "LABEL": "Hardware Upgrade",
+                  "DESCRIPTION": "An asset is in need or in process of having hardware upgraded."
+                },
+                {
+                  "ID": 12,
+                  "STATUS": {
+                    "ID": 5,
+                    "NAME": "Maintenance",
+                    "DESCRIPTION": "Asset is scheduled for maintenance"
+                  },
+                  "NAME": "HW_TESTING",
+                  "LABEL": "Hardware Testing",
+                  "DESCRIPTION": "Performing some testing that requires putting the asset into a maintenance state."
+                },
+                {
+                  "ID": 13,
+                  "STATUS": {
+                    "ID": 5,
+                    "NAME": "Maintenance",
+                    "DESCRIPTION": "Asset is scheduled for maintenance"
+                  },
+                  "NAME": "MAINT_NOOP",
+                  "LABEL": "Maintenance NOOP",
+                  "DESCRIPTION": "Doing nothing, bouncing this through maintenance for my own selfish reasons."
+                },
+                {
+                  "ID": 15,
+                  "STATUS": {
+                    "ID": 5,
+                    "NAME": "Maintenance",
+                    "DESCRIPTION": "Asset is scheduled for maintenance"
+                  },
+                  "NAME": "HW_ON_FIRE",
+                  "LABEL": "Hardware on Fire",
+                  "DESCRIPTION": "Use this state if hardware has caught on fire"
+                }
+              ]
+            }
+  admin:
+    content: api/admin.html
+    api_sections:
+      "repopulate solr":
+        description: Trigger repopulation of the Solr index. This does not normally need to be manually done, but useful for testing or after any database changes not done through Collins
+        request: GET /api/admin/solr
+        permission: controllers.Admin.clearCache
+        parameters:
+          waitForCompletion:
+            type: Option[Boolean]
+            description: True or false. If true, the request will block until the reindexing is complete. Otherwise the request will return immediately and reindexing will occur asynchronously.
+        response_codes:
+          200: Reindexing complete (if waitForCompletion) or reindexing started
+        examples:
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/admin/solr
+        responses:
+          text: OK
+  misc:
+    content: api/misc.html
+    api_sections:
+      timestamp:
+        description: Fetch the current unix timestamp from this collins instance
+        request: GET /api/timestamp
+        permission: None
+        note: Output from this endpoint is only available as text
+        response_codes:
+          200: Timestamp fetched
+        examples:
+          curl: curl http://localhost:9000/api/timestamp
+        responses:
+          text: 1347919676
+      ping:
+        description: Check if collins is alive
+        request: GET /api/ping
+        permission: None
+        responses_codes:
+          200: Ping fetched
+        note: Output from this endpoint is only available as text
+        examples:
+          curl: curl http://localhost:9000/api/ping
+        responses:
+          text: pong

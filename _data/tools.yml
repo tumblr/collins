@@ -1,0 +1,12 @@
+---
+title: Collins Tools
+subtitle: The tools at your disposal to use with collins
+sections:
+  overview:
+    content: tools/overview.html
+  sdk:
+    content: tools/sdk.html
+  "collins shell":
+    content: tools/collins_shell.html
+  genesis:
+    content: tools/genesis.html

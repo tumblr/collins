@@ -1,0 +1,144 @@
+<p class="lead">With great power, comes great responsibility</p>
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">powermanagement</span>
+</p>
+
+<p>
+Assuming you would like the ability to perform power management operations on devices, such as power cycling
+them or powering them off, you will want to provide a power management configuration.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">enabled</td>
+      <td>Boolean</td>
+      <td>Set to true to enable, defaults to false.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">class</td>
+      <td>String</td>
+      <td>Defaults to "util.plugins.IpmiPowerManagement" which is probably suitable for your environment.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">timeout</td>
+      <td>Duration</td>
+      <td>Defaults to 10 seconds. Do not increase as this will reduce concurrency on the system.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">allowAssetTypes</td>
+      <td>Set[String]</td>
+      <td>Asset types that can be power managed. Defaults to [SERVER_NODE].</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">disallowStatus</td>
+      <td>Set[String]</td>
+      <td>Set of status types where power management should not be enabled. Defaults to empty set.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">disallowWhenAllocated</td>
+      <td>Set[String]</td>
+      <td>Set of power actions to disable when an asset is allocated. Defaults to powerOff.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">commands</td>
+      <td>Object</td>
+      <td>Defines the commands to execute when a power action is called.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example example-config">
+<pre>powermanagement {
+  enabled = true
+  command_template = "ipmitool -H &lt;host&gt; -U &lt;username&gt; -P &lt;password&gt; -I lan -L OPERATOR"
+
+  commands {
+    powerOff = ${powermanagement.command_template}" chassis power off"
+    powerOn = ${powermanagement.command_template}" chassis power on"
+    powerSoft = ${powermanagement.command_template}" chassis power soft"
+    powerState = ${powermanagement.command_template}" chassis power status"
+    rebootHard = ${powermanagement.command_template}" chassis power cycle"
+    rebootSoft = ${powermanagement.command_template}" chassis power reset"
+    identify = ${powermanagement.command_template}" chassis identify &lt;interval&gt;"
+    verify = "ping -c 3 &lt;host&gt;"
+  }
+}</pre>
+</div>
+
+<p>
+<span class="label label-note">Note</span> A command must be specified for every power action.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Action</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">powerOff</td>
+      <td>Power off.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">powerOn</td>
+      <td>Power on.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">powerSoft</td>
+      <td>ACPI power off.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">powerState</td>
+      <td>Power status, should have 'on' in stdout if the device is on.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">rebootHard</td>
+      <td>Power cycle</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">rebootSoft</td>
+      <td>ACPI reboot</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">identify</td>
+      <td>Turn on the IPMI light for &lt;interval&gt; seconds</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">verify</td>
+      <td>A command to run if the IPMI command fails. Should exit 0 if the host is reachable and exit 1 otherwise.</td>
+    </tr>
+  </tbody>
+</table>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Substitution</th><th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">&lt;username&gt;</td>
+      <td>The IPMI username associated with the asset</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">&lt;password&gt;</td>
+      <td>The IPMI password associated with the asset</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">&lt;host&gt;</td>
+      <td>The IPMI address associated with the asset</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">&lt;interval&gt;</td>
+      <td>The interval to keep the light on for. 60 seconds.</td>
+    </tr>
+  </tbody>
+</table>

@@ -1,0 +1,16 @@
+<h2>Overview</h2>
+<p>
+Collins provides a fairly robust IPAM system, complete with callbacks and hooks
+to drive automation for your networking devices. Address management comes in two
+forms, strict and non-strict. In strict mode, addresses can only by allocated or
+managed from predefined pools. The pool configuration is documented
+<a href="configuration.html">here</a>. In non-strict mode, which is typically
+only suitable if you don't manage your own addresses, Collins will allow you to
+allocate any addresses, as long as they aren't in use.
+</p>
+<p>
+In addition to address management (creates, deletes, etc), the Collins IPAM API
+allows you to easily query this information. You can find out which pools are in
+use as well as utilization statistics, you can find out which asset is using a
+particular address, you can find out which assets are in a particular pool.
+</p>

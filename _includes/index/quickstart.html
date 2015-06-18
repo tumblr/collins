@@ -1,0 +1,148 @@
+<p class="lead">
+  Up and running in 5 minutes.
+</p>
+
+<h3>Software Requirements</h3>
+<p>
+  Collins has one software requirement - Java 1.6 (with the <a href="http://www.oracle.com/technetwork/java/javase/downloads/jce-6-download-429243.html">unlimited strength JCE</a>).
+  Collins is developed using Java 1.6 and 1.7, and we currently release builds in Java 1.6 bytecode. <br>
+  If you would like your data to persist between restarts, you should also have MySQL 5.5 (5.1 may work but is untested).
+</p>
+
+<h3 id="quickstart-docker">Docker</h3>
+<p>The simplest way to get started playing with Collins is to use the Docker image. Make sure you have a functioning Docker install. <a href="https://registry.hub.docker.com/u/tumblr/collins/">Docker repository</a></p>
+<ol>
+  <li>Start the container: <code>docker run -p 9000:9000 tumblr/collins</code></li>
+  <li>Hit http://localhost:9000/ and log in with the username <code>blake</code> and password <code>admin:first</code>.</li>
+  <li>If desired, add some assets with <code>./scripts/populate.sh</code>.</li>
+</ol>
+
+<h3 id="quickstart-zip">Use our build</h3>
+<ol>
+  <li>Download the latest collins zip from <a href="downloads.html">here</a></li>
+  <li>Unpack the zip file</li>
+  <li>run <code>scripts/setup</code> and follow the instructions</li>
+</ol>
+<p>
+  Note that the above method will only work with MySQL. If you don't have MySQL available you can follow the instructions
+  below which will use an in memory database.
+</p>
+
+<h3 id="quickstart-source">Get your hands dirty and build it yourself</h3>
+<ol>
+  <li>Download the <a href="http://downloads.typesafe.com/play/2.0.8/play-2.0.8.zip">Play Framework</a></li>
+  <li>Unpack the zip into <code>$HOME/src/play-2.0.8</code></li>
+  <li><code>cd ~/src/ &amp; &amp; git clone git@github.com:tumblr/collins.git</code></li>
+  <li>In <code>~/src/collins</code> type <code>~/src/play-2.0.8/play</code> and hit enter (this will take a minute the first time)</li>
+  <li>Once you are in the console type <code>compile</code> and hit enter, you should see no errors. We're just testing your environment, you normally won't do this.</li>
+  <li>Type <code>run</code> and then visit <code>http://localhost:9000</code> in your browser. To run with a different configuration file (the default is <code>conf/application.conf</code>), instead of typing run type <code>run -Dconfig.file=/path/to/alt.conf</code>. Login with username <code>blake</code> and password <code>admin:first</code>.</li>
+</ol>
+</p>
+
+<h3>Support Scripts</h3>
+<p>
+  There is a supplied population script at <code>scripts/populate.sh</code> which will create 10 assets in your local collins instance for you to play around with.<br>
+  There is a supplied package script at <code>scripts/package.sh</code> which will produce a fat zip with all the requirements and dependencies. This is what we deploy to production at Tumblr.<br>
+  There is a supplied init script at <code>scripts/collins.sh</code>. This is a useful starting point for running the app and is what we use to run the app in production at Tumblr. This script is also bundled by the <code>scripts/package.sh</code> script. Note that the supplied init script requires <a href="http://libslack.org/daemon/">daemon</a>.</p>
+
+<h3>Authentication</h3>
+<p>
+  By default the authentication is provided via the
+  <a href="https://github.com/tumblr/collins/blob/master/app/util/security/MockAuthenticationProvider.scala">MockAuthenticationProvider</a>
+  (set in <code>conf/application.conf</code> as <code>authentication.type=default</code>). Usernames/passwords for this provider are below.
+</p>
+<p>
+  You can change the auth provider by setting <code>authentication.type</code> to <code>file</code> or <code>ldap</code> in
+  <code>conf/application.conf</code>. If you set <code>authentication.type</code> to <code>file</code>, the default file used
+  is <code>conf/users.conf</code> (which can be changed by setting <code>authentication.file.userfile=/path/to/users.conf</code>).
+  The usernames/passwords/groups in the default <code>users.conf</code> file are below.
+</p>
+<div class="panel-group" id="credentials">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapsed" data-toggle="collapse" data-target="#credentials-default" href="#credentials-default">Default Devel Credentials</a>
+    </div>
+    <div id="credentials-default" class="panel-collapse collapse">
+      <div class="panel-body">
+        <table class="table table-condensed table-hover">
+          <thead>
+            <tr>
+              <th>Username</th><th>Password</th><th>Groups</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>blake</td>
+              <td>admin:first</td>
+              <td>engineering,infra,ops</td>
+            </tr>
+            <tr>
+              <td>matt</td>
+              <td>foobar</td>
+              <td>engineering,management</td>
+            </tr>
+            <tr>
+              <td>test</td>
+              <td>fizz</td>
+              <td>none</td>
+            </tr>
+            <tr>
+              <td>joeengineer</td>
+              <td>flah</td>
+              <td>engineering</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <a class="panel-title collapsed" data-toggle="collapse" data-parent="#credentials-file" href="#credentials-file">Default File Credentials</a>
+    </div>
+    <div id="credentials-file" class="panel-collapse collapse">
+      <div class="panel-body">
+        <table class="table table-condensed table-hover">
+          <thead>
+            <tr>
+              <th>Username</th><th>Password</th><th>Groups</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>blake</td>
+              <td>8vCeb3h8F863</td>
+              <td>engineering,infra,ops</td>
+            </tr>
+            <tr>
+              <td>matt</td>
+              <td>0592607689Cr</td>
+              <td>engineering,management</td>
+            </tr>
+            <tr>
+              <td>test</td>
+              <td>h2624A7WJA3y</td>
+              <td>none</td>
+            </tr>
+            <tr>
+              <td>joeengineer</td>
+              <td>4ZRl5311al77</td>
+              <td>engineering</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<p>
+  The script used to generate the file based passwords is available at <code>scripts/gen_passwords.sh</code>
+</p>
+<p>
+  There is more complete authentication configuration documentation available <a href="configuration.html#authentication">here</a>
+</p>
+<h3>Contributing to Collins</h3>
+<p>
+  If you want to help develop collins, you'll need to follow the instructions in "Software Setup" above.  Then, to use your favorite IDE, follow the instructions on how to set it up using play.
+  <a href="http://www.playframework.com/documentation/2.0.8/IDE">Setting up your preferred IDE with Play Framework</a>
+</p>

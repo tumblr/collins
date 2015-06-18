@@ -1,0 +1,20 @@
+<p>
+  The logs for an asset are created by both internal and external processes. There is an API available for creating new log
+  entries and querying existing ones, but log entries are immutable and permanent, there is no delete support, even once an asset
+  is decommissioned. These logs give you a permanent historical view of lifecycle related events such as provisions and cancellations
+  as well as changes in tag values.
+</p>
+<div class="row">
+  <div class="col-md-6">
+    <a href="img/asset_note.png" target="_blank" class="thumbnail">
+      <img src="img/asset_note.png" alt="Asset Notes">
+    </a>
+  </div>
+</div>
+<p>
+  Although in the UI you will see a few entries that say "User unknown", the user account record is actually stored and this is a UI
+  bug. By design, no changes or updates to an asset can happen without leaving some kind of an audit trail.
+</p>
+<p>
+  The create a note web UI action allows you to create a log entry for an asset.
+</p>

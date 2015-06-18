@@ -1,0 +1,70 @@
+{% comment %}
+This is an api endpoint subsection template.  It takes data from a yaml file, and fills out a standard api section
+{% endcomment %}
+
+<table class="table table-condensed">
+  <thead>
+    <tr><td></td><td></td></tr>
+  </thead>
+  <tbody>
+    <tr><th>Description</th><td>{{ include.data.description }}</td></tr>
+    <tr><th>Request</th><td><code>{{ include.data.request }}</code></td></tr>
+    <tr><th>Permission</th><td>{{ include.data.permission }}</td></tr>
+    {% if include.data.note %}
+    <tr><td colspan="2"><span class="label label-warning">Note</span>{{ include.data.note }}</td></tr>
+    {% endif %}
+    {% if include.data.parameters %}
+    <tr>
+      <th>Parameters{% if include.data.paginated %} <span class="label label-info">Paginated</span>{% endif %}</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Name</td><td>Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            {% for param in include.data.parameters %}
+            <tr>
+              <th class="inlinecode">{{ param[0] }}</th>
+              <td>{{ param[1].type }}</td>
+              <td>{{ param[1].description }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    {% endif %}
+    <tr>
+      <th>Response Codes</th>
+      <td>
+        <table class="table table-hover table-condensed">
+          <thead>
+            <tr><td>Code</td><td>Reason</td></tr>
+          </thead>
+          <tbody>
+            {% for code in include.data.response_codes %}
+            <tr>
+              <th class="inlinecode">{{ code[0] }}</th>
+              <td>{{ code[1] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+{% for example in include.data.examples %}
+<div class="example {{ example[0] }}">
+  <pre>{{ example[1] }}</pre>
+</div>
+{% endfor %}
+
+{% for resp in include.data.responses %}
+{% capture collapse_id %}new_{{ include.title | slugify }}_{{ resp[0] }}{% endcapture %}
+<p>
+  <a class="btn btn-primary" data-toggle="collapse" data-target="#{{ collapse_id }}">{{ resp[0] }} response example</a>
+</p>
+<pre class="collapse" id="{{ collapse_id }}">{{ resp[1] }}</pre>
+{% endfor %}

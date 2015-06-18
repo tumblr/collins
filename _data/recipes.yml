@@ -1,0 +1,18 @@
+---
+title: Collins Recipes
+subtitle: Real world examples of useful collins snippets
+sections:
+  "collins_shell":
+    content: recipes/collins_shell.html
+    subsections:
+      overview: recipes/shell_overview.html
+      ipmi: recipes/ipmi.html
+      console: recipes/console.html
+      status: recipes/pstatus.html
+      lldp: recipes/lldp.html
+  cql:
+    content: recipes/cql.html
+  "puppet terminus":
+    content: recipes/terminus.html
+  centos:
+    content: recipes/centos.html

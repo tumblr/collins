@@ -1,0 +1,29 @@
+<p class="lead">
+  By infrastructure engineers, for infrastructure engineers.
+</p>
+<p>
+  We looked at a dozen or so open source and commercial products before coding began.
+  Having an API and flexible workflow were requirements. The intake support for our
+  specific hardware intake process also needed to be accounted for. We also needed
+  something that would support not just virtualized systems, but was more tailored
+  towards physical hardware. We found nothing that met the requirements we had.
+  Things we looked at included:
+</p>
+<ul>
+  <li><a href="http://openstack.org/">openstack</a></li>
+  <li><a href="https://wiki.ubuntu.com/ServerTeam/Orchestra">Ubuntu Orchestra</a></li>
+  <li><a href="https://forms.raritan.com/products/data-center-infrastructure-management/dctrack/">dcTrack</a></li>
+  <li><a href="http://iptrack.sourceforge.net/">IPplan</a></li>
+  <li><a href="http://opennetadmin.com/">OpenNetAdmin</a></li>
+  <li><a href="http://code.google.com/p/openipam/">openIPAM</a></li>
+  <li><a href="http://code.google.com/p/spoiled/">Spoled</a></li>
+</ul>
+<p>
+  Some of these are strictly for IPAM, some handled parts of what collins does. None of these were good fits for the
+  initial problems we were trying to solve.
+</p>
+<p>
+  Collins can sit on top of existing asset management systems (we have done this at Tumblr with both SoftLayer and Amazon)
+  or be the infrastructure source of truth for your entire environment. I personally found openstack to be the closest fit for
+  what we were looking for but the number of changes required to make it work for Tumblr were substantial.
+</p>

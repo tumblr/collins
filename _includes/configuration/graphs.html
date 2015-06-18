@@ -1,0 +1,239 @@
+<p class="lead">Display trending data</p>
+<h2>Overview <small><span class="label label-info">Namespace</span> <span class="inlinecode">graph</span></small></h2>
+
+<ul class="thumbnails">
+  <li class="col-md-4">
+    <p>
+    Collins has an easy to implement plugin for graph and trending systems. The
+    graph plugin will display embedded graphs or charts for assets, or just links to
+    those systems (depending on the graph plugin). Once enabled, you will find an additional
+    tab on the asset details screen named 'Graphs' with all the configured information
+    available in it.
+    </p>
+
+    <p>
+    There is currently support for Fibr,
+    the <a href="http://opentsdb.net/">OpenTSDB</a> visualization tool
+    we built at Tumblr
+    and <a href="http://ganglia.info/">ganglia</a>. While there are
+    plans to open source fibr in the near future, it is likely an
+    early November release.
+    </p>
+
+    <p>
+    Because graph plugins are easy to implement, we hope that the community will
+    contribute plugins for other common similar systems such as graphite, or munin.
+    </p>
+
+    <p>
+    If you are interested in building and contributing a plugin and have any questions, please
+    feel free to reach out on the mailing list.
+    </p>
+  </li>
+  <li class="col-md-5">
+    <a href="img/asset_graph.png" class="thumbnail" target="_blank"><img src="img/asset_graph.png" alt="Asset trending"></a>
+  </li>
+</ul>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">class</td>
+      <td>String</td>
+      <td>Class that implements the neccesary graph plugin. Defaults to <code>collins.graphs.FibrGraphs</code></td>
+    </tr>
+    <tr>
+      <td class="inlinecode">enabled</td>
+      <td>Boolean</td>
+      <td>Defaults to false.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">queryCacheSize</td>
+      <td>Integer</td>
+      <td>Defaults to 2000. This is the size cache to keep for custom metrics. Custom metrics are metrics to include for a host dynamically, based on a search query. This allows you to say things like "Memcache hosts should also display these metrics".</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">queryCacheTimeout</td>
+      <td>Duration</td>
+      <td>Defaults to 60 seconds. The amount of time to wait before expiring a query from the cache.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>graph {
+  class = "collins.graphs.FibrGraphs"
+  enabled = false
+  queryCacheSize = 2000
+  queryCacheTimeout = 60 seconds
+
+  FibrGraphs {
+    annotations = [deploy]
+    customMetrics = {}
+    defaultMetrics = [
+      SYS/LOAD,
+      SYS/MEM,
+      SYS/NET,
+      SYS/PROC,
+      SYS/IO-UTIL
+    ]
+    timeframe = 1 hour
+    url = "http://fibr.d2.tumblr.net"
+}</pre>
+</div>
+
+<h3>Fibr Graphs <small><span class="label label-info">Namespace</span> <span class="inlinecode">graph.FibrGraphs</span></small></h3>
+
+<p>
+At Tumblr, Fibr is our primary trending, graphing, and systems visualization tool. There is more information
+on <a href="tools.html#fibr">fibr</a> in the tool document.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">annotations</td>
+      <td>Set[String]</td>
+      <td>Annotations to display with graphs. Defaults to <code>[deploy]</code> (show deploy lines)</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">customMetrics</td>
+      <td>Object</td>
+      <td>Metrics to display based on asset information</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">defaultMetrics</td>
+      <td>Set[String]</td>
+      <td>Metrics to display for any asset. Defaults to <code>SYS/LOAD, SYS/MEM, SYS/NET, SYS/PROC, SYS/IO-UTIL</code></td>
+    </tr>
+    <tr>
+      <td class="inlinecode">timeframe</td>
+      <td>Duration</td>
+      <td>What timeframe to display for the metrics. Defaults to 1 hour (shows 1 hour of data).</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">url</td>
+      <td>URL</td>
+      <td>
+        The Fibr web URL. Defaults to <code>http://fibr.d2.tumblr.net/</code> which is almost certainly
+        not suitable outside of Tumblr.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example example-config">
+<pre>graph.FibrGraphs {
+  customMetrics = {
+    mysqlHosts {
+      selector = "PRIMARY_ROLE = \"DATABASE\""
+      metrics = [
+        MYSQL/COMMANDS,
+        MYSQL/SLOW,
+        MYSQL/THREADS,
+        MYSQL/NET
+      ]
+    }
+    memcacheHosts {
+      selector = "POOL = MEMCACHE*"
+      metrics = [
+        MEMCACHE/COMMANDS,
+        MEMCACHE/EVICTS,
+        MEMCACHE/ITEMS,
+        MEMCACHE/HITRATIO
+      ]
+    }
+  }
+}</pre>
+</div>
+
+<p>
+In the above example, hosts that have a <code>PRIMARY_ROLE</code> of <code>DATABASE</code> will
+display in addition to the default metrics, the MySQL specific metrics. Assets with a <code>POOL</code>
+matching <code>MEMCACHE*</code> will additionally display memcache specific metrics.
+</p>
+
+<h3>Ganglia Graphs <small><span class="label label-info">Namespace</span> <span class="inlinecode">graph.GangliaGraphs</span></small></h3>
+
+<ul class="thumbnails">
+  <li class="col-md-4">
+    <p>
+      <a href="http://ganglia.info/">Ganglia</a> is a distributed
+      metrics generation, collection, and visualization system.  Collins
+      integration relies on
+      recent <a href="https://github.com/ganglia/ganglia-web/blob/master/docs/ad-hoc-views.mdown">ad-hoc-views</a>
+      support.
+    </p>
+
+  </li>
+  <li class="col-md-5">
+    <a href="img/ganglia_asset_graph.png" class="thumbnail" target="_blank"><img src="img/ganglia_asset_graph.png" alt="Ganglia graph example"></a>
+  </li>
+</ul>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">url</td>
+      <td>String</td>
+      <td>Location of the ganglia web ui.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">timeRange</td>
+      <td>String</td>
+      <td>Default time range to display in the UI.  Defaults
+      to <code>1hr</code>.  Options available will depend on your
+      ganglia setup.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">hostSuffix</td>
+      <td>String</td>
+      <td>By default ganglia uses reverse dns to determine hostnames.
+      That means a server with a hosname of <code>foo</code> might
+      show up as <code>foo.example.com</code>.  If your reverse dns
+      scheme has a consistent suffix, you can supply it here.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">defaultGraphs</td>
+      <td>Set[String]</td>
+      <td>gweb veiws makes a distinction between "graphs" (or reports)
+      and individual metrics.  "graphs" are pre-defined and can
+      combine multiple metrics whiel metrics just display a single
+      value.  Defaults to <code>"load_all_report", "load_report",
+      "mem_report", "cpu_report", "network_report",
+      "packet_report"</code>.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">defaultMetrics</td>
+      <td>Set[String]</td>
+      <td>
+        Which individual metrics to display.  Defaults to <code>"disk_free", "disk_total"</code>.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example example-config">
+<pre>graph {
+  class = "collins.graphs.GangliaGraphs"
+  enabled = true
+  GangliaGraphs {
+    url = "http://my-ganglia.domain.local/"
+ }
+}</pre>
+</div>

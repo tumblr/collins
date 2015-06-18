@@ -1,0 +1,246 @@
+<p class="lead">Configuration options that don't fit anywhere else</p>
+<h2>Application Specific</h2>
+
+<p>
+These configuration aspects are specific to the play framework.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">application.secret</td>
+      <td>String</td>
+      <td>A secret key used to secure your cookies. If you deploy several collins instances be sure to use the same key.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">parsers.text.maxLength</td>
+      <td>Integer</td>
+      <td>The maximum allowable size of a body. Be sure to make this large enough to allow for LSHW/LLDP uploads.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">evolutionplugin</td>
+      <td>String</td>
+      <td>Set to disabled in production, or enabled in development</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example example-config">
+<pre>application.secret="AbFgHx0eJx8lalkja812389uasdlkajsdlka98012398uasdlkasdklajsd81298"
+parsers.text.maxLength=1048576
+evolutionplugin = disabled</pre>
+</div>
+
+<h2>Concurrency</h2>
+
+<p>
+These configuration aspects manage various concurrency components of the system. This will dictate
+how much work Collins can do at any given time.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">concurrency.actorCount</td>
+      <td>Integer</td>
+      <td>The number of actors to spin up to handle async processing of things like provisioning and power status. This defaults to the number of CPUs * 2.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">concurrency.timeout</td>
+      <td>Duration</td>
+      <td>The maximum amount of time to allow a process to run. This defaults to 2 seconds but generally different plugins allow you to specify different timeouts.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example example-config">
+<pre>concurrency {
+  actorCount = 48
+  timeout = 10 seconds
+}</pre>
+</div>
+
+<h2>Crypto</h2>
+
+<p>
+The only crypto configuration available is the key. The crypto key must not be changed after the system
+is initialized for the first time or you will be unable to decrypt data.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">crypto.key</td>
+      <td>String</td>
+      <td>A 63 character random string. Be sure that any Collins instances using the same database have the same crypto.key</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example example-config">
+<pre>crypto.key = "lkkajsdlkajsdlkajsdlkajsdlkajsdlkajsdlkajsdlkajsdlkajsdlkajsdla"</pre>
+</div>
+
+<h2>Database</h2>
+
+<div class="config-overview">
+Collins is extensively tested using both MySQL 5.5 and H2. H2 is used for development and MySQL is used in production.
+</div>
+
+<div class="accordion" id="database">
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#database" href="#database-h2">H2</a>
+    </div>
+    <div id="database-h2" class="accordion-body collapse in">
+      <div class="accordion-inner">
+<pre>db {
+  collins {
+    logStatements = false
+    user = "sa"
+    password = ""
+    driver = "org.h2.Driver"
+    url = "jdbc:h2:mem:play;IGNOERCASE=true"
+  }
+}</pre>
+      </div> <!-- accordion inner -->
+    </div> <!-- accordion-body -->
+  </div> <!-- accordion-group -->
+  <div class="accordion-group">
+    <div class="accordion-heading">
+      <a class="accordion-toggle" data-toggle="collapse" data-parent="#database" href="#database-mysql">MySQL</a>
+    </div>
+    <div id="database-mysql" class="accordion-body collapse">
+      <div class="accordion-inner">
+<pre>db {
+  collins {
+    logStatements = false
+    user = "root"
+    password = ""
+    driver = "com.mysql.jdbc.Driver"
+    url = "jdbc:mysql://localhost/collins?autoReconnect=true&amp;interactiveClient=true"
+  }
+}</pre>
+      </div> <!-- accordion inner -->
+    </div> <!-- accordion-body -->
+  </div> <!-- accordion-group -->
+
+</div> <!-- accordion -->
+
+<h2>LSHW Parsing</h2>
+
+<p>
+Due to how LSHW handles PCIe flash devices, you have to give the parser a hint
+as to which attribute values indicate that the device is in fact a flash storage
+device. Here you can specify the string to match on and the size to use if the
+match is found.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">lshw.defaultNicCapacity</td>
+      <td>Long</td>
+      <td>If the network interface capacity can not be found, fallback to this value. Specified in bits. No default value.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">lshw.flashProduct</td>
+      <td>String</td>
+      <td><span class="label label-warning">Deprecated</span> Product string to look for in LSHW output to detect a flash device.  Defaults to flashmax. This is deprecated, and will be removed in a future version. Please use <code>lshw.flashProducts</code> instead.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">lshw.flashProducts</td>
+      <td>Set[String]</td>
+      <td>Product strings to look for in LSHW output to detect a flash device.  Defaults to <code>["flashmax"]</code>, and includes <code>lshw.flashProduct</code>.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">lshw.flashSize</td>
+      <td>Long</td>
+      <td>If the flashProduct matched, the size to use. Defaults to 1400000000000.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">lshw.includeDisabledCpu</td>
+      <td>Bool</td>
+      <td>Whether CPUs marked as disabled should be included. Defaults to false.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">lshw.includeEmptySocket</td>
+      <td>Bool</td>
+      <td>Whether sockets with no CPU should be included. Defaults to false.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>lshw {
+  defaultNicCapacity = 10000000000
+  flashProducts = ["flashmax","fusionIO","TachION Drive"]
+  flashSize = 1400000000000
+}</pre>
+</div>
+
+<h2>Query Log</h2>
+
+<p>
+The query log is primary used for development but allows you to turn on database
+query logging and API (find/search) logging.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">querylog.enabled</td>
+      <td>Boolean</td>
+      <td>Whether to log database queries</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">querylog.includeResults</td>
+      <td>Boolean</td>
+      <td>Defaults to false. If the query log is enabled, and includeResults is true, query results will also be logged</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">querylog.prefix</td>
+      <td>String</td>
+      <td>Defaults to "QUERY: ". A prefix to use in the log message.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">querylog.frontendLogging</td>
+      <td>Boolean</td>
+      <td>Defaults to false. If true, API queries are logged</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>querylog {
+  enabled = false
+  includeResults = false
+  prefix = "QUERY: "
+  frontendLogging = false
+}</pre>
+</div>

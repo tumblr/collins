@@ -1,0 +1,28 @@
+---
+title: Collins Overview
+subtitle: A screenshot tour of the basics
+sections:
+  basics:
+    content: overview/basics.html
+  login:
+    content: overview/login.html
+  search:
+    content: overview/search.html
+  "asset details":
+    content: overview/asset_details.html
+  "asset actions":
+    content: overview/asset_actions.html
+    subsections:
+      provisioning: overview/provisioning.html
+      maintenance: overview/maintenance.html
+      cancellation: overview/cancel.html
+      deletion: overview/delete.html
+      "power managment": overview/power.html
+      "log creation": overview/action_log.html
+      activation: overview/activation.html
+  admin:
+    content: overview/admin.html
+    subsections:
+      logs: overview/admin_log.html
+      stats: overview/stats.html
+      create: overview/create.html

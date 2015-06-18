@@ -1,0 +1,14 @@
+<p class="lead">An audit trail with an API</p>
+<p>
+  Every modification or lifecycle event that occurs with an asset is logged, along with who made the change and the time of the change.
+  If a tag is modified (and not encrypted), the previous and new value are both stored.
+  Logs can be searched via the API and can be viewed on the web as well.
+  Logs are immutable but can be created via the API. Below is a list of log levels (based on syslog) and descriptions.
+</p>
+{% include logs.html %}
+<p>
+  System logs (messages that aren't specific to any particular kind of asset) can only be logged internally by collins.
+  Collins of course uses an asset to log these kinds of messages against.
+  By default the system asset is the <code>multicollins.thisInstance</code> value, or <code>tumblrtag1</code>. You can
+  specify the system asset via the <code>features.syslogAsset</code> configuration.
+</p>

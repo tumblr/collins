@@ -1,0 +1,116 @@
+<p class="lead">Hooking into lifecycle events in collins</p>
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">callbacks</span>
+</p>
+
+<p>
+Collins supports a callback mechanism that allows you to trigger events when the configured
+callbacks are matched. A short example is probably most useful here.
+</p>
+
+<div class="example example-config">
+<pre>callbacks.registry {
+  hardwareProblem {
+    on = "asset_update"
+    when {
+      previous.state = "!isMaintenance"
+      current.state = "isMaintenance"
+      current.states = [ HARDWARE_PROBLEM ]
+    }
+    action {
+      type = exec
+      command = "/sbin/notify &lt;tag&gt; sysadmin@example.org"
+    }
+  }
+}</pre>
+</div>
+
+<p>
+In the above configuration we have registered a callback named hardwareProblem. This
+callback will be triggered when an asset is moved to have a status of Maintenance
+with a state of HARDWARE_PROBLEM. When the callback is triggered we will execute a notify
+command that will email a systems administrator.
+</p>
+
+<p>
+A callback is triggered by an event which is specified via the <code>on</code> config value. The value is
+then matched using a matcher which is specified via the <code>when</code> config value. If the matcher
+succeeds the specified <code>action</code> is taken.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">enabled</td>
+      <td>Boolean</td>
+      <td>Defaults to true. Do not disable as some cache maintenance is done via callbacks.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">class</td>
+      <td>String</td>
+      <td>The callback implementation to use. Defaults to collins.callbacks.CallbackManagerPlugin</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">registry</td>
+      <td>Object</td>
+      <td>A set of named objects describing various callback scenarios</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>callbacks {
+  enabled = true
+  class = "collins.callbacks.CallbackManagerPlugin"
+  registry {
+  }
+}</pre>
+</div>
+
+<h3>Registry <small><span class="label label-info">Namespace</span> <span class="inlinecode">callbacks.registry</span></small></h3>
+
+<p>
+The registry holds all your configured callbacks.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">on</td>
+      <td>String</td>
+      <td>The condition to match on. Required. Valid values are below.
+        <ul>
+          <li class="inlinecode">asset_create</li>
+          <li class="inlinecode">asset_update</li>
+          <li class="inlinecode">asset_delete</li>
+          <li class="inlinecode">asset_log_create</li>
+          <li class="inlinecode">asset_meta_value_create</li>
+          <li class="inlinecode">asset_meta_value_delete</li>
+          <li class="inlinecode">ipAddresses_create</li>
+          <li class="inlinecode">ipAddresses_update</li>
+          <li class="inlinecode">ipAddresses_delete</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td class="inlinecode">when</td>
+      <td>Object</td>
+      <td>Has previous state/states and current state/states as keys. These describe how to match whether the action should be triggered or not.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">action</td>
+      <td>Object</td>
+      <td>Valid keys in the action are type (exec, collinscript) and a command</td>
+    </tr>
+  </tbody>
+</table>

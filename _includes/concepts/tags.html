@@ -1,0 +1,59 @@
+<p class="lead">Multi-dimensional key/values for an asset</p>
+<p>
+  The most fundamentally important concept in collins is that of a tag. A tag consists of a key (such as <code>TOTAL_DISK_SPACE_BYTES</code>),
+  a value (such as <code>536870912000</code>) and a dimension (such as <code>0</code>). Tags are what provide most of the flexibility within
+  collins. If you set a new tag on an asset and that tag does not yet exist, it will be available to query on and immediately available to
+  query on. If you set a new tag value using the same dimension, the old value will be overwritten. All tag changes, including deletes, are logged
+  as part of the asset audit trail.
+</p>
+
+<h2>Tag Types</h2>
+<p>
+  Tags can be either managed, automated, or unmanaged.
+</p>
+<dl>
+  <dt>Managed</dt>
+  <dd>
+    Tags that are not user managable (such as CPU speed) and can only be set or changed during certain lifecycle events, such as the server intake process.
+    These tags can not be changed, updated or deleted by a user. This is enforced in the software.
+  </dd>
+  <dt>Automated</dt>
+  <dd>
+    Tags that are managed by external automated processes such as server provisioning.
+    Although these can technically be set/changed by users via the API, convention dictates that they should not be.
+  </dd>
+  <dt>Unmanaged</dt>
+  <dd>
+    Tags set by a user via some api interaction (most likely), but probably on a manual basis. In some cases these may be part of an automated process,
+    but some user-interaction will dictate the tag value. These are typically used for things like notes, links, testing, etc.
+  </dd>
+</dl>
+
+<h2>Dimensions</h2>
+<p>
+  A dimension can be any integer value (including a timestamp) and is typically used for grouping things together. You can imagine the disks of a host being described lik\
+  e:
+</p>
+<pre><code>{
+    "0": {
+    "DEV_NAME": "/dev/sda",
+    "TOTAL_DISK_SPACE_BYTES": 536870912000,
+    "DISK_TYPE": "SATA"
+    },
+    "1": {
+    "DEV_NAME": "/dev/sdb",
+    "TOTAL_DISK_SPACE_BYTES": 0,
+    "DISK_TYPE": "CD-ROM"
+    }
+    }</code></pre>
+<p>
+  This information tells you that the asset has two disks (one sata, one cd-rom) and tells you a bit about each physical disk. The value of
+  the dimension in this case is just to logically group things together, and possibly to provide some ordering. You could also however
+  use the dimension to represent things like port allocation (i.e. each dimension represents a port in use on the asset), or order of
+  some arbitrary event where the timestamp is the dimension used. It's up to you.
+</p>
+
+<h2>Tags</h2>
+<p>
+  The flexible nature of the tag approach used with Collins dictates that agreed upon convention is required.
+</p>
