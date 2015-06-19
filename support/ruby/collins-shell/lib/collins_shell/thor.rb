@@ -46,7 +46,7 @@ module CollinsShell
       method_option :tag, :type => :string, :required => required, :desc => 'Tag for asset'
     end
     def use_nuke_option required = false
-      method_option :nuke, :required => true, :default => :false, :desc => 'Nuke to destroy'
+      method_option :nuke, :required => required, :default => :false, :desc => 'Nuke to destroy'
     end
     def use_selector_option required = false
       method_option :selector, :type => :hash, :required => required, :desc => 'Selector to query collins. Takes the form of --selector=key1:val1 key2:val2 etc'

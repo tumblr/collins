@@ -27,7 +27,7 @@ module CollinsShell
       end
     end
 
-    desc 'delete', 'delete an asset in collins (must be cancelled)'
+    desc 'delete [NUKE=BOOLEAN]', 'delete an asset in collins (must be cancelled)'
     use_collins_options
     use_tag_option(true)
     use_nuke_option(true)
