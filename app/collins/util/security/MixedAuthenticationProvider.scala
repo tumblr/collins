@@ -73,6 +73,6 @@ class MixedAuthenticationProvider(types: Array[String]) extends AuthenticationPr
   def authenticate(username: String, password: String): Option[User] = {
     logger.debug("Beginning to try authentication types")
 
-    providers.flatMap { p => tryAuthCache(p, username, password) }.headOption
+    providers.toStream.flatMap { p => tryAuthCache(p, username, password) }.headOption
   }
 }
