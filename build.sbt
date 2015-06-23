@@ -32,8 +32,8 @@ libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.187",
   "org.apache.solr" % "solr-solrj" % "5.2.0",
   "org.apache.solr" % "solr-core"  % "5.2.0",
-  "org.apache.httpcomponents" % "httpclient" % "4.5", 
-  "org.apache.httpcomponents" % "httpmime" % "4.5", 
+  "org.apache.httpcomponents" % "httpclient" % "4.5",
+  "org.apache.httpcomponents" % "httpmime" % "4.5",
   "commons-net" % "commons-net" % "3.3",
   "org.bouncycastle" % "bcprov-jdk16" % "1.46",
   "com.twitter" %% "util-core" % "6.23.0",
@@ -46,12 +46,10 @@ libraryDependencies ++= Seq(
   "com.google.code.findbugs" % "jsr305" % "3.0.0",
   "org.webjars" %% "webjars-play" % "2.3.0-3",
   "org.webjars" % "bootstrap" % "3.3.4",
-  "org.webjars" % "bootswatch-sandstone" % "3.3.1+2",
+  "org.webjars" % "bootswatch-default" % "3.3.1+2",
   "org.webjars" % "bootstrap-datepicker" % "1.4.0",
   "org.webjars" % "datatables" % "1.10.7",
   "org.webjars" % "datatables-plugins" % "1.10.7",
   "org.webjars" % "jquery" % "2.1.4",
   ws
 )
-
-
