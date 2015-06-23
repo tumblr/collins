@@ -21,7 +21,7 @@ trait AuthenticationProvider {
                                 .build(
                                   new CacheLoader[Credentials, Option[User]] {
                                     override def load(creds: Credentials): Option[User] = {
-                                      logger.info("Loading user %s from backend".format(creds._1))
+                                      logger.debug("Loading user %s from backend".format(creds._1))
                                       authenticate(creds._1, creds._2)
                                     }
                                   }
@@ -48,7 +48,7 @@ trait AuthenticationProvider {
 object AuthenticationProvider {
   val Default = new MockAuthenticationProvider
   val Types = Set("ldap", "file", "default")
-  def filename = AuthenticationProviderConfig.permissionsFile 
+  def filename = AuthenticationProviderConfig.permissionsFile
 
   private val logger = Logger("util.security.AuthenticationProvider")
 
