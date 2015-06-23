@@ -20,12 +20,31 @@ import collins.validation.StringUtil
 
 case class DeleteAction(
   _assetTag: String,
-  realDelete: Boolean,
+  nuke: Boolean,
   spec: SecuritySpecification,
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction {
 
   case class ActionDataHolder(options: Map[String,String]) extends RequestDataHolder
+
+  val dataForm = Form(tuple(
+    "reason" -> optional(text(1)),
+    "nuke" => optional(boolean),
+  ))
+
+  override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
+    withValidAsset(_assetTag) { asset =>
+      if (nuke && !reason.isDefined) {
+        Left(RequestDataHolder.error400("reason must be specified"))
+      } else {
+        val options = reason.map(r => Map("reason" -> r)).getOrElse(Map.empty)
+        Right(ActionDataHolder(options))
+      }
+    form => {
+      val (reason, nuke) = form
+      } 
+    }
+  }
 
   lazy val reason: Option[String] = Form(
     "reason" -> optional(text(1))
@@ -33,17 +52,6 @@ case class DeleteAction(
     err => None,
     str => str.flatMap(StringUtil.trim(_))
   )
-
-  override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
-    withValidAsset(_assetTag) { asset =>
-      if (realDelete && !reason.isDefined) {
-        Left(RequestDataHolder.error400("reason must be specified"))
-      } else {
-        val options = reason.map(r => Map("reason" -> r)).getOrElse(Map.empty)
-        Right(ActionDataHolder(options))
-      }
-    }
-  }
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
     case ActionDataHolder(options) =>
@@ -53,7 +61,7 @@ case class DeleteAction(
             RequestDataHolder.error409("Illegal state transition: %s".format(throwable.getMessage))
           )
         case Right(status) =>
-          if (realDelete) {
+          if (nuke) {
             val errMsg = "User deleted asset %s. Reason: %s".format(
               definedAsset.tag, options.get("reason").getOrElse("Unspecified")
             )

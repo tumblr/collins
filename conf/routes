@@ -75,7 +75,7 @@ DELETE  /api/asset/:tag/attribute/:attribute   collins.app.Api.deleteAssetAttrib
 POST    /api/asset/:tag/status      collins.app.Api.updateAssetStatus(tag: String)
 PUT     /api/asset/:tag             collins.app.Api.createAsset(tag: String)
 POST    /api/asset/:tag             collins.app.Api.updateAsset(tag: String)
-DELETE  /api/asset/:tag             collins.app.Api.deleteAsset(tag: String, nuke: Boolean)
+DELETE  /api/asset/:tag             collins.app.Api.deleteAsset(tag: String)
 GET     /api/asset/:tag             collins.app.Api.getAsset(tag: String, location: Option[String])
 GET     /api/assets                 collins.app.Api.getAssets(page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", sortField: String ?= "TAG", details: String ?= "true")
 GET     /api/asset/:tag/similar     collins.app.Api.similar(tag: String, page: Int ?= 0, size: Int ?= 50, sort: String  ?= "ASC")

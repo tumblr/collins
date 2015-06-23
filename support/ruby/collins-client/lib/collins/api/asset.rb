@@ -26,7 +26,7 @@ module Collins; module Api
       }
       parameters = select_non_empty_parameters parameters
       logger.debug("Deleting asset #{asset.tag} with parameters #{parameters.inspect}")
-      http_delete("/api/asset/#{asset.tag}?nuke=#{parameters[:nuke]}", parameters, asset.location) do |response|
+      http_delete("/api/asset/#{asset.tag}", parameters, asset.location) do |response|
         parse_response response, :expects => 200, :as => :status, :raise => strict?, :default => false
       end
     end
