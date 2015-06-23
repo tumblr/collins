@@ -1,12 +1,6 @@
 package collins.util.security
 
-import java.util.concurrent.TimeUnit
-
 import play.api.Logger
-
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
 
 import collins.cache.ConfigCache
 import collins.models.User
@@ -14,43 +8,14 @@ import collins.permissions.Privileges
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger
-  type Credentials = Tuple2[String,String]
-  protected lazy val cache: LoadingCache[Credentials, Option[User]] = CacheBuilder.newBuilder()
-                                .maximumSize(100)
-                                .expireAfterWrite(cacheTimeout, TimeUnit.MILLISECONDS)
-                                .build(
-                                  new CacheLoader[Credentials, Option[User]] {
-                                    override def load(creds: Credentials): Option[User] = {
-                                      logger.info("Loading user %s from backend".format(creds._1))
-                                      authenticate(creds._1, creds._2)
-                                    }
-                                  }
-                                )
   def authType: Array[String]
   def authenticate(username: String, password: String): Option[User]
   def useCachedCredentials: Boolean = AuthenticationProviderConfig.cacheCredentials
   def cacheTimeout: Long = AuthenticationProviderConfig.cacheTimeout
-  def tryAuthCache(username: String, password: String): Option[User] = {
-    if (!useCachedCredentials) {
-      authenticate(username, password)
-    } else {
-      cache.get((username, password)) match {
-        case None =>
-          cache.invalidate((username, password))
-          None
-        case Some(u) =>
-          Some(u)
-      }
-    }
-  }
 }
 
 object AuthenticationProvider {
-  val Default = new MockAuthenticationProvider
-  val Types = Set("ldap", "file", "default")
-  def filename = AuthenticationProviderConfig.permissionsFile 
-
-  private val logger = Logger("util.security.AuthenticationProvider")
+  private val logger = Logger("collins.util.security.AuthenticationProvider")
 
   lazy private val permissionsCache =
     ConfigCache.create(AuthenticationProviderConfig.cachePermissionsTimeout, PermissionsLoader())
@@ -108,7 +73,7 @@ object AuthenticationProvider {
   }
 
   protected[util] def privileges: Privileges = {
-    val p = permissionsCache.get(filename)
+    val p = permissionsCache.get(AuthenticationProviderConfig.permissionsFile)
     logger.trace("Privileges - %s".format(p))
     p
   }

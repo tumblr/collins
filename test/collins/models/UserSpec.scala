@@ -1,15 +1,15 @@
 package collins.models
 
-import collins.util.security.AuthenticationProvider
 import org.specs2.mutable._
 import java.io.File
+import collins.util.security.MockAuthenticationProvider
 
 object UserSpec extends Specification {
 
   "The User Model" should {
     "handle authentication" in {
       "with default authentication" in {
-        val provider = AuthenticationProvider.Default
+        val provider = new MockAuthenticationProvider
         User.authenticate("blake", "admin:first", Some(provider)) must beSome[User]
         User.authenticate("no", "suchuser", Some(provider)) must beNone
       }

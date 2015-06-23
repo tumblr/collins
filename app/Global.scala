@@ -111,6 +111,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
       case false => authentication = Some(auth)
     }
   }
+
   def getAuthentication() = {
     val authen = authentication.getOrElse(throw new IllegalStateException("Authentication Provider not defined"))
     if (AuthenticationProviderConfig.authType != authen.authType) {
@@ -124,5 +125,4 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
     authen
   }
-
 }

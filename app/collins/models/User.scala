@@ -50,7 +50,7 @@ object User {
       case None => getProviderFromFramework()
       case Some(p) => p
     }
-    p.tryAuthCache(username, password) match {
+    p.authenticate(username, password) match {
       case None =>
         Stats.count("Authentication","Failure")
         None
