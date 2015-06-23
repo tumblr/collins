@@ -1,6 +1,12 @@
 package collins.util.security
 
+import java.util.concurrent.TimeUnit
+
 import collins.models.User
+
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 
 /**
  * Exception encountered during authentication phase
@@ -8,14 +14,57 @@ import collins.models.User
 class AuthenticationException(msg: String) extends Exception(msg)
 
 /**
- * Provides authentication by a variety of methods
+ * Provides authentication by a variety of methods and caching logic (implements decorator pattern)
  */
 class MixedAuthenticationProvider(types: Array[String]) extends AuthenticationProvider {
-
-  /**
-   * @return The authorization type provided by this class
-   */
+  
+  private val providers = types.map({
+     case "default" => {
+       logger.trace("mock authentication type")
+       new MockAuthenticationProvider
+     }
+     case "file" => {
+       logger.trace("file authentication type")
+       new FileAuthenticationProvider()
+     }
+     case "ldap" => {
+       logger.trace("ldap authentication type")
+       new LdapAuthenticationProvider()
+     }
+     case t => {
+       throw new AuthenticationException("Invalid authentication type provided: " + t)
+     }
+  })
+  
   def authType = types
+  
+  /* Implement caching semantics for authentication */
+  type Credentials = Tuple2[String,String]
+  val cache: LoadingCache[Credentials, Option[User]] = CacheBuilder.newBuilder()
+                                .maximumSize(100)
+                                .expireAfterWrite(cacheTimeout, TimeUnit.MILLISECONDS)
+                                .build(
+                                  new CacheLoader[Credentials, Option[User]] {
+                                    override def load(creds: Credentials): Option[User] = {
+                                      logger.info("Loading user %s from backend".format(creds._1))
+                                      authenticate(creds._1, creds._2)
+                                    }
+                                  }
+                                )
+
+  def tryAuthCache(provider: AuthenticationProvider, username: String, password: String): Option[User] = {
+    if (!useCachedCredentials) {
+      provider.authenticate(username, password)
+    } else {
+      cache.get((username, password)) match {
+        case None =>
+          cache.invalidate((username, password))
+          None
+        case Some(u) =>
+          Some(u)
+      }
+    }
+  }
 
   /**
    * Attempt to authenticate user by each method specified in :types
@@ -24,31 +73,6 @@ class MixedAuthenticationProvider(types: Array[String]) extends AuthenticationPr
   def authenticate(username: String, password: String): Option[User] = {
     logger.debug("Beginning to try authentication types")
 
-    // Iterate over the types lazily, such that if one method passes, iteration stops
-    authType.flatMap({
-      case "default" => {
-        logger.trace("mock authentication type")
-        val defaultProvider = AuthenticationProvider.Default
-        val user = defaultProvider.tryAuthCache(username, password)
-        logger.debug("Tried mock authentication for %s, got back %s".format(username, user))
-        user
-      }
-      case "file" => {
-        logger.trace("file authentication type")
-        val fileProvider = new FileAuthenticationProvider()
-        val user = fileProvider.tryAuthCache(username, password)
-        logger.debug("Tried file authentication for %s, got back %s".format(username, user))
-        user
-      }
-      case "ldap" => {
-        val ldapProvider = new LdapAuthenticationProvider()
-        val user = ldapProvider.tryAuthCache(username, password)
-        logger.debug("Tried ldap authentication for %s, got back %s".format(username, user))
-        user
-      }
-      case t => {
-        throw new AuthenticationException("Invalid authentication type provided: " + t)
-      }
-    }).headOption
+    providers.flatMap { p => tryAuthCache(p, username, password) }.headOption
   }
 }
