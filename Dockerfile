@@ -5,14 +5,11 @@ RUN apt-get update && apt-get install -y zip unzip && rm -r /var/lib/apt/lists/*
 
 RUN useradd -Ur -d /opt/collins collins
 RUN for dir in /build /build/collins /var/log/collins /var/run/collins; do mkdir $dir; chown collins $dir; done
-ENV APP_HOME /opt/collins
-ENV LOG_HOME /var/log/collins
 
 WORKDIR /build
 # get Play, Collins, build, and deploy it to /opt/collins
 COPY . /build/collins
-RUN echo "Fetching Play 2.3.9" && \
-    wget -q http://downloads.typesafe.com/typesafe-activator/1.3.4/typesafe-activator-1.3.4-minimal.zip -O /build/typesafe-activator-1.3.4-minimal.zip && \
+RUN wget -q http://downloads.typesafe.com/typesafe-activator/1.3.4/typesafe-activator-1.3.4-minimal.zip -O /build/typesafe-activator-1.3.4-minimal.zip && \
     unzip -q ./typesafe-activator-1.3.4-minimal.zip && \
     cd collins && \
     java -version 2>&1 && \
@@ -37,25 +34,6 @@ RUN chown -R collins /opt/collins
 WORKDIR /opt/collins
 USER collins
 EXPOSE 9000
-CMD /usr/bin/java -server \
-      -Dconfig.file=$APP_HOME/conf/production.conf \
-      -Dhttp.port=9000 \
-      -Dlogger.file=$APP_HOME/conf/logger.xml \
-      -Dnetworkaddress.cache.ttl=1 \
-      -Dnetworkaddress.cache.negative.ttl=1 \
-      -Dcom.sun.management.jmxremote \
-      -Dcom.sun.management.jmxremote.port=3333 \
-      -Dcom.sun.management.jmxremote.authenticate=false \
-      -Dcom.sun.management.jmxremote.ssl=false \
-      -XX:MaxPermSize=384m \
-      -XX:+CMSClassUnloadingEnabled \
-      -XX:+PrintGCDetails \
-      -XX:+PrintGCTimeStamps \
-      -XX:+PrintGCDateStamps \
-      -XX:+PrintTenuringDistribution \
-      -XX:+PrintHeapAtGC \
-      -Xloggc:$LOG_HOME/gc.log \
-      -XX:+UseGCLogFileRotation \
-      -cp "$APP_HOME/lib/*" \
-      play.core.server.NettyServer $APP_HOME
+EXPOSE 3333
+CMD ["/usr/bin/java","-server","-Dconfig.file=/opt/collins/conf/production.conf","-Dhttp.port=9000","-Dlogger.file=/opt/collins/conf/logger.xml","-Dnetworkaddress.cache.ttl=1","-Dnetworkaddress.cache.negative.ttl=1","-Dcom.sun.management.jmxremote","-Dcom.sun.management.jmxremote.port=3333","-Dcom.sun.management.jmxremote.authenticate=false","-Dcom.sun.management.jmxremote.ssl=false","-XX:MaxPermSize=384m","-XX:+CMSClassUnloadingEnabled","-XX:+PrintGCDetails","-XX:+PrintGCTimeStamps","-XX:+PrintGCDateStamps","-XX:+PrintTenuringDistribution","-XX:+PrintHeapAtGC","-Xloggc:/var/log/collins/gc.log","-XX:+UseGCLogFileRotation","-cp","/opt/collins/lib/*","play.core.server.NettyServer","/opt/collins"]
 
