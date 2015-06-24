@@ -1,12 +1,11 @@
 package collins.util.security
 
+import java.util.concurrent.Callable
 import java.util.concurrent.TimeUnit
 
 import collins.models.User
-
 import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
+import com.google.common.cache.Cache
 
 /**
  * Exception encountered during authentication phase
@@ -40,24 +39,24 @@ class MixedAuthenticationProvider(types: Array[String]) extends AuthenticationPr
   
   /* Implement caching semantics for authentication */
   type Credentials = Tuple2[String,String]
-  val cache: LoadingCache[Credentials, Option[User]] = CacheBuilder.newBuilder()
+  val cache: Cache[Credentials, Option[User]] = CacheBuilder.newBuilder()
                                 .maximumSize(100)
                                 .expireAfterWrite(cacheTimeout, TimeUnit.MILLISECONDS)
-                                .build(
-                                  new CacheLoader[Credentials, Option[User]] {
-                                    override def load(creds: Credentials): Option[User] = {
-                                      logger.info("Loading user %s from backend".format(creds._1))
-                                      authenticate(creds._1, creds._2)
-                                    }
-                                  }
-                                )
+                                .build()
 
   def tryAuthCache(provider: AuthenticationProvider, username: String, password: String): Option[User] = {
     if (!useCachedCredentials) {
       provider.authenticate(username, password)
     } else {
-      cache.get((username, password)) match {
+      cache.get((username, password), new Callable[Option[User]] {
+        override def call = {
+          logger.info("Loading user %s from backend".format(username))
+          provider.authenticate(username, password)
+        }
+      }) match {
         case None =>
+          // if authentication failed, None will be present in the cache
+          // due to the loader, discard it
           cache.invalidate((username, password))
           None
         case Some(u) =>
