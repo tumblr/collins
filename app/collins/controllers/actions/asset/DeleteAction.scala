@@ -2,9 +2,12 @@ package collins.controllers.actions.asset
 
 import scala.concurrent.Future
 
+import play.api.data._
+import play.api.data.Forms._
 import play.api.data.Form
 import play.api.data.Forms.optional
 import play.api.data.Forms.text
+import play.api.data.Forms.tuple
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
@@ -25,33 +28,27 @@ case class DeleteAction(
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction {
 
-  case class ActionDataHolder(options: Map[String,String]) extends RequestDataHolder
+  case class ActionDataHolder(reason: String, nuke: Boolean) extends RequestDataHolder
 
   val dataForm = Form(tuple(
-    "reason" -> optional(text(1)),
-    "nuke" => optional(boolean),
+    "reason" -> optional(nonEmptyText),
+    "nuke" -> default(boolean, false)
   ))
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
     withValidAsset(_assetTag) { asset =>
-      if (nuke && !reason.isDefined) {
+      dataForm.bindFromRequest()(request).fold(
+        err => Left(RequestDataHolder.error400("Invalid pool or count specified")),
+        form => {
+        val (reason, nuke) = form
+      if (!reason.isDefined) {
         Left(RequestDataHolder.error400("reason must be specified"))
       } else {
-        val options = reason.map(r => Map("reason" -> r)).getOrElse(Map.empty)
+        val options = reason.map(r => Map("reason" -> r, "nuke" -> nuke));
         Right(ActionDataHolder(options))
       }
-    form => {
-      val (reason, nuke) = form
-      } 
-    }
+    })}
   }
-
-  lazy val reason: Option[String] = Form(
-    "reason" -> optional(text(1))
-  ).bindFromRequest()(request).fold(
-    err => None,
-    str => str.flatMap(StringUtil.trim(_))
-  )
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
     case ActionDataHolder(options) =>
@@ -61,7 +58,7 @@ case class DeleteAction(
             RequestDataHolder.error409("Illegal state transition: %s".format(throwable.getMessage))
           )
         case Right(status) =>
-          if (nuke) {
+          if (options.get("nuke")) {
             val errMsg = "User deleted asset %s. Reason: %s".format(
               definedAsset.tag, options.get("reason").getOrElse("Unspecified")
             )
