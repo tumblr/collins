@@ -2,12 +2,13 @@ package collins.controllers.actions.asset
 
 import scala.concurrent.Future
 
-import play.api.data._
-import play.api.data.Forms._
 import play.api.data.Form
 import play.api.data.Forms.optional
 import play.api.data.Forms.text
 import play.api.data.Forms.tuple
+import play.api.data.Forms.nonEmptyText
+import play.api.data.Forms.boolean
+import play.api.data.Forms.default
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
@@ -31,7 +32,7 @@ case class DeleteAction(
   case class ActionDataHolder(reason: String, nuke: Boolean) extends RequestDataHolder
 
   val dataForm = Form(tuple(
-    "reason" -> optional(nonEmptyText),
+    "reason" -> nonEmptyText,
     "nuke" -> default(boolean, false)
   ))
 
@@ -41,26 +42,22 @@ case class DeleteAction(
         err => Left(RequestDataHolder.error400("Invalid pool or count specified")),
         form => {
         val (reason, nuke) = form
-      if (!reason.isDefined) {
-        Left(RequestDataHolder.error400("reason must be specified"))
-      } else {
         val options = reason.map(r => Map("reason" -> r, "nuke" -> nuke));
-        Right(ActionDataHolder(options))
-      }
+        Right(ActionDataHolder(reason, nuke))
     })}
   }
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
-    case ActionDataHolder(options) =>
-      AssetLifecycle.decommissionAsset(definedAsset, options) match {
+    case ActionDataHolder(reason, nuke) =>
+      AssetLifecycle.decommissionAsset(definedAsset, reason, nuke) match {
         case Left(throwable) =>
           handleError(
             RequestDataHolder.error409("Illegal state transition: %s".format(throwable.getMessage))
           )
         case Right(status) =>
-          if (options.get("nuke")) {
+          if (nuke) {
             val errMsg = "User deleted asset %s. Reason: %s".format(
-              definedAsset.tag, options.get("reason").getOrElse("Unspecified")
+              definedAsset.tag, reason
             )
             SystemTattler.safeError(errMsg)
             Api.statusResponse(AssetDeleter.purge(definedAsset))

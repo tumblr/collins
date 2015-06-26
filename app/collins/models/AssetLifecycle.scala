@@ -79,15 +79,10 @@ object AssetLifecycle {
     }
   }
 
-  def decommissionAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = {
-    val reason = options.get("reason").map { r =>
-      r + " : status is %s".format(asset.getStatusName)
-    }.getOrElse(
-      "Decommission of asset requested, status is %s".format(asset.getStatusName)
-    )
+  def decommissionAsset(asset: Asset, reason: String, nuke: Boolean): Status[Boolean] = {
     try {
       Asset.inTransaction {
-        InternalTattler.informational(asset, None, reason)
+        InternalTattler.informational(asset, None, reason + " : status is %s".format(asset.getStatusName))
         AssetStateMachine(asset).decommission()
         InternalTattler.informational(asset, None, "Asset decommissioned successfully")
       }
