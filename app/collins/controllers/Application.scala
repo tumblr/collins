@@ -3,6 +3,8 @@ package collins.controllers
 import play.api.data.Form
 import play.api.data.Forms
 import play.api.mvc.Action
+import play.api.mvc.Request
+import play.api.mvc.AnyContent
 
 import collins.models.User
 import collins.util.security.SecuritySpec
@@ -16,10 +18,7 @@ object Application extends SecureWebController {
       "username" -> Forms.nonEmptyText,
       "password" -> Forms.nonEmptyText(3),
       "location" -> Forms.optional(Forms.text)
-      ) verifying ("Invalid username or password", result => result match {
-        case(username,password,location) =>
-          User.authenticate(username, password).isDefined
-      })
+    )
   )
 
   def login = Action { implicit req =>
@@ -30,20 +29,31 @@ object Application extends SecureWebController {
         Ok(html.login(loginForm.fill(("","",Some(location.head))).copy(errors = Nil)))
     }
   }
+  
+  def sanitizeForm(loginForm : Form[(String, String, Option[String])]): Map[String,String] = loginForm.data - "password"
+  
+  def failedAuth(loginForm : Form[(String, String, Option[String])]) (implicit req: Request[AnyContent]) = {
+    BadRequest(html.login(loginForm.withGlobalError("Invalid username or password").copy(data = sanitizeForm(loginForm))))
+  }
+  
+  def successAuth(user: User, location: Option[String]) = {
+    location match {
+      case Some(location) =>
+        Redirect(location).withSession(User.toMap(Some(user)).toSeq:_*)
+      case None =>
+        Redirect(collins.app.routes.Resources.index).withSession(User.toMap(Some(user)).toSeq:_*)
+    }
+  }
 
   def authenticate = Action { implicit req =>
     loginForm.bindFromRequest.fold(
       formWithErrors => {
-        val tmp: Map[String,String] = formWithErrors.data - "password"
-        BadRequest(html.login(formWithErrors.copy(data = tmp)))
+        BadRequest(html.login(formWithErrors.copy(data = sanitizeForm(formWithErrors))))
       },
-      user => {
-        val u = User.toMap(User.authenticate(user._1, user._2))
-        user._3 match {
-          case Some(location) =>
-            Redirect(location).withSession(u.toSeq:_*)
-          case None =>
-            Redirect(collins.app.routes.Resources.index).withSession(u.toSeq:_*)
+      userForm => {
+        User.authenticate(userForm._1, userForm._2) match {
+          case None => failedAuth(loginForm)
+          case Some(user) => successAuth(user, userForm._3)
         }
       }
     )

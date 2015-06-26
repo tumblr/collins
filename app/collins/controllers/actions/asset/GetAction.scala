@@ -2,7 +2,7 @@ package collins.controllers.actions.asset
 
 import scala.concurrent.Future
 
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
@@ -67,7 +67,7 @@ case class GetAction(
     Some(Redirect(collins.app.routes.Resources.index).flashing("message" -> msg))
   }
 
-  protected def handleSuccess(asset: Asset): SimpleResult = {
+  protected def handleSuccess(asset: Asset): Result = {
     val display = asset.getAllAttributes.exposeCredentials(user.canSeePasswords)
     isHtml match {
       case true =>

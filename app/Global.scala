@@ -19,7 +19,7 @@ import collins.util.security.AuthenticationAccessor
 import collins.util.security.AuthenticationProvider
 import collins.util.security.AuthenticationProviderConfig
 import scala.concurrent.Future
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
@@ -48,7 +48,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     response
   }
 
-  override def onError(request: RequestHeader, ex: Throwable): Future[SimpleResult] = {
+  override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
     logger.warn("Unhandled exception", ex)
     val debugOutput = Play.maybeApplication.map {
       case app if app.mode == Mode.Dev => true
@@ -65,7 +65,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  override def onHandlerNotFound(request: RequestHeader): Future[SimpleResult] = {
+  override def onHandlerNotFound(request: RequestHeader): Future[Result] = {
     logger.info("Unhandled URI: " + request.uri)
     val msg = "The specified path was invalid: " + request.path
     val status = Results.NotFound
@@ -79,7 +79,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  override def onBadRequest(request: RequestHeader, error: String): Future[SimpleResult] = {
+  override def onBadRequest(request: RequestHeader, error: String): Future[Result] = {
     val msg = "Bad Request, parsing failed. " + error
     val status = Results.BadRequest
     val err = None
@@ -111,6 +111,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
       case false => authentication = Some(auth)
     }
   }
+
   def getAuthentication() = {
     val authen = authentication.getOrElse(throw new IllegalStateException("Authentication Provider not defined"))
     if (AuthenticationProviderConfig.authType != authen.authType) {
@@ -124,5 +125,4 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
     authen
   }
-
 }

@@ -1,16 +1,18 @@
 import sbt._
 import Keys._
-import play.Project._
+import play.twirl.sbt.Import._
 
 object ApplicationBuild extends Build {
 
     val appName         = "collins"
-    val appVersion      = "1.4.0"
+    val appVersion      = "2.0-SNAPSHOT"
 
     val appDependencies = Seq()
 
-    val main = play.Project(appName, appVersion, appDependencies).settings(
-      templatesImport ++= Seq(
+    val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
+      version := appVersion,
+      libraryDependencies ++= appDependencies,
+      TwirlKeys.templateImports ++= Seq(
         "collins.models._", 
         "collins.models.shared._", 
         "collins.models.asset._", 

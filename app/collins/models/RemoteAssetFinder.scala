@@ -99,8 +99,7 @@ class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) 
 
   val host = remoteHost.host
   val queryUrl = host + collins.app.routes.Api.getAssets().toString
-  val authenticationTuple = (remoteHost.username, remoteHost.password, com.ning.http.client.Realm.AuthScheme.BASIC)
-
+  
   var total: Option[Long] = None
 
   def getTotal = total.getOrElse(0)
@@ -113,9 +112,8 @@ class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) 
     //key name, which is required for attributes
     val queryString = RemoteAssetClient.createQueryString(params.toSeq ++ page.toSeq)
 
-    val request = WS.url(queryUrl + queryString).copy(
-      auth = Some(authenticationTuple)
-    )
+    val request = WS.url(queryUrl + queryString).withAuth(remoteHost.username,
+      remoteHost.password, play.api.libs.ws.WSAuthScheme.BASIC)
 
     val result = try Await.result(request.get, 5 minutes) catch {
       case t: TimeoutException => throw new TimeoutException("Timed out in remote query to %s".format(queryUrl))

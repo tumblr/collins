@@ -6,7 +6,7 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
-import play.api.templates.Html
+import play.twirl.api.Html
 
 import collins.models.AssetMeta
 import collins.models.AssetMetaValue

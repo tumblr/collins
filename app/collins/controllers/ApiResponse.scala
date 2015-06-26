@@ -20,7 +20,7 @@ import collins.util.OutputType
 import collins.util.OutputType.contentTypeWithCharset
 import collins.util.TextOutput
 import scala.concurrent.Future
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 
 object ApiResponse extends ApiResponse {
   import OutputType.contentTypeWithCharset
@@ -50,7 +50,7 @@ object ApiResponse extends ApiResponse {
     formatJsonMessage("error", JsObject(message ++ optional))
   }
 
-  def bashError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]): Future[SimpleResult] = {
+  def bashError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]): Future[Result] = {
     val exSeq = ex.map { e => formatException(e) }.getOrElse(Seq())
     val exMsg = exSeq.map { case(k,v) =>
       """DATA_EXCEPTION_%s='%s';""".format(k.toUpperCase, v)
@@ -84,12 +84,12 @@ DATA_MESSAGE='%s';
     }
   }
 
-  def jsonError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]): Future[SimpleResult] = {
+  def jsonError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]): Future[Result] = {
     val output: JsValue = formatJsonMessage(status, formatJsonError(msg, ex))
     Future.successful(status(output).as(contentTypeWithCharset(JsonOutput())))
   }
 
-  def textError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]): Future[SimpleResult] = {
+  def textError(msg: String, status: Results.Status = Results.BadRequest, ex: Option[Throwable]): Future[Result] = {
     val exSeq = ex.map { e => formatException(e) }.getOrElse(Seq())
     val exMsg = exSeq.map { case(k,v) => """
 Exception %s  %s""".format(k, v.replace("\n","\n\t\t"))

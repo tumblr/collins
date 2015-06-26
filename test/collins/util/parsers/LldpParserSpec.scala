@@ -20,12 +20,12 @@ class LldpParserSpec extends mutable.Specification {
       parseResult must beRight
       parseResult.right.toOption must beSome.which { rep =>
         rep.interfaceCount mustEqual(1)
-        rep.macAddresses must haveTheSameElementsAs(Seq("78:19:f7:88:60:c0"))
-        rep.interfaceNames must haveTheSameElementsAs(Seq("eth0"))
-        rep.localPorts must haveTheSameElementsAs(Seq(616))
-        rep.chassisNames must haveTheSameElementsAs(Seq("core01.dfw01"))
-        rep.vlanNames must haveTheSameElementsAs(Seq("DFW-LOGGING"))
-        rep.vlanIds must haveTheSameElementsAs(Seq(106))
+        rep.macAddresses must contain(exactly(Seq("78:19:f7:88:60:c0"):_*))
+        rep.interfaceNames must contain(exactly(Seq("eth0"):_*))
+        rep.localPorts must contain(exactly(Seq(616):_*))
+        rep.chassisNames must contain(exactly(Seq("core01.dfw01"):_*))
+        rep.vlanNames must contain(exactly(Seq("DFW-LOGGING"):_*))
+        rep.vlanIds must contain(exactly(Seq(106):_*))
       }
     }
 

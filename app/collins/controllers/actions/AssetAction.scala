@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 
 import collins.controllers.Api
 import collins.controllers.Permissions
@@ -79,11 +79,11 @@ trait AssetResultsAction {
       handleApiSuccess(p, details)
   }
 
-  protected def handleWebSuccess(p: Page[AssetView], details: Boolean): SimpleResult = {
+  protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
     Api.errorResponse(NotImplementedError.toString, NotImplementedError.status().get)
   }
 
-  protected def handleApiSuccess(p: Page[AssetView], details: Boolean): SimpleResult = {
+  protected def handleApiSuccess(p: Page[AssetView], details: Boolean): Result = {
     val items = p.items.map { 
       case a: Asset => if (details){
         a.getAllAttributes.exposeCredentials(user.canSeePasswords).toJsValue

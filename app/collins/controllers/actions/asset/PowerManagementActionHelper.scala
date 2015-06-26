@@ -2,7 +2,7 @@ package collins.controllers.actions.asset
 
 import scala.concurrent.Future
 
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.mvc.Results
 
 import collins.controllers.Api
@@ -41,7 +41,7 @@ abstract class PowerManagementActionHelper(
   )
   val PowerMessages = PowerManagementConfig.Messages
 
-  override def execute(rd: RequestDataHolder): Future[SimpleResult] = rd match {
+  override def execute(rd: RequestDataHolder): Future[Result] = rd match {
     case PowerStatusRd(cmd) => runCommand(cmd)
   }
 
@@ -109,7 +109,7 @@ abstract class PowerManagementActionHelper(
   }
 
   protected def runCommand(cmd: IpmiPowerCommand) = BackgroundProcessor.send(cmd) { result =>
-    IpmiCommand.fromResult(result) match {
+    result match {
       case Left(throwable) =>
         onError(throwable)
       case Right(None) =>

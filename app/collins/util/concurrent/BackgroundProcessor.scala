@@ -33,16 +33,16 @@ object BackgroundProcessor {
   lazy val ref = Akka.system.actorOf(Props[BackgroundProcessorActor].
       withRouter(FromConfig()), name = "background-processor")
 
-  type SendType[T] = (Option[Throwable], Option[T])
+  type SendType[T] = Either[Throwable, T]
 
   def send[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]): Future[RESPONSE] = {
 
     val f : Future[PROC_RES] = ask(ref, cmd)(cmd.timeout).mapTo[PROC_RES]
 
-    val mpd: Future[RESPONSE] = f.map{x => result((None, Some(x)))}
+    val mpd: Future[RESPONSE] = f.map{x => result(Right(x))}
     mpd.recover {
-      case t : TimeoutException => result((Some(SexyTimeoutException(cmd.timeout)), None))
-      case th : Throwable => result((Some(th), None))
+      case t : TimeoutException => result(Left(SexyTimeoutException(cmd.timeout)))
+      case th : Throwable => result(Left(th))
     }
   }
 
@@ -51,10 +51,10 @@ object BackgroundProcessor {
   def flatSend[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => Future[RESPONSE])(implicit mf: Manifest[PROC_RES]): Future[RESPONSE] = {
 
     val f: Future[PROC_RES] = ask(ref, cmd)(cmd.timeout).mapTo[PROC_RES]
-    val mpd: Future[RESPONSE] = f.flatMap{x => result((None, Some(x)))}
+    val mpd: Future[RESPONSE] = f.flatMap{x => result(Right(x))}
     mpd.recoverWith{
-      case t : TimeoutException => result((Some(SexyTimeoutException(cmd.timeout)), None))
-      case th : Throwable => result((Some(th), None))
+      case t : TimeoutException => result(Left(SexyTimeoutException(cmd.timeout)))
+      case th : Throwable => result(Left(th))
     }
   }
 }

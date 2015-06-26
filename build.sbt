@@ -1,5 +1,3 @@
-scalacOptions ++= Seq("-deprecation","-unchecked", "-feature")
-
 resolvers += "Twitter Repository" at "http://maven.twttr.com/"
 
 resolvers += "Sonatype-public" at "http://oss.sonatype.org/content/groups/public"
@@ -14,7 +12,9 @@ javaOptions in Test := Seq("-Dconfig.file=conf/test.conf")
 
 parallelExecution in IntegrationTest := false
 
-scalaVersion := "2.10.5"
+scalaVersion := "2.11.1"
+
+scalacOptions ++= Seq("-deprecation","-unchecked", "-feature")
 
 scalacOptions += "-feature"
 
@@ -23,17 +23,17 @@ scalacOptions += "-language:postfixOps"
 scalacOptions += "-language:implicitConversions"
 
 libraryDependencies ++= Seq(
-  "org.specs2" %% "specs2" % "1.9.2" % "test",
+  "org.specs2" %% "specs2" % "2.3.13" % "test",
   "com.google.guava" % "guava" % "18.0",
   "com.jolbox" % "bonecp" % "0.8.0.RELEASE",
-  "nl.grons" %% "metrics-scala" % "2.2.0",
+  "nl.grons" %% "metrics-scala" % "2.1.5",
   "com.addthis.metrics" % "reporter-config" % "2.3.1",
   "mysql" % "mysql-connector-java" % "5.1.35",
   "com.h2database" % "h2" % "1.4.187",
-  "org.apache.solr" % "solr-solrj" % "5.1.0",
-  "org.apache.solr" % "solr-core"  % "5.1.0",
-  "org.apache.httpcomponents" % "httpclient" % "4.4.1", 
-  "org.apache.httpcomponents" % "httpmime" % "4.4.1", 
+  "org.apache.solr" % "solr-solrj" % "5.2.0",
+  "org.apache.solr" % "solr-core"  % "5.2.0",
+  "org.apache.httpcomponents" % "httpclient" % "4.5",
+  "org.apache.httpcomponents" % "httpmime" % "4.5",
   "commons-net" % "commons-net" % "3.3",
   "org.bouncycastle" % "bcprov-jdk16" % "1.46",
   "com.twitter" %% "util-core" % "6.23.0",
@@ -41,9 +41,14 @@ libraryDependencies ++= Seq(
   "org.squeryl" %% "squeryl" % "0.9.5-7",
   "com.gilt" %% "jerkson" % "0.6.6",
   "org.yaml" % "snakeyaml" % "1.15",
-  "com.typesafe.play" %% "play-jdbc" % "2.2.6",
-  "com.typesafe.play" %% "play-cache" % "2.2.6",
-  "com.google.code.findbugs" % "jsr305" % "3.0.0"
+  "com.typesafe.play" %% "play-jdbc" % "2.3.9",
+  "com.typesafe.play" %% "play-cache" % "2.3.9",
+  "com.google.code.findbugs" % "jsr305" % "3.0.0",
+  "org.webjars" %% "webjars-play" % "2.3.0-3",
+  "org.webjars" % "bootstrap" % "3.3.4",
+  "org.webjars" % "bootstrap-datepicker" % "1.4.0",
+  "org.webjars" % "datatables" % "1.10.7",
+  "org.webjars" % "datatables-plugins" % "1.10.7",
+  "org.webjars" % "jquery" % "2.1.4",
+  ws
 )
-
-

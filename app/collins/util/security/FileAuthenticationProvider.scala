@@ -13,7 +13,7 @@ class FileAuthenticationProvider() extends AuthenticationProvider {
   def userfile = FileAuthenticationProviderConfig.userfile
   override val authType = Array("file")
 
-  lazy private val userCache = ConfigCache.create(10000L, FileUserLoader())
+  private val userCache = ConfigCache.create(10000L, FileUserLoader())
 
   override def authenticate(username: String, password: String): Option[User] = {
     user(username) match {
@@ -28,7 +28,7 @@ class FileAuthenticationProvider() extends AuthenticationProvider {
   }
 
   protected def user(username: String): Option[UserImpl] = {
-    userCache.get(userfile).get(username)
+    userCache.get(userfile).data.get(username)
   }
 
   // This is consistent with how apache encrypts SHA1
