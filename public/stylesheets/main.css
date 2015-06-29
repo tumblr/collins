@@ -39,8 +39,9 @@ table.dataTable thead .sorting_desc {
 }
 
 .form-horizontal > div > ul > li > input {
-    margin-top:6px
+    margin-top:8px
 }
+
 .page-header .asset-status-label {
     /* position the label in the top right of the page-header only on asset show_menu view*/
     position:absolute;

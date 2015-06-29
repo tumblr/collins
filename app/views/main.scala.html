@@ -41,7 +41,7 @@
         <div class="navbar-collapse collapse navbar-right">
           <ul class="nav navbar-nav">
             <li class="@{if (req.path == collins.app.routes.Resources.index.toString) "active" }">
-              <input type="text" class="form-control" placeholder="Search ..." style="margin-top:5px">
+              <input type="text" class="form-control" placeholder="Search Asset Tag">
             </li>
             @User.fromMap(req.session.data).map { u =>
               @if(Permissions.please(u, Permissions.AssetLogApi.GetAll)) {
