@@ -60,7 +60,7 @@ trait MethodHelper extends MethodArguments with MethodReturnType {
   protected def handleFailure(msg: String) {
     if (chattyFailures) {
       logger.error(msg)
-      SystemTattler.safeError(msg)
+      SystemTattler.error(msg)
     }
   }
 }

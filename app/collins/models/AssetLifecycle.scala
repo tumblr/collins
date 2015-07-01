@@ -11,7 +11,6 @@ import collins.models.AssetMeta.Enum.RackPosition
 import collins.models.{Status => AStatus}
 import collins.models.logs._
 
-import collins.util.ApiTattler
 import collins.util.AssetStateMachine
 import collins.util.InternalTattler
 import collins.util.LldpRepresentation
@@ -68,12 +67,12 @@ object AssetLifecycle {
         Solr.updateAsset(asset)
         Tuple2(asset, ipmi)
       }
-      InternalTattler.informational(res._1, None,
-        "Initial intake successful, status now %s".format(_status.toString))
+      InternalTattler.informational(
+        "Initial intake successful, status now %s".format(_status.toString), res._1)
       Right(res)
     } catch {
       case e: Throwable =>
-        SystemTattler.safeError("Failed to create asset %s: %s".format(tag, e.getMessage))
+        SystemTattler.error("Failed to create asset %s: %s".format(tag, e.getMessage))
         Left(e)
     }
   }
@@ -86,9 +85,9 @@ object AssetLifecycle {
     )
     try {
       Asset.inTransaction {
-        InternalTattler.informational(asset, None, reason)
+        InternalTattler.informational(reason, asset)
         AssetStateMachine(asset).decommission()
-        InternalTattler.informational(asset, None, "Asset decommissioned successfully")
+        InternalTattler.informational("Asset decommissioned successfully", asset)
       }
       Right(true)
     } catch {
@@ -96,29 +95,29 @@ object AssetLifecycle {
     }
   }
 
-  def updateAsset(asset: Asset, options: Map[String,String]): Status[Boolean] = asset.isServerNode match {
-    case true  => updateServer(asset, options)
-    case false => updateAssetAttributes(asset, options)
+  def updateAsset(asset: Asset, options: Map[String,String], user: Option[User]): Status[Boolean] = asset.isServerNode match {
+    case true  => updateServer(asset, options, user)
+    case false => updateAssetAttributes(asset, options, user)
   }
 
-  protected def updateServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  protected def updateServer(asset: Asset, options: Map[String,String], user: Option[User]): Status[Boolean] = {
     if (asset.isIncomplete) {
-      updateIncompleteServer(asset, options)
+      updateIncompleteServer(asset, options, user)
     } else if (asset.isNew) {
-      updateNewServer(asset, options)
+      updateNewServer(asset, options, user)
     } else {
-      updateServerHardwareMeta(asset, options)
+      updateServerHardwareMeta(asset, options, user)
     }
   }
 
-  def updateAssetAttributes(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  def updateAssetAttributes(asset: Asset, options: Map[String,String], user: Option[User]): Status[Boolean] = {
     asset.isServerNode match {
-      case true => updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(false))
-      case false => updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(true))
+      case true => updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(false), user)
+      case false => updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(true), user)
     }
   }
 
-  protected def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String]): Status[Boolean] = {
+  protected def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String], user: Option[User]): Status[Boolean] = {
     allCatch[Boolean].either {
       val groupId = options.get("groupId").map(_.toInt)
       val state = options.get("state").flatMap(s => State.findByName(s))
@@ -134,10 +133,10 @@ object AssetLifecycle {
         Asset.partialUpdate(asset, Some(new Date().asTimestamp), status, state)
         true
       }
-    }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
+    }.left.map(e => handleException(asset, "Error saving attributes for asset", e, user))
   }
 
-  def updateAssetStatus(asset: Asset, status: Option[AStatus], state: Option[State], reason: String): Status[Boolean] = {
+  def updateAssetStatus(asset: Asset, status: Option[AStatus], state: Option[State], reason: String, user: Option[User]): Status[Boolean] = {
     if (!Feature.sloppyStatus) {
       return Left(new Exception("features.sloppyStatus is not enabled"))
     }
@@ -150,37 +149,37 @@ object AssetLifecycle {
       val message = "Old status:state (%s:%s) -> New status:state (%s:%s) - %s".format(
         oldStatus, oldState, newStatus, newState, reason
       )
-      ApiTattler.informational(asset, None, message)
+      InternalTattler.informational(message, asset)
       true
-    }.left.map(e => handleException(asset, "Error updating status/state for asset", e))
+    }.left.map(e => handleException(asset, "Error updating status/state for asset", e, user))
   }
 
-  protected def updateServerHardwareMeta(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  protected def updateServerHardwareMeta(asset: Asset, options: Map[String,String], user: Option[User]): Status[Boolean] = {
     // if asset's status is in the allowed statuses for updating, do it
     if (Feature.allowedServerUpdateStatuses.contains(asset.getStatus())) {
       // we will allow updates to lshw/lldp while the machine is in these statuses
       allCatch[Boolean].either {
         Asset.inTransaction {
           options.get("lshw").foreach{lshw =>
-            parseLshw(asset, new LshwParser(lshw)).left.foreach{throw _}
-            InternalTattler.informational(asset, None, "Parsing and storing LSHW data succeeded")
+            parseLshw(asset, new LshwParser(lshw), user).left.foreach{throw _}
+            InternalTattler.informational("Parsing and storing LSHW data succeeded", asset)
           }
           options.get("lldp").foreach{lldp =>
-            parseLldp(asset, new LldpParser(lldp)).left.foreach{throw _}
-            InternalTattler.informational(asset, None, "Parsing and storing LLDP data succeeded")
+            parseLldp(asset, new LldpParser(lldp), user).left.foreach{throw _}
+            InternalTattler.informational("Parsing and storing LLDP data succeeded", asset)
           }
           options.get("CHASSIS_TAG").foreach{chassis_tag =>
             MetaWrapper.createMeta(asset, Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
           }
           true
         }
-      }.left.map(e => handleException(asset, "Exception updating asset", e))
+      }.left.map(e => handleException(asset, "Exception updating asset", e, user))
     } else {
       Left(new Exception("Only updates for servers in statuses " + Feature.allowedServerUpdateStatuses.mkString(", ") + " are currently supported"))
     }
   }
 
-  protected def updateNewServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  protected def updateNewServer(asset: Asset, options: Map[String,String], user: Option[User]): Status[Boolean] = {
     val units = PowerUnits()
     val requiredKeys = Set(RackPosition.toString) ++ PowerUnits.keys(units)
     requiredKeys.find(key => !options.contains(key)).map { not_found =>
@@ -207,12 +206,12 @@ object AssetLifecycle {
         Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.Starting)
         newAsset
       }
-      ApiTattler.informational(unallocatedAsset, None, "Intake now complete, asset Unallocated")
+      InternalTattler.informational("Intake now complete, asset Unallocated", unallocatedAsset)
       true
-    }.left.map(e => handleException(asset, "Exception updating asset", e))
+    }.left.map(e => handleException(asset, "Exception updating asset", e, user))
   }
 
-  protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): Status[Boolean] = {
+  protected def updateIncompleteServer(asset: Asset, options: Map[String,String], user : Option[User]): Status[Boolean] = {
     val requiredKeys = Set("lshw", "lldp", "CHASSIS_TAG")
     requiredKeys.find(key => !options.contains(key)).map { not_found =>
       return Left(new Exception(not_found + " parameter not specified"))
@@ -231,27 +230,27 @@ object AssetLifecycle {
 
     allCatch[Boolean].either {
       Asset.inTransaction {
-        val lshwParsingResults = parseLshw(asset, lshwParser)
+        val lshwParsingResults = parseLshw(asset, lshwParser, user)
         if (lshwParsingResults.isLeft) {
           throw lshwParsingResults.left.get
         }
-        val lldpParsingResults = parseLldp(asset, lldpParser)
+        val lldpParsingResults = parseLldp(asset, lldpParser, user)
         if (lldpParsingResults.isLeft) {
           throw lldpParsingResults.left.get
         }
         MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
         val newAsset = asset.copy(status = Status.New.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
         Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.New)
-        InternalTattler.informational(newAsset, None, "Parsing and storing LSHW/LLDP data succeeded")
+        InternalTattler.informational("Parsing and storing LSHW/LLDP data succeeded", newAsset)
         true
       }
-    }.left.map(e => handleException(asset, "Exception updating asset", e))
+    }.left.map(e => handleException(asset, "Exception updating asset", e, user))
   }
 
-  protected def parseLshw(asset: Asset, parser: LshwParser): Status[LshwRepresentation] = {
+  protected def parseLshw(asset: Asset, parser: LshwParser, user: Option[User]): Status[LshwRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
-        AssetLog.notice(asset, "Parsing LSHW failed", LogFormat.PlainText,
+        AssetLog.notice(asset, user.map{ _.username }.getOrElse(""), "Parsing LSHW failed", LogFormat.PlainText,
           LogSource.Internal).withException(ex).create()
         Left(ex)
       case Right(lshwRep) =>
@@ -260,15 +259,15 @@ object AssetLifecycle {
             Right(lshwRep)
           case false =>
             val ex = new Exception("Parsing LSHW succeeded but saving failed")
-            Left(handleException(asset, ex.getMessage, ex))
+            Left(handleException(asset, ex.getMessage, ex, user))
         }
     } //catch
   } // updateServer
 
-  protected def parseLldp(asset: Asset, parser: LldpParser): Status[LldpRepresentation] = {
+  protected def parseLldp(asset: Asset, parser: LldpParser, user: Option[User]): Status[LldpRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
-        AssetLog.notice(asset, "Parsing LLDP failed", LogFormat.PlainText,
+        AssetLog.notice(asset, user.map{ _.username }.getOrElse(""), "Parsing LLDP failed", LogFormat.PlainText,
           LogSource.Internal).withException(ex).create()
         Left(ex)
       case Right(lldpRep) =>
@@ -277,16 +276,17 @@ object AssetLifecycle {
             Right(lldpRep)
           case false =>
             val ex = new Exception("Parsing LLDP succeeded but saving failed")
-            Left(handleException(asset, ex.getMessage, ex))
+            Left(handleException(asset, ex.getMessage, ex, user))
         }
     }
   }
 
-  private def handleException(asset: Asset, msg: String, e: Throwable): Throwable = {
+  private def handleException(asset: Asset, msg: String, e: Throwable, user: Option[User]): Throwable = {
     logger.warn(msg, e)
     try {
       AssetLog.error(
         asset,
+        user.map{ _.username }.getOrElse(""), 
         msg,
         LogFormat.PlainText,
         LogSource.Internal
@@ -294,7 +294,7 @@ object AssetLifecycle {
     } catch {
       case ex: Throwable =>
         logger.error("Database problems", ex)
-        SystemTattler.safeError("Database problems: %s".format(ex.getMessage))
+        SystemTattler.error("Database problems: %s".format(ex.getMessage))
     }
     e
   }

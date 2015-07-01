@@ -46,7 +46,7 @@ case class DeleteAttributeAction(
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
     case adh@ActionDataHolder(attribute, gid) =>
-      AssetLifecycle.updateAssetAttributes(definedAsset, mapForUpdates(adh)) match {
+      AssetLifecycle.updateAssetAttributes(definedAsset, mapForUpdates(adh), userOption) match {
         case Left(throwable) =>
           handleError(RequestDataHolder.error500("Error deleting asset attributes"))
         case Right(status) =>

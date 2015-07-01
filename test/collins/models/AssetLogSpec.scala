@@ -100,7 +100,7 @@ class AssetLogSpec extends mutable.Specification {
     def msg = "Hello World"
     def format = LogFormat.PlainText
     def source = LogSource.Internal
-    def newLog = AssetLog.alert(asset, msg, format, source)
+    def newLog = AssetLog.alert(asset, "tumblr", msg, format, source)
   }
 
   trait concretelog extends WithApplication {
@@ -113,6 +113,5 @@ class AssetLogSpec extends mutable.Specification {
     def message = "Automatically created by database migration"
     def newLog = AssetLog.alert(asset, "Spec error message", format, source)
   }
-
 
 }

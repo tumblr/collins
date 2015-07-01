@@ -105,9 +105,9 @@ case class UpdateAction(
       case adh@ActionDataHolder(map) =>
         val results: collins.models.AssetLifecycle.Status[Boolean] =
           if (onlyAttributes)
-            AssetLifecycle.updateAssetAttributes(definedAsset, map)
+            AssetLifecycle.updateAssetAttributes(definedAsset, map, userOption)
           else
-            AssetLifecycle.updateAsset(definedAsset, map)
+            AssetLifecycle.updateAsset(definedAsset, map, userOption)
         results match {
           case Left(exception) =>
             handleError(

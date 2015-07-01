@@ -8,7 +8,6 @@ import play.api.mvc.Results
 import collins.controllers.actions.asset.DeleteAction
 import collins.controllers.actors.AssetCancelProcessor
 import collins.models.Asset
-import collins.util.UserTattler
 import collins.util.concurrent.BackgroundProcessor
 import collins.util.concurrent.BackgroundProcessor.SendType
 import collins.util.config.AppConfig
@@ -32,7 +31,8 @@ trait AssetWebApi {
             case Right(res) => res match {
               case Left(err) => err.asResult
               case Right(success) =>
-                UserTattler.notice(asset.get, user, "Server cancelled")
+                // TODO: fix asset.get
+                tattler(user).notice("Server cancelled", asset.get)
                 ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(success)))).asResult
             }
         }

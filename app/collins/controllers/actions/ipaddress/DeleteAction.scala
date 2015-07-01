@@ -15,7 +15,6 @@ import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.Asset
 import collins.models.IpAddresses
-import collins.util.ApiTattler
 import collins.util.security.SecuritySpecification
 
 // Delete addressed for an asset, optionally by pool
@@ -43,7 +42,7 @@ case class DeleteAction(
     rd match {
       case ActionDataHolder(asset, pool) =>
         val deleted = IpAddresses.deleteByAssetAndPool(asset, pool)
-        ApiTattler.notice(asset, userOption, "Deleted %d IP addresses".format(deleted))
+        tattler.notice("Deleted %d IP addresses".format(deleted), asset)
         ResponseData(Status.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
     }
   }

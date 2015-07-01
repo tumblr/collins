@@ -159,6 +159,7 @@ abstract class SecureAction(
         None
     validationResults.getOrElse(validate())
   }
+  
   private def handleExecution(rd: RequestDataHolder): Future[Result] = {
     val executionResults =
       if (isReadRequest)
@@ -173,6 +174,7 @@ abstract class SecureAction(
         None
     executionResults.getOrElse(execute(rd))
   }
+  
   private def run(): Future[Result] = handleValidation() match {
     case Left(rd) => Promise.successful(handleError(rd)).future
     case Right(rd) => handleExecution(rd) map {
@@ -181,4 +183,5 @@ abstract class SecureAction(
     }
   }
 
+  def tattler = securityHandler.tattler(userOption())
 }

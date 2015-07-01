@@ -96,7 +96,7 @@ case class UpdateStatusAction(
   override def execute(rd: RequestDataHolder) = Future { 
     rd match {
       case ActionDataHolder(status, state, reason) =>
-        AssetLifecycle.updateAssetStatus(definedAsset, status, state, reason).fold(
+        AssetLifecycle.updateAssetStatus(definedAsset, status, state, reason, userOption).fold(
           e => Api.errorResponse("Error updating status", Status.InternalServerError, Some(e)),
           b => Api.statusResponse(b)
         )

@@ -48,7 +48,7 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration]
               case ticketId =>
                 Asset.inTransaction {
                   MetaWrapper.createMeta(asset, Map("CANCEL_TICKET" -> ticketId.toString))
-                  AssetLifecycle.updateAssetStatus(asset, AStatus.Cancelled, None, reason)
+                  AssetLifecycle.updateAssetStatus(asset, AStatus.Cancelled, None, reason, None)
                 }
                 Await.result(plugin.setNote(n, "Cancelled: %s".format(reason)), timeout)
                 Right(ticketId)

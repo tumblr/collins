@@ -14,7 +14,6 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.models.AssetLifecycle
 import collins.models.asset.AssetDeleter
-import collins.util.SystemTattler
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
 
@@ -57,7 +56,7 @@ case class DeleteAction(
             val errMsg = "User deleted asset %s. Reason: %s".format(
               definedAsset.tag, options.get("reason").getOrElse("Unspecified")
             )
-            SystemTattler.safeError(errMsg)
+            tattler.error(errMsg, definedAsset)
             Api.statusResponse(AssetDeleter.purge(definedAsset))
           } else {
             Api.statusResponse(status)

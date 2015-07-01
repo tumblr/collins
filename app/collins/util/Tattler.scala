@@ -1,5 +1,7 @@
 package collins.util
 
+import play.api.Logger
+
 import collins.models.Asset
 import collins.models.AssetLog
 import collins.models.User
@@ -8,64 +10,153 @@ import collins.models.logs.LogSource
 
 import collins.util.config.Feature
 
-trait TattlerHelper {
-  val pString: Option[String] = None
-  def message(user: Option[User], msg: String) = {
-    val username = user.map(_.username)
-      .orElse(pString).orElse(Some("Unknown")).get
-    "User %s: %s".format(username, msg)
-  }
+trait Tattler {
+  def critical(msg: String, asset: Asset): AssetLog
+  def error(msg: String, asset: Asset): AssetLog
+  def warning(msg: String, asset: Asset): AssetLog
+  def notice(msg: String,  asset: Asset): AssetLog
+  def note(msg: String, asset: Asset): AssetLog
+  def informational(msg: String, asset: Asset): AssetLog
 }
-object TattlerHelper extends TattlerHelper
 
-sealed abstract class Tattler(val source: LogSource.LogSource, override val pString: Option[String] = None) extends TattlerHelper {
-  def critical(asset: Asset, user: Option[User], msg: String): AssetLog = {
+sealed class ApplicationTattler(val user: User, val source: LogSource.LogSource) extends Tattler {
+  def message(user: User, msg: String) = {
+    "User %s: %s".format(user.username, msg)
+  }
+    
+  def critical(msg: String, asset: Asset = Feature.syslogAsset): AssetLog = {
     AssetLog.critical(
-      asset, message(user, msg), LogFormat.PlainText, source
+      asset, user.username, message(user, msg), LogFormat.PlainText, source
     ).create()
   }
-  def error(asset: Asset, user: Option[User], msg: String): AssetLog = {
+  
+  def error(msg: String, asset: Asset = Feature.syslogAsset): AssetLog = {
     AssetLog.error(
-      asset, message(user, msg), LogFormat.PlainText, source
+      asset, user.username, message(user, msg), LogFormat.PlainText, source
     ).create()
   }
-  def warning(asset: Asset, user: Option[User], msg: String): AssetLog = {
+  
+  def warning(msg: String,  asset: Asset = Feature.syslogAsset): AssetLog = {
     AssetLog.warning(
-      asset, message(user, msg), LogFormat.PlainText, source
+      asset, user.username, message(user, msg), LogFormat.PlainText, source
     ).create()
   }
-  def notice(asset: Asset, user: Option[User], msg: String) = {
+  
+  def notice(msg: String,  asset: Asset = Feature.syslogAsset): AssetLog = {
     AssetLog.notice(
-      asset, message(user, msg), LogFormat.PlainText, source
+      asset, user.username, message(user, msg), LogFormat.PlainText, source
     ).create()
   }
-  def note(asset: Asset, user: Option[User], msg: String) = {
+  
+  def note(msg: String, asset: Asset = Feature.syslogAsset): AssetLog = {
     AssetLog.note(
-      asset, message(user, msg), LogFormat.PlainText, source
+      asset, user.username, message(user, msg), LogFormat.PlainText, source
     ).create()
   }
-  def informational(asset: Asset, user: Option[User], msg: String): AssetLog = {
+  
+  def informational(msg: String, asset: Asset = Feature.syslogAsset): AssetLog = {
     AssetLog.informational(
-      asset, message(user, msg), LogFormat.PlainText, source
+      asset, user.username, message(user, msg), LogFormat.PlainText, source
     ).create()
   }
 }
-object UserTattler extends Tattler(LogSource.User)
-object ApiTattler extends Tattler(LogSource.Api)
-object InternalTattler extends Tattler(LogSource.Internal, Some("Internal"))
-object SystemTattler extends Tattler(LogSource.System, Some("System")) {
-  def safeError(msg: String) {
+
+object InternalTattler extends Tattler {
+  protected[this] val logger = Logger.logger
+  
+  def execute(asset: Asset, msg: String, f: (Asset, String) => AssetLog): AssetLog = {
     try {
-      error(Feature.syslogAsset, None, msg)
-    } catch {
+      f(asset, msg)
+    } catch  {
       case e: Throwable =>
+        logger.error("Failed to create assetlog", e)
+        throw e
     }
   }
-  def safeWarning(msg: String) {
+
+  def critical(msg: String, asset: Asset): AssetLog = {
+    execute(asset, msg, { (asset, msg) => AssetLog.critical(
+      asset, "Internal", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def error(msg: String, asset: Asset): AssetLog = {
+    execute(asset, msg, { (asset, msg) => AssetLog.error(
+      asset, "Internal", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def warning(msg: String, asset: Asset): AssetLog = {
+    execute(asset, msg, { (asset, msg) => AssetLog.warning(
+      asset, "Internal", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def notice(msg: String, asset: Asset): AssetLog = {
+    execute(asset, msg, { (asset, msg) => AssetLog.notice(
+      asset, "Internal", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def note(msg: String, asset: Asset): AssetLog = {
+    execute(asset, msg, { (asset, msg) => AssetLog.note(
+      asset, "Internal", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def informational(msg: String, asset: Asset): AssetLog = {
+    execute(asset, msg, { (asset, msg) => AssetLog.informational(
+      asset, "Internal", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+}
+
+object SystemTattler {
+  protected[this] val logger = Logger.logger
+  
+  def execute(msg: String, f: (String) => AssetLog): AssetLog = {
     try {
-      warning(Feature.syslogAsset, None, msg)
-    } catch {
+      f(msg)
+    } catch  {
       case e: Throwable =>
+        logger.error("Failed to create assetlog", e)
+        throw e
     }
+  }
+
+  def critical(msg: String): AssetLog = {
+    execute(msg, { (msg) => AssetLog.critical(
+      Feature.syslogAsset, "System", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def error(msg: String): AssetLog = {
+    execute(msg, { (msg) => AssetLog.error(
+      Feature.syslogAsset, "System", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def warning(msg: String): AssetLog = {
+    execute(msg, { (msg) => AssetLog.warning(
+      Feature.syslogAsset, "System", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def notice(msg: String): AssetLog = {
+    execute(msg, { (msg) => AssetLog.notice(
+      Feature.syslogAsset, "System", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def note(msg: String): AssetLog = {
+    execute(msg, { (msg) => AssetLog.note(
+      Feature.syslogAsset, "System", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
+  }
+  
+  def informational(msg: String): AssetLog = {
+    execute(msg, { (msg) => AssetLog.informational(
+      Feature.syslogAsset, "System", msg, LogFormat.PlainText, LogSource.Internal
+    ).create()})
   }
 }

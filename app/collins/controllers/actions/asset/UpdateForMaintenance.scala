@@ -86,9 +86,9 @@ case class UpdateForMaintenanceAction(
     rd match {
       case adh@ActionDataHolder(status, description, state) =>
         val success = if (status.id == AssetStatus.Maintenance.get.id) {
-          Maintenance.toMaintenance(definedAsset, description, state)
+          Maintenance.toMaintenance(definedAsset, description, state, userOption)
         } else {
-          Maintenance.fromMaintenance(definedAsset, description, status.name, state)
+          Maintenance.fromMaintenance(definedAsset, description, status.name, state, userOption)
         }
         success match {
           case true => Api.statusResponse(true)
