@@ -807,7 +807,7 @@ class SolrQuerySpec extends mutable.Specification {
   }
 
   "AssetSearchParameters conversion" should {
-    "basic conversion" in {
+    "basic conversion" in new WithApplication {
       //finder
       val somedate = new java.util.Date
       val dateString = collins.util.views.Formatter.solrDateFormat(somedate)

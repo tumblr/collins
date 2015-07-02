@@ -11,7 +11,7 @@ import com.google.common.cache.CacheLoader
 import collins.models.UserImpl
 import collins.validation.File
 
-case class FileUserLoader(users: FileUserMap) extends CacheLoader[String,FileUserMap] {
+case class FileUserLoader(users: FileUserMap) extends CacheLoader[String,FileUserMap]  {
 
   private[this] val logger = Logger("util.security.FileUserLoader")
 

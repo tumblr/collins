@@ -99,7 +99,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
     }}
   }
 
-  override def get(i: IpmiInfo) = getOrElseUpdate(getKey.format(i.id)) {
+  override def get(i: IpmiInfo) = inTransaction {
     tableDef.lookup(i.id).get
   }
 

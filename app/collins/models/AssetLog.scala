@@ -191,7 +191,7 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
       apply(asset, message, format, source, LogMessageType.Debug)
   }
 
-  override def get(log: AssetLog) = getOrElseUpdate("AssetLog.get(%d)".format(log.id)) {
+  override def get(log: AssetLog) = inTransaction {
     tableDef.lookup(log.id).get
   }
 

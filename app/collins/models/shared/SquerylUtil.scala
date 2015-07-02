@@ -9,7 +9,6 @@ import org.squeryl.internals.PosoLifecycleEvent
 
 import play.api.Logger
 
-import collins.util.plugins.Cache
 import collins.util.plugins.Callback
 
 trait ValidatedEntity[T] extends KeyedEntity[T] {
@@ -38,12 +37,6 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
   protected def deleteEventName: Option[String] = None
 
   def inTransaction[A](f: => A): A = PrimitiveTypeMode.inTransaction(f)
-  protected def cacheKeys(t: T): Seq[String] = Seq()
-  override def callbacks = Seq(
-    afterDelete(tableDef) call(loggedInvalidation("afterDelete", _)),
-    afterUpdate(tableDef) call(loggedInvalidation("afterUpdate", _)),
-    afterInsert(tableDef) call(loggedInvalidation("afterInsert", _))
-  )
 
   protected def log[A](a: => A): A = {
     if (QueryLogConfig.enabled) {
@@ -78,14 +71,6 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
       query.page(offset, pageSize)
     }
 
-  protected def loggedInvalidation(s: String, t: T) {
-    logger.trace("Callback triggered: %s - %s".format(getClass.getName, s))
-    cacheKeys(t).map { k =>
-      logger.trace("Invalidating key %s".format(k))
-      Cache.invalidate(k)
-    }
-  }
-
   protected def afterDeleteCallback[A](t: T)(f: => A): A = {
     val result = f
     deleteEventName.map { name =>
@@ -96,15 +81,6 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
     }
     result
   }
-
-  protected def getOrElseUpdate[T <: AnyRef](key: String)(op: => T)(implicit m: Manifest[T]): T = {
-    Cache.getOrElseUpdate(key) {
-      inTransaction {
-        op
-      }
-    }(m)
-  }
-
 }
 
 trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema =>
@@ -116,7 +92,6 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
     try {
       val oldValue = get(t)
       tableDef.update(t)
-      loggedInvalidation("updateOldValue", oldValue)
       updateEventName.map { name =>
         oldValue.forComparison
         t.forComparison
@@ -128,7 +103,7 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
     }
   }
 
-  override def callbacks = super.callbacks ++ Seq(
+  override def callbacks = Seq(
     beforeInsert(tableDef) call(_.validate),
     beforeUpdate(tableDef) call(_.validate)
   )

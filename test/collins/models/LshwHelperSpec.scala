@@ -9,9 +9,11 @@ import play.api.test.WithApplication
 class LshwHelperSpec extends mutable.Specification {
 
   "LSHW Helper Specification".title
+  
+  args(sequential = true)
 
   "The LSHW Helper" should {
-    "Parse and reconstruct data" in new WithApplication {
+    "Parse and reconstruct data" in {
       "containing a 10-gig card" in new LshwCommonHelper("lshw-10g.xml") {
         val lshw = parsed()
         val stub = getStub()
@@ -26,7 +28,7 @@ class LshwHelperSpec extends mutable.Specification {
         val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
         lshw mustEqual reconstructed
       }
-      "with an intel CPU" in new LshwCommonHelper("lshw-intel.xml") {
+     "with an intel CPU" in new LshwCommonHelper("lshw-intel.xml") {
         val lshw = parsed()
         val stub = getStub()
         val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
@@ -75,31 +77,23 @@ class LshwHelperSpec extends mutable.Specification {
         val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
         lshw mustEqual reconstructed
       }
-    }
-
-    "update asset meta tags" in new WithApplication {
-      "create asset" in new AssetUpdateHelper("lshw-basic.xml") {
-        val asset = Asset.create(Asset(assetTag, Status.Incomplete.get, AssetType.ServerNode.get))
+      "create asset" in new LshwCommonHelper("lshw-basic.xml") {
+        val asset = Asset.create(Asset("lshw-asset", Status.Incomplete.get, AssetType.ServerNode.get))
         LshwHelper.updateAsset(asset, parsed())
         asset.getMetaAttribute(AssetMeta.Enum.DiskType.toString) must beSome
       }
-      "update asset LSHW with smaller profile" in new AssetUpdateHelper("lshw-small.xml") {
+      "update asset LSHW with smaller profile" in new LshwCommonHelper("lshw-small.xml") {
+        val asset = Asset.create(Asset("lshw-asset", Status.Incomplete.get, AssetType.ServerNode.get))
         //lshw-small.xml has no disks
-        Asset.findByTag(assetTag).map{asset =>
-          LshwHelper.updateAsset(asset, parsed())
-          asset.getMetaAttribute(AssetMeta.Enum.DiskType.toString) must beNone
-        }.getOrElse(failure("expected to find asset"))
+        LshwHelper.updateAsset(asset, parsed())
+        asset.getMetaAttribute(AssetMeta.Enum.DiskType.toString) must beNone
       }
     }
   }
 
-  class LshwCommonHelper(txt: String) extends WithApplication with Scope with CommonHelperSpec[LshwRepresentation] {
+  class LshwCommonHelper(txt: String) extends WithApplication with CommonHelperSpec[LshwRepresentation] {
     def getParser(str: String) = new LshwParser(str)
     override def parsed(): LshwRepresentation = getParsed(txt)
-  }
-
-  class AssetUpdateHelper(txt: String) extends LshwCommonHelper(txt) {
-    val assetTag = "lshw-asset"
   }
 
 }

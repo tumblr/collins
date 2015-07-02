@@ -12,7 +12,6 @@ import collins.util.Stats
 import collins.util.config.Feature
 import collins.util.config.MultiCollinsConfig
 import collins.util.config.NodeclassifierConfig
-import collins.util.plugins.Cache
 import collins.util.power.PowerUnits
 import collins.util.views.Formatter.dateFormat
 import collins.solr.CQLQuery
@@ -152,11 +151,6 @@ object Asset extends Schema with AnormAdapter[Asset] {
     a.created is(indexed),
     a.updated is(indexed)
   ))
-  override def cacheKeys(asset: Asset) = Seq(
-    "Asset.findByTag(%s)".format(asset.tag.toLowerCase),
-    "Asset.findById(%d)".format(asset.id)
-  )
-  def flushCache(asset: Asset) = loggedInvalidation("flushCache", asset)
   object Messages extends MessageHelper("asset") {
     def intakeError[T <: AssetView](t: String, a: T) = "intake.error.%s".format(t.toLowerCase) match {
       case msg if msg == "intake.error.new" =>
@@ -202,15 +196,13 @@ object Asset extends Schema with AnormAdapter[Asset] {
       )
   }
 
-  def findById(id: Long) = getOrElseUpdate("Asset.findById(%d)".format(id)) {
+  def findById(id: Long) = inTransaction {
     tableDef.lookup(id)
   }
   def get(a: Asset) = findById(a.id).get
 
-  def findByTag(tag: String): Option[Asset] = {
-    getOrElseUpdate("Asset.findByTag(%s)".format(tag.toLowerCase)) {
-      tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
-    }
+  def findByTag(tag: String): Option[Asset] = inTransaction {
+    tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
   }
 
   /**

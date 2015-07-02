@@ -7,12 +7,12 @@ import scala.collection.immutable.SortedSet
 import play.api.Logger
 
 import com.google.common.cache.CacheLoader
+
 import com.tumblr.play.interop.ProvisionerProfileHelper
 
 import collins.validation.File
 
-case class ProfileLoader(profiles: Set[ProvisionerProfile])
-  extends CacheLoader[String, Set[ProvisionerProfile]]
+case class ProfileLoader(profiles: Set[ProvisionerProfile]) extends CacheLoader[String, Set[ProvisionerProfile]]
 {
   private[this] val logger = Logger("collins.provisioning.ProfileLoader")
 
