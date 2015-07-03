@@ -19,7 +19,6 @@ import collins.power.Verify
 import collins.power.management.PowerManagementConfig
 import collins.shell.CommandResult
 import collins.util.IpmiCommand
-import collins.util.UserTattler
 import collins.util.concurrent.BackgroundProcessor
 import collins.util.config.AppConfig
 import collins.util.plugins.IpmiPowerCommand
@@ -145,7 +144,7 @@ abstract class PowerManagementActionHelper(
       case Verify | PowerState | Identify =>
         // don't log verify, state, identify (normal lifecycle)
       case o =>
-        UserTattler.warning(definedAsset, userOption, msg)
+        tattler.warning(msg, definedAsset)
     }
   }
 

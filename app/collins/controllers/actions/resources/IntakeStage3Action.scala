@@ -93,7 +93,8 @@ case class IntakeStage3Action(
   
         val updateMap = basicMap ++ customFieldMap ++ powerMap
         // Asset Lifecycle business
-        AssetLifecycle.updateAsset(definedAsset, updateMap) match {
+        val lifeCycle = new AssetLifecycle(userOption, tattler)
+        lifeCycle.updateAsset(definedAsset, updateMap) match {
   
           case Left(error) =>
             handleError(RequestDataHolder.error400(error.getMessage))

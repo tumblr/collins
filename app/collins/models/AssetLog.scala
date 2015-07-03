@@ -40,6 +40,7 @@ import collins.models.shared.ValidatedEntity
 case class AssetLog(
   asset_id: Long,
   created: Timestamp,
+  created_by: String,
   format: LogFormat = LogFormat.PlainText,
   source: LogSource = LogSource.Internal,
   message_type: LogMessageType = LogMessageType.Emergency,
@@ -47,7 +48,7 @@ case class AssetLog(
   id: Long = 0) extends ValidatedEntity[Long]
 {
   def this() = // 0 arg constructor since we have enums
-    this(0,new Date().asTimestamp, LogFormat.PlainText, LogSource.Internal, LogMessageType.Emergency, "", 0)
+    this(0,new Date().asTimestamp, "", LogFormat.PlainText, LogSource.Internal, LogMessageType.Emergency, "", 0)
 
   override def validate() {
     require(message != null && message.length > 0)
@@ -85,6 +86,7 @@ case class AssetLog(
 
   def getId(): Long = id
   def getAssetId(): Long = asset_id
+  def getCreatedBy(): String = created_by
   def getAssetTag(): String = getAsset().tag
   def getAsset(): Asset = Asset.findById(getAssetId()).get
 
@@ -136,59 +138,59 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
 
   override def delete(t: AssetLog): Int = 0
 
-  def apply(asset: Asset, message: String, format: LogFormat, source: LogSource, mt: LogMessageType) = {
-    new AssetLog(asset.getId, new Date().asTimestamp, format, source, mt, message)
+  def apply(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource, mt: LogMessageType) = {
+    new AssetLog(asset.getId, new Date().asTimestamp, createdBy, format, source, mt, message)
   }
 
   // A "panic" condition - notify all tech staff on call? (earthquake? tornado?) - affects multiple
   // apps/servers/sites...
-  def emergency(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
-      apply(asset, message, format, source, LogMessageType.Emergency)
+  def emergency(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource) = {
+      apply(asset, createdBy, message, format, source, LogMessageType.Emergency)
   }
 
   // Should be corrected immediately, but indicates failure in a primary system - fix CRITICAL
   // problems before ALERT - example is loss of primary ISP connection
-  def critical(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
-      apply(asset, message, format, source, LogMessageType.Critical)
+  def critical(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource) = {
+      apply(asset, createdBy, message, format, source, LogMessageType.Critical)
   }
 
   // Should be corrected immediately - notify staff who can fix the problem - example is loss of
   // backup ISP connection
-  def alert(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
-      apply(asset, message, format, source, LogMessageType.Alert)
+  def alert(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource) = {
+      apply(asset, createdBy, message, format, source, LogMessageType.Alert)
   }
 
   // Non-urgent failures - these should be relayed to developers or admins; each item must be
   // resolved within a given time
-  def error(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
-      apply(asset, message, format, source, LogMessageType.Error)
+  def error(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource) = {
+      apply(asset, createdBy, message, format, source, LogMessageType.Error)
   }
 
   // Warning messages - not an error, but indication that an error will occur if action is not
   // taken, e.g. file system 85% full - each item must be resolved within a given time
-  def warning(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
-      apply(asset, message, format, source, LogMessageType.Warning)
+  def warning(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource) = {
+      apply(asset, createdBy, message, format, source, LogMessageType.Warning)
   }
 
   // Events that are unusual but not error conditions - might be summarized in an email to
   // developers or admins to spot potential problems - no immediate action required
-  def notice(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
-      apply(asset, message, format, source, LogMessageType.Notice)
+  def notice(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource) = {
+      apply(asset, createdBy, message, format, source, LogMessageType.Notice)
   }
 
-  def note(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
-      apply(asset, message, format, source, LogMessageType.Note)
+  def note(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource) = {
+      apply(asset, createdBy, message, format, source, LogMessageType.Note)
   }
 
   // Normal operational messages - may be harvested for reporting, measuring throughput, etc - no
   // action required
-  def informational(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
-      apply(asset, message, format, source, LogMessageType.Informational)
+  def informational(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource) = {
+      apply(asset, createdBy, message, format, source, LogMessageType.Informational)
   }
 
   //Info useful to developers for debugging the application, not useful during operations
-  def debug(asset: Asset, message: String, format: LogFormat, source: LogSource) = {
-      apply(asset, message, format, source, LogMessageType.Debug)
+  def debug(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource) = {
+      apply(asset, createdBy, message, format, source, LogMessageType.Debug)
   }
 
   override def get(log: AssetLog) = inTransaction {
