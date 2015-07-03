@@ -6,11 +6,13 @@
   <h3>Logs <small>Messages logged on this asset</small></h3>
   <script type="text/javascript">
     var logDataCols = [
-      {"mDataProp": "CREATED", "sWidth": "20%"},
-      {"mDataProp": "SOURCE", "sWidth": "10%", "bSortable": false},
-      {"mDataProp": "TYPE", "sWidth": "15%", "bSortable": false},
-      {"mDataProp": "MESSAGE", "sWidth": "55%", "bSortable": false}
+      {"mDataProp": "CREATED", "sWidth": "15%"},
+      {"mDataProp": "CREATED_BY", "sWidth": "5%", "bSortable": false},
+      {"mDataProp": "SOURCE", "sWidth": "5%", "bSortable": false},
+      {"mDataProp": "TYPE", "sWidth": "10%", "bSortable": false},
+      {"mDataProp": "MESSAGE", "sWidth": "65%", "bSortable": false}
     ];
+        
     var logDataLevels = [
       "NOTE", "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING"
     ];
@@ -23,6 +25,7 @@
     <thead>
       <tr>
         <th>Date</th>
+        <th>User</th>
         <th>Source</th>
         <th>Level</th>
         <th>Message</th>
@@ -33,6 +36,7 @@
     <tfoot>
       <tr>
         <th>Date</th>
+        <th>User</th>
         <th>Source</th>
         <th>Level</th>
         <th>Message</th>

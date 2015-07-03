@@ -103,11 +103,12 @@ case class UpdateAction(
   override def execute(rd: RequestDataHolder) = Future { 
     rd match {
       case adh@ActionDataHolder(map) =>
-        val results: collins.models.AssetLifecycle.Status[Boolean] =
+        val lifeCycle = new AssetLifecycle(userOption(), tattler)
+        val results: AssetLifecycle.Status[Boolean] =
           if (onlyAttributes)
-            AssetLifecycle.updateAssetAttributes(definedAsset, map, userOption)
+            lifeCycle.updateAssetAttributes(definedAsset, map)
           else
-            AssetLifecycle.updateAsset(definedAsset, map, userOption)
+            lifeCycle.updateAsset(definedAsset, map)
         results match {
           case Left(exception) =>
             handleError(

@@ -228,10 +228,11 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
     val ActionDataHolder(asset, pRequest, _, attribs) = adh
     val plugin = SoftLayer.plugin.get
     val slId = plugin.softLayerId(asset).get
-    if (attribs.nonEmpty)
-      AssetLifecycle.updateAssetAttributes(
-        Asset.findById(asset.getId).get, attribs, userOption
-      )
+    if (attribs.nonEmpty) {
+      val lifeCycle = new AssetLifecycle(userOption(), tattler)
+      lifeCycle.updateAssetAttributes(Asset.findById(asset.getId).get, attribs)
+    }
+    
     BackgroundProcessor.send(ActivationProcessor(slId)(request)) { res =>
       processProvisionAction(res) {
         case true =>
@@ -265,8 +266,9 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
         Future(err)
       case None =>
         if (attribs.nonEmpty) {
-          AssetLifecycle.updateAssetAttributes(
-            Asset.findById(asset.getId).get, attribs, userOption
+          val lifeCycle = new AssetLifecycle(userOption(), tattler)
+          lifeCycle.updateAssetAttributes(
+            Asset.findById(asset.getId).get, attribs
           )
           setAsset(Asset.findById(asset.getId))
         }

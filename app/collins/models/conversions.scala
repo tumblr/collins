@@ -83,6 +83,7 @@ object conversions {
     ))
   }
   implicit object AssetLogFormat extends Format[AssetLog] {
+    val df = new SimpleDateFormat("d/M/yy HH:mm:ss")
     override def reads(json: JsValue) = JsSuccess(AssetLog(
       (json \ "ASSET_ID").as[Long],
       (json \ "CREATED").as[Timestamp],
@@ -96,7 +97,7 @@ object conversions {
     override def writes(log: AssetLog) = JsObject(Seq(
       "ID" -> Json.toJson(log.id),
       "ASSET_TAG" -> Json.toJson(Asset.findById(log.asset_id).map(_.tag).getOrElse("Unknown")),
-      "CREATED" -> Json.toJson(log.created),
+      "CREATED" -> Json.toJson(df.format(log.created)),
       "CREATED_BY" -> Json.toJson(log.created_by),
       "FORMAT" -> Json.toJson(log.format.toString),
       "SOURCE" -> Json.toJson(log.source.toString),

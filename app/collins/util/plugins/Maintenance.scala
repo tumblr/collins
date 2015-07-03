@@ -7,9 +7,9 @@ import collins.models.State
 import collins.models.Status
 
 object Maintenance {
-  def toMaintenance(asset: Asset, reason: String, state: State, user: Option[User]): Boolean = {
+  def toMaintenance(asset: Asset, reason: String, state: State, lifeCycle: AssetLifecycle): Boolean = {
     if (canTransitionToMaintenance(asset)) {
-      AssetLifecycle.updateAssetStatus(asset, Status.Maintenance, Some(state), reason, user) match {
+      lifeCycle.updateAssetStatus(asset, Status.Maintenance, Some(state), reason) match {
         case Left(e) => false
         case _ => true
       }
@@ -18,9 +18,9 @@ object Maintenance {
     }
   }
 
-  def fromMaintenance(asset: Asset, reason: String, status: String, state: State, user: Option[User]): Boolean = {
+  def fromMaintenance(asset: Asset, reason: String, status: String, state: State, lifeCycle: AssetLifecycle): Boolean = {
     if (canTransitionFromMaintenance(asset)) {
-      AssetLifecycle.updateAssetStatus(asset, Status.findByName(status), Some(state), reason, user) match {
+      lifeCycle.updateAssetStatus(asset, Status.findByName(status), Some(state), reason) match {
         case Left(e) => false
         case _ => true
       }
