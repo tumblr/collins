@@ -111,7 +111,7 @@ class AssetLogSpec extends mutable.Specification {
     def message_type = 6 // Informational
     def asset = Asset.findById(1).get
     def message = "Automatically created by database migration"
-    def newLog = AssetLog.alert(asset, "Spec error message", format, source)
+    def newLog = AssetLog.alert(asset, "tumblr", "Spec error message", format, source)
   }
 
 }
