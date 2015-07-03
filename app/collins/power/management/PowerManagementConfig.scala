@@ -50,7 +50,6 @@ object PowerManagementConfig extends Configurable {
   }
 
   def enabled = getBoolean("enabled", false)
-  def getClassOption = getString("class")
   def timeoutMs = getMilliseconds("timeout").getOrElse(10000L)
 
   def powerOffCommand = command(PowerOffKey)
@@ -69,8 +68,6 @@ object PowerManagementConfig extends Configurable {
       allowAssetTypes
       disallowStatus
       disallowWhenAllocated
-      enabled
-      getClassOption
       timeoutMs
       RequiredKeys.foreach { key =>
         val cmd = command(key)

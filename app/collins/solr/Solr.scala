@@ -3,6 +3,8 @@ package collins.solr
 import java.io.File
 import java.util.Date
 
+import scala.concurrent.Future
+
 import org.apache.solr.client.solrj.SolrClient
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.client.solrj.impl.HttpSolrClient
@@ -16,21 +18,19 @@ import collins.models.Asset
 
 object Solr {
 
-  def inPlugin[A](f: SolrPlugin => A): Option[A] = {
-    if (SolrConfig.enabled) {
-      Play.maybeApplication.flatMap{ _.plugin[SolrPlugin] }.filter{_.enabled}.map{ f(_) }
-    } else {
-      None
-    }
+  def populate(): Option[Future[Any]] = if (SolrConfig.enabled) { Some(SolrHelper.populate()) } else None
+
+  def updateAssets(assets: Seq[Asset]) {
+    if (SolrConfig.enabled) { SolrHelper.updateAssets(assets, new Date) }
   }
 
-  def populate() = inPlugin {_.populate()}
+  def updateAsset(asset: Asset) {
+    updateAssets(asset :: Nil)
+  }
 
-  def updateAssets(assets: Seq[Asset]) = inPlugin {_.updateAssets(assets, new Date)}
-
-  def updateAsset(asset: Asset){updateAssets(asset :: Nil)}
-
-  def updateAssetByTag(tag: String) = Asset.findByTag(tag).foreach{updateAsset}
+  def updateAssetByTag(tag: String) {
+    Asset.findByTag(tag).foreach{updateAsset}
+  }
 
   //TODO: Rename
   type AssetSolrDocument = Map[SolrKey, SolrValue]

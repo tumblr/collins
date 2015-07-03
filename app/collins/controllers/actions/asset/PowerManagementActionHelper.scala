@@ -16,14 +16,14 @@ import collins.power.Identify
 import collins.power.PowerAction
 import collins.power.PowerState
 import collins.power.Verify
+import collins.power.management.IpmiPowerCommand
+import collins.power.management.PowerManagement
 import collins.power.management.PowerManagementConfig
 import collins.shell.CommandResult
-import collins.util.IpmiCommand
 import collins.util.concurrent.BackgroundProcessor
 import collins.util.config.AppConfig
-import collins.util.plugins.IpmiPowerCommand
-import collins.util.plugins.PowerManagement
 import collins.util.security.SecuritySpecification
+
 
 abstract class PowerManagementActionHelper(
   assetTag: String,
@@ -48,7 +48,7 @@ abstract class PowerManagementActionHelper(
     val asset = assetFromTag(assetTag)
     val pa = powerAction
 
-    if (!PowerManagement.isPluginEnabled) {
+    if (!PowerManagementConfig.enabled) {
       Left(RequestDataHolder.error501("PowerManagement plugin not enabled"))
     } else if (!asset.isDefined) {
       Left(assetNotFound(assetTag))

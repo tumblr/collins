@@ -19,7 +19,7 @@ import collins.models.State
 import collins.models.{Status => AssetStatus}
 import collins.models.AssetLifecycle
 import collins.util.MessageHelper
-import collins.util.plugins.Maintenance
+import collins.util.views.Maintenance
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
 

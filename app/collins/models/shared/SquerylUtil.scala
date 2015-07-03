@@ -9,7 +9,7 @@ import org.squeryl.internals.PosoLifecycleEvent
 
 import play.api.Logger
 
-import collins.util.plugins.Callback
+import collins.callbacks.Callback
 
 trait ValidatedEntity[T] extends KeyedEntity[T] {
   def validate(): Unit

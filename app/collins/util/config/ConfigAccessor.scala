@@ -22,7 +22,7 @@ trait ConfigAccessor {
   def ns: Option[String] = None
 
   def globalError(message: String, e: Option[Throwable] = None) =
-    e.map(new PlayException("Confguration error", message, _)).getOrElse(new PlayException("Confguration error", message))
+    e.map(new PlayException("Confguration error", message, _)).getOrElse(new PlayException("Configuration error", message))
 
   protected def underlying = {
     _underlying.get()

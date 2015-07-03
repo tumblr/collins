@@ -1,4 +1,4 @@
-package collins.util.plugins
+package collins.metrics
 
 import collins.util.config.ConfigValue
 import collins.util.config.Configurable
