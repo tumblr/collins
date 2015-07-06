@@ -10,15 +10,14 @@ import play.api.mvc.AnyContent
 import play.api.mvc.Request
 
 import collins.softlayer.SoftLayerConfig
+import collins.softlayer.SoftLayer
 import collins.util.concurrent.BackgroundProcess
-import collins.util.plugins.SoftLayer
 
 case class ActivationProcessor(slId: Long, userTimeout: Option[FiniteDuration] = None)(implicit req: Request[AnyContent]) extends BackgroundProcess[Boolean] {
   val timeout = userTimeout.getOrElse(Duration(SoftLayerConfig.activationRequestTimeoutMs, TimeUnit.MILLISECONDS))
 
   def run(): Boolean = {
-    val plugin = SoftLayer.pluginEnabled.get
-    Await.result(plugin.activateServer(slId), timeout)
+    Await.result(SoftLayer.activateServer(slId), timeout)
   }
 }
 

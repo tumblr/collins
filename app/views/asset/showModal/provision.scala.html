@@ -2,7 +2,8 @@
 
 @import helper._
 @import util._
-@import collins.util.plugins.Provisioner
+@import collins.provisioning.Provisioner
+@import collins.provisioning.ProvisionerConfig
 @import collins.util.views.ProvisionerHelper
 
 @container("provision-server", "Provision Server", true) {
@@ -32,8 +33,8 @@
       @formInputInline {
         <select name="profile" id="profile" data-show="suffix-container,hostname-container" data-triggers="PROVISIONER_TRIGGERS" class="form-control">
         <option value="" selected="selected"></option>
-        @Provisioner.pluginEnabled.map { p =>
-          @p.profiles.toSeq.map { v =>
+        @if(ProvisionerConfig.enabled) {
+          @Provisioner.profiles.toSeq.map { v =>
           <option value="@v.identifier" data-show-display="@v.allow_suffix.toString" data-aggregate-value="@v.prefix">@v.label</option>
           }
         }

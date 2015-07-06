@@ -153,9 +153,7 @@ class SolrSpec extends mutable.Specification {
     val pageParam = PageParams(0, 10, "DESC", "TAG")
     def reindex() {
       // repopulate solr - HARD CODED TIME - DO THIS BETTER
-      Solr.inPlugin { p =>
-        Await.result(p.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
-      }
+      Await.result(SolrHelper.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
     }
     
     "must find asset with state filter" in new WithApplication(FakeApplication(

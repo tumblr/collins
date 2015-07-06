@@ -35,6 +35,7 @@ object Feature extends Configurable {
   def syslogAsset = Asset.findByTag(getString("syslogAsset", MultiCollinsConfig.thisInstance)).orElse {
     Asset.findByTag("tumblrtag1")
   }.getOrElse {
+    new Exception().printStackTrace()
     throw globalError("neither features.syslogAsset or multicollins.thisInstance were specified")
   }
   def deleteIpmiOnDecommission = getBoolean("deleteIpmiOnDecommission", true)

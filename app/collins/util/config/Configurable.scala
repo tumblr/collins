@@ -8,9 +8,22 @@ import com.typesafe.config.ConfigFactory
 
 import collins.util.InternalTattler
 
+/**
+ * All derived types of this class must be 'Object' types (singletons)
+ * 
+ * The Registry manages the creation and lifecycle of configurable
+ * instances. In doing so it make assumptions, one of which is that
+ * the config is of type Object. This is captured in the logic for
+ * invocation of the 'once' method, it is invoked on the class 
+ * and not on the instance.
+ * 
+ * Configurable ensures that Collins configuration types are dynamically
+ * loaded onChange without requiring application restart.
+ * 
+ */
 trait Configurable extends ConfigAccessor with AppConfig { self =>
 
-  protected val logger = Logger("configurable")
+  protected val logger = Logger(getClass)
 
   // By default values are optional, except when they aren't. Methods returning default values do
   // not use this. Methods without defaults will take a ConfigRequirement as an implicit
@@ -31,15 +44,6 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
   // This is only assigned to during delayedInit call, after constructor code
   private var referenceConfig: Option[TypesafeConfiguration] = None
 
-  // Used with plugins that need to use configs before the system is initialized
-  def pluginInitialize(config: PlayConfiguration) {
-    if (once) {
-      mergeReferenceAndSave(config.underlying, true)
-    }
-  }
-
-  // Setup referenceConfig and register self with Registry
-
   // Will be called from Registry.validate, should not be called directly except maybe in tests
   def initialize() {
     mergeReferenceAndSave(appConfig().underlying)
@@ -48,7 +52,9 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
   protected def refFilename = "reference/%s".format(referenceConfigFilename)
   protected val alreadyRun = new AtomicBoolean(false)
 
+  // invoked using reflection.
   def once(): Boolean = {
+    Registry.add(namespace, this)
     if (!alreadyRun.compareAndSet(false, true)) {
       return false
     }
@@ -70,7 +76,6 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
         logger.error(msg, e)
         referenceConfig = None
     }
-    Registry.add(namespace, this)
     true
   }
 

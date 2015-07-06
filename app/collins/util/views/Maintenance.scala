@@ -1,4 +1,4 @@
-package collins.util.plugins
+package collins.util.views
 
 import collins.models.User
 import collins.models.Asset
