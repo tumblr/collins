@@ -136,11 +136,11 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     ).toList
   }}
 
-  override def get(i: IpAddresses) = getOrElseUpdate(getKey.format(i.id)) {
+  override def get(i: IpAddresses) = inTransaction {
     tableDef.lookup(i.id).get
   }
 
-  def getPoolsInUse(): Set[String] = getOrElseUpdate("getPoolsInUse") {
+  def getPoolsInUse(): Set[String] = inTransaction {
     from(tableDef)(i =>
       select(i.pool)
     ).distinct.toSet

@@ -45,29 +45,21 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
     ))
   }
 
-  override def cacheKeys(a: AssetType) = Seq(
-    "AssetType.findById(%d)".format(a.id),
-    "AssetType.findByName(%s)".format(a.name.toUpperCase),
-    "AssetType.find"
-  )
-
-  def findById(id: Int): Option[AssetType] =
-    getOrElseUpdate("AssetType.findById(%d)".format(id)) {
-      tableDef.lookup(id)
-    }
+  def findById(id: Int): Option[AssetType] = inTransaction {
+    tableDef.lookup(id)
+  }
 
   override def get(a: AssetType) = findById(a.id).get
 
-  def find(): List[AssetType] = getOrElseUpdate("AssetType.find") {
+  def find(): List[AssetType] = inTransaction {
     from(tableDef)(at => select(at)).toList
   }
 
-  def findByName(name: String): Option[AssetType] =
-    getOrElseUpdate("AssetType.findByName(%s)".format(name.toUpperCase)) {
-      tableDef.where(a =>
-        a.name.toLowerCase === name.toLowerCase
-      ).headOption
-    }
+  def findByName(name: String): Option[AssetType] = inTransaction {
+    tableDef.where(a =>
+      a.name.toLowerCase === name.toLowerCase
+    ).headOption
+  }
 
   override def delete(a: AssetType): Int = inTransaction {
     afterDeleteCallback(a) {

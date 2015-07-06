@@ -2,23 +2,21 @@ package collins.util.security
 
 import play.api.Logger
 
-import collins.cache.ConfigCache
 import collins.models.User
 import collins.permissions.Privileges
+import collins.cache.GuavaCacheFactory
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger
   def authType: Array[String]
   def authenticate(username: String, password: String): Option[User]
-  def useCachedCredentials: Boolean = AuthenticationProviderConfig.cacheCredentials
-  def cacheTimeout: Long = AuthenticationProviderConfig.cacheTimeout
 }
 
 object AuthenticationProvider {
   private val logger = Logger("collins.util.security.AuthenticationProvider")
 
-  lazy private val permissionsCache =
-    ConfigCache.create(AuthenticationProviderConfig.cachePermissionsTimeout, PermissionsLoader())
+  lazy private val permissionsCache =   
+    GuavaCacheFactory.create(AuthenticationProviderConfig.permissionsCacheSpecification, PermissionsLoader())
 
   def get(types: Array[String]): AuthenticationProvider = {
     new MixedAuthenticationProvider(types)

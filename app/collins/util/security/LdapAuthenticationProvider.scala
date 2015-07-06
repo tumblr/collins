@@ -1,18 +1,17 @@
 package collins.util.security
 
 import java.util.{Hashtable => JHashTable}
-
 import scala.collection.JavaConversions.enumerationAsScalaIterator
 import scala.collection.JavaConversions.mapAsJavaMap
 import scala.collection.JavaConverters.mapAsJavaMapConverter
-
 import collins.models.User
 import collins.models.UserImpl
-
 import javax.naming.Context
 import javax.naming.directory.InitialDirContext
 import javax.naming.directory.SearchControls
 import javax.naming.directory.SearchResult
+import collins.cache.GuavaCacheFactory
+import com.google.common.cache.CacheLoader
 
 class LdapAuthenticationProvider extends AuthenticationProvider {
 
@@ -36,6 +35,13 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
   def anonymous = config.anonymous
   def groupnameattrib = config.groupNameAttribute
   def usernumattrib = config.userNumberAttribute
+  
+  type Credentials = Tuple2[String,String]
+  lazy val cache = GuavaCacheFactory.create(config.cacheSpecification, new CacheLoader[Credentials, Option[User]] {
+    override def load(creds: Credentials): Option[User] = {
+      nativeAuthenticate(creds._1, creds._2)
+    } 
+  })
 
   // setup for LDAP
   protected def env = Map(
@@ -119,10 +125,15 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
       ctx.close() 
     }
   }
-
-  
-  // Authenticate via LDAP
+    
+  // Authenticate via LDAP - verify cache first
   override def authenticate(username: String, password: String): Option[User] = {
+    cache.get((username, password))
+  }
+  
+  private def nativeAuthenticate(username:String, password: String): Option[User] = {
+    logger.info("Loading user %s from backend".format(username))
+
     getInitialContext().flatMap (withCtxt(_) { ctx =>
       findDn(ctx, username).flatMap(dn => {
         getUserContext(dn, password).flatMap(withCtxt(_) { uctx =>

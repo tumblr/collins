@@ -8,7 +8,6 @@ import collins.models.AssetLog
 import collins.models.AssetMetaValue
 import collins.models.IpAddresses
 import collins.models.IpmiInfo
-import collins.util.plugins.Cache
 import collins.util.plugins.Callback
 
 object AssetDeleter {
@@ -23,7 +22,6 @@ object AssetDeleter {
     }
     if (result) {
       Callback.fire("asset_purge", tag, null)
-      Cache.clear()
     }
     result
   }

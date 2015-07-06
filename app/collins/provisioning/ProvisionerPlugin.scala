@@ -2,17 +2,16 @@ package collins.provisioning
 
 import play.api.Application
 import play.api.Plugin
-
-import collins.cache.ConfigCache
 import collins.models.Asset
 import collins.shell.Command
 import collins.shell.CommandResult
+import collins.cache.GuavaCacheFactory
 
 
 class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
-  lazy protected[this] val profileCache =
-    ConfigCache.create(ProvisionerConfig.cacheTimeout, ProfileLoader())
+  lazy protected[this] val profileCache =   
+    GuavaCacheFactory.create(ProvisionerConfig.cacheSpecification, ProfileLoader())
 
   // overrides Plugin.enabled
   override def enabled: Boolean = {
@@ -22,8 +21,8 @@ class ProvisionerPlugin(app: Application) extends Plugin with Provisioner {
 
   // overrides Plugin.onStart
   override def onStart() {
-    if (enabled) {
-      ProvisionerConfig.validateConfig
+    if (enabled) {   
+      ProvisionerConfig.validateConfig   
     }
   }
 

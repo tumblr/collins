@@ -54,11 +54,6 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
   def apply(asset: Asset, assetMeta: AssetMeta, groupId: Int, value: String) =
     new AssetMetaValue(asset.getId, assetMeta.getId, groupId, value)
 
-  override def cacheKeys(a: AssetMetaValue) = Seq(
-    "AssetMetaValue.findByMeta(%d)".format(a.asset_meta_id),
-    "AssetMetaValue.findByAsset(%d)".format(a.asset_id),
-    fbam.format(a.asset_id, a.asset_meta_id)
-  )
   override def callbacks = super.callbacks ++ Seq(
     beforeInsert(tableDef).map(v =>
       Option(shouldEncrypt(v))
@@ -148,39 +143,27 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }}
   }
 
-  def findByAsset(asset: Asset, checkCache: Boolean = true): Seq[MetaWrapper] = {
-    lazy val op = {
+  def findByAsset(asset: Asset, checkCache: Boolean = true): Seq[MetaWrapper] = inTransaction {
       from(tableDef)(a =>
         where(a.asset_id === asset.id)
         select(a)
       ).toList.map { amv =>
         MetaWrapper(amv.getMeta(), amv)
       }
-    }
-    if (checkCache) {
-      getOrElseUpdate("AssetMetaValue.findByAsset(%d)".format(asset.id))(op) 
-    } else {
-      inTransaction{op}
-    }
   }
 
-  private[this] val fbam = "AssetMetaValue.findByAssetAndMeta(%d, %d)"
-  def findByAssetAndMeta(asset: Asset, meta: AssetMeta, count: Int): Seq[MetaWrapper] = {
-    getOrElseUpdate(fbam.format(asset.getId, meta.id)) {
-      from(tableDef)(a =>
-        where(a.asset_id === asset.getId and a.asset_meta_id === meta.id)
-        select(a)
-      ).page(0, count).toList.map(mv => MetaWrapper(meta, mv))
-    }
+  def findByAssetAndMeta(asset: Asset, meta: AssetMeta, count: Int): Seq[MetaWrapper] = inTransaction {
+    from(tableDef)(a =>
+      where(a.asset_id === asset.getId and a.asset_meta_id === meta.id)
+      select(a)
+    ).page(0, count).toList.map(mv => MetaWrapper(meta, mv))
   }
 
-  def findByMeta(meta: AssetMeta): Seq[String] = {
-    getOrElseUpdate("AssetMetaValue.findByMeta(%d)".format(meta.id)) {
-      from(tableDef)(a =>
-        where(a.asset_meta_id === meta.id)
-        select(a.value)
-      ).distinct.toList.sorted
-    }
+  def findByMeta(meta: AssetMeta): Seq[String] = inTransaction {
+    from(tableDef)(a =>
+      where(a.asset_meta_id === meta.id)
+      select(a.value)
+    ).distinct.toList.sorted
   }
 
   def purge(mvs: Seq[AssetMetaValue], groupId: Option[Int]) = {
