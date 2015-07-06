@@ -1,0 +1,25 @@
+@import collins.frames.ViewSpecs
+@(specs: ViewSpecs)
+
+<style>
+#frame-@specs.name
+{
+  @specs.style
+}
+</style>
+
+<p>
+<a href="@Html(specs.url)" target="_blank" class="btn btn-primary">Open in new window</a>
+</p>
+
+<iframe id="frame-@specs.name" src=""></iframe>
+
+<script type="text/javascript">
+  $('a[data-toggle="pill"]').on('show.bs.tab', function(e) {
+    var target = $(e.target);
+    var iframe = $('#frame-@specs.name');
+    if (target.attr('href') === '#@specs.name-info' && iframe.attr('src') === "") {
+      iframe.attr('src', "@Html(specs.url)");
+    }
+  })
+</script>

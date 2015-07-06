@@ -7,20 +7,9 @@ import play.api.Logger
 import play.api.Play
 import play.api.Plugin
 
-class LoggingPlugin(app: Application) extends Plugin {
+object LoggingHelper {
 
-  override def enabled = true
-
-  override def onStart() {
-    if (enabled) {
-      setupLogging
-    }
-  }
-
-  override def onStop() {
-  }
-
-  protected def setupLogging() {
+  def setupLogging(app: Application) {
     if (Play.isDev(app) || Play.isTest(app)) {
       Option(this.getClass.getClassLoader.getResource("dev_logger.xml"))
         .map(_.getFile())

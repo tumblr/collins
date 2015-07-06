@@ -1,6 +1,6 @@
 @(asset: AssetView, text: String = "SL")
 
-@import collins.util.plugins.SoftLayer
+@import collins.util.views.SoftLayerHelper
 
 @formatUrl(url: String) = {
   <a href="@url" target="_blank">@text</a>
@@ -9,4 +9,4 @@
   <em>Unknown</em>
 }
 
-<td>@SoftLayer.assetLink(asset).map(url => formatUrl(url)).getOrElse(formatEmpty())</td>
+<td>@SoftLayerHelper.assetLink(asset).map(url => formatUrl(url)).getOrElse(formatEmpty())</td>

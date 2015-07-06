@@ -2,8 +2,6 @@ package collins.controllers.actions.asset
 
 import scala.concurrent.Future
 
-import play.api.mvc.SimpleResult
-
 import collins.controllers.Permissions
 import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder
@@ -11,7 +9,6 @@ import collins.controllers.actions.SecureAction
 import collins.provisioning.ProvisionerConfig
 import collins.util.concurrent.RateLimiter
 import collins.util.config.AppConfig
-import collins.util.plugins.Provisioner
 import collins.util.security.SecuritySpecification
 
 case class ProvisionAction(
@@ -32,14 +29,13 @@ case class ProvisionAction(
       return Left(
         RequestDataHolder.error403("Asset has been configured to ignore dangerous commands")
       )
-    val plugin = Provisioner.plugin
-    if (!plugin.isDefined)
+    if (!ProvisionerConfig.enabled)
       return Left(
-        RequestDataHolder.error501("Provisioner plugin not enabled")
+        RequestDataHolder.error501("Provisioning is not enabled")
       )
     provisionForm.bindFromRequest()(request).fold(
       errorForm => fieldError(errorForm),
-      okForm => validate(plugin.get, asset, okForm)
+      okForm => validate(asset, okForm)
     )
   }
 

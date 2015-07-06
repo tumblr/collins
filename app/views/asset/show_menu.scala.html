@@ -1,9 +1,12 @@
 @(aa: AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import collins.util.AssetStateMachine
-@import collins.util.plugins.{GraphPlugin, MonitoringPlugin, Maintenance, PowerManagement, Provisioner, SoftLayer}
-@import collins.util.views.{OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
+@import collins.power.management.PowerManagement
+@import collins.util.views.{Maintenance, SoftLayerHelper, OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
 @import collins.provisioning.ProvisionerConfig
+@import collins.provisioning.Provisioner
+@import collins.graphs.GraphView
+@import collins.frames.{ViewsConfig, FrameView}
 @import collins.controllers.Permissions
 
 <div class="page-header" style="position:relative;">
@@ -36,7 +39,7 @@
         <ul class="dropdown-menu">
           <li>@modalLink("#asset-note", "Create Note", icon = Some("glyphicon glyphicon-comment"))</li>
           <li class="divider"></li>
-          @if(Permissions.please(user, Permissions.AssetWebApi.CancelAsset) && SoftLayer.canCancel(aa.asset)) {
+          @if(Permissions.please(user, Permissions.AssetWebApi.CancelAsset) && SoftLayerHelper.canCancel(aa.asset)) {
             <li>@modalLink("#cancel-server", "Cancel Server", icon = Some("glyphicon glyphicon-warning-sign"))</li>
           }
           @if(Permissions.please(user, Permissions.AssetWebApi.DeleteAsset) && AssetStateMachine(aa.asset).canDecommission) {
@@ -51,37 +54,31 @@
             }
           }
           @if(Permissions.please(user, Permissions.AssetManagementApi.PowerManagement)) {
-            @PowerManagement.pluginEnabled.map { p =>
-              @if(PowerManagement.powerAllowed(aa.asset)) {
-                <li>@modalLink("#power-server", "Power Management", icon = Some("glyphicon glyphicon-fire"))</li> 
-              }
-            }
+             @if(PowerManagement.powerAllowed(aa.asset)) {
+               <li>@modalLink("#power-server", "Power Management", icon = Some("glyphicon glyphicon-fire"))</li> 
+             }
           }
 	        @if(Permissions.please(user, Permissions.AssetManagementApi.ProvisionAsset)) {
-	          @Provisioner.pluginEnabled.map { p =>
-              @if(p.canProvision(aa.asset)) {
-                <li>@modalLink("#provision-server", "Provision Server", icon = Some("glyphicon glyphicon-play"))</li>
-              } else {
-                @if(SoftLayer.canActivate(aa.asset)) {
-                  <li>@modalLink("#provision-server", "Activate Server", icon = Some("glyphicon glyphicon-play"))</li>
+	          @if(ProvisionerConfig.enabled) {
+                @if(Provisioner.canProvision(aa.asset)) {
+                  <li>@modalLink("#provision-server", "Provision Server", icon = Some("glyphicon glyphicon-play"))</li>
+                } else {
+                  @if(SoftLayerHelper.canActivate(aa.asset)) {
+                    <li>@modalLink("#provision-server", "Activate Server", icon = Some("glyphicon glyphicon-play"))</li>
+                  }
                 }
-              }
 	          }
 	        }
         </ul>
       </li>
-      @GraphPlugin.option.map { p =>
-        @if(p.isGraphable(aa.asset)) {
-          <li><a href="#graph-info" data-toggle="pill">Graphs</a></li>
-        } else {
-          <li class="disabled" data-rel="tooltip" data-original-title="This asset is not graphable"><a href="javascript:void(0);">Graphs</a></li>
-        }
+      @if(GraphView.isGraphable(aa.asset)) {
+        <li><a href="#graph-info" data-toggle="pill">Graphs</a></li>
+      } else {
+        <li class="disabled" data-rel="tooltip" data-original-title="This asset is not graphable"><a href="javascript:void(0);">Graphs</a></li>
       }
-      @MonitoringPlugin.option.map { plugin =>
-        @if(plugin.isMonitorable(aa.asset)) {
-          <li><a href="#monitoring-info" data-toggle="pill">Monitoring</a></li>
-        } else {
-          <li class="disabled" data-rel="tooltip" data-original-title="This asset is not monitorable"><a href="javascript:void(0);">Monitoring</a></li>
+      @if(ViewsConfig.enabled) {
+        @for(specs <- FrameView.getViewSpecs(aa)) {
+          <li><a href="#@specs.name-info" data-toggle="pill">@specs.title</a></li>
         }
       }
     </ul>

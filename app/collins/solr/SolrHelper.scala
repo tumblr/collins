@@ -1,40 +1,34 @@
 package collins.solr
 
 import java.util.Date
-
 import scala.concurrent.Future
-
 import org.apache.solr.client.solrj.SolrClient
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.common.SolrInputDocument
-
 import play.api.Application
 import play.api.Logger
 import play.api.Play.current
 import play.api.Plugin
 import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
 import collins.models.Asset
 import collins.models.AssetLog
 import collins.solr.CollinsQueryDSL.str2collins
 import collins.solr.Solr.AssetSolrDocument
-import collins.util.plugins.Callback
+import collins.callbacks.Callback
 import collins.util.views.Formatter
-
 import akka.actor.Props
 import akka.routing.FromConfig
+import org.apache.solr.client.solrj.impl.HttpSolrClient
 
-class SolrPlugin(app: Application) extends Plugin {
+object SolrHelper {
 
   private[this] var _server: Option[SolrClient] = None
   private[this] val logger = Logger("SolrPlugin")
 
   def server = _server.getOrElse(throw new RuntimeException("No Solr server is initialized"))
 
-  override def enabled = true
-
-  override def onStart() {
+  def setupSolr() {
     if (SolrConfig.enabled) {
       System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
       System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
@@ -89,7 +83,7 @@ class SolrPlugin(app: Application) extends Plugin {
   }
 
   def populate() = Future {
-    _server.map{ server =>
+    _server.map { server =>
       logger.warn("Repopulating Solr index")
       val indexTime = new Date
 
@@ -142,8 +136,11 @@ class SolrPlugin(app: Application) extends Plugin {
     updateItems[AssetLog](logs, AssetLogSerializer, indexTime,commit)
   }
 
-  override def onStop() {
-    _server.foreach{case s: EmbeddedSolrServer => s.getCoreContainer.shutdown()}
+  def terminateSolr() {
+    _server.foreach{
+      case s: EmbeddedSolrServer => s.getCoreContainer.shutdown()
+      case s: HttpSolrClient => s.close()
+    }
   }
 
   def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {

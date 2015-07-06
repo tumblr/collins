@@ -4,8 +4,15 @@
 @import util.notice
 @import collins.util.conversions._
 @import collins.util.config.Feature
-@import collins.util.plugins.{Maintenance, PowerManagement, Provisioner, SoftLayer}
-@import collins.util.views.{ListHelper, OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
+@import collins.power.management.PowerManagement
+@import collins.frames.{ViewsConfig, FrameView, ViewSpecs}
+@import collins.util.views.{Maintenance, ListHelper, OptionSorter, Summary, TagDecorator, Titler}
+
+@frame(specs: ViewSpecs) = {
+<div class="tab-pane" id="@specs.name-info">
+  @views.html.frames.frame(specs)
+</div>
+}
 
 @main(Titler(aa.asset)) {
 <div class="row">
@@ -27,8 +34,11 @@
 @show_hwdetails(aa, user)
 @show_logs(aa, user)
 @show_graphs(aa, user)
-@show_monitoring(aa, user)
-
+@if(ViewsConfig.enabled) {
+  @for(specs <- FrameView.getViewSpecs(aa)) {
+    @frame(specs)
+  }
+}
   </div>
 </div>
 <!-- end main body -->

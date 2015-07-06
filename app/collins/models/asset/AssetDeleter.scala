@@ -8,7 +8,7 @@ import collins.models.AssetLog
 import collins.models.AssetMetaValue
 import collins.models.IpAddresses
 import collins.models.IpmiInfo
-import collins.util.plugins.Callback
+import collins.callbacks.Callback
 
 object AssetDeleter {
   def purge(asset: Asset): Boolean = {

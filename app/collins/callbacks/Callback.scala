@@ -11,35 +11,27 @@ import play.api.libs.concurrent.Akka
 import akka.actor.Props
 import akka.routing.FromConfig
 
-class CallbackManagerPlugin(app: Application) extends Plugin with AsyncCallbackManager {
-  override protected val logger = Logger("CallbackManagerPlugin")
+object Callback extends AsyncCallbackManager {
+  override protected val logger = Logger(getClass)
 
-  //this must be lazy so it gets called after the system exists
-  override lazy val changeQueue = Akka.system.actorOf(Props(CallbackMessageQueue(pcs)).
+  override val changeQueue = Akka.system.actorOf(Props(CallbackMessageQueue(pcs)).
       withRouter(FromConfig()), name = "change_queue_processor")
 
-  override def enabled: Boolean = {
-    CallbackConfig.pluginInitialize(app.configuration)
-    CallbackConfig.enabled
-  }
-
-  // overrides Plugin.onStart
-  override def onStart() {
-    if (enabled) {
+  def setupCallbacks() {
+    if (CallbackConfig.enabled) {
       logger.debug("Loading listeners")
       loadListeners()
     }
   }
 
-  // overrides Plugin.onStop
-  override def onStop() {
+  def terminateCallbacks() {
     removeListeners()
   }
 
   override protected def loadListeners(): Unit = {
-    CallbackConfig.registry.foreach { callback =>
-      logger.debug("Loading callback %s".format(callback.name))
-      setupCallback(callback)
+    CallbackConfig.registry.foreach { descriptor =>
+      logger.debug("Loading callback %s".format(descriptor.name))
+      setupCallback(descriptor)
     }
   }
 
