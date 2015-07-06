@@ -19,7 +19,6 @@ import collins.controllers.actions.SecureAction
 import collins.models.Asset
 import collins.models.IpAddresses
 import collins.models.shared.IpAddressConfig
-import collins.util.ApiTattler
 import collins.util.security.SecuritySpecification
 
 // Allocate addresses for an asset
@@ -70,7 +69,7 @@ case class CreateAction(
           case false => pool
         }
         val created = IpAddresses.createForAsset(asset, count, Some(poolName))
-        ApiTattler.notice(asset, userOption, "Created %d IP addresses".format(created.size))
+        tattler.notice("Created %d IP addresses".format(created.size), asset)
         ResponseData(Status.Created, created.toJson)
       } catch {
         case e: SQLException =>

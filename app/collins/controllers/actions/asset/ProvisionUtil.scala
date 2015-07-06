@@ -27,8 +27,6 @@ import collins.models.Truthy
 import collins.provisioning.ProvisionerPlugin
 import collins.provisioning.ProvisionerRequest
 import collins.provisioning.{ProvisionerRoleData => ProvisionerRole}
-import collins.util.ApiTattler
-import collins.util.UserTattler
 import collins.util.concurrent.BackgroundProcessor
 import collins.util.concurrent.BackgroundProcessor.SendType
 import collins.util.config.Feature
@@ -220,24 +218,21 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
   }
 
   protected def tattle(message: String, error: Boolean) {
-    val tattler = isHtml match {
-      case true => UserTattler
-      case false => ApiTattler
-    }
     if (error)
-      tattler.critical(definedAsset, userOption, message)
+      tattler.critical(message, definedAsset)
     else
-      tattler.note(definedAsset, userOption, message)
+      tattler.note(message, definedAsset)
   }
 
   protected def activateAsset(adh: ActionDataHolder): Future[Result] = {
     val ActionDataHolder(asset, pRequest, _, attribs) = adh
     val plugin = SoftLayer.plugin.get
     val slId = plugin.softLayerId(asset).get
-    if (attribs.nonEmpty)
-      AssetLifecycle.updateAssetAttributes(
-        Asset.findById(asset.getId).get, attribs
-      )
+    if (attribs.nonEmpty) {
+      val lifeCycle = new AssetLifecycle(userOption(), tattler)
+      lifeCycle.updateAssetAttributes(Asset.findById(asset.getId).get, attribs)
+    }
+    
     BackgroundProcessor.send(ActivationProcessor(slId)(request)) { res =>
       processProvisionAction(res) {
         case true =>
@@ -271,7 +266,8 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
         Future(err)
       case None =>
         if (attribs.nonEmpty) {
-          AssetLifecycle.updateAssetAttributes(
+          val lifeCycle = new AssetLifecycle(userOption(), tattler)
+          lifeCycle.updateAssetAttributes(
             Asset.findById(asset.getId).get, attribs
           )
           setAsset(Asset.findById(asset.getId))

@@ -17,6 +17,7 @@ import collins.controllers.forms.stateFormat
 import collins.controllers.forms.statusFormat
 import collins.models.State
 import collins.models.{Status => AssetStatus}
+import collins.models.AssetLifecycle
 import collins.util.MessageHelper
 import collins.util.plugins.Maintenance
 import collins.util.security.SecuritySpecification
@@ -85,10 +86,11 @@ case class UpdateForMaintenanceAction(
   override def execute(rd: RequestDataHolder) = Future { 
     rd match {
       case adh@ActionDataHolder(status, description, state) =>
+        val lifeCycle = new AssetLifecycle(userOption, tattler)
         val success = if (status.id == AssetStatus.Maintenance.get.id) {
-          Maintenance.toMaintenance(definedAsset, description, state)
+          Maintenance.toMaintenance(definedAsset, description, state, lifeCycle)
         } else {
-          Maintenance.fromMaintenance(definedAsset, description, status.name, state)
+          Maintenance.fromMaintenance(definedAsset, description, status.name, state, lifeCycle)
         }
         success match {
           case true => Api.statusResponse(true)

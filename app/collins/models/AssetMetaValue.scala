@@ -237,12 +237,12 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
         val metaName = newValue.getMeta().name
         val newValueS = if (Feature.encryptedTags.map(_.name).contains(metaName)) {
           val msg = "Value of '%s' was changed".format(metaName)
-          InternalTattler.notice(newValue.getAsset, None, msg)
+          InternalTattler.notice(msg, newValue.getAsset)
         } else {
           val msg = "Deleting old %s value '%s', setting to '%s'".format(
                     AssetMeta.findById(newValue.asset_meta_id).map(_.name).getOrElse("Unknown"),
                     oValue.value, newValue.value)
-          InternalTattler.notice(newValue.getAsset, None, msg)
+          InternalTattler.notice(msg, newValue.getAsset)
         }
     }
   }

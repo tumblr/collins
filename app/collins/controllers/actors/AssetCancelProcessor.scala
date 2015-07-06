@@ -16,6 +16,7 @@ import collins.models.AssetLifecycle
 import collins.models.MetaWrapper
 import collins.models.{Status => AStatus}
 import collins.softlayer.SoftLayerConfig
+import collins.util.InternalTattler
 import collins.util.concurrent.BackgroundProcess
 import collins.util.plugins.SoftLayer
 
@@ -48,7 +49,8 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration]
               case ticketId =>
                 Asset.inTransaction {
                   MetaWrapper.createMeta(asset, Map("CANCEL_TICKET" -> ticketId.toString))
-                  AssetLifecycle.updateAssetStatus(asset, AStatus.Cancelled, None, reason)
+                  val lifeCycle = new AssetLifecycle(None, InternalTattler)
+                  lifeCycle.updateAssetStatus(asset, AStatus.Cancelled, None, reason)
                 }
                 Await.result(plugin.setNote(n, "Cancelled: %s".format(reason)), timeout)
                 Right(ticketId)

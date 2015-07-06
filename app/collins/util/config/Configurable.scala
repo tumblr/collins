@@ -6,7 +6,7 @@ import play.api.Logger
 
 import com.typesafe.config.ConfigFactory
 
-import collins.util.SystemTattler
+import collins.util.InternalTattler
 
 trait Configurable extends ConfigAccessor with AppConfig { self =>
 
@@ -66,7 +66,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
         val msg = "Reference configuration %s not found or invalid: %s".format(
           refFilename, e.getMessage
         )
-        SystemTattler.safeError(msg)
+        InternalTattler.system(msg)
         logger.error(msg, e)
         referenceConfig = None
     }
@@ -113,7 +113,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
           val msg = "Error validating configuration for %s: %s".format(
             getClass.getName, e.getMessage
           )
-          SystemTattler.safeError(msg)
+          InternalTattler.system(msg)
           logger.error(msg, e)
           self.underlying = savedConfig
           throw e
@@ -121,7 +121,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
     } catch {
       case e: Throwable =>
         val msg = "Exception in mergeReferenceAndSave: %s".format(e.getMessage)
-        SystemTattler.safeError(msg)
+        InternalTattler.system(msg)
         logger.error(msg, e)
         throw e
     }
