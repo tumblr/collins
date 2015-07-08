@@ -12,7 +12,7 @@ parallelExecution in Test := false
 
 parallelExecution in IntegrationTest := false
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.7"
 
 scalacOptions ++= Seq("-deprecation","-unchecked", "-feature")
 
