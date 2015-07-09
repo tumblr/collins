@@ -37,9 +37,12 @@
           </button>
           <a class="navbar-brand" href="@collins.app.routes.Resources.index">Collins</a>
         </div>
+        @form(collins.app.routes.Resources.find(0,50,"DESC","and"), 'class -> "form-horizontal") {
         <div class="navbar-collapse collapse navbar-right">
           <ul class="nav navbar-nav">
-            <li class="@{if (req.path == collins.app.routes.Resources.index.toString) "active" }"><a href="@collins.app.routes.Resources.index">Search</a></li>
+            <li class="@{if (req.path == collins.app.routes.Resources.index.toString) "active" }">
+              <input type="text" class="form-control" placeholder="Search Asset Tag">
+            </li>
             @User.fromMap(req.session.data).map { u =>
               @if(Permissions.please(u, Permissions.AssetLogApi.GetAll)) {
                 <li class="@{if (req.path == collins.controllers.routes.Admin.logs.toString) "active" }"><a href="@collins.controllers.routes.Admin.logs">Logging</a></li>
@@ -59,6 +62,7 @@
             <li><a href="@collins.controllers.routes.Application.logout">Logout</a></li>
           </ul>
         </div>
+      }
       </div>
     </nav>
     } else {
