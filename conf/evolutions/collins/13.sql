@@ -2,7 +2,7 @@
 
 # --- !Ups
 
-ALTER TABLE asset_log ADD COLUMN created_by CHAR(256) NOT NULL DEFAULT '';
+ALTER TABLE asset_log ADD COLUMN created_by VARCHAR(255) NOT NULL DEFAULT '';
 
 # --- !Downs
 
