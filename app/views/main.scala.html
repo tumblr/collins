@@ -40,15 +40,17 @@
 
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav navbar-right">
-            <li>
-              @form(collins.app.routes.Resources.find(0,50,"DESC","and"), 'class -> "navbar-form navbar-left", 'role -> "search") {
-              <div class="input-group navbar-right">
-                <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
-                <input type="text" autofocus="autofocus" autocomplete="off" placeholder="Asset tag / CQL" name="query" class="form-control">
-                <span class="input-group-addon"><a href="@collins.app.routes.HelpPage.index("cql")"><i class="glyphicon glyphicon-question-sign icon-white"></i></a></span>
-              </div>
+            @if(req.path != "/") {
+              <li>
+                @form(collins.app.routes.Resources.find(0,50,"DESC","and"), 'class -> "navbar-form navbar-left", 'role -> "search") {
+                <div class="input-group navbar-right">
+                  <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+                  <input type="text" autofocus="autofocus" autocomplete="off" placeholder="Asset tag / CQL" name="query" class="form-control">
+                  <span class="input-group-addon"><a href="@collins.app.routes.HelpPage.index("cql")"><i class="glyphicon glyphicon-question-sign icon-white"></i></a></span>
+                </div>
+              }
+              </li>
             }
-            </li>
 	        @User.fromMap(req.session.data).map { u =>
 	          @if(Permissions.please(u, Permissions.AssetApi.CreateAsset)) {
 	          <li class="dropdown @{if (req.path contains "/asset/create") "active" }">
