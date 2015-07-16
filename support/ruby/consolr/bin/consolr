@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+
+require 'consolr'
+
+console = Consolr::Console.new
+console.start
