@@ -99,13 +99,8 @@ module Consolr
     end
 
     def start
-      begin
-        @opt_parser.parse! # extract from ARGV[]
-        raise OptionParser::MissingArgument, "asset tag or hostname is required" if options[:tag].nil? and options[:hostname].nil?
-      rescue Exception => e
-        puts @opt_parser
-        exit 1
-      end
+      @opt_parser.parse! # extract from ARGV[]
+      abort("Please pass either the asset tag or hostname" if options[:tag].nil? and options[:hostname].nil?
       
       abort("Cannot find #{@ipmitool_exec}") unless File.exist?(@ipmitool_exec)
 
@@ -129,16 +124,7 @@ module Consolr
       end
       
       if options[:tag] and options[:hostname]
-        node = collins.find :tag => options[:tag]
-        host = node[0].hostname
-        puts options[:hostname]
-        puts host
-        if host != options[:hostname]
-          puts "You supplied both hostname and asset tag."
-          puts "That's borderline acceptable but the asset tag doesn't match up with the hostname"
-          puts "Asset tag matches with hostname #{host}"
-          abort("Please doublecheck the hostname and tag and IDEALLY pass one of them.")
-        end
+        abort("Please pass either the hostname OR the tag but not both.")
       end
      
       # match assets like vm-67f5eh, zt-*, etc.
