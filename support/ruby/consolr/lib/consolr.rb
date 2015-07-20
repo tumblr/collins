@@ -23,14 +23,14 @@ module Consolr
         puts "Looks like a configuration file doesn't exist."
         puts "Please look at README.md on creating a configuration file"
         puts "-------"
-        exit 0
+        exit 1
       rescue ArgumentError => e
         puts "------"
         puts "Failed to load Configuration File ... "
         puts "Looks like the configuration file is not correctly formatted"
         puts "Please check if your file conforms to YAML spec"
         puts "------"
-        exit 0
+        exit 1
       end
       
       begin
@@ -40,7 +40,7 @@ module Consolr
         puts "-------"
         puts "Ensure that the ipmitool's path (#{@ipmitool_exec}) is given in the consolr.yml file and is correct"
         puts "-------"
-        exit 0
+        exit 1
       end
       
       # Will be ignored for dangerous actions, no matter what, even with --force
@@ -53,7 +53,7 @@ module Consolr
         puts "Please make sure dangerous_assets exists and is valid."
         puts "Supply them in a comma separated list."
         puts "-------"
-        exit 0
+        exit 1
       end
 
       # Dangerous actions wont be run in these status, override with --force
@@ -65,7 +65,7 @@ module Consolr
         puts "Dangerous Status -- #{@dangeous_status}"
         puts "Please specify the statuses which are dangerorous, during which dangerous shouldn't be run."
         puts "-------"
-        exit 0
+        exit 1
       end
 
       @dangerous_actions = [:off, :reboot] # Must match the symbol in options{}
@@ -76,20 +76,20 @@ module Consolr
         opt.separator  ""
         opt.separator  "Options"
         
-        opt.on("-t","--tag ASSET","asset tag") { |tag| options[:tag] = tag }
-        opt.on("-H","--hostname ASSET","asset hostname") { |hostname| options[:hostname] = hostname }
-        opt.on("-o","--on","turn on node") { options[:on] = true }
-        opt.on("-x","--off","turn off node") { options[:off] = true }
-        opt.on("-r","--reboot","restart node") { options[:reboot] = true }
-        opt.on("-i","--identify","turn on chassis UID") { options[:identify] = true }
         opt.on("-c","--console","console into node via SOL") { options[:console] = true }
-        opt.on("-k","--kick","kick if someone is hogging the console") { options[:kick] = true }
         opt.on("-d","--dangerous","list dangerous stuff") { options[:dangerous] = true }
         opt.on("-f","--force","force run dangerous actions") { options[:force] = true }
-        opt.on("-s","--sdr","Sensor Data Repository (SDR)") { options[:sdr] = true }
-        opt.on("-l","--log LOG","System Event Log (SEL) [list|clear]") { |log| options[:log] = log }
-        
         opt.on("-h","--help","help") { exit 0 }
+        opt.on("-H","--hostname ASSET","asset hostname") { |hostname| options[:hostname] = hostname }
+        opt.on("-i","--identify","turn on chassis UID") { options[:identify] = true }
+        opt.on("-k","--kick","kick if someone is hogging the console") { options[:kick] = true }
+        opt.on("-l","--log LOG","System Event Log (SEL) [list|clear]") { |log| options[:log] = log }
+        opt.on("-o","--on","turn on node") { options[:on] = true }
+        opt.on("-r","--reboot","restart node") { options[:reboot] = true }
+        opt.on("-s","--sdr","Sensor Data Repository (SDR)") { options[:sdr] = true }
+        opt.on("-t","--tag ASSET","asset tag") { |tag| options[:tag] = tag }
+        opt.on("-x","--off","turn off node") { options[:off] = true }
+        
       end
     end
     
@@ -101,10 +101,10 @@ module Consolr
     def start
       begin
         @opt_parser.parse! # extract from ARGV[]
-        raise OptionParser::MissingArgument, "asset tag or asset hostname required" if options[:tag].nil? and options[:hostname].nil?
+        raise OptionParser::MissingArgument, "asset tag or hostname is required" if options[:tag].nil? and options[:hostname].nil?
       rescue Exception => e
         puts @opt_parser
-        exit 0
+        exit 1
       end
       
       abort("Cannot find #{@ipmitool_exec}") unless File.exist?(@ipmitool_exec)
@@ -115,7 +115,7 @@ module Consolr
       
       if options[:dangerous]
         puts dangerous_body
-        exit 0
+        exit 1
       end
       
       begin
@@ -125,7 +125,20 @@ module Consolr
         puts "-------"
         puts "There was a problem setting up a connection with Collins."
         puts "-------"
-        exit 0
+        exit 1
+      end
+      
+      if options[:tag] and options[:hostname]
+        node = collins.find :tag => options[:tag]
+        host = node[0].hostname
+        puts options[:hostname]
+        puts host
+        if host != options[:hostname]
+          puts "You supplied both hostname and asset tag."
+          puts "That's borderline acceptable but the asset tag doesn't match up with the hostname"
+          puts "Asset tag matches with hostname #{host}"
+          abort("Please doublecheck the hostname and tag and IDEALLY pass one of them.")
+        end
       end
      
       # match assets like vm-67f5eh, zt-*, etc.
