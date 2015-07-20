@@ -76,7 +76,8 @@ module Consolr
         opt.separator  ""
         opt.separator  "Options"
         
-        opt.on("-a","--asset ASSET","asset tag or hostname") { |asset| options[:asset] = asset }
+        opt.on("-t","--tag ASSET","asset tag") { |tag| options[:tag] = tag }
+        opt.on("-H","--hostname ASSET","asset hostname") { |hostname| options[:hostname] = hostname }
         opt.on("-o","--on","turn on node") { options[:on] = true }
         opt.on("-x","--off","turn off node") { options[:off] = true }
         opt.on("-r","--reboot","restart node") { options[:reboot] = true }
@@ -88,7 +89,7 @@ module Consolr
         opt.on("-s","--sdr","Sensor Data Repository (SDR)") { options[:sdr] = true }
         opt.on("-l","--log LOG","System Event Log (SEL) [list|clear]") { |log| options[:log] = log }
         
-        opt.on("-h","--help","help") { puts @opt_parser }
+        opt.on("-h","--help","help") { exit 0 }
       end
     end
     
@@ -100,7 +101,7 @@ module Consolr
     def start
       begin
         @opt_parser.parse! # extract from ARGV[]
-        raise OptionParser::MissingArgument, "-a" if options[:asset].nil?
+        raise OptionParser::MissingArgument, "asset tag or asset hostname required" if options[:tag].nil? and options[:hostname].nil?
       rescue Exception => e
         puts @opt_parser
         exit 0
@@ -128,14 +129,14 @@ module Consolr
       end
      
       # match assets like vm-67f5eh, zt-*, etc.
-      nodes = options[:asset].match(/[a-zA-Z0-9\-\_]+/) ? (collins.find :tag => options[:asset]) : (collins.find :hostname => options[:asset])
+      nodes = options[:tag] ? (collins.find :tag => options[:tag]) : (collins.find :hostname => options[:hostname])
       @node = nodes.length == 1 ? nodes.first : abort("Found #{nodes.length} assets, aborting.")
       
       %x(/bin/ping -c 1 #{@node.ipmi.address})
       abort("Cannot ping IP #{@node.ipmi.address} (#{@node.tag})") unless $?.exitstatus == 0
       
       if dangerous_assets.include?(@node.tag) and dangerous_actions.any?
-        puts "Asset #{@node.tag} is a vulnerable asset. Can't execute dangerous actions."
+        puts "Asset #{@node.tag} is a crucial asset. Can't execute dangerous actions on this asset."
       end
       
       if options[:force].nil? and dangerous_actions.any? and dangerous_status.include?(@node.status)
