@@ -53,7 +53,7 @@ trait AssetApi {
   def deleteAsset(tag: String) = DeleteAction(tag, false, Permissions.AssetApi.DeleteAsset, this)
 
   //GET /api/asset/:tag/similar
-  def similar(tag: String, page: Int, size: Int, sort: String) = 
+  def similar(tag: String, page: Int, size: Int, sort: String) =
     FindSimilarAction(tag, PageParams(page, size, sort, "sparse"), Permissions.AssetApi.GetAssets, this)
 
 }

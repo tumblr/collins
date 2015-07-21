@@ -27,13 +27,15 @@ module CollinsShell
       end
     end
 
-    desc 'delete', 'delete an asset in collins (must be cancelled)'
+    desc 'delete [NUKE=BOOLEAN]', 'delete an asset in collins (must be cancelled)'
     use_collins_options
     use_tag_option(true)
+    use_nuke_option(true)
     method_option :reason, :required => true, :type => :string, :desc => 'Reason to delete asset'
+    method_option :nuke, :required => false, :type => :boolean, :default => :false, :desc => 'Destroy asset forever?'
     def delete
       call_collins get_collins_client, "delete asset" do |client|
-        if client.delete!(options.tag, :reason => options.reason) then
+        if client.delete!(options.tag, :reason => options.reason, :nuke => options.nuke) then
           say_success "deleted asset #{options.tag}"
         else
           say_error "deleting asset #{options.tag}", :exit => true
