@@ -39,7 +39,7 @@ case class DeleteAction(
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
     withValidAsset(_assetTag) { asset =>
       dataForm.bindFromRequest()(request).fold(
-        err => Left(RequestDataHolder.error400("Invalid pool or count specified")),
+        err => Left(RequestDataHolder.error400("Reason must be specified.")),
         form => {
         val (reason, nuke) = form
         val options = reason.map(r => Map("reason" -> r, "nuke" -> nuke));
