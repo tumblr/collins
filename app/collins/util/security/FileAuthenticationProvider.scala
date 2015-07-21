@@ -10,7 +10,7 @@ import collins.cache.GuavaCacheFactory
 class FileAuthenticationProvider() extends AuthenticationProvider {
 
   def userfile = FileAuthenticationProviderConfig.userfile
-  override val authType = Array("file")
+  override val authType = List("file")
 
   private lazy val userCache = GuavaCacheFactory.create(FileAuthenticationProviderConfig.cacheSpecification, FileUserLoader())
 

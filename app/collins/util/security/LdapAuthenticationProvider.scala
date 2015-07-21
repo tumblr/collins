@@ -16,7 +16,7 @@ import com.google.common.cache.CacheLoader
 class LdapAuthenticationProvider extends AuthenticationProvider {
 
   val config = LdapAuthenticationProviderConfig
-  override val authType = Array("ldap")
+  override val authType = List("ldap")
 
   // LDAP values
   def host = config.host
@@ -39,7 +39,7 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
   type Credentials = Tuple2[String,String]
   lazy val cache = GuavaCacheFactory.create(config.cacheSpecification, new CacheLoader[Credentials, Option[User]] {
     override def load(creds: Credentials): Option[User] = {
-      nativeAuthenticate(creds._1, creds._2)
+      nativeAuthenticate(creds)
     } 
   })
 
@@ -131,7 +131,8 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
     cache.get((username, password))
   }
   
-  private def nativeAuthenticate(username:String, password: String): Option[User] = {
+  private def nativeAuthenticate(creds: Credentials): Option[User] = {
+    val (username, password) = creds
     logger.info("Loading user %s from backend".format(username))
 
     getInitialContext().flatMap (withCtxt(_) { ctx =>

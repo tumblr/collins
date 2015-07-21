@@ -15,7 +15,7 @@ class AuthenticationException(msg: String) extends Exception(msg)
 /**
  * Provides authentication by a variety of methods and caching logic (implements decorator pattern)
  */
-class MixedAuthenticationProvider(types: Array[String]) extends AuthenticationProvider {
+class MixedAuthenticationProvider(types: List[String]) extends AuthenticationProvider {
   
   private val providers = types.map({
      case "default" => {

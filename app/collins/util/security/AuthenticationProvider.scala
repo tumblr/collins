@@ -8,7 +8,7 @@ import collins.cache.GuavaCacheFactory
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger
-  def authType: Array[String]
+  def authType: List[String]
   def authenticate(username: String, password: String): Option[User]
 }
 
@@ -18,7 +18,7 @@ object AuthenticationProvider {
   lazy private val permissionsCache =   
     GuavaCacheFactory.create(AuthenticationProviderConfig.permissionsCacheSpecification, PermissionsLoader())
 
-  def get(types: Array[String]): AuthenticationProvider = {
+  def get(types: List[String]): AuthenticationProvider = {
     new MixedAuthenticationProvider(types)
   }
 
