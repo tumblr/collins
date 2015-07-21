@@ -25,7 +25,6 @@ import collins.models.logs.LogFormat
 import collins.models.logs.LogMessageType
 import collins.models.logs.LogSource
 import collins.util.MessageHelper
-import collins.util.TattlerHelper
 import collins.util.config.Feature
 import collins.util.security.SecuritySpecification
 
@@ -90,7 +89,7 @@ case class CreateAction(
       error => Left(RequestDataHolder.error400(MessageError)),
       success => logFromRequestData(success) { case(messageBody, messageSource, messageType) =>
         val msg = formatStringMessage(messageBody)
-        AssetLog(asset, msg, LogFormat.PlainText, messageSource, messageType)
+        AssetLog(asset, userOption().map { _.username }.getOrElse(""), msg, LogFormat.PlainText, messageSource, messageType)
       }
     )
   }
@@ -107,7 +106,7 @@ case class CreateAction(
       case None => Left(RequestDataHolder.error400(MessageError))
       case Some(message) =>
         logFromRequestData(message, osource, otype) { case(messageBody,messageSource,messageType) =>
-          AssetLog(asset, messageBody, LogFormat.Json, LogSource.Api, messageType)
+          AssetLog(asset, userOption().map { _.username }.getOrElse(""), messageBody, LogFormat.Json, messageSource, messageType)
         }
     }
   }
@@ -127,8 +126,7 @@ case class CreateAction(
 
   // Given a text message, strip out bad HTML and include the user in the text
   protected def formatStringMessage(txt: String): String = {
-    val escapedMessage = Jsoup.clean(txt, Whitelist.basic())
-    TattlerHelper.message(userOption, escapedMessage)
+      Jsoup.clean(txt, Whitelist.basic())
   }
 
   // Given some form data provide defaults and convert things to None when invalid

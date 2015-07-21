@@ -37,26 +37,37 @@
           </button>
           <a class="navbar-brand" href="@collins.app.routes.Resources.index">Collins</a>
         </div>
-        <div class="navbar-collapse collapse navbar-right">
-          <ul class="nav navbar-nav">
-            <li class="@{if (req.path == collins.app.routes.Resources.index.toString) "active" }"><a href="@collins.app.routes.Resources.index">Search</a></li>
-            @User.fromMap(req.session.data).map { u =>
-              @if(Permissions.please(u, Permissions.AssetLogApi.GetAll)) {
-                <li class="@{if (req.path == collins.controllers.routes.Admin.logs.toString) "active" }"><a href="@collins.controllers.routes.Admin.logs">Logging</a></li>
+
+        <div class="collapse navbar-collapse">
+          <ul class="nav navbar-nav navbar-right">
+            @if(req.path != "/") {
+              <li>
+                @form(collins.app.routes.Resources.find(0,50,"DESC","and"), 'class -> "navbar-form navbar-left", 'role -> "search") {
+                <div class="input-group navbar-right">
+                  <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+                  <input type="text" autofocus="autofocus" autocomplete="off" placeholder="Asset tag / CQL" name="query" class="form-control">
+                  <span class="input-group-addon"><a href="@collins.app.routes.HelpPage.index("cql")"><i class="glyphicon glyphicon-question-sign icon-white"></i></a></span>
+                </div>
               }
-              @if(Permissions.please(u, Permissions.AssetApi.CreateAsset)) {
-              <li class="dropdown @{if (req.path contains "/asset/create") "active" }">
-                <a href="#" class="dropdown-toggle" data-toggle="dropdown">Create <b class="caret"></b></a>
-                <ul class="dropdown-menu">
-                  @AssetType.find().filter(_.name != "SERVER_NODE").map { t =>
-                    <li><a href="@collins.app.routes.Resources.displayCreateForm(t.name)">@t.label</a></li>
-                  }
-                </ul>
               </li>
-              }
             }
-            <li><a href="@collins.app.routes.HelpPage.index("default")"><i class="glyphicon glyphicon-question-sign icon-white"></i></a></li>
+	        @User.fromMap(req.session.data).map { u =>
+	          @if(Permissions.please(u, Permissions.AssetApi.CreateAsset)) {
+	          <li class="dropdown @{if (req.path contains "/asset/create") "active" }">
+	            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Create <b class="caret"></b></a>
+	            <ul class="dropdown-menu">
+	              @AssetType.find().filter(_.name != "SERVER_NODE").map { t =>
+	                <li><a href="@collins.app.routes.Resources.displayCreateForm(t.name)">@t.label</a></li>
+	              }
+	            </ul>
+              </li>
+	          }
+	          @if(Permissions.please(u, Permissions.AssetLogApi.GetAll)) {
+	            <li class="@{if (req.path == collins.controllers.routes.Admin.logs.toString) "active" }"><a href="@collins.controllers.routes.Admin.logs">Logging</a></li>
+	          }
+	        }
             <li><a href="@collins.controllers.routes.Application.logout">Logout</a></li>
+            <li><a href="@collins.app.routes.HelpPage.index("default")"><i class="glyphicon glyphicon-question-sign icon-white"></i></a></li>
           </ul>
         </div>
       </div>

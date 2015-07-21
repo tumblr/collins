@@ -21,23 +21,35 @@ class AssetLogSpec extends mutable.Specification {
     }
 
     "The api should" in {
-      "Support getters/finders" in new WithApplication {
+      "Support getters/finders" in {
 
         "find with an asset" in new concretelog {
           val logs = AssetLog.list(Some(asset))
           logs.total mustEqual 1
-          logs.items(0).getFormat.id mustEqual format
+          logs.items(0).getFormat.id mustEqual format.id
           logs.items(0).message mustEqual message
         }
 
         "find with another asset" in new mocklog {
+          AssetLog.create(newLog)
           val logs = AssetLog.list(Some(asset))
           logs.total mustEqual 1
           logs.items(0).getFormat mustEqual format
           logs.items(0).message mustEqual msg
         }
+        
+        "find with a negating filter and no asset" in new concretelog {
+          AssetLog.create(newLog)
+          val alert = AssetLog.list(None,0,10,"DESC","!Informational")
+          alert.total mustEqual 1
+          alert.items(0).isAlert must beTrue
+          val info = AssetLog.list(None,0,10,"DESC","!Alert")
+          info.total mustEqual 1
+          info.items(0).isInformational must beTrue
+        }
 
         "find with a filter and no asset" in new concretelog {
+          AssetLog.create(newLog)
           val alert = AssetLog.list(None,0,10,"DESC","Alert")
           alert.total mustEqual 1
           alert.items(0).isAlert must beTrue
@@ -53,16 +65,8 @@ class AssetLogSpec extends mutable.Specification {
           info.items(0).getAssetId mustEqual asset_id
         }
 
-        "find with a negating filter and no asset" in new concretelog {
-          val alert = AssetLog.list(None,0,10,"DESC","!Informational")
-          alert.total mustEqual 1
-          alert.items(0).isAlert must beTrue
-          val info = AssetLog.list(None,0,10,"DESC","!Alert")
-          info.total must be_>=(1L)
-          info.items(0).isInformational must beTrue
-        }
-
         "find with a negating filter and an asset" in new mocklog {
+          AssetLog.create(newLog)
           val alert = AssetLog.list(Some(asset),0,10,"DESC","!Informational")
           alert.total mustEqual 1
           alert.items(0).isAlert must beTrue
@@ -70,7 +74,8 @@ class AssetLogSpec extends mutable.Specification {
           AssetLog.list(Some(asset),0,10,"DESC","!Alert").total mustEqual 0
         }
 
-        "find with a sort" in {
+        "find with a sort" in new concretelog {
+          AssetLog.create(newLog)
           val desc = AssetLog.list(None, 0, 10, "DESC")
           desc.items(0).getId must be_>(desc.items(1).getId)
           val asc = AssetLog.list(None, 0, 10, "ASC")
@@ -81,32 +86,32 @@ class AssetLogSpec extends mutable.Specification {
     }
   } // Asset should
 
-  trait mocklog extends Scope {
+  trait mocklog extends WithApplication {
     val tag = "tumblrtag15"
     def createAsset = {
       Asset.create(Asset(tag, Status.Incomplete.get, AssetType.ServerNode.get))
       Asset.findByTag(tag).get
     }
-    val asset = Asset.findByTag(tag) match {
+    def asset = Asset.findByTag(tag) match {
       case None => createAsset
       case Some(a) => a
     }
-    val asset_id = asset.getId
-    val msg = "Hello World"
-    val format = LogFormat.PlainText
-    val source = LogSource.Internal
-    val newLog = AssetLog.alert(asset, msg, format, source)
+    def asset_id = asset.getId
+    def msg = "Hello World"
+    def format = LogFormat.PlainText
+    def source = LogSource.Internal
+    def newLog = AssetLog.alert(asset, "tumblr", msg, format, source)
   }
 
-  trait concretelog extends Scope {
-    val id = 1
-    val asset_id = 1L
-    val format = 0
-    val source = 0
-    val message_type = 6 // Informational
-    val asset = Asset.findById(1).get
-    val message = "Automatically created by database migration"
+  trait concretelog extends WithApplication {
+    def id = 1
+    def asset_id = 1L
+    def format = LogFormat.PlainText
+    def source = LogSource.Internal
+    def message_type = 6 // Informational
+    def asset = Asset.findById(1).get
+    def message = "Automatically created by database migration"
+    def newLog = AssetLog.alert(asset, "tumblr", "Spec error message", format, source)
   }
-
 
 }

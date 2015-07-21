@@ -1,5 +1,7 @@
 package collins.util.security
 
+import com.google.common.cache.CacheBuilderSpec
+
 import collins.util.config.ConfigValue
 import collins.util.config.Configurable
 import collins.validation.File
@@ -9,15 +11,13 @@ object AuthenticationProviderConfig extends Configurable {
   override val referenceConfigFilename = "authentication_reference.conf"
 
   def adminGroup = getStringSet("adminGroup").map(_.toLowerCase)
-  def cacheCredentials = getBoolean("cacheCredentials", false)
-  def cacheTimeout = getMilliseconds("cacheTimeout").getOrElse(0L)
-  def cachePermissionsTimeout = getMilliseconds("cachePermissionsTimeout").getOrElse(30000L)
+  def permissionsCacheSpecification = getString("permissionsCacheSpecification", "expireAfterWrite=30s")
   def permissionsFile = getString("permissionsFile")(ConfigValue.Required).get
   def authType = getString("type", "default").split(",").map(_.trim.toLowerCase)
 
   override protected def validateConfig() {
     File.requireFileIsReadable(permissionsFile)
-    require(cachePermissionsTimeout > 0, "cachePermissionsTimeout must be > 0")
+    CacheBuilderSpec.parse(permissionsCacheSpecification)
     PermissionsLoader()
   }
 }
@@ -28,10 +28,12 @@ object FileAuthenticationProviderConfig extends Configurable {
   override val referenceConfigFilename = "authentication_reference.conf"
 
   def userfile = getString("userfile")(ConfigValue.Required).get
+  def cacheSpecification = getString("cacheSpecification", "expireAfterWrite=30s")
 
   override protected def validateConfig() {
     if (AuthenticationProviderConfig.authType.contains("file")) {
       logger.debug("User authentication file " + userfile)
+      CacheBuilderSpec.parse(cacheSpecification)
       File.requireFileIsReadable(userfile)
     }
   }
@@ -46,6 +48,7 @@ object LdapAuthenticationProviderConfig extends Configurable {
   val RFC_2307_BIS = "rfc2307bis"
   val ValidSchemas = Set(RFC_2307, RFC_2307_BIS)
 
+  def cacheSpecification = getString("cacheSpecification", "expireAfterWrite=30s")
   def groupsub = getString("groupsub")(ConfigValue.Required).get
   def groupAttribute = getString("groupAttribute")(ConfigValue.Required).get
   def host = getString("host")(ConfigValue.Required).get
@@ -65,6 +68,7 @@ object LdapAuthenticationProviderConfig extends Configurable {
 
   override protected def validateConfig() {
     if (AuthenticationProviderConfig.authType.contains("ldap")) {
+      CacheBuilderSpec.parse(cacheSpecification)
       host
       if (!ValidSchemas.contains(schema)) {
         throw globalError("%s is not one of %s".format(

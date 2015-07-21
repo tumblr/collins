@@ -83,7 +83,8 @@ case class CreateAction(
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
     case ActionDataHolder(assetTag, genIpmi, assetType, assetStatus) =>
-      AssetLifecycle.createAsset(assetTag, assetType, genIpmi, assetStatus) match {
+      val lifeCycle = new AssetLifecycle(userOption(), tattler)
+      lifeCycle.createAsset(assetTag, assetType, genIpmi, assetStatus) match {
         case Left(throwable) =>
           handleError(
             RequestDataHolder.error500("Could not create asset: %s".format(throwable.getMessage))

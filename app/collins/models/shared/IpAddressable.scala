@@ -46,12 +46,6 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   // abstract
   protected def getConfig()(implicit scope: Option[String]): Option[AddressPool]
 
-  override def cacheKeys(a: T) = Seq(
-    findByAssetKey.format(a.asset_id),
-    findAllByAssetKey.format(a.asset_id),
-    getKey.format(a.id)
-  )
-
   protected[this] val logger = Logger.logger
 
   override def delete(a: T): Int = inTransaction {
@@ -66,17 +60,12 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     }
   }
 
-  def findAllByAsset(asset: Asset, checkCache: Boolean = true)(implicit mf: Manifest[T]): Seq[T] = {
-    lazy val op = tableDef.where(a => a.asset_id === asset.getId).toList
-    if (checkCache) {
-      getOrElseUpdate(findAllByAssetKey.format(asset.getId)) (op)
-    } else inTransaction {op}
+  def findAllByAsset(asset: Asset, checkCache: Boolean = true): Seq[T] = inTransaction { 
+    tableDef.where(a => a.asset_id === asset.getId).toList 
   }
 
-  def findByAsset(asset: Asset)(implicit mf: Manifest[T]): Option[T] = {
-    getOrElseUpdate(findByAssetKey.format(asset.getId)) {
-      tableDef.where(a => a.asset_id === asset.getId).headOption
-    }
+  def findByAsset(asset: Asset)(implicit mf: Manifest[T]): Option[T] = inTransaction {
+    tableDef.where(a => a.asset_id === asset.getId).headOption
   }
 
   def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long,Long,Long] = {

@@ -18,7 +18,6 @@ import collins.controllers.validators.ParamValidation
 import collins.models.Asset
 import collins.models.IpAddresses
 import collins.models.shared.IpAddressConfig
-import collins.util.ApiTattler
 import collins.util.IpAddress
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
@@ -100,12 +99,12 @@ case class UpdateAction(
   protected def handleUpdate(asset: Asset, address: IpAddresses) = {
     IpAddresses.update(address) match {
       case 1 =>
-        ApiTattler.notice(asset, userOption, "Updated IP address %s".format(address.dottedAddress))
+        tattler.notice("Updated IP address %s".format(address.dottedAddress), asset)
         (Status.Ok, true)
       case _ =>
-        ApiTattler.warning(asset, userOption, "Failed to update address %s".format(
+        tattler.warning("Failed to update address %s".format(
           address.dottedAddress
-        ))
+        ), asset)
         (Status.InternalServerError, false)
     }
   }
@@ -113,12 +112,12 @@ case class UpdateAction(
   protected def handleCreate(asset: Asset, address: IpAddresses) = {
     IpAddresses.create(address).id match {
       case fail if fail <= 0 =>
-        ApiTattler.warning(asset, userOption, "Failed to create address %s".format(
+        tattler.warning("Failed to create address %s".format(
           address.dottedAddress
-        ))
+        ), asset)
         (Status.InternalServerError, false)
       case success =>
-        ApiTattler.notice(asset, userOption, "Created IP address %s".format(address.dottedAddress))
+        tattler.notice("Created IP address %s".format(address.dottedAddress), asset)
         (Status.Created, true)
     }
   }

@@ -4,15 +4,15 @@ resolvers += "Sonatype-public" at "http://oss.sonatype.org/content/groups/public
 
 resolvers += "Restlet repository" at "http://maven.restlet.org"
 
-parallelExecution in Test := false
-
 Keys.fork in Test := true
 
 javaOptions in Test := Seq("-Dconfig.file=conf/test.conf")
 
+parallelExecution in Test := false
+
 parallelExecution in IntegrationTest := false
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.7"
 
 scalacOptions ++= Seq("-deprecation","-unchecked", "-feature")
 

@@ -1,19 +1,18 @@
 package collins.util.security
 
+import java.io.File
 import java.security.MessageDigest
-
-import collins.cache.ConfigCache
 import collins.models.User
 import collins.models.UserImpl
-
 import sun.misc.BASE64Encoder
+import collins.cache.GuavaCacheFactory
 
 class FileAuthenticationProvider() extends AuthenticationProvider {
 
   def userfile = FileAuthenticationProviderConfig.userfile
   override val authType = Array("file")
 
-  private val userCache = ConfigCache.create(10000L, FileUserLoader())
+  private lazy val userCache = GuavaCacheFactory.create(FileAuthenticationProviderConfig.cacheSpecification, FileUserLoader())
 
   override def authenticate(username: String, password: String): Option[User] = {
     user(username) match {

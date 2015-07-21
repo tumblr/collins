@@ -83,12 +83,6 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     a.priority is(indexed)
   ))
 
-  override def cacheKeys(a: AssetMeta) = Seq(
-    "AssetMeta.findByName(%s)".format(a.name),
-    "AssetMeta.findById(%d)".format(a.id),
-    "AssetMeta.findAll",
-    "AssetMeta.getViewable"
-  )
   override def delete(a: AssetMeta): Int = inTransaction {
     afterDeleteCallback(a) {
       tableDef.deleteWhere(p => p.id === a.id)
@@ -99,11 +93,11 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     name != null && name.nonEmpty && NameR(name).matches
   }
 
-  def findAll(): Seq[AssetMeta] = getOrElseUpdate("AssetMeta.findAll") {
+  def findAll(): Seq[AssetMeta] = inTransaction {
     from(tableDef)(s => select(s)).toList
   }
 
-  def findById(id: Long) = getOrElseUpdate("AssetMeta.findById(%d)".format(id)) {
+  def findById(id: Long) = inTransaction {
     tableDef.lookup(id)
   }
 
@@ -115,20 +109,17 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
       description = name,
       value_type = valueType.id
     ))
-    findByName(name).get
   }
 
   override def get(a: AssetMeta) = findById(a.id).get
 
-  def findByName(name: String): Option[AssetMeta] = {
-    getOrElseUpdate("AssetMeta.findByName(%s)".format(name.toUpperCase)) {
-      tableDef.where(a =>
-        a.name.toUpperCase === name.toUpperCase
-      ).headOption
-    }
+  def findByName(name: String): Option[AssetMeta] = inTransaction {
+    tableDef.where(a =>
+      a.name.toUpperCase === name.toUpperCase
+    ).headOption
   }
 
-  def getViewable(): Seq[AssetMeta] = getOrElseUpdate("AssetMeta.getViewable") {
+  def getViewable(): Seq[AssetMeta] = inTransaction {
     from(tableDef)(a =>
       where(a.priority gt -1)
       select(a)
@@ -211,7 +202,5 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     def getValues(): Seq[AssetMeta] = {
       Seq(BaseDescription,BaseProduct,BaseVendor,BaseSerial)
     }
-
-
   }
 }
