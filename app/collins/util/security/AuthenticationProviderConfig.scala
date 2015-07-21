@@ -13,7 +13,7 @@ object AuthenticationProviderConfig extends Configurable {
   def adminGroup = getStringSet("adminGroup").map(_.toLowerCase)
   def permissionsCacheSpecification = getString("permissionsCacheSpecification", "expireAfterWrite=30s")
   def permissionsFile = getString("permissionsFile")(ConfigValue.Required).get
-  def authType = getString("type", "default").split(",").map(_.trim.toLowerCase)
+  def authType = getString("type", "default").split(",").toList.map(_.trim.toLowerCase)
 
   override protected def validateConfig() {
     File.requireFileIsReadable(permissionsFile)
