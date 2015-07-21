@@ -5,6 +5,10 @@ import scala.concurrent.Future
 import play.api.data.Form
 import play.api.data.Forms.optional
 import play.api.data.Forms.text
+import play.api.data.Forms.tuple
+import play.api.data.Forms.nonEmptyText
+import play.api.data.Forms.boolean
+import play.api.data.Forms.default
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
@@ -19,43 +23,41 @@ import collins.validation.StringUtil
 
 case class DeleteAction(
   _assetTag: String,
-  realDelete: Boolean,
+  nuke: Boolean,
   spec: SecuritySpecification,
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction {
 
-  case class ActionDataHolder(options: Map[String,String]) extends RequestDataHolder
+  case class ActionDataHolder(reason: String, nuke: Boolean) extends RequestDataHolder
 
-  lazy val reason: Option[String] = Form(
-    "reason" -> optional(text(1))
-  ).bindFromRequest()(request).fold(
-    err => None,
-    str => str.flatMap(StringUtil.trim(_))
-  )
+  val dataForm = Form(tuple(
+    "reason" -> nonEmptyText,
+    "nuke" -> default(boolean, false)
+  ))
 
   override def validate(): Either[RequestDataHolder,RequestDataHolder] = {
     withValidAsset(_assetTag) { asset =>
-      if (realDelete && !reason.isDefined) {
-        Left(RequestDataHolder.error400("reason must be specified"))
-      } else {
-        val options = reason.map(r => Map("reason" -> r)).getOrElse(Map.empty)
-        Right(ActionDataHolder(options))
-      }
-    }
+      dataForm.bindFromRequest()(request).fold(
+        err => Left(RequestDataHolder.error400("Reason must be specified.")),
+        form => {
+        val (reason, nuke) = form
+        val options = reason.map(r => Map("reason" -> r, "nuke" -> nuke));
+        Right(ActionDataHolder(reason, nuke))
+    })}
   }
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
-    case ActionDataHolder(options) =>
+    case ActionDataHolder(reason, nuke) =>
       val lifeCycle = new AssetLifecycle(userOption(), tattler)
-      lifeCycle.decommissionAsset(definedAsset, options) match {
+      lifeCycle.decommissionAsset(definedAsset, reason) match {
         case Left(throwable) =>
           handleError(
             RequestDataHolder.error409("Illegal state transition: %s".format(throwable.getMessage))
           )
         case Right(status) =>
-          if (realDelete) {
+          if (nuke) {
             val errMsg = "User deleted asset %s. Reason: %s".format(
-              definedAsset.tag, options.get("reason").getOrElse("Unspecified")
+              definedAsset.tag, reason
             )
             tattler.error(errMsg, definedAsset)
             Api.statusResponse(AssetDeleter.purge(definedAsset))
