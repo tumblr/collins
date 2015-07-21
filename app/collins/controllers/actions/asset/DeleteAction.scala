@@ -49,7 +49,7 @@ case class DeleteAction(
   override def execute(rd: RequestDataHolder) = Future { rd match {
     case ActionDataHolder(reason, nuke) =>
       val lifeCycle = new AssetLifecycle(userOption(), tattler)
-      lifeCycle.decommissionAsset(definedAsset, reason, nuke) match {
+      lifeCycle.decommissionAsset(definedAsset, reason) match {
         case Left(throwable) =>
           handleError(
             RequestDataHolder.error409("Illegal state transition: %s".format(throwable.getMessage))

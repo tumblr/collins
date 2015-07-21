@@ -77,7 +77,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     }
   }
 
-  def decommissionAsset(asset: Asset, reason: String, nuke: Boolean): AssetLifecycle.Status[Boolean] = {
+  def decommissionAsset(asset: Asset, reason: String): AssetLifecycle.Status[Boolean] = {
     try {
       Asset.inTransaction {
         tattler.informational(reason, asset)
