@@ -61,14 +61,6 @@ object State extends Schema with AnormAdapter[State] {
     s.status is(indexed)
   ))
 
-  override def cacheKeys(s: State) = Seq(
-    "State.find",
-    "State.findById(%d)".format(s.id),
-    "State.findByName(%s)".format(s.name.toLowerCase),
-    "State.findByAnyStatus",
-    "State.findByStatus(%d)".format(s.status)
-  )
-
   override def delete(state: State): Int = inTransaction {
     afterDeleteCallback(state) {
       tableDef.deleteWhere(s => s.id === state.id)
@@ -77,31 +69,34 @@ object State extends Schema with AnormAdapter[State] {
 
   def empty = new State(0, ANY_STATUS, "INVALID", "Invalid Label", "Invalid Description")
 
-  def find(): List[State] = getOrElseUpdate("State.find") {
+  def find(): List[State] = inTransaction {
     from(tableDef)(s => select(s)).toList
   }
-  def findById(id: Int): Option[State] = getOrElseUpdate("State.findById(%d)".format(id)) {
+
+  def findById(id: Int): Option[State] = inTransaction {
     tableDef.lookup(id)
   }
-  def findByName(name: String): Option[State] =
-    getOrElseUpdate("State.findByName(%s)".format(name.toLowerCase)) {
-      tableDef.where(s =>
-        s.name.toLowerCase === name.toLowerCase
-      ).headOption
-    }
-  def findByAnyStatus(): List[State] =
-    getOrElseUpdate("State.findByAnyStatus") {
-      tableDef.where(s =>
-        s.status === ANY_STATUS
-      ).toList
-    }
-  def findByStatus(status: Status): List[State] =
-    getOrElseUpdate("State.findByStatus(%d)".format(status.id)) {
-      tableDef.where(s =>
-        s.status === status.id
-      ).toList
-    }
+
+  def findByName(name: String): Option[State] = inTransaction {
+    tableDef.where(s =>
+      s.name.toLowerCase === name.toLowerCase
+    ).headOption
+  }
+
+  def findByAnyStatus(): List[State] = inTransaction {
+    tableDef.where(s =>
+      s.status === ANY_STATUS
+    ).toList
+  }
+  
+  def findByStatus(status: Status): List[State] = inTransaction {
+    tableDef.where(s =>
+      s.status === status.id
+    ).toList
+  }
+  
   override def get(state: State): State = findById(state.id).get
+  
   def isSystemState(state: State): Boolean = state.id < 7
 }
 

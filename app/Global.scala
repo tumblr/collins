@@ -1,3 +1,5 @@
+import scala.concurrent.Future
+
 import play.api.Application
 import play.api.GlobalSettings
 import play.api.Logger
@@ -6,8 +8,10 @@ import play.api.Play
 import play.api.mvc.Handler
 import play.api.mvc.RequestHeader
 import play.api.mvc.Results
+import play.api.mvc.Result
+
 import collins.controllers.ApiResponse
-import collins.database.DatabasePlugin
+import collins.db.DB
 import collins.util.BashOutput
 import collins.util.CryptoAccessor
 import collins.util.JsonOutput
@@ -18,17 +22,36 @@ import collins.util.config.CryptoConfig
 import collins.util.security.AuthenticationAccessor
 import collins.util.security.AuthenticationProvider
 import collins.util.security.AuthenticationProviderConfig
-import scala.concurrent.Future
-import play.api.mvc.SimpleResult
+
+import collins.logging.LoggingHelper
+import collins.util.config.Registry
+import collins.solr.SolrHelper
+import collins.metrics.MetricsReporter
+import collins.callbacks.Callback
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
 
+  override def beforeStart(app: Application) {
+    // initialize DB session factory creation
+    DB.initialize(app)
+  }
+
   override def onStart(app: Application) {
-    val auth = AuthenticationProvider.get(AuthenticationProviderConfig.authType)
-    val key = CryptoConfig.key
-    setAuthentication(auth)
-    setCryptoKey(key)
+    Registry.setupRegistry(app)
+    setAuthentication(AuthenticationProvider.get(AuthenticationProviderConfig.authType))
+    setCryptoKey(CryptoConfig.key)
+    LoggingHelper.setupLogging(app)
+    SolrHelper.setupSolr()
+    MetricsReporter.setupMetrics()
+    Callback.setupCallbacks()
+  }
+  
+  override def onStop(app: Application) {
+    DB.shutdown()
+    Registry.terminateRegistry()
+    SolrHelper.terminateSolr()
+    Callback.terminateCallbacks()
   }
 
   override def onRouteRequest(request: RequestHeader): Option[Handler] = {
@@ -43,12 +66,10 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     } else {
       super.onRouteRequest(request)
     }
-
-    Play.maybeApplication.flatMap{_.plugin[DatabasePlugin]}.filter{_.enabled}.foreach{_.closeConnection}
     response
   }
 
-  override def onError(request: RequestHeader, ex: Throwable): Future[SimpleResult] = {
+  override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
     logger.warn("Unhandled exception", ex)
     val debugOutput = Play.maybeApplication.map {
       case app if app.mode == Mode.Dev => true
@@ -65,7 +86,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  override def onHandlerNotFound(request: RequestHeader): Future[SimpleResult] = {
+  override def onHandlerNotFound(request: RequestHeader): Future[Result] = {
     logger.info("Unhandled URI: " + request.uri)
     val msg = "The specified path was invalid: " + request.path
     val status = Results.NotFound
@@ -79,7 +100,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
   }
 
-  override def onBadRequest(request: RequestHeader, error: String): Future[SimpleResult] = {
+  override def onBadRequest(request: RequestHeader, error: String): Future[Result] = {
     val msg = "Bad Request, parsing failed. " + error
     val status = Results.BadRequest
     val err = None
@@ -111,6 +132,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
       case false => authentication = Some(auth)
     }
   }
+
   def getAuthentication() = {
     val authen = authentication.getOrElse(throw new IllegalStateException("Authentication Provider not defined"))
     if (AuthenticationProviderConfig.authType != authen.authType) {
@@ -124,5 +146,4 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     }
     authen
   }
-
 }

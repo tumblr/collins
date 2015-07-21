@@ -64,27 +64,20 @@ object Status extends Schema with AnormAdapter[Status] {
     s.name is(unique)
   ))
 
-  override protected def cacheKeys(s: Status) = Seq(
-    "Status.find",
-    "Status.findById(%d)".format(s.id),
-    "Status.findByName(%s)".format(s.name.toLowerCase)
-  )
-
-  def find(): List[Status] = getOrElseUpdate("Status.find") {
+  def find(): List[Status] = inTransaction {
     from(tableDef)(s => select(s)).toList
   }
-  def findById(id: Int): Option[Status] = getOrElseUpdate("Status.findById(%d)".format(id)) {
+  
+  def findById(id: Int): Option[Status] = inTransaction {
     tableDef.lookup(id)
   }
 
   override def get(s: Status) = findById(s.id).get
 
-  def findByName(name: String): Option[Status] = {
-    getOrElseUpdate("Status.findByName(%s)".format(name.toLowerCase)) {
-      tableDef.where(s =>
-        s.name.toLowerCase === name.toLowerCase
-      ).headOption
-    }
+  def findByName(name: String): Option[Status] = inTransaction {
+    tableDef.where(s =>
+      s.name.toLowerCase === name.toLowerCase
+    ).headOption
   }
 
   override def delete(s: Status): Int = inTransaction {

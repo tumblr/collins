@@ -1,11 +1,9 @@
 @(aa: AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
-@import collins.util.plugins.GraphPlugin
+@import collins.graphs.GraphView
 
-@GraphPlugin.option.map { p =>
-@if(p.isGraphable(aa.asset)){
+@if(GraphView.isGraphable(aa.asset)){
 <div class="tab-pane" id="graph-info">
-  @p.get(aa.asset)
+  @GraphView.get(aa.asset)
 </div>
-}
 }

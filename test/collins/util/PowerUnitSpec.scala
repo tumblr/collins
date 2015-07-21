@@ -79,7 +79,7 @@ class PowerUnitSpec extends Specification with DataTables {
   "Power Components" should {
     "have predictable alphabetic names" in new PowerUnitScope(count = 2, alphabetic = true) {
       var found = 0
-      units.zipWithIndex.foreach { case(unit, id) =>
+      units.toSeq.zipWithIndex.foreach { case(unit, id) =>
         val sid = id match {
           case 0 => "A"
           case 1 => "B"
@@ -91,6 +91,7 @@ class PowerUnitSpec extends Specification with DataTables {
       }
       found mustEqual 2
     }
+    
     "have predictable numeric names" in new PowerUnitScope(count = 2, alphabetic = false) {
       strip(units.head).sid.toInt mustEqual 0
       outlet(units.head).sid.toInt mustEqual 0
@@ -98,11 +99,6 @@ class PowerUnitSpec extends Specification with DataTables {
       strip(units.last).sid.toInt mustEqual 1
       outlet(units.last).sid.toInt mustEqual 1
       pdu(units.last).sid.toInt mustEqual 1
-    }
-    "support labels via messages" in new PowerUnitScope() {
-      strips must have(!_.label.startsWith(config.parentKey))
-      outlets must have(!_.label.startsWith(config.parentKey))
-      pdus must have(!_.label.startsWith(config.parentKey))
     }
   }
 

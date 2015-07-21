@@ -44,7 +44,7 @@ object CryptoCodec {
     Play.maybeApplication.map { app =>
       app.global match {
         case c: CryptoAccessor => c.getCryptoKey()
-        case _ => throw new RuntimeException("Application is not a CryptoAccessor")
+        case _ => throw new RuntimeException("Application global settings is not a CryptoAccessor")
       }
     }.getOrElse(throw new RuntimeException("Not in application context"))
   }

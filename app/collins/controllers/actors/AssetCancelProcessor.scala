@@ -2,6 +2,8 @@ package collins.controllers.actors
 
 import java.util.concurrent.TimeUnit
 
+import scala.Left
+import scala.Right
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.FiniteDuration
@@ -14,10 +16,11 @@ import collins.controllers.ResponseData
 import collins.models.Asset
 import collins.models.AssetLifecycle
 import collins.models.MetaWrapper
-import collins.models.{Status => AStatus}
+import collins.models.{ Status => AStatus }
 import collins.softlayer.SoftLayerConfig
+import collins.softlayer.SoftLayer
+import collins.util.InternalTattler
 import collins.util.concurrent.BackgroundProcess
-import collins.util.plugins.SoftLayer
 
 case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration] = None)(implicit req: Request[AnyContent])
   extends BackgroundProcess[Either[ResponseData,Long]]
@@ -39,21 +42,23 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration]
     reasonOpt.fold(noReason){ r =>
       val reason = r.trim
       Api.withAssetFromTag(tag) { asset =>
-        SoftLayer.pluginEnabled.fold(softlayerDisabled){ plugin =>
+        if (SoftLayerConfig.enabled) {
+          SoftLayer.softLayerId(asset).fold(nonSoftlayerAsset) { n =>
 
-          plugin.softLayerId(asset).fold(nonSoftlayerAsset) { n =>
-
-            Await.result(plugin.cancelServer(n, reason), timeout) match  {
+            Await.result(SoftLayer.cancelServer(n, reason), timeout) match  {
               case 0L => cancellationError
               case ticketId =>
                 Asset.inTransaction {
                   MetaWrapper.createMeta(asset, Map("CANCEL_TICKET" -> ticketId.toString))
-                  AssetLifecycle.updateAssetStatus(asset, AStatus.Cancelled, None, reason)
+                  val lifeCycle = new AssetLifecycle(None, InternalTattler)
+                  lifeCycle.updateAssetStatus(asset, AStatus.Cancelled, None, reason)
                 }
-                Await.result(plugin.setNote(n, "Cancelled: %s".format(reason)), timeout)
+                Await.result(SoftLayer.setNote(n, "Cancelled: %s".format(reason)), timeout)
                 Right(ticketId)
             }
-          }
+          }          
+        } else {
+          softlayerDisabled
         }
       }
     }

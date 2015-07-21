@@ -1,7 +1,6 @@
 package collins.models.shared
 
 import org.specs2._
-import specification._
 import org.specs2.matcher._
 
 import play.api.Configuration

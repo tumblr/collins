@@ -12,7 +12,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Action
 import play.api.mvc.AnyContent
 import play.api.mvc.Request
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.mvc.Results
 
 import collins.controllers.actors.TestProcessor
@@ -26,7 +26,7 @@ import collins.util.concurrent.BackgroundProcessor
 import collins.util.views.Formatter
 
 private[controllers] case class ResponseData(status: Results.Status, data: JsValue, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
-  def asResult(implicit req: Request[AnyContent]): SimpleResult =
+  def asResult(implicit req: Request[AnyContent]): Result =
     ApiResponse.formatResponseData(this)(req)
 }
 
@@ -70,10 +70,10 @@ IpAddressApi with AssetStateApi with AdminApi {
   }
 
   def asyncPing(sleepMs: Long) = Action.async { implicit req =>
-    BackgroundProcessor.send(TestProcessor(sleepMs)) { case(ex, res) =>
-      println("Got result %s".format(res.toString))
-      formatResponseData(Api.statusResponse(res.getOrElse(false)))
-    }
+    BackgroundProcessor.send(TestProcessor(sleepMs)) { r => r match {
+      case Left(_) => formatResponseData(Api.statusResponse(false))
+      case Right(res) => formatResponseData(Api.statusResponse(res))
+    }}
   }
 
   def errorPing(id: Int) = Action { implicit req =>

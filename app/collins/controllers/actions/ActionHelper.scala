@@ -19,6 +19,7 @@ object ActionHelper {
       protected val data = Seq.empty[(String, Seq[String])]
     }
     val body = AnyContentAsEmpty
+    val secure = false
   }
 
   def createRequest(req: Request[AnyContent], finalMap: Map[String, Seq[String]]) =
@@ -33,5 +34,6 @@ object ActionHelper {
       def headers = req.headers
       def body = req.body
       def remoteAddress = req.remoteAddress
+      val secure = false
     }
 }

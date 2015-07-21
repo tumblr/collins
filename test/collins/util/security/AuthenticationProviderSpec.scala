@@ -11,7 +11,7 @@ object AuthenticationProviderSpec extends Specification with collins.ResourceFin
 
   "Authentication Providers" should {
     "work with default authentication" >> {
-      val provider = AuthenticationProvider.Default
+      val provider = new MockAuthenticationProvider
       provider.authenticate("blake", "admin:first") must beSome[User]
       provider.authenticate("no", "suchuser") must beNone
     }

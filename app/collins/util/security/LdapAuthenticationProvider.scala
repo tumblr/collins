@@ -1,18 +1,17 @@
 package collins.util.security
 
 import java.util.{Hashtable => JHashTable}
-
 import scala.collection.JavaConversions.enumerationAsScalaIterator
 import scala.collection.JavaConversions.mapAsJavaMap
 import scala.collection.JavaConverters.mapAsJavaMapConverter
-
 import collins.models.User
 import collins.models.UserImpl
-
 import javax.naming.Context
 import javax.naming.directory.InitialDirContext
 import javax.naming.directory.SearchControls
 import javax.naming.directory.SearchResult
+import collins.cache.GuavaCacheFactory
+import com.google.common.cache.CacheLoader
 
 class LdapAuthenticationProvider extends AuthenticationProvider {
 
@@ -36,6 +35,13 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
   def anonymous = config.anonymous
   def groupnameattrib = config.groupNameAttribute
   def usernumattrib = config.userNumberAttribute
+  
+  type Credentials = Tuple2[String,String]
+  lazy val cache = GuavaCacheFactory.create(config.cacheSpecification, new CacheLoader[Credentials, Option[User]] {
+    override def load(creds: Credentials): Option[User] = {
+      nativeAuthenticate(creds._1, creds._2)
+    } 
+  })
 
   // setup for LDAP
   protected def env = Map(
@@ -96,38 +102,55 @@ class LdapAuthenticationProvider extends AuthenticationProvider {
   }
   
   // creating a initial dir context will fail to indicate an authentication error
-  private def getUserContext(dn: String,  password: String) = {
-    new InitialDirContext(new JHashTable[String, String](
-      Map(
-        Context.SECURITY_PRINCIPAL -> dn,
-        Context.SECURITY_CREDENTIALS -> password) ++ env
-    ))
-  }
-
-  // Authenticate via LDAP
-  override def authenticate(username: String, password: String): Option[User] = {
-    getInitialContext().flatMap (ctx => {
-      try {
-        findDn(ctx, username).map(dn => {
-          val uctx = getUserContext(dn, password)
-          try {
-            val uid = getUid(dn, uctx)
-            require(uid > 0, "Unable to find UID for user")
-            val groups = getGroups(dn, username, uctx)
-            val user = UserImpl(username, "*", groups.toSet, uid, true)
-            logger.trace("Succesfully authenticated %s".format(username))
-            user
-          } finally {
-            uctx.close
-          }
-        })
-      } catch {
-        case e: AuthenticationException =>
+  private def getUserContext(dn: String,  password: String): Option[InitialDirContext] = {
+    try {
+      Some(new InitialDirContext(new JHashTable[String, String](
+        Map(
+          Context.SECURITY_PRINCIPAL -> dn,
+          Context.SECURITY_CREDENTIALS -> password) ++ env
+      )))
+    } catch {
+      case e: AuthenticationException =>
           logger.info("Failed authentication for user %s", e)
-          None        
-      } finally {
-    	ctx.close
-      }
+          None
+    }
+  }
+  
+  def withCtxt[A](ctx: InitialDirContext) (f: InitialDirContext => Option[A]) (onException: Throwable => Option[A]): Option[A] = {
+    try { 
+      f(ctx) 
+    } catch {
+      case t : Throwable => onException(t)
+    } finally { 
+      ctx.close() 
+    }
+  }
+    
+  // Authenticate via LDAP - verify cache first
+  override def authenticate(username: String, password: String): Option[User] = {
+    cache.get((username, password))
+  }
+  
+  private def nativeAuthenticate(username:String, password: String): Option[User] = {
+    logger.info("Loading user %s from backend".format(username))
+
+    getInitialContext().flatMap (withCtxt(_) { ctx =>
+      findDn(ctx, username).flatMap(dn => {
+        getUserContext(dn, password).flatMap(withCtxt(_) { uctx =>
+          val uid = getUid(dn, uctx)
+          require(uid > 0, "Unable to find UID for user")
+          val groups = getGroups(dn, username, uctx)
+          val user = UserImpl(username, "*", groups.toSet, uid, true)
+          logger.info("Succesfully authenticated %s".format(username))
+          Some(user)
+        } { t =>
+          logger.warn("Failed to get groups for user %s".format(username), t)
+          None
+        })
+      })
+    } { t =>
+      logger.error("Failed to bind to ldap server, please verify ldap configuration", t)
+      None
     })
   }
 

@@ -15,7 +15,6 @@ class PowerManagementConfigSpec extends Specification with ResourceFinder {
 
   // This will load the same configurations as the app
   val fakeApp = FakeApplication()
-  PowerManagementConfig.pluginInitialize(fakeApp.configuration)
 
   private case class spec() {
     def loadVerifyConfig = {

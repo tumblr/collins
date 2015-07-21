@@ -1,227 +1,50 @@
-html {
-  overflow-y: scroll;
+/*
+ * Global body styles
+ */
+body {
+    padding-top: 60px;
+    padding-bottom: 40px;
+    position: relative;
 }
 
-body {
-  padding-top: 60px;
-  padding-bottom: 40px;
-  position: relative;
+p { 
+    padding: 5px 0; 
+}
+
+/* 
+ * Remove the Datatable sort indicator in favor of the bootstrap one 
+ */
+table.dataTable thead .sorting, 
+table.dataTable thead .sorting_asc, 
+table.dataTable thead .sorting_desc {
+    background : none;
 }
 
 /*
-@media (max-height: 900px) {
-  .modal.fade.dynamicModal.in {
-    top: 37%;
-  }
-  .dynamicModal * .modal-body {
-    max-height: 500px;
-  }
-  .modal {
-    max-height: 500px;
-  }
-}
-
-@media (min-height: 900px) and (max-height: 1000px) {
-  .modal.fade.dynamicModal.in {
-    top: 37%;
-  }
-  .dynamicModal * .modal-body {
-    max-height: 600px;
-  }
-  .modal {
-    max-height: 600px;
-  }
-}
-
-@media (min-height: 1000px) {
-  .modal.fade.dynamicModal.in {
-    top: 37%;
-  }
-  .dynamicModal * .modal-body {
-    max-height: 700px;
-  }
-  .modal {
-    max-height: 700px;
-  }
-}
-*/
-
-/* Fix for tables getting scrollbars */
+ * Asset overview table styles
+ */
 .tab-content {
-  display: table;
-  width: 100%;
+    display: table;
+    width: 100%;
 }
-
-div.dataTables_length label {
-  float: left;
-  text-align: left;
-}
-
-div.dataTables_length select {
-  width: 75px;
-}
-
-div.dataTables_filter label {
-  float: right;
-}
-
-div.dataTables_info {
-  padding-top: 8px;
-}
-
-div.dataTables_paginate {
-  float: right;
-  margin: 0;
-}
-
-table.table {
-  clear: both;
-  margin-bottom: 6px !important;
-}
-
-table.table thead .sorting,
-table.table thead .sorting_asc,
-table.table thead .sorting_desc,
-table.table thead .sorting_asc_disabled,
-table.table thead .sorting_desc_disabled {
-  cursor: pointer;
-  *cursor: hand;
-}
-
-table.table thead .sorting { background: url('../images/sort_both.png') no-repeat center right; }
-table.table thead .sorting_asc { background: url('../images/sort_asc.png') no-repeat center right; }
-table.table thead .sorting_desc { background: url('../images/sort_desc.png') no-repeat center right; }
-
-table.table thead .sorting_asc_disabled { background: url('../images/sort_asc_disabled.png') no-repeat center right; }
-table.table thead .sorting_desc_disabled { background: url('../images/sort_desc_disabled.png') no-repeat center right; }
-
-table.dataTable th:active {
-  outline: none;
-}
-
-div.collapsable {
-margin: 0;
-padding: 0;
-width: 500px;
-}
- 
-h5.expand_header {
-margin: 1px;
-padding: 3px 10px;
-cursor: pointer;
-position: relative;
-background: url('../images/sort_desc.png') no-repeat center right;
-background-color: #f5f5f5;
-}
-div.expand_content {
-padding: 5px 10px;
-}
-p { padding: 5px 0; }
-
-/* Bootstrap code examples
--------------------------------------------------- */
-
-.subsection {
-  padding-top: 30px;
-}
-
-/* Base class */
-.sectional {
-  position: relative;
-  margin: 15px 0;
-  padding: 5px 19px 14px;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  -webkit-border-radius: 4px;
-     -moz-border-radius: 4px;
-          border-radius: 4px;
-}
-
-.sectional * .pagination {
-  position: relative;
-  top: -20px;
-}
-
-#sidenav {
-  width: 228px;
-  margin: 30px 0 0;
-  padding: 0;
-  background-color: #fff;
-  -webkit-border-radius: 6px;
-     -moz-border-radius: 6px;
-          border-radius: 6px;
-  -webkit-box-shadow: 0 1px 4px rgba(0,0,0,.065);
-     -moz-box-shadow: 0 1px 4px rgba(0,0,0,.065);
-          box-shadow: 0 1px 4px rgba(0,0,0,.065);
-}
-#sidenav > li > a {
-  display: block;
-  *width: 190px;
-  margin: 0 0 -1px;
-  padding: 8px 14px;
-  border: 1px solid #e5e5e5;
-}
-#sidenav > li:first-child > a {
-  -webkit-border-radius: 6px 6px 0 0;
-     -moz-border-radius: 6px 6px 0 0;
-          border-radius: 6px 6px 0 0;
-}
-#sidenav > li:last-child > a {
-  -webkit-border-radius: 0 0 6px 6px;
-     -moz-border-radius: 0 0 6px 6px;
-          border-radius: 0 0 6px 6px;
-}
-#sidenav > .active > a {
-  position: relative;
-  z-index: 2;
-  padding: 9px 15px;
-  border: 0;
-  text-shadow: 0 1px 0 rgba(0,0,0,.15);
-  -webkit-box-shadow: inset 1px 0 0 rgba(0,0,0,.1), inset -1px 0 0 rgba(0,0,0,.1);
-     -moz-box-shadow: inset 1px 0 0 rgba(0,0,0,.1), inset -1px 0 0 rgba(0,0,0,.1);
-          box-shadow: inset 1px 0 0 rgba(0,0,0,.1), inset -1px 0 0 rgba(0,0,0,.1);
-}
-/* Chevrons */
-#sidenav .icon-chevron-right {
-  float: right;
-  margin-top: 2px;
-  margin-right: -6px;
-  opacity: .25;
-}
-#sidenav > li > a:hover {
-  background-color: #f5f5f5;
-}
-#sidenav a:hover .icon-chevron-right {
-  opacity: .5;
-}
-#sidenav .active .icon-chevron-right,
-#sidenav .active a:hover .icon-chevron-right {
-  background-image: url(../img/glyphicons-halflings-white.png);
-  opacity: 1;
-}
-#sidenav.affix {
-  top: 40px;
-}
-#sidenav.affix-bottom {
-  position: absolute;
-  top: auto;
-  bottom: 270px;
-}
-
-/* bootstrap hacks */
 
 /* bootstrap 3 makes this !important so lets let .show() override it */
 .hide-loprio {
-  display:none;
+   display:none;
 }
 
 .form-horizontal .control-label {
-  /* override control-label from bootstrap in form-horizontal */
-  text-align:inherit !important;
+    /* override control-label from bootstrap in form-horizontal */
+    text-align:inherit !important;
 }
-.page-header h4 {
-  /* position the label in the top right of the page-header only on asset show_menu view*/
-  position:absolute;
-  top:0;
-  right:0;
+
+.form-horizontal > div > ul > li > input {
+    margin-top:8px
+}
+
+.page-header .asset-status-label {
+    /* position the label in the top right of the page-header only on asset show_menu view*/
+    position:absolute;
+    top:0;
+    right:0;
 }

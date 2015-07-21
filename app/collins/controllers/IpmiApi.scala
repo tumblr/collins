@@ -41,7 +41,7 @@ trait IpmiApi {
   val IPMI_FORM = Form(
     mapping(
       "username" -> optional(text(1)),
-      "password" -> optional(text(minLength=5, maxLength=20)),
+      "password" -> optional(text(minLength=4, maxLength=20)),
       "address" -> optional(text(7)),
       "gateway" -> optional(text(7)),
       "netmask" -> optional(text(7))

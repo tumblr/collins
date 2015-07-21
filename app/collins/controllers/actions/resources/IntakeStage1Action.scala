@@ -6,7 +6,7 @@ import play.api.data.Form
 import play.api.data.Forms.of
 import play.api.data.Forms.single
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.templates.Html
 
 import collins.controllers.Help
@@ -17,10 +17,10 @@ import collins.controllers.forms.truthyFormat
 import collins.models.Truthy
 import collins.power.Identify
 import collins.power.management.PowerManagement
+import collins.power.management.PowerManagementConfig
 import collins.util.IpmiCommand
 import collins.util.concurrent.BackgroundProcessor
-import collins.util.plugins.IpmiPowerCommand
-import collins.util.plugins.PowerManagement
+import collins.power.management.IpmiPowerCommand
 import collins.util.security.SecuritySpecification
 
 case class IntakeStage1Action(
@@ -49,11 +49,11 @@ case class IntakeStage1Action(
       Future {  Status.Ok(
         views.html.resources.intake2(definedAsset, IntakeStage2Action.dataForm)(flash, request)
       ) }
-    case dummy => PowerManagement.pluginEnabled match {
-      case None =>
+    case dummy => PowerManagementConfig.enabled match {
+      case false =>
         Future { Status.Ok(views.html.help(Help.PowerManagementDisabled)(flash, request)) }
-      case Some(plugin) => 
-        identifyAsset(plugin)
+      case true => 
+        identifyAsset()
     }
   }
 
@@ -61,16 +61,16 @@ case class IntakeStage1Action(
     Redirect(collins.app.routes.Resources.intake(assetId, 1)).flashing("error" -> rd.toString)
   )
 
-  protected def identifyAsset(plugin: PowerManagement) : Future[SimpleResult] = {
+  protected def identifyAsset() : Future[Result] = {
     val cmd = IpmiPowerCommand.fromPowerAction(definedAsset, Identify)
     BackgroundProcessor.flatSend(cmd) { result =>
-      IpmiCommand.fromResult(result) match {
+      result match {
         case Left(throwable) =>
-          verifyIpmiReachable(plugin, throwable.toString)
+          verifyIpmiReachable(throwable.toString)
         case Right(None) => Future.successful(defaultView)
         case Right(Some(suc)) if suc.isSuccess => Future.successful(defaultView)
         case Right(Some(error)) if !error.isSuccess =>
-          verifyIpmiReachable(plugin, error.toString)
+          verifyIpmiReachable(error.toString)
       }
     }
   }
@@ -78,8 +78,8 @@ case class IntakeStage1Action(
   protected def defaultView =
     Status.Ok(views.html.resources.intake(definedAsset)(flash, request))
 
-  protected def verifyIpmiReachable(plugin: PowerManagement, errorString: String): Future[SimpleResult] = {
-    val ps = plugin.verify(definedAsset)
+  protected def verifyIpmiReachable(errorString: String): Future[Result] = {
+    val ps = PowerManagement.verify(definedAsset)
     ps.map {
       case reachable if reachable.isSuccess =>
         Status.Ok(views.html.help(Help.IpmiError, errorString)(flash, request))

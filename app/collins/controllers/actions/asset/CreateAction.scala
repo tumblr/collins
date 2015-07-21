@@ -7,7 +7,7 @@ import play.api.data.Forms.of
 import play.api.data.Forms.optional
 import play.api.data.Forms.text
 import play.api.data.Forms.tuple
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
@@ -83,7 +83,8 @@ case class CreateAction(
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
     case ActionDataHolder(assetTag, genIpmi, assetType, assetStatus) =>
-      AssetLifecycle.createAsset(assetTag, assetType, genIpmi, assetStatus) match {
+      val lifeCycle = new AssetLifecycle(userOption(), tattler)
+      lifeCycle.createAsset(assetTag, assetType, genIpmi, assetStatus) match {
         case Left(throwable) =>
           handleError(
             RequestDataHolder.error500("Could not create asset: %s".format(throwable.getMessage))
@@ -108,7 +109,7 @@ case class CreateAction(
     
   
 
-  protected def handleSuccess(asset: Asset, ipmi: Option[IpmiInfo]): SimpleResult = isHtml match {
+  protected def handleSuccess(asset: Asset, ipmi: Option[IpmiInfo]): Result = isHtml match {
     case true =>
       Redirect(collins.app.routes.Resources.index).flashing("success" -> "Asset successfully created")
     case false =>

@@ -3,14 +3,13 @@ package collins.controllers
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
 import play.api.mvc.Action
-import play.api.mvc.AsyncResult
 import play.api.mvc.Results
 
 import collins.controllers.actions.asset.DeleteAction
 import collins.controllers.actors.AssetCancelProcessor
 import collins.models.Asset
-import collins.util.UserTattler
 import collins.util.concurrent.BackgroundProcessor
+import collins.util.concurrent.BackgroundProcessor.SendType
 import collins.util.config.AppConfig
 
 trait AssetWebApi {
@@ -20,29 +19,25 @@ trait AssetWebApi {
     DeleteAction(tag, true, Permissions.AssetWebApi.DeleteAsset, this)
 
   // POST /asset/:tag/cancel
-  def cancelAsset(tag: String) = Authenticated { user => Action { implicit req =>
+  def cancelAsset(tag: String) = Authenticated { user => 
     if (AppConfig.ignoreAsset(tag)) {
-      formatResponseData(
+      Action { implicit req => formatResponseData(
         Api.getErrorMessage("Specified asset has been configured to not permit this operation")
-      )
+      ) }
     } else {
-      val asset = Asset.findByTag(tag)
-      AsyncResult {
-        BackgroundProcessor.send(AssetCancelProcessor(tag)) { case(ex,res) =>
-          val rd: ResponseData = ex.map { err =>
-            Api.getErrorMessage(err.getMessage)
-          }.orElse{
-            res.get match {
-              case Left(err) => Some(err)
+      Action.async { implicit req => val asset = Asset.findByTag(tag)
+        val processor = (r: SendType[Either[ResponseData,Long]]) => r match {
+            case Left(ex) => Api.getErrorMessage(ex.getMessage).asResult
+            case Right(res) => res match {
+              case Left(err) => err.asResult
               case Right(success) =>
-                UserTattler.notice(asset.get, user, "Server cancelled")
-                Some(ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(success)))))
+                // TODO: fix asset.get
+                tattler(user).notice("Server cancelled", asset.get)
+                ResponseData(Results.Ok, JsObject(Seq("SUCCESS" -> JsNumber(success)))).asResult
             }
-          }.get
-          formatResponseData(rd)
         }
-      }
+        BackgroundProcessor.send(AssetCancelProcessor(tag)) { processor(_) }
     }
-  }}(Permissions.AssetWebApi.CancelAsset)
+    }}(Permissions.AssetWebApi.CancelAsset)
 
 }

@@ -1,8 +1,8 @@
 @(aa: AllAttributes, user: User)(implicit flash: Flash, req: Request[AnyContent])
 
 @import collins.util.config.{Feature, NodeclassifierConfig}
-@import collins.util.plugins.SoftLayer
-@import collins.util.views.{MetaValueOrderer, TagDecorator}
+@import collins.softlayer.{SoftLayerConfig, SoftLayer}
+@import collins.util.views.{SoftLayerHelper, MetaValueOrderer, TagDecorator}
 @import util._
 
 <div class="active tab-pane" id="overview">
@@ -31,9 +31,11 @@
         }
         <tr>
           <th>Asset Tag</th>
-          @SoftLayer.pluginEnabled.filter(p => p.isSoftLayerAsset(aa.asset)).map { t =>
+          @if(SoftLayerConfig.enabled && SoftLayer.isSoftLayerAsset(aa.asset)) {
             @slLink(aa.asset, aa.asset.tag)
-          }.getOrElse{<td>@aa.asset.tag</td>}
+          } else {
+            <td>@aa.asset.tag</td>
+          }
           <td></td>
         </tr>
         <tr>
@@ -96,7 +98,7 @@
           <td>
           @{
             mv.getName match {
-              case "CANCEL_TICKET" => optionDisplay(0, SoftLayer.ticketLink(mv.getValue), mv.getValue)
+              case "CANCEL_TICKET" => optionDisplay(0, SoftLayerHelper.ticketLink(mv.getValue), mv.getValue)
               case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
               case encrypted if Feature.encryptedTags.map(_.name).contains(encrypted) => if(user.canSeePasswords) { TagDecorator.decorate(mv) } else { "********" }
               case _ => TagDecorator.decorate(mv)

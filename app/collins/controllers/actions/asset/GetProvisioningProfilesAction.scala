@@ -1,7 +1,6 @@
 package collins.controllers.actions.asset
 
 import scala.concurrent.Future
-
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsBoolean
 import play.api.libs.json.JsNull
@@ -9,15 +8,15 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.AssetAction
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.provisioning.ProvisionerProfile
-import collins.util.plugins.Provisioner
+import collins.provisioning.Provisioner
 import collins.util.security.SecuritySpecification
+import collins.provisioning.ProvisionerConfig
 
 case class GetProvisioningProfilesAction(
   spec: SecuritySpecification,
@@ -26,11 +25,11 @@ case class GetProvisioningProfilesAction(
 
   case class ActionDataHolder(profiles: Set[ProvisionerProfile]) extends RequestDataHolder
 
-  override def validate(): Validation = Provisioner.plugin match {
-    case None =>
-      Left(RequestDataHolder.error501("Provisioner plugin not enabled"))
-    case Some(plugin) =>
-      Right(ActionDataHolder(plugin.profiles))
+  override def validate(): Validation = ProvisionerConfig.enabled match {
+    case false =>
+      Left(RequestDataHolder.error501("Provisioning is not not enabled"))
+    case true =>
+      Right(ActionDataHolder(Provisioner.profiles))
   }
 
   override def execute(rd: RequestDataHolder) = Future { 

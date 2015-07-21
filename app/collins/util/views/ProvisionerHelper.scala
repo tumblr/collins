@@ -6,16 +6,18 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
-import play.api.templates.Html
+import play.twirl.api.Html
 
 import collins.models.AssetMeta
 import collins.models.AssetMetaValue
-import collins.util.plugins.Provisioner
+
+import collins.provisioning.ProvisionerConfig
+import collins.provisioning.Provisioner
 
 object ProvisionerHelper {
   def profilesAsJson(): Html = {
-    Provisioner.pluginEnabled { plugin =>
-      val profiles: Seq[(String,JsValue)] = plugin.profiles.map { profile =>
+    if(ProvisionerConfig.enabled) {
+      val profiles: Seq[(String,JsValue)] = Provisioner.profiles.map { profile =>
         val role = profile.role
         val fields: Seq[(String,JsValue)] = Seq(
           "requires_primary_role" -> JsBoolean(role.requires_primary_role),
@@ -31,7 +33,9 @@ object ProvisionerHelper {
         (profile.identifier -> JsObject(fields))
       }.toSeq
       Html(Json.stringify(JsObject(profiles)))
-    }.getOrElse(Html("{}"))
+    } else {
+      Html("{}")
+    }
   }
 
   def secondaryRolesAsJson(): Html = {

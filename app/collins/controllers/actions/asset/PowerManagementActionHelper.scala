@@ -2,7 +2,7 @@ package collins.controllers.actions.asset
 
 import scala.concurrent.Future
 
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.mvc.Results
 
 import collins.controllers.Api
@@ -16,15 +16,14 @@ import collins.power.Identify
 import collins.power.PowerAction
 import collins.power.PowerState
 import collins.power.Verify
+import collins.power.management.IpmiPowerCommand
+import collins.power.management.PowerManagement
 import collins.power.management.PowerManagementConfig
 import collins.shell.CommandResult
-import collins.util.IpmiCommand
-import collins.util.UserTattler
 import collins.util.concurrent.BackgroundProcessor
 import collins.util.config.AppConfig
-import collins.util.plugins.IpmiPowerCommand
-import collins.util.plugins.PowerManagement
 import collins.util.security.SecuritySpecification
+
 
 abstract class PowerManagementActionHelper(
   assetTag: String,
@@ -41,7 +40,7 @@ abstract class PowerManagementActionHelper(
   )
   val PowerMessages = PowerManagementConfig.Messages
 
-  override def execute(rd: RequestDataHolder): Future[SimpleResult] = rd match {
+  override def execute(rd: RequestDataHolder): Future[Result] = rd match {
     case PowerStatusRd(cmd) => runCommand(cmd)
   }
 
@@ -49,7 +48,7 @@ abstract class PowerManagementActionHelper(
     val asset = assetFromTag(assetTag)
     val pa = powerAction
 
-    if (!PowerManagement.isPluginEnabled) {
+    if (!PowerManagementConfig.enabled) {
       Left(RequestDataHolder.error501("PowerManagement plugin not enabled"))
     } else if (!asset.isDefined) {
       Left(assetNotFound(assetTag))
@@ -109,7 +108,7 @@ abstract class PowerManagementActionHelper(
   }
 
   protected def runCommand(cmd: IpmiPowerCommand) = BackgroundProcessor.send(cmd) { result =>
-    IpmiCommand.fromResult(result) match {
+    result match {
       case Left(throwable) =>
         onError(throwable)
       case Right(None) =>
@@ -145,7 +144,7 @@ abstract class PowerManagementActionHelper(
       case Verify | PowerState | Identify =>
         // don't log verify, state, identify (normal lifecycle)
       case o =>
-        UserTattler.warning(definedAsset, userOption, msg)
+        tattler.warning(msg, definedAsset)
     }
   }
 

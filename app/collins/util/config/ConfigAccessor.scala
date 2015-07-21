@@ -3,16 +3,14 @@ package collins.util.config
 import java.net.MalformedURLException
 import java.net.URL
 import java.util.concurrent.atomic.AtomicReference
-
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
-
 import play.api.PlayException
-
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.{ConfigValue => TypesafeConfigValue}
+import java.util.concurrent.TimeUnit
 
 class ConfigurationException(msg: String) extends Exception(msg)
 
@@ -24,7 +22,7 @@ trait ConfigAccessor {
   def ns: Option[String] = None
 
   def globalError(message: String, e: Option[Throwable] = None) =
-    e.map(new PlayException("Confguration error", message, _)).getOrElse(new PlayException("Confguration error", message))
+    e.map(new PlayException("Confguration error", message, _)).getOrElse(new PlayException("Configuration error", message))
 
   protected def underlying = {
     _underlying.get()
@@ -55,7 +53,7 @@ trait ConfigAccessor {
   protected def getLong(key: String, default: Long): Long =
     getLong(key).getOrElse(default)
 
-  protected def getMilliseconds(key: String): Option[Long] = getValue(key, _.getMilliseconds(key))
+  protected def getMilliseconds(key: String): Option[Long] = getValue(key, _.getDuration(key, TimeUnit.MILLISECONDS))
 
   protected def getObjectMap(key: String): Map[String,ConfigObject] =
     getValue(key, _.getObject(key).toConfig.root.asScala.map {

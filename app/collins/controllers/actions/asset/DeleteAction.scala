@@ -18,7 +18,6 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.models.AssetLifecycle
 import collins.models.asset.AssetDeleter
-import collins.util.SystemTattler
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
 
@@ -49,7 +48,8 @@ case class DeleteAction(
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
     case ActionDataHolder(reason, nuke) =>
-      AssetLifecycle.decommissionAsset(definedAsset, reason, nuke) match {
+      val lifeCycle = new AssetLifecycle(userOption(), tattler)
+      lifeCycle.decommissionAsset(definedAsset, reason, nuke) match {
         case Left(throwable) =>
           handleError(
             RequestDataHolder.error409("Illegal state transition: %s".format(throwable.getMessage))
@@ -59,7 +59,7 @@ case class DeleteAction(
             val errMsg = "User deleted asset %s. Reason: %s".format(
               definedAsset.tag, reason
             )
-            SystemTattler.safeError(errMsg)
+            tattler.error(errMsg, definedAsset)
             Api.statusResponse(AssetDeleter.purge(definedAsset))
           } else {
             Api.statusResponse(status)

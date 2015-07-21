@@ -9,11 +9,15 @@ import play.api.mvc.AnyContent
 import play.api.mvc.Controller
 import play.api.mvc.Request
 import play.api.mvc.RequestHeader
-import play.api.mvc.SimpleResult
+import play.api.mvc.Result
 import play.api.mvc.Results
-import play.api.templates.Txt
+import play.twirl.api.Txt
 
 import collins.models.User
+import collins.models.logs.LogSource
+import collins.util.Tattler
+import collins.util.ApplicationTattler
+import collins.util.InternalTattler
 import collins.util.security.AuthenticationProvider
 import collins.util.security.SecuritySpecification
 
@@ -71,6 +75,14 @@ object SecureController {
 trait SecureController extends Controller {
   protected val logger = Logger.logger
 
+  /** Obtains a tattler for this controller */
+  def tattler(user: Option[User]): Tattler = {
+    user.filter { _.isAuthenticated() }.map { new ApplicationTattler(_, logSource) }.getOrElse(InternalTattler)
+  }
+
+  /** Log source identifier to use */
+  def logSource : LogSource.LogSource
+  
   /** Controllers that extend this trait can override the default authorize behavior */
   def authorize(user: User, spec: SecuritySpecification): Boolean = {
     AuthenticationProvider.userIsAuthorized(user, spec)
@@ -83,7 +95,7 @@ trait SecureController extends Controller {
   def Authenticated(action: Option[User] => Action[AnyContent])(implicit spec: SecuritySpecification) =
     SecureController.Authenticated(authenticate, onUnauthorized, authorize)(action)
 
-  def SecureAction(block: Request[AnyContent] => SimpleResult)(implicit spec: SecuritySpecification) =
+  def SecureAction(block: Request[AnyContent] => Result)(implicit spec: SecuritySpecification) =
     Authenticated(_ => Action(block))
 }
 
@@ -92,6 +104,8 @@ trait SecureWebController extends SecureController {
   val unauthorizedRoute = routes.Application.login.url
   def securityMessage(req: RequestHeader) = ("security" -> "The specified resource requires additional authorization")
 
+  def logSource = LogSource.User
+  
   override def onUnauthorized = Action { implicit request =>
     // If user is not logged in and accesses a page, store the location so they can be redirected
     // after authentication
@@ -123,6 +137,9 @@ trait SecureWebController extends SecureController {
 
 /** Used for API access, authenticates based on basic auth */
 trait SecureApiController extends SecureController {
+  
+  def logSource = LogSource.Api
+  
   override def onUnauthorized = Action { implicit request =>
     Results.Unauthorized(Txt("Invalid Username/Password specified"))
   }

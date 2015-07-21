@@ -1,6 +1,11 @@
 package collins.util.security
 
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
 import collins.models.User
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.Cache
+import collins.cache.GuavaCacheFactory
 
 /**
  * Exception encountered during authentication phase
@@ -8,13 +13,28 @@ import collins.models.User
 class AuthenticationException(msg: String) extends Exception(msg)
 
 /**
- * Provides authentication by a variety of methods
+ * Provides authentication by a variety of methods and caching logic (implements decorator pattern)
  */
 class MixedAuthenticationProvider(types: Array[String]) extends AuthenticationProvider {
-
-  /**
-   * @return The authorization type provided by this class
-   */
+  
+  private val providers = types.map({
+     case "default" => {
+       logger.trace("mock authentication type")
+       new MockAuthenticationProvider
+     }
+     case "file" => {
+       logger.trace("file authentication type")
+       new FileAuthenticationProvider()
+     }
+     case "ldap" => {
+       logger.trace("ldap authentication type")
+       new LdapAuthenticationProvider()
+     }
+     case t => {
+       throw new AuthenticationException("Invalid authentication type provided: " + t)
+     }
+  })
+  
   def authType = types
 
   /**
@@ -24,31 +44,6 @@ class MixedAuthenticationProvider(types: Array[String]) extends AuthenticationPr
   def authenticate(username: String, password: String): Option[User] = {
     logger.debug("Beginning to try authentication types")
 
-    // Iterate over the types lazily, such that if one method passes, iteration stops
-    authType.flatMap({
-      case "default" => {
-        logger.trace("mock authentication type")
-        val defaultProvider = AuthenticationProvider.Default
-        val user = defaultProvider.authenticate(username, password)
-        logger.debug("Tried mock authentication for %s, got back %s".format(username, user))
-        user
-      }
-      case "file" => {
-        logger.trace("file authentication type")
-        val fileProvider = new FileAuthenticationProvider()
-        val user = fileProvider.authenticate(username, password)
-        logger.debug("Tried file authentication for %s, got back %s".format(username, user))
-        user
-      }
-      case "ldap" => {
-        val ldapProvider = new LdapAuthenticationProvider()
-        val user = ldapProvider.authenticate(username, password)
-        logger.debug("Tried ldap authentication for %s, got back %s".format(username, user))
-        user
-      }
-      case t => {
-        throw new AuthenticationException("Invalid authentication type provided: " + t)
-      }
-    }).headOption
+    providers.toStream.flatMap { _.authenticate(username, password) }.headOption
   }
 }

@@ -4,7 +4,7 @@ import java.lang.reflect.Method
 
 import play.api.Logger
 
-import collins.util.SystemTattler
+import collins.util.InternalTattler
 
 trait MethodHelper extends MethodArguments with MethodReturnType {
 
@@ -60,7 +60,7 @@ trait MethodHelper extends MethodArguments with MethodReturnType {
   protected def handleFailure(msg: String) {
     if (chattyFailures) {
       logger.error(msg)
-      SystemTattler.safeError(msg)
+      InternalTattler.system(msg)
     }
   }
 }

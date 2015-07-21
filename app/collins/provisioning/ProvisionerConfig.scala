@@ -6,6 +6,7 @@ import collins.util.concurrent.RateLimit
 import collins.util.config.ConfigValue
 import collins.util.config.Configurable
 import collins.validation.File
+import com.google.common.cache.CacheBuilderSpec
 
 object ProvisionerConfig extends Configurable {
   override val namespace = "provisioner"
@@ -20,7 +21,7 @@ object ProvisionerConfig extends Configurable {
       case Some(a) => a.id
     }
   }.toSet
-  def cacheTimeout = getMilliseconds("cacheTimeout").getOrElse(30000L)
+  def cacheSpecification = getString("cacheSpecification", "expireAfterWrite=30s")
   def checkCommand = getString("checkCommand").filter(_.nonEmpty)
   def command = getString("command").filter(_.nonEmpty)
   def enabled = getBoolean("enabled", false)
@@ -36,6 +37,7 @@ object ProvisionerConfig extends Configurable {
       tryOption("command", command.get)
       tryOption("profiles", profilesFile)
       File.requireFileIsReadable(profilesFile)
+      CacheBuilderSpec.parse(cacheSpecification)
       require(
         ProfileLoader.fromFile(profilesFile).size > 0,
         "Must have at least one profile in %s".format(profilesFile)
