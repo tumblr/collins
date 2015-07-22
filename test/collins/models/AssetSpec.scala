@@ -24,7 +24,7 @@ class AssetSpec extends mutable.Specification {
         val maybeAsset = Asset.findByTag(assetTag)
         maybeAsset must beSome[Asset]
         val realAsset = maybeAsset.get
-        Asset.update(realAsset.copy(status = Status.New.get.id))
+        Asset.update(realAsset.copy(statusId = Status.New.get.id))
         Asset.findByTag(assetTag).map { a =>
           a.getStatus().getId mustEqual(Status.New.get.id)
         }.getOrElse(failure("Couldn't find asset but expected to"))

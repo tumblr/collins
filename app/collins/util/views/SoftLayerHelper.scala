@@ -26,7 +26,7 @@ object SoftLayerHelper {
   }
 
   def canCancel(asset: Asset): Boolean = {
-    validAsset(asset) && SoftLayerConfig.allowedCancelStatus.contains(asset.status)
+    validAsset(asset) && SoftLayerConfig.allowedCancelStatus.contains(asset.statusId)
   }
 
   def canActivate(asset: Asset): Boolean = {
@@ -35,7 +35,7 @@ object SoftLayerHelper {
 
   protected def validAsset(asset: Asset): Boolean = {
     SoftLayer.isSoftLayerAsset(asset) &&
-      ProvisionerConfig.allowedType(asset.asset_type)
+      ProvisionerConfig.allowedType(asset.assetTypeId)
   }
 
 }

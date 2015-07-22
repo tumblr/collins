@@ -73,8 +73,8 @@
             <td>@aa.asset.getStatus().description</td>
           }
         </tr>
-@if(aa.asset.state != 0) {
-  @State.findById(aa.asset.state).map { state =>
+@if(aa.asset.stateId != 0) {
+  @State.findById(aa.asset.stateId).map { state =>
         <tr>
           <th>Asset State</th>
           <td>@state.label</td>

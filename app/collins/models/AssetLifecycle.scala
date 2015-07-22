@@ -196,9 +196,9 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
-        val newAsset = asset.copy(status = Status.Unallocated.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
+        val newAsset = asset.copy(statusId = Status.Unallocated.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
-        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.Starting)
+        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.statusId), State.Starting)
         newAsset
       }
       tattler.informational("Intake now complete, asset Unallocated", unallocatedAsset)
@@ -234,8 +234,8 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
           throw lldpParsingResults.left.get
         }
         MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
-        val newAsset = asset.copy(status = Status.New.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
-        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.New)
+        val newAsset = asset.copy(statusId = Status.New.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
+        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.statusId), State.New)
         tattler.informational("Parsing and storing LSHW/LLDP data succeeded", newAsset)
         true
       }

@@ -34,7 +34,7 @@ object Provisioner extends Provisioner {
 
   // overrides ProvisionerInterface.canProvision
   override def canProvision(asset: Asset): Boolean = {
-    ProvisionerConfig.allowedStatus(asset.status) && ProvisionerConfig.allowedType(asset.asset_type)
+    ProvisionerConfig.allowedStatus(asset.statusId) && ProvisionerConfig.allowedType(asset.assetTypeId)
   }
 
   // overrides ProvisionerInterface.provision

@@ -14,12 +14,15 @@ abstract class RemoteAssetProxy(jsonAsset: JsValue) extends RemoteAsset {
 
   def id = asset.id
   def tag = asset.tag
-  def state = asset.state
-  def status = asset.status
-  def asset_type = asset.asset_type
+  def stateId = asset.stateId
+  def statusId = asset.statusId
+  def assetTypeId = asset.assetTypeId
   def created = asset.created
   def updated = asset.updated
   def deleted = asset.deleted
+  def getStatusName() = asset.getStatusName()
+  def getStateName() = asset.getStateName()
+  def getTypeName() = asset.getTypeName()
 
   def toJsValue() = {
     AssetFormat.writes(asset) ++ JsObject(Seq("LOCATION" -> JsString(hostTag)))

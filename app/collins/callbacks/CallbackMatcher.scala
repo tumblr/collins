@@ -46,7 +46,7 @@ case class CallbackMatcher(conditional: MatchConditional, fn: PropertyChangeEven
     val states = conditional.states.toSet
     val value = Option(fn(pce))
     value.filter(_.isInstanceOf[AssetView]).map(_.asInstanceOf[AssetView]).map { v =>
-      State.findById(v.state).map { state =>
+      State.findById(v.stateId).map { state =>
         states.map(_.toUpperCase).contains(state.name.toUpperCase)
       }.getOrElse(false)
     }.getOrElse(true)

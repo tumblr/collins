@@ -29,6 +29,7 @@ import play.api.Logger
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Schema
+import org.squeryl.annotations.Column
 
 import java.sql.Timestamp
 import java.util.Date
@@ -40,9 +41,9 @@ import collins.models.shared.Page
 import collins.models.shared.PageParams
 import collins.models.shared.SortDirection
 
-case class Asset(tag: String, status: Int, asset_type: Int,
+case class Asset(tag: String, @Column("STATUS") statusId: Int, @Column("ASSET_TYPE") assetTypeId: Int,
     created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp],
-    id: Long = 0, state: Int = 0) extends ValidatedEntity[Long] with AssetView
+    id: Long = 0, @Column("STATE") stateId: Int = 0) extends ValidatedEntity[Long] with AssetView
 {
   private[this] val logger = Logger("Asset")
 
@@ -59,13 +60,15 @@ case class Asset(tag: String, status: Int, asset_type: Int,
 
   def getId(): Long = id
 
-  def getStatus(): Status = Status.findById(status).get
+  def getStatus(): Status = Status.findById(statusId).get
   override def getStatusName(): String = getStatus().name
+  override def getStateName(): String = State.findById(stateId).map(_.name).getOrElse("Unknown")
+  override def getTypeName(): String = AssetType.findById(assetTypeId).map(_.name).getOrElse("Unknown")
 
-  def getState(): Option[State] = State.findById(state)
+  def getState(): Option[State] = State.findById(stateId)
 
   def getType(): AssetType = {
-    AssetType.findById(asset_type).get
+    AssetType.findById(assetTypeId).get
   }
 
   def getMetaAttributeValue(name: String): Option[String] = getMetaAttribute(name).map(_.getValue)
@@ -145,9 +148,9 @@ object Asset extends Schema with AnormAdapter[Asset] {
   on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
     a.tag is(unique),
-    a.status is(indexed),
-    a.state is(indexed),
-    a.asset_type is(indexed),
+    a.statusId is(indexed),
+    a.stateId is(indexed),
+    a.assetTypeId is(indexed),
     a.created is(indexed),
     a.updated is(indexed)
   ))
@@ -298,8 +301,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
   def resetState(state: State, newId: Int): Int = inTransaction {
     import collins.solr.Solr
     val count = tableDef.update(a =>
-      where(a.state === state.id)
-      set(a.state := newId)
+      where(a.stateId === state.id)
+      set(a.stateId := newId)
     )
     // We repopulate solr because the alternative is to do some complex state tracking
     // The above update operation also will not trigger callbacks
@@ -309,8 +312,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int], state: Option[State] = None) = {
     val assetWUpdate = updated.map(u => asset.copy(updated = Some(u))).getOrElse(asset)
-    val assetWStatus = status.map(s => assetWUpdate.copy(status = s)).getOrElse(assetWUpdate)
-    val assetWState = state.map(s => assetWStatus.copy(state = s.id)).getOrElse(assetWStatus)
+    val assetWStatus = status.map(s => assetWUpdate.copy(statusId = s)).getOrElse(assetWUpdate)
+    val assetWState = state.map(s => assetWStatus.copy(stateId = s.id)).getOrElse(assetWStatus)
     Asset.update(assetWState)
   }
 
