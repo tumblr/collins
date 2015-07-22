@@ -21,7 +21,8 @@ module Collins; module Api
     def delete! asset_or_tag, options = {}
       asset = get_asset_or_tag asset_or_tag
       parameters = {
-        :reason => get_option(:reason, options, nil)
+        :reason => get_option(:reason, options, nil),
+        :nuke   => get_option(:nuke, options, false),
       }
       parameters = select_non_empty_parameters parameters
       logger.debug("Deleting asset #{asset.tag} with parameters #{parameters.inspect}")
