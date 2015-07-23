@@ -62,7 +62,7 @@ class AssetLogSpec extends mutable.Specification {
           AssetLog.list(Some(asset),0,10,"DESC","Alert").total mustEqual 0
           val info = AssetLog.list(Some(asset),0,10,"DESC","Informational")
           info.total mustEqual 1
-          info.items(0).getAssetId mustEqual asset_id
+          info.items(0).assetId mustEqual asset_id
         }
 
         "find with a negating filter and an asset" in new mocklog {
@@ -70,16 +70,16 @@ class AssetLogSpec extends mutable.Specification {
           val alert = AssetLog.list(Some(asset),0,10,"DESC","!Informational")
           alert.total mustEqual 1
           alert.items(0).isAlert must beTrue
-          alert.items(0).getAssetId mustEqual asset_id
+          alert.items(0).assetId mustEqual asset_id
           AssetLog.list(Some(asset),0,10,"DESC","!Alert").total mustEqual 0
         }
 
         "find with a sort" in new concretelog {
           AssetLog.create(newLog)
           val desc = AssetLog.list(None, 0, 10, "DESC")
-          desc.items(0).getId must be_>(desc.items(1).getId)
+          desc.items(0).id must be_>(desc.items(1).id)
           val asc = AssetLog.list(None, 0, 10, "ASC")
-          asc.items(0).getId must be_<(asc.items(1).getId)
+          asc.items(0).id must be_<(asc.items(1).id)
         }
 
       } // support getters/finders
@@ -96,7 +96,7 @@ class AssetLogSpec extends mutable.Specification {
       case None => createAsset
       case Some(a) => a
     }
-    def asset_id = asset.getId
+    def asset_id = asset.id
     def msg = "Hello World"
     def format = LogFormat.PlainText
     def source = LogSource.Internal

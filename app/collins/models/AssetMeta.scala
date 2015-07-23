@@ -43,7 +43,6 @@ case class AssetMeta(
       "DESCRIPTION" -> JsString(description)
     )))
   }
-  def getId(): Long = id
 
   def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType(value_type)
 

@@ -30,6 +30,7 @@ import play.api.Logger
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Schema
 import org.squeryl.annotations.Column
+import org.squeryl.annotations.Transient
 
 import java.sql.Timestamp
 import java.util.Date
@@ -52,24 +53,27 @@ case class Asset(tag: String, @Column("STATUS") statusId: Int, @Column("ASSET_TY
   }
   override def asJson: String = toJsValue.toString
 
-  override def getHostnameMetaValue = getMetaAttributeValue("HOSTNAME")
+  @Transient
+  override lazy val getHostnameMetaValue = getMetaAttributeValue("HOSTNAME")
+  @Transient
   override def getPrimaryRoleMetaValue = getMetaAttributeValue("PRIMARY_ROLE")
-  override def toJsValue() = {
-    Json.toJson[AssetView](this)
-  }
 
-  def getId(): Long = id
+  override def toJsValue() = Json.toJson[AssetView](this)
 
-  def getStatus(): Status = Status.findById(statusId).get
-  override def getStatusName(): String = getStatus().name
-  override def getStateName(): String = State.findById(stateId).map(_.name).getOrElse("Unknown")
-  override def getTypeName(): String = AssetType.findById(assetTypeId).map(_.name).getOrElse("Unknown")
+  @Transient
+  lazy val status: Status = Status.findById(statusId).get
+  @Transient
+  override lazy val getStatusName: String = status.name
 
-  def getState(): Option[State] = State.findById(stateId)
+  @Transient
+  lazy val state: Option[State] = State.findById(stateId)
+  @Transient
+  override lazy val getStateName: String = state.map(_.name).getOrElse("Unknown")
 
-  def getType(): AssetType = {
-    AssetType.findById(assetTypeId).get
-  }
+  @Transient
+  lazy val assetType: AssetType = AssetType.findById(assetTypeId).get
+  @Transient
+  override lazy val getTypeName: String = assetType.name
 
   def getMetaAttributeValue(name: String): Option[String] = getMetaAttribute(name).map(_.getValue)
 
@@ -177,8 +181,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def isValidTag(tag: String): Boolean = isAlphaNumericString(tag)
 
-  def apply(tag: String, status: Status, asset_type: AssetType) = {
-    new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
+  def apply(tag: String, status: Status, assetType: AssetType) = {
+    new Asset(tag, status.id, assetType.id, new Date().asTimestamp, None, None)
   }
 
   override def delete(asset: Asset): Int = inTransaction {

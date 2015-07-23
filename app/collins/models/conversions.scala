@@ -96,12 +96,12 @@ object conversions {
     ))
     override def writes(log: AssetLog) = JsObject(Seq(
       "ID" -> Json.toJson(log.id),
-      "ASSET_TAG" -> Json.toJson(Asset.findById(log.asset_id).map(_.tag).getOrElse("Unknown")),
+      "ASSET_TAG" -> Json.toJson(Asset.findById(log.assetId).map(_.tag).getOrElse("Unknown")),
       "CREATED" -> Json.toJson(df.format(log.created)),
-      "CREATED_BY" -> Json.toJson(log.created_by),
+      "CREATED_BY" -> Json.toJson(log.createdBy),
       "FORMAT" -> Json.toJson(log.format.toString),
       "SOURCE" -> Json.toJson(log.source.toString),
-      "TYPE" -> Json.toJson(log.message_type.toString),
+      "TYPE" -> Json.toJson(log.messageType.toString),
       "MESSAGE" -> (if (log.isJson()) {
         try {
           Json.parse(log.message)

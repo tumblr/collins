@@ -107,8 +107,8 @@ case class UpdateStatusAction(
   protected def checkStateConflict(
     asset: Asset, statusOpt: Option[AssetStatus], stateOpt: Option[State]
   ): Tuple2[Option[AssetStatus],Option[State]] = {
-    val status = statusOpt.getOrElse(asset.getStatus())
-    val state = stateOpt.getOrElse(State.findById(asset.stateId).getOrElse(State.empty))
+    val status = statusOpt.getOrElse(asset.status)
+    val state = stateOpt.getOrElse(asset.state.getOrElse(State.empty))
     if (state.status == State.ANY_STATUS || state.status == status.id) {
       (None, None)
     } else {

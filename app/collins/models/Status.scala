@@ -21,7 +21,6 @@ import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
 
 case class Status(name: String, description: String, id: Int = 0) extends ValidatedEntity[Int] {
-  def getId(): Int = id
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
     require(description != null && description.length > 0, "Description must not be empty")

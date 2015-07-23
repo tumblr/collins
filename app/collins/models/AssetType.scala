@@ -13,7 +13,6 @@ import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
 
 case class AssetType(name: String, label: String, id: Int = 0) extends ValidatedEntity[Int] {
-  def getId(): Int = id
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
   }

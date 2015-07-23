@@ -176,7 +176,7 @@ class SolrSpec extends mutable.Specification {
       page.items.size mustEqual 1
       page.items.headOption must beSome.which { asset =>
         asset.tag mustEqual assetTag
-        asset.statusId mustEqual Status.Allocated.get.getId()
+        asset.statusId mustEqual Status.Allocated.get.id
       }
     }
     
@@ -202,7 +202,7 @@ class SolrSpec extends mutable.Specification {
       page.items.size mustEqual 1
       page.items.headOption must beSome.which { asset =>
         asset.tag mustEqual assetTag
-        asset.statusId mustEqual Status.Allocated.get.getId()
+        asset.statusId mustEqual Status.Allocated.get.id
       }
     }
     
@@ -228,7 +228,7 @@ class SolrSpec extends mutable.Specification {
       page.items.size mustEqual 1
       page.items.headOption must beSome.which { asset =>
         asset.tag mustEqual assetTag
-        asset.statusId mustEqual Status.Allocated.get.getId()
+        asset.statusId mustEqual Status.Allocated.get.id
       }
     }
     
@@ -254,7 +254,7 @@ class SolrSpec extends mutable.Specification {
       page.items.size mustEqual 1
       page.items.headOption must beSome.which { asset =>
         asset.tag mustEqual assetTag
-        asset.statusId mustEqual Status.Allocated.get.getId()
+        asset.statusId mustEqual Status.Allocated.get.id
       }
     }
     
@@ -280,7 +280,7 @@ class SolrSpec extends mutable.Specification {
       page.items.size mustEqual 1
       page.items.headOption must beSome.which { asset =>
         asset.tag mustEqual assetTag
-        asset.statusId mustEqual Status.Allocated.get.getId()
+        asset.statusId mustEqual Status.Allocated.get.id
       }
     }
     
@@ -304,13 +304,13 @@ class SolrSpec extends mutable.Specification {
       page.items.size mustEqual 2
       page.items.find { a => a.tag == assetTag } must beSome.which { asset =>
         asset.tag mustEqual assetTag
-        asset.statusId mustEqual Status.Allocated.get.getId()
+        asset.statusId mustEqual Status.Allocated.get.id
         asset.getMetaAttributeValue("T") mustEqual Some("T")
         asset.getMetaAttributeValue("U") mustEqual None
       }
       page.items.find { a => a.tag == assetTag2 } must beSome.which { asset =>
         asset.tag mustEqual assetTag2
-        asset.statusId mustEqual Status.Provisioned.get.getId()
+        asset.statusId mustEqual Status.Provisioned.get.id
         asset.getMetaAttributeValue("T") mustEqual None
         asset.getMetaAttributeValue("U") mustEqual Some("U")
       }
@@ -335,7 +335,7 @@ class SolrSpec extends mutable.Specification {
       page.items.size mustEqual 1
       page.items.find { a => a.tag == assetTag } must beSome.which { asset =>
         asset.tag mustEqual assetTag
-        asset.statusId mustEqual Status.Allocated.get.getId()
+        asset.statusId mustEqual Status.Allocated.get.id
          asset.getMetaAttributeValue("SPECIFICATION") mustEqual Some("WEB SERVICE FURY HADOOP")
       }
     }

@@ -61,7 +61,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   ))
 
   def createForAsset(asset: Asset): IpmiInfo = inTransaction {
-    val assetId = asset.getId
+    val assetId = asset.id
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
     createWithRetry(10) { attempt =>

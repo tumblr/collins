@@ -37,7 +37,7 @@ case class SolrAssetCallbackHandler(server: SolrClient, updater: ActorRef) exten
       updater ! a
     }
     case v: AssetMetaValue =>
-      updater ! v.getAsset
+      updater ! v.asset
     case i: IpAddresses =>
       updater ! i.getAsset
     case s: String =>

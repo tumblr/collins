@@ -151,7 +151,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
 
   protected def updateServerHardwareMeta(asset: Asset, options: Map[String,String]): AssetLifecycle.Status[Boolean] = {
     // if asset's status is in the allowed statuses for updating, do it
-    if (Feature.allowedServerUpdateStatuses.contains(asset.getStatus())) {
+    if (Feature.allowedServerUpdateStatuses.contains(asset.status)) {
       // we will allow updates to lshw/lldp while the machine is in these statuses
       allCatch[Boolean].either {
         Asset.inTransaction {

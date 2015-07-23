@@ -233,13 +233,13 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
     val slId = SoftLayer.softLayerId(asset).get
     if (attribs.nonEmpty) {
       val lifeCycle = new AssetLifecycle(userOption(), tattler)
-      lifeCycle.updateAssetAttributes(Asset.findById(asset.getId).get, attribs)
+      lifeCycle.updateAssetAttributes(Asset.findById(asset.id).get, attribs)
     }
     
     BackgroundProcessor.send(ActivationProcessor(slId)(request)) { res =>
       processProvisionAction(res) {
         case true =>
-          val newAsset = Asset.findById(asset.getId).get
+          val newAsset = Asset.findById(asset.id).get
           Asset.partialUpdate(newAsset, None, AStatus.New.map(_.id))
           setAsset(newAsset)
           tattle("Asset successfully activated", false)
@@ -271,9 +271,9 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
         if (attribs.nonEmpty) {
           val lifeCycle = new AssetLifecycle(userOption(), tattler)
           lifeCycle.updateAssetAttributes(
-            Asset.findById(asset.getId).get, attribs
+            Asset.findById(asset.id).get, attribs
           )
-          setAsset(Asset.findById(asset.getId))
+          setAsset(Asset.findById(asset.id))
         }
         BackgroundProcessor.send(ProvisionerRun(pRequest)) { res =>
           processProvisionAction(res) { result =>

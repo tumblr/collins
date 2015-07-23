@@ -61,11 +61,11 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
   }
 
   def findAllByAsset(asset: Asset, checkCache: Boolean = true): Seq[T] = inTransaction { 
-    tableDef.where(a => a.asset_id === asset.getId).toList 
+    tableDef.where(a => a.asset_id === asset.id).toList 
   }
 
   def findByAsset(asset: Asset)(implicit mf: Manifest[T]): Option[T] = inTransaction {
-    tableDef.where(a => a.asset_id === asset.getId).headOption
+    tableDef.where(a => a.asset_id === asset.id).headOption
   }
 
   def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long,Long,Long] = {

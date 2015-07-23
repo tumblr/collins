@@ -25,8 +25,8 @@ trait CommonHelperSpec[REP] extends collins.ResourceFinder {
     val enums = AssetMeta.Enum.values.toSeq
     val dvals = AssetMeta.DynamicEnum.getValues
     mvs.map { mv =>
-      val mid = mv.asset_meta_id
-      MetaWrapper(AssetMeta.findById(mv.asset_meta_id).get, mv)
+      val mid = mv.assetMetaId
+      MetaWrapper(AssetMeta.findById(mv.assetMetaId).get, mv)
     }
   }
 }

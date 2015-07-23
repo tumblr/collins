@@ -6,11 +6,11 @@ import collins.util.CryptoCodec
  * Provide a convenience wrapper on top of a row of meta/value data
  */
 case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
-  def getAssetId(): Long = _value.asset_id
+  def getAssetId(): Long = _value.assetId
   def getMetaId(): Long = _meta.id
   def getId(): (Long,Long) = (getAssetId(), getMetaId())
   def getName(): String = _meta.name
-  def getGroupId(): Int = _value.group_id
+  def getGroupId(): Int = _value.groupId
   def getPriority(): Int = _meta.priority
   def getLabel(): String = _meta.label
   def getDescription(): String = _meta.description
@@ -24,7 +24,7 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
 }
 
 object MetaWrapper {
-  def apply(amv: AssetMetaValue): MetaWrapper = MetaWrapper(amv.getMeta, amv)
+  def apply(amv: AssetMetaValue): MetaWrapper = MetaWrapper(amv.meta, amv)
   def createMeta(asset: Asset, metas: Map[String,String], groupId: Option[Int] = None) = {
     val metaValues = metas.map { case(k,v) =>
       val meta = AssetMeta.findOrCreateFromName(k)

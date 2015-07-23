@@ -71,7 +71,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
   }
 
   def createForAsset(asset: Asset, scope: Option[String]): IpAddresses = inTransaction {
-    val assetId = asset.getId
+    val assetId = asset.id
     val cfg = getConfig()(scope)
     val ipAddresses = createWithRetry(10) { attempt =>
       val (gateway, address, netmask) = getNextAddress(attempt)(scope)

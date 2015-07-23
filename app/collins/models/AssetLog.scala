@@ -13,7 +13,10 @@ import org.squeryl.PrimitiveTypeMode.orderByArg2OrderByExpression
 import org.squeryl.PrimitiveTypeMode.singleColComputeQuery2Scalar
 import org.squeryl.PrimitiveTypeMode.traversableOfEnumerationValue2ListEnumerationValue
 import org.squeryl.PrimitiveTypeMode.where
+
 import org.squeryl.Schema
+import org.squeryl.annotations.Column
+import org.squeryl.annotations.Transient
 import org.squeryl.dsl.ast.LogicalBoolean
 
 import play.api.libs.json.JsObject
@@ -38,12 +41,12 @@ import collins.models.shared.Page
 import collins.models.shared.ValidatedEntity
 
 case class AssetLog(
-  asset_id: Long,
+  @Column("ASSET_ID") assetId: Long,
   created: Timestamp,
-  created_by: String,
+  @Column("CREATED_BY") createdBy: String,
   format: LogFormat = LogFormat.PlainText,
   source: LogSource = LogSource.Internal,
-  message_type: LogMessageType = LogMessageType.Emergency,
+  @Column("MESSAGE_TYPE") messageType: LogMessageType = LogMessageType.Emergency,
   message: String,
   id: Long = 0) extends ValidatedEntity[Long]
 {
@@ -66,29 +69,27 @@ case class AssetLog(
   def isUserSource(): Boolean = getSource() == LogSource.User
   def isSystemSource(): Boolean = getSource() == LogSource.System
 
-  def getMessageType(): LogMessageType = message_type
   def isEmergency(): Boolean =
-    getMessageType() == LogMessageType.Emergency
+    messageType == LogMessageType.Emergency
   def isAlert(): Boolean =
-    getMessageType() == LogMessageType.Alert
+    messageType == LogMessageType.Alert
   def isCritical(): Boolean =
-    getMessageType() == LogMessageType.Critical
+    messageType == LogMessageType.Critical
   def isError(): Boolean =
-    getMessageType() == LogMessageType.Error
+    messageType == LogMessageType.Error
   def isWarning(): Boolean =
-    getMessageType() == LogMessageType.Warning
+    messageType == LogMessageType.Warning
   def isNotice(): Boolean =
-    getMessageType() == LogMessageType.Notice
+    messageType == LogMessageType.Notice
   def isInformational(): Boolean =
-    getMessageType() == LogMessageType.Informational
+    messageType == LogMessageType.Informational
   def isDebug(): Boolean =
-    getMessageType() == LogMessageType.Debug
-
-  def getId(): Long = id
-  def getAssetId(): Long = asset_id
-  def getCreatedBy(): String = created_by
-  def getAssetTag(): String = getAsset().tag
-  def getAsset(): Asset = Asset.findById(getAssetId()).get
+    messageType == LogMessageType.Debug
+  
+  @Transient
+  lazy val assetTag: String = asset.tag
+  @Transient
+  lazy val asset: Asset = Asset.findById(assetId).get
 
   def withException(ex: Throwable) = {
     val oldMessage = message
@@ -133,13 +134,13 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
   override val tableDef = table[AssetLog]("asset_log")
   on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
-    columns(a.asset_id, a.message_type) are(indexed)
+    columns(a.assetId, a.messageType) are(indexed)
   ))
 
   override def delete(t: AssetLog): Int = 0
 
   def apply(asset: Asset, createdBy: String, message: String, format: LogFormat, source: LogSource, mt: LogMessageType) = {
-    new AssetLog(asset.getId, new Date().asTimestamp, createdBy, format, source, mt, message)
+    new AssetLog(asset.id, new Date().asTimestamp, createdBy, format, source, mt, message)
   }
 
   // A "panic" condition - notify all tech staff on call? (earthquake? tornado?) - affects multiple
@@ -199,7 +200,7 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
 
   def list(asset: Option[Asset], page: Int = 0, pageSize: Int = 10, sort: String = "DESC", filter: String = ""): Page[AssetLog] = inTransaction {
     val offset = pageSize * page
-    val asset_id = asset.map(_.getId)
+    val asset_id = asset.map(_.id)
     val query = from(tableDef)(a =>
       where(whereClause(a, asset_id, filter))
       select(a)
@@ -216,7 +217,7 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
 
   def findByAsset(asset: Asset) = inTransaction {
     from(tableDef)(a =>
-      where(a.asset_id === asset.id)
+      where(a.assetId === asset.id)
       select(a)
     ).toList
   }
@@ -231,9 +232,9 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
   private def whereClause(a: AssetLog, asset_id: Option[Long], filter: String) = {
     filter match {
       case e if e.isEmpty =>
-        (a.asset_id === asset_id.?)
+        (a.assetId === asset_id.?)
       case ne =>
-        (a.asset_id === asset_id.?) and
+        (a.assetId === asset_id.?) and
         filterToClause(ne, a)
     }
   }
@@ -254,9 +255,9 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
       }
     }
     if (negated) {
-      (log.message_type notIn filters)
+      (log.messageType notIn filters)
     } else {
-      (log.message_type in filters)
+      (log.messageType in filters)
     }
   }
 

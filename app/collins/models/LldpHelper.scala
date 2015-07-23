@@ -31,7 +31,7 @@ object LldpHelper extends CommonHelper[LldpRepresentation] {
     if (lldp.interfaceCount < 1) {
       return Seq()
     }
-    val asset_id = asset.getId
+    val asset_id = asset.id
     lldp.interfaces.zipWithIndex.foldLeft(Seq[AssetMetaValue]()) { case(seq,tuple) =>
       val interface = tuple._1
       val groupId = tuple._2
