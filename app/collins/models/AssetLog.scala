@@ -3,21 +3,15 @@ package collins.models
 import java.sql.Timestamp
 import java.util.Date
 
-import org.squeryl.PrimitiveTypeMode.__thisDsl
-import org.squeryl.PrimitiveTypeMode.count
-import org.squeryl.PrimitiveTypeMode.enum2EnumNode
-import org.squeryl.PrimitiveTypeMode.from
-import org.squeryl.PrimitiveTypeMode.long2ScalarLong
-import org.squeryl.PrimitiveTypeMode.optionLong2ScalarLong
-import org.squeryl.PrimitiveTypeMode.orderByArg2OrderByExpression
-import org.squeryl.PrimitiveTypeMode.singleColComputeQuery2Scalar
-import org.squeryl.PrimitiveTypeMode.traversableOfEnumerationValue2ListEnumerationValue
-import org.squeryl.PrimitiveTypeMode.where
+import org.squeryl.Schema
+import org.squeryl.annotations.Column
 
+import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Schema
 import org.squeryl.annotations.Column
 import org.squeryl.annotations.Transient
 import org.squeryl.dsl.ast.LogicalBoolean
+
 
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
@@ -227,6 +221,13 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
       where(a.id === id)
       select(a)
     ).toList.headOption
+  }
+  
+  def findByIds(id: Seq[Long]): List[AssetLog] = inTransaction {
+    from(tableDef)(s =>
+      where(s.id in id)
+      select(s)
+    ).toList
   }
 
   private def whereClause(a: AssetLog, asset_id: Option[Long], filter: String) = {

@@ -196,7 +196,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
     CQLQuery(AssetDocType, AssetSearchParameters(params, afinder, operation).toSolrExpression)
       .typeCheck
       .right
-      .flatMap{exp => AssetSearchQuery(exp, page).getPage()}
+      .flatMap{exp => AssetSearchQuery(exp, page).getPage(findByTags(_))}
       .fold(
         err => throw new Exception(err),
         page => page
@@ -208,8 +208,16 @@ object Asset extends Schema with AnormAdapter[Asset] {
   }
   def get(a: Asset) = findById(a.id).get
 
+  def findByTags(tags: Seq[String]): List[Asset] = inTransaction {
+    val ltags = tags.map { _.toLowerCase }
+    from(tableDef)(s =>
+      where(s.tag.toLowerCase in ltags)
+      select(s)
+    ).toList
+  }
+  
   def findByTag(tag: String): Option[Asset] = inTransaction {
-    tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
+    tableDef.where(_.tag.toLowerCase === tag.toLowerCase).headOption
   }
 
   /**

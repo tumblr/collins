@@ -51,7 +51,7 @@ case class SolrFindAction(
   }
 
   protected def getLogs(adh: ActionDataHolder): Page[AssetLog] = {
-    (new AssetLogSearchQuery(adh.query, adh.params)).getPage.fold(
+    (new AssetLogSearchQuery(adh.query, adh.params)).getPage(AssetLog.findByIds(_)).fold(
       err => throw new Exception(err),
       res => res
     )
