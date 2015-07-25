@@ -2,7 +2,7 @@ package collins.models
 
 import collins.models.logs._
 import org.specs2._
-import specification._
+import org.specs2.specification._
 import play.api.test.WithApplication
 
 class AssetLogSpec extends mutable.Specification {
@@ -12,7 +12,7 @@ class AssetLogSpec extends mutable.Specification {
   args(sequential = true)
 
   "The AssetLog Model" should {
-    
+
     "should create" in new WithApplication {
       "scoped" in new mocklog {
         val result = AssetLog.create(newLog)
@@ -37,7 +37,7 @@ class AssetLogSpec extends mutable.Specification {
           logs.items(0).getFormat mustEqual format
           logs.items(0).message mustEqual msg
         }
-        
+
         "find with a negating filter and no asset" in new concretelog {
           AssetLog.create(newLog)
           val alert = AssetLog.list(None,0,10,"DESC","!Informational")
@@ -93,7 +93,7 @@ class AssetLogSpec extends mutable.Specification {
       Asset.findByTag(tag).get
     }
     def asset = Asset.findByTag(tag) match {
-      case None => createAsset
+      case None    => createAsset
       case Some(a) => a
     }
     def asset_id = asset.id

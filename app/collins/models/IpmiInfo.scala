@@ -1,25 +1,27 @@
 package collins.models
 
 import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.annotations.Column
 import org.squeryl.dsl.ast.BinaryOperatorNodeLogicalBoolean
 import org.squeryl.dsl.ast.LogicalBoolean
 
 import play.api.libs.json.Json
 
+import collins.models.cache.Cache
 import collins.models.asset.AssetView
 import collins.models.shared.AddressPool
 import collins.models.shared.IpAddressStorage
 import collins.models.shared.IpAddressable
 import collins.models.shared.Page
 import collins.models.shared.PageParams
+import collins.models.conversions.IpmiFormat
+
 import collins.util.CryptoCodec
 import collins.util.IpAddress
 import collins.util.config.IpmiConfig
 
-import conversions.IpmiFormat
-
 case class IpmiInfo(
-  asset_id: Long,
+  @Column("ASSET_ID") assetId: Long,
   username: String,
   password: String,
   gateway: Long,
@@ -48,13 +50,15 @@ case class IpmiInfo(
   }
 }
 
-object IpmiInfo extends IpAddressStorage[IpmiInfo] {
+object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] {
   import org.squeryl.PrimitiveTypeMode._
+
+  def storageName = "IpmiInfo"
 
   val tableDef = table[IpmiInfo]("ipmi_info")
   on(tableDef)(i => declare(
     i.id is(autoIncremented,primaryKey),
-    i.asset_id is(unique),
+    i.assetId is(unique),
     i.address is(unique),
     i.gateway is(indexed),
     i.netmask is(indexed)
@@ -81,7 +85,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
   def findAssetsByIpmi(page: PageParams, ipmi: IpmiQuerySeq, finder: AssetFinder): Page[AssetView] = {
     def whereClause(assetRow: Asset, ipmiRow: IpmiInfo) = {
       where(
-        assetRow.id === ipmiRow.asset_id and
+        assetRow.id === ipmiRow.assetId and
         finder.asLogicalBoolean(assetRow) and
         collectParams(ipmi, ipmiRow)
       )
@@ -99,9 +103,9 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] {
     }}
   }
 
-  override def get(i: IpmiInfo) = inTransaction {
+  override def get(i: IpmiInfo): IpmiInfo = Cache.get(findByIdKey(i.id), inTransaction {
     tableDef.lookup(i.id).get
-  }
+  })
 
   type Enum = Enum.Value
   object Enum extends Enumeration(1) {

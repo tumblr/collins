@@ -8,13 +8,16 @@ import play.api.Logger
 
 import org.squeryl.Schema
 
+import collins.models.cache.Cache
 import collins.models.Asset
+import collins.models.IpAddressKeys
+
 import collins.util.IpAddress
 import collins.util.IpAddressCalc
 
 trait IpAddressable extends ValidatedEntity[Long] {
 
-  val asset_id: Long
+  val assetId: Long
   val gateway: Long
   val address: Long
   val netmask: Long
@@ -30,18 +33,16 @@ trait IpAddressable extends ValidatedEntity[Long] {
   def dottedGateway(): String = IpAddress.toString(gateway)
   def dottedNetmask(): String = IpAddress.toString(netmask)
   def getId(): Long = id
-  def getAssetId(): Long = asset_id
+  def getAssetId(): Long = assetId
   def getAsset(): Asset = Asset.findById(getAssetId()).get
 
 }
 
-trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
+trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] with IpAddressKeys[T] { self: Schema with Keys[T] =>
   import org.squeryl.PrimitiveTypeMode._
 
-  lazy val className: String = getClass.getName.toString
-  lazy val findAllByAssetKey: String = "%s.findAllByAsset(".format(className) + "%d)"
-  lazy val findByAssetKey: String = "%s.findByAsset(".format(className) + "%d)"
-  lazy val getKey: String = "%s.get(".format(className) + "%d)"
+  // name of ipaddress storage, ipmi etc
+  def storageName: String
 
   // abstract
   protected def getConfig()(implicit scope: Option[String]): Option[AddressPool]
@@ -54,19 +55,28 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     }
   }
 
-  def deleteByAsset(a: Asset)(implicit mf: Manifest[T]): Int = inTransaction {
+  def deleteByAsset(a: Asset): Int = inTransaction {
     findAllByAsset(a).foldLeft(0) { case(sum, ipInfo) =>
       sum + delete(ipInfo)
     }
   }
 
-  def findAllByAsset(asset: Asset, checkCache: Boolean = true): Seq[T] = inTransaction { 
-    tableDef.where(a => a.asset_id === asset.id).toList 
+  def findAllByAsset(asset: Asset, checkCache: Boolean = true): List[T] = {
+    lazy val op = inTransaction {
+      tableDef.where(a => a.assetId === asset.id).toList
+    }
+    if (checkCache) {
+      Cache.get(findAllByAssetKey(asset.id), op)
+    } else {
+      inTransaction {
+        op
+      }
+    }
   }
 
-  def findByAsset(asset: Asset)(implicit mf: Manifest[T]): Option[T] = inTransaction {
-    tableDef.where(a => a.asset_id === asset.id).headOption
-  }
+  def findByAsset(asset: Asset): Option[T] = Cache.get(findByAssetKey(asset.id), inTransaction {
+    tableDef.where(a => a.assetId === asset.id).headOption
+  })
 
   def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long,Long,Long] = {
     //this is used by ip allocation without pools (i.e. IPMI)
@@ -152,7 +162,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] {
     }
   }
   protected def getNetwork()(implicit scope: Option[String]): String = getConfig() match {
-    case None => throw new RuntimeException("no %s configuration found".format(className))
+    case None => throw new RuntimeException("no %s configuration found".format(getClass.getName))
     case Some(config) => config.network
   }
   protected def getStartAddress()(implicit scope: Option[String]): Option[String] = getConfig() match {

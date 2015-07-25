@@ -9,6 +9,7 @@ import org.squeryl.annotations.Column
 
 import play.api.Logger
 
+import collins.models.cache.Cache
 import collins.models.shared.BasicModel
 import collins.models.shared.Page
 import collins.models.shared.PageParams
@@ -32,7 +33,7 @@ case class AssetMetaValue(@Column("ASSET_ID") assetId: Long, @Column("ASSET_META
 
 }
 
-object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
+object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] with AssetMetaValueKeys {
   type AssetMetaFinder = Seq[Tuple2[AssetMeta, String]]
   private[this] val logger = Logger.logger
 
@@ -146,28 +147,36 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] {
     }}
   }
 
-  def findByAsset(asset: Asset, checkCache: Boolean = true): Seq[MetaWrapper] = inTransaction {
+  def findByAsset(asset: Asset, checkCache: Boolean = true): List[MetaWrapper] = {
+    def loader = inTransaction {
       from(tableDef)(a =>
         where(a.assetId === asset.id)
-        select(a)
-      ).toList.map { amv =>
+          select (a)).toList.map { amv =>
         MetaWrapper(amv.meta, amv)
       }
+    }
+    if (checkCache) {
+      Cache.get(findByAssetKey(asset.id), loader)
+    } else {
+      val res = loader
+      Cache.put(findByAssetKey(asset.id), res)
+      res
+    }
   }
 
-  def findByAssetAndMeta(asset: Asset, meta: AssetMeta, count: Int): Seq[MetaWrapper] = inTransaction {
+  def findByAssetAndMeta(asset: Asset, meta: AssetMeta, count: Int): List[MetaWrapper] = Cache.get(findByAssetAndMetaKey(asset.id, meta.id), inTransaction {
     from(tableDef)(a =>
       where(a.assetId === asset.id and a.assetMetaId === meta.id)
       select(a)
     ).page(0, count).toList.map(mv => MetaWrapper(meta, mv))
-  }
+  })
 
-  def findByMeta(meta: AssetMeta): Seq[String] = inTransaction {
+  def findByMeta(meta: AssetMeta): Seq[String] = Cache.get(findByMetaKey(meta.id), inTransaction {
     from(tableDef)(a =>
       where(a.assetMetaId === meta.id)
       select(a.value)
     ).distinct.toList.sorted
-  }
+  })
 
   def purge(mvs: Seq[AssetMetaValue], groupId: Option[Int]) = {
     mvs.map(mv => (find(mv, false, groupId), mv)).foreach { case(oldValue, newValue) =>

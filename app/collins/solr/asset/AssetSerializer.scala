@@ -1,4 +1,3 @@
-
 package collins.solr
 
 import java.util.Date
@@ -49,7 +48,7 @@ object AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
     val ipmi: AssetSolrDocument = IpmiInfo.findByAsset(asset).map{ipmi => Map(
       res(IpmiInfo.Enum.IpmiAddress.toString).get -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
     )}.getOrElse(Map())
-      
+
     opt ++ ipmi ++ Map[SolrKey, SolrValue](
       res("ID").get -> SolrIntValue(asset.id.toInt),
       res("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
@@ -60,7 +59,7 @@ object AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
   }
 
   def getUUID(asset: Asset) = asset.id
-  
+
   //FIXME: The parsing logic here is duplicated in AssetMeta.validateValue
   def serializeMetaValues(values: Seq[MetaWrapper]): AssetSolrDocument = {
     def process(build: AssetSolrDocument, remain: Seq[MetaWrapper]): AssetSolrDocument = remain match {

@@ -53,8 +53,8 @@ object conversions {
       (json \ "ID").asOpt[Long].getOrElse(0L)
     ))
     override def writes(ipmi: IpmiInfo) = JsObject(Seq(
-      "ASSET_ID" -> Json.toJson(ipmi.asset_id),
-      "ASSET_TAG" -> Json.toJson(Asset.findById(ipmi.asset_id).map(_.tag).getOrElse("Unknown")),
+      "ASSET_ID" -> Json.toJson(ipmi.assetId),
+      "ASSET_TAG" -> Json.toJson(Asset.findById(ipmi.assetId).map(_.tag).getOrElse("Unknown")),
       IpmiUsername.toString -> Json.toJson(ipmi.username),
       IpmiPassword.toString -> Json.toJson(ipmi.password),
       IpmiGateway.toString -> Json.toJson(ipmi.dottedGateway),
@@ -73,8 +73,8 @@ object conversions {
       (json \ "ID").asOpt[Long].getOrElse(0L)
     ))
     override def writes(ip: IpAddresses) = JsObject(Seq(
-      "ASSET_ID" -> Json.toJson(ip.asset_id),
-      "ASSET_TAG" -> Json.toJson(Asset.findById(ip.asset_id).map(_.tag).getOrElse("Unknown")),
+      "ASSET_ID" -> Json.toJson(ip.assetId),
+      "ASSET_TAG" -> Json.toJson(Asset.findById(ip.assetId).map(_.tag).getOrElse("Unknown")),
       "GATEWAY" -> Json.toJson(ip.dottedGateway),
       "ADDRESS" -> Json.toJson(ip.dottedAddress),
       "NETMASK" -> Json.toJson(ip.dottedNetmask),

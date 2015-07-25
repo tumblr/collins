@@ -5,13 +5,11 @@ import java.util.Date
 
 import org.squeryl.Schema
 import org.squeryl.annotations.Column
-
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Schema
 import org.squeryl.annotations.Column
 import org.squeryl.annotations.Transient
 import org.squeryl.dsl.ast.LogicalBoolean
-
 
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
@@ -22,7 +20,6 @@ import collins.models.conversions.orderByString2oba
 import collins.models.shared.AnormAdapter
 import collins.models.shared.Page
 import collins.models.shared.ValidatedEntity
-
 import collins.models.conversions.AssetLogFormat
 import collins.models.logs.LogFormat
 import collins.models.logs.LogFormat.LogFormat
@@ -79,7 +76,7 @@ case class AssetLog(
     messageType == LogMessageType.Informational
   def isDebug(): Boolean =
     messageType == LogMessageType.Debug
-  
+
   @Transient
   lazy val assetTag: String = asset.tag
   @Transient
@@ -121,7 +118,7 @@ case class AssetLog(
   }
 }
 
-object AssetLog extends Schema with AnormAdapter[AssetLog] {
+object AssetLog extends Schema with AnormAdapter[AssetLog] with AssetLogKeys {
 
   override val createEventName = Some("asset_log_create")
 
@@ -217,12 +214,12 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
   }
 
   def findById(id: Long): Option[AssetLog] = inTransaction {
-    from(tableDef)(a => 
+    from(tableDef)(a =>
       where(a.id === id)
       select(a)
     ).toList.headOption
   }
-  
+
   def findByIds(id: Seq[Long]): List[AssetLog] = inTransaction {
     from(tableDef)(s =>
       where(s.id in id)
@@ -241,7 +238,7 @@ object AssetLog extends Schema with AnormAdapter[AssetLog] {
   }
 
   private def filterToClause(filter: String, log: AssetLog): LogicalBoolean = {
-    val (negated, filters) = filter.split(';').foldLeft(false,Set[LogMessageType]()) { case(tuple, fs) => 
+    val (negated, filters) = filter.split(';').foldLeft(false,Set[LogMessageType]()) { case(tuple, fs) =>
       val negate = fs.startsWith("!")
       val mt = negate match {
         case true =>

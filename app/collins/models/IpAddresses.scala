@@ -2,9 +2,11 @@ package collins.models
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.dsl.ast.LogicalBoolean
+import org.squeryl.annotations.Column
 
 import play.api.libs.json.Json
 
+import collins.models.cache.Cache
 import collins.models.asset.AssetView
 import collins.models.shared.AddressPool
 import collins.models.shared.IpAddressConfig
@@ -12,13 +14,13 @@ import collins.models.shared.IpAddressStorage
 import collins.models.shared.IpAddressable
 import collins.models.shared.Page
 import collins.models.shared.PageParams
+import collins.models.conversions.IpAddressFormat
+
 import collins.util.IpAddress
 import collins.util.IpAddressCalc
 
-import conversions.IpAddressFormat
-
 case class IpAddresses(
-  asset_id: Long,
+  @Column("ASSET_ID") assetId: Long,
   gateway: Long,
   address: Long,
   netmask: Long,
@@ -30,8 +32,10 @@ case class IpAddresses(
   def toJsValue = Json.toJson(this)
 }
 
-object IpAddresses extends IpAddressStorage[IpAddresses] {
+object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAddresses] {
   import org.squeryl.PrimitiveTypeMode._
+
+  override def storageName = "IpAddresses"
 
   override protected def createEventName: Option[String] = Some("ipAddresses_create")
   override protected def updateEventName: Option[String] = Some("ipAddresses_update")
@@ -46,7 +50,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     i.gateway is(indexed),
     i.netmask is(indexed),
     i.pool is(indexed),
-    columns(i.asset_id, i.address) are(indexed)
+    columns(i.assetId, i.address) are(indexed)
   ))
 
   def createForAsset(asset: Asset, count: Int, scope: Option[String]): Seq[IpAddresses] = {
@@ -84,7 +88,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
 
   def deleteByAssetAndPool(asset: Asset, pool: Option[String]): Int = inTransaction {
     val rows = tableDef.where(i =>
-      i.asset_id === asset.id and
+      i.assetId === asset.id and
       i.pool === pool.?
     ).toList
     val res = rows.foldLeft(0) { case(sum, ipInfo) =>
@@ -96,7 +100,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
   def findAssetsByAddress(page: PageParams, addys: Seq[String], finder: AssetFinder): Page[AssetView] = {
     def whereClause(assetRow: Asset, addressRow: IpAddresses) = {
       where(
-        (assetRow.id === addressRow.asset_id) and
+        (assetRow.id === addressRow.assetId) and
         generateFindQuery(addressRow, addys.head) and
         finder.asLogicalBoolean(assetRow)
       )
@@ -123,28 +127,28 @@ object IpAddresses extends IpAddressStorage[IpAddresses] {
     from(tableDef, Asset.tableDef)((i,a) =>
       where(
         (i.address === addressAsLong) and
-        (i.asset_id === a.id)
+        (i.assetId === a.id)
       )
       select(a)
     ).headOption
   }}
 
-  def findInPool(pool: String): Seq[IpAddresses] = inTransaction { log {
+  def findInPool(pool: String): List[IpAddresses] = inTransaction { log {
     from(tableDef)(i =>
       where(i.pool === pool)
       select(i)
     ).toList
   }}
 
-  override def get(i: IpAddresses) = inTransaction {
+  override def get(i: IpAddresses) = Cache.get(findByIdKey(i.id), inTransaction {
     tableDef.lookup(i.id).get
-  }
+  })
 
-  def getPoolsInUse(): Set[String] = inTransaction {
+  def getPoolsInUse(): Set[String] = Cache.get(findPoolsInUseKey, inTransaction {
     from(tableDef)(i =>
       select(i.pool)
     ).distinct.toSet
-  }
+  })
 
   override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
     AddressConfig.flatMap(cfg => scope.flatMap(cfg.pool(_)).orElse(cfg.defaultPool))

@@ -47,7 +47,7 @@ object AssetLifecycleConfig {
 
 object AssetLifecycle {
   type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
-  type Status[T] = Either[Throwable,T]  
+  type Status[T] = Either[Throwable,T]
 }
 // Supports meta operations on assets
 class AssetLifecycle(user: Option[User], tattler: Tattler) {
@@ -65,8 +65,9 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
           case false => None
         }
         Solr.updateAsset(asset)
-        Tuple2(asset, ipmi)
+        (asset, ipmi)
       }
+      Asset.flushCache(res._1)
       tattler.informational(
         "Initial intake successful, status now %s".format(_status.toString), res._1)
       Right(res)
@@ -281,7 +282,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     try {
       AssetLog.error(
         asset,
-        user.map{ _.username }.getOrElse(""), 
+        user.map{ _.username }.getOrElse(""),
         msg,
         LogFormat.PlainText,
         LogSource.Internal
