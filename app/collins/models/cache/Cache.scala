@@ -5,9 +5,37 @@ import java.util.concurrent.Callable
 import play.api.Logger
 
 import com.google.common.cache.{ Cache => BasicCache }
+import com.google.common.cache.{ CacheStats => GuavaCacheStats }
 
 import collins.cache.CacheConfig
 import collins.cache.GuavaCacheFactory
+
+trait Stats {
+  def evictionCount(): Long
+  def hitCount(): Long
+  def hitRate(): Double
+  def missCount(): Long
+  def missRate(): Double
+  def requestCount(): Long
+}
+
+class CacheStats(stats: GuavaCacheStats) extends Stats {
+  def evictionCount(): Long = stats.evictionCount
+  def hitCount(): Long = stats.hitCount
+  def hitRate(): Double = stats.hitRate
+  def missCount(): Long = stats.missCount
+  def missRate(): Double = stats.missRate
+  def requestCount(): Long = stats.requestCount
+}
+
+object DisabledStats extends Stats {
+  def evictionCount() = 0
+  def hitCount() = 0
+  def hitRate() = 0
+  def missCount() = 0
+  def missRate() = 0
+  def requestCount() = 0
+}
 
 object Cache {
 
@@ -21,13 +49,17 @@ object Cache {
     }
   }
 
+  def stats: Stats = {
+    cache.map(underlying => new CacheStats(underlying.stats)).getOrElse(DisabledStats)
+  }
+
   private[models] def invalidate(key: String) {
     logger.trace(s"Invalidating cache key $key")
     cache.map(_.invalidate(key))
   }
 
-  private[models] def clear() {
-    logger.trace("Clearing cache")
+  def clear() {
+    logger.warn("Clearing cache")
     cache.map(_.invalidateAll())
   }
 

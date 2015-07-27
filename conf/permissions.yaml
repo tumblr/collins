@@ -22,6 +22,7 @@ permissions:
     - "g=sre"
     - "u=admins"
     - "u=tools"
+  controllers.Admin.cache:
   controllers.Admin.stats:
   controllers.AssetLogApi.getAllLogData:
     - "g=infra"

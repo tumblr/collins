@@ -32,6 +32,7 @@ object Permissions {
   object Admin extends PermSpec("controllers.Admin") {
     def Spec = spec(AdminSpec)
     def Stats = spec("stats", Spec)
+    def Cache = spec("cache", Spec)
     def ClearCache = spec("clearCache", Stats)
   }
 
