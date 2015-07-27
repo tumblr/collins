@@ -1,6 +1,9 @@
+$LOAD_PATH.unshift('./lib/')
+
 require 'collins_auth'
 require 'optparse'
 require 'yaml'
+require 'consolr/version'
 
 module Consolr
   class Console
@@ -11,12 +14,12 @@ module Consolr
       config_file = [ENV['CONSOLR_CONFIG'],
                       '~/.consolr.yml', '~/.consolr.yaml',
                       '/etc/consolr.yml', '/etc/consolr.yaml',
-                      '/var/db/consolr.yml', '/var/db/consolr.yaml'].compact.find do |config_file|
-        File.readable? config_file and File.size(config_file) > 0
+                      '/var/db/consolr.yml', '/var/db/consolr.yaml'].compact.find do |conf|
+        File.readable?(File.expand_path(conf, __FILE__)) and File.size(File.expand_path(conf, __FILE__)) > 0
       end
 
       config_params = begin
-        YAML.load(File.open(config_file))
+        YAML.load(File.open(File.expand_path(config_file, __FILE__)))
       rescue TypeError => e
         puts "-------"
         puts "Failed to load Configuration File ... "
@@ -72,24 +75,24 @@ module Consolr
 
       @options = {}
       @opt_parser = OptionParser.new do |opt|
-        opt.banner = "Usage: consolr [OPTIONS]"
-        opt.separator  ""
-        opt.separator  "Options"
+        opt.banner = 'Usage: consolr [OPTIONS]'
+        opt.separator  ''
+        opt.separator  'Options'
         
-        opt.on("-c","--console","console into node via SOL") { options[:console] = true }
-        opt.on("-d","--dangerous","list dangerous stuff") { options[:dangerous] = true }
-        opt.on("-f","--force","force run dangerous actions") { options[:force] = true }
-        opt.on("-h","--help","help") { exit 0 }
-        opt.on("-H","--hostname ASSET","asset hostname") { |hostname| options[:hostname] = hostname }
-        opt.on("-i","--identify","turn on chassis UID") { options[:identify] = true }
-        opt.on("-k","--kick","kick if someone is hogging the console") { options[:kick] = true }
-        opt.on("-l","--log LOG","System Event Log (SEL) [list|clear]") { |log| options[:log] = log }
-        opt.on("-o","--on","turn on node") { options[:on] = true }
-        opt.on("-r","--reboot","restart node") { options[:reboot] = true }
-        opt.on("-s","--sdr","Sensor Data Repository (SDR)") { options[:sdr] = true }
-        opt.on("-t","--tag ASSET","asset tag") { |tag| options[:tag] = tag }
-        opt.on("-x","--off","turn off node") { options[:off] = true }
-        
+        opt.on('-c', '--console', 'console into node via SOL') { options[:console] = true }
+        opt.on('-d', '--dangerous', 'list dangerous stuff') { options[:dangerous] = true }
+        opt.on('-f', '--force', 'force run dangerous actions') { options[:force] = true }
+        opt.on('-H', '--hostname ASSET', 'asset hostname') { |hostname| options[:hostname] = hostname }
+        opt.on('-i', '--identify', 'turn on chassis UID') { options[:identify] = true }
+        opt.on('-k', '--kick', 'kick if someone is hogging the console') { options[:kick] = true }
+        opt.on('-l', '--log LOG', 'System Event Log (SEL) [list|clear]') { |log| options[:log] = log }
+        opt.on('-o', '--on', 'turn on node') { options[:on] = true }
+        opt.on('-r', '--reboot', 'restart node') { options[:reboot] = true }
+        opt.on('-s', '--sdr', 'Sensor Data Repository (SDR)') { options[:sdr] = true }
+        opt.on('-t', '--tag ASSET', 'asset tag') { |tag| options[:tag] = tag }
+        opt.on('-x', '--off', 'turn off node') { options[:off] = true }
+        opt.on_tail('-h', '--help', 'help') { puts opt; exit 0 }
+        opt.on_tail('-v', '--version', 'version') { puts Consolr::VERSION; exit 0 }
       end
     end
     
@@ -100,7 +103,7 @@ module Consolr
 
     def start
       @opt_parser.parse! # extract from ARGV[]
-      abort("Please pass either the asset tag or hostname" if options[:tag].nil? and options[:hostname].nil?
+      abort("Please pass either the asset tag or hostname") if options[:tag].nil? and options[:hostname].nil?
       
       abort("Cannot find #{@ipmitool_exec}") unless File.exist?(@ipmitool_exec)
 
@@ -142,36 +145,27 @@ module Consolr
         puts "Cannot run dangerous commands on #{@node.hostname} (#{@node.tag} - #{@node.status})"
         abort dangerous_body
       end
-      
+
       case
       when options[:console]
-        puts "--> Opening SOL session (type ~~. to quit)"
-        puts self.ipmitool_cmd("sol activate")
-      
+        puts '--> Opening SOL session (type ~~. to quit)'
+        puts ipmitool_cmd('sol activate')
       when options[:kick]
-        puts self.ipmitool_cmd("sol deactivate")
-      
+        puts ipmitool_cmd('sol deactivate')
       when options[:identify]
-        puts self.ipmitool_cmd("chassis identify")
-      
+        puts ipmitool_cmd('chassis identify')
       when options[:sdr]
-        puts self.ipmitool_cmd("sdr elist all")
-      
-      when options[:log] == "list"
-        puts self.ipmitool_cmd("sel list")
-      
-      when options[:log] == "clear"
-        puts self.ipmitool_cmd("sel clear")
-      
+        puts ipmitool_cmd('sdr elist all')
+      when options[:log] == 'list'
+        puts ipmitool_cmd('sel list')
+      when options[:log] == 'clear'
+        puts ipmitool_cmd('sel clear')
       when options[:on]
-        puts self.ipmitool_cmd("power on")
-      
+        puts ipmitool_cmd('power on')
       when options[:off]
-        puts self.ipmitool_cmd("power off")
-      
+        puts ipmitool_cmd('power off')
       when options[:reboot]
-        puts self.ipmitool_cmd("power cycle")
-      
+        puts ipmitool_cmd('power cycle')
       else
         begin
           raise OptionParser::MissingArgument, "specify an action"
