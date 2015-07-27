@@ -10,7 +10,7 @@ object CacheConfig extends Configurable {
   override val referenceConfigFilename = "cache_reference.conf"
 
   def enabled = getBoolean("enabled", true)
-  def specification = getString("specification", "maximumSize=10000,expireAfterWrite=10s")
+  def specification = getString("specification", "maximumSize=10000,expireAfterWrite=10s,recordStats")
 
   override protected def validateConfig() {
     if (enabled) {
