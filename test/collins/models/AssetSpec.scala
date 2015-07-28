@@ -17,23 +17,23 @@ class AssetSpec extends mutable.Specification {
 
       "CREATE" in new mockasset {
         val result = Asset.create(newAsset)
-        result.getId must beGreaterThan(1L)
+        result.id must beGreaterThan(1L)
       }
 
       "UPDATE" in new mockasset {
         val maybeAsset = Asset.findByTag(assetTag)
         maybeAsset must beSome[Asset]
         val realAsset = maybeAsset.get
-        Asset.update(realAsset.copy(status = Status.New.get.id))
+        Asset.update(realAsset.copy(statusId = Status.New.get.id))
         Asset.findByTag(assetTag).map { a =>
-          a.getStatus().getId mustEqual(Status.New.get.id)
+          a.status.id mustEqual(Status.New.get.id)
         }.getOrElse(failure("Couldn't find asset but expected to"))
       }
 
       "DELETE" in new mockasset {
         Asset.findByTag(assetTag).map { a =>
           Asset.delete(a) mustEqual 1
-          Asset.findById(a.getId) must beNone
+          Asset.findById(a.id) must beNone
         }.getOrElse(failure("Couldn't find asset but expected to"))
       }
     }

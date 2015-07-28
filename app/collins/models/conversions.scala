@@ -53,8 +53,8 @@ object conversions {
       (json \ "ID").asOpt[Long].getOrElse(0L)
     ))
     override def writes(ipmi: IpmiInfo) = JsObject(Seq(
-      "ASSET_ID" -> Json.toJson(ipmi.asset_id),
-      "ASSET_TAG" -> Json.toJson(Asset.findById(ipmi.asset_id).map(_.tag).getOrElse("Unknown")),
+      "ASSET_ID" -> Json.toJson(ipmi.assetId),
+      "ASSET_TAG" -> Json.toJson(Asset.findById(ipmi.assetId).map(_.tag).getOrElse("Unknown")),
       IpmiUsername.toString -> Json.toJson(ipmi.username),
       IpmiPassword.toString -> Json.toJson(ipmi.password),
       IpmiGateway.toString -> Json.toJson(ipmi.dottedGateway),
@@ -73,8 +73,8 @@ object conversions {
       (json \ "ID").asOpt[Long].getOrElse(0L)
     ))
     override def writes(ip: IpAddresses) = JsObject(Seq(
-      "ASSET_ID" -> Json.toJson(ip.asset_id),
-      "ASSET_TAG" -> Json.toJson(Asset.findById(ip.asset_id).map(_.tag).getOrElse("Unknown")),
+      "ASSET_ID" -> Json.toJson(ip.assetId),
+      "ASSET_TAG" -> Json.toJson(Asset.findById(ip.assetId).map(_.tag).getOrElse("Unknown")),
       "GATEWAY" -> Json.toJson(ip.dottedGateway),
       "ADDRESS" -> Json.toJson(ip.dottedAddress),
       "NETMASK" -> Json.toJson(ip.dottedNetmask),
@@ -83,7 +83,6 @@ object conversions {
     ))
   }
   implicit object AssetLogFormat extends Format[AssetLog] {
-    val df = new SimpleDateFormat("d/M/yy HH:mm:ss")
     override def reads(json: JsValue) = JsSuccess(AssetLog(
       (json \ "ASSET_ID").as[Long],
       (json \ "CREATED").as[Timestamp],
@@ -96,12 +95,12 @@ object conversions {
     ))
     override def writes(log: AssetLog) = JsObject(Seq(
       "ID" -> Json.toJson(log.id),
-      "ASSET_TAG" -> Json.toJson(Asset.findById(log.asset_id).map(_.tag).getOrElse("Unknown")),
-      "CREATED" -> Json.toJson(df.format(log.created)),
-      "CREATED_BY" -> Json.toJson(log.created_by),
+      "ASSET_TAG" -> Json.toJson(Asset.findById(log.assetId).map(_.tag).getOrElse("Unknown")),
+      "CREATED" -> Json.toJson(log.created),
+      "CREATED_BY" -> Json.toJson(log.createdBy),
       "FORMAT" -> Json.toJson(log.format.toString),
       "SOURCE" -> Json.toJson(log.source.toString),
-      "TYPE" -> Json.toJson(log.message_type.toString),
+      "TYPE" -> Json.toJson(log.messageType.toString),
       "MESSAGE" -> (if (log.isJson()) {
         try {
           Json.parse(log.message)

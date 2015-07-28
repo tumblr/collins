@@ -9,11 +9,11 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
+import collins.models.cache.Cache
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
 
 case class AssetType(name: String, label: String, id: Int = 0) extends ValidatedEntity[Int] {
-  def getId(): Int = id
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
   }
@@ -23,7 +23,7 @@ case class AssetType(name: String, label: String, id: Int = 0) extends Validated
   override def toString(): String = name
 }
 
-object AssetType extends Schema with AnormAdapter[AssetType] {
+object AssetType extends Schema with AnormAdapter[AssetType] with AssetTypeKeys {
 
   override val tableDef = table[AssetType]("asset_type")
   val reservedNames = List("SERVER_NODE","SERVER_CHASSIS","RACK","SWITCH","ROUTER","POWER_CIRCUIT","POWER_STRIP","DATA_CENTER","CONFIGURATION")
@@ -45,21 +45,21 @@ object AssetType extends Schema with AnormAdapter[AssetType] {
     ))
   }
 
-  def findById(id: Int): Option[AssetType] = inTransaction {
+  def findById(id: Int): Option[AssetType] = Cache.get(findByIdKey(id), inTransaction {
     tableDef.lookup(id)
-  }
+  })
 
   override def get(a: AssetType) = findById(a.id).get
 
-  def find(): List[AssetType] = inTransaction {
+  def find(): List[AssetType] = Cache.get(findKey, inTransaction {
     from(tableDef)(at => select(at)).toList
-  }
+  })
 
-  def findByName(name: String): Option[AssetType] = inTransaction {
+  def findByName(name: String): Option[AssetType] = Cache.get(findByNameKey(name), inTransaction {
     tableDef.where(a =>
       a.name.toLowerCase === name.toLowerCase
     ).headOption
-  }
+  })
 
   override def delete(a: AssetType): Int = inTransaction {
     afterDeleteCallback(a) {

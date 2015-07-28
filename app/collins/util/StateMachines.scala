@@ -21,7 +21,7 @@ case class AssetStateMachine(asset: Asset) {
   def decommission(): Option[Asset] = if (canDecommission) {
     val sid = State.Terminated.map(_.id).getOrElse(0)
     // FIXME change to partial update
-    val newAsset = asset.copy(status = Status.Decommissioned.get.id, deleted = Some(new Date().asTimestamp), state = sid)
+    val newAsset = asset.copy(statusId = Status.Decommissioned.get.id, deleted = Some(new Date().asTimestamp), stateId = sid)
     val res = Asset.update(newAsset) match {
       case 1 => Some(newAsset)
       case n => None

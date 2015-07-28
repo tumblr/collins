@@ -26,6 +26,8 @@ GET     /asset/:tag/similar         collins.app.Resources.similar(tag: String, p
 
 # Admin pages
 GET     /admin/stats                collins.controllers.Admin.stats
+GET     /admin/cache                collins.controllers.Admin.cache
+POST    /admin/cache/clear          collins.controllers.Admin.clearCache
 GET     /admin/logs                 collins.controllers.Admin.logs
 GET     /admin/solr                 collins.controllers.Admin.populateSolr
 

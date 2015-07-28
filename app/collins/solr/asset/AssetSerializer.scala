@@ -1,4 +1,3 @@
-
 package collins.solr
 
 import java.util.Date
@@ -34,7 +33,7 @@ object AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
     val opt = Map[SolrKey, Option[SolrValue]](
       res("UPDATED").get -> asset.updated.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
       res("DELETED").get -> asset.deleted.map{t => SolrStringValue(Formatter.solrDateFormat(t), StrictUnquoted)},
-      res("STATE").get -> asset.getState.map{s => SolrStringValue(s.name, StrictUnquoted)},
+      res("STATE").get -> asset.state.map{s => SolrStringValue(s.name, StrictUnquoted)},
       res("IP_ADDRESS").get -> {
         val a = IpAddresses.findAllByAsset(asset, false)
         if (a.size > 0) {
@@ -49,18 +48,18 @@ object AssetSerializer extends SolrSerializer[Asset](AssetDocType) {
     val ipmi: AssetSolrDocument = IpmiInfo.findByAsset(asset).map{ipmi => Map(
       res(IpmiInfo.Enum.IpmiAddress.toString).get -> SolrStringValue(ipmi.dottedAddress, StrictUnquoted)
     )}.getOrElse(Map())
-      
+
     opt ++ ipmi ++ Map[SolrKey, SolrValue](
       res("ID").get -> SolrIntValue(asset.id.toInt),
       res("TAG").get -> SolrStringValue(asset.tag, StrictUnquoted),
-      res("STATUS").get -> SolrStringValue(asset.getStatus.name, StrictUnquoted),
-      res("TYPE").get -> SolrStringValue(asset.getType.name, StrictUnquoted),
+      res("STATUS").get -> SolrStringValue(asset.getStatusName, StrictUnquoted),
+      res("TYPE").get -> SolrStringValue(asset.getTypeName, StrictUnquoted),
       res("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(asset.created), StrictUnquoted)
     ) ++ serializeMetaValues(AssetMetaValue.findByAsset(asset, false))
   }
 
   def getUUID(asset: Asset) = asset.id
-  
+
   //FIXME: The parsing logic here is duplicated in AssetMeta.validateValue
   def serializeMetaValues(values: Seq[MetaWrapper]): AssetSolrDocument = {
     def process(build: AssetSolrDocument, remain: Seq[MetaWrapper]): AssetSolrDocument = remain match {

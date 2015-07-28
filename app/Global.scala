@@ -23,6 +23,7 @@ import collins.util.security.AuthenticationAccessor
 import collins.util.security.AuthenticationProvider
 import collins.util.security.AuthenticationProviderConfig
 
+import collins.models.cache.Cache
 import collins.logging.LoggingHelper
 import collins.util.config.Registry
 import collins.solr.SolrHelper
@@ -39,6 +40,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
 
   override def onStart(app: Application) {
     Registry.setupRegistry(app)
+    Cache.setupCache()
     setAuthentication(AuthenticationProvider.get(AuthenticationProviderConfig.authType))
     setCryptoKey(CryptoConfig.key)
     LoggingHelper.setupLogging(app)
@@ -46,7 +48,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     MetricsReporter.setupMetrics()
     Callback.setupCallbacks()
   }
-  
+
   override def onStop(app: Application) {
     DB.shutdown()
     Registry.terminateRegistry()

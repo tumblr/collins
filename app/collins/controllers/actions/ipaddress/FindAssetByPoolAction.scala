@@ -26,7 +26,7 @@ case class FindAssetsByPoolAction(
   override def validate(): Validation =
     Right(ActionDataHolder(convertPoolName(pool)))
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case ActionDataHolder(cleanPool) =>
         IpAddresses.findInPool(cleanPool) match {
@@ -35,7 +35,7 @@ case class FindAssetsByPoolAction(
               RequestDataHolder.error404("No such pool or no assets in pool")
             )
           case list =>
-            val jsList = list.map(e => Asset.findById(e.asset_id).get.toJsValue).toList
+            val jsList = list.map(e => Asset.findById(e.assetId).get.toJsValue).toList
             ResponseData(Status.Ok, JsObject(Seq("ASSETS" -> JsArray(jsList))))
         }
     }

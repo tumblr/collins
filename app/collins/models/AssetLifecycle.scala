@@ -47,7 +47,7 @@ object AssetLifecycleConfig {
 
 object AssetLifecycle {
   type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
-  type Status[T] = Either[Throwable,T]  
+  type Status[T] = Either[Throwable,T]
 }
 // Supports meta operations on assets
 class AssetLifecycle(user: Option[User], tattler: Tattler) {
@@ -65,8 +65,9 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
           case false => None
         }
         Solr.updateAsset(asset)
-        Tuple2(asset, ipmi)
+        (asset, ipmi)
       }
+      Asset.flushCache(res._1)
       tattler.informational(
         "Initial intake successful, status now %s".format(_status.toString), res._1)
       Right(res)
@@ -151,7 +152,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
 
   protected def updateServerHardwareMeta(asset: Asset, options: Map[String,String]): AssetLifecycle.Status[Boolean] = {
     // if asset's status is in the allowed statuses for updating, do it
-    if (Feature.allowedServerUpdateStatuses.contains(asset.getStatus())) {
+    if (Feature.allowedServerUpdateStatuses.contains(asset.status)) {
       // we will allow updates to lshw/lldp while the machine is in these statuses
       allCatch[Boolean].either {
         Asset.inTransaction {
@@ -196,9 +197,9 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
         val created = AssetMetaValue.create(values)
         require(created == values.length,
           "Should have created %d rows, created %d".format(values.length, created))
-        val newAsset = asset.copy(status = Status.Unallocated.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
+        val newAsset = asset.copy(statusId = Status.Unallocated.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
         MetaWrapper.createMeta(newAsset, filtered)
-        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.Starting)
+        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.statusId), State.Starting)
         newAsset
       }
       tattler.informational("Intake now complete, asset Unallocated", unallocatedAsset)
@@ -234,8 +235,8 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
           throw lldpParsingResults.left.get
         }
         MetaWrapper.createMeta(asset, filtered ++ Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
-        val newAsset = asset.copy(status = Status.New.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
-        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.status), State.New)
+        val newAsset = asset.copy(statusId = Status.New.map(_.id).getOrElse(0), updated = Some(new Date().asTimestamp))
+        Asset.partialUpdate(newAsset, newAsset.updated, Some(newAsset.statusId), State.New)
         tattler.informational("Parsing and storing LSHW/LLDP data succeeded", newAsset)
         true
       }
@@ -281,7 +282,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     try {
       AssetLog.error(
         asset,
-        user.map{ _.username }.getOrElse(""), 
+        user.map{ _.username }.getOrElse(""),
         msg,
         LogFormat.PlainText,
         LogSource.Internal

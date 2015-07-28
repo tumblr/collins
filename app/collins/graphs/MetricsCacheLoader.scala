@@ -4,6 +4,7 @@ import play.api.Logger
 
 import com.google.common.cache.CacheLoader
 
+import collins.models.Asset
 import collins.models.shared.PageParams
 import collins.models.shared.SortDirection
 import collins.solr.AssetDocType
@@ -43,7 +44,7 @@ case class MetricsCacheLoader() extends CacheLoader[MetricsQuery, Set[String]] {
         },
         expr => {
           val cq = AssetSearchQuery(expr, PageParams(0, 1, SortDirection.SortAsc, "TAG"))
-          cq.getPage().fold(
+          cq.getPage(Asset.findByTags(_)).fold(
             err => {
               logger.warn("Error executing CQL query: %s".format(err))
               false

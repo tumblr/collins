@@ -11,6 +11,12 @@ import play.api.Logger
 
 import collins.callbacks.Callback
 
+import collins.models.cache.Cache
+
+trait Keys[T <: AnyRef] {
+  def cacheKeys(t: T): Seq[String]
+}
+
 trait ValidatedEntity[T] extends KeyedEntity[T] {
   def validate(): Unit
   def asJson: String
@@ -27,7 +33,7 @@ trait ValidatedEntity[T] extends KeyedEntity[T] {
   override def isPersisted: Boolean = persisted.getOrElse(super.isPersisted)
 }
 
-trait BasicModel[T <: AnyRef] { self: Schema =>
+trait BasicModel[T <: AnyRef] { self: Schema with Keys[T] =>
   private[this] val logger = Logger(getClass)
 
   import org.squeryl.PrimitiveTypeMode
@@ -38,9 +44,14 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
 
   def inTransaction[A](f: => A): A = PrimitiveTypeMode.inTransaction(f)
 
+  override def callbacks = Seq(
+    afterDelete(tableDef) call (loggedInvalidation("afterDelete", _)),
+    afterUpdate(tableDef) call (loggedInvalidation("afterUpdate", _)),
+    afterInsert(tableDef) call (loggedInvalidation("afterInsert", _)))
+
   protected def log[A](a: => A): A = {
     if (QueryLogConfig.enabled) {
-      org.squeryl.Session.currentSession.setLogger(query => 
+      org.squeryl.Session.currentSession.setLogger(query =>
         if (QueryLogConfig.includeResults || !(query startsWith "ResultSetRow")) {
           Logger.logger.info(QueryLogConfig.prefix + query)
         }
@@ -71,6 +82,12 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
       query.page(offset, pageSize)
     }
 
+  protected def loggedInvalidation(s: String, t: T) {
+    logger.trace("Callback triggered: %s - %s".format(getClass.getName, s))
+    cacheKeys(t).map { k =>
+      Cache.invalidate(k)
+    }
+  }
   protected def afterDeleteCallback[A](t: T)(f: => A): A = {
     val result = f
     deleteEventName.map { name =>
@@ -83,7 +100,7 @@ trait BasicModel[T <: AnyRef] { self: Schema =>
   }
 }
 
-trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema =>
+trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema with Keys[T] =>
   protected def updateEventName: Option[String] = None
 
   def get(t: T): T
@@ -103,7 +120,7 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
     }
   }
 
-  override def callbacks = Seq(
+  override def callbacks = super.callbacks ++ Seq(
     beforeInsert(tableDef) call(_.validate),
     beforeUpdate(tableDef) call(_.validate)
   )

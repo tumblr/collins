@@ -35,19 +35,19 @@ case class AssetSummary(template: String) extends Summarizer[Asset] {
   def getAssetType(asset: Asset): String = {
     asset.isServerNode match {
       case true => "Server"
-      case false => asset.getType().label
+      case false => asset.assetType.label
     }
   }
   def getStatusLabel(asset: Asset): String = {
-    val state_string = asset.getState match {
+    val state_string = asset.state match {
       case Some(st) => ":%s" format st.name
       case None => ""
     }
-    val state_descr = asset.getState match {
+    val state_descr = asset.state match {
       case Some(st) => " - %s" format st.description
       case None => ""
     }
-    val badge_class = asset.getStatus.name match {
+    val badge_class = asset.getStatusName match {
       case "Allocated"                    => "label-primary"
       case "Cancelled" | "Decommissioned" => "label-default"
       case "Maintenance"                  => "label-danger"
@@ -56,7 +56,7 @@ case class AssetSummary(template: String) extends Summarizer[Asset] {
       case "Unallocated"                  => "label-success"
       case _                              => "label-default"
     }
-    "<span data-rel=\"tooltip\" data-original-title=\"" + asset.getStatus.description + state_descr +
+    "<span data-rel=\"tooltip\" data-original-title=\"" + asset.status.description + state_descr +
       "\" data-placement=\"bottom\"  class=\"label " + badge_class + "\">" + asset.getStatusName + state_string + "</span>"
   }
   def getHostname(asset: Asset): String = {

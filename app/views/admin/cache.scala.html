@@ -1,0 +1,48 @@
+@(cacheStats: collins.models.cache.Stats)(implicit flash: Flash, req: Request[AnyContent])
+
+@import collins.util.views.Formatter
+@import collins.util.Stats
+
+@main("Cache Stats") {
+<div class="page-header">
+  <h1>Since <small>@Formatter.dateFormat(Stats.StartupTime)</small></h1>
+</div>
+<div class="row">      
+  <div class="colmd12">      
+    <h3 style="display: inline; float: left;"><a datacollapsible="cacheStats">Cache Stats</a></h3>        
+    <form action="/admin/cache/clear" method="POST"><button type="submit" style="float: right" class="btn btnprimary">Clear Cache</button></form>   
+  </div>       
+       
+  <div class="colmd12">      
+    <table id="cacheStats" class="table tablebordered tablehover tablecondensed">       
+      <tbody>      
+        <tr>       
+          <th>Eviction Count</th>      
+          <td>@cacheStats.evictionCount</td>       
+        </tr>      
+        <tr>       
+          <th>Hit Count</th>       
+          <td>@cacheStats.hitCount</td>        
+        </tr>      
+        <tr>       
+          <th>Hit Rate</th>        
+          <td>@Formatter.forPercent(cacheStats.hitRate) %</td>     
+        </tr>      
+        <tr>       
+          <th>Miss Count</th>      
+          <td>@cacheStats.missCount</td>       
+        </tr>      
+        <tr>       
+          <th>Miss Rate</th>       
+          <td>@Formatter.forPercent(cacheStats.missRate) %</td>        
+        </tr>      
+        <tr>       
+          <th>Request Count</th>       
+          <td>@cacheStats.requestCount</td>        
+        </tr>      
+      </tbody>     
+       
+    </table>       
+  </div>       
+</div>
+}

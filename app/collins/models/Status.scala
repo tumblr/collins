@@ -1,12 +1,7 @@
 package collins.models
 
-import scala.math.BigDecimal.int2bigDecimal
+import org.squeryl.PrimitiveTypeMode._
 
-import org.squeryl.PrimitiveTypeMode.__thisDsl
-import org.squeryl.PrimitiveTypeMode.from
-import org.squeryl.PrimitiveTypeMode.int2ScalarInt
-import org.squeryl.PrimitiveTypeMode.select
-import org.squeryl.PrimitiveTypeMode.string2ScalarString
 import org.squeryl.Schema
 
 import play.api.libs.json.Format
@@ -17,11 +12,11 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
+import collins.models.cache.Cache
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
 
 case class Status(name: String, description: String, id: Int = 0) extends ValidatedEntity[Int] {
-  def getId(): Int = id
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
     require(description != null && description.length > 0, "Description must not be empty")
@@ -33,7 +28,7 @@ case class Status(name: String, description: String, id: Int = 0) extends Valida
   override def toString(): String = name
 }
 
-object Status extends Schema with AnormAdapter[Status] {
+object Status extends Schema with AnormAdapter[Status] with StatusKeys {
 
   def Allocated = Status.findByName("Allocated")
   def Cancelled = Status.findByName("Cancelled")
@@ -64,21 +59,21 @@ object Status extends Schema with AnormAdapter[Status] {
     s.name is(unique)
   ))
 
-  def find(): List[Status] = inTransaction {
+  def find(): List[Status] = Cache.get(findKey, inTransaction {
     from(tableDef)(s => select(s)).toList
-  }
-  
-  def findById(id: Int): Option[Status] = inTransaction {
+  })
+
+  def findById(id: Int): Option[Status] = Cache.get(findByIdKey(id), inTransaction {
     tableDef.lookup(id)
-  }
+  })
 
   override def get(s: Status) = findById(s.id).get
 
-  def findByName(name: String): Option[Status] = inTransaction {
+  def findByName(name: String): Option[Status] = Cache.get(findByNameKey(name), inTransaction {
     tableDef.where(s =>
       s.name.toLowerCase === name.toLowerCase
     ).headOption
-  }
+  })
 
   override def delete(s: Status): Int = inTransaction {
     afterDeleteCallback(s) {

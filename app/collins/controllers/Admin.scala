@@ -1,5 +1,7 @@
 package collins.controllers
 
+import collins.models.cache.Cache
+
 import collins.solr.Solr
 import collins.util.Stats
 
@@ -15,7 +17,16 @@ object Admin extends SecureWebController {
     Ok(html.admin.logs())
   }(Permissions.AssetLogApi.GetAll)
 
-  def populateSolr = SecureAction {implicit req => 
+  def cache = SecureAction { implicit req =>
+    Ok(html.admin.cache(Cache.stats))
+  }(Permissions.Admin.Cache)
+
+  def clearCache = SecureAction { implicit req =>
+    Cache.clear()
+    Redirect(routes.Admin.cache)
+  }(Permissions.Admin.ClearCache)
+
+  def populateSolr = SecureAction { implicit req =>
     Solr.populate()
     Redirect(collins.app.routes.Resources.index).flashing("error" -> "Repopulating Solr index in the background.  May take a few minutes to complete")
   }(Permissions.Admin.ClearCache)

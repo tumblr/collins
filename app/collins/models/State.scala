@@ -1,13 +1,7 @@
 package collins.models
 
-import scala.math.Ordering
-
-import org.squeryl.PrimitiveTypeMode.__thisDsl
-import org.squeryl.PrimitiveTypeMode.from
-import org.squeryl.PrimitiveTypeMode.int2ScalarInt
-import org.squeryl.PrimitiveTypeMode.select
-import org.squeryl.PrimitiveTypeMode.string2ScalarString
 import org.squeryl.Schema
+import org.squeryl.PrimitiveTypeMode._
 
 import play.api.libs.json.Format
 import play.api.libs.json.JsObject
@@ -15,14 +9,15 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.models.shared.AnormAdapter
-import collins.models.shared.ValidatedEntity
+import collins.models.cache.Cache
 import collins.validation.Pattern.isAlphaNumericString
 import collins.validation.Pattern.isNonEmptyString
 
-import Status.StatusFormat
+import collins.models.shared.AnormAdapter
+import collins.models.shared.ValidatedEntity
+import collins.models.Status.StatusFormat
 
-object State extends Schema with AnormAdapter[State] {
+object State extends Schema with AnormAdapter[State] with StateKeys {
 
   /** Status value that can apply to any asset, regardless of status **/
   val ANY_STATUS = 0
@@ -69,34 +64,34 @@ object State extends Schema with AnormAdapter[State] {
 
   def empty = new State(0, ANY_STATUS, "INVALID", "Invalid Label", "Invalid Description")
 
-  def find(): List[State] = inTransaction {
+  def find(): List[State] = Cache.get(findKey, inTransaction {
     from(tableDef)(s => select(s)).toList
-  }
+  })
 
-  def findById(id: Int): Option[State] = inTransaction {
+  def findById(id: Int): Option[State] = Cache.get(findByIdKey(id), inTransaction {
     tableDef.lookup(id)
-  }
+  })
 
-  def findByName(name: String): Option[State] = inTransaction {
+  def findByName(name: String): Option[State] = Cache.get(findByNameKey(name), inTransaction {
     tableDef.where(s =>
       s.name.toLowerCase === name.toLowerCase
     ).headOption
-  }
+  })
 
-  def findByAnyStatus(): List[State] = inTransaction {
+  def findByAnyStatus(): List[State] = Cache.get(findByAnyStatusKey, inTransaction {
     tableDef.where(s =>
       s.status === ANY_STATUS
     ).toList
-  }
-  
-  def findByStatus(status: Status): List[State] = inTransaction {
+  })
+
+  def findByStatus(status: Status): List[State] = Cache.get(findByStatusKey(status.id), inTransaction {
     tableDef.where(s =>
       s.status === status.id
     ).toList
-  }
-  
+  })
+
   override def get(state: State): State = findById(state.id).get
-  
+
   def isSystemState(state: State): Boolean = state.id < 7
 }
 

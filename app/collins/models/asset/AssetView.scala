@@ -18,9 +18,9 @@ trait AssetView {
 
   def id: Long
   def tag: String
-  def status: Int
-  def state: Int
-  def asset_type: Int
+  def statusId: Int
+  def stateId: Int
+  def assetTypeId: Int
   def created: Timestamp
   def updated: Option[Timestamp]
   def deleted: Option[Timestamp]
@@ -31,9 +31,9 @@ trait AssetView {
   def remoteHost: Option[String] //none if local
   def toJsValue(): JsValue
 
-  def getStatusName(): String = Status.findById(status).map(_.name).getOrElse("Unknown")
-  def getStateName(): String = State.findById(state).map(_.name).getOrElse("Unknown")
-  def getTypeName(): String = AssetType.findById(asset_type).map(_.name).getOrElse("Unknown")
+  def getStatusName(): String
+  def getStateName(): String
+  def getTypeName(): String
 
   def isServerNode(): Boolean = isAssetType(AssetType.ServerNode)
   def isConfiguration(): Boolean = isAssetType(AssetType.Configuration)
@@ -50,9 +50,9 @@ trait AssetView {
   def isMaintenance(): Boolean = isStatus(Status.Maintenance)
 
   private def isStatus(statusOpt: Option[Status]): Boolean = {
-    statusOpt.map(_.id).filter(_.equals(status)).isDefined
+    statusOpt.map(_.id).filter(_.equals(statusId)).isDefined
   }
   protected def isAssetType(atOpt: Option[AssetType]): Boolean = {
-    atOpt.map(_.id).filter(_.equals(asset_type)).isDefined
+    atOpt.map(_.id).filter(_.equals(assetTypeId)).isDefined
   }
 }

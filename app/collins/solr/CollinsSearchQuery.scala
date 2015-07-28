@@ -47,8 +47,8 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
     Left("Solr is not initialized!")
   }
 
-  def getPage(): Either[String, Page[T]] = getResults().right.map{case (results, total) =>
-    Page(results, page.page, page.page * page.size, total)
+  def getPage[V](f: Seq[T] => Seq[V] ): Either[String, Page[V]] = getResults().right.map{case (results, total) =>
+    Page(f(results), page.page, page.page * page.size, total)
   }
 
   protected def getSortDirection() = {
@@ -62,14 +62,14 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
 
 }
 
-case class AssetSearchQuery(query: TypedSolrExpression, page: PageParams) extends CollinsSearchQuery[Asset](AssetDocType, query, page) {
+case class AssetSearchQuery(query: TypedSolrExpression, page: PageParams) extends CollinsSearchQuery[String](AssetDocType, query, page) {
 
-  def parseDocument(doc: SolrDocument) = Asset.findByTag(doc.getFieldValue("TAG").toString)
+  def parseDocument(doc: SolrDocument) = Some(doc.getFieldValue("TAG").toString)
 
 }
 
-case class AssetLogSearchQuery(query: TypedSolrExpression, page: PageParams) extends CollinsSearchQuery[AssetLog](AssetLogDocType, query, page) {
+case class AssetLogSearchQuery(query: TypedSolrExpression, page: PageParams) extends CollinsSearchQuery[Long](AssetLogDocType, query, page) {
 
-  def parseDocument(doc: SolrDocument) = AssetLog.findById(Integer.parseInt(doc.getFieldValue("ID").toString))
+  def parseDocument(doc: SolrDocument) = Some(java.lang.Long.parseLong(doc.getFieldValue("ID").toString))
 
 }

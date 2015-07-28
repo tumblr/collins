@@ -53,7 +53,7 @@ class AssetMetaSpec extends mutable.Specification {
       "DELETE" in new mockassetmeta {
         AssetMeta.findByName(metaName).map { a =>
           AssetMeta.delete(a) mustEqual 1
-          AssetMeta.findById(a.getId) must beNone
+          AssetMeta.findById(a.id) must beNone
         }.getOrElse(failure("Couldn't find asset meta but expected to"))
       }
     }

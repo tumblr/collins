@@ -16,6 +16,7 @@ import collins.solr.SolrDoubleValue
 import collins.solr.SolrBooleanValue
 import collins.solr.SolrStringValue
 
+import collins.models.cache.Cache
 import collins.models.shared.ValidatedEntity
 import collins.models.shared.AnormAdapter
 
@@ -43,7 +44,6 @@ case class AssetMeta(
       "DESCRIPTION" -> JsString(description)
     )))
   }
-  def getId(): Long = id
 
   def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType(value_type)
 
@@ -73,7 +73,7 @@ case class AssetMeta(
   }
 }
 
-object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
+object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys {
   private[this] val NameR = """[A-Za-z0-9\-_]+""".r.pattern.matcher(_)
 
   override val tableDef = table[AssetMeta]("asset_meta")
@@ -93,39 +93,40 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] {
     name != null && name.nonEmpty && NameR(name).matches
   }
 
-  def findAll(): Seq[AssetMeta] = inTransaction {
+  def findAll(): List[AssetMeta] = Cache.get(findByAllKey, inTransaction {
     from(tableDef)(s => select(s)).toList
-  }
+  })
 
-  def findById(id: Long) = inTransaction {
+  def findById(id: Long) = Cache.get(findByIdKey(id), inTransaction {
     tableDef.lookup(id)
-  }
+  })
 
   def findOrCreateFromName(name: String, valueType: ValueType = ValueType.String): AssetMeta = findByName(name).getOrElse {
     create(AssetMeta(
-      name = name.toUpperCase, 
-      priority = -1, 
-      label = name.toLowerCase.capitalize, 
+      name = name.toUpperCase,
+      priority = -1,
+      label = name.toLowerCase.capitalize,
       description = name,
       value_type = valueType.id
     ))
+    findByName(name).get
   }
 
   override def get(a: AssetMeta) = findById(a.id).get
 
-  def findByName(name: String): Option[AssetMeta] = inTransaction {
+  def findByName(name: String): Option[AssetMeta] = Cache.get(findByNameKey(name), inTransaction {
     tableDef.where(a =>
       a.name.toUpperCase === name.toUpperCase
     ).headOption
-  }
+  })
 
-  def getViewable(): Seq[AssetMeta] = inTransaction {
+  def getViewable(): List[AssetMeta] = Cache.get(findByViewableKey,  inTransaction {
     from(tableDef)(a =>
       where(a.priority gt -1)
       select(a)
       orderBy(a.priority asc)
     ).toList
-  }
+  })
 
   type ValueType = ValueType.Value
   object ValueType extends Enumeration {

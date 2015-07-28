@@ -88,13 +88,13 @@ sealed trait PowerManagement  {
   def verify(e: Asset): Future[PowerCommandStatus] = run(e, Verify)
   
   def assetTypeAllowed(asset: Asset): Boolean = {
-    val isTrue = PowerManagementConfig.allowAssetTypes.contains(asset.asset_type)
+    val isTrue = PowerManagementConfig.allowAssetTypes.contains(asset.assetTypeId)
     logger.debug("assetTypeAllowed: %s".format(isTrue.toString))
     isTrue
   }
 
   def assetStateAllowed(asset: Asset): Boolean = {
-    val isFalse = !PowerManagementConfig.disallowStatus.contains(asset.status)
+    val isFalse = !PowerManagementConfig.disallowStatus.contains(asset.statusId)
     logger.debug("assetStateAllowed: %s".format(isFalse.toString))
     isFalse
   }

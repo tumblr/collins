@@ -17,8 +17,8 @@ object AssetLogSerializer extends SolrSerializer[AssetLog](AssetLogDocType) {
   def getFields(log: AssetLog, indexTime: Date): AssetSolrDocument = Map[SolrKey, SolrValue](
     res("ID").get -> SolrIntValue(log.id.toInt),
     res("MESSAGE").get -> SolrStringValue(log.message, StrictUnquoted),
-    res("MESSAGE_TYPE").get -> SolrStringValue(log.message_type.toString, StrictUnquoted),
-    res("ASSET_TAG").get -> SolrStringValue(log.getAssetTag()),
+    res("MESSAGE_TYPE").get -> SolrStringValue(log.messageType.toString, StrictUnquoted),
+    res("ASSET_TAG").get -> SolrStringValue(log.assetTag),
     res("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(log.created))
   )
 

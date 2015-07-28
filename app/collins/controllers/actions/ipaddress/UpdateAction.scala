@@ -42,7 +42,7 @@ case class UpdateAction(
     }.getOrElse {
       if (address.isDefined && gateway.isDefined && netmask.isDefined) {
         val p = convertPoolName(pool.getOrElse(IpAddressConfig.DefaultPoolName))
-        IpAddresses(asset.getId, gateway.get, address.get, netmask.get, p)
+        IpAddresses(asset.id, gateway.get, address.get, netmask.get, p)
       } else {
         throw new Exception("If creating a new IP the address, gateway and netmask must be specified")
       }

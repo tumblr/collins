@@ -61,20 +61,20 @@
         </tr>
         <tr>
           <th>Asset Type</th>
-          <td>@aa.asset.getType().label</td>
+          <td>@aa.asset.assetType.label</td>
           <td></td>
         </tr>
         <tr class="@statusClassFromAsset(aa.asset)">
           <td><strong>Asset Status</strong></td>
-          <td>@aa.asset.getStatus().name</td>
+          <td>@aa.asset.getStatusName</td>
           @if(aa.asset.isMaintenance) {
-            <td><a href="#user-log-section"><span class="label label-primary">See Notes</span></a> @aa.asset.getStatus().description</td>
+            <td><a href="#user-log-section"><span class="label label-primary">See Notes</span></a> @aa.asset.status.description</td>
           } else {
-            <td>@aa.asset.getStatus().description</td>
+            <td>@aa.asset.status.description</td>
           }
         </tr>
-@if(aa.asset.state != 0) {
-  @State.findById(aa.asset.state).map { state =>
+@if(aa.asset.stateId != 0) {
+  @State.findById(aa.asset.stateId).map { state =>
         <tr>
           <th>Asset State</th>
           <td>@state.label</td>

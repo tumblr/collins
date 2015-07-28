@@ -1,13 +1,15 @@
 package collins.models.asset
 
-import org.squeryl.PrimitiveTypeMode.__thisDsl
-import org.squeryl.PrimitiveTypeMode.long2ScalarLong
+import org.squeryl.PrimitiveTypeMode._
+
+import collins.models.cache.Cache
 
 import collins.models.Asset
 import collins.models.AssetLog
 import collins.models.AssetMetaValue
 import collins.models.IpAddresses
 import collins.models.IpmiInfo
+
 import collins.callbacks.Callback
 
 object AssetDeleter {
@@ -22,6 +24,7 @@ object AssetDeleter {
     }
     if (result) {
       Callback.fire("asset_purge", tag, null)
+      Cache.clear()
     }
     result
   }
@@ -30,7 +33,7 @@ object AssetDeleter {
     AssetMetaValue.deleteByAsset(asset) >= 0
   }
   protected def deleteLogs(asset: Asset): Boolean = {
-    AssetLog.tableDef.deleteWhere(al => al.asset_id === asset.id) >= 0
+    AssetLog.tableDef.deleteWhere(al => al.assetId === asset.id) >= 0
   }
   protected def deleteIpmiInfo(asset: Asset): Boolean = {
     IpmiInfo.deleteByAsset(asset) >= 0

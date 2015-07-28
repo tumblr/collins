@@ -1,9 +1,30 @@
 package collins.models
 
+import java.sql.Timestamp
+import java.util.Date
+
+import play.api.libs.json.Json
+import play.api.Logger
+
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.Schema
+import org.squeryl.annotations.Column
+import org.squeryl.annotations.Transient
+
+import collins.models.cache.Cache
 import collins.models.asset.AssetView
 import collins.models.asset.AllAttributes
 import collins.models.asset.conversions._
 import collins.models.conversions._
+import collins.models.shared.QueryLogConfig
+import collins.models.AssetSort.Type
+import collins.models.shared.SortDirection._
+import collins.models.shared.ValidatedEntity
+import collins.models.shared.AnormAdapter
+import collins.models.shared.Page
+import collins.models.shared.PageParams
+import collins.models.shared.SortDirection
+
 import collins.util.AttributeResolver
 import collins.util.LldpRepresentation
 import collins.util.LshwRepresentation
@@ -14,35 +35,17 @@ import collins.util.config.MultiCollinsConfig
 import collins.util.config.NodeclassifierConfig
 import collins.util.power.PowerUnits
 import collins.util.views.Formatter.dateFormat
+import collins.util.RemoteCollinsHost
+
+import collins.solr.AssetSearchQuery
 import collins.solr.CQLQuery
 import collins.solr.AssetDocType
-import collins.solr.AssetSearchQuery
-import collins.models.shared.QueryLogConfig
-import collins.models.AssetSort.Type
 
 import collins.validation.Pattern.isAlphaNumericString
 
-import collins.util.{MessageHelper, RemoteCollinsHost, Stats}
-
-import play.api.libs.json.Json
-import play.api.Logger
-
-import org.squeryl.PrimitiveTypeMode._
-import org.squeryl.Schema
-
-import java.sql.Timestamp
-import java.util.Date
-
-import collins.models.shared.SortDirection._
-import collins.models.shared.ValidatedEntity
-import collins.models.shared.AnormAdapter
-import collins.models.shared.Page
-import collins.models.shared.PageParams
-import collins.models.shared.SortDirection
-
-case class Asset(tag: String, status: Int, asset_type: Int,
+case class Asset(tag: String, @Column("STATUS") statusId: Int, @Column("ASSET_TYPE") assetTypeId: Int,
     created: Timestamp, updated: Option[Timestamp], deleted: Option[Timestamp],
-    id: Long = 0, state: Int = 0) extends ValidatedEntity[Long] with AssetView
+    id: Long = 0, @Column("STATE") stateId: Int = 0) extends ValidatedEntity[Long] with AssetView
 {
   private[this] val logger = Logger("Asset")
 
@@ -51,30 +54,35 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   }
   override def asJson: String = toJsValue.toString
 
-  override def getHostnameMetaValue = getMetaAttributeValue("HOSTNAME")
+  @Transient
+  override lazy val getHostnameMetaValue = getMetaAttributeValue("HOSTNAME")
+  @Transient
   override def getPrimaryRoleMetaValue = getMetaAttributeValue("PRIMARY_ROLE")
-  override def toJsValue() = {
-    Json.toJson[AssetView](this)
-  }
 
-  def getId(): Long = id
+  override def toJsValue() = Json.toJson[AssetView](this)
 
-  def getStatus(): Status = Status.findById(status).get
-  override def getStatusName(): String = getStatus().name
+  @Transient
+  lazy val status: Status = Status.findById(statusId).get
+  @Transient
+  override lazy val getStatusName: String = status.name
 
-  def getState(): Option[State] = State.findById(state)
+  @Transient
+  lazy val state: Option[State] = State.findById(stateId)
+  @Transient
+  override lazy val getStateName: String = state.map(_.name).getOrElse("Unknown")
 
-  def getType(): AssetType = {
-    AssetType.findById(asset_type).get
-  }
+  @Transient
+  lazy val assetType: AssetType = AssetType.findById(assetTypeId).get
+  @Transient
+  override lazy val getTypeName: String = assetType.name
 
   def getMetaAttributeValue(name: String): Option[String] = getMetaAttribute(name).map(_.getValue)
 
   def getMetaAttribute(name: String): Option[MetaWrapper] = {
     AssetMeta.findByName(name).flatMap { meta =>
       AssetMetaValue.findByAssetAndMeta(this, meta, 1) match {
-        case Nil => None
-        case head :: Nil => Some(head)
+        case List(mw) => Some(mw)
+        case _ => None
       }
     }
   }
@@ -96,7 +104,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
     val nodeclassType = NodeclassifierConfig.assetType
     val instanceFinder = AssetFinder
       .empty
-      .copy ( 
+      .copy (
         assetType = Some(nodeclassType)
       )
     val nodeclassParams: ResolvedAttributes = EmptyResolvedAttributes
@@ -107,7 +115,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
       .collect{case a: Asset => a}
     val myMetaSeq = this.metaSeq
     //Note - we cannot use set operations because an asset may contain multiple values of the same meta
-    nodeclasses.map{n => 
+    nodeclasses.map{n =>
       val metaseq = n.filteredMetaSeq
       if (metaseq.foldLeft(true){(ok, metaval) => ok && (myMetaSeq contains metaval)}) {
         logger.debug("%s,%d".format(n.toString, metaseq.size))
@@ -134,7 +142,7 @@ case class Asset(tag: String, status: Int, asset_type: Int,
   def remoteHost = None
 }
 
-object Asset extends Schema with AnormAdapter[Asset] {
+object Asset extends Schema with AnormAdapter[Asset] with AssetKeys {
 
   private[this] val logger = Logger("Asset")
   override protected val createEventName = Some("asset_create")
@@ -145,12 +153,15 @@ object Asset extends Schema with AnormAdapter[Asset] {
   on(tableDef)(a => declare(
     a.id is(autoIncremented,primaryKey),
     a.tag is(unique),
-    a.status is(indexed),
-    a.state is(indexed),
-    a.asset_type is(indexed),
+    a.statusId is(indexed),
+    a.stateId is(indexed),
+    a.assetTypeId is(indexed),
     a.created is(indexed),
     a.updated is(indexed)
   ))
+
+  def flushCache(asset: Asset) = loggedInvalidation("flushCache", asset)
+
   object Messages extends MessageHelper("asset") {
     def intakeError[T <: AssetView](t: String, a: T) = "intake.error.%s".format(t.toLowerCase) match {
       case msg if msg == "intake.error.new" =>
@@ -174,8 +185,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def isValidTag(tag: String): Boolean = isAlphaNumericString(tag)
 
-  def apply(tag: String, status: Status, asset_type: AssetType) = {
-    new Asset(tag, status.id, asset_type.getId, new Date().asTimestamp, None, None)
+  def apply(tag: String, status: Status, assetType: AssetType) = {
+    new Asset(tag, status.id, assetType.id, new Date().asTimestamp, None, None)
   }
 
   override def delete(asset: Asset): Int = inTransaction {
@@ -189,21 +200,43 @@ object Asset extends Schema with AnormAdapter[Asset] {
     CQLQuery(AssetDocType, AssetSearchParameters(params, afinder, operation).toSolrExpression)
       .typeCheck
       .right
-      .flatMap{exp => AssetSearchQuery(exp, page).getPage()}
+      .flatMap{exp => AssetSearchQuery(exp, page).getPage(findByTags(_))}
       .fold(
         err => throw new Exception(err),
         page => page
       )
   }
 
-  def findById(id: Long) = inTransaction {
+  def findById(id: Long) = Cache.get(findByIdKey(id), inTransaction {
     tableDef.lookup(id)
-  }
+  })
+
   def get(a: Asset) = findById(a.id).get
 
-  def findByTag(tag: String): Option[Asset] = inTransaction {
-    tableDef.where(a => a.tag.toLowerCase === tag.toLowerCase).headOption
+  // Loads assets from cache, then database if not available in cache.
+  // Asset are loaded from database using 'in' clause, and are added to cache
+  // Returns assets in the order requested, i.e. tag order in params
+  def findByTags(tags: Seq[String]) = {
+    val ltags = tags.map { _.toLowerCase }
+    val assetOpts = ltags.map { tag => tag -> Cache.get[Option[Asset]](findByTagKey(tag)) }.toMap
+    val loadedAssets = inTransaction { from(tableDef)(s =>
+      where(s.tag.toLowerCase in assetOpts.filter(_._2.isEmpty).map(_._1))
+        select (s)).map { asset => {
+          Cache.put(s"Asset.findByTag(${asset.tag.toLowerCase})", Some(asset))
+          (asset.tag.toLowerCase, asset)
+        }}.toMap
+    }
+    ltags.flatMap { tag =>
+      assetOpts(tag) match {
+        case None => loadedAssets.get(tag)
+        case Some(x)    => x
+      }
+    }
   }
+
+  def findByTag(tag: String): Option[Asset] = Cache.get(findByTagKey(tag), inTransaction {
+    tableDef.where(_.tag.toLowerCase === tag.toLowerCase).headOption
+  })
 
   /**
    * Finds assets across multiple collins instances.  Data for instances are
@@ -228,7 +261,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       .collect{case a: Asset => a}
       .filter{_.tag != MultiCollinsConfig.thisInstance}
     //iterate over the locations, sending requests to each one and aggregate their results
-    val remoteClients = findLocations.flatMap { locationAsset => 
+    val remoteClients = findLocations.flatMap { locationAsset =>
       val locationAttribute = MultiCollinsConfig.locationAttribute
       locationAsset.getMetaAttribute(locationAttribute).map(_.getValue) match {
         case None =>
@@ -258,7 +291,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
       logger.warn("Invalid sort " + page.sort)
       SortDesc
     })
-    asset.nodeClass.map{ nodeclass => 
+    asset.nodeClass.map{ nodeclass =>
       logger.debug("Asset %s has NodeClass %s".format(asset.tag, nodeclass.tag))
       val unsortedItems:Page[AssetView] = find(
         PageParams(0,10000, "asc", "tag"), //TODO: unbounded search
@@ -267,15 +300,15 @@ object Asset extends Schema with AnormAdapter[Asset] {
         Some("and")
       )
       val sortedItems = AssetDistanceSorter.sort(
-        asset, 
-        unsortedItems.items.collect{case a: Asset => a}.filter{_.tag != asset.tag}, 
+        asset,
+        unsortedItems.items.collect{case a: Asset => a}.filter{_.tag != asset.tag},
         sortType,
         sorter
       )
       val sortedPage: Page[AssetView] = Page(
-        page = page.page, 
-        items = sortedItems.slice(page.offset, page.offset + page.size), 
-        total = sortedItems.size, 
+        page = page.page,
+        items = sortedItems.slice(page.offset, page.offset + page.size),
+        total = sortedItems.size,
         offset = page.offset
       )
       sortedPage
@@ -289,7 +322,7 @@ object Asset extends Schema with AnormAdapter[Asset] {
    * Used only when repopulating the solr index, this should not be used anywhere else
    */
   def findRaw() = inTransaction { log {
-    from(tableDef){asset => 
+    from(tableDef){asset =>
       where(AssetFinder.empty.asLogicalBoolean(asset))
       select(asset)
     }.toList
@@ -298,8 +331,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
   def resetState(state: State, newId: Int): Int = inTransaction {
     import collins.solr.Solr
     val count = tableDef.update(a =>
-      where(a.state === state.id)
-      set(a.state := newId)
+      where(a.stateId === state.id)
+      set(a.stateId := newId)
     )
     // We repopulate solr because the alternative is to do some complex state tracking
     // The above update operation also will not trigger callbacks
@@ -309,8 +342,8 @@ object Asset extends Schema with AnormAdapter[Asset] {
 
   def partialUpdate(asset: Asset, updated: Option[Timestamp], status: Option[Int], state: Option[State] = None) = {
     val assetWUpdate = updated.map(u => asset.copy(updated = Some(u))).getOrElse(asset)
-    val assetWStatus = status.map(s => assetWUpdate.copy(status = s)).getOrElse(assetWUpdate)
-    val assetWState = state.map(s => assetWStatus.copy(state = s.id)).getOrElse(assetWStatus)
+    val assetWStatus = status.map(s => assetWUpdate.copy(statusId = s)).getOrElse(assetWUpdate)
+    val assetWState = state.map(s => assetWStatus.copy(stateId = s.id)).getOrElse(assetWStatus)
     Asset.update(assetWState)
   }
 
