@@ -88,7 +88,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
   def processRequest(req: Request[AnyContent]): Either[RequestDataHolder,AssetFinderDataHolder] = {
     processForm(finderForm.bindFromRequest()(req), req.queryString)
   }
-    
+
   protected def processForm(form: Form[DataForm], data: Map[String,Seq[String]]): Either[RequestDataHolder,AssetFinderDataHolder] = {
     form.fold(
       err => Left(RequestDataHolder.error400(fieldError(err))),
@@ -134,6 +134,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     case e if e.error("details").isDefined => rootMessage("error.truthy", "details")
     case e if e.error("remoteLookup").isDefined => rootMessage("error.truthy", "remoteLookup")
     case e if e.error("state").isDefined => rootMessage("asset.state.invalid")
+    case e if e.error("query").isDefined => message("query.invalid")
     case n => "Unexpected error occurred"
   }
 
