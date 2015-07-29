@@ -37,6 +37,7 @@ assetfinder.tag.invalid=An asset tag must be at least 1 character.
 assetfinder.type.invalid=Invalid asset type specified.
 assetfinder.date.invalid={0} must be an ISO 8601 date format like ''{1}''.
 assetfinder.operation.invalid=Invalid operation specified. Valid operations are ''and'' or ''or''.
+assetfinder.query.invalid=Invalid Collins Query syntax.
 
 assetlog.create.error.messageInvalid=message parameter must not be empty
 assetlog.create.error.messageTypeInvalid=specified log type is invalid, valid types are: {0}
