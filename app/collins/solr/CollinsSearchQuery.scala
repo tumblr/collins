@@ -5,6 +5,8 @@ import org.apache.solr.common.SolrDocument
 
 import play.api.Logger
 
+import collins.util.Stats
+
 import collins.models.Asset
 import collins.models.AssetLog
 import collins.models.shared.Page
@@ -48,8 +50,11 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
     Left("Solr is not initialized!")
   }
 
-  def getPage[V](f: Seq[T] => Seq[V] ): Either[String, Page[V]] = getResults().right.map{case (results, total) =>
-    Page(f(results), page.page, page.page * page.size, total)
+  def getPage[V](f: Seq[T] => Seq[V]): Either[String, Page[V]] = Stats.time(f"Solr.find-pgs-${page.size}%d") {
+    getResults().right.map {
+      case (results, total) =>
+        Page(f(results), page.page, page.page * page.size, total)
+    }
   }
 
   protected def getSortDirection() = {
