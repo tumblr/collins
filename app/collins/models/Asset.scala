@@ -216,7 +216,7 @@ object Asset extends Schema with AnormAdapter[Asset] with AssetKeys {
   // Loads assets from cache, then database if not available in cache.
   // Asset are loaded from database using 'in' clause, and are added to cache
   // Returns assets in the order requested, i.e. tag order in params
-  def findByTags(tags: Seq[String]) = {
+  def findByTags(tags: Seq[String]) = Stats.time("Asset.findByTags") {
     val ltags = tags.map { _.toLowerCase }
     val assetOpts = ltags.map { tag => tag -> Cache.get[Option[Asset]](findByTagKey(tag)) }.toMap
     val loadedAssets = inTransaction { from(tableDef)(s =>
