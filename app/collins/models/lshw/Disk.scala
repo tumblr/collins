@@ -6,6 +6,7 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
+import collins.util.Stats
 import collins.util.ByteStorageUnit
 
 object Disk {
@@ -19,22 +20,26 @@ object Disk {
   }
 
   implicit object DiskFormat extends Format[Disk] {
-    override def reads(json: JsValue) = JsSuccess(Disk(
-      ByteStorageUnit((json \ "SIZE").as[Long]),
-      Disk.Type.withName((json \ "TYPE").as[String]),
-      (json \ "DESCRIPTION").as[String],
-      (json \ "PRODUCT").as[String],
-      (json \ "VENDOR").as[String]
-    ))
-    override def writes(disk: Disk) = JsObject(Seq(
-      "SIZE" -> Json.toJson(disk.size.inBytes),
-      "SIZE_S" -> Json.toJson(disk.size.inBytes.toString),
-      "SIZE_HUMAN" -> Json.toJson(disk.size.toHuman),
-      "TYPE" -> Json.toJson(disk.diskType.toString),
-      "DESCRIPTION" -> Json.toJson(disk.description),
-      "PRODUCT" -> Json.toJson(disk.product),
-      "VENDOR" -> Json.toJson(disk.vendor)
-    ))
+    override def reads(json: JsValue) = Stats.time("Disk.Reads") {
+      JsSuccess(Disk(
+        ByteStorageUnit((json \ "SIZE").as[Long]),
+        Disk.Type.withName((json \ "TYPE").as[String]),
+        (json \ "DESCRIPTION").as[String],
+        (json \ "PRODUCT").as[String],
+        (json \ "VENDOR").as[String]
+      ))
+    }
+    override def writes(disk: Disk) = Stats.time("Disk.Writes") {
+      JsObject(Seq(
+        "SIZE" -> Json.toJson(disk.size.inBytes),
+        "SIZE_S" -> Json.toJson(disk.size.inBytes.toString),
+        "SIZE_HUMAN" -> Json.toJson(disk.size.toHuman),
+        "TYPE" -> Json.toJson(disk.diskType.toString),
+        "DESCRIPTION" -> Json.toJson(disk.description),
+        "PRODUCT" -> Json.toJson(disk.product),
+        "VENDOR" -> Json.toJson(disk.vendor)
+      ))
+    }
   }
 }
 

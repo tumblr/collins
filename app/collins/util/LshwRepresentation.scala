@@ -28,20 +28,24 @@ object LshwRepresentation {
     import Nic._
     import ServerBase._
     import Json.toJson
-    override def reads(json: JsValue) = JsSuccess(LshwRepresentation(
-      (json \ "CPU").as[Seq[Cpu]],
-      (json \ "MEMORY").as[Seq[Memory]],
-      (json \ "NIC").as[Seq[Nic]],
-      (json \ "DISK").as[Seq[Disk]],
-      (json \ "BASE").as[ServerBase]
-    ))
-    override def writes(lshw: LshwRepresentation) = JsObject(Seq(
-      "CPU" -> Json.toJson(lshw.cpus),
-      "MEMORY" -> Json.toJson(lshw.memory),
-      "NIC" -> Json.toJson(lshw.nics),
-      "DISK" -> Json.toJson(lshw.disks),
-      "BASE" -> Json.toJson(lshw.base)
-    ))
+    override def reads(json: JsValue) = Stats.time("LshwRepresentation.Reads") {
+      JsSuccess(LshwRepresentation(
+        (json \ "CPU").as[Seq[Cpu]],
+        (json \ "MEMORY").as[Seq[Memory]],
+        (json \ "NIC").as[Seq[Nic]],
+        (json \ "DISK").as[Seq[Disk]],
+        (json \ "BASE").as[ServerBase]
+      ))
+    }
+    override def writes(lshw: LshwRepresentation) = Stats.time("LshwRepresentation.Writes") {
+        JsObject(Seq(
+        "CPU" -> Json.toJson(lshw.cpus),
+        "MEMORY" -> Json.toJson(lshw.memory),
+        "NIC" -> Json.toJson(lshw.nics),
+        "DISK" -> Json.toJson(lshw.disks),
+        "BASE" -> Json.toJson(lshw.base)
+      ))
+    }
   }
 }
 

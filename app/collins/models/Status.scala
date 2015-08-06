@@ -12,6 +12,8 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
+import collins.util.Stats
+
 import collins.models.cache.Cache
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
@@ -41,16 +43,20 @@ object Status extends Schema with AnormAdapter[Status] with StatusKeys {
   def Unallocated = Status.findByName("Unallocated")
 
   implicit object StatusFormat extends Format[Status] {
-    override def reads(json: JsValue) = JsSuccess(Status(
-      (json \ "NAME").as[String],
-      (json \ "DESCRIPTION").as[String],
-      (json \ "ID").as[Int]
-    ))
-    override def writes(status: Status) = JsObject(Seq(
-      "ID" -> JsNumber(status.id),
-      "NAME" -> JsString(status.name),
-      "DESCRIPTION" -> JsString(status.description)
-    ))
+    override def reads(json: JsValue) = Stats.time("Status.Reads") {
+      JsSuccess(Status(
+        (json \ "NAME").as[String],
+        (json \ "DESCRIPTION").as[String],
+        (json \ "ID").as[Int]
+      ))
+    }
+    override def writes(status: Status) = Stats.time("Status.Writes") {
+      JsObject(Seq(
+        "ID" -> JsNumber(status.id),
+        "NAME" -> JsString(status.name),
+        "DESCRIPTION" -> JsString(status.description)
+      ))
+    }
   }
 
   override val tableDef = table[Status]("status")

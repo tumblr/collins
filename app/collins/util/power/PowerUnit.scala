@@ -6,6 +6,8 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
+import collins.util.Stats
+
 object PowerUnit {
   def apply(config: PowerConfiguration, id: Int): PowerUnit = {
     val components: PowerComponents =
@@ -15,15 +17,19 @@ object PowerUnit {
     new PowerUnit(config, id, components)
   }
   implicit object PowerUnitFormat extends Format[PowerUnit] {
-    override def reads(json: JsValue) = JsSuccess(PowerUnit(
-      PowerConfiguration.get(),
-      (json \ "UNIT_ID").as[Int],
-      (json \ "UNITS").as[Set[PowerComponent]]
-    ))
-    override def writes(unit: PowerUnit) = JsObject(Seq(
-      "UNIT_ID" -> Json.toJson(unit.id),
-      "UNITS" -> Json.toJson(unit.components.map(Json.toJson(_)))
-    ))
+    override def reads(json: JsValue) = Stats.time("PowerUnit.Reads") {
+      JsSuccess(PowerUnit(
+        PowerConfiguration.get(),
+        (json \ "UNIT_ID").as[Int],
+        (json \ "UNITS").as[Set[PowerComponent]]
+      ))
+    }
+    override def writes(unit: PowerUnit) = Stats.time("PowerUnit.Writes") {
+      JsObject(Seq(
+        "UNIT_ID" -> Json.toJson(unit.id),
+        "UNITS" -> Json.toJson(unit.components.map(Json.toJson(_)))
+      ))
+    }
   }
 }
 
