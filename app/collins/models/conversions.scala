@@ -15,6 +15,7 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
+import collins.util.Stats
 import collins.util.IpAddress
 import collins.util.views.Formatter.ISO_8601_FORMAT
 import collins.util.views.Formatter.dateFormat
@@ -30,8 +31,9 @@ object conversions {
   implicit def ops2bo(o: Option[String]) = new LogicalBooleanFromString(o)
   implicit def reOrLike[E <% StringExpression[String]](s: E) = new PossibleRegex(s)
   implicit def orderByString2oba[E <% TypedExpressionNode[_]](e: E) = new OrderByFromString(e)
+
   implicit object TimestampFormat extends Format[Timestamp] {
-    override def reads(json: JsValue) =
+    override def reads(json: JsValue) = Stats.time("Timestamp.Reads") {
       JsSuccess(json.asOpt[String].filter(_.nonEmpty)
         .map { str =>
           val formatter = new SimpleDateFormat(ISO_8601_FORMAT)
@@ -39,78 +41,97 @@ object conversions {
         }.getOrElse {
           new Timestamp(0L)
         })
-    override def writes(ts: Timestamp) = Json.toJson(dateFormat(ts))
+    }
+    override def writes(ts: Timestamp) = Stats.time("Timestamp.Writes") {
+      Json.toJson(dateFormat(ts))
+    }
   }
+
   implicit object IpmiFormat extends Format[IpmiInfo] {
     import IpmiInfo.Enum._
-    override def reads(json: JsValue) = JsSuccess(IpmiInfo(
-      (json \ "ASSET_ID").as[Long],
-      (json \ IpmiUsername.toString).as[String],
-      (json \ IpmiPassword.toString).as[String],
-      IpAddress.toLong((json \ IpmiGateway.toString).as[String]),
-      IpAddress.toLong((json \ IpmiAddress.toString).as[String]),
-      IpAddress.toLong((json \ IpmiNetmask.toString).as[String]),
-      (json \ "ID").asOpt[Long].getOrElse(0L)
-    ))
-    override def writes(ipmi: IpmiInfo) = JsObject(Seq(
-      "ASSET_ID" -> Json.toJson(ipmi.assetId),
-      "ASSET_TAG" -> Json.toJson(Asset.findById(ipmi.assetId).map(_.tag).getOrElse("Unknown")),
-      IpmiUsername.toString -> Json.toJson(ipmi.username),
-      IpmiPassword.toString -> Json.toJson(ipmi.password),
-      IpmiGateway.toString -> Json.toJson(ipmi.dottedGateway),
-      IpmiAddress.toString -> Json.toJson(ipmi.dottedAddress),
-      IpmiNetmask.toString -> Json.toJson(ipmi.dottedNetmask),
-      "ID" -> Json.toJson(ipmi.id)
-    ))
+    override def reads(json: JsValue) = Stats.time("Ipmi.Reads") {
+      JsSuccess(IpmiInfo(
+        (json \ "ASSET_ID").as[Long],
+        (json \ IpmiUsername.toString).as[String],
+        (json \ IpmiPassword.toString).as[String],
+        IpAddress.toLong((json \ IpmiGateway.toString).as[String]),
+        IpAddress.toLong((json \ IpmiAddress.toString).as[String]),
+        IpAddress.toLong((json \ IpmiNetmask.toString).as[String]),
+        (json \ "ID").asOpt[Long].getOrElse(0L)
+      ))
+    }
+    override def writes(ipmi: IpmiInfo) = Stats.time("Ipmi.Writes") {
+      JsObject(Seq(
+        "ASSET_ID" -> Json.toJson(ipmi.assetId),
+        "ASSET_TAG" -> Json.toJson(Asset.findById(ipmi.assetId).map(_.tag).getOrElse("Unknown")),
+        IpmiUsername.toString -> Json.toJson(ipmi.username),
+        IpmiPassword.toString -> Json.toJson(ipmi.password),
+        IpmiGateway.toString -> Json.toJson(ipmi.dottedGateway),
+        IpmiAddress.toString -> Json.toJson(ipmi.dottedAddress),
+        IpmiNetmask.toString -> Json.toJson(ipmi.dottedNetmask),
+        "ID" -> Json.toJson(ipmi.id)
+      ))
+    }
   }
+
   implicit object IpAddressFormat extends Format[IpAddresses] {
-    override def reads(json: JsValue) = JsSuccess(IpAddresses(
-      (json \ "ASSET_ID").as[Long],
-      IpAddress.toLong((json \ "GATEWAY").as[String]),
-      IpAddress.toLong((json \ "ADDRESS").as[String]),
-      IpAddress.toLong((json \ "NETMASK").as[String]),
-      (json \ "POOL").asOpt[String].getOrElse(shared.IpAddressConfig.DefaultPoolName),
-      (json \ "ID").asOpt[Long].getOrElse(0L)
-    ))
-    override def writes(ip: IpAddresses) = JsObject(Seq(
-      "ASSET_ID" -> Json.toJson(ip.assetId),
-      "ASSET_TAG" -> Json.toJson(Asset.findById(ip.assetId).map(_.tag).getOrElse("Unknown")),
-      "GATEWAY" -> Json.toJson(ip.dottedGateway),
-      "ADDRESS" -> Json.toJson(ip.dottedAddress),
-      "NETMASK" -> Json.toJson(ip.dottedNetmask),
-      "POOL" -> Json.toJson(ip.pool),
-      "ID" -> Json.toJson(ip.id)
-    ))
+    override def reads(json: JsValue) = Stats.time("IpAddress.Reads") {
+      JsSuccess(IpAddresses(
+        (json \ "ASSET_ID").as[Long],
+        IpAddress.toLong((json \ "GATEWAY").as[String]),
+        IpAddress.toLong((json \ "ADDRESS").as[String]),
+        IpAddress.toLong((json \ "NETMASK").as[String]),
+        (json \ "POOL").asOpt[String].getOrElse(shared.IpAddressConfig.DefaultPoolName),
+        (json \ "ID").asOpt[Long].getOrElse(0L)
+      ))
+    }
+    override def writes(ip: IpAddresses) = Stats.time("IpAddress.Writes") {
+      JsObject(Seq(
+        "ASSET_ID" -> Json.toJson(ip.assetId),
+        "ASSET_TAG" -> Json.toJson(Asset.findById(ip.assetId).map(_.tag).getOrElse("Unknown")),
+        "GATEWAY" -> Json.toJson(ip.dottedGateway),
+        "ADDRESS" -> Json.toJson(ip.dottedAddress),
+        "NETMASK" -> Json.toJson(ip.dottedNetmask),
+        "POOL" -> Json.toJson(ip.pool),
+        "ID" -> Json.toJson(ip.id)
+      ))
+    }
   }
+
   implicit object AssetLogFormat extends Format[AssetLog] {
-    override def reads(json: JsValue) = JsSuccess(AssetLog(
-      (json \ "ASSET_ID").as[Long],
-      (json \ "CREATED").as[Timestamp],
-      (json \ "CREATED_BY").as[String],
-      logs.LogFormat.withName((json \ "FORMAT").as[String]),
-      logs.LogSource.withName((json \ "SOURCE").as[String]),
-      logs.LogMessageType.withName((json \ "TYPE").as[String]),
-      (json \ "MESSAGE").as[String],
-      (json \ "ID").asOpt[Long].getOrElse(0L)
-    ))
-    override def writes(log: AssetLog) = JsObject(Seq(
-      "ID" -> Json.toJson(log.id),
-      "ASSET_TAG" -> Json.toJson(Asset.findById(log.assetId).map(_.tag).getOrElse("Unknown")),
-      "CREATED" -> Json.toJson(log.created),
-      "CREATED_BY" -> Json.toJson(log.createdBy),
-      "FORMAT" -> Json.toJson(log.format.toString),
-      "SOURCE" -> Json.toJson(log.source.toString),
-      "TYPE" -> Json.toJson(log.messageType.toString),
-      "MESSAGE" -> (if (log.isJson()) {
-        try {
-          Json.parse(log.message)
-        } catch {
-          case e: Throwable => Json.toJson("Error parsing JSON: %s".format(e.getMessage))
-        }
-      } else {
-        Json.toJson(log.message)
-      })
-    ))
+    override def reads(json: JsValue) = Stats.time("AssetLog.Reads") {
+      JsSuccess(AssetLog(
+        (json \ "ASSET_ID").as[Long],
+        (json \ "CREATED").as[Timestamp],
+        (json \ "CREATED_BY").as[String],
+        logs.LogFormat.withName((json \ "FORMAT").as[String]),
+        logs.LogSource.withName((json \ "SOURCE").as[String]),
+        logs.LogMessageType.withName((json \ "TYPE").as[String]),
+        (json \ "MESSAGE").as[String],
+        (json \ "ID").asOpt[Long].getOrElse(0L)
+      ))
+    }
+
+    override def writes(log: AssetLog) = Stats.time("AssetLog.Writes") {
+      JsObject(Seq(
+        "ID" -> Json.toJson(log.id),
+        "ASSET_TAG" -> Json.toJson(Asset.findById(log.assetId).map(_.tag).getOrElse("Unknown")),
+        "CREATED" -> Json.toJson(log.created),
+        "CREATED_BY" -> Json.toJson(log.createdBy),
+        "FORMAT" -> Json.toJson(log.format.toString),
+        "SOURCE" -> Json.toJson(log.source.toString),
+        "TYPE" -> Json.toJson(log.messageType.toString),
+        "MESSAGE" -> (if (log.isJson()) {
+          try {
+            Json.parse(log.message)
+          } catch {
+            case e: Throwable => Json.toJson("Error parsing JSON: %s".format(e.getMessage))
+          }
+        } else {
+          Json.toJson(log.message)
+        })
+      ))
+    }
   }
 }
 
