@@ -6,27 +6,21 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.util.Stats
-
 import collins.models.lldp.ChassisId.ChassisIdFormat
 
 object Chassis {
   import ChassisId._
   implicit object ChassisFormat extends Format[Chassis] {
-    override def reads(json: JsValue) = Stats.time("Chassis.Reads") {
-      JsSuccess(Chassis(
-        (json \ "NAME").as[String],
-        (json \ "ID").as[ChassisId],
-        (json \ "DESCRIPTION").as[String]
-      ))
-    }
-    override def writes(chassis: Chassis) = Stats.time("Chassis.Writes") {
-      JsObject(Seq(
-        "NAME" -> Json.toJson(chassis.name),
-        "ID" -> Json.toJson(chassis.id),
-        "DESCRIPTION" -> Json.toJson(chassis.description)
-      ))
-    }
+    override def reads(json: JsValue) = JsSuccess(Chassis(
+      (json \ "NAME").as[String],
+      (json \ "ID").as[ChassisId],
+      (json \ "DESCRIPTION").as[String]
+    ))
+    override def writes(chassis: Chassis) = JsObject(Seq(
+      "NAME" -> Json.toJson(chassis.name),
+      "ID" -> Json.toJson(chassis.id),
+      "DESCRIPTION" -> Json.toJson(chassis.description)
+    ))
   }
 }
 

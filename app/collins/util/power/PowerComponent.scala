@@ -6,8 +6,6 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.util.Stats
-
 import collins.models.AssetMeta
 
 /** A power related component (distribution unit, strip, outlet, etc) */
@@ -16,7 +14,7 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
   def config: PowerConfiguration
   def id: Int // the id of the power unit
   // the position of the component within a unit, not physical position, this has to do with ordering during display
-  def position: Int
+  def position: Int 
   def value: Option[String] // value of the power component
 
   def label = PowerConfiguration.Messages.ComponentLabel(typeName, sid)
@@ -63,26 +61,22 @@ object PowerComponent {
     case false => s.split("_").last.charAt(0).toInt
   }
   implicit object PowerComponentFormat extends Format[PowerComponent] {
-    override def reads(json: JsValue) = Stats.time("PowerComponent.Reads") {
-      JsSuccess(PowerComponentValue(
-        Symbol(unidentify((json \ "TYPE").as[String])),
-        PowerConfiguration.get(),
-        unkey((json \ "KEY").as[String]),
-        (json \ "POSITION").as[Int],
-        (json \ "VALUE").asOpt[String]
-      ))
-    }
+    override def reads(json: JsValue) = JsSuccess(PowerComponentValue(
+      Symbol(unidentify((json \ "TYPE").as[String])),
+      PowerConfiguration.get(),
+      unkey((json \ "KEY").as[String]),
+      (json \ "POSITION").as[Int],
+      (json \ "VALUE").asOpt[String]
+    ))
 
-    override def writes(pc: PowerComponent) = Stats.time("PowerComponent.Writes") {
-      JsObject(Seq(
-        "KEY" -> Json.toJson(pc.key),
-        "VALUE" -> Json.toJson(pc.value.getOrElse("Unspecified")),
-        "TYPE" -> Json.toJson(pc.identifier),
-        "LABEL" -> Json.toJson(pc.label),
-        "POSITION" -> Json.toJson(pc.position),
-        "IS_REQUIRED" -> Json.toJson(pc.isRequired),
-        "UNIQUE" -> Json.toJson(pc.isUnique)
-      ))
-    }
+    override def writes(pc: PowerComponent) = JsObject(Seq(
+      "KEY" -> Json.toJson(pc.key),
+      "VALUE" -> Json.toJson(pc.value.getOrElse("Unspecified")),
+      "TYPE" -> Json.toJson(pc.identifier),
+      "LABEL" -> Json.toJson(pc.label),
+      "POSITION" -> Json.toJson(pc.position),
+      "IS_REQUIRED" -> Json.toJson(pc.isRequired),
+      "UNIQUE" -> Json.toJson(pc.isUnique)
+    ))
   }
 }

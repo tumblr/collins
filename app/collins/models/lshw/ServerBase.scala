@@ -6,26 +6,20 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.util.Stats
-
 object ServerBase {
   implicit object ServerbaseFormat extends Format[ServerBase] {
-    override def reads(json: JsValue) = Stats.time("Serverbase.Reads") {
-      JsSuccess(ServerBase(
-        (json \ "DESCRIPTION").as[String],
-        (json \ "PRODUCT").as[String],
-        (json \ "VENDOR").as[String],
-        (json \ "SERIAL").as[String]
-      ))
-    }
-    override def writes(serverbase: ServerBase) = Stats.time("Serverbase.Writes") {
-      JsObject(Seq(
-        "DESCRIPTION" -> Json.toJson(serverbase.description),
-        "PRODUCT" -> Json.toJson(serverbase.product),
-        "VENDOR" -> Json.toJson(serverbase.vendor),
-        "SERIAL" -> Json.toJson(serverbase.serial)
-      ))
-    }
+    override def reads(json: JsValue) = JsSuccess(ServerBase(
+      (json \ "DESCRIPTION").as[String],
+      (json \ "PRODUCT").as[String],
+      (json \ "VENDOR").as[String],
+      (json \ "SERIAL").as[String]
+    ))
+    override def writes(serverbase: ServerBase) = JsObject(Seq(
+      "DESCRIPTION" -> Json.toJson(serverbase.description),
+      "PRODUCT" -> Json.toJson(serverbase.product),
+      "VENDOR" -> Json.toJson(serverbase.vendor),
+      "SERIAL" -> Json.toJson(serverbase.serial)
+    ))
   }
 }
 

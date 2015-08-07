@@ -5,8 +5,6 @@ import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.util.Stats
-
 import collins.models.Asset
 import collins.models.AssetMetaValue
 import collins.models.IpAddresses
@@ -17,7 +15,6 @@ import collins.models.MetaWrapper
 import collins.models.PowerHelper
 import collins.models.conversions.IpAddressFormat
 import collins.models.conversions.IpmiFormat
-
 import collins.util.LldpRepresentation
 import collins.util.LshwRepresentation
 import collins.util.config.Feature
@@ -26,7 +23,7 @@ import collins.util.power.PowerUnits
 import collins.util.power.PowerUnits
 
 object AllAttributes {
-  def get(asset: Asset): AllAttributes = Stats.time("Asset.GetAllAttributes") {
+  def get(asset: Asset): AllAttributes = {
     if (asset.isConfiguration) {
       AllAttributes(asset,
         LshwRepresentation.empty,
@@ -74,7 +71,7 @@ case class AllAttributes(
     }
   }
 
-  def toJsValue(): JsValue = Stats.time("SerializeAsset.AllAttributes") {
+  def toJsValue(): JsValue = {
     val outSeq = Seq(
       "ASSET" -> asset.toJsValue,
       "HARDWARE" -> lshw.toJsValue,
