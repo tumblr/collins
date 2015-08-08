@@ -1,5 +1,9 @@
 package collins.controllers
 
+import scala.concurrent.Future
+
+import play.api.mvc.Result
+
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsBoolean
 import play.api.libs.json.JsNull
@@ -9,18 +13,20 @@ import play.api.libs.json.JsString
 import play.api.libs.json.JsUndefined
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
+
 import play.api.mvc.AnyContent
 import play.api.mvc.Controller
 import play.api.mvc.Request
 import play.api.mvc.Results
+
+import collins.util.Stats
 import collins.util.BashOutput
 import collins.util.HtmlOutput
 import collins.util.JsonOutput
 import collins.util.OutputType
 import collins.util.OutputType.contentTypeWithCharset
 import collins.util.TextOutput
-import scala.concurrent.Future
-import play.api.mvc.Result
+
 
 object ApiResponse extends ApiResponse {
   import OutputType.contentTypeWithCharset
@@ -125,11 +131,7 @@ trait ApiResponse extends Controller {
       case o: BashOutput =>
         response.status(formatBashResponse(response.data) + "\n").as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: JsonOutput =>
-        val rewritten = ApiResponse.isJsonErrorMessage(response.data) match {
-          case true => response.data
-          case false => ApiResponse.formatJsonMessage(response.status, response.data)
-        }
-        response.status(Json.stringify(rewritten)).as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
+        response.status(formatJsonResponse(response.status, response.data)).as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: HtmlOutput =>
         val e = new Exception("Unhandled view")
         e.printStackTrace()
@@ -137,7 +139,15 @@ trait ApiResponse extends Controller {
     }
   }
 
-  protected def formatBashResponse(jsobject: JsValue, prefix: String = ""): String = {
+  private[this] def formatJsonResponse(status: Results.Status, jsobject: JsValue): String = Stats.time("Response.AsJson") {
+    val rewritten = ApiResponse.isJsonErrorMessage(jsobject) match {
+      case true  => jsobject
+      case false => ApiResponse.formatJsonMessage(status, jsobject)
+    }
+    Json.stringify(rewritten)
+  }
+
+  private[this] def formatBashResponse(jsobject: JsValue, prefix: String = ""): String = Stats.time("Response.AsBash") {
     def formatBasic(jsvalue: JsValue): String = {
       jsvalue match {
         case JsNull => ""
@@ -194,7 +204,7 @@ trait ApiResponse extends Controller {
     }.mkString("\n")
   }
 
-  protected def formatTextResponse(jsobject: JsValue, depth: Int = 0): String = {
+  private[this] def formatTextResponse(jsobject: JsValue, depth: Int = 0): String = Stats.time("Response.AsText") {
     def formatBasic(jsvalue: JsValue): String = {
       jsvalue match {
         case JsNull => "null"

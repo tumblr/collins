@@ -9,8 +9,6 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.util.Stats
-
 import collins.models.cache.Cache
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
@@ -35,20 +33,16 @@ object AssetType extends Schema with AnormAdapter[AssetType] with AssetTypeKeys 
   ))
 
   implicit object AssetTypeFormat extends Format[AssetType] {
-    override def reads(json: JsValue) = Stats.time("AssetType.Reads") {
-      JsSuccess(AssetType(
-        (json \ "NAME").as[String],
-        (json \ "LABEL").as[String],
-        (json \ "ID").asOpt[Int].getOrElse(0)
-      ))
-    }
-    override def writes(at: AssetType) = Stats.time("AssetType.Writes") {
-      JsObject(Seq(
-        "ID" -> Json.toJson(at.id),
-        "NAME" -> Json.toJson(at.name),
-        "LABEL" -> Json.toJson(at.label)
-      ))
-    }
+    override def reads(json: JsValue) = JsSuccess(AssetType(
+      (json \ "NAME").as[String],
+      (json \ "LABEL").as[String],
+      (json \ "ID").asOpt[Int].getOrElse(0)
+    ))
+    override def writes(at: AssetType) = JsObject(Seq(
+      "ID" -> Json.toJson(at.id),
+      "NAME" -> Json.toJson(at.name),
+      "LABEL" -> Json.toJson(at.label)
+    ))
   }
 
   def findById(id: Int): Option[AssetType] = Cache.get(findByIdKey(id), inTransaction {

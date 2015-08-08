@@ -9,12 +9,10 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.util.Stats
-
+import collins.models.cache.Cache
 import collins.validation.Pattern.isAlphaNumericString
 import collins.validation.Pattern.isNonEmptyString
 
-import collins.models.cache.Cache
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
 import collins.models.Status.StatusFormat
@@ -36,24 +34,20 @@ object State extends Schema with AnormAdapter[State] with StateKeys {
 
   implicit object StateFormat extends Format[State] {
     import Status.StatusFormat
-    override def reads(json: JsValue) = Stats.time("State.Reads") {
-      JsSuccess(State(
-        (json \ "ID").asOpt[Int].getOrElse(0),
-        (json \ "STATUS").asOpt[Int].getOrElse(ANY_STATUS),
-        (json \ "NAME").as[String],
-        (json \ "LABEL").as[String],
-        (json \ "DESCRIPTION").as[String]
-      ))
-    }
-    override def writes(state: State) = Stats.time("State.Writes") {
-      JsObject(Seq(
-        "ID" -> Json.toJson(state.id),
-        "STATUS" -> Json.toJson(Status.findById(state.status)),
-        "NAME" -> Json.toJson(state.name),
-        "LABEL" -> Json.toJson(state.label),
-        "DESCRIPTION" -> Json.toJson(state.description)
-      ))
-    }
+    override def reads(json: JsValue) = JsSuccess(State(
+      (json \ "ID").asOpt[Int].getOrElse(0),
+      (json \ "STATUS").asOpt[Int].getOrElse(ANY_STATUS),
+      (json \ "NAME").as[String],
+      (json \ "LABEL").as[String],
+      (json \ "DESCRIPTION").as[String]
+    ))
+    override def writes(state: State) = JsObject(Seq(
+      "ID" -> Json.toJson(state.id),
+      "STATUS" -> Json.toJson(Status.findById(state.status)),
+      "NAME" -> Json.toJson(state.name),
+      "LABEL" -> Json.toJson(state.label),
+      "DESCRIPTION" -> Json.toJson(state.description)
+    ))
   }
   override val tableDef = table[State]("state")
   on(tableDef)(s => declare(
