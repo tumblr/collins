@@ -1,25 +1,28 @@
 package collins.solr
 
 import java.util.Date
+
 import scala.concurrent.Future
+
 import org.apache.solr.client.solrj.SolrClient
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
+import org.apache.solr.client.solrj.impl.HttpSolrClient
 import org.apache.solr.common.SolrInputDocument
-import play.api.Application
+
 import play.api.Logger
 import play.api.Play.current
-import play.api.Plugin
 import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
+import collins.callbacks.Callback
 import collins.models.Asset
 import collins.models.AssetLog
 import collins.solr.CollinsQueryDSL.str2collins
 import collins.solr.Solr.AssetSolrDocument
-import collins.callbacks.Callback
 import collins.util.views.Formatter
+
 import akka.actor.Props
 import akka.routing.FromConfig
-import org.apache.solr.client.solrj.impl.HttpSolrClient
 
 object SolrHelper {
 
@@ -57,7 +60,7 @@ object SolrHelper {
     }
     _server = Some(server)
   }
-  
+
   /**
    * Setup callbacks on all operations that modify asset data, so we can
    * properly reindex the updated asset in Solr

@@ -32,14 +32,13 @@ object SolrConfig extends Configurable {
   def assetBatchUpdateWindow = getInt("assetBatchUpdateWindowMs", 10) milliseconds
 
   override protected def validateConfig() {
-    if (!enabled) {
-      return
-    }
-    if (useEmbeddedServer) {
-      val path = new File(embeddedSolrHome)
-      require(path.isDirectory && path.canWrite, Messages.invalidHome(path.toString))
-    } else {
-      require(externalUrl.isDefined, Messages.invalidUrl(getString("externalUrl", "")))
+    if (enabled) {
+      if (useEmbeddedServer) {
+        val path = new File(embeddedSolrHome)
+        require(path.isDirectory && path.canWrite, Messages.invalidHome(path.toString))
+      } else {
+        require(externalUrl.isDefined, Messages.invalidUrl(getString("externalUrl", "")))
+      }
     }
   }
 }
