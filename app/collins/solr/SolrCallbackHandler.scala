@@ -47,12 +47,6 @@ case class SolrAssetCallbackHandler(server: SolrClient, updater: ActorRef) exten
       logger.error("Unknown value in update callback %s".format(maybeNullString(o)))
   }
 
-  private def maybeNullString(s: AnyRef): String = if (s == null) {
-    "null"
-  } else {
-    s.toString
-  }
-
   protected def removeAssetByTag(tag: String) {
     if (tag != "*") {
       server.deleteByQuery("TAG:" + tag)
@@ -80,14 +74,6 @@ case class SolrAssetLogCallbackHandler(server: SolrClient, updater: ActorRef) ex
     case o =>
       logger.error("Unknown value in update callback %s".format(maybeNullString(o)))
   }
-
-  private def maybeNullString(s: AnyRef): String = if (s == null) {
-    "null"
-  } else {
-    s.toString
-  }
-
-
 }
 
 

@@ -9,4 +9,10 @@ trait CallbackActionHandler {
     Option(pce.getNewValue).getOrElse(pce.getOldValue)
 
   protected def getValueOption(pce: PropertyChangeEvent): Option[AnyRef] = Option(getValue(pce))
+
+  def maybeNullString(s: AnyRef): String = if (s == null) {
+    "null"
+  } else {
+    s.toString
+  }
 }
