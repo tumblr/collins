@@ -10,9 +10,6 @@ trait CallbackActionHandler {
 
   protected def getValueOption(pce: PropertyChangeEvent): Option[AnyRef] = Option(getValue(pce))
 
-  def maybeNullString(s: AnyRef): String = if (s == null) {
-    "null"
-  } else {
-    s.toString
-  }
+  protected def maybeNullString(s: AnyRef): String =
+    Option(s).filter(_ != null).map(_.toString).getOrElse("null")
 }
