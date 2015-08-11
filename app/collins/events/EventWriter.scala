@@ -1,22 +1,29 @@
 package collins.events
 
 import play.api.Logger
-
-import collins.models.asset.AllAttributes
+import play.api.libs.json.JsValue
 
 import akka.actor.Actor
 import akka.actor.ActorRef
+import akka.actor.actorRef2Scala
 
-case class Listener(listernerRef: ActorRef)
-case class Message(category: Category, property: String, asset: AllAttributes)
+case class Event(data: JsValue)
 
-class EventWriter extends Actor {
+// TODO: Think about persistent view
+class EventWriter(client: ActorRef, processor: ActorRef) extends Actor {
   private[this] val logger = Logger(getClass)
 
+  override def preStart(): Unit = {
+    processor ! Register
+  }
+
+  override def postStop(): Unit = {
+    processor ! UnRegister
+  }
+
   def receive = {
-    case Listener(lr) => logger.trace("Add a listener")
-    case m: Message =>
-      logger.trace("Received a message of type %s for asset with tag %s for property %s".format(m.category, m.asset.asset.tag, m.property))
-      logger.trace("Sent event to MOM")
+    case Event(data) => {
+      client ! data
+    }
   }
 }

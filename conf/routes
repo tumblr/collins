@@ -42,7 +42,8 @@ GET     /logout                     collins.controllers.Application.logout
 # API
 
 # Generic Functionality
-GET     /api/timestamp                       collins.app.Api.timestamp
+GET     /api/timestamp              collins.app.Api.timestamp
+GET     /api/events                 collins.app.Api.events
 
 # Admin API
 GET     /api/admin/solr                          collins.app.Api.repopulateSolr(waitForCompletion: String ?= "true")

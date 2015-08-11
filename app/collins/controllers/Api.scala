@@ -2,6 +2,9 @@ package collins.controllers
 
 import java.util.Date
 
+import scala.concurrent.Future
+
+import play.api.libs.concurrent.Akka
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsBoolean
 import play.api.libs.json.JsNumber
@@ -14,8 +17,12 @@ import play.api.mvc.AnyContent
 import play.api.mvc.Request
 import play.api.mvc.Result
 import play.api.mvc.Results
+import play.api.mvc.WebSocket
 
 import collins.controllers.actors.TestProcessor
+import collins.events.EventWriter
+import collins.events.EventsConfig
+import collins.events.Events
 import collins.models.Asset
 import collins.util.BashOutput
 import collins.util.HtmlOutput
@@ -24,6 +31,8 @@ import collins.util.OutputType
 import collins.util.TextOutput
 import collins.util.concurrent.BackgroundProcessor
 import collins.util.views.Formatter
+
+import akka.actor.Props
 
 private[controllers] case class ResponseData(status: Results.Status, data: JsValue, headers: Seq[(String,String)] = Nil, attachment: Option[AnyRef] = None) {
   def asResult(implicit req: Request[AnyContent]): Result =
@@ -48,6 +57,31 @@ IpAddressApi with AssetStateApi with AdminApi {
         Results.Ok(Json.stringify(json)).as(o.contentType)
       case o: HtmlOutput =>
         Results.Ok(time.toString).as(o.contentType)
+    }
+  }
+
+  def events = {
+    import play.api.Play.current
+    WebSocket.tryAcceptWithActor[JsValue, JsValue] { implicit request =>
+      Future.successful {
+        if (EventsConfig.enabled) {
+          authenticate(request) match {
+            case None =>
+              logger.debug("Authentication required and NOT successful for streams")
+              Left(Forbidden)
+            case Some(user) => authorize(user, Permissions.Events.Stream) match {
+              case false =>
+                logger.debug("Authorization required and NOT successful for streams")
+                Left(Forbidden)
+              case true => {
+                Right(Events.registerCallback(_))
+              }
+            }
+          }
+        } else {
+          Left(ServiceUnavailable)
+        }
+      }
     }
   }
 

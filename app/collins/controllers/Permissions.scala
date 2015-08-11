@@ -121,4 +121,8 @@ object Permissions {
     def GetTagValues = spec("getTagValues", AdminSpec)
   }
 
+  object Events extends PermSpec("controllers.Events") {
+    def Spec = spec(LoggedIn)
+    def Stream = spec("stream", Spec)
+  }
 }
