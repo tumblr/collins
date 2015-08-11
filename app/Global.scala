@@ -11,7 +11,9 @@ import play.api.mvc.Results
 import play.api.mvc.Result
 
 import collins.controllers.ApiResponse
+
 import collins.db.DB
+
 import collins.util.BashOutput
 import collins.util.CryptoAccessor
 import collins.util.JsonOutput
@@ -24,11 +26,18 @@ import collins.util.security.AuthenticationProvider
 import collins.util.security.AuthenticationProviderConfig
 
 import collins.models.cache.Cache
+
 import collins.logging.LoggingHelper
+
 import collins.util.config.Registry
+
 import collins.solr.SolrHelper
+
 import collins.metrics.MetricsReporter
+
 import collins.callbacks.Callback
+
+import collins.events.Events
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
@@ -47,6 +56,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     SolrHelper.setupSolr()
     MetricsReporter.setupMetrics()
     Callback.setupCallbacks()
+    Events.setupEvents()
   }
 
   override def onStop(app: Application) {
