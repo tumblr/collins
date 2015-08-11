@@ -21,6 +21,7 @@ object Events {
   def setupEvents() {
 
     if (EventsConfig.enabled) {
+      logger.info("Installing callbacks for events")
       val processor = Akka.system.actorOf(Props[EventProcessor].withRouter(FromConfig()), name = "event_processor")
 
       val callback = EventsCallbackHandler(processor)
@@ -35,6 +36,7 @@ object Events {
   }
 
   def registerCallback(ws: ActorRef) = {
+    logger.info("Registering a callback with the processor")
     val processor = Akka.system.actorSelection("/user/event_processor")
     Props(new EventWriter(ws, Await.result(processor.resolveOne(registerDuration), registerDuration)))
   }
