@@ -3,7 +3,6 @@ $LOAD_PATH.unshift('./lib/')
 require 'collins_auth'
 require 'optparse'
 require 'yaml'
-require 'consolr/version'
 
 module Consolr
   class Console
@@ -35,7 +34,7 @@ module Consolr
         puts "------"
         exit 1
       end
-      
+
       begin
         @ipmitool_exec = config_params['ipmitool'] # ipmitool absolute path
       rescue Exception => e
@@ -45,7 +44,7 @@ module Consolr
         puts "-------"
         exit 1
       end
-      
+
       # Will be ignored for dangerous actions, no matter what, even with --force
       begin
         @dangerous_assets = config_params['dangerous_assets']
@@ -72,50 +71,27 @@ module Consolr
       end
 
       @dangerous_actions = [:off, :reboot] # Must match the symbol in options{}
-
-      @options = {}
-      @opt_parser = OptionParser.new do |opt|
-        opt.banner = 'Usage: consolr [OPTIONS]'
-        opt.separator  ''
-        opt.separator  'Options'
-        
-        opt.on('-c', '--console', 'console into node via SOL') { options[:console] = true }
-        opt.on('-d', '--dangerous', 'list dangerous stuff') { options[:dangerous] = true }
-        opt.on('-f', '--force', 'force run dangerous actions') { options[:force] = true }
-        opt.on('-H', '--hostname ASSET', 'asset hostname') { |hostname| options[:hostname] = hostname }
-        opt.on('-i', '--identify', 'turn on chassis UID') { options[:identify] = true }
-        opt.on('-k', '--kick', 'kick if someone is hogging the console') { options[:kick] = true }
-        opt.on('-l', '--log LOG', 'System Event Log (SEL) [list|clear]') { |log| options[:log] = log }
-        opt.on('-o', '--on', 'turn on node') { options[:on] = true }
-        opt.on('-r', '--reboot', 'restart node') { options[:reboot] = true }
-        opt.on('-s', '--sdr', 'Sensor Data Repository (SDR)') { options[:sdr] = true }
-        opt.on('-t', '--tag ASSET', 'asset tag') { |tag| options[:tag] = tag }
-        opt.on('-x', '--off', 'turn off node') { options[:off] = true }
-        opt.on_tail('-h', '--help', 'help') { puts opt; exit 0 }
-        opt.on_tail('-v', '--version', 'version') { puts Consolr::VERSION; exit 0 }
-      end
     end
-    
+
     def ipmitool_cmd action
       system("#{@ipmitool_exec} -I lanplus -H #{@node.ipmi.address} -U #{@node.ipmi.username} -P #{@node.ipmi.password} #{action}")
       return $?.exitstatus == 0 ? "SUCCESS" : "FAILED"
     end
 
-    def start
-      @opt_parser.parse! # extract from ARGV[]
+    def start options
       abort("Please pass either the asset tag or hostname") if options[:tag].nil? and options[:hostname].nil?
-      
+
       abort("Cannot find #{@ipmitool_exec}") unless File.exist?(@ipmitool_exec)
 
       dangerous_body = "Dangerous actions: #{dangerous_actions.join(', ')}\n"\
         "Dangerous status: #{dangerous_status.join(', ')} (override with --force)\n"\
         "Dangerous assets: #{dangerous_assets.join(', ')} (ignored no matter what, even with --force)"
-      
+
       if options[:dangerous]
         puts dangerous_body
         exit 1
       end
-      
+
       begin
         collins = Collins::Authenticator.setup_client
       rescue Exception => e
@@ -125,22 +101,22 @@ module Consolr
         puts "-------"
         exit 1
       end
-      
+
       if options[:tag] and options[:hostname]
         abort("Please pass either the hostname OR the tag but not both.")
       end
-     
+
       # match assets like vm-67f5eh, zt-*, etc.
       nodes = options[:tag] ? (collins.find :tag => options[:tag]) : (collins.find :hostname => options[:hostname])
       @node = nodes.length == 1 ? nodes.first : abort("Found #{nodes.length} assets, aborting.")
-      
+
       %x(/bin/ping -c 1 #{@node.ipmi.address})
       abort("Cannot ping IP #{@node.ipmi.address} (#{@node.tag})") unless $?.exitstatus == 0
-      
+
       if dangerous_assets.include?(@node.tag) and dangerous_actions.any?
         puts "Asset #{@node.tag} is a crucial asset. Can't execute dangerous actions on this asset."
       end
-      
+
       if options[:force].nil? and dangerous_actions.any? and dangerous_status.include?(@node.status)
         puts "Cannot run dangerous commands on #{@node.hostname} (#{@node.tag} - #{@node.status})"
         abort dangerous_body
