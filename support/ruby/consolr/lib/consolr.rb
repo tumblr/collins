@@ -73,11 +73,6 @@ module Consolr
       @dangerous_actions = [:off, :reboot] # Must match the symbol in options{}
     end
 
-    def ipmitool_cmd action
-      system("#{@ipmitool_exec} -I lanplus -H #{@node.ipmi.address} -U #{@node.ipmi.username} -P #{@node.ipmi.password} #{action}")
-      return $?.exitstatus == 0 ? "SUCCESS" : "FAILED"
-    end
-
     def start options
       abort("Please pass either the asset tag or hostname") if options[:tag].nil? and options[:hostname].nil?
 
@@ -147,10 +142,16 @@ module Consolr
           raise OptionParser::MissingArgument, "specify an action"
         rescue OptionParser::MissingArgument => e
           puts e
-          puts @opt_parser
-          exit 0
+          exit 1
         end
       end
+    end
+
+    private
+
+    def ipmitool_cmd action
+      system("#{@ipmitool_exec} -I lanplus -H #{@node.ipmi.address} -U #{@node.ipmi.username} -P #{@node.ipmi.password} #{action}")
+      return $?.exitstatus == 0 ? "SUCCESS" : "FAILED"
     end
 
   end
