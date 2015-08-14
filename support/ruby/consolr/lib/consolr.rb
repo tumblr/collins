@@ -109,13 +109,13 @@ module Consolr
 
       abort("Cannot ping IP #{@node.ipmi.address} (#{@node.tag})") unless Net::Ping::External.new(@node.ipmi.address).ping?
 
-      if dangerous_assets.include?(@node.tag) and dangerous_actions.any?
-        puts "Asset #{@node.tag} is a crucial asset. Can't execute dangerous actions on this asset."
+      selected_dangerous_actions = dangerous_actions.select { |o| options[o] }
+      if dangerous_assets.include?(@node.tag) and selected_dangerous_actions.any?
+        abort "Asset #{@node.tag} is a crucial asset. Can't ever execute dangerous actions on this asset.\n#{dangerous_body}"
       end
 
-      if options[:force].nil? and dangerous_actions.any? and dangerous_status.include?(@node.status)
-        puts "Cannot run dangerous commands on #{@node.hostname} (#{@node.tag} - #{@node.status})"
-        abort dangerous_body
+      if options[:force].nil? and selected_dangerous_actions.any? and dangerous_status.include?(@node.status)
+        abort "Cannot run dangerous commands on #{@node.hostname} (#{@node.tag} - #{@node.status}) because it is in a protected status. This can be overridden with the --force flag\n#{dangerous_body}"
       end
 
       case
