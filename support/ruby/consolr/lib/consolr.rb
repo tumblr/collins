@@ -1,6 +1,8 @@
 $LOAD_PATH.unshift('./lib/')
 
+require 'consolr/version'
 require 'collins_auth'
+require 'net/ping'
 require 'optparse'
 require 'yaml'
 
@@ -105,8 +107,7 @@ module Consolr
       nodes = options[:tag] ? (collins.find :tag => options[:tag]) : (collins.find :hostname => options[:hostname])
       @node = nodes.length == 1 ? nodes.first : abort("Found #{nodes.length} assets, aborting.")
 
-      %x(/bin/ping -c 1 #{@node.ipmi.address})
-      abort("Cannot ping IP #{@node.ipmi.address} (#{@node.tag})") unless $?.exitstatus == 0
+      abort("Cannot ping IP #{@node.ipmi.address} (#{@node.tag})") unless Net::Ping::External.new(@node.ipmi.address).ping?
 
       if dangerous_assets.include?(@node.tag) and dangerous_actions.any?
         puts "Asset #{@node.tag} is a crucial asset. Can't execute dangerous actions on this asset."

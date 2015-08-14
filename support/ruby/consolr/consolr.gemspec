@@ -19,4 +19,5 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "collins_auth", "~> 0.1.2"
+  spec.add_runtime_dependency "net-ping", "~> 1.7.7"
 end
