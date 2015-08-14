@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+# mock impitool script
+
+require 'optparse'
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: example.rb [options]"
+
+  # compatibility arguments that are ignored
+  opts.on("-I", "--interface [INTERFACE]",  "compatibility with real tool. Ignored")
+  opts.on("-H", "--hostname [HOSTNAME]",    "compatibility with real tool. Ignored")
+  opts.on("-U", "--user [USERNAME]",        "compatibility with real tool. Ignored")
+  opts.on("-P", "--password [PASSWORD]",    "compatibility with real tool. Ignored")
+end.parse!
+
+# ARGV options is the action to take
+# for testing, just return the action taken
+puts ARGV.join(' ')
