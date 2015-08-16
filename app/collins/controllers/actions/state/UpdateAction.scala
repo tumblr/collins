@@ -12,7 +12,8 @@ import collins.controllers.Api
 import collins.controllers.actions.SecureAction
 import collins.controllers.actions.RequestDataHolder
 import collins.validation.StringUtil
-import collins.models.{State, Status => AStatus}
+import collins.models.State
+import collins.models.{Status => AssetStatus}
 import collins.util.security.SecuritySpecification
 
 
@@ -87,7 +88,7 @@ case class UpdateAction(
     }
   )
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(state) => State.update(state) match {
         case ok if ok >= 0 => Api.statusResponse(true, Status.Ok)
@@ -137,7 +138,7 @@ case class UpdateAction(
   protected def getStatusId(status: Option[String]): Option[Int] = status.flatMap { s =>
     (s.toUpperCase == State.ANY_NAME.toUpperCase) match {
       case true => Some(State.ANY_STATUS)
-      case false => AStatus.findByName(s).map(_.id)
+      case false => AssetStatus.findByName(s).map(_.id)
     }
   }
 

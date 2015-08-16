@@ -35,8 +35,8 @@ import collins.util.RemoteCollinsHost
  * instance is different from the pagination of the overall request
  */
 case class AssetSearchParameters(
-  params: ResultTuple, 
-  afinder: AssetFinder, 
+  params: ResultTuple,
+  afinder: AssetFinder,
   operation: Option[String] = None, //"and" or "or"
   details: Boolean = false
 
@@ -49,8 +49,8 @@ case class AssetSearchParameters(
    */
   def toSeq: Seq[(String, String)] = {
     val q1: Seq[(String, String)] = (
-      params._1.map{case (enum, value) => (enum.toString, value)} ++ 
-      params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, URLEncoder.encode(value, "UTF-8")))} ++ 
+      params._1.map{case (enum, value) => (enum.toString, value)} ++
+      params._2.map{case (assetMeta,value) => ("attribute" -> "%s;%s".format(assetMeta.name, URLEncoder.encode(value, "UTF-8")))} ++
       params._3.map{i => ("attribute" -> ("ip_address;" + URLEncoder.encode(i, "UTF-8")))}
     ) ++ afinder.toSeq :+ ("details" -> (if (details) "true" else "false"))
     operation.map{op => q1 :+ ("operation" -> op)}.getOrElse(q1)
@@ -66,8 +66,8 @@ case class AssetSearchParameters(
   }
 
   def toSolrExpression: SolrExpression = {
-    val p = params._1.map{case (enum, value) => SolrKeyVal(enum.toString, StringValueFormat.createValueFor(value))} ++ 
-      params._2.map{case (assetMeta,value) => SolrKeyVal(assetMeta.name, StringValueFormat.createValueFor(value))} ++ 
+    val p = params._1.map{case (enum, value) => SolrKeyVal(enum.toString, StringValueFormat.createValueFor(value))} ++
+      params._2.map{case (assetMeta,value) => SolrKeyVal(assetMeta.name, StringValueFormat.createValueFor(value))} ++
       params._3.map{i => SolrKeyVal("ip_address", StringValueFormat.createValueFor(i))}
     val allkeyvals = (p ++ afinder.toSolrKeyVals).toSet
     if (allkeyvals.size > 0) {
@@ -99,7 +99,7 @@ class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) 
 
   val host = remoteHost.host
   val queryUrl = host + collins.app.routes.Api.getAssets().toString
-  
+
   var total: Option[Long] = None
 
   def getTotal = total.getOrElse(0)
@@ -189,7 +189,7 @@ class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchPar
   val cachedAssets = new collection.mutable.Queue[AssetView]
   var nextRetrievedPage: Option[Int] = None
   var eof = false
-  
+
   /**
    * Retrieve the next item in the cached queue.  If there are no items, get
    * some more from the remote client, and if the client returns None, set eof
@@ -229,7 +229,7 @@ class RemoteAssetQueue(val client: RemoteAssetClient, val params: AssetSearchPar
  * merge-sort.  Backed using a Scala Stream for memoization
  */
 class RemoteAssetStream(clients: Seq[RemoteAssetClient], searchParams: AssetSearchParameters) {
-  
+
   val queues = clients.map{client => new RemoteAssetQueue(client, searchParams)}
 
   /**
@@ -266,7 +266,7 @@ class RemoteAssetStream(clients: Seq[RemoteAssetClient], searchParams: AssetSear
 
   def aggregateTotal: Long = clients.map{_.getTotal}.sum
 
-  /** 
+  /**
    * NOTE - this will not scale past a few thousand total assets when doing
    * searches that return large numbers of assets and requests are made for
    * high offsets in the result set, after that we'll need some kind of search
@@ -288,5 +288,5 @@ object RemoteAssetFinder {
     Cache.set(key, stream, 30)
     (results, stream.aggregateTotal)
   }
-    
+
 }

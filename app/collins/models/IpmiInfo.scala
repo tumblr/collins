@@ -40,6 +40,19 @@ case class IpmiInfo(
   def toJsValue() = Json.toJson(this)
   override def asJson: String = toJsValue.toString
 
+  override def compare(z: Any): Boolean = {
+    if (z == null)
+      return false
+    val ar = z.asInstanceOf[AnyRef]
+    if (!ar.getClass.isAssignableFrom(this.getClass))
+      false
+    else {
+      val other = ar.asInstanceOf[IpmiInfo]
+      this.assetId == other.assetId && this.gateway == other.gateway &&
+      this.netmask == other.netmask && this.username == other.username && this.password == other.password
+    }
+  }
+
   def decryptedPassword(): String = IpmiInfo.decrypt(password)
   def withExposedCredentials(exposeCredentials: Boolean = false) = {
     if (exposeCredentials) {
@@ -81,7 +94,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     CryptoCodec.withKeyFromFramework.Encode(pass)
   }
 
-  type IpmiQuerySeq = Seq[Tuple2[IpmiInfo.Enum, String]]
+  type IpmiQuerySeq = Seq[Tuple2[Enum, String]]
   def findAssetsByIpmi(page: PageParams, ipmi: IpmiQuerySeq, finder: AssetFinder): Page[AssetView] = {
     def whereClause(assetRow: Asset, ipmiRow: IpmiInfo) = {
       where(
@@ -116,7 +129,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     val IpmiNetmask = Value("IPMI_NETMASK")
   }
 
-  protected def decrypt(password: String) = {
+  def decrypt(password: String) = {
     logger.debug("Decrypting %s".format(password))
     CryptoCodec.withKeyFromFramework.Decode(password).getOrElse("")
   }
@@ -137,7 +150,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
   }
 
   // Converts our query parameters to fragments and parameters for a query
-  private[this] def collectParams(ipmi: Seq[Tuple2[IpmiInfo.Enum, String]], ipmiRow: IpmiInfo): LogicalBoolean = {
+  private[this] def collectParams(ipmi: Seq[Tuple2[Enum, String]], ipmiRow: IpmiInfo): LogicalBoolean = {
     import Enum._
     val results: Seq[LogicalBoolean] = ipmi.map { case(enum, value) =>
       enum match {

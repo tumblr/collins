@@ -9,7 +9,11 @@ import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
+
 import collins.models.State
+import collins.models.State
+import collins.models.conversions._
+
 import collins.util.MessageHelper
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
@@ -64,7 +68,7 @@ case class GetAction(
     Right(ActionDataHolder(None))
   }
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(state) => state match {
         case None =>

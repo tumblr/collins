@@ -18,8 +18,10 @@ import collins.controllers.actions.SecureAction
 import collins.controllers.forms.statusFormat
 import collins.controllers.forms.truthyFormat
 import collins.controllers.forms.typeFormat
+
 import collins.models.Asset
 import collins.models.AssetLifecycle
+import collins.models.AssetType
 import collins.models.AssetType
 import collins.models.IpmiInfo
 import collins.models.{Status => AssetStatus}
@@ -106,8 +108,8 @@ case class CreateAction(
         "error" -> rd.error.getOrElse("A tag must be specified")
       ))
   }
-    
-  
+
+
 
   protected def handleSuccess(asset: Asset, ipmi: Option[IpmiInfo]): Result = isHtml match {
     case true =>

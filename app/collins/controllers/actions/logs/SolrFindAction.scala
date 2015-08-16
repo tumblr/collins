@@ -12,6 +12,7 @@ import collins.controllers.actions.AssetAction
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.models.AssetLog
+import collins.models.AssetLog
 import collins.models.conversions.AssetLogFormat
 import collins.models.shared.Page
 import collins.models.shared.PageParams

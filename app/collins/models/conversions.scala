@@ -13,17 +13,14 @@ import play.api.libs.json.Format
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
+import play.api.libs.json.JsNumber
+import play.api.libs.json.JsString
 import play.api.libs.json.Json
 
 import collins.util.IpAddress
+import collins.models.asset.AssetView
 import collins.util.views.Formatter.ISO_8601_FORMAT
 import collins.util.views.Formatter.dateFormat
-
-import collins.models.IpmiInfo.Enum.IpmiAddress
-import collins.models.IpmiInfo.Enum.IpmiGateway
-import collins.models.IpmiInfo.Enum.IpmiNetmask
-import collins.models.IpmiInfo.Enum.IpmiPassword
-import collins.models.IpmiInfo.Enum.IpmiUsername
 
 object conversions {
   implicit def dateToTimestamp(date: Date) = new DateToTimestamp(date)
@@ -110,6 +107,64 @@ object conversions {
       } else {
         Json.toJson(log.message)
       })
+    ))
+  }
+  implicit object StatusFormat extends Format[Status] {
+    override def reads(json: JsValue) = JsSuccess(Status(
+      (json \ "NAME").as[String],
+      (json \ "DESCRIPTION").as[String],
+      (json \ "ID").as[Int]
+    ))
+    override def writes(status: Status) = JsObject(Seq(
+      "ID" -> JsNumber(status.id),
+      "NAME" -> JsString(status.name),
+      "DESCRIPTION" -> JsString(status.description)
+    ))
+  }
+  implicit object StateFormat extends Format[State] {
+    override def reads(json: JsValue) = JsSuccess(State(
+      (json \ "ID").asOpt[Int].getOrElse(0),
+      (json \ "STATUS").asOpt[Int].getOrElse(State.ANY_STATUS),
+      (json \ "NAME").as[String],
+      (json \ "LABEL").as[String],
+      (json \ "DESCRIPTION").as[String]))
+    override def writes(state: State) = JsObject(Seq(
+      "ID" -> Json.toJson(state.id),
+      "STATUS" -> Json.toJson(Status.findById(state.status)),
+      "NAME" -> Json.toJson(state.name),
+      "LABEL" -> Json.toJson(state.label),
+      "DESCRIPTION" -> Json.toJson(state.description)))
+  }
+  implicit object AssetFormat extends Format[AssetView] {
+    override def reads(json: JsValue) = JsSuccess(Asset(
+      (json \ "TAG").as[String],
+      Status.findByName((json \ "STATUS").as[String]).map(_.id).get,
+      AssetType.findByName((json \ "TYPE").as[String]).map(_.id).get,
+      (json \ "CREATED").as[Timestamp],
+      (json \ "UPDATED").asOpt[Timestamp],
+      (json \ "DELETED").asOpt[Timestamp],
+      (json \ "ID").as[Long],
+      (json \ "STATE").asOpt[State].map(_.id).getOrElse(0)))
+    override def writes(asset: AssetView): JsObject = JsObject(Seq(
+      "ID" -> JsNumber(asset.id),
+      "TAG" -> JsString(asset.tag),
+      "STATE" -> Json.toJson(State.findById(asset.stateId)),
+      "STATUS" -> JsString(asset.getStatusName),
+      "TYPE" -> Json.toJson(AssetType.findById(asset.assetTypeId).map(_.name)),
+      "CREATED" -> Json.toJson(asset.created),
+      "UPDATED" -> Json.toJson(asset.updated),
+      "DELETED" -> Json.toJson(asset.deleted)))
+  }
+  implicit object AssetTypeFormat extends Format[AssetType] {
+    override def reads(json: JsValue) = JsSuccess(AssetType(
+      (json \ "NAME").as[String],
+      (json \ "LABEL").as[String],
+      (json \ "ID").asOpt[Int].getOrElse(0)
+    ))
+    override def writes(at: AssetType) = JsObject(Seq(
+      "ID" -> Json.toJson(at.id),
+      "NAME" -> Json.toJson(at.name),
+      "LABEL" -> Json.toJson(at.label)
     ))
   }
 }

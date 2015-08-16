@@ -15,6 +15,7 @@ import play.api.Logger
 import play.api.Play
 
 import collins.models.Asset
+import collins.models.Asset
 
 object Solr {
 

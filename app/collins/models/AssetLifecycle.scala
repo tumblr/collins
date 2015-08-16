@@ -7,9 +7,9 @@ import scala.util.control.Exception.allCatch
 import play.api.Logger
 
 import collins.models.conversions._
+import collins.models.logs.LogFormat
+import collins.models.logs.LogSource
 import collins.models.AssetMeta.Enum.RackPosition
-import collins.models.{Status => AStatus}
-import collins.models.logs._
 
 import collins.util.AssetStateMachine
 import collins.util.Tattler
@@ -54,7 +54,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
 
   private[this] val logger = Logger.logger
 
-  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[AStatus]): AssetLifecycle.Status[AssetLifecycle.AssetIpmi] = {
+  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status]): AssetLifecycle.Status[AssetLifecycle.AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
       val _status = status.getOrElse(Status.Incomplete.get)
@@ -117,7 +117,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     allCatch[Boolean].either {
       val groupId = options.get("groupId").map(_.toInt)
       val state = options.get("state").flatMap(s => State.findByName(s))
-      val status = options.get("status").flatMap(s => AStatus.findByName(s)).map(_.id)
+      val status = options.get("status").flatMap(s => Status.findByName(s)).map(_.id)
       val opts = options - "state" - "groupId" - "status"
       if (!asset.isConfiguration) {
         opts.find(kv => restricted(kv._1)).map(kv =>
@@ -132,7 +132,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     }.left.map(e => handleException(asset, "Error saving attributes for asset", e))
   }
 
-  def updateAssetStatus(asset: Asset, status: Option[AStatus], state: Option[State], reason: String): AssetLifecycle.Status[Boolean] = {
+  def updateAssetStatus(asset: Asset, status: Option[Status], state: Option[State], reason: String): AssetLifecycle.Status[Boolean] = {
     if (!Feature.sloppyStatus) {
       return Left(new Exception("features.sloppyStatus is not enabled"))
     }

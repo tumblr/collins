@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 import collins.models.User
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.Cache
-import collins.cache.GuavaCacheFactory
+import collins.guava.GuavaCacheFactory
 
 /**
  * Exception encountered during authentication phase

@@ -36,11 +36,11 @@ case class FindSimilarAction(
   page: PageParams,
   spec: SecuritySpecification,
   handler: SecureController
-) extends SecureAction(spec, handler) with AssetAction with AssetResultsAction{
+) extends SecureAction(spec, handler) with AssetAction with AssetResultsAction {
 
   case class SimilarDataHolder(
     asset: Asset,
-    details: Option[Truthy], 
+    details: Option[Truthy],
     onlyUnallocated: Option[Truthy],
     sortType: Option[AssetSort.Type]
   ) extends RequestDataHolder
@@ -76,7 +76,7 @@ case class FindSimilarAction(
   }
 
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case SimilarDataHolder(asset, details, only, sortType) => {
         Logger.logger.debug(only.toString)

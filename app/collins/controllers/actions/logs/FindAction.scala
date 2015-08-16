@@ -13,6 +13,7 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.models.Asset
 import collins.models.AssetLog
+import collins.models.AssetLog
 import collins.models.conversions.AssetLogFormat
 import collins.models.shared.Page
 import collins.models.shared.PageParams
@@ -36,7 +37,7 @@ case class FindAction(
     }.getOrElse(Right(ActionDataHolder(None, pageParams, filter)))
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case adh@ActionDataHolder(asset, params, filter) =>
         val logs = getLogs(adh)

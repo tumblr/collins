@@ -9,7 +9,7 @@ import play.api.test.WithApplication
 class LshwHelperSpec extends mutable.Specification {
 
   "LSHW Helper Specification".title
-  
+
   args(sequential = true)
 
   "The LSHW Helper" should {

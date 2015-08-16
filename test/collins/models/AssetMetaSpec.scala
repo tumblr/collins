@@ -63,7 +63,7 @@ class AssetMetaSpec extends mutable.Specification {
       "findByTag" in new concreteassetmeta {
         AssetMeta.findByName(metaName) must beSome[AssetMeta]
       }
-      
+
       "findAll" in {
         AssetMeta.findAll().size must be_>=(AssetMeta.Enum.values.size)
       }
@@ -80,7 +80,7 @@ class AssetMetaSpec extends mutable.Specification {
         maybeMeta must beSome[AssetMeta]
         val realMeta = maybeMeta.get
         val whateverAsset = Asset("foo",Status.Allocated.get,AssetType.ServerNode.get)
-        AssetMetaValue(whateverAsset, realMeta.id, "123") 
+        AssetMetaValue(whateverAsset, realMeta.id, "123")
         success
       }
       "reject non-numeric value" in new numberassetmeta {

@@ -10,6 +10,8 @@ import org.squeryl.internals.PosoLifecycleEvent
 import play.api.Logger
 
 import collins.callbacks.Callback
+import collins.callbacks.CallbackDatum
+import collins.callbacks.CallbackDatumHolder
 
 import collins.models.cache.Cache
 
@@ -20,20 +22,9 @@ trait Keys[T <: AnyRef] {
 trait ValidatedEntity[T] extends KeyedEntity[T] {
   def validate(): Unit
   def asJson: String
-  @transient private var persisted: Option[Boolean] = None
-  // KeyedEntity overrides hashCode/equals with respect to isPersisted. Without the
-  // forComparison/isPersisted code, two models with the same primary key are considered identical
-  // (according to their PK) even if those models have different attributes. This behavior breaks
-  // callbacks that need to compare an 'old' and 'new' model. forComparison provides a short-hand
-  // for forcing KeyedEntity to use the class hashCode/equals instead of the custom one. This is
-  // horrible and will likely break since it depends on some squeryl internals.
-  def forComparison {
-    persisted = Some(false)
-  }
-  override def isPersisted: Boolean = persisted.getOrElse(super.isPersisted)
 }
 
-trait BasicModel[T <: AnyRef] { self: Schema with Keys[T] =>
+trait BasicModel[T <: CallbackDatum] { self: Schema with Keys[T] =>
   private[this] val logger = Logger(getClass)
 
   import org.squeryl.PrimitiveTypeMode
@@ -54,8 +45,7 @@ trait BasicModel[T <: AnyRef] { self: Schema with Keys[T] =>
       org.squeryl.Session.currentSession.setLogger(query =>
         if (QueryLogConfig.includeResults || !(query startsWith "ResultSetRow")) {
           Logger.logger.info(QueryLogConfig.prefix + query)
-        }
-      )
+        })
     }
     a
   }
@@ -63,14 +53,15 @@ trait BasicModel[T <: AnyRef] { self: Schema with Keys[T] =>
   def create(t: T): T = inTransaction {
     val newValue = tableDef.insert(t)
     createEventName.map { name =>
-      Callback.fire(name, null, newValue)
+      Callback.fire(name, CallbackDatumHolder(None), CallbackDatumHolder(Some(newValue)))
     }
     newValue
   }
 
   def delete(t: T): Int // Override
 
-  /** Optionally return a paginated query
+  /**
+   * Optionally return a paginated query
    *
    * If either the offset or pageSize are non-zero, pagination is applied. Otherwise, the query is
    * given back without pagination being applied.
@@ -91,7 +82,7 @@ trait BasicModel[T <: AnyRef] { self: Schema with Keys[T] =>
   protected def afterDeleteCallback[A](t: T)(f: => A): A = {
     val result = f
     deleteEventName.map { name =>
-      Callback.fire(name, t, null)
+      Callback.fire(name, CallbackDatumHolder(Some(t)), CallbackDatumHolder(None))
     }
     callbacks.filter(_.e == PosoLifecycleEvent.AfterDelete).foreach { cb =>
       cb.callback(t)
@@ -100,7 +91,7 @@ trait BasicModel[T <: AnyRef] { self: Schema with Keys[T] =>
   }
 }
 
-trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema with Keys[T] =>
+trait AnormAdapter[T <: ValidatedEntity[_] with CallbackDatum] extends BasicModel[T] { self: Schema with Keys[T] =>
   protected def updateEventName: Option[String] = None
 
   def get(t: T): T
@@ -109,10 +100,8 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
     try {
       val oldValue = get(t)
       tableDef.update(t)
-      updateEventName.map { name =>
-        oldValue.forComparison
-        t.forComparison
-        Callback.fire(name, oldValue, t)
+      updateEventName.map {
+        Callback.fire(_, CallbackDatumHolder(Some(oldValue)), CallbackDatumHolder(Some(t)))
       }
       1
     } catch {
@@ -121,7 +110,6 @@ trait AnormAdapter[T <: ValidatedEntity[_]] extends BasicModel[T] { self: Schema
   }
 
   override def callbacks = super.callbacks ++ Seq(
-    beforeInsert(tableDef) call(_.validate),
-    beforeUpdate(tableDef) call(_.validate)
-  )
+    beforeInsert(tableDef) call (_.validate),
+    beforeUpdate(tableDef) call (_.validate))
 }

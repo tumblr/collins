@@ -10,7 +10,7 @@ import collins.solr.Solr
 
 trait AdminApi {
   this: Api with SecureController =>
-  
+
   /**
    * Force reindexing Solr
    *
@@ -25,8 +25,8 @@ trait AdminApi {
     }
   }(Permissions.Admin.ClearCache)
 
-  def reindexAsset(tag: String) = SecureAction { implicit req => 
-    Asset.findByTag(tag).map{asset => 
+  def reindexAsset(tag: String) = SecureAction { implicit req =>
+    Asset.findByTag(tag).map{asset =>
       Solr.updateAssets(List(asset))
       Ok(ApiResponse.formatJsonMessage(Results.Ok, JsString("ok")))
     }.getOrElse(Results.BadRequest(ApiResponse.formatJsonError("Asset %s not found".format(tag), None)))

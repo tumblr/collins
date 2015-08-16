@@ -25,7 +25,7 @@ case class GetAction(
     Right(ActionDataHolder(id))
   }
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(log_id) =>
         AssetLog.findById(log_id) match {

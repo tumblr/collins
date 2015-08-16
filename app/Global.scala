@@ -12,6 +12,7 @@ import play.api.mvc.Result
 
 import collins.controllers.ApiResponse
 import collins.db.DB
+import collins.hazelcast.HazelcastHelper
 import collins.util.BashOutput
 import collins.util.CryptoAccessor
 import collins.util.JsonOutput
@@ -40,18 +41,21 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
 
   override def onStart(app: Application) {
     Registry.setupRegistry(app)
+    HazelcastHelper.setupHazelcast()
     Cache.setupCache()
     setAuthentication(AuthenticationProvider.get(AuthenticationProviderConfig.authType))
     setCryptoKey(CryptoConfig.key)
     LoggingHelper.setupLogging(app)
+    Callback.setupCallbacks()
     SolrHelper.setupSolr()
     MetricsReporter.setupMetrics()
-    Callback.setupCallbacks()
   }
 
   override def onStop(app: Application) {
     DB.shutdown()
     Registry.terminateRegistry()
+    Cache.terminateCache()
+    HazelcastHelper.terminateHazelcast()
     SolrHelper.terminateSolr()
     Callback.terminateCallbacks()
   }

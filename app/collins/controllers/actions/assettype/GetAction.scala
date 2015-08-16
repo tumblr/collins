@@ -9,6 +9,8 @@ import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
+import collins.models.conversions._
+import collins.models.AssetType
 import collins.models.AssetType
 import collins.util.MessageHelper
 import collins.util.security.SecuritySpecification
@@ -64,7 +66,7 @@ case class GetAction(
     Right(ActionDataHolder(None))
   }
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(atype) => atype match {
         case None =>

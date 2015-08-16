@@ -42,29 +42,29 @@ class AssetSearchParametersSpec extends mutable.Specification {
   }
 
   "AssetSearchParameters" should {
-    
+
     "generate correct query string sequence" in {
 
       "asks for details" in {
         AssetSearchParameters(EMPTY_RESULT_TUPLE, AssetFinder.empty, None, true).toSeq.findOne("details") must_== Some("true")
       }
-      
+
       "include operation with empty params" in {
         AssetSearchParameters(EMPTY_RESULT_TUPLE, AssetFinder.empty, Some("and")).toSeq.findOne("operation") must_== Some("and")
       }
-      
+
       "include operation with non-empty parms" in {
         AssetSearchParameters(EMPTY_RESULT_TUPLE, AssetFinder.empty.copy(tag = Some("foo")), Some("and")).toSeq.findOne("operation") must_== Some("and")
       }
-      
+
       "IPMI info" in {
         AssetSearchParameters(
           EMPTY_RESULT_TUPLE.copy(_1 = List((IpmiInfo.Enum.IpmiAddress, "1.2.3.4"))),
-          AssetFinder.empty, 
+          AssetFinder.empty,
           None
         ).toSeq.findOne(IpmiInfo.Enum.IpmiAddress.toString) must_== Some("1.2.3.4")
       }
-      
+
       "single attribute" in {
         AssetSearchParameters(
           EMPTY_RESULT_TUPLE.copy(_2 = List((AssetMeta("CPU_COUNT", -1, "","", 0L), 2.toString))),
@@ -75,7 +75,7 @@ class AssetSearchParametersSpec extends mutable.Specification {
 
       "multiple attributes" in {
         val metas = List(
-          (AssetMeta("CPU_COUNT", -1, "","", 0L), 2.toString), 
+          (AssetMeta("CPU_COUNT", -1, "","", 0L), 2.toString),
           (AssetMeta("FOO", -1, "", "", 0L), "BAR")
         )
         AssetSearchParameters(
@@ -104,4 +104,4 @@ class AssetSearchParametersSpec extends mutable.Specification {
     }
   }
 }
-        
+

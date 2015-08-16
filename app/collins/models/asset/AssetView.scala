@@ -5,7 +5,8 @@ import java.sql.Timestamp
 import play.api.libs.json.JsValue
 
 import collins.models.AssetType
-import collins.models.State
+import collins.models.AssetType
+import collins.models.Status
 import collins.models.Status
 
 /**

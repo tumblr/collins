@@ -5,7 +5,7 @@ import java.security.MessageDigest
 import collins.models.User
 import collins.models.UserImpl
 import sun.misc.BASE64Encoder
-import collins.cache.GuavaCacheFactory
+import collins.guava.GuavaCacheFactory
 
 class FileAuthenticationProvider() extends AuthenticationProvider {
 

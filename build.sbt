@@ -6,7 +6,7 @@ resolvers += "Restlet repository" at "http://maven.restlet.org"
 
 Keys.fork in Test := true
 
-javaOptions in Test := Seq("-Dconfig.file=conf/test.conf")
+javaOptions in Test := Seq("-Dconfig.file=conf/test.conf", "-XX:MaxPermSize=512M", "-Xms512m", "-Xmx512m")
 
 parallelExecution in Test := false
 
@@ -50,5 +50,6 @@ libraryDependencies ++= Seq(
   "org.webjars" % "datatables" % "1.10.7",
   "org.webjars" % "datatables-plugins" % "1.10.7",
   "org.webjars" % "jquery" % "2.1.4",
+  "com.hazelcast" % "hazelcast" % "3.5.1",
   ws
 )

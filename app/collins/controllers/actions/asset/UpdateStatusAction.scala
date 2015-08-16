@@ -19,6 +19,7 @@ import collins.controllers.validators.ParamValidation
 import collins.models.Asset
 import collins.models.AssetLifecycle
 import collins.models.State
+import collins.models.State
 import collins.models.{Status => AssetStatus}
 import collins.util.security.SecuritySpecification
 
@@ -93,7 +94,7 @@ case class UpdateStatusAction(
     }
   )
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case ActionDataHolder(status, state, reason) =>
         val lifeCycle = new AssetLifecycle(userOption, tattler)

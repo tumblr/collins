@@ -4,7 +4,7 @@ import play.api.Logger
 
 import collins.models.User
 import collins.permissions.Privileges
-import collins.cache.GuavaCacheFactory
+import collins.guava.GuavaCacheFactory
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger

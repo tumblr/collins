@@ -10,12 +10,15 @@ import org.squeryl.Schema
 
 import collins.models.cache.Cache
 import collins.models.Asset
+import collins.models.Asset
 import collins.models.IpAddressKeys
 
 import collins.util.IpAddress
 import collins.util.IpAddressCalc
 
-trait IpAddressable extends ValidatedEntity[Long] {
+import collins.callbacks.CallbackDatum
+
+trait IpAddressable extends ValidatedEntity[Long] with CallbackDatum {
 
   val assetId: Long
   val gateway: Long

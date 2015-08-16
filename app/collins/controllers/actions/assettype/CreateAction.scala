@@ -13,6 +13,7 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.AssetType
+import collins.models.AssetType
 import collins.util.MessageHelper
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
@@ -83,7 +84,7 @@ case class CreateAction(
     }
   )
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(assettype) => try {
         AssetType.create(assettype) match {

@@ -3,7 +3,7 @@ package collins.provisioning
 import play.api.Logger
 import collins.models.Asset
 import collins.shell.CommandResult
-import collins.cache.GuavaCacheFactory
+import collins.guava.GuavaCacheFactory
 import collins.shell.Command
 
 trait Provisioner {

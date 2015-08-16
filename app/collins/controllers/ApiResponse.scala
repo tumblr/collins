@@ -133,9 +133,7 @@ trait ApiResponse extends Controller {
       case o: JsonOutput =>
         response.status(formatJsonResponse(response.status, response.data)).as(contentTypeWithCharset(o)).withHeaders(response.headers:_*)
       case o: HtmlOutput =>
-        val e = new Exception("Unhandled view")
-        e.printStackTrace()
-        throw e
+        throw new Exception("Unhandled view")
     }
   }
 

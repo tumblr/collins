@@ -5,7 +5,7 @@ import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.models.asset.conversions.AssetFormat
+import collins.models.conversions._
 
 abstract class RemoteAssetProxy(jsonAsset: JsValue) extends RemoteAsset {
 

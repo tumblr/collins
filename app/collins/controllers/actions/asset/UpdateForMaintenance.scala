@@ -83,7 +83,7 @@ case class UpdateForMaintenanceAction(
     }
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case adh@ActionDataHolder(status, description, state) =>
         val lifeCycle = new AssetLifecycle(userOption, tattler)

@@ -1,6 +1,6 @@
 package collins.graphs
 
-import collins.cache.GuavaCacheFactory
+import collins.guava.GuavaCacheFactory
 import collins.util.config.Configurable
 import com.google.common.cache.CacheBuilderSpec
 

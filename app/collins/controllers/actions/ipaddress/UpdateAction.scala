@@ -17,6 +17,7 @@ import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.Asset
 import collins.models.IpAddresses
+import collins.models.IpAddresses
 import collins.models.shared.IpAddressConfig
 import collins.util.IpAddress
 import collins.util.security.SecuritySpecification
@@ -67,7 +68,7 @@ case class UpdateAction(
     )
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case adh@ActionDataHolder(asset, old, address, gateway, netmask, pool) =>
         val addressInfo = IpAddresses.findAllByAsset(asset)

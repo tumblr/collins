@@ -1,6 +1,7 @@
 package collins.util
 
 import collins.models.AssetMeta
+import collins.models.AssetMeta
 import collins.models.IpmiInfo
 
 object AttributeResolver extends MessageHelper("attributeresolver") {
@@ -10,7 +11,7 @@ object AttributeResolver extends MessageHelper("attributeresolver") {
   type ResultTuple = Tuple3[Seq[IpmiTuple], Seq[AssetMetaTuple], Seq[String]]
 
   //same as ResultTuple, but with named fields
-  case class ResolvedAttributes(ipmi: Seq[IpmiTuple], assetMeta: Seq[AssetMetaTuple], ipAddress: Option[String]) { 
+  case class ResolvedAttributes(ipmi: Seq[IpmiTuple], assetMeta: Seq[AssetMetaTuple], ipAddress: Option[String]) {
     def withMeta(key: String, value: String) = this.copy(assetMeta = assetMeta :+ (AssetMeta.findOrCreateFromName(key), value))
     def withMetas(metas: Seq[AssetMetaTuple]) = this.copy(assetMeta = assetMeta ++ metas)
   }

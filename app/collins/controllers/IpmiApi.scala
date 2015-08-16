@@ -16,6 +16,7 @@ import play.api.mvc.Results
 
 import collins.models.Asset
 import collins.models.IpmiInfo
+import collins.models.IpmiInfo
 import collins.util.IpAddress
 
 trait IpmiApi {

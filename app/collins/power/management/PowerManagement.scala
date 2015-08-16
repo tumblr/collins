@@ -10,6 +10,8 @@ import scala.concurrent.duration.FiniteDuration
 import play.api.Logger
 
 import collins.models.Asset
+import collins.models.Asset
+import collins.models.IpmiInfo
 import collins.models.IpmiInfo
 import collins.power.Identify
 import collins.power.PowerAction
@@ -77,7 +79,7 @@ case class Failure(override val description: String = "Failed to execute power c
 
 sealed trait PowerManagement  {
   protected[this] val logger = Logger(getClass)
-  
+
   def powerOff(e: Asset): Future[PowerCommandStatus] = run(e, PowerOff)
   def powerOn(e: Asset): Future[PowerCommandStatus] = run(e, PowerOn)
   def powerSoft(e: Asset): Future[PowerCommandStatus] = run(e, PowerSoft)
@@ -86,7 +88,7 @@ sealed trait PowerManagement  {
   def rebootSoft(e: Asset): Future[PowerCommandStatus] = run(e, RebootSoft)
   def identify(e: Asset): Future[PowerCommandStatus] = run(e, Identify)
   def verify(e: Asset): Future[PowerCommandStatus] = run(e, Verify)
-  
+
   def assetTypeAllowed(asset: Asset): Boolean = {
     val isTrue = PowerManagementConfig.allowAssetTypes.contains(asset.assetTypeId)
     logger.debug("assetTypeAllowed: %s".format(isTrue.toString))
@@ -110,7 +112,7 @@ sealed trait PowerManagement  {
   def powerAllowed(asset: Asset): Boolean = {
     assetStateAllowed(asset) && PowerManagementConfig.enabled && assetTypeAllowed(asset)
   }
-  
+
   def run(e: Asset, action: PowerAction): Future[PowerCommandStatus]
 }
 
@@ -118,9 +120,9 @@ object PowerManagement extends PowerManagement {
 
   override def run(e: Asset, action: PowerAction): Future[PowerCommandStatus] = {
     BackgroundProcessor.send(IpmiPowerCommand.fromPowerAction(getAsset(e), action))(result => result match {
-      case Left(error) => 
+      case Left(error) =>
       Failure("Error running command for %s".format(error.getMessage()))
-      case Right(statusOpt) => statusOpt match { 
+      case Right(statusOpt) => statusOpt match {
         case Some(status) => status.isSuccess match {
           case true => Success(status.stdout)
           case false => Failure(status.stderr.getOrElse("Error running command for %s".format(action)))

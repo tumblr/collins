@@ -38,7 +38,7 @@ case class DeleteAction(
     Right(ActionDataHolder(asset, pool))
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case ActionDataHolder(asset, pool) =>
         val deleted = IpAddresses.deleteByAssetAndPool(asset, pool)

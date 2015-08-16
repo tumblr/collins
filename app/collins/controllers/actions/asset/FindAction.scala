@@ -11,6 +11,7 @@ import collins.controllers.actions.AssetAction
 import collins.controllers.actions.AssetResultsAction
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
+
 import collins.models.Asset
 import collins.models.shared.PageParams
 import collins.util.config.MultiCollinsConfig
@@ -49,7 +50,7 @@ class FindAction(
           logger.debug("Performing local asset find")
           Asset.find(pageParams, ra, af, op)
         }
-        handleSuccess(results, afdh.details.map(_.isTruthy).getOrElse(true)) 
+        handleSuccess(results, afdh.details.map(_.isTruthy).getOrElse(true))
       } catch {
         case timeout: TimeoutException => {
           handleError(RequestDataHolder.error504(

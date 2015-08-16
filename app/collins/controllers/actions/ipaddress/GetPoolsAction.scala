@@ -28,9 +28,9 @@ case class GetPoolsAction(
 
   override def validate(): Validation = Right(ActionDataHolder(allPools.toBoolean))
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
-      case ActionDataHolder(all) => 
+      case ActionDataHolder(all) =>
         val pools: Set[String] =
           if (all) {
             val set = IpAddresses.AddressConfig.map(_.poolNames).getOrElse(Set())

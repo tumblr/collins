@@ -9,13 +9,15 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
+import collins.models.conversions._
 import collins.models.cache.Cache
 import collins.validation.Pattern.isAlphaNumericString
 import collins.validation.Pattern.isNonEmptyString
 
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
-import collins.models.Status.StatusFormat
+
+import collins.callbacks.CallbackDatum
 
 object State extends Schema with AnormAdapter[State] with StateKeys {
 
@@ -23,32 +25,15 @@ object State extends Schema with AnormAdapter[State] with StateKeys {
   val ANY_STATUS = 0
   val ANY_NAME = "Any"
 
-  def New = State.findByName("NEW")
-  def Running = State.findByName("RUNNING")
-  def Starting = State.findByName("STARTING")
-  def Terminated = State.findByName("TERMINATED")
+  def New = findByName("NEW")
+  def Running = findByName("RUNNING")
+  def Starting = findByName("STARTING")
+  def Terminated = findByName("TERMINATED")
 
   object StateOrdering extends Ordering[State] {
     override def compare(a: State, b: State) = a.getDisplayLabel compare b.getDisplayLabel
   }
 
-  implicit object StateFormat extends Format[State] {
-    import Status.StatusFormat
-    override def reads(json: JsValue) = JsSuccess(State(
-      (json \ "ID").asOpt[Int].getOrElse(0),
-      (json \ "STATUS").asOpt[Int].getOrElse(ANY_STATUS),
-      (json \ "NAME").as[String],
-      (json \ "LABEL").as[String],
-      (json \ "DESCRIPTION").as[String]
-    ))
-    override def writes(state: State) = JsObject(Seq(
-      "ID" -> Json.toJson(state.id),
-      "STATUS" -> Json.toJson(Status.findById(state.status)),
-      "NAME" -> Json.toJson(state.name),
-      "LABEL" -> Json.toJson(state.label),
-      "DESCRIPTION" -> Json.toJson(state.description)
-    ))
-  }
   override val tableDef = table[State]("state")
   on(tableDef)(s => declare(
     s.id is (autoIncremented,primaryKey),
@@ -101,7 +86,7 @@ case class State(
   name: String,       // Name, should be tag like (alpha numeric and _-)
   label: String,      // A visual (short) label to accompany the state
   description: String // A longer description of the state
-) extends ValidatedEntity[Int] {
+) extends ValidatedEntity[Int] with CallbackDatum {
   def getId(): Int = id
   def getDisplayLabel(): String = "%s - %s".format(getStatusName, label)
   def getStatusName(): String = status match {
@@ -119,4 +104,17 @@ case class State(
     require(description.length > 1 && description.length <= 255, "length of description must be between 1 and 255 characters")
   }
   override def asJson: String = Json.toJson(this).toString
+
+  override def compare(z: Any): Boolean = {
+    if (z == null)
+      return false
+    val ar = z.asInstanceOf[AnyRef]
+    if (!ar.getClass.isAssignableFrom(this.getClass))
+      false
+    else {
+      val other = ar.asInstanceOf[State]
+      this.status == other.status && this.name == other.name &&
+        this.label == other.label && this.description == other.description
+    }
+  }
 }

@@ -30,6 +30,19 @@ case class IpAddresses(
   import conversions._
   override def asJson: String = toJsValue.toString
   def toJsValue = Json.toJson(this)
+
+  override def compare(z: Any): Boolean = {
+    if (z == null)
+      return false
+    val ar = z.asInstanceOf[AnyRef]
+    if (!ar.getClass.isAssignableFrom(this.getClass))
+      false
+    else {
+      val other = ar.asInstanceOf[IpAddresses]
+      this.assetId == other.assetId && this.gateway == other.gateway && this.netmask == other.netmask &&
+        this.pool == other.pool && this.id == other.id
+    }
+  }
 }
 
 object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAddresses] {

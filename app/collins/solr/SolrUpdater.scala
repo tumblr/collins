@@ -12,6 +12,7 @@ import play.api.Logger
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.models.Asset
+import collins.models.Asset
 import collins.models.AssetLog
 
 import akka.actor.Actor

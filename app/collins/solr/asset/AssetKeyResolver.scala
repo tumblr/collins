@@ -27,9 +27,9 @@ object AssetKeyResolver extends SolrKeyResolver{
    */
   lazy val nonMetaKeys: Seq[SolrKey] = List(
     SolrKey("ID", Integer, Static, SingleValued, Sortable),
-    SolrKey("TAG", String, Static, SingleValued, Sortable), 
-    SolrKey("CREATED", String, Static, SingleValued, Sortable), 
-    SolrKey("UPDATED", String, Static, SingleValued, Sortable), 
+    SolrKey("TAG", String, Static, SingleValued, Sortable),
+    SolrKey("CREATED", String, Static, SingleValued, Sortable),
+    SolrKey("UPDATED", String, Static, SingleValued, Sortable),
     SolrKey("DELETED", String, Static, SingleValued, Sortable),
     SolrKey("IP_ADDRESS", String, Static, MultiValued, NotSortable),
     SolrKey("PRIMARY_ROLE", String, Static, SingleValued, Sortable),

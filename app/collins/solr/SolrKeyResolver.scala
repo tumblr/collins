@@ -86,7 +86,7 @@ object UpperCaseString {
 }
 
 
-/** 
+/**
  * This class holds data about a solr key, mainly for translating "local" key
  * names to their solr equivalent
  */

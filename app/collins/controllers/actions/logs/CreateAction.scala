@@ -21,6 +21,7 @@ import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.Asset
 import collins.models.AssetLog
+import collins.models.AssetLog
 import collins.models.logs.LogFormat
 import collins.models.logs.LogMessageType
 import collins.models.logs.LogSource

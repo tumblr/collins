@@ -10,7 +10,7 @@ import javax.naming.Context
 import javax.naming.directory.InitialDirContext
 import javax.naming.directory.SearchControls
 import javax.naming.directory.SearchResult
-import collins.cache.GuavaCacheFactory
+import collins.guava.GuavaCacheFactory
 import com.google.common.cache.CacheLoader
 
 class LdapAuthenticationProvider extends AuthenticationProvider {

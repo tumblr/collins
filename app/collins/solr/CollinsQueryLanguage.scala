@@ -19,7 +19,7 @@ case class CQLQuery(select: SolrDocType, where: SolrExpression) {
       case TypedEmptySolrQuery => docKeyVal
       case _ => new SolrAndOp(Set(expr,docKeyVal )) with TypedSolrExpression
     }
-  }    
+  }
 }
 
 /**
@@ -80,7 +80,7 @@ case class SolrMultiValue(values: MultiSet[SolrSingleValue], valueType: ValueTyp
 
   lazy val value = values.toSeq.map{_.value}.toArray
 
-  
+
 }
 
 object SolrMultiValue {
@@ -100,7 +100,7 @@ object SolrMultiValue {
 /**
  * ADT for AST
  */
-sealed trait SolrExpression extends SolrQueryComponent{ 
+sealed trait SolrExpression extends SolrQueryComponent{
 
   /*
    * Performs type-checking and solr-key name resolution: eg converts foo to
@@ -125,7 +125,7 @@ sealed trait _EmptySolrQuery extends SolrExpression{
 
 case object EmptySolrQuery extends _EmptySolrQuery
 
-case object TypedEmptySolrQuery extends _EmptySolrQuery with TypedSolrExpression 
+case object TypedEmptySolrQuery extends _EmptySolrQuery with TypedSolrExpression
 
 abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends SolrExpression {
   require(exprs.size > 0, "Cannot create empty multi-expression")
@@ -134,7 +134,7 @@ abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends Sol
   def create(exprs: Set[SolrExpression]): TypedSolrExpression
 
   //create a typed instance of the dual of this object (and creates or, vice versa)
-  //NOTE - 
+  //NOTE -
   def createOp(exprs:Set[SolrExpression]): TypedSolrExpression
 
   def traverseQueryString(toplevel: Boolean) = {
@@ -151,8 +151,8 @@ abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends Sol
         case Right(expr) => Right(set + expr)
       }
     }}
-    //if all the members are NOT's, apply de morgans laws to avoid solr bug    
-    r.right.map{s => 
+    //if all the members are NOT's, apply de morgans laws to avoid solr bug
+    r.right.map{s =>
       val ops:Set[SolrExpression] = s.flatMap{
         case SolrNotOp(expr) => Some(expr)
         case _ => None
@@ -163,7 +163,7 @@ abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends Sol
         create(s)
       }
     }
-    
+
   }
 
 }
@@ -191,7 +191,7 @@ trait SolrSimpleExpr extends SolrExpression {
   def AND(k: SolrExpression) = SolrAndOp(Set(this,k))
   def OR(k: SolrExpression) = SolrOrOp(Set(this ,k))
 
-  def typeError(key: String, expected: ValueType, actual: ValueType) = 
+  def typeError(key: String, expected: ValueType, actual: ValueType) =
     "Key %s expects type %s, got %s".format(key, expected.toString, actual.toString)
 
 
@@ -209,10 +209,10 @@ trait SolrSimpleExpr extends SolrExpression {
   def typeCheckValue(solrKey: SolrKey, value: SolrSingleValue): Either[String, SolrSingleValue] = solrKey match {
     case e: EnumKey => (value match {
       case SolrStringValue(stringValue, _) => try {
-        e.lookupById(java.lang.Integer.parseInt(stringValue)) 
+        e.lookupById(java.lang.Integer.parseInt(stringValue))
       } catch {
         case _: Throwable => e.lookupByName(stringValue)
-      }      
+      }
       case SolrIntValue(id) => e.lookupById(id)
     }) match {
       case Some(v) => Right(SolrStringValue(v, StrictUnquoted))

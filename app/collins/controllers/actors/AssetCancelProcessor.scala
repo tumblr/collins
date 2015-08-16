@@ -14,9 +14,10 @@ import play.api.mvc.Request
 import collins.controllers.Api
 import collins.controllers.ResponseData
 import collins.models.Asset
+import collins.models.Asset
 import collins.models.AssetLifecycle
 import collins.models.MetaWrapper
-import collins.models.{ Status => AStatus }
+import collins.models.Status
 import collins.softlayer.SoftLayerConfig
 import collins.softlayer.SoftLayer
 import collins.util.InternalTattler
@@ -51,12 +52,12 @@ case class AssetCancelProcessor(tag: String, userTimeout: Option[FiniteDuration]
                 Asset.inTransaction {
                   MetaWrapper.createMeta(asset, Map("CANCEL_TICKET" -> ticketId.toString))
                   val lifeCycle = new AssetLifecycle(None, InternalTattler)
-                  lifeCycle.updateAssetStatus(asset, AStatus.Cancelled, None, reason)
+                  lifeCycle.updateAssetStatus(asset, Status.Cancelled, None, reason)
                 }
                 Await.result(SoftLayer.setNote(n, "Cancelled: %s".format(reason)), timeout)
                 Right(ticketId)
             }
-          }          
+          }
         } else {
           softlayerDisabled
         }

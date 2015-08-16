@@ -57,7 +57,7 @@ case class CreateAction(
     )
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case ActionDataHolder(asset, pool, count) => try {
         val poolName = pool.isEmpty match {

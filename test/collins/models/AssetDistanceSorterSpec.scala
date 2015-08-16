@@ -39,20 +39,20 @@ class AssetDistanceSorterSpec extends mutable.Specification {
       "using sparse" in new mocksorter {
         val expected = List("e","b","d","c","a")
         val sortedAssets = AssetDistanceSorter.distributionSort(
-          targetAsset, 
-          similarAssets, 
+          targetAsset,
+          similarAssets,
           SortAsc,
-          sortConfig) 
+          sortConfig)
         sortedAssets.map{_.tag} must_== expected
       }
 
       "using dense" in new mocksorter {
         val expected = List("a","b","c","d","e")
         val sortedAssets = AssetDistanceSorter.distributionSort(
-          targetAsset, 
-          similarAssets, 
+          targetAsset,
+          similarAssets,
           SortDesc,
-          sortConfig) 
+          sortConfig)
         sortedAssets.map{_.tag} must_== expected
       }
     }
@@ -79,14 +79,14 @@ class AssetDistanceSorterSpec extends mutable.Specification {
       val a1 = new Asset("1", 0, 0, new Timestamp(System.currentTimeMillis), None, None)
       val a2 = new Asset("2", 0, 0, new Timestamp(System.currentTimeMillis), None, None)
       val nameeval = new MockAssetNameEval
-      nameeval.distance(a1, a2) must_== 1  
+      nameeval.distance(a1, a2) must_== 1
     }
   }
 
   "AssetDistanceSorter" should {
 
     "sort named assets in ascending order" in {
-      val assets = (1 to 20).map { i => 
+      val assets = (1 to 20).map { i =>
         new Asset(i.toString, 0, 0, new Timestamp(System.currentTimeMillis), None, None)
       }
       assets must_== AssetDistanceSorter.sort(
@@ -98,10 +98,10 @@ class AssetDistanceSorterSpec extends mutable.Specification {
     }
 
     "sort permuted named assets in ascending order" in {
-      val assets1 = (11 to 20).map { i => 
+      val assets1 = (11 to 20).map { i =>
                 new Asset(i.toString, 0, 0, new Timestamp(System.currentTimeMillis), None, None)
       }
-      val assets2 = (1 to 10).map { i => 
+      val assets2 = (1 to 10).map { i =>
                 new Asset(i.toString, 0, 0, new Timestamp(System.currentTimeMillis), None, None)
       }
       (assets2 ++ assets1) must_== AssetDistanceSorter.sort(
@@ -112,7 +112,7 @@ class AssetDistanceSorterSpec extends mutable.Specification {
     }
 
     "sort named assets in descending order" in {
-      val assets = (1 to 20).map { i => 
+      val assets = (1 to 20).map { i =>
                 new Asset(i.toString, 0, 0, new Timestamp(System.currentTimeMillis), None, None)
       }
       assets.reverse must_== AssetDistanceSorter.sort(
@@ -121,7 +121,7 @@ class AssetDistanceSorterSpec extends mutable.Specification {
                                AssetSort.Name,
                                SortDesc)
     }
-        
+
   } // AssetDistanceSorter should
-  
+
 }

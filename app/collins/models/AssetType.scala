@@ -9,16 +9,32 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
+import collins.models.conversions._
 import collins.models.cache.Cache
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
 
-case class AssetType(name: String, label: String, id: Int = 0) extends ValidatedEntity[Int] {
+import collins.callbacks.CallbackDatum
+
+case class AssetType(name: String, label: String, id: Int = 0)
+  extends ValidatedEntity[Int] with CallbackDatum {
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
   }
-  override def asJson: String =
-    Json.stringify(AssetType.AssetTypeFormat.writes(this))
+  override def asJson: String = Json.toJson(this).toString()
+
+  override def compare(z: Any): Boolean = {
+    if (z == null)
+      return false
+    val ar = z.asInstanceOf[AnyRef]
+    if (!ar.getClass.isAssignableFrom(this.getClass))
+      false
+    else {
+      val other = ar.asInstanceOf[AssetType]
+      this.name == other.name && this.label == other.label
+    }
+  }
+
   // We do this to mock the former Enum stuff
   override def toString(): String = name
 }
@@ -31,19 +47,6 @@ object AssetType extends Schema with AnormAdapter[AssetType] with AssetTypeKeys 
     a.id is(autoIncremented,primaryKey),
     a.name is(unique)
   ))
-
-  implicit object AssetTypeFormat extends Format[AssetType] {
-    override def reads(json: JsValue) = JsSuccess(AssetType(
-      (json \ "NAME").as[String],
-      (json \ "LABEL").as[String],
-      (json \ "ID").asOpt[Int].getOrElse(0)
-    ))
-    override def writes(at: AssetType) = JsObject(Seq(
-      "ID" -> Json.toJson(at.id),
-      "NAME" -> Json.toJson(at.name),
-      "LABEL" -> Json.toJson(at.label)
-    ))
-  }
 
   def findById(id: Int): Option[AssetType] = Cache.get(findByIdKey(id), inTransaction {
     tableDef.lookup(id)

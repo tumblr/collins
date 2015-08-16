@@ -20,6 +20,8 @@ import collins.models.cache.Cache
 import collins.models.shared.ValidatedEntity
 import collins.models.shared.AnormAdapter
 
+import collins.callbacks.CallbackDatum
+
 case class AssetMeta(
     name: String,
     priority: Int,
@@ -27,7 +29,7 @@ case class AssetMeta(
     description: String,
     id: Long = 0,
     value_type: Int = AssetMeta.ValueType.String.id
-    ) extends ValidatedEntity[Long]
+    ) extends ValidatedEntity[Long] with CallbackDatum
 {
   override def validate() {
     require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
@@ -43,6 +45,19 @@ case class AssetMeta(
       "LABEL" -> JsString(label),
       "DESCRIPTION" -> JsString(description)
     )))
+  }
+
+  override def compare(z: Any): Boolean = {
+    if (z == null)
+      return false
+    val ar = z.asInstanceOf[AnyRef]
+    if (!ar.getClass.isAssignableFrom(this.getClass))
+      false
+    else {
+      val other = ar.asInstanceOf[AssetMeta]
+      this.name == other.name && this.priority == other.priority && this.label == other.label &&
+        this.description == other.description && this.value_type == other.value_type
+    }
   }
 
   def getValueType(): AssetMeta.ValueType = AssetMeta.ValueType(value_type)
@@ -195,10 +210,10 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
 
   // Post enum fields, enum is not safe to extend with new values
   object DynamicEnum {
-    val BaseDescription = AssetMeta.findOrCreateFromName("BASE_DESCRIPTION")
-    val BaseProduct = AssetMeta.findOrCreateFromName("BASE_PRODUCT")
-    val BaseVendor = AssetMeta.findOrCreateFromName("BASE_VENDOR")
-    val BaseSerial = AssetMeta.findOrCreateFromName("BASE_SERIAL")
+    val BaseDescription = findOrCreateFromName("BASE_DESCRIPTION")
+    val BaseProduct = findOrCreateFromName("BASE_PRODUCT")
+    val BaseVendor = findOrCreateFromName("BASE_VENDOR")
+    val BaseSerial = findOrCreateFromName("BASE_SERIAL")
 
     def getValues(): Seq[AssetMeta] = {
       Seq(BaseDescription,BaseProduct,BaseVendor,BaseSerial)

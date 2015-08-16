@@ -2,6 +2,7 @@ package collins.models
 
 import collins.util.config.Feature
 import collins.util.CryptoCodec
+
 /**
  * Provide a convenience wrapper on top of a row of meta/value data
  */

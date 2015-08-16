@@ -4,11 +4,11 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.Json
 import play.twirl.api.Html
 
+import collins.models.conversions._
 import collins.models.State
 import collins.models.Status
 
 object StateHelper {
-  import State.StateFormat._
   def statesAsJson(): Html = {
     val anyState = State.findByAnyStatus()
     // create a map where keys are asset names and values are state objects
