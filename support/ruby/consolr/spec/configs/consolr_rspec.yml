@@ -1,0 +1,7 @@
+# this is a dummy config for the unit tests
+ipmitool: spec/rspec_ipmi
+dangerous_assets:
+  - "dangerous-allocated-tag"
+  - "dangerous-maintenance-tag"
+dangerous_status:
+  - "Allocated"

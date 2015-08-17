@@ -35,6 +35,8 @@ matrix:
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-client
     - jdk: oraclejdk7
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-state
+    - jdk: oraclejdk7
+      env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=consolr
 script:
   - if $RUN_SCALA; then activator-1.3.4-minimal/activator test; fi
   - if $RUN_RUBY; then cd support/ruby/$GEM_NAME; bundle install --path ./vendor/bundle; bundle exec rake; fi

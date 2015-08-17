@@ -1,6 +1,31 @@
 #!/usr/bin/env ruby
 
 require 'consolr'
+require 'consolr/version'
+
+options = {}
+opt_parser = OptionParser.new do |opt|
+  opt.banner = 'Usage: consolr [OPTIONS]'
+  opt.separator  ''
+  opt.separator  'Options'
+
+  opt.on('-c', '--console',         'console into node via SOL')               { options[:console] = true }
+  opt.on('-d', '--dangerous',       'list dangerous stuff')                    { options[:dangerous] = true }
+  opt.on('-f', '--force',           'force run dangerous actions')             { options[:force] = true }
+  opt.on('-H', '--hostname ASSET',  'asset hostname')                          { |hostname| options[:hostname] = hostname }
+  opt.on('-i', '--identify',        'turn on chassis UID')                     { options[:identify] = true }
+  opt.on('-k', '--kick',            'kick if someone is hogging the console')  { options[:kick] = true }
+  opt.on('-l', '--log LOG',         'System Event Log (SEL) [list|clear]')     { |log| options[:log] = log }
+  opt.on('-o', '--on',              'turn on node')                            { options[:on] = true }
+  opt.on('-r', '--reboot',          'restart node')                            { options[:reboot] = true }
+  opt.on('-s', '--sdr',             'Sensor Data Repository (SDR)')            { options[:sdr] = true }
+  opt.on('-t', '--tag ASSET',       'asset tag')                               { |tag| options[:tag] = tag }
+  opt.on('-x', '--off',             'turn off node')                           { options[:off] = true }
+
+  opt.on_tail('-h', '--help', 'help') { puts opt; exit 0 }
+  opt.on_tail('-v', '--version', 'version') { puts Consolr::VERSION; exit 0 }
+end
+opt_parser.parse!
 
 console = Consolr::Console.new
-console.start
+console.start options
