@@ -49,7 +49,7 @@ describe Collins::Api::Asset do
     def uri; "/api/asset/#{tag}" end
 
     it "supports using a reason" do
-      args = Hash[:reason => 'Angry gods']
+      args = Hash[:reason => 'Angry gods', :nuke => false]
       api.with(:body => body(args)).returns 200, CollinsFixture.status_response(false)
       subject.delete!(tag, args).should be true
     end
