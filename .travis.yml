@@ -1,3 +1,4 @@
+sudo: false
 language: scala
 # Activator & Travis image SBT conflicts
 # https://github.com/travis-ci/travis-ci/issues/3140
@@ -9,6 +10,18 @@ before_script:
   - wget http://downloads.typesafe.com/typesafe-activator/1.3.4/typesafe-activator-1.3.4-minimal.zip
   - unzip -q typesafe-activator-1.3.4-minimal.zip
   - if $RUN_RUBY; then gem install bundler; fi
+
+cache:
+  directories:
+    # caching scala stuff based on
+    # http://www.scala-sbt.org/0.13/docs/Travis-CI-with-sbt.html#%28Experimental%29+Reusing+Ivy+cache
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt/boot/
+    # cache each of the bundle from the ruby tests
+    - support/ruby/collins-client/vendor/bundle
+    - support/ruby/collins-state/vendor/bundle
+    - support/ruby/consolr/vendor/bundle
+
 jdk:
   - oraclejdk7
 scala:
@@ -25,5 +38,9 @@ matrix:
 script:
   - if $RUN_SCALA; then activator-1.3.4-minimal/activator test; fi
   - if $RUN_RUBY; then cd support/ruby/$GEM_NAME; bundle install --path ./vendor/bundle; bundle exec rake; fi
+  # cleanup travis trick from
+  # http://www.scala-sbt.org/0.13/docs/Travis-CI-with-sbt.html#%28Experimental%29+Reusing+Ivy+cache
+  - find $HOME/.sbt -name "*.lock" | xargs rm
+  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
 notifications:
   irc: "chat.freenode.net#collins"
