@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "collins_auth", "~> 0.1.2"
-  spec.add_runtime_dependency "net-ping", "~> 1.7.7"
+  spec.add_runtime_dependency "net-ping", "= 1.7.2" # this is the last version that supports ruby 1.9.2
 
   spec.add_development_dependency "rake", "~> 10.4.2"
   spec.add_development_dependency "rspec", "~> 3.3.0"
