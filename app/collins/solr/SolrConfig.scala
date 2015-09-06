@@ -4,8 +4,10 @@ import java.io.File
 
 import scala.concurrent.duration.DurationInt
 
+import collins.callbacks.CallbackConfig
 import collins.util.MessageHelper
 import collins.util.config.Configurable
+import collins.util.config.ConfigurationException
 
 object SolrConfig extends Configurable {
   override val namespace = "solr"
@@ -16,6 +18,8 @@ object SolrConfig extends Configurable {
       messageWithDefault("invalidHome", "solr.embeddedSolrHome %s is invalid".format(t), t)
     def invalidUrl(t: String) =
       messageWithDefault("invalidUrl", "solr.externalUrl %s is invalid".format(t), t)
+    def callbacksNotEnabled =
+      messageWithDefault("callbacksNotEnabled", "Solr support requires callback, ensure callbacks are enabled.")
   }
 
   // defaults taken from http://wiki.apache.org/solr/Solrj#Changing_other_Connection_Settings
@@ -33,6 +37,7 @@ object SolrConfig extends Configurable {
 
   override protected def validateConfig() {
     if (enabled) {
+      require(CallbackConfig.enabled, Messages.callbacksNotEnabled)
       if (useEmbeddedServer) {
         val path = new File(embeddedSolrHome)
         require(path.isDirectory && path.canWrite, Messages.invalidHome(path.toString))

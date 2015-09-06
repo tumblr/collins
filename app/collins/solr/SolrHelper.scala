@@ -14,7 +14,7 @@ import play.api.Play.current
 import play.api.libs.concurrent.Akka
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
-import collins.callbacks.CallbackManager
+import collins.callbacks.Callback
 import collins.models.Asset
 import collins.models.Asset
 import collins.models.AssetLog
@@ -71,23 +71,20 @@ object SolrHelper {
     val updater = Akka.system.actorOf(Props[AssetSolrUpdater].withRouter(FromConfig()), name = "solr_asset_updater")
     val logUpdater = Akka.system.actorOf(Props[AssetLogSolrUpdater].withRouter(FromConfig()), name = "solr_asset_log_updater")
 
-    object SolrCallback extends CallbackManager {
-    }
-
     val callback = SolrAssetCallbackHandler(server, updater)
-    SolrCallback.on("asset_update", callback)
-    SolrCallback.on("asset_create", callback)
-    SolrCallback.on("asset_delete", callback)
-    SolrCallback.on("asset_purge", callback)
-    SolrCallback.on("asset_meta_value_create", callback)
-    SolrCallback.on("asset_meta_value_delete", callback)
-    SolrCallback.on("ipAddresses_create", callback)
-    SolrCallback.on("ipAddresses_update", callback)
-    SolrCallback.on("ipAddresses_delete", callback)
+    Callback.on("asset_update", callback)
+    Callback.on("asset_create", callback)
+    Callback.on("asset_delete", callback)
+    Callback.on("asset_purge", callback)
+    Callback.on("asset_meta_value_create", callback)
+    Callback.on("asset_meta_value_delete", callback)
+    Callback.on("ipAddresses_create", callback)
+    Callback.on("ipAddresses_update", callback)
+    Callback.on("ipAddresses_delete", callback)
 
     val logCallback = new SolrAssetLogCallbackHandler(server, logUpdater)
-    SolrCallback.on("asset_log_create", logCallback)
-    SolrCallback.on("asset_log_update", logCallback)
+    Callback.on("asset_log_create", logCallback)
+    Callback.on("asset_log_update", logCallback)
   }
 
   def populate() = Future {

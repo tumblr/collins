@@ -87,4 +87,5 @@ powerconfiguration.validation.nonUnique=Power component ''{0}'' requires unique 
 
 solr.invalidHome=solr.embeddedSolrHome ''{0}'' is not writable or not a directory
 solr.invalidUrl=solr.useEmbeddedServer is false and solr.externalUrl ''{0}'' is not valid
+solr.callbacksNotEnabled=Solr support requires callback, ensure callbacks are enabled.
 sorttype.invalid=Invalid sort type ''{0}''
