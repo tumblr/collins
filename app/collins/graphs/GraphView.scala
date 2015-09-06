@@ -2,8 +2,6 @@ package collins.graphs
 
 import java.net.URLEncoder
 
-import scala.util.control.Exception
-
 import play.twirl.api.Content
 
 import com.codahale.jerkson.Json.generate

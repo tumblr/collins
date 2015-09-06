@@ -2,21 +2,17 @@ package collins.models.shared
 
 import java.sql.SQLException
 
-import scala.collection.immutable.SortedSet
+import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.Schema
 
 import play.api.Logger
 
-import org.squeryl.Schema
-
-import collins.models.cache.Cache
-import collins.models.Asset
+import collins.callbacks.CallbackDatum
 import collins.models.Asset
 import collins.models.IpAddressKeys
-
+import collins.models.cache.Cache
 import collins.util.IpAddress
 import collins.util.IpAddressCalc
-
-import collins.callbacks.CallbackDatum
 
 trait IpAddressable extends ValidatedEntity[Long] with CallbackDatum {
 
@@ -42,7 +38,6 @@ trait IpAddressable extends ValidatedEntity[Long] with CallbackDatum {
 }
 
 trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] with IpAddressKeys[T] { self: Schema with Keys[T] =>
-  import org.squeryl.PrimitiveTypeMode._
 
   // name of ipaddress storage, ipmi etc
   def storageName: String
@@ -59,8 +54,9 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
   }
 
   def deleteByAsset(a: Asset): Int = inTransaction {
-    findAllByAsset(a).foldLeft(0) { case(sum, ipInfo) =>
-      sum + delete(ipInfo)
+    findAllByAsset(a).foldLeft(0) {
+      case (sum, ipInfo) =>
+        sum + delete(ipInfo)
     }
   }
 
@@ -81,7 +77,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
     tableDef.where(a => a.assetId === asset.id).headOption
   })
 
-  def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long,Long,Long] = {
+  def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long, Long, Long] = {
     //this is used by ip allocation without pools (i.e. IPMI)
     val network = getNetwork
     val startAt = overrideStart.orElse(getStartAddress)
@@ -118,8 +114,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
       }
     } while (!res.isDefined && i < retryCount)
     res.getOrElse(
-      throw new RuntimeException("Unable to create address after %d tries".format(retryCount))
-    )
+      throw new RuntimeException("Unable to create address after %d tries".format(retryCount)))
   }
 
   /*
@@ -137,19 +132,17 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
     val sortedAddresses = from(tableDef)(t =>
       where(
         (t.address gte minAddress) and
-        (t.address lte maxAddress)
-      )
-      select(t.address)
-      orderBy(t.address asc)
-    ).toSeq
+          (t.address lte maxAddress))
+        select (t.address)
+        orderBy (t.address asc)).toSeq
 
     lazy val localMaximaAddresses = for {
-      i <- Range(0, sortedAddresses.size-1).inclusive.toStream
+      i <- Range(0, sortedAddresses.size - 1).inclusive.toStream
       curr = sortedAddresses(i)
-      next = sortedAddresses.lift(i+1)
+      next = sortedAddresses.lift(i + 1)
       nextAddress = calc.incrementAddressUnchecked(curr)
       // address should not have an allocated address logically after it
-      if (next.map{_ > nextAddress}.getOrElse(true))
+      if (next.map { _ > nextAddress }.getOrElse(true))
       // address should not be the last address in the IP range
       if (curr < maxAddress)
     } yield curr
@@ -161,15 +154,15 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
     case None => None
     case Some(config) => config.gateway match {
       case Some(value) => Option(IpAddress.toLong(value))
-      case None => None
+      case None        => None
     }
   }
   protected def getNetwork()(implicit scope: Option[String]): String = getConfig() match {
-    case None => throw new RuntimeException("no %s configuration found".format(getClass.getName))
+    case None         => throw new RuntimeException("no %s configuration found".format(getClass.getName))
     case Some(config) => config.network
   }
   protected def getStartAddress()(implicit scope: Option[String]): Option[String] = getConfig() match {
-    case None => None
+    case None    => None
     case Some(c) => c.startAddress
   }
 

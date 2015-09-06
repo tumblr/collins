@@ -7,12 +7,17 @@ import play.api.Mode
 import play.api.Play
 import play.api.mvc.Handler
 import play.api.mvc.RequestHeader
-import play.api.mvc.Results
 import play.api.mvc.Result
+import play.api.mvc.Results
 
+import collins.callbacks.Callback
 import collins.controllers.ApiResponse
 import collins.db.DB
 import collins.hazelcast.HazelcastHelper
+import collins.logging.LoggingHelper
+import collins.metrics.MetricsReporter
+import collins.models.cache.Cache
+import collins.solr.SolrHelper
 import collins.util.BashOutput
 import collins.util.CryptoAccessor
 import collins.util.JsonOutput
@@ -20,16 +25,10 @@ import collins.util.OutputType
 import collins.util.Stats
 import collins.util.TextOutput
 import collins.util.config.CryptoConfig
+import collins.util.config.Registry
 import collins.util.security.AuthenticationAccessor
 import collins.util.security.AuthenticationProvider
 import collins.util.security.AuthenticationProviderConfig
-
-import collins.models.cache.Cache
-import collins.logging.LoggingHelper
-import collins.util.config.Registry
-import collins.solr.SolrHelper
-import collins.metrics.MetricsReporter
-import collins.callbacks.Callback
 
 object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger

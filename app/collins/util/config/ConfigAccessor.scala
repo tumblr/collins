@@ -2,15 +2,18 @@ package collins.util.config
 
 import java.net.MalformedURLException
 import java.net.URL
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
+
 import play.api.PlayException
+
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigObject
-import com.typesafe.config.{ConfigValue => TypesafeConfigValue}
-import java.util.concurrent.TimeUnit
+import com.typesafe.config.{ ConfigValue => TypesafeConfigValue }
 
 class ConfigurationException(msg: String) extends Exception(msg)
 
@@ -55,15 +58,16 @@ trait ConfigAccessor {
 
   protected def getMilliseconds(key: String): Option[Long] = getValue(key, _.getDuration(key, TimeUnit.MILLISECONDS))
 
-  protected def getObjectMap(key: String): Map[String,ConfigObject] =
+  protected def getObjectMap(key: String): Map[String, ConfigObject] =
     getValue(key, _.getObject(key).toConfig.root.asScala.map {
-      case(key: String, value: ConfigObject) => (key -> value)
-    }).getOrElse(Map.empty[String,ConfigObject]).toMap
+      case (key: String, value: ConfigObject) => (key -> value)
+    }).getOrElse(Map.empty[String, ConfigObject]).toMap
 
-  protected def getStringMap(key: String): Map[String,String] =
-    getValue(key, _.getObject(key).toConfig.root.asScala.map { case(key: String, value) =>
-      (key -> value.unwrapped.toString)
-    }).getOrElse(Map.empty[String,String]).toMap
+  protected def getStringMap(key: String): Map[String, String] =
+    getValue(key, _.getObject(key).toConfig.root.asScala.map {
+      case (key: String, value) =>
+        (key -> value.unwrapped.toString)
+    }).getOrElse(Map.empty[String, String]).toMap
 
   protected def getString(key: String, default: String): String =
     getString(key)(ConfigValue.Optional).getOrElse(default)
@@ -75,8 +79,7 @@ trait ConfigAccessor {
         case true => Some(v)
         case false =>
           throw new Exception("Value %s for key %s is not one of %s".format(
-            v, key, validValues.mkString(", ")
-          ))
+            v, key, validValues.mkString(", ")))
       }
     }
 
@@ -103,7 +106,6 @@ trait ConfigAccessor {
     else
       list
   }
-
 
   protected def getStringSet(key: String): Set[String] = getStringList(key).toSet
   protected def getStringSet(key: String, default: Set[String]): Set[String] = {

@@ -2,18 +2,15 @@ package collins.controllers.actions.state
 
 import scala.concurrent.Future
 
-import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.Json
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
-
 import collins.models.State
-import collins.models.State
-import collins.models.conversions._
-
+import collins.models.conversions.StateFormat
 import collins.util.MessageHelper
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil

@@ -9,7 +9,6 @@ import play.api.Logger
 import collins.callbacks.CallbackActionHandler
 import collins.callbacks.CallbackDatumHolder
 import collins.callbacks.StringDatum
-
 import collins.models.Asset
 import collins.models.AssetLog
 import collins.models.AssetMetaValue

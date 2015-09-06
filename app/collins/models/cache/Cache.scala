@@ -1,13 +1,14 @@
 package collins.models.cache
 
 import java.util.concurrent.Callable
+
 import play.api.Logger
+
 import com.google.common.cache.{ Cache => BasicCache }
 import com.google.common.cache.CacheStats
-import com.hazelcast.config.FileSystemXmlConfig
-import com.hazelcast.core.Hazelcast
 import com.hazelcast.core.IMap
 import com.hazelcast.monitor.LocalMapStats
+
 import collins.cache.CacheConfig
 import collins.guava.GuavaCacheFactory
 import collins.guava.GuavaConfig

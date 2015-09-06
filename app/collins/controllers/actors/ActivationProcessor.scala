@@ -9,8 +9,8 @@ import scala.concurrent.duration.FiniteDuration
 import play.api.mvc.AnyContent
 import play.api.mvc.Request
 
-import collins.softlayer.SoftLayerConfig
 import collins.softlayer.SoftLayer
+import collins.softlayer.SoftLayerConfig
 import collins.util.concurrent.BackgroundProcess
 
 case class ActivationProcessor(slId: Long, userTimeout: Option[FiniteDuration] = None)(implicit req: Request[AnyContent]) extends BackgroundProcess[Boolean] {

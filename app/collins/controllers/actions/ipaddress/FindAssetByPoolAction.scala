@@ -2,9 +2,9 @@ package collins.controllers.actions.ipaddress
 
 import scala.concurrent.Future
 
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsObject
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController

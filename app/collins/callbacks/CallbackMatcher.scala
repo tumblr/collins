@@ -2,10 +2,10 @@ package collins.callbacks
 
 import java.beans.PropertyChangeEvent
 
-import collins.models.State
 import collins.models.Asset
 import collins.models.AssetMetaValue
 import collins.models.IpAddresses
+import collins.models.State
 
 /**
  * Given a matchMethod, apply it to the PCE.

@@ -7,7 +7,6 @@ import play.api.data.Forms.of
 import play.api.data.Forms.single
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc.Result
-import play.api.templates.Html
 
 import collins.controllers.Help
 import collins.controllers.SecureController
@@ -16,11 +15,10 @@ import collins.controllers.actions.SecureAction
 import collins.controllers.forms.truthyFormat
 import collins.models.Truthy
 import collins.power.Identify
+import collins.power.management.IpmiPowerCommand
 import collins.power.management.PowerManagement
 import collins.power.management.PowerManagementConfig
-import collins.util.IpmiCommand
 import collins.util.concurrent.BackgroundProcessor
-import collins.power.management.IpmiPowerCommand
 import collins.util.security.SecuritySpecification
 
 case class IntakeStage1Action(
@@ -52,7 +50,7 @@ case class IntakeStage1Action(
     case dummy => PowerManagementConfig.enabled match {
       case false =>
         Future { Status.Ok(views.html.help(Help.PowerManagementDisabled)(flash, request)) }
-      case true => 
+      case true =>
         identifyAsset()
     }
   }

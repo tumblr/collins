@@ -2,16 +2,15 @@ package collins.controllers.actions.logs
 
 import scala.concurrent.Future
 
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.AssetAction
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
-import collins.models.AssetLog
 import collins.models.AssetLog
 import collins.models.conversions.AssetLogFormat
 import collins.models.shared.Page

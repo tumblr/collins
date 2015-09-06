@@ -1,6 +1,6 @@
 package collins.util.security
 
-import java.io.{File => IoFile}
+import java.io.{ File => IoFile }
 
 import play.api.Logger
 
@@ -22,8 +22,7 @@ case class PermissionsLoader(privileges: Privileges) extends CacheLoader[String,
     } catch {
       case e: Throwable =>
         logger.error("There is a problem with the permissions file %s: %s".format(
-          filename, e.getMessage
-        ))
+          filename, e.getMessage))
         privileges
     }
   }

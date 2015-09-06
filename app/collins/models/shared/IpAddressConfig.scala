@@ -15,8 +15,6 @@ import collins.util.config.Configurable
 import collins.util.config.SimpleAddressConfig
 import collins.util.config.TypesafeConfiguration
 
-import AddressPool.poolName
-
 /**
  * Represents an IP Address configuration.
  *
@@ -42,19 +40,16 @@ case class IpAddressConfig(cfgName: String, source: SimpleAddressConfig) extends
   val strict = source.strict
 
   // PoolName -> AddressPool map, if pools are specified
-  val pools: ConcurrentHashMap[String,AddressPool] = new ConcurrentHashMap(
-    IpAddressConfig.getAddressPools(source).asJava
-  )
+  val pools: ConcurrentHashMap[String, AddressPool] = new ConcurrentHashMap(
+    IpAddressConfig.getAddressPools(source).asJava)
 
   // The default address pool, either one from the pools map, or if no pools were specified, assume
   // a 'naked' config (e.g. network/etc hanging off the key)
   val defaultPool: Option[AddressPool] = source.defaultPoolName.map { pool =>
     Option(pools.get(poolName(pool))).getOrElse(
-      throw source.globalError(message("invalidDefaultPool", pool))
-    )
+      throw source.globalError(message("invalidDefaultPool", pool)))
   }.orElse(
-    AddressPool.fromConfig(source, IpAddressConfig.DefaultPoolName, false, false)
-  )
+    AddressPool.fromConfig(source, IpAddressConfig.DefaultPoolName, false, false))
 
   def hasDefault: Boolean = defaultPool.isDefined
   def hasPool(pool: String): Boolean = pools.containsKey(poolName(pool))
@@ -63,16 +58,17 @@ case class IpAddressConfig(cfgName: String, source: SimpleAddressConfig) extends
   def defaultPoolName: Option[String] = defaultPool.map(_.name)
   protected def onChange(updatedSource: SimpleAddressConfig) {
     val newPools = IpAddressConfig.getAddressPools(updatedSource)
-    newPools.foreach { case(name, addressPool) =>
-      if (!pools.containsKey(name)) {
-        logger.info("Saw new pool %s".format(name))
-        pools.put(name, addressPool)
-      } else {
-        Option(pools.get(name)).filterNot(_.strictEquals(addressPool)).foreach { _ =>
-          logger.info("Pool %s changed".format(name))
-          pools.replace(name, addressPool)
+    newPools.foreach {
+      case (name, addressPool) =>
+        if (!pools.containsKey(name)) {
+          logger.info("Saw new pool %s".format(name))
+          pools.put(name, addressPool)
+        } else {
+          Option(pools.get(name)).filterNot(_.strictEquals(addressPool)).foreach { _ =>
+            logger.info("Pool %s changed".format(name))
+            pools.replace(name, addressPool)
+          }
         }
-      }
     }
     pools.keys().asScala.foreach { name =>
       if (!newPools.contains(name)) {
@@ -111,11 +107,12 @@ object IpAddressConfig extends Configurable {
   override protected def validateConfig() {
     get(true)
   }
-  protected def getAddressPools(config: SimpleAddressConfig): Map[String,AddressPool] = {
-    config.pools.map { case(name, poolCfg) =>
-      val simpleConfig = SimpleAddressConfig(poolCfg.toConfig, Some(name), Some(config.strict))
-      val addressPool = AddressPool.fromConfig(simpleConfig, name, true, config.strict).get
-      poolName(addressPool.name) -> addressPool
+  protected def getAddressPools(config: SimpleAddressConfig): Map[String, AddressPool] = {
+    config.pools.map {
+      case (name, poolCfg) =>
+        val simpleConfig = SimpleAddressConfig(poolCfg.toConfig, Some(name), Some(config.strict))
+        val addressPool = AddressPool.fromConfig(simpleConfig, name, true, config.strict).get
+        poolName(addressPool.name) -> addressPool
     }.toMap
   }
   override protected def afterChange() {

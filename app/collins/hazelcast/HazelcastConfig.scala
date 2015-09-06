@@ -1,8 +1,7 @@
 package collins.hazelcast
 
-import collins.util.config.Configurable
-
 import java.io.File
+
 import collins.util.config.Configurable
 import collins.util.config.ConfigurationException
 

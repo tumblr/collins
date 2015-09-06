@@ -14,12 +14,11 @@ import play.api.mvc.Request
 import collins.controllers.Api
 import collins.controllers.ResponseData
 import collins.models.Asset
-import collins.models.Asset
 import collins.models.AssetLifecycle
 import collins.models.MetaWrapper
 import collins.models.Status
-import collins.softlayer.SoftLayerConfig
 import collins.softlayer.SoftLayer
+import collins.softlayer.SoftLayerConfig
 import collins.util.InternalTattler
 import collins.util.concurrent.BackgroundProcess
 

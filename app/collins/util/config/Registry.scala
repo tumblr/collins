@@ -1,9 +1,8 @@
 package collins.util.config
 
-import scala.collection.mutable.Buffer
-import scala.collection.mutable.ArrayBuffer
-
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Buffer
 
 import play.api.Application
 
@@ -52,7 +51,7 @@ object Registry {
   }
 
   def validate() {
-    registered.foreach { c => 
+    registered.foreach { c =>
       logger.info("Initializing configuration of type" + c.getClass)
       c.initialize()
     }
@@ -81,8 +80,8 @@ object Registry {
 
   // Return a Set of classes extending util.config.Configurable
   protected def getSubclassesOfConfigurable(app: Application): Option[Buffer[Class[_]]] = {
-    app.configuration.getStringList("config.validations").map { l => 
-      l.asScala.map { Class.forName } 
+    app.configuration.getStringList("config.validations").map { l =>
+      l.asScala.map { Class.forName }
     }
   }
 }

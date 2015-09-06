@@ -5,14 +5,11 @@ import org.apache.solr.common.SolrDocument
 
 import play.api.Logger
 
-import collins.util.Stats
-
-import collins.models.Asset
-import collins.models.AssetLog
 import collins.models.shared.Page
 import collins.models.shared.PageParams
 import collins.models.shared.SortDirection.SortAsc
 import collins.solr.UpperCaseString.string2UpperCaseString
+import collins.util.Stats
 
 /**
  * This class is a full search query, which includes an expression along with
@@ -26,7 +23,7 @@ abstract class CollinsSearchQuery[T](docType: SolrDocType, query: TypedSolrExpre
     val server = SolrHelper.server
     val q = new SolrQuery
     val queryString = query.toSolrQueryString
-    docType.keyResolver.either(page.sortField).right.flatMap{k => k.sortKey.map{Right(_)}.getOrElse(Left("Cannot sort on " + k.name))}.right.flatMap { sortKey =>
+    docType.keyResolver.either(page.sortField).right.flatMap { k => k.sortKey.map { Right(_) }.getOrElse(Left("Cannot sort on " + k.name)) }.right.flatMap { sortKey =>
       logger.debug("SOLR: " + queryString + "| sort: " + sortKey.name)
       q.setQuery(queryString)
       q.setStart(page.offset)

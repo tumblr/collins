@@ -21,7 +21,7 @@ case class LockingBitSet(private val bs: BitSet) {
     override def hasNext() = (pos >= 0)
     override def next() = {
       val ret = pos
-      pos = bs.nextSetBit(pos+1)
+      pos = bs.nextSetBit(pos + 1)
       ret
     }
   }

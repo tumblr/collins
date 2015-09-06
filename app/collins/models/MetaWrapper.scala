@@ -9,7 +9,7 @@ import collins.util.CryptoCodec
 case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getAssetId(): Long = _value.assetId
   def getMetaId(): Long = _meta.id
-  def getId(): (Long,Long) = (getAssetId(), getMetaId())
+  def getId(): (Long, Long) = (getAssetId(), getMetaId())
   def getName(): String = _meta.name
   def getGroupId(): Int = _value.groupId
   def getPriority(): Int = _meta.priority
@@ -17,7 +17,7 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
   def getDescription(): String = _meta.description
   def getValueType(): AssetMeta.ValueType = _meta.getValueType()
   def getValue(): String = Feature.encryptedTags.map(_.name).contains(getName) match {
-    case true => CryptoCodec.withKeyFromFramework.Decode(_value.value).getOrElse(_value.value)
+    case true  => CryptoCodec.withKeyFromFramework.Decode(_value.value).getOrElse(_value.value)
     case false => _value.value
   }
   override def toString(): String = getValue()
@@ -26,11 +26,12 @@ case class MetaWrapper(_meta: AssetMeta, _value: AssetMetaValue) {
 
 object MetaWrapper {
   def apply(amv: AssetMetaValue): MetaWrapper = MetaWrapper(amv.meta, amv)
-  def createMeta(asset: Asset, metas: Map[String,String], groupId: Option[Int] = None) = {
-    val metaValues = metas.map { case(k,v) =>
-      val meta = AssetMeta.findOrCreateFromName(k)
-      groupId.map(AssetMetaValue(asset, meta.id, _, v))
-        .getOrElse(AssetMetaValue(asset, meta.id, v))
+  def createMeta(asset: Asset, metas: Map[String, String], groupId: Option[Int] = None) = {
+    val metaValues = metas.map {
+      case (k, v) =>
+        val meta = AssetMeta.findOrCreateFromName(k)
+        groupId.map(AssetMetaValue(asset, meta.id, _, v))
+          .getOrElse(AssetMetaValue(asset, meta.id, v))
     }.toSeq
     AssetMetaValue.purge(metaValues, groupId)
     val values = metaValues.filter(v => v.value != null && v.value.nonEmpty)

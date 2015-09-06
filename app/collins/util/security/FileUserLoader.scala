@@ -1,6 +1,6 @@
 package collins.util.security
 
-import java.io.{File => IoFile}
+import java.io.{ File => IoFile }
 
 import scala.io.Source
 

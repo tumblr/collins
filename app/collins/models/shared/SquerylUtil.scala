@@ -12,7 +12,6 @@ import play.api.Logger
 import collins.callbacks.Callback
 import collins.callbacks.CallbackDatum
 import collins.callbacks.CallbackDatumHolder
-
 import collins.models.cache.Cache
 
 trait Keys[T <: AnyRef] {

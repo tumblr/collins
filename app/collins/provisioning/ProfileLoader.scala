@@ -1,13 +1,12 @@
 package collins.provisioning
 
-import java.io.{File => IoFile}
+import java.io.{ File => IoFile }
 
 import scala.collection.immutable.SortedSet
 
 import play.api.Logger
 
 import com.google.common.cache.CacheLoader
-
 import com.tumblr.play.interop.ProvisionerProfileHelper
 
 import collins.validation.File

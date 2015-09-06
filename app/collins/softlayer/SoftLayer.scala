@@ -8,8 +8,6 @@ import scala.util.control.Exception.allCatch
 import org.jboss.netty.handler.codec.http.QueryStringEncoder
 
 import play.api.Logger
-import play.api.Application
-import play.api.Plugin
 import play.api.Play.current
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsArray
@@ -21,10 +19,10 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WS
 
 import collins.models.Asset
-import collins.power.management.PowerCommandStatus
 import collins.power.management.Failure
-import collins.power.management.Success
+import collins.power.management.PowerCommandStatus
 import collins.power.management.RateLimit
+import collins.power.management.Success
 
 trait SoftLayer {
   val SOFTLAYER_API_HOST = "api.softlayer.com:443"

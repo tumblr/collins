@@ -11,8 +11,7 @@ case class CommandResult(exitCode: Int, stdout: String, stderr: Option[String] =
         "Exit Code: %d, Stdout: %s".format(exitCode, stdout)
       case Some(err) =>
         "Exit Code: %d, Stdout: %s, Stderr: %s".format(
-          exitCode, stdout, err
-        )
+          exitCode, stdout, err)
     }
   }
 }

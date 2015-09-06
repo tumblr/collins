@@ -5,7 +5,6 @@ import java.io.File
 import play.api.Application
 import play.api.Logger
 import play.api.Play
-import play.api.Plugin
 
 object LoggingHelper {
 

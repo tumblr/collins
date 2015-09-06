@@ -1,8 +1,6 @@
 package collins.metrics
 
-import play.api.Application
 import play.api.Logger
-import play.api.Plugin
 
 import com.addthis.metrics.reporter.config.ReporterConfig
 

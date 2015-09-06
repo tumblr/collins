@@ -11,7 +11,6 @@ import collins.controllers.actions.AssetAction
 import collins.controllers.actions.AssetResultsAction
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
-
 import collins.models.Asset
 import collins.models.shared.PageParams
 import collins.util.config.MultiCollinsConfig

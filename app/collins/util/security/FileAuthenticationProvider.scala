@@ -1,11 +1,12 @@
 package collins.util.security
 
-import java.io.File
 import java.security.MessageDigest
+
+import collins.guava.GuavaCacheFactory
 import collins.models.User
 import collins.models.UserImpl
+
 import sun.misc.BASE64Encoder
-import collins.guava.GuavaCacheFactory
 
 class FileAuthenticationProvider() extends AuthenticationProvider {
 

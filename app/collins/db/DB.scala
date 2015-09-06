@@ -5,8 +5,8 @@ import org.squeryl.SessionFactory
 import org.squeryl.adapters.H2Adapter
 import org.squeryl.adapters.MySQLInnoDBAdapter
 
-import play.api.Logger
 import play.api.Application
+import play.api.Logger
 import play.api.db.{ DB => PDB }
 
 /**

@@ -13,12 +13,9 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.AssetType
-import collins.models.AssetType
 import collins.util.MessageHelper
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
-
-import collins.controllers.actions.assettype.CreateAction.Messages.fuck
 
 object CreateAction {
   object Messages extends MessageHelper("controllers.AssetTypeApi.createAssetType") {

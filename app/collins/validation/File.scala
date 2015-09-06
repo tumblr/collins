@@ -1,6 +1,6 @@
 package collins.validation
 
-import java.io.{File => IoFile}
+import java.io.{ File => IoFile }
 
 object File {
   def requireFileIsReadable(filename: String) {

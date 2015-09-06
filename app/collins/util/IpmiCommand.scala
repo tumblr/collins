@@ -41,8 +41,7 @@ abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
     val exitStatus = try {
       process ! ProcessLogger(
         s => stdout.append(s + "\n"),
-        e => stderr.append(e + "\n")
-      )
+        e => stderr.append(e + "\n"))
     } catch {
       case e: Throwable =>
         stderr.append(e.getMessage)

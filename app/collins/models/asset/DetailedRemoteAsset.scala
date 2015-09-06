@@ -8,8 +8,7 @@ import play.api.libs.json.JsString
  * searching
  */
 case class DetailedRemoteAsset(hostTag: String, remoteUrl: String, json: JsObject)
-  extends RemoteAssetProxy((json \ "ASSET"))
-{
+    extends RemoteAssetProxy((json \ "ASSET")) {
   def getHostnameMetaValue() = (json \ "ATTRIBS" \ "0" \ "HOSTNAME").asOpt[String]
   def getPrimaryRoleMetaValue() = (json \ "ATTRIBS" \ "0" \ "PRIMARY_ROLE").asOpt[String]
   def getMetaAttributeValue(name: String) = (json \ "ATTRIBS" \ "0" \ name).asOpt[String]

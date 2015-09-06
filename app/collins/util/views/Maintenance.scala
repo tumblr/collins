@@ -1,11 +1,8 @@
 package collins.util.views
 
-import collins.models.User
 import collins.models.Asset
 import collins.models.AssetLifecycle
 import collins.models.State
-import collins.models.State
-import collins.models.Status
 import collins.models.Status
 
 object Maintenance {

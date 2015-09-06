@@ -2,8 +2,8 @@ package collins.controllers.actions.logs
 
 import scala.concurrent.Future
 
-import play.api.libs.json.JsBoolean
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.JsBoolean
 
 import collins.controllers.Api
 import collins.controllers.ResponseData

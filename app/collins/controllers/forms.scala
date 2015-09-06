@@ -9,17 +9,14 @@ import play.api.data.format.Formatter
 import collins.models.Asset
 import collins.models.AssetSort
 import collins.models.AssetType
-import collins.models.AssetType
 import collins.models.State
-import collins.models.State
-import collins.models.Status
 import collins.models.Status
 import collins.models.Truthy
 import collins.power.PowerAction
 import collins.solr.AssetDocType
+import collins.solr.CQLQuery
 import collins.solr.CollinsQueryParser
 import collins.solr.SolrExpression
-import collins.solr.CQLQuery
 
 package object forms {
 

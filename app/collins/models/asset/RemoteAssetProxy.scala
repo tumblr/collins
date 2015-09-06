@@ -5,12 +5,12 @@ import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.models.conversions._
+import collins.models.conversions.AssetFormat
 
 abstract class RemoteAssetProxy(jsonAsset: JsValue) extends RemoteAsset {
 
   private[this] val asset = Json.fromJson[AssetView](jsonAsset)
-		  .getOrElse(throw new Exception("Unable to obtain asset from remote asset proxy"))
+    .getOrElse(throw new Exception("Unable to obtain asset from remote asset proxy"))
 
   def id = asset.id
   def tag = asset.tag

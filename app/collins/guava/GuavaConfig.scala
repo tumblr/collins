@@ -1,7 +1,8 @@
 package collins.guava
 
-import collins.util.config.Configurable
 import com.google.common.cache.CacheBuilderSpec
+
+import collins.util.config.Configurable
 
 object GuavaConfig extends Configurable {
   override val namespace = "guava"

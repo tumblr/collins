@@ -1,26 +1,18 @@
 package collins.models
 
 import org.squeryl.PrimitiveTypeMode._
-
 import org.squeryl.Schema
 
-import play.api.libs.json.Format
-import play.api.libs.json.JsNumber
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsString
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.models.conversions._
+import collins.callbacks.CallbackDatum
 import collins.models.cache.Cache
+import collins.models.conversions.StatusFormat
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
 
-import collins.callbacks.CallbackDatum
-
 case class Status(name: String, description: String, id: Int = 0)
-  extends ValidatedEntity[Int] with CallbackDatum {
+    extends ValidatedEntity[Int] with CallbackDatum {
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
     require(description != null && description.length > 0, "Description must not be empty")
@@ -57,9 +49,8 @@ object Status extends Schema with AnormAdapter[Status] with StatusKeys {
 
   override val tableDef = table[Status]("status")
   on(tableDef)(s => declare(
-    s.id is (autoIncremented,primaryKey),
-    s.name is(unique)
-  ))
+    s.id is (autoIncremented, primaryKey),
+    s.name is (unique)))
 
   def find(): List[Status] = Cache.get(findKey, inTransaction {
     from(tableDef)(s => select(s)).toList
@@ -73,8 +64,7 @@ object Status extends Schema with AnormAdapter[Status] with StatusKeys {
 
   def findByName(name: String): Option[Status] = Cache.get(findByNameKey(name), inTransaction {
     tableDef.where(s =>
-      s.name.toLowerCase === name.toLowerCase
-    ).headOption
+      s.name.toLowerCase === name.toLowerCase).headOption
   })
 
   override def delete(s: Status): Int = inTransaction {

@@ -2,9 +2,9 @@ package collins.util.security
 
 import play.api.Logger
 
+import collins.guava.GuavaCacheFactory
 import collins.models.User
 import collins.permissions.Privileges
-import collins.guava.GuavaCacheFactory
 
 trait AuthenticationProvider {
   protected val logger = Logger.logger
@@ -15,7 +15,7 @@ trait AuthenticationProvider {
 object AuthenticationProvider {
   private val logger = Logger("collins.util.security.AuthenticationProvider")
 
-  lazy private val permissionsCache =   
+  lazy private val permissionsCache =
     GuavaCacheFactory.create(AuthenticationProviderConfig.permissionsCacheSpecification, PermissionsLoader())
 
   def get(types: List[String]): AuthenticationProvider = {

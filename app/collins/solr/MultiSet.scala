@@ -14,24 +14,24 @@ package collins.solr
  * need from it, this should be expanded to fit in more with regular scala
  * collections
  */
-case class MultiSet[T] private(val items: Map[T, Int]) {
+case class MultiSet[T] private (val items: Map[T, Int]) {
   def +(v: T) = new MultiSet[T](items.get(v) match {
     case Some(c) => items + (v -> (c + 1))
-    case None => items + (v -> 1)
+    case None    => items + (v -> 1)
   })
 
-  def toSeq: Seq[T] = items.map{case (item, count) => (1 to count).map{_ => item}}.toSeq.flatten
+  def toSeq: Seq[T] = items.map { case (item, count) => (1 to count).map { _ => item } }.toSeq.flatten
 
-  def size: Long = items.foldLeft(0){_ + _._2}
+  def size: Long = items.foldLeft(0) { _ + _._2 }
 
-  def headOption: Option[T] = items.headOption.map{_._1}
+  def headOption: Option[T] = items.headOption.map { _._1 }
 }
 
 object MultiSet {
   def apply[T](items: T*): MultiSet[T] = {
     val m = new MultiSet[T](Map[T, Int]())
-    items.foldLeft(m){(build, item) => build + item}
+    items.foldLeft(m) { (build, item) => build + item }
   }
 
-  def fromSeq[T](s: Seq[T]): MultiSet[T] = MultiSet(s:_*)
+  def fromSeq[T](s: Seq[T]): MultiSet[T] = MultiSet(s: _*)
 }

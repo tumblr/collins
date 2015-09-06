@@ -23,11 +23,11 @@ import collins.controllers.forms.typeFormat
 import collins.models.AssetFinder
 import collins.models.AssetType
 import collins.models.State
-import collins.models.{Status => AssetStatus}
+import collins.models.{ Status => AssetStatus }
 import collins.models.Truthy
 import collins.solr.SolrExpression
 import collins.util.AttributeResolver
-import collins.util.AttributeResolver.{ResultTuple => ResolvedAttributes}
+import collins.util.AttributeResolver.{ ResultTuple => ResolvedAttributes }
 import collins.util.MessageHelper
 import collins.util.views.Formatter.ISO_8601_FORMAT
 import collins.validation.StringUtil

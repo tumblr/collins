@@ -15,13 +15,13 @@ package object conversions {
 
   class JsValueWrapper(js: JsValue) {
     def value: Any = js match {
-      case JsNull => null
+      case JsNull           => null
       case und: JsUndefined => und.error
-      case JsBoolean(v) => v
-      case JsNumber(v) => v
-      case JsString(v) => v
-      case JsArray(v) => v
-      case JsObject(v) => v
+      case JsBoolean(v)     => v
+      case JsNumber(v)      => v
+      case JsString(v)      => v
+      case JsArray(v)       => v
+      case JsObject(v)      => v
     }
   }
 }

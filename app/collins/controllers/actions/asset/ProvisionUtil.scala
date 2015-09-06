@@ -19,22 +19,19 @@ import collins.controllers.actors.ProvisionerResult
 import collins.controllers.actors.ProvisionerRun
 import collins.controllers.actors.ProvisionerTest
 import collins.controllers.forms.truthyFormat
-
 import collins.models.Asset
 import collins.models.AssetLifecycle
 import collins.models.AssetMetaValue
-import collins.models.{Status => AssetStatus}
+import collins.models.{ Status => AssetStatus }
 import collins.models.Truthy
-
 import collins.provisioning.Provisioner
 import collins.provisioning.ProvisionerRequest
-import collins.provisioning.{ProvisionerRoleData => ProvisionerRole}
-
+import collins.provisioning.{ ProvisionerRoleData => ProvisionerRole }
+import collins.softlayer.SoftLayer
+import collins.softlayer.SoftLayerConfig
 import collins.util.concurrent.BackgroundProcessor
 import collins.util.concurrent.BackgroundProcessor.SendType
 import collins.util.config.Feature
-import collins.softlayer.SoftLayer
-import collins.softlayer.SoftLayerConfig
 
 trait ProvisionUtil { self: SecureAction =>
   import collins.controllers.forms._

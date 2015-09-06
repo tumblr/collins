@@ -1,8 +1,8 @@
 package collins.controllers.actions.ipaddress
 
-import scala.concurrent.Future
-
 import java.sql.SQLException
+
+import scala.concurrent.Future
 
 import play.api.data.Form
 import play.api.data.Forms.tuple
@@ -16,7 +16,6 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.Asset
-import collins.models.IpAddresses
 import collins.models.IpAddresses
 import collins.models.shared.IpAddressConfig
 import collins.util.IpAddress

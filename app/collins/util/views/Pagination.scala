@@ -10,12 +10,13 @@ object Pagination {
   }
 
   def mapToQueryString(prefix: String, map: Map[String, Seq[String]]): String = {
-    val qs = map.map { case(k,v) =>
-      v.map{s => "%s=%s".format(k, URLEncoder.encode(s,"UTF-8"))}.mkString("&")
+    val qs = map.map {
+      case (k, v) =>
+        v.map { s => "%s=%s".format(k, URLEncoder.encode(s, "UTF-8")) }.mkString("&")
     }.mkString("&")
     prefix match {
       case hasQs if hasQs.contains("?") => hasQs + "&" + qs
-      case noQs => noQs + "?" + qs
+      case noQs                         => noQs + "?" + qs
     }
   }
 }

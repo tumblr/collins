@@ -7,10 +7,7 @@ import play.api.libs.json.Json
 
 import collins.models.Asset
 import collins.models.AssetMetaValue
-import collins.models.AssetMetaValue
 import collins.models.IpAddresses
-import collins.models.IpAddresses
-import collins.models.IpmiInfo
 import collins.models.IpmiInfo
 import collins.models.LldpHelper
 import collins.models.LshwHelper
@@ -34,8 +31,7 @@ object AllAttributes {
         None,
         IpAddresses.findAllByAsset(asset),
         PowerUnits(),
-        AssetMetaValue.findByAsset(asset)
-      )
+        AssetMetaValue.findByAsset(asset))
     } else {
       val (lshwRep, mvs) = LshwHelper.reconstruct(asset)
       val (lldpRep, mvs2) = LldpHelper.reconstruct(asset, mvs)
@@ -49,21 +45,20 @@ object AllAttributes {
 }
 
 case class AllAttributes(
-  asset: Asset,
-  lshw: LshwRepresentation,
-  lldp: LldpRepresentation,
-  ipmi: Option[IpmiInfo],
-  addresses: Seq[IpAddresses],
-  power: PowerUnits,
-  mvs: Seq[MetaWrapper])
-{
+    asset: Asset,
+    lshw: LshwRepresentation,
+    lldp: LldpRepresentation,
+    ipmi: Option[IpmiInfo],
+    addresses: Seq[IpAddresses],
+    power: PowerUnits,
+    mvs: Seq[MetaWrapper]) {
 
   import collins.models.conversions._
   import collins.util.power.PowerUnit.PowerUnitFormat
 
   def exposeCredentials(showCreds: Boolean = false) = {
     this.copy(ipmi = this.ipmi.map { _.withExposedCredentials(showCreds) })
-        .copy(mvs = this.metaValuesWithExposedCredentials(showCreds))
+      .copy(mvs = this.metaValuesWithExposedCredentials(showCreds))
   }
 
   protected def metaValuesWithExposedCredentials(showCreds: Boolean): Seq[MetaWrapper] = {
@@ -82,10 +77,10 @@ case class AllAttributes(
       "IPMI" -> Json.toJson(ipmi),
       "ADDRESSES" -> Json.toJson(addresses),
       "POWER" -> Json.toJson(power),
-      "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map { case(groupId, mv) =>
-        groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) })
-      }.toSeq)
-    )
+      "ATTRIBS" -> JsObject(mvs.groupBy { _.getGroupId }.map {
+        case (groupId, mv) =>
+          groupId.toString -> JsObject(mv.map { mvw => mvw.getName -> JsString(mvw.getValue) })
+      }.toSeq))
     JsObject(outSeq)
   }
 }

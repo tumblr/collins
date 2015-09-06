@@ -3,11 +3,11 @@ package collins.util.views
 import collins.models.Asset
 import collins.models.asset.AssetView
 import collins.models.shared.Page
+import collins.softlayer.SoftLayer
+import collins.softlayer.SoftLayerConfig
 import collins.util.power.PowerComponent
 import collins.util.power.PowerUnits
 import collins.util.power.PowerUnits
-import collins.softlayer.SoftLayerConfig
-import collins.softlayer.SoftLayer
 
 // Mostly used with views/asset/list, also for comprehensions
 object ListHelper {
@@ -15,10 +15,10 @@ object ListHelper {
     assets.items.find(_.getHostnameMetaValue.isDefined).map(_ => true).getOrElse(false)
   }
   def showSoftLayerLink(assets: Page[AssetView]): Boolean = {
-    if (SoftLayerConfig.enabled) { 
+    if (SoftLayerConfig.enabled) {
       assets.items.collectFirst{ case asset: Asset if(SoftLayer.isSoftLayerAsset(asset)) => true }.getOrElse(false)
     } else {
-      false 
+      false
     }
   }
   def getPowerComponentsInOrder(units: PowerUnits): Seq[PowerComponent] = {

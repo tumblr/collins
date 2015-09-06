@@ -16,7 +16,7 @@ import collins.solr.UpperCaseString.string2UpperCaseString
 
 import collins.solr.SolrKeyFlag._
 
-object AssetKeyResolver extends SolrKeyResolver{
+object AssetKeyResolver extends SolrKeyResolver {
 
   /**
    * each key is an "incoming" field from a query, the ValueType is the
@@ -38,23 +38,22 @@ object AssetKeyResolver extends SolrKeyResolver{
     SolrKey(IpmiUsername.toString, String, Dynamic, SingleValued, Sortable),
     SolrKey(IpmiPassword.toString, String, Dynamic, SingleValued, Sortable),
     SolrKey(IpmiGateway.toString, String, Dynamic, SingleValued, Sortable),
-    SolrKey(IpmiNetmask.toString, String, Dynamic, SingleValued, Sortable)
-  ) ++ AssetSerializer.generatedFields
+    SolrKey(IpmiNetmask.toString, String, Dynamic, SingleValued, Sortable)) ++ AssetSerializer.generatedFields
 
-  val typeKey = new SolrKey("TYPE",String,Static, SingleValued, Sortable, Set("ASSETTYPE")) with EnumKey {
+  val typeKey = new SolrKey("TYPE", String, Static, SingleValued, Sortable, Set("ASSETTYPE")) with EnumKey {
     def lookupByName(value: String) = AssetType.findByName(value.toUpperCase).map(_.name)
     def lookupById(value: Int) = AssetType.findById(value).map(_.name)
 
   }
 
   val statusKey = new SolrKey("STATUS", String, Static, SingleValued, Sortable) with EnumKey {
-    def lookupByName(value: String) = Status.findByName(value).map{_.name}
-    def lookupById(value: Int) = Status.findById(value).map{_.name}
+    def lookupByName(value: String) = Status.findByName(value).map { _.name }
+    def lookupById(value: Int) = Status.findById(value).map { _.name }
   }
 
   val stateKey = new SolrKey("STATE", String, Static, SingleValued, Sortable) with EnumKey {
-    def lookupByName(value: String) = State.findByName(value).map{_.name}
-    def lookupById(value: Int) = State.findById(value).map{_.name}
+    def lookupByName(value: String) = State.findByName(value).map { _.name }
+    def lookupById(value: Int) = State.findById(value).map { _.name }
   }
 
   val enumKeys = typeKey :: statusKey :: stateKey :: Nil
@@ -62,8 +61,7 @@ object AssetKeyResolver extends SolrKeyResolver{
   def docSpecificKey(key: UpperCaseString): Option[SolrKey] = {
     nonMetaKeys.find(_ matches key)
       .orElse(enumKeys.find(_ matches key))
-      .orElse(AssetMeta.findByName(key).map{_.getSolrKey})
+      .orElse(AssetMeta.findByName(key).map { _.getSolrKey })
   }
-
 
 }

@@ -1,7 +1,6 @@
 package collins.util
 
 import collins.models.AssetMeta
-import collins.models.AssetMeta
 import collins.models.IpmiInfo
 
 object AttributeResolver extends MessageHelper("attributeresolver") {
@@ -20,25 +19,26 @@ object AttributeResolver extends MessageHelper("attributeresolver") {
 
   val EmptyResolvedAttributes = ResolvedAttributes(Nil, Nil, None)
 
-  def apply(map: Map[String,String]): ResultTuple = {
+  def apply(map: Map[String, String]): ResultTuple = {
     val init: ResultTuple = (Seq[IpmiTuple](), Seq[AssetMetaTuple](), Seq[String]())
-    map.foldLeft(init) { case(total, kv) =>
-      val (k, v) = kv
-      val (ipmi, meta, address) = total
-      asIpmi(k) match {
-        case None => asAssetMeta(k) match {
-          case None => isIpAddress(k) match {
-            case true =>
-              (ipmi, meta, (address ++ Seq(v)))
-            case false =>
-              throw new Exception(message("notfound", k))
+    map.foldLeft(init) {
+      case (total, kv) =>
+        val (k, v) = kv
+        val (ipmi, meta, address) = total
+        asIpmi(k) match {
+          case None => asAssetMeta(k) match {
+            case None => isIpAddress(k) match {
+              case true =>
+                (ipmi, meta, (address ++ Seq(v)))
+              case false =>
+                throw new Exception(message("notfound", k))
+            }
+            case Some(assetMeta) =>
+              (ipmi, ((assetMeta -> v) +: meta), address)
           }
-          case Some(assetMeta) =>
-            (ipmi, ((assetMeta -> v) +: meta), address)
+          case Some(ipmiInfo) =>
+            (((ipmiInfo -> v) +: ipmi), meta, address)
         }
-        case Some(ipmiInfo) =>
-          (((ipmiInfo -> v) +: ipmi), meta, address)
-      }
     }
   }
 

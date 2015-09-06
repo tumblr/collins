@@ -12,7 +12,7 @@ object NodeclassifierConfig extends Configurable {
 
   def assetType = getString("assetType").orElse(Some("CONFIGURATION")).map { t =>
     AssetType.findByName(t) match {
-      case None => throw globalError("%s is not a valid asset type".format(t))
+      case None    => throw globalError("%s is not a valid asset type".format(t))
       case Some(t) => t
     }
   }.get

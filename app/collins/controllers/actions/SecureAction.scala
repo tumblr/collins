@@ -2,7 +2,6 @@ package collins.controllers.actions
 
 import java.util.concurrent.atomic.AtomicReference
 
-import scala.util.Success
 import scala.concurrent.Future
 import scala.concurrent.Promise
 
@@ -19,7 +18,6 @@ import play.api.mvc.Flash
 import play.api.mvc.Request
 import play.api.mvc.Result
 import play.api.mvc.Results
-import play.api.mvc.Action
 
 import collins.controllers.Api
 import collins.controllers.ResponseData
@@ -159,7 +157,7 @@ abstract class SecureAction(
         None
     validationResults.getOrElse(validate())
   }
-  
+
   private def handleExecution(rd: RequestDataHolder): Future[Result] = {
     val executionResults =
       if (isReadRequest)
@@ -174,7 +172,7 @@ abstract class SecureAction(
         None
     executionResults.getOrElse(execute(rd))
   }
-  
+
   private def run(): Future[Result] = handleValidation() match {
     case Left(rd) => Promise.successful(handleError(rd)).future
     case Right(rd) => handleExecution(rd) map {

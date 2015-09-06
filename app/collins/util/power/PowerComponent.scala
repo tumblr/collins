@@ -7,7 +7,6 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
 import collins.models.AssetMeta
-import collins.models.AssetMeta
 
 /** A power related component (distribution unit, strip, outlet, etc) */
 sealed trait PowerComponent extends Ordered[PowerComponent] {
@@ -28,7 +27,7 @@ sealed trait PowerComponent extends Ordered[PowerComponent] {
   final def isUnique: Boolean = config.uniqueComponents.contains(componentType)
   final def key: String = "%s_%s".format(identifier, sid)
   final def sid: String = config.useAlphabeticNames match {
-    case true => (65 + id).toChar.toString
+    case true  => (65 + id).toChar.toString
     case false => id.toString
   }
 
@@ -52,13 +51,12 @@ case class PowerComponentValue(
   config: PowerConfiguration,
   id: Int,
   position: Int,
-  value: Option[String] = None
-) extends PowerComponent
+  value: Option[String] = None) extends PowerComponent
 
 object PowerComponent {
   private def unidentify(s: String): String = s.replaceAll("^POWER_", "")
   private def unkey(s: String): Int = PowerConfiguration.get().useAlphabeticNames match {
-    case true => s.split("_").last.charAt(0).toInt - 65
+    case true  => s.split("_").last.charAt(0).toInt - 65
     case false => s.split("_").last.charAt(0).toInt
   }
   implicit object PowerComponentFormat extends Format[PowerComponent] {
@@ -67,8 +65,7 @@ object PowerComponent {
       PowerConfiguration.get(),
       unkey((json \ "KEY").as[String]),
       (json \ "POSITION").as[Int],
-      (json \ "VALUE").asOpt[String]
-    ))
+      (json \ "VALUE").asOpt[String]))
 
     override def writes(pc: PowerComponent) = JsObject(Seq(
       "KEY" -> Json.toJson(pc.key),
@@ -77,7 +74,6 @@ object PowerComponent {
       "LABEL" -> Json.toJson(pc.label),
       "POSITION" -> Json.toJson(pc.position),
       "IS_REQUIRED" -> Json.toJson(pc.isRequired),
-      "UNIQUE" -> Json.toJson(pc.isUnique)
-    ))
+      "UNIQUE" -> Json.toJson(pc.isUnique)))
   }
 }

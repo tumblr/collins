@@ -2,15 +2,12 @@ package collins.models.shared
 
 import collins.models.Asset
 import collins.models.AssetMeta
-import collins.models.AssetMeta
-import collins.models.AssetMetaValue
 import collins.models.AssetMetaValue
 import collins.models.MetaWrapper
 
 trait CommonHelper[T] {
   type Reconstruction = Tuple2[T, Seq[MetaWrapper]]
   type FilteredSeq[T1] = Tuple2[Seq[T1], Map[Int, Seq[MetaWrapper]]]
-
 
   val managedTags: Set[AssetMeta.Enum]
 

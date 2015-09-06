@@ -11,7 +11,7 @@ sealed trait SortDirection {
   override def toString = strVal
 
   def unary_! = this match {
-    case SortAsc => SortDesc
+    case SortAsc  => SortDesc
     case SortDesc => SortAsc
   }
 }
@@ -26,9 +26,9 @@ object SortDirection {
 
   val values = SortAsc :: SortDesc :: Nil
 
-  def withName(str: String):Option[SortDirection] = values.find{_.strVal == str}
+  def withName(str: String): Option[SortDirection] = values.find { _.strVal == str }
 
-  def op(dir: SortDirection): (Int, Int) => Boolean = if (dir == SortAsc) _ < _ else _ > _ 
+  def op(dir: SortDirection): (Int, Int) => Boolean = if (dir == SortAsc) _ < _ else _ > _
 }
 
 import SortDirection._
@@ -47,13 +47,9 @@ object PageParams {
   /**
    * Currently if sort is invalid it will just default to Asc
    */
-  def apply(page: Int, size: Int, sort: String, sortField: String): PageParams = 
+  def apply(page: Int, size: Int, sort: String, sortField: String): PageParams =
     PageParams(page, size, SortDirection.withName(sort.toUpperCase).getOrElse(SortAsc), sortField)
 }
-
-
-
-
 
 case class Page[+A](items: Seq[A], page: Int, offset: Long, total: Long) {
   lazy val prev: Option[Int] = Option(page - 1).filter(_ >= 0)
@@ -64,13 +60,12 @@ case class Page[+A](items: Seq[A], page: Int, offset: Long, total: Long) {
 
   lazy val size = items.size
 
-  def getPaginationHeaders(): Seq[(String,String)] = {
+  def getPaginationHeaders(): Seq[(String, String)] = {
     Seq(
       ("X-Pagination-PreviousPage" -> prevPage.toString),
       ("X-Pagination-CurrentPage" -> page.toString),
       ("X-Pagination-NextPage" -> nextPage.toString),
-      ("X-Pagination-TotalResults" -> total.toString)
-    )
+      ("X-Pagination-TotalResults" -> total.toString))
   }
   def getPaginationJsObject(): Seq[(String, JsValue)] = {
     Seq(
@@ -78,9 +73,7 @@ case class Page[+A](items: Seq[A], page: Int, offset: Long, total: Long) {
         "PreviousPage" -> JsNumber(prevPage),
         "CurrentPage" -> JsNumber(page),
         "NextPage" -> JsNumber(nextPage),
-        "TotalResults" -> JsNumber(total)
-      ))
-    )
+        "TotalResults" -> JsNumber(total))))
   }
 }
 

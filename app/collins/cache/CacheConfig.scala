@@ -1,9 +1,9 @@
 package collins.cache
 
 import collins.guava.GuavaConfig
+import collins.hazelcast.HazelcastConfig
 import collins.util.config.Configurable
 import collins.util.config.ConfigurationException
-import collins.hazelcast.HazelcastConfig
 
 object CacheConfig extends Configurable {
 

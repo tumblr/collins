@@ -25,7 +25,7 @@ object SolrConfig extends Configurable {
   def reactToUpdates = getBoolean("reactToUpdates", true)
   def repopulateOnStartup = getBoolean("repopulateOnStartup", false)
   def useEmbeddedServer = getBoolean("useEmbeddedServer", true)
-  def socketTimeout = getInt("socketTimeout",1000)
+  def socketTimeout = getInt("socketTimeout", 1000)
   def connectionTimeout = getInt("connectionTimeout", 5000)
   def maxTotalConnections = getInt("maxTotalConnections", 100)
   def defaultMaxConnectionsPerHost = getInt("defaultMaxConnectionsPerHost", 100)

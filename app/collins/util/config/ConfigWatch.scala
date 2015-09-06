@@ -28,7 +28,7 @@ object ConfigWatch extends AppConfig {
     throw new Exception("Config has no file based origin, can not watch for changes")
   }
 
-  private val allWatches: Map[File,Long] = {
+  private val allWatches: Map[File, Long] = {
     val cfg = appConfig().underlying
     val files = cfg.root.unwrapped.asScala.keys.map { key =>
       Option(cfg.root.get(key).origin.filename)
@@ -75,14 +75,12 @@ object ConfigWatch extends AppConfig {
   protected[config] def onChange() {
     try {
       val config = ConfigFactory.load(
-        ConfigFactory.parseFileAnySyntax(rootConfig)
-      ) // this is what Play does
+        ConfigFactory.parseFileAnySyntax(rootConfig)) // this is what Play does
       Registry.onChange(config)
     } catch {
       case e: Throwable =>
         logger.warn("Error loading configuration from %s: %s".format(
-          rootConfig.toString, e.getMessage
-        ), e)
+          rootConfig.toString, e.getMessage), e)
     }
   }
 }

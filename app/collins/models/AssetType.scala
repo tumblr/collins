@@ -3,21 +3,16 @@ package collins.models
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Schema
 
-import play.api.libs.json.Format
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.models.conversions._
+import collins.callbacks.CallbackDatum
 import collins.models.cache.Cache
+import collins.models.conversions.AssetTypeFormat
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
 
-import collins.callbacks.CallbackDatum
-
 case class AssetType(name: String, label: String, id: Int = 0)
-  extends ValidatedEntity[Int] with CallbackDatum {
+    extends ValidatedEntity[Int] with CallbackDatum {
   override def validate() {
     require(name != null && name.length > 0, "Name must not be empty")
   }
@@ -42,11 +37,10 @@ case class AssetType(name: String, label: String, id: Int = 0)
 object AssetType extends Schema with AnormAdapter[AssetType] with AssetTypeKeys {
 
   override val tableDef = table[AssetType]("asset_type")
-  val reservedNames = List("SERVER_NODE","SERVER_CHASSIS","RACK","SWITCH","ROUTER","POWER_CIRCUIT","POWER_STRIP","DATA_CENTER","CONFIGURATION")
+  val reservedNames = List("SERVER_NODE", "SERVER_CHASSIS", "RACK", "SWITCH", "ROUTER", "POWER_CIRCUIT", "POWER_STRIP", "DATA_CENTER", "CONFIGURATION")
   on(tableDef)(a => declare(
-    a.id is(autoIncremented,primaryKey),
-    a.name is(unique)
-  ))
+    a.id is (autoIncremented, primaryKey),
+    a.name is (unique)))
 
   def findById(id: Int): Option[AssetType] = Cache.get(findByIdKey(id), inTransaction {
     tableDef.lookup(id)
@@ -60,8 +54,7 @@ object AssetType extends Schema with AnormAdapter[AssetType] with AssetTypeKeys 
 
   def findByName(name: String): Option[AssetType] = Cache.get(findByNameKey(name), inTransaction {
     tableDef.where(a =>
-      a.name.toLowerCase === name.toLowerCase
-    ).headOption
+      a.name.toLowerCase === name.toLowerCase).headOption
   })
 
   override def delete(a: AssetType): Int = inTransaction {

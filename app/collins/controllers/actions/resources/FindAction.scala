@@ -6,7 +6,7 @@ import collins.controllers.SecureController
 import collins.controllers.actions.ActionHelper
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.asset.AssetFinderDataHolder
-import collins.controllers.actions.asset.{FindAction => AssetFindAction}
+import collins.controllers.actions.asset.{ FindAction => AssetFindAction }
 import collins.models.asset.AssetView
 import collins.models.shared.Page
 import collins.models.shared.PageParams
@@ -19,7 +19,7 @@ case class FindAction(
   handler: SecureController
 ) extends AssetFindAction(pageParams, spec, handler) {
 
-  override def validate(): Either[RequestDataHolder,RequestDataHolder] =  
+  override def validate(): Either[RequestDataHolder,RequestDataHolder] =
     AssetFinderDataHolder.processRequest(ActionHelper.createRequest(request, requestMap))
 
   override def execute(rd: RequestDataHolder) = rd match {

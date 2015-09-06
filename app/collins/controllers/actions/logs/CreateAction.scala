@@ -7,10 +7,10 @@ import org.jsoup.safety.Whitelist
 
 import play.api.data.Form
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsBoolean
 import play.api.libs.json.JsUndefined
 import play.api.libs.json.JsValue
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.ResponseData
@@ -20,7 +20,6 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.Asset
-import collins.models.AssetLog
 import collins.models.AssetLog
 import collins.models.logs.LogFormat
 import collins.models.logs.LogMessageType

@@ -28,9 +28,7 @@ case class AssetMeta(
     label: String,
     description: String,
     id: Long = 0,
-    value_type: Int = AssetMeta.ValueType.String.id
-    ) extends ValidatedEntity[Long] with CallbackDatum
-{
+    value_type: Int = AssetMeta.ValueType.String.id) extends ValidatedEntity[Long] with CallbackDatum {
   override def validate() {
     require(name != null && name.toUpperCase == name && name.size > 0, "Name must be all upper case, length > 0")
     require(AssetMeta.isValidName(name), "Name must be all upper case, alpha numeric (and hyphens): %s".format(name))
@@ -43,8 +41,7 @@ case class AssetMeta(
       "NAME" -> JsString(name),
       "PRIORITY" -> JsNumber(priority),
       "LABEL" -> JsString(label),
-      "DESCRIPTION" -> JsString(description)
-    )))
+      "DESCRIPTION" -> JsString(description))))
   }
 
   override def compare(z: Any): Boolean = {
@@ -93,10 +90,9 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
 
   override val tableDef = table[AssetMeta]("asset_meta")
   on(tableDef)(a => declare(
-    a.id is(autoIncremented,primaryKey),
-    a.name is(unique),
-    a.priority is(indexed)
-  ))
+    a.id is (autoIncremented, primaryKey),
+    a.name is (unique),
+    a.priority is (indexed)))
 
   override def delete(a: AssetMeta): Int = inTransaction {
     afterDeleteCallback(a) {
@@ -122,8 +118,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
       priority = -1,
       label = name.toLowerCase.capitalize,
       description = name,
-      value_type = valueType.id
-    ))
+      value_type = valueType.id))
     findByName(name).get
   }
 
@@ -131,34 +126,31 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
 
   def findByName(name: String): Option[AssetMeta] = Cache.get(findByNameKey(name), inTransaction {
     tableDef.where(a =>
-      a.name.toUpperCase === name.toUpperCase
-    ).headOption
+      a.name.toUpperCase === name.toUpperCase).headOption
   })
 
-  def getViewable(): List[AssetMeta] = Cache.get(findByViewableKey,  inTransaction {
+  def getViewable(): List[AssetMeta] = Cache.get(findByViewableKey, inTransaction {
     from(tableDef)(a =>
       where(a.priority gt -1)
-      select(a)
-      orderBy(a.priority asc)
-    ).toList
+        select (a)
+        orderBy (a.priority asc)).toList
   })
 
   type ValueType = ValueType.Value
   object ValueType extends Enumeration {
-    val String = Value(1,"STRING")
-    val Integer = Value(2,"INTEGER")
-    val Double = Value(3,"DOUBLE")
-    val Boolean = Value(4,"BOOLEAN")
+    val String = Value(1, "STRING")
+    val Integer = Value(2, "INTEGER")
+    val Double = Value(3, "DOUBLE")
+    val Boolean = Value(4, "BOOLEAN")
 
-    def valStrings = values.map{_.toString}
-    def valIds = values.map{_.id}
+    def valStrings = values.map { _.toString }
+    def valIds = values.map { _.id }
 
-    val postFix = Map[ValueType,String](
+    val postFix = Map[ValueType, String](
       String -> "_meta_s",
       Integer -> "_meta_i",
       Double -> "_meta_d",
-      Boolean -> "_meta_b"
-    )
+      Boolean -> "_meta_b")
   }
 
   // DO NOT ADD ANYTHING TO THIS
@@ -216,7 +208,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
     val BaseSerial = findOrCreateFromName("BASE_SERIAL")
 
     def getValues(): Seq[AssetMeta] = {
-      Seq(BaseDescription,BaseProduct,BaseVendor,BaseSerial)
+      Seq(BaseDescription, BaseProduct, BaseVendor, BaseSerial)
     }
   }
 }

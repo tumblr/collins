@@ -1,7 +1,6 @@
 package collins.controllers
 
 import collins.models.cache.Cache
-
 import collins.solr.Solr
 import collins.util.Stats
 

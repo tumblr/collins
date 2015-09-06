@@ -7,29 +7,26 @@ import org.squeryl.dsl.ast.LogicalBoolean
 
 import play.api.libs.json.Json
 
-import collins.models.cache.Cache
 import collins.models.asset.AssetView
+import collins.models.cache.Cache
+import collins.models.conversions.IpmiFormat
 import collins.models.shared.AddressPool
 import collins.models.shared.IpAddressStorage
 import collins.models.shared.IpAddressable
 import collins.models.shared.Page
 import collins.models.shared.PageParams
-import collins.models.conversions.IpmiFormat
-
 import collins.util.CryptoCodec
 import collins.util.IpAddress
 import collins.util.config.IpmiConfig
 
 case class IpmiInfo(
-  @Column("ASSET_ID") assetId: Long,
-  username: String,
-  password: String,
-  gateway: Long,
-  address: Long,
-  netmask: Long,
-  id: Long = 0) extends IpAddressable
-{
-  import conversions._
+    @Column("ASSET_ID") assetId: Long,
+    username: String,
+    password: String,
+    gateway: Long,
+    address: Long,
+    netmask: Long,
+    id: Long = 0) extends IpAddressable {
   override def validate() {
     super.validate()
     List(username, password).foreach { s =>
@@ -49,7 +46,7 @@ case class IpmiInfo(
     else {
       val other = ar.asInstanceOf[IpmiInfo]
       this.assetId == other.assetId && this.gateway == other.gateway &&
-      this.netmask == other.netmask && this.username == other.username && this.password == other.password
+        this.netmask == other.netmask && this.username == other.username && this.password == other.password
     }
   }
 
@@ -70,12 +67,11 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
 
   val tableDef = table[IpmiInfo]("ipmi_info")
   on(tableDef)(i => declare(
-    i.id is(autoIncremented,primaryKey),
-    i.assetId is(unique),
-    i.address is(unique),
-    i.gateway is(indexed),
-    i.netmask is(indexed)
-  ))
+    i.id is (autoIncremented, primaryKey),
+    i.assetId is (unique),
+    i.address is (unique),
+    i.gateway is (indexed),
+    i.netmask is (indexed)))
 
   def createForAsset(asset: Asset): IpmiInfo = inTransaction {
     val assetId = asset.id
@@ -84,8 +80,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     createWithRetry(10) { attempt =>
       val (gateway, address, netmask) = getNextAvailableAddress()(None)
       val ipmiInfo = IpmiInfo(
-        assetId, username, password, gateway, address, netmask
-      )
+        assetId, username, password, gateway, address, netmask)
       tableDef.insert(ipmiInfo)
     }
   }
@@ -99,21 +94,20 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     def whereClause(assetRow: Asset, ipmiRow: IpmiInfo) = {
       where(
         assetRow.id === ipmiRow.assetId and
-        finder.asLogicalBoolean(assetRow) and
-        collectParams(ipmi, ipmiRow)
-      )
+          finder.asLogicalBoolean(assetRow) and
+          collectParams(ipmi, ipmiRow))
     }
-    inTransaction { log {
-      val results = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
-        whereClause(assetRow, ipmiRow)
-        select(assetRow)
-      ).page(page.offset, page.size).toList
-      val totalCount = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
-        whereClause(assetRow, ipmiRow)
-        compute(count)
-      )
-      Page(results, page.page, page.offset, totalCount)
-    }}
+    inTransaction {
+      log {
+        val results = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
+          whereClause(assetRow, ipmiRow)
+            select (assetRow)).page(page.offset, page.size).toList
+        val totalCount = from(Asset.tableDef, tableDef)((assetRow, ipmiRow) =>
+          whereClause(assetRow, ipmiRow)
+            compute (count))
+        Page(results, page.page, page.offset, totalCount)
+      }
+    }
   }
 
   override def get(i: IpmiInfo): IpmiInfo = Cache.get(findByIdKey(i.id), inTransaction {
@@ -152,21 +146,22 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
   // Converts our query parameters to fragments and parameters for a query
   private[this] def collectParams(ipmi: Seq[Tuple2[Enum, String]], ipmiRow: IpmiInfo): LogicalBoolean = {
     import Enum._
-    val results: Seq[LogicalBoolean] = ipmi.map { case(enum, value) =>
-      enum match {
-        case IpmiAddress =>
-          (ipmiRow.address === IpAddress.toLong(value))
-        case IpmiUsername =>
-          (ipmiRow.username === value)
-        case IpmiGateway =>
-          (ipmiRow.gateway === IpAddress.toLong(value))
-        case IpmiNetmask =>
-          (ipmiRow.netmask === IpAddress.toLong(value))
-        case e =>
-          throw new Exception("Unhandled IPMI tag: %s".format(e))
-      }
+    val results: Seq[LogicalBoolean] = ipmi.map {
+      case (enum, value) =>
+        enum match {
+          case IpmiAddress =>
+            (ipmiRow.address === IpAddress.toLong(value))
+          case IpmiUsername =>
+            (ipmiRow.username === value)
+          case IpmiGateway =>
+            (ipmiRow.gateway === IpAddress.toLong(value))
+          case IpmiNetmask =>
+            (ipmiRow.netmask === IpAddress.toLong(value))
+          case e =>
+            throw new Exception("Unhandled IPMI tag: %s".format(e))
+        }
     }
-    results.reduceRight((a,b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
+    results.reduceRight((a, b) => new BinaryOperatorNodeLogicalBoolean(a, b, "and"))
   }
 
 }

@@ -51,7 +51,7 @@ case class MetricsCacheLoader() extends CacheLoader[MetricsQuery, Set[String]] {
             },
             page => if (page.size > 0) {
               logger.debug("Query (%s) had results".format(query))
-              true 
+              true
             } else {
               logger.debug("Query (%s) had no results".format(query))
               false

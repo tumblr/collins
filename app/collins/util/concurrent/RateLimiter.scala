@@ -28,8 +28,7 @@ object RateLimit {
     val array = input.split("/", 2)
     if (array.length != 2)
       throw new IllegalArgumentException(
-        "Input string '%s' must be of form int/duration".format(input)
-      )
+        "Input string '%s' must be of form int/duration".format(input))
     val actionsAllowed = array(0)
     val timeUnit = array(1)
     fromStringPair(actionsAllowed, timeUnit)
@@ -43,8 +42,7 @@ object RateLimit {
     val duration: Long = try Duration(timeUnit).toMillis catch {
       case e: Throwable =>
         throw new IllegalArgumentException(
-          "Expected '%s' to be a duration such as '10 seconds'".format(timeUnit)
-        )
+          "Expected '%s' to be a duration such as '10 seconds'".format(timeUnit))
     }
     if (allowedInt < 0)
       throw new IllegalArgumentException("'%s' must not be negative".format(actionsAllowed))
@@ -68,15 +66,13 @@ private[concurrent] case class RateBucket(var started: Long, var rateUsage: Int)
 }
 
 private[concurrent] case class MemoryRateLimiter(
-  limit: RateLimit, buckets: ConcurrentHashMap[String, RateBucket]
-) extends RateLimiter
-  with RateLimit
-{
+  limit: RateLimit, buckets: ConcurrentHashMap[String, RateBucket]) extends RateLimiter
+    with RateLimit {
   override def rate: Int = limit.rate
   override def perTimeUnit: Long = limit.perTimeUnit
 
   override def isLimited(subject: String): Boolean = {
-    buckets.putIfAbsent(subject, RateBucket(now-1, 0))
+    buckets.putIfAbsent(subject, RateBucket(now - 1, 0))
     if (rate == 0) {
       true
     } else if (rate == 1 && perTimeUnit == 0L) {
@@ -100,7 +96,7 @@ private[concurrent] case class MemoryRateLimiter(
 
   // If a user sets the perTimeUnit to 0, it will cause the rate bucket to be reset on every tick.
   override def tick(subject: String) {
-    buckets.putIfAbsent(subject, RateBucket(now-1, 0))
+    buckets.putIfAbsent(subject, RateBucket(now - 1, 0))
     buckets.get(subject).withLock { bucket =>
       val current = now
       if (expired(current, bucket.started)) {
@@ -111,7 +107,7 @@ private[concurrent] case class MemoryRateLimiter(
     }
   }
   override def untick(subject: String) {
-    buckets.putIfAbsent(subject, RateBucket(now-1, 0))
+    buckets.putIfAbsent(subject, RateBucket(now - 1, 0))
     buckets.get(subject).withLock { bucket =>
       if (bucket.rateUsage > 0)
         bucket.rateUsage -= 1
@@ -122,7 +118,7 @@ private[concurrent] case class MemoryRateLimiter(
 }
 
 object RateLimiter {
-  lazy private val buckets = new ConcurrentHashMap[String,RateBucket]()
+  lazy private val buckets = new ConcurrentHashMap[String, RateBucket]()
   def apply(rateLimit: String): RateLimiter =
     MemoryRateLimiter(RateLimit.fromString(rateLimit), buckets)
 }

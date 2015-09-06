@@ -13,9 +13,8 @@ import collins.controllers.actions.SecureAction
 import collins.controllers.actions.RequestDataHolder
 import collins.validation.StringUtil
 import collins.models.State
-import collins.models.{Status => AssetStatus}
+import collins.models.{ Status => AssetStatus }
 import collins.util.security.SecuritySpecification
-
 
 /**
  * Update a state
@@ -44,10 +43,9 @@ import collins.util.security.SecuritySpecification
  * }}}
  */
 case class UpdateAction(
-  name: String,
-  spec: SecuritySpecification,
-  handler: SecureController
-) extends SecureAction(spec, handler) with ParamValidation {
+    name: String,
+    spec: SecuritySpecification,
+    handler: SecureController) extends SecureAction(spec, handler) with ParamValidation {
 
   import CreateAction.Messages._
   import DeleteAction.Messages.systemName
@@ -58,8 +56,7 @@ case class UpdateAction(
     "status" -> validatedOptionalText(2),
     "name" -> validatedOptionalText(2, 32),
     "label" -> validatedOptionalText(2, 32),
-    "description" -> validatedOptionalText(2, 255)
-  ))
+    "description" -> validatedOptionalText(2, 255)))
 
   override def validate(): Validation = stateForm.bindFromRequest()(request).fold(
     err => Left(RequestDataHolder.error400(fieldError(err))),
@@ -85,24 +82,23 @@ case class UpdateAction(
       }.getOrElse {
         Left(RequestDataHolder.error404(invalidName))
       }
-    }
-  )
+    })
 
   override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(state) => State.update(state) match {
         case ok if ok >= 0 => Api.statusResponse(true, Status.Ok)
-        case notok => Api.statusResponse(false, Status.InternalServerError)
+        case notok         => Api.statusResponse(false, Status.InternalServerError)
       }
     }
   }
 
   protected def fieldError(f: Form[_]) = f match {
-    case e if e.error("name").isDefined => invalidName
-    case e if e.error("label").isDefined => invalidLabel
+    case e if e.error("name").isDefined        => invalidName
+    case e if e.error("label").isDefined       => invalidLabel
     case e if e.error("description").isDefined => invalidDescription
-    case e if e.error("status").isDefined => invalidStatus
-    case n => fuck
+    case e if e.error("status").isDefined      => invalidStatus
+    case n                                     => fuck
   }
 
   protected def stateWithName(state: State, name: Option[String]): State =
@@ -114,13 +110,13 @@ case class UpdateAction(
   protected def stateWithDescription(state: State, desc: Option[String]): State =
     desc.map(d => state.copy(description = d)).getOrElse(state)
 
-  protected def validateName(nameOpt: Option[String]): Either[RequestDataHolder,Option[String]] = {
-    val validatedName: Either[String,Option[String]] = nameOpt match {
+  protected def validateName(nameOpt: Option[String]): Either[RequestDataHolder, Option[String]] = {
+    val validatedName: Either[String, Option[String]] = nameOpt match {
       case None =>
         Right(None)
       case Some(n) =>
         StringUtil.trim(n).filter(s => s.length > 1 && s.length <= 32) match {
-          case None => Left(invalidName)
+          case None    => Left(invalidName)
           case Some(s) => Right(Some(s))
         }
     }
@@ -129,7 +125,7 @@ case class UpdateAction(
         Left(RequestDataHolder.error400(err))
       case Right(None) => Right(None)
       case Right(Some(s)) => State.findByName(s) match {
-        case None => Right(Some(s))
+        case None    => Right(Some(s))
         case Some(_) => Left(RequestDataHolder.error409(invalidName))
       }
     }
@@ -137,7 +133,7 @@ case class UpdateAction(
 
   protected def getStatusId(status: Option[String]): Option[Int] = status.flatMap { s =>
     (s.toUpperCase == State.ANY_NAME.toUpperCase) match {
-      case true => Some(State.ANY_STATUS)
+      case true  => Some(State.ANY_STATUS)
       case false => AssetStatus.findByName(s).map(_.id)
     }
   }

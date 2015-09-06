@@ -3,8 +3,6 @@ package collins.models
 import java.sql.Timestamp
 import java.util.Date
 
-import org.squeryl.Schema
-import org.squeryl.annotations.Column
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Schema
 import org.squeryl.annotations.Column
@@ -15,12 +13,10 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.Json
 
+import collins.callbacks.CallbackDatum
+import collins.models.conversions.AssetLogFormat
 import collins.models.conversions.dateToTimestamp
 import collins.models.conversions.orderByString2oba
-import collins.models.shared.AnormAdapter
-import collins.models.shared.Page
-import collins.models.shared.ValidatedEntity
-import collins.models.conversions.AssetLogFormat
 import collins.models.logs.LogFormat
 import collins.models.logs.LogFormat.LogFormat
 import collins.models.logs.LogMessageType
@@ -30,8 +26,6 @@ import collins.models.logs.LogSource.LogSource
 import collins.models.shared.AnormAdapter
 import collins.models.shared.Page
 import collins.models.shared.ValidatedEntity
-
-import collins.callbacks.CallbackDatum
 
 case class AssetLog(
     @Column("ASSET_ID") assetId: Long,

@@ -10,8 +10,6 @@ import scala.concurrent.duration.FiniteDuration
 import play.api.Logger
 
 import collins.models.Asset
-import collins.models.Asset
-import collins.models.IpmiInfo
 import collins.models.IpmiInfo
 import collins.power.Identify
 import collins.power.PowerAction

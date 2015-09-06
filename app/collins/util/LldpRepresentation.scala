@@ -17,11 +17,9 @@ object LldpRepresentation {
   }
   implicit object LldpFormat extends Format[LldpRepresentation] {
     override def reads(json: JsValue) = JsSuccess(LldpRepresentation(
-      (json \ "INTERFACES").as[Seq[Interface]]
-    ))
+      (json \ "INTERFACES").as[Seq[Interface]]))
     override def writes(lldp: LldpRepresentation) = JsObject(Seq(
-      "INTERFACES" -> Json.toJson(lldp.interfaces)
-    ))
+      "INTERFACES" -> Json.toJson(lldp.interfaces)))
   }
 }
 
@@ -38,12 +36,12 @@ case class LldpRepresentation(interfaces: Seq[Interface]) extends LldpAttribute 
   override def equals(that: Any) = that match {
     case other: LldpRepresentation =>
       (macAddresses.sorted == other.macAddresses.sorted) &&
-      (chassisNames.sorted == other.chassisNames.sorted) &&
-      (interfaceCount == other.interfaceCount) &&
-      (interfaceNames.sorted == other.interfaceNames.sorted) &&
-      (localPorts.sorted == other.localPorts.sorted) &&
-      (vlanNames.sorted == other.vlanNames.sorted) &&
-      (vlanIds.sorted == other.vlanIds.sorted)
+        (chassisNames.sorted == other.chassisNames.sorted) &&
+        (interfaceCount == other.interfaceCount) &&
+        (interfaceNames.sorted == other.interfaceNames.sorted) &&
+        (localPorts.sorted == other.localPorts.sorted) &&
+        (vlanNames.sorted == other.vlanNames.sorted) &&
+        (vlanIds.sorted == other.vlanIds.sorted)
     case _ => false
   }
 }

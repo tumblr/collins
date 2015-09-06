@@ -1,10 +1,11 @@
 package collins.provisioning
 
 import play.api.Logger
-import collins.models.Asset
-import collins.shell.CommandResult
+
 import collins.guava.GuavaCacheFactory
+import collins.models.Asset
 import collins.shell.Command
+import collins.shell.CommandResult
 
 trait Provisioner {
   protected[this] val logger = Logger(getClass)
@@ -24,7 +25,7 @@ trait Provisioner {
 
 object Provisioner extends Provisioner {
 
-  protected[this] val profileCache =   
+  protected[this] val profileCache =
     GuavaCacheFactory.create(ProvisionerConfig.cacheSpecification, ProfileLoader())
 
   // overrides ProvisionerInterface.profiles

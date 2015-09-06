@@ -22,10 +22,10 @@ class MockAssetNameEval extends AssetDistanceEval {
   def distance(a: Asset, b: Asset) = try {
     math.abs(Integer.parseInt(a.tag) - Integer.parseInt(b.tag))
   } catch {
-    case n: NumberFormatException => 
+    case n: NumberFormatException =>
       throw new NumberFormatException("MockAssetNameEval requires asset tags to be parse-able integers (%s)".format(n.getMessage))
   }
-    
+
 }
 
 class PhysicalDistanceEval(sortkeys: Set[String]) extends AssetDistanceEval {
@@ -41,14 +41,15 @@ class PhysicalDistanceEval(sortkeys: Set[String]) extends AssetDistanceEval {
   def distance(a: Asset, b: Asset): Int = {
     sortkeys
       .zipWithIndex
-      .map{ key => 
-        if ( (a.getMetaAttribute(key._1), b.getMetaAttribute(key._1)) match {
-            case (None, None) => true
-            case (None, _) => false
-            case (_, None) => false
-            case (Some(x),Some(y)) => x.valueEquals(y) } )
-          math.pow(2, key._2).toInt 
-        else 0 
+      .map { key =>
+        if ((a.getMetaAttribute(key._1), b.getMetaAttribute(key._1)) match {
+          case (None, None)       => true
+          case (None, _)          => false
+          case (_, None)          => false
+          case (Some(x), Some(y)) => x.valueEquals(y)
+        })
+          math.pow(2, key._2).toInt
+        else 0
       }
       .sum
   }
@@ -68,49 +69,49 @@ object AssetSort extends Enumeration {
 import AssetSort._
 
 object AssetDistanceSorter {
-  
+
   def sortKeys = NodeclassifierConfig.sortKeys
 
   def sort(
-    target: Asset, 
-    similarAssets: Seq[Asset], 
-    sortType: AssetSort.Type, 
-    direction: SortDirection
-  ): Seq[Asset] = sortType match {
-    case Name => genericSort(target, similarAssets, new MockAssetNameEval, direction)
-    case Distance => genericSort(target, similarAssets, new PhysicalDistanceEval(sortKeys), direction)
+    target: Asset,
+    similarAssets: Seq[Asset],
+    sortType: AssetSort.Type,
+    direction: SortDirection): Seq[Asset] = sortType match {
+    case Name         => genericSort(target, similarAssets, new MockAssetNameEval, direction)
+    case Distance     => genericSort(target, similarAssets, new PhysicalDistanceEval(sortKeys), direction)
     /** Asc means sparse search, Desc means dense search */
     case Distribution => distributionSort(target, similarAssets, direction, sortKeys)
-    case Arbitrary => similarAssets
+    case Arbitrary    => similarAssets
   }
 
   def distributionSort(target: Asset, similar: Seq[Asset], direction: SortDirection, sortKeys: Set[String]) = {
     val sort = new PhysicalDistanceEval(sortKeys)
 
-    /** pulls out assets one at time based on physical proximity to
-        current group of assets. sparse search orders based on least
-        close assets physically. this can be pulled out to take a flag
-        and also serve as a dense search if needed */
+    /**
+     * pulls out assets one at time based on physical proximity to
+     * current group of assets. sparse search orders based on least
+     * close assets physically. this can be pulled out to take a flag
+     * and also serve as a dense search if needed
+     */
     def sortLoop(build: Seq[Asset], remain: Seq[(Asset, Int)]): Seq[Asset] = if (remain == Nil) build else {
       val s = remain
-        .map{case (assetA, sum) => (assetA, sum + sort.distance(assetA, build.headOption.getOrElse(target)))}
-        .sortWith{(a,b) => op(direction)(a._2,b._2) || (a._2 == b._2 && a._1.tag < b._1.tag)}
+        .map { case (assetA, sum) => (assetA, sum + sort.distance(assetA, build.headOption.getOrElse(target))) }
+        .sortWith { (a, b) => op(direction)(a._2, b._2) || (a._2 == b._2 && a._1.tag < b._1.tag) }
       sortLoop(s.head._1 +: build, s.tail)
     }
 
-    sortLoop(Nil, similar.map{x => (x,0)}).reverse
+    sortLoop(Nil, similar.map { x => (x, 0) }).reverse
   }
 
   def genericSort(
     target: Asset,
     similarAssets: Seq[Asset],
     sorter: AssetDistanceEval,
-    direction : SortDirection
-  ): Seq[Asset] = {
+    direction: SortDirection): Seq[Asset] = {
     similarAssets
-      .map{asset => (asset, sorter.distance(target, asset))}
-      .sortWith{(a,b) => SortDirection.op(direction)(a._2,b._2)}
-      .map{_._1}
+      .map { asset => (asset, sorter.distance(target, asset)) }
+      .sortWith { (a, b) => SortDirection.op(direction)(a._2, b._2) }
+      .map { _._1 }
   }
 
 }

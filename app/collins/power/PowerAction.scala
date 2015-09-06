@@ -41,7 +41,7 @@ object PowerAction {
   def identify() = Identify
   def apply(s: String): PowerAction = unapply(s) match {
     case Some(p) => p
-    case None => throw new MatchError("No such power action " + s)
+    case None    => throw new MatchError("No such power action " + s)
   }
   def unapply(t: String) = t.toLowerCase match {
     case r if rebootSoft().toString.toLowerCase == r => Some(rebootSoft())

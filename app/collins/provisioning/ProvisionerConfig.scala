@@ -1,12 +1,13 @@
 package collins.provisioning
 
+import com.google.common.cache.CacheBuilderSpec
+
 import collins.models.AssetType
 import collins.models.Status
 import collins.util.concurrent.RateLimit
 import collins.util.config.ConfigValue
 import collins.util.config.Configurable
 import collins.validation.File
-import com.google.common.cache.CacheBuilderSpec
 
 object ProvisionerConfig extends Configurable {
   override val namespace = "provisioner"

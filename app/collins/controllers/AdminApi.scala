@@ -1,6 +1,5 @@
 package collins.controllers
 
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsString
 import play.api.mvc.Results
 

@@ -10,16 +10,16 @@ import collins.util.InternalTattler
 
 /**
  * All derived types of this class must be 'Object' types (singletons)
- * 
+ *
  * The Registry manages the creation and lifecycle of configurable
  * instances. In doing so it make assumptions, one of which is that
  * the config is of type Object. This is captured in the logic for
- * invocation of the 'once' method, it is invoked on the class 
+ * invocation of the 'once' method, it is invoked on the class
  * and not on the instance.
- * 
+ *
  * Configurable ensures that Collins configuration types are dynamically
  * loaded onChange without requiring application restart.
- * 
+ *
  */
 trait Configurable extends ConfigAccessor with AppConfig { self =>
 
@@ -63,15 +63,13 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
       val rc = ConfigFactory.parseResourcesAnySyntax(refFilename).resolve
       if (rc.isEmpty) {
         throw new Exception("Got back empty (not found) configuration for %s:%s".format(
-          namespace, refFilename
-        ))
+          namespace, refFilename))
       }
       referenceConfig = Some(rc)
     } catch {
       case e: Throwable =>
         val msg = "Reference configuration %s not found or invalid: %s".format(
-          refFilename, e.getMessage
-        )
+          refFilename, e.getMessage)
         InternalTattler.system(msg)
         logger.error(msg, e)
         referenceConfig = None
@@ -86,8 +84,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
     } catch {
       case e: Throwable =>
         logger.warn("Exception handling file (%s) change: %s".format(
-          Option(newConfig.origin.filename).getOrElse("unknown"), e.getMessage
-        ))
+          Option(newConfig.origin.filename).getOrElse("unknown"), e.getMessage))
     }
   }
 
@@ -116,8 +113,7 @@ trait Configurable extends ConfigAccessor with AppConfig { self =>
       } catch {
         case e: Throwable =>
           val msg = "Error validating configuration for %s: %s".format(
-            getClass.getName, e.getMessage
-          )
+            getClass.getName, e.getMessage)
           InternalTattler.system(msg)
           logger.error(msg, e)
           self.underlying = savedConfig

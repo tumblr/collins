@@ -2,32 +2,29 @@ package collins.models
 
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Schema
+import org.squeryl.annotations.Column
+import org.squeryl.annotations.Transient
 import org.squeryl.dsl.ast.BinaryOperatorNodeLogicalBoolean
 import org.squeryl.dsl.ast.LogicalBoolean
-import org.squeryl.annotations.Transient
-import org.squeryl.annotations.Column
 
 import play.api.Logger
 
+import collins.callbacks.CallbackDatum
+import collins.models.asset.AssetView
 import collins.models.cache.Cache
+import collins.models.conversions.ops2bo
+import collins.models.conversions.reOrLike
 import collins.models.shared.BasicModel
 import collins.models.shared.Page
 import collins.models.shared.PageParams
-
-import collins.util.InternalTattler
 import collins.util.CryptoCodec
+import collins.util.InternalTattler
 import collins.util.config.Feature
 
-import collins.models.asset.AssetView
-import collins.models.conversions.ops2bo
-import collins.models.conversions.reOrLike
-
-import collins.callbacks.CallbackDatum
-
 case class AssetMetaValue(@Column("ASSET_ID") assetId: Long,
-    @Column("ASSET_META_ID") assetMetaId: Long,
-    @Column("GROUP_ID") groupId: Int,
-    value: String) extends CallbackDatum {
+                          @Column("ASSET_META_ID") assetMetaId: Long,
+                          @Column("GROUP_ID") groupId: Int,
+                          value: String) extends CallbackDatum {
 
   @Transient
   lazy val asset: Asset = Asset.findById(assetId).get

@@ -12,14 +12,8 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.AssetType
-import collins.models.AssetType
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
-
-import collins.controllers.actions.assettype.CreateAction.Messages.fuck
-import collins.controllers.actions.assettype.CreateAction.Messages.invalidLabel
-import collins.controllers.actions.assettype.CreateAction.Messages.invalidName
-import collins.controllers.actions.assettype.DeleteAction.Messages.systemName
 
 /**
  * Update a asset type

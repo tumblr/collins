@@ -14,7 +14,7 @@ import collins.util.LldpRepresentation
 import collins.util.config.LldpConfig
 
 class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
-  override def parse(): Either[Throwable,LldpRepresentation] = {
+  override def parse(): Either[Throwable, LldpRepresentation] = {
     val xml = try {
       XML.loadString(txt)
     } catch {
@@ -23,8 +23,9 @@ class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
         return Left(e)
     }
     val rep = try {
-      getInterfaces(xml).foldLeft(LldpRepresentation(Nil)) { case(holder, interface) =>
-        holder.copy(interfaces = toInterface(interface) +: holder.interfaces)
+      getInterfaces(xml).foldLeft(LldpRepresentation(Nil)) {
+        case (holder, interface) =>
+          holder.copy(interfaces = toInterface(interface) +: holder.interfaces)
       }
     } catch {
       case e: Throwable =>
@@ -51,8 +52,7 @@ class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
     val description = (chassis \\ "descr" text)
     requireNonEmpty(
       (idType -> "chassis id type"), (idValue -> "chassis id value"),
-      (name -> "chassis name"), (description -> "chassis description")
-    )
+      (name -> "chassis name"), (description -> "chassis description"))
     Chassis(name, ChassisId(idType, idValue), description)
   }
 
@@ -67,15 +67,16 @@ class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
   }
 
   protected def findVlans(seq: NodeSeq): Seq[Vlan] = {
-    (seq \\ "vlan").foldLeft(Seq[Vlan]()) { case(vseq, vlan) =>
-      val id = Option(vlan \ "@vlan-id" text).filter(_.nonEmpty).getOrElse("0")
-      val name = vlan.text
-      if (LldpConfig.requireVlanName) {
-        requireNonEmpty((id -> "vlan-id"), (name -> "vlan name"))
-      } else {
-        requireNonEmpty((id -> "vlan-id"))
-      }
-      Vlan(id.toInt, name) +: vseq
+    (seq \\ "vlan").foldLeft(Seq[Vlan]()) {
+      case (vseq, vlan) =>
+        val id = Option(vlan \ "@vlan-id" text).filter(_.nonEmpty).getOrElse("0")
+        val name = vlan.text
+        if (LldpConfig.requireVlanName) {
+          requireNonEmpty((id -> "vlan-id"), (name -> "vlan name"))
+        } else {
+          requireNonEmpty((id -> "vlan-id"))
+        }
+        Vlan(id.toInt, name) +: vseq
     }
   }
 

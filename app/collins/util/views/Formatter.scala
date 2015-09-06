@@ -24,7 +24,7 @@ object Formatter {
     }
   }
 
-  def forPercent(d: Double) = "%.2f".format(100*d)
+  def forPercent(d: Double) = "%.2f".format(100 * d)
 
   private[this] val words = """([a-zA-Z]+)""".r
   private[this] val separators = """([^a-zA-Z]+)""".r

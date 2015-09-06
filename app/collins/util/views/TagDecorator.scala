@@ -10,29 +10,30 @@ object TagDecorator {
   // optionalDelimiter only used if no decorator defined
   def decorate(key: String, values: Seq[String], optionalDelimiter: String): Content = {
     getDecorator(key) match {
-      case None => Html(values.mkString(optionalDelimiter))
+      case None    => Html(values.mkString(optionalDelimiter))
       case Some(d) => Html(d.format(key, values))
     }
   }
 
   def decorate(key: String, value: String): Content = {
     getDecorator(key) match {
-      case None => Html(value)
+      case None    => Html(value)
       case Some(d) => Html(d.format(key, value))
     }
   }
 
   def decorate(meta: MetaWrapper): Content = {
     getDecorator(meta.getName) match {
-      case None => Html(meta.getValue)
+      case None    => Html(meta.getValue)
       case Some(d) => Html(d.format(meta))
     }
   }
 
-  protected def decorators: Map[String,Decorator] = {
+  protected def decorators: Map[String, Decorator] = {
     val decorators = TagDecoratorConfig.decorators
-    decorators.map { case(name, config) =>
-      name -> createDecorator(config)
+    decorators.map {
+      case (name, config) =>
+        name -> createDecorator(config)
     }
   }
 

@@ -13,13 +13,10 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.State
-import collins.models.State
-import collins.models.{Status => AssetStatus}
+import collins.models.{ Status => AssetStatus }
 import collins.util.MessageHelper
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
-
-import CreateAction.Messages.fuck
 
 object CreateAction {
   object Messages extends MessageHelper("controllers.AssetStateApi.createState") {

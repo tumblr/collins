@@ -6,7 +6,7 @@ import scala.util.control.Exception.allCatch
 
 import play.api.Logger
 
-import collins.models.conversions._
+import collins.models.conversions.dateToTimestamp
 import collins.models.logs.LogFormat
 import collins.models.logs.LogSource
 import collins.models.AssetMeta.Enum.RackPosition
@@ -41,13 +41,13 @@ object AssetLifecycleConfig {
 
   def withExcludes(includeUser: Boolean = false) = includeUser match {
     case false => RestrictedKeys
-    case true => RestrictedKeys -- configuredExcludes
+    case true  => RestrictedKeys -- configuredExcludes
   }
 }
 
 object AssetLifecycle {
-  type AssetIpmi = Tuple2[Asset,Option[IpmiInfo]]
-  type Status[T] = Either[Throwable,T]
+  type AssetIpmi = Tuple2[Asset, Option[IpmiInfo]]
+  type Status[T] = Either[Throwable, T]
 }
 // Supports meta operations on assets
 class AssetLifecycle(user: Option[User], tattler: Tattler) {
@@ -61,7 +61,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
       val res = Asset.inTransaction {
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
-          case true => Some(IpmiInfo.createForAsset(asset))
+          case true  => Some(IpmiInfo.createForAsset(asset))
           case false => None
         }
         Solr.updateAsset(asset)
@@ -91,12 +91,12 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     }
   }
 
-  def updateAsset(asset: Asset, options: Map[String,String]): AssetLifecycle.Status[Boolean] = asset.isServerNode match {
+  def updateAsset(asset: Asset, options: Map[String, String]): AssetLifecycle.Status[Boolean] = asset.isServerNode match {
     case true  => updateServer(asset, options)
     case false => updateAssetAttributes(asset, options)
   }
 
-  protected def updateServer(asset: Asset, options: Map[String,String]): AssetLifecycle.Status[Boolean] = {
+  protected def updateServer(asset: Asset, options: Map[String, String]): AssetLifecycle.Status[Boolean] = {
     if (asset.isIncomplete) {
       updateIncompleteServer(asset, options)
     } else if (asset.isNew) {
@@ -106,14 +106,14 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     }
   }
 
-  def updateAssetAttributes(asset: Asset, options: Map[String,String]): AssetLifecycle.Status[Boolean] = {
+  def updateAssetAttributes(asset: Asset, options: Map[String, String]): AssetLifecycle.Status[Boolean] = {
     asset.isServerNode match {
-      case true => updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(false))
+      case true  => updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(false))
       case false => updateAssetAttributes(asset, options, AssetLifecycleConfig.withExcludes(true))
     }
   }
 
-  protected def updateAssetAttributes(asset: Asset, options: Map[String,String], restricted: Set[String]): AssetLifecycle.Status[Boolean] = {
+  protected def updateAssetAttributes(asset: Asset, options: Map[String, String], restricted: Set[String]): AssetLifecycle.Status[Boolean] = {
     allCatch[Boolean].either {
       val groupId = options.get("groupId").map(_.toInt)
       val state = options.get("state").flatMap(s => State.findByName(s))
@@ -121,8 +121,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
       val opts = options - "state" - "groupId" - "status"
       if (!asset.isConfiguration) {
         opts.find(kv => restricted(kv._1)).map(kv =>
-          return Left(new Exception("Attribute %s is restricted".format(kv._1)))
-        )
+          return Left(new Exception("Attribute %s is restricted".format(kv._1))))
       }
       Asset.inTransaction {
         MetaWrapper.createMeta(asset, opts, groupId)
@@ -143,28 +142,27 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
       val newStatus = status.map(_.name).getOrElse("NotUpdated")
       val newState = state.map(_.name).getOrElse("NotUpdated")
       val message = "Old status:state (%s:%s) -> New status:state (%s:%s) - %s".format(
-        oldStatus, oldState, newStatus, newState, reason
-      )
+        oldStatus, oldState, newStatus, newState, reason)
       tattler.informational(message, asset)
       true
     }.left.map(e => handleException(asset, "Error updating status/state for asset", e))
   }
 
-  protected def updateServerHardwareMeta(asset: Asset, options: Map[String,String]): AssetLifecycle.Status[Boolean] = {
+  protected def updateServerHardwareMeta(asset: Asset, options: Map[String, String]): AssetLifecycle.Status[Boolean] = {
     // if asset's status is in the allowed statuses for updating, do it
     if (Feature.allowedServerUpdateStatuses.contains(asset.status)) {
       // we will allow updates to lshw/lldp while the machine is in these statuses
       allCatch[Boolean].either {
         Asset.inTransaction {
-          options.get("lshw").foreach{lshw =>
-            parseLshw(asset, new LshwParser(lshw)).left.foreach{throw _}
+          options.get("lshw").foreach { lshw =>
+            parseLshw(asset, new LshwParser(lshw)).left.foreach { throw _ }
             tattler.informational("Parsing and storing LSHW data succeeded", asset)
           }
-          options.get("lldp").foreach{lldp =>
-            parseLldp(asset, new LldpParser(lldp)).left.foreach{throw _}
+          options.get("lldp").foreach { lldp =>
+            parseLldp(asset, new LldpParser(lldp)).left.foreach { throw _ }
             tattler.informational("Parsing and storing LLDP data succeeded", asset)
           }
-          options.get("CHASSIS_TAG").foreach{chassis_tag =>
+          options.get("CHASSIS_TAG").foreach { chassis_tag =>
             MetaWrapper.createMeta(asset, Map(AssetMeta.Enum.ChassisTag.toString -> chassis_tag))
           }
           true
@@ -175,7 +173,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     }
   }
 
-  protected def updateNewServer(asset: Asset, options: Map[String,String]): AssetLifecycle.Status[Boolean] = {
+  protected def updateNewServer(asset: Asset, options: Map[String, String]): AssetLifecycle.Status[Boolean] = {
     val units = PowerUnits()
     val requiredKeys = Set(RackPosition.toString) ++ PowerUnits.keys(units)
     requiredKeys.find(key => !options.contains(key)).map { not_found =>
@@ -186,12 +184,11 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))
     filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
-      return Left(new Exception("Attribute %s is restricted".format(kv._1)))
-    )
+      return Left(new Exception("Attribute %s is restricted".format(kv._1))))
 
     allCatch[Boolean].either {
       val values = Seq(AssetMetaValue(asset, RackPosition, rackpos)) ++
-                   PowerUnits.toMetaValues(units, asset, options)
+        PowerUnits.toMetaValues(units, asset, options)
       val unallocatedAsset = Asset.inTransaction {
         AssetMetaValue.purge(values, Some(0))
         val created = AssetMetaValue.create(values)
@@ -207,7 +204,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     }.left.map(e => handleException(asset, "Exception updating asset", e))
   }
 
-  protected def updateIncompleteServer(asset: Asset, options: Map[String,String]): AssetLifecycle.Status[Boolean] = {
+  protected def updateIncompleteServer(asset: Asset, options: Map[String, String]): AssetLifecycle.Status[Boolean] = {
     val requiredKeys = Set("lshw", "lldp", "CHASSIS_TAG")
     requiredKeys.find(key => !options.contains(key)).map { not_found =>
       return Left(new Exception(not_found + " parameter not specified"))
@@ -219,8 +216,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
 
     val filtered = options.filter(kv => !requiredKeys(kv._1))
     filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
-      return Left(new Exception("Attribute %s is restricted".format(kv._1)))
-    )
+      return Left(new Exception("Attribute %s is restricted".format(kv._1))))
     val lshwParser = new LshwParser(lshw)
     val lldpParser = new LldpParser(lldp)
 
@@ -246,7 +242,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
   protected def parseLshw(asset: Asset, parser: LshwParser): AssetLifecycle.Status[LshwRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
-        AssetLog.notice(asset, user.map{ _.username }.getOrElse(""), "Parsing LSHW failed", LogFormat.PlainText,
+        AssetLog.notice(asset, user.map { _.username }.getOrElse(""), "Parsing LSHW failed", LogFormat.PlainText,
           LogSource.Internal).withException(ex).create()
         Left(ex)
       case Right(lshwRep) =>
@@ -263,7 +259,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
   protected def parseLldp(asset: Asset, parser: LldpParser): AssetLifecycle.Status[LldpRepresentation] = {
     parser.parse() match {
       case Left(ex) =>
-        AssetLog.notice(asset, user.map{ _.username }.getOrElse(""), "Parsing LLDP failed", LogFormat.PlainText,
+        AssetLog.notice(asset, user.map { _.username }.getOrElse(""), "Parsing LLDP failed", LogFormat.PlainText,
           LogSource.Internal).withException(ex).create()
         Left(ex)
       case Right(lldpRep) =>
@@ -282,11 +278,10 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     try {
       AssetLog.error(
         asset,
-        user.map{ _.username }.getOrElse(""),
+        user.map { _.username }.getOrElse(""),
         msg,
         LogFormat.PlainText,
-        LogSource.Internal
-      ).withException(e).create()
+        LogSource.Internal).withException(e).create()
     } catch {
       case ex: Throwable =>
         logger.error("Database problems", ex)
