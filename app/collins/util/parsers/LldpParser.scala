@@ -69,7 +69,7 @@ class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
   protected def findVlans(seq: NodeSeq): Seq[Vlan] = {
     (seq \\ "vlan").foldLeft(Seq[Vlan]()) {
       case (vseq, vlan) =>
-        val id = Option(vlan \ "@vlan-id" text).filter(_.nonEmpty).getOrElse("0")
+        val id = Option(vlan \ "@vlan-id" text).filter(_.nonEmpty).getOrElse("")
         val name = vlan.text
         if (LldpConfig.requireVlanName) {
           requireNonEmpty((id -> "vlan-id"), (name -> "vlan name"))

@@ -16,16 +16,16 @@ class LshwParserSpec extends mutable.Specification {
   def beNonEmptyStringSeq: Matcher[Seq[String]] = { s:Seq[String] =>
     s.forall { x => x.nonEmpty && x.size >= 5 }
   }
-  
-  class LshwParserHelper(val filename: String, val ac: Map[String, _ <: Any] = Map.empty) 
-    extends WithApplication(FakeApplication(additionalConfiguration = ac)) with Scope with CommonParserSpec[LshwRepresentation] {
+
+  class LshwParserHelper(val filename: String, val ac: Map[String, _ <: Any] = Map.empty)
+    extends WithApplication(FakeApplication(additionalConfiguration = ac)) with CommonParserSpec[LshwRepresentation] {
     override def getParser(txt: String) =
       new LshwParser(txt)
     def parsed() = getParseResults(filename)
   }
 
   "The Lshw Parser" should {
-   
+
     "Parse Dell (AMD) lshw output" in {
 
       "with a 10-Gig card" in new LshwParserHelper("lshw-10g.xml") {
@@ -36,12 +36,12 @@ class LshwParserSpec extends mutable.Specification {
           rep.cpuCoreCount mustEqual 12
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(2.3, 0.1)
-    
+
           rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
           rep.memoryBanksUsed mustEqual 4
           rep.memoryBanksUnused mustEqual 8
           rep.memoryBanksTotal mustEqual 12
-    
+
           rep.totalStorage.toHuman mustEqual "5.46 TB"
           rep.diskCount mustEqual 6
 
@@ -56,7 +56,7 @@ class LshwParserSpec extends mutable.Specification {
           rep.base.serial mustEqual "FZ1NXQ1"
         }
       } // with a 10-gig card
-      
+
       "quad nic missing capacity having size" in new LshwParserHelper("lshw-size.xml") {
         val parseResults = parsed()
         parseResults must beRight
@@ -80,15 +80,15 @@ class LshwParserSpec extends mutable.Specification {
           rep.cpuCoreCount mustEqual 12
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(2.3, 0.1)
-  
+
           rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
           rep.memoryBanksUsed mustEqual 4
           rep.memoryBanksUnused mustEqual 8
           rep.memoryBanksTotal mustEqual 12
-    
+
           rep.totalStorage.toHuman mustEqual "5.46 TB"
           rep.diskCount mustEqual 6
-    
+
           rep.hasFlashStorage must beFalse
           rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
           rep.totalUsableStorage.toHuman mustEqual "5.46 TB"
@@ -109,15 +109,15 @@ class LshwParserSpec extends mutable.Specification {
           rep.cpuCoreCount mustEqual 12
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(2.3, 0.1)
-  
+
           rep.totalMemory.inGigabytes must beCloseTo(96L, 1)
           rep.memoryBanksUsed mustEqual 12
           rep.memoryBanksUnused mustEqual 0
           rep.memoryBanksTotal mustEqual 12
-    
+
           rep.totalStorage.toHuman mustEqual "931.52 GB"
           rep.diskCount mustEqual 2
-    
+
           rep.hasFlashStorage must beFalse
           rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
           rep.totalUsableStorage.toHuman mustEqual "931.52 GB"
@@ -138,15 +138,15 @@ class LshwParserSpec extends mutable.Specification {
           rep.cpuCoreCount mustEqual 12
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(2.3, 0.1)
-  
+
           rep.totalMemory.inGigabytes must beCloseTo(96L, 1)
           rep.memoryBanksUsed mustEqual 12
           rep.memoryBanksUnused mustEqual 0
           rep.memoryBanksTotal mustEqual 12
-    
+
           rep.totalStorage.toHuman mustEqual "931.52 GB"
           rep.diskCount mustEqual 2
-    
+
           rep.hasFlashStorage must beFalse
           rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
           rep.totalUsableStorage.toHuman mustEqual "931.52 GB"
@@ -167,7 +167,7 @@ class LshwParserSpec extends mutable.Specification {
           rep.cpuCoreCount mustEqual 12
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(2.3, 0.1)
-    
+
           rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
           rep.memoryBanksUsed mustEqual 4
           rep.memoryBanksUnused mustEqual 8
@@ -176,10 +176,10 @@ class LshwParserSpec extends mutable.Specification {
           rep.hasFlashStorage must beTrue
           rep.totalFlashStorage.toHuman mustEqual "1.27 TB"
           rep.totalUsableStorage.toHuman mustEqual "1.55 TB"
-   
+
           rep.totalStorage.toHuman mustEqual "278.46 GB"
           rep.diskCount mustEqual 4
-    
+
           rep.nicCount mustEqual 2
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -199,12 +199,12 @@ class LshwParserSpec extends mutable.Specification {
           rep.cpuCoreCount mustEqual 2
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(1.6, 0.1)
-    
+
           rep.totalMemory.inGigabytes must beCloseTo(72L, 1)
           rep.memoryBanksUsed mustEqual 18
           rep.memoryBanksUnused mustEqual 0
           rep.memoryBanksTotal mustEqual 18
-    
+
           rep.totalStorage.toHuman mustEqual "930.99 GB"
           rep.diskCount mustEqual 3
 
@@ -227,12 +227,12 @@ class LshwParserSpec extends mutable.Specification {
           rep.cpuCoreCount mustEqual 2
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(2.3, 0.1)
-    
+
           rep.totalMemory.inGigabytes must beCloseTo(96L, 1)
           rep.memoryBanksUsed mustEqual 12
           rep.memoryBanksUnused mustEqual 0
           rep.memoryBanksTotal mustEqual 12
-    
+
           rep.totalStorage.toHuman mustEqual "931.52 GB"
           rep.diskCount mustEqual 2
 
@@ -252,12 +252,12 @@ class LshwParserSpec extends mutable.Specification {
           rep.cpuCoreCount mustEqual 12
           rep.hasHyperthreadingEnabled must beTrue
           rep.cpuSpeed must beCloseTo(1.6, 0.1)
-    
+
           rep.totalMemory.inGigabytes must beCloseTo(72L, 1)
           rep.memoryBanksUsed mustEqual 18
           rep.memoryBanksUnused mustEqual 0
           rep.memoryBanksTotal mustEqual 18
-    
+
           rep.totalStorage.toHuman mustEqual "930.99 GB"
           rep.diskCount mustEqual 3
 
@@ -277,18 +277,18 @@ class LshwParserSpec extends mutable.Specification {
           rep.cpuCoreCount mustEqual 12
           rep.hasHyperthreadingEnabled must beFalse
           rep.cpuSpeed must beCloseTo(2.3, 0.1)
-    
+
           rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
           rep.memoryBanksUsed mustEqual 4
           rep.memoryBanksUnused mustEqual 8
           rep.memoryBanksTotal mustEqual 12
-  
+
           rep.totalStorage.toHuman mustEqual "465.76 GB"
           rep.hasFlashStorage must beFalse
           rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
           rep.diskCount mustEqual 1
           rep.hasCdRom must beFalse
-  
+
           rep.nicCount mustEqual 2
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -350,7 +350,7 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
           rep.diskCount mustEqual 2
           rep.hasCdRom must beTrue
-    
+
           rep.nicCount mustEqual 4
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
@@ -378,7 +378,7 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalFlashStorage.toHuman mustEqual "0 Bytes"
           rep.diskCount mustEqual 2
           rep.hasCdRom must beTrue
-    
+
           rep.nicCount mustEqual 4
           rep.hasGbNic must beTrue
           rep.has10GbNic must beFalse
