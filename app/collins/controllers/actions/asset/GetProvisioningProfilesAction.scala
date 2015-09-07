@@ -1,22 +1,24 @@
 package collins.controllers.actions.asset
 
 import scala.concurrent.Future
+
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsBoolean
 import play.api.libs.json.JsNull
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.JsValue
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
+
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.AssetAction
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
-import collins.provisioning.ProvisionerProfile
 import collins.provisioning.Provisioner
-import collins.util.security.SecuritySpecification
 import collins.provisioning.ProvisionerConfig
+import collins.provisioning.ProvisionerProfile
+import collins.util.security.SecuritySpecification
 
 case class GetProvisioningProfilesAction(
   spec: SecuritySpecification,
@@ -32,7 +34,7 @@ case class GetProvisioningProfilesAction(
       Right(ActionDataHolder(Provisioner.profiles))
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case ActionDataHolder(profiles) =>
         val obj = JsObject(Seq("PROFILES" -> formatProfiles(profiles)))

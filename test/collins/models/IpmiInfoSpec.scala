@@ -8,7 +8,7 @@ import specification._
 import play.api.test.WithApplication
 
 class IpmiInfoSpec extends mutable.Specification {
-  
+
   "IpmiInfo Model Specification".title
 
   args(sequential = true)

@@ -39,7 +39,7 @@ object IpAddress {
     val bb = ByteBuffer.allocate(8)
     addressBytes.length match {
       case 4 =>
-        bb.put(Array[Byte](0,0,0,0)) // Need a filler
+        bb.put(Array[Byte](0, 0, 0, 0)) // Need a filler
         bb.put(addressBytes)
       case n =>
         throw new IndexOutOfBoundsException("Expected 4 byte address, got " + n)
@@ -92,8 +92,7 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
   if (startAt.isDefined)
     require(
       subnetInfo.isInRange(startAt.get),
-      "%s is not in network %s".format(startAt.get, network)
-    )
+      "%s is not in network %s".format(startAt.get, network))
   def addressCount: Int = subnetInfo.getAddressCount
   def broadcastAddress: String = subnetInfo.getBroadcastAddress
   def broadcastAddressAsLong = IpAddress.toLong(broadcastAddress)
@@ -136,17 +135,13 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
         case true => nextAddress
         case false => throw new RuntimeException(
           "Next available address %s is not in network block %s".format(
-            nextAddressString, network
-          )
-        )
+            nextAddressString, network))
       }
     } catch {
-      case e: Throwable => 
+      case e: Throwable =>
         throw new RuntimeException(
           "Next available address %s is not a valid address in %s".format(
-            nextAddressString, network
-          )
-        )
+            nextAddressString, network))
     }
   }
 }

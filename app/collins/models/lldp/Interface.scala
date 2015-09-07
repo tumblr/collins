@@ -19,20 +19,17 @@ object Interface {
       (json \ "NAME").as[String],
       (json \ "CHASSIS").as[Chassis],
       (json \ "PORT").as[Port],
-      (json \ "VLANS").as[Seq[Vlan]]
-    ))
+      (json \ "VLANS").as[Seq[Vlan]]))
     override def writes(iface: Interface) = JsObject(Seq(
       "NAME" -> Json.toJson(iface.name),
       "CHASSIS" -> Json.toJson(iface.chassis),
       "PORT" -> Json.toJson(iface.port),
-      "VLANS" -> Json.toJson(iface.vlans)
-    ))
+      "VLANS" -> Json.toJson(iface.vlans)))
   }
 }
 
 case class Interface(
-  name: String, chassis: Chassis, port: Port, vlans: Seq[Vlan]
-) extends LldpAttribute {
+    name: String, chassis: Chassis, port: Port, vlans: Seq[Vlan]) extends LldpAttribute {
 
   import Interface._
 

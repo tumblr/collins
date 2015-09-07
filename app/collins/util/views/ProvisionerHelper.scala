@@ -10,9 +10,8 @@ import play.twirl.api.Html
 
 import collins.models.AssetMeta
 import collins.models.AssetMetaValue
-
-import collins.provisioning.ProvisionerConfig
 import collins.provisioning.Provisioner
+import collins.provisioning.ProvisionerConfig
 
 object ProvisionerHelper {
   def profilesAsJson(): Html = {

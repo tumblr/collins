@@ -13,12 +13,10 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.controllers.validators.ParamValidation
 import collins.models.State
-import collins.models.{Status => AStatus}
+import collins.models.{ Status => AssetStatus }
 import collins.util.MessageHelper
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
-
-import CreateAction.Messages.fuck
 
 object CreateAction {
   object Messages extends MessageHelper("controllers.AssetStateApi.createState") {
@@ -94,7 +92,7 @@ case class CreateAction(
     }
   )
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(state) => try {
         State.create(state) match {
@@ -121,7 +119,7 @@ case class CreateAction(
   protected def getStatusId(status: Option[String]): Option[Int] = status.flatMap { s =>
     (s.toUpperCase == State.ANY_NAME.toUpperCase) match {
       case true => Some(State.ANY_STATUS)
-      case false => AStatus.findByName(s).map(_.id)
+      case false => AssetStatus.findByName(s).map(_.id)
     }
   }
 

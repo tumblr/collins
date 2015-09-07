@@ -8,7 +8,7 @@ import play.api.Play.current
 import collins.models.Asset
 
 object AppConfig {
-  var globalConfig: Option[PlayConfiguration] = None 
+  var globalConfig: Option[PlayConfiguration] = None
 
   // Ignore asset for dangerous commands
   def ignoredAssets = Feature.ignoreDangerousCommands.map(_.toUpperCase)

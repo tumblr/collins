@@ -7,8 +7,7 @@ import play.api.libs.json.JsObject
  * A remote asset that extracts from json returned by collins when details is false
  */
 case class BasicRemoteAsset(hostTag: String, remoteUrl: String, json: JsObject)
-  extends RemoteAssetProxy(json)
-{
+    extends RemoteAssetProxy(json) {
   private[this] val logger = Logger("BasicRemoteAsset")
 
   private[this] def warnAboutData(name: String): Option[String] = {

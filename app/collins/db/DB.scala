@@ -5,8 +5,8 @@ import org.squeryl.SessionFactory
 import org.squeryl.adapters.H2Adapter
 import org.squeryl.adapters.MySQLInnoDBAdapter
 
-import play.api.Logger
 import play.api.Application
+import play.api.Logger
 import play.api.db.{ DB => PDB }
 
 /**
@@ -28,8 +28,13 @@ object DB {
     logger.debug("Using driver %s".format(driver))
 
     val adapter = createAdapter(driver)
-    SessionFactory.concreteFactory = Some(
+
+    // NOTE: Synchronized to ensure concrete factory is visible to actor-systems
+    // immediately on start up.
+    SessionFactory.synchronized {
+      SessionFactory.concreteFactory = Some(
       () => new Session(PDB.getConnection(name)(app), adapter, None))
+    }
   }
 
   def shutdown() {

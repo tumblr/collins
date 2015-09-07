@@ -2,8 +2,8 @@ package collins.controllers.actions.logs
 
 import scala.concurrent.Future
 
-import play.api.libs.json.JsBoolean
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.JsBoolean
 
 import collins.controllers.Api
 import collins.controllers.ResponseData
@@ -25,7 +25,7 @@ case class GetAction(
     Right(ActionDataHolder(id))
   }
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(log_id) =>
         AssetLog.findById(log_id) match {

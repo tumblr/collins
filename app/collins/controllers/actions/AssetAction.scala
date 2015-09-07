@@ -84,7 +84,7 @@ trait AssetResultsAction {
   }
 
   protected def handleApiSuccess(p: Page[AssetView], details: Boolean): Result = {
-    val items = p.items.map { 
+    val items = p.items.map {
       case a: Asset => if (details){
         a.getAllAttributes.exposeCredentials(user.canSeePasswords).toJsValue
       } else {

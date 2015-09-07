@@ -12,5 +12,4 @@ case class ProvisionerRequest(
   token: String,
   profile: ProvisionerProfile,
   notification: Option[String] = None,
-  suffix: Option[String] = None
-)
+  suffix: Option[String] = None)

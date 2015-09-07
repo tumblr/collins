@@ -15,33 +15,36 @@
        
   <div class="colmd12">      
     <table id="cacheStats" class="table tablebordered tablehover tablecondensed">       
-      <tbody>      
-        <tr>       
-          <th>Eviction Count</th>      
-          <td>@cacheStats.evictionCount</td>       
-        </tr>      
-        <tr>       
-          <th>Hit Count</th>       
-          <td>@cacheStats.hitCount</td>        
-        </tr>      
-        <tr>       
-          <th>Hit Rate</th>        
-          <td>@Formatter.forPercent(cacheStats.hitRate) %</td>     
-        </tr>      
-        <tr>       
-          <th>Miss Count</th>      
-          <td>@cacheStats.missCount</td>       
-        </tr>      
-        <tr>       
-          <th>Miss Rate</th>       
-          <td>@Formatter.forPercent(cacheStats.missRate) %</td>        
-        </tr>      
-        <tr>       
+      <tbody>
+        <tr>
+          <th>Hit Count</th>
+          <td>@cacheStats.hitCount</td>
+        </tr>
+        <tr>
+          <th>Hit Rate</th>
+          <td>@Formatter.forPercent(cacheStats.hitRate) %</td>
+        </tr>
+        <tr>
+          <th>Miss Count</th>
+          <td>@cacheStats.missCount</td>
+        </tr>
+        <tr>
+          <th>Miss Rate</th>
+          <td>@Formatter.forPercent(cacheStats.missRate) %</td>
+        </tr>
+        <tr>
           <th>Request Count</th>       
           <td>@cacheStats.requestCount</td>        
-        </tr>      
-      </tbody>     
-       
+        </tr>
+        <tr>
+          <th>Max Get Latency</th>
+          <td>@cacheStats.maxGetLatency</td>
+        </tr>
+        <tr>
+          <th>Max Put Latency</th>
+          <td>@cacheStats.maxPutLatency</td>
+        </tr>
+      </tbody>
     </table>       
   </div>       
 </div>

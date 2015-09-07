@@ -2,6 +2,8 @@ package collins.util.concurrent
 
 import java.util.concurrent.TimeoutException
 
+import scala.Left
+import scala.Right
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
@@ -31,30 +33,30 @@ object BackgroundProcessor {
   import play.api.Play.current
 
   lazy val ref = Akka.system.actorOf(Props[BackgroundProcessorActor].
-      withRouter(FromConfig()), name = "background-processor")
+    withRouter(FromConfig()), name = "background-processor")
 
   type SendType[T] = Either[Throwable, T]
 
-  def send[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]): Future[RESPONSE] = {
+  def send[PROC_RES, RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => RESPONSE)(implicit mf: Manifest[PROC_RES]): Future[RESPONSE] = {
 
-    val f : Future[PROC_RES] = ask(ref, cmd)(cmd.timeout).mapTo[PROC_RES]
+    val f: Future[PROC_RES] = ask(ref, cmd)(cmd.timeout).mapTo[PROC_RES]
 
-    val mpd: Future[RESPONSE] = f.map{x => result(Right(x))}
+    val mpd: Future[RESPONSE] = f.map { x => result(Right(x)) }
     mpd.recover {
-      case t : TimeoutException => result(Left(SexyTimeoutException(cmd.timeout)))
-      case th : Throwable => result(Left(th))
+      case t: TimeoutException => result(Left(SexyTimeoutException(cmd.timeout)))
+      case th: Throwable       => result(Left(th))
     }
   }
 
   //possibly the WORST name ever.  Don't judge me.  'flatSend' because the above function is really just a fancy map function
   //since you pass a func that goes from x->y and get a future[y], this is just the flatMap version of that.
-  def flatSend[PROC_RES,RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => Future[RESPONSE])(implicit mf: Manifest[PROC_RES]): Future[RESPONSE] = {
+  def flatSend[PROC_RES, RESPONSE](cmd: BackgroundProcess[PROC_RES])(result: SendType[PROC_RES] => Future[RESPONSE])(implicit mf: Manifest[PROC_RES]): Future[RESPONSE] = {
 
     val f: Future[PROC_RES] = ask(ref, cmd)(cmd.timeout).mapTo[PROC_RES]
-    val mpd: Future[RESPONSE] = f.flatMap{x => result(Right(x))}
-    mpd.recoverWith{
-      case t : TimeoutException => result(Left(SexyTimeoutException(cmd.timeout)))
-      case th : Throwable => result(Left(th))
+    val mpd: Future[RESPONSE] = f.flatMap { x => result(Right(x)) }
+    mpd.recoverWith {
+      case t: TimeoutException => result(Left(SexyTimeoutException(cmd.timeout)))
+      case th: Throwable       => result(Left(th))
     }
   }
 }

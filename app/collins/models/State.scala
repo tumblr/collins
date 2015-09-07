@@ -1,21 +1,17 @@
 package collins.models
 
-import org.squeryl.Schema
 import org.squeryl.PrimitiveTypeMode._
+import org.squeryl.Schema
 
-import play.api.libs.json.Format
-import play.api.libs.json.JsObject
-import play.api.libs.json.JsSuccess
-import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
+import collins.callbacks.CallbackDatum
 import collins.models.cache.Cache
-import collins.validation.Pattern.isAlphaNumericString
-import collins.validation.Pattern.isNonEmptyString
-
+import collins.models.conversions.StateFormat
 import collins.models.shared.AnormAdapter
 import collins.models.shared.ValidatedEntity
-import collins.models.Status.StatusFormat
+import collins.validation.Pattern.isAlphaNumericString
+import collins.validation.Pattern.isNonEmptyString
 
 object State extends Schema with AnormAdapter[State] with StateKeys {
 
@@ -23,38 +19,20 @@ object State extends Schema with AnormAdapter[State] with StateKeys {
   val ANY_STATUS = 0
   val ANY_NAME = "Any"
 
-  def New = State.findByName("NEW")
-  def Running = State.findByName("RUNNING")
-  def Starting = State.findByName("STARTING")
-  def Terminated = State.findByName("TERMINATED")
+  def New = findByName("NEW")
+  def Running = findByName("RUNNING")
+  def Starting = findByName("STARTING")
+  def Terminated = findByName("TERMINATED")
 
   object StateOrdering extends Ordering[State] {
     override def compare(a: State, b: State) = a.getDisplayLabel compare b.getDisplayLabel
   }
 
-  implicit object StateFormat extends Format[State] {
-    import Status.StatusFormat
-    override def reads(json: JsValue) = JsSuccess(State(
-      (json \ "ID").asOpt[Int].getOrElse(0),
-      (json \ "STATUS").asOpt[Int].getOrElse(ANY_STATUS),
-      (json \ "NAME").as[String],
-      (json \ "LABEL").as[String],
-      (json \ "DESCRIPTION").as[String]
-    ))
-    override def writes(state: State) = JsObject(Seq(
-      "ID" -> Json.toJson(state.id),
-      "STATUS" -> Json.toJson(Status.findById(state.status)),
-      "NAME" -> Json.toJson(state.name),
-      "LABEL" -> Json.toJson(state.label),
-      "DESCRIPTION" -> Json.toJson(state.description)
-    ))
-  }
   override val tableDef = table[State]("state")
   on(tableDef)(s => declare(
-    s.id is (autoIncremented,primaryKey),
-    s.name is(unique),
-    s.status is(indexed)
-  ))
+    s.id is (autoIncremented, primaryKey),
+    s.name is (unique),
+    s.status is (indexed)))
 
   override def delete(state: State): Int = inTransaction {
     afterDeleteCallback(state) {
@@ -74,20 +52,17 @@ object State extends Schema with AnormAdapter[State] with StateKeys {
 
   def findByName(name: String): Option[State] = Cache.get(findByNameKey(name), inTransaction {
     tableDef.where(s =>
-      s.name.toLowerCase === name.toLowerCase
-    ).headOption
+      s.name.toLowerCase === name.toLowerCase).headOption
   })
 
   def findByAnyStatus(): List[State] = Cache.get(findByAnyStatusKey, inTransaction {
     tableDef.where(s =>
-      s.status === ANY_STATUS
-    ).toList
+      s.status === ANY_STATUS).toList
   })
 
   def findByStatus(status: Status): List[State] = Cache.get(findByStatusKey(status.id), inTransaction {
     tableDef.where(s =>
-      s.status === status.id
-    ).toList
+      s.status === status.id).toList
   })
 
   override def get(state: State): State = findById(state.id).get
@@ -96,12 +71,12 @@ object State extends Schema with AnormAdapter[State] with StateKeys {
 }
 
 case class State(
-  id: Int,            // unique PK
-  status: Int = 0,    // FK to status, or 0 to apply to any status
-  name: String,       // Name, should be tag like (alpha numeric and _-)
-  label: String,      // A visual (short) label to accompany the state
-  description: String // A longer description of the state
-) extends ValidatedEntity[Int] {
+    id: Int, // unique PK
+    status: Int = 0, // FK to status, or 0 to apply to any status
+    name: String, // Name, should be tag like (alpha numeric and _-)
+    label: String, // A visual (short) label to accompany the state
+    description: String // A longer description of the state
+    ) extends ValidatedEntity[Int] with CallbackDatum {
   def getId(): Int = id
   def getDisplayLabel(): String = "%s - %s".format(getStatusName, label)
   def getStatusName(): String = status match {
@@ -111,7 +86,7 @@ case class State(
   override def validate() {
     require(status >= 0, "status must be >= 0")
     require(isAlphaNumericString(name), "State name must be alphanumeric")
-    require(name.length > 1 && name.length <=32, "length of name must between 1 and 32")
+    require(name.length > 1 && name.length <= 32, "length of name must between 1 and 32")
     require(name == name.toUpperCase, "name must be uppercase")
     require(isNonEmptyString(label), "label must be specified")
     require(label.length > 1 && label.length <= 32, "length of label must be between 1 and 32 characters")
@@ -119,4 +94,17 @@ case class State(
     require(description.length > 1 && description.length <= 255, "length of description must be between 1 and 255 characters")
   }
   override def asJson: String = Json.toJson(this).toString
+
+  override def compare(z: Any): Boolean = {
+    if (z == null)
+      return false
+    val ar = z.asInstanceOf[AnyRef]
+    if (!ar.getClass.isAssignableFrom(this.getClass))
+      false
+    else {
+      val other = ar.asInstanceOf[State]
+      this.status == other.status && this.name == other.name &&
+        this.label == other.label && this.description == other.description
+    }
+  }
 }

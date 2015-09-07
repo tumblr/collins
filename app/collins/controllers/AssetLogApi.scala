@@ -18,7 +18,7 @@ trait AssetLogApi {
     FindAction(None, PageParams(page, size, sort, "date"), filter, Permissions.AssetLogApi.GetAll, this)
 
   // GET /api/assets/logs/search
-  def searchLogs(page: Int, size: Int, sortField: String, sort: String, query: String) = 
+  def searchLogs(page: Int, size: Int, sortField: String, sort: String, query: String) =
     SolrFindAction(query, PageParams(page, size, sort, sortField), Permissions.AssetLogApi.GetAll, this)
 
   // GET /api/logs/:id

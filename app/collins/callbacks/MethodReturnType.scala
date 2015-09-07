@@ -1,4 +1,4 @@
-package collins.reflection
+package collins.callbacks
 
 import java.lang.reflect.Method
 

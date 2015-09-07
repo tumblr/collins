@@ -7,10 +7,10 @@ import play.api.data.Form
 import play.api.data.Forms.of
 import play.api.data.Forms.optional
 import play.api.data.Forms.tuple
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.mvc.AnyContent
 import play.api.mvc.Request
 import play.api.mvc.Result
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.SecureController
 import collins.controllers.actions.AssetAction
@@ -23,7 +23,7 @@ import collins.models.Asset
 import collins.models.AssetFinder
 import collins.models.AssetSort
 import collins.models.AssetType
-import collins.models.{Status => AssetStatus}
+import collins.models.{ Status => AssetStatus }
 import collins.models.Truthy
 import collins.models.asset.AssetView
 import collins.models.shared.Page
@@ -36,11 +36,11 @@ case class FindSimilarAction(
   page: PageParams,
   spec: SecuritySpecification,
   handler: SecureController
-) extends SecureAction(spec, handler) with AssetAction with AssetResultsAction{
+) extends SecureAction(spec, handler) with AssetAction with AssetResultsAction {
 
   case class SimilarDataHolder(
     asset: Asset,
-    details: Option[Truthy], 
+    details: Option[Truthy],
     onlyUnallocated: Option[Truthy],
     sortType: Option[AssetSort.Type]
   ) extends RequestDataHolder
@@ -76,7 +76,7 @@ case class FindSimilarAction(
   }
 
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case SimilarDataHolder(asset, details, only, sortType) => {
         Logger.logger.debug(only.toString)

@@ -15,9 +15,9 @@ import play.twirl.api.Txt
 
 import collins.models.User
 import collins.models.logs.LogSource
-import collins.util.Tattler
 import collins.util.ApplicationTattler
 import collins.util.InternalTattler
+import collins.util.Tattler
 import collins.util.security.AuthenticationProvider
 import collins.util.security.SecuritySpecification
 
@@ -82,7 +82,7 @@ trait SecureController extends Controller {
 
   /** Log source identifier to use */
   def logSource : LogSource.LogSource
-  
+
   /** Controllers that extend this trait can override the default authorize behavior */
   def authorize(user: User, spec: SecuritySpecification): Boolean = {
     AuthenticationProvider.userIsAuthorized(user, spec)
@@ -105,7 +105,7 @@ trait SecureWebController extends SecureController {
   def securityMessage(req: RequestHeader) = ("security" -> "The specified resource requires additional authorization")
 
   def logSource = LogSource.User
-  
+
   override def onUnauthorized = Action { implicit request =>
     // If user is not logged in and accesses a page, store the location so they can be redirected
     // after authentication
@@ -137,9 +137,9 @@ trait SecureWebController extends SecureController {
 
 /** Used for API access, authenticates based on basic auth */
 trait SecureApiController extends SecureController {
-  
+
   def logSource = LogSource.Api
-  
+
   override def onUnauthorized = Action { implicit request =>
     Results.Unauthorized(Txt("Invalid Username/Password specified"))
   }

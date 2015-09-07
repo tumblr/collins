@@ -6,8 +6,7 @@ import collins.util.MessageHelper
 import collins.util.config.SimpleAddressConfig
 
 case class AddressPool(
-  name: String, network: String, startAddress: Option[String], gateway: Option[String]
-) {
+    name: String, network: String, startAddress: Option[String], gateway: Option[String]) {
 
   require(name.toUpperCase == name, "pool name must be all caps")
   require(network.nonEmpty, "network must be nonEmpty")
@@ -17,8 +16,7 @@ case class AddressPool(
       IpAddress.toLong(startAddress.get)
     } catch {
       case e: Throwable => throw new IllegalArgumentException("%s is not a valid IPv4 address".format(
-        startAddress.get
-      ))
+        startAddress.get))
     }
 
   val ipCalc = try {
@@ -27,8 +25,7 @@ case class AddressPool(
     case e: Throwable => throw new IllegalArgumentException("%s%s is not a valid network%s".format(
       network,
       startAddress.map(s => ":%s".format(s)).getOrElse(""),
-      startAddress.map(_ => "/startAddress").getOrElse("")
-    ))
+      startAddress.map(_ => "/startAddress").getOrElse("")))
   }
 
   def isInRange(address: String): Boolean = ipCalc.subnetInfo.isInRange(address)
@@ -37,13 +34,13 @@ case class AddressPool(
   // Ensure as a set, address pools with the same name are seen as equal
   override def equals(o: Any) = o match {
     case that: AddressPool => that.name.equalsIgnoreCase(this.name)
-    case _ => false
+    case _                 => false
   }
   override def hashCode = name.toUpperCase.hashCode
 
   def strictEquals(that: AddressPool): Boolean = {
     that.name.equalsIgnoreCase(this.name) &&
-      that.network == this.network && 
+      that.network == this.network &&
       that.startAddress == this.startAddress &&
       that.gateway == this.gateway
   }
@@ -60,8 +57,7 @@ case class AddressPool(
     val addressString = IpAddress.toString(address)
     if (!isInRange(address))
       throw new RuntimeException("Address %s is not in network block %s".format(
-        addressString, network
-      ))
+        addressString, network))
   }
 }
 
@@ -72,8 +68,7 @@ object AddressPool extends MessageHelper("ip_address") {
   def poolName(pool: String) = pool.toUpperCase
 
   def fromConfig(
-    cfg: SimpleAddressConfig, uname: String, required: Boolean, strict: Boolean
-  ): Option[AddressPool] = {
+    cfg: SimpleAddressConfig, uname: String, required: Boolean, strict: Boolean): Option[AddressPool] = {
     val startAddress = cfg.startAddress
     val network = cfg.network
     val name = cfg.name
@@ -95,13 +90,11 @@ object AddressPool extends MessageHelper("ip_address") {
   }
 
   def fromConfig(
-    cfg: Option[SimpleAddressConfig], uname: String, required: Boolean, strict: Boolean
-  ): Option[AddressPool] = cfg match {
+    cfg: Option[SimpleAddressConfig], uname: String, required: Boolean, strict: Boolean): Option[AddressPool] = cfg match {
     case None =>
       if (required)
         throw new IllegalArgumentException(messageWithDefault(
-          "missingConfig", "no config defined", uname
-        ))
+          "missingConfig", "no config defined", uname))
       else
         None
     case Some(config) => fromConfig(config, uname, required, strict)

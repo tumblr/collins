@@ -1,7 +1,7 @@
 package collins.permissions
 
-import java.util.{List => JList}
-import java.util.{Map => JMap}
+import java.util.{ List => JList }
+import java.util.{ Map => JMap }
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter

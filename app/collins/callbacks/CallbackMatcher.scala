@@ -2,9 +2,10 @@ package collins.callbacks
 
 import java.beans.PropertyChangeEvent
 
+import collins.models.Asset
+import collins.models.AssetMetaValue
+import collins.models.IpAddresses
 import collins.models.State
-import collins.models.asset.AssetView
-import collins.reflection.MethodHelper
 
 /**
  * Given a matchMethod, apply it to the PCE.
@@ -12,9 +13,8 @@ import collins.reflection.MethodHelper
  * @param matchMethod a string containing a method to apply
  * @param fn a function that takes a PCE and returns some value for it
  */
-case class CallbackMatcher(conditional: MatchConditional, fn: PropertyChangeEvent => AnyRef)
-  extends MethodHelper
-{
+case class CallbackMatcher(conditional: MatchConditional, fn: PropertyChangeEvent => CallbackDatumHolder)
+    extends MethodHelper {
 
   override val chattyFailures = true
   val name = conditional.name
@@ -29,27 +29,35 @@ case class CallbackMatcher(conditional: MatchConditional, fn: PropertyChangeEven
    * matchMethod is None. False will be returned if an error occurs.
    */
   def apply(pce: PropertyChangeEvent): Boolean = {
-    checkState(pce) && checkStates(pce)
+    val asset = fn(pce) match {
+      case CallbackDatumHolder(Some(a: Asset)) => Some(a)
+      case CallbackDatumHolder(Some(v: AssetMetaValue)) => Some(v.asset)
+      case CallbackDatumHolder(Some(i: IpAddresses)) => Some(i.getAsset)
+      case _ => None
+    }
+
+    checkState(pce, asset) && checkStates(pce, asset)
   }
-  
-  protected def checkState(pce: PropertyChangeEvent): Boolean = conditional.state.map { method =>
-    val value = fn(pce)
+
+  protected def checkState(pce: PropertyChangeEvent, asset: Option[Asset]): Boolean = conditional.state.map { method =>
     negation(method) match {
-      case (true, meth) => invokeMethod(meth, value).map(b => !b).getOrElse(false)
-      case (false, meth) => invokeMethod(meth, value).getOrElse(false)
+      case (true, meth)  => invokeMethod(meth, asset).map(b => !b).getOrElse(false)
+      case (false, meth) => invokeMethod(meth, asset).getOrElse(false)
     }
   }.getOrElse(true)
 
-  protected def checkStates(pce: PropertyChangeEvent): Boolean = if (conditional.states.isEmpty) {
+  protected def checkStates(pce: PropertyChangeEvent, asset: Option[Asset]): Boolean = if (conditional.states.isEmpty) {
     true
   } else {
     val states = conditional.states.toSet
-    val value = Option(fn(pce))
-    value.filter(_.isInstanceOf[AssetView]).map(_.asInstanceOf[AssetView]).map { v =>
-      State.findById(v.stateId).map { state =>
-        states.map(_.toUpperCase).contains(state.name.toUpperCase)
-      }.getOrElse(false)
-    }.getOrElse(true)
+    asset match {
+      case Some(v: Asset) => {
+        State.findById(v.stateId).map { state =>
+          states.map(_.toUpperCase).contains(state.name.toUpperCase)
+        }.getOrElse(false)
+      }
+      case _ => true
+    }
   }
 
   /**
@@ -62,13 +70,17 @@ case class CallbackMatcher(conditional: MatchConditional, fn: PropertyChangeEven
    * @param method the method being executed
    * @return a tuple where the left is true if this is a negation, and the right is the method name
    */
-  protected def negation(method: String): Tuple2[Boolean,String] = method.startsWith("!") match {
-    case true => (true, method.drop(1))
+  private[this] def negation(method: String): Tuple2[Boolean, String] = method.startsWith("!") match {
+    case true  => (true, method.drop(1))
     case false => (false, method)
   }
 
-  protected def invokeMethod(meth: String, v: AnyRef): Option[Boolean] = {
-    getMethod(meth, v).flatMap(invokePredicateMethod(_, v))
+  private[this] def invokeMethod(meth: String, assetOpt: Option[Asset]): Option[Boolean] = {
+    for {
+      asset <- assetOpt
+      method <- getMethod(meth, asset)
+      pv <- invokePredicateMethod(method, asset)
+    } yield pv
   }
 
 }

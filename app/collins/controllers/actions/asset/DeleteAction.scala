@@ -3,12 +3,10 @@ package collins.controllers.actions.asset
 import scala.concurrent.Future
 
 import play.api.data.Form
-import play.api.data.Forms.optional
-import play.api.data.Forms.text
-import play.api.data.Forms.tuple
-import play.api.data.Forms.nonEmptyText
 import play.api.data.Forms.boolean
 import play.api.data.Forms.default
+import play.api.data.Forms.nonEmptyText
+import play.api.data.Forms.tuple
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
@@ -19,7 +17,6 @@ import collins.controllers.actions.SecureAction
 import collins.models.AssetLifecycle
 import collins.models.asset.AssetDeleter
 import collins.util.security.SecuritySpecification
-import collins.validation.StringUtil
 
 case class DeleteAction(
   _assetTag: String,

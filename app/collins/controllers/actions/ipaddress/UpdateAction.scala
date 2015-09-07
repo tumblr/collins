@@ -1,8 +1,8 @@
 package collins.controllers.actions.ipaddress
 
-import scala.concurrent.Future
-
 import java.sql.SQLException
+
+import scala.concurrent.Future
 
 import play.api.data.Form
 import play.api.data.Forms.tuple
@@ -67,7 +67,7 @@ case class UpdateAction(
     )
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case adh@ActionDataHolder(asset, old, address, gateway, netmask, pool) =>
         val addressInfo = IpAddresses.findAllByAsset(asset)

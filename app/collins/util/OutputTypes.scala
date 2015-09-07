@@ -8,7 +8,7 @@ import play.api.mvc.RequestHeader
 
 sealed trait OutputType {
   val fileExtension: String
-  val queryString: (String,String)
+  val queryString: (String, String)
   val contentType: String
 
   def inPath(header: RequestHeader) = header.path.endsWith(fileExtension)
@@ -45,14 +45,14 @@ object OutputType {
     case json if JsonOutput().matches(json) => Some(JsonOutput())
     case bash if BashOutput().matches(bash) => Some(BashOutput())
     case text if TextOutput().matches(text) => Some(TextOutput())
-    case _ => None
+    case _                                  => None
   }
   def apply(header: RequestHeader): Option[OutputType] = header match {
     case html if HtmlOutput().matches(html) => Some(HtmlOutput())
     case json if JsonOutput().matches(json) => Some(JsonOutput())
     case bash if BashOutput().matches(bash) => Some(BashOutput())
     case text if TextOutput().matches(text) => Some(TextOutput())
-    case _ => None
+    case _                                  => None
   }
   def isHtml(request: Request[AnyContent]): Boolean = HtmlOutput().matches(request)
   def isJson(request: Request[AnyContent]): Boolean = JsonOutput().matches(request)

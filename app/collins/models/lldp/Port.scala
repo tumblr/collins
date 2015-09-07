@@ -6,19 +6,18 @@ import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
-import collins.models.lldp.PortId.PortIdFormat
+import Port.PortFormat
+import PortId.PortIdFormat
 
 object Port {
   import PortId._
   implicit object PortFormat extends Format[Port] {
     override def reads(json: JsValue) = JsSuccess(Port(
       (json \ "ID").as[PortId],
-      (json \ "DESCRIPTION").as[String]
-    ))
+      (json \ "DESCRIPTION").as[String]))
     override def writes(port: Port) = JsObject(Seq(
       "ID" -> Json.toJson(port.id),
-      "DESCRIPTION" -> Json.toJson(port.description)
-    ))
+      "DESCRIPTION" -> Json.toJson(port.description)))
   }
 }
 

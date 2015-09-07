@@ -25,7 +25,7 @@ case class FindAssetAction(
     Right(ActionDataHolder(validAddress))
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case ActionDataHolder(validAddress) =>
         IpAddresses.findByAddress(validAddress) match {

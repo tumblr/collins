@@ -24,7 +24,6 @@ import collins.util.concurrent.BackgroundProcessor
 import collins.util.config.AppConfig
 import collins.util.security.SecuritySpecification
 
-
 abstract class PowerManagementActionHelper(
   assetTag: String,
   spec: SecuritySpecification,

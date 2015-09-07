@@ -2,20 +2,6 @@ package collins.solr
 
 import play.api.Logger
 
-import collins.models.Asset
-import collins.models.AssetFinder
-import collins.models.AssetMeta
-import collins.models.AssetMetaValue
-import collins.models.AssetType
-import collins.models.IpAddresses
-import collins.models.MetaWrapper
-import collins.models.State
-import collins.models.Status
-import collins.models.Truthy
-import collins.models.shared.Page
-import collins.models.shared.PageParams
-import collins.models.asset.AssetView
-import collins.models.IpmiInfo.Enum._
 import collins.models.AssetMeta.ValueType
 import collins.models.AssetMeta.ValueType._
 
@@ -57,7 +43,6 @@ object SolrKeyFlag {
 }
 import SolrKeyFlag._
 
-
 /**
  * A helpful type to ensure strings are always capitalized
  *
@@ -75,8 +60,8 @@ case class UpperCaseString(original: String) {
 
   override def equals(a: Any) = a match {
     case u: UpperCaseString => u.uString == uString
-    case s: String => s == uString
-    case _ => false
+    case s: String          => s == uString
+    case _                  => false
   }
 }
 
@@ -85,32 +70,31 @@ object UpperCaseString {
   implicit def UppercaseString2String(u: UpperCaseString) = u.toString
 }
 
-
-/** 
+/**
  * This class holds data about a solr key, mainly for translating "local" key
  * names to their solr equivalent
  */
-case class SolrKey (
-  val name: UpperCaseString,
-  val valueType: ValueType,
-  val isDynamic: Boolean,
-  val isMultiValued: Boolean,
-  val isSortable: Boolean,
-  val aliases: Set[UpperCaseString] = Set()
-) {
+case class SolrKey(
+    val name: UpperCaseString,
+    val valueType: ValueType,
+    val isDynamic: Boolean,
+    val isMultiValued: Boolean,
+    val isSortable: Boolean,
+    val aliases: Set[UpperCaseString] = Set()) {
 
   if (!name.originallyUpperCase) {
     Logger("SolrKey").warn("SolrKey name %s should be ALL CAPS".format(name.original))
   }
-  aliases.map{alias => if (!alias.originallyUpperCase){
-    Logger("SolrKey").warn("Alias %s for SolrKey %s should be ALL CAPS".format(name, alias.original))
-  }}
+  aliases.map { alias =>
+    if (!alias.originallyUpperCase) {
+      Logger("SolrKey").warn("Alias %s for SolrKey %s should be ALL CAPS".format(name, alias.original))
+    }
+  }
   if (isMultiValued && isSortable) {
     Logger("SolrKey").error("Cannot create sortable multivalued key for %s, forcing non-sortable")
   }
 
-
-  lazy val resolvedName = name + (if(isDynamic) ValueType.postFix(valueType) else "")
+  lazy val resolvedName = name + (if (isDynamic) ValueType.postFix(valueType) else "")
   def isAliasOf(alias: UpperCaseString) = aliases(alias)
 
   def matches(k: UpperCaseString) = (k == name) || isAliasOf(k)
@@ -124,7 +108,7 @@ case class SolrKey (
 
   def sortKey: Option[SolrKey] = if (!isMultiValued && isSortable) Some(SolrKey(sortName, String, Static, SingleValued, Sortable)) else None
 
-  def sortify(value: SolrValue): Option[(SolrKey, SolrStringValue)] = sortKey.map{skey => (skey, SolrStringValue(value.sortValue, StrictUnquoted))}
+  def sortify(value: SolrValue): Option[(SolrKey, SolrStringValue)] = sortKey.map { skey => (skey, SolrStringValue(value.sortValue, StrictUnquoted)) }
 
 }
 
@@ -132,18 +116,18 @@ case class SolrKey (
  * Mixin for enum keys, allows us to resolve the solr key and then validate
  * the enum value by passing it to the valueLookup method.
  */
-trait EnumKey{ self: SolrKey =>
+trait EnumKey { self: SolrKey =>
   def lookupByName(value: String): Option[String]
   def lookupById(value: Int): Option[String]
 }
 
 trait SolrKeyResolver {
   import SolrKeyResolver._
-  def apply(rawKey: UpperCaseString): Option[SolrKey] = allDocKeys.find{_ matches rawKey} orElse docSpecificKey(rawKey)
+  def apply(rawKey: UpperCaseString): Option[SolrKey] = allDocKeys.find { _ matches rawKey } orElse docSpecificKey(rawKey)
 
   def either(rawkey: UpperCaseString) = apply(rawkey) match {
     case Some(k) => Right(k)
-    case None => Left("Unknown key " + rawkey)
+    case None    => Left("Unknown key " + rawkey)
   }
 
   def docSpecificKey(rawKey: UpperCaseString): Option[SolrKey]
@@ -169,13 +153,9 @@ object SolrKeyResolver {
   val allDocKeys = List(
     SolrKey("DOC_TYPE", String, Static, SingleValued, Sortable),
     SolrKey("LAST_INDEXED", String, Static, SingleValued, Sortable),
-    SolrKey("UUID", String, Static, SingleValued, Sortable)
-  )
-
+    SolrKey("UUID", String, Static, SingleValued, Sortable))
 
 }
-
-
 
 /*
  * This is simply a key resolver to use when working with generic documents of

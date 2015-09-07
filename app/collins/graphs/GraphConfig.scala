@@ -1,8 +1,9 @@
 package collins.graphs
 
-import collins.cache.GuavaCacheFactory
-import collins.util.config.Configurable
 import com.google.common.cache.CacheBuilderSpec
+
+import collins.guava.GuavaCacheFactory
+import collins.util.config.Configurable
 
 object GraphConfig extends Configurable {
   override val namespace = "graph"

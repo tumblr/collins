@@ -1,35 +1,47 @@
 package collins.models
 
 import org.squeryl.PrimitiveTypeMode._
-import org.squeryl.dsl.ast.LogicalBoolean
 import org.squeryl.annotations.Column
+import org.squeryl.dsl.ast.LogicalBoolean
 
 import play.api.libs.json.Json
 
-import collins.models.cache.Cache
 import collins.models.asset.AssetView
+import collins.models.cache.Cache
 import collins.models.shared.AddressPool
 import collins.models.shared.IpAddressConfig
 import collins.models.shared.IpAddressStorage
 import collins.models.shared.IpAddressable
 import collins.models.shared.Page
 import collins.models.shared.PageParams
-import collins.models.conversions.IpAddressFormat
-
 import collins.util.IpAddress
 import collins.util.IpAddressCalc
 
+import conversions.IpAddressFormat
+
 case class IpAddresses(
-  @Column("ASSET_ID") assetId: Long,
-  gateway: Long,
-  address: Long,
-  netmask: Long,
-  pool: String,
-  id: Long = 0) extends IpAddressable
-{
+    @Column("ASSET_ID") assetId: Long,
+    gateway: Long,
+    address: Long,
+    netmask: Long,
+    pool: String,
+    id: Long = 0) extends IpAddressable {
   import conversions._
   override def asJson: String = toJsValue.toString
   def toJsValue = Json.toJson(this)
+
+  override def compare(z: Any): Boolean = {
+    if (z == null)
+      return false
+    val ar = z.asInstanceOf[AnyRef]
+    if (!ar.getClass.isAssignableFrom(this.getClass))
+      false
+    else {
+      val other = ar.asInstanceOf[IpAddresses]
+      this.assetId == other.assetId && this.gateway == other.gateway && this.netmask == other.netmask &&
+        this.pool == other.pool && this.id == other.id
+    }
+  }
 }
 
 object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAddresses] {
@@ -45,13 +57,12 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAd
   lazy val AddressConfig = IpAddressConfig.get()
 
   on(tableDef)(i => declare(
-    i.id is(autoIncremented,primaryKey),
-    i.address is(unique),
-    i.gateway is(indexed),
-    i.netmask is(indexed),
-    i.pool is(indexed),
-    columns(i.assetId, i.address) are(indexed)
-  ))
+    i.id is (autoIncremented, primaryKey),
+    i.address is (unique),
+    i.gateway is (indexed),
+    i.netmask is (indexed),
+    i.pool is (indexed),
+    columns(i.assetId, i.address) are (indexed)))
 
   def createForAsset(asset: Asset, count: Int, scope: Option[String]): Seq[IpAddresses] = {
     (0 until count).map { i =>
@@ -59,11 +70,11 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAd
     }
   }
 
-  override def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long,Long,Long] = {
+  override def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long, Long, Long] = {
     throw new UnsupportedOperationException("getNextAvailableAddress not supported")
   }
 
-  def getNextAddress(iteration: Int)(implicit scope: Option[String]): Tuple3[Long,Long,Long] = {
+  def getNextAddress(iteration: Int)(implicit scope: Option[String]): Tuple3[Long, Long, Long] = {
     val network = getNetwork
     val startAt = getStartAddress
     val calc = IpAddressCalc(network, startAt)
@@ -89,10 +100,10 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAd
   def deleteByAssetAndPool(asset: Asset, pool: Option[String]): Int = inTransaction {
     val rows = tableDef.where(i =>
       i.assetId === asset.id and
-      i.pool === pool.?
-    ).toList
-    val res = rows.foldLeft(0) { case(sum, ipInfo) =>
-      sum + delete(ipInfo)
+        i.pool === pool.?).toList
+    val res = rows.foldLeft(0) {
+      case (sum, ipInfo) =>
+        sum + delete(ipInfo)
     }
     res
   }
@@ -101,44 +112,44 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAd
     def whereClause(assetRow: Asset, addressRow: IpAddresses) = {
       where(
         (assetRow.id === addressRow.assetId) and
-        generateFindQuery(addressRow, addys.head) and
-        finder.asLogicalBoolean(assetRow)
-      )
+          generateFindQuery(addressRow, addys.head) and
+          finder.asLogicalBoolean(assetRow))
     }
-    inTransaction { log {
-      val results = from(Asset.tableDef, tableDef)((assetRow, addressRow) =>
-        whereClause(assetRow, addressRow)
-        select(assetRow)
-      ).page(page.offset, page.size).toList
-      val totalCount = from(Asset.tableDef, tableDef)((assetRow, addressRow) =>
-        whereClause(assetRow, addressRow)
-        compute(count)
-      )
-      Page(results, page.page, page.offset, totalCount)
-    }}
+    inTransaction {
+      log {
+        val results = from(Asset.tableDef, tableDef)((assetRow, addressRow) =>
+          whereClause(assetRow, addressRow)
+            select (assetRow)).page(page.offset, page.size).toList
+        val totalCount = from(Asset.tableDef, tableDef)((assetRow, addressRow) =>
+          whereClause(assetRow, addressRow)
+            compute (count))
+        Page(results, page.page, page.offset, totalCount)
+      }
+    }
   }
 
-  def findByAddress(address: String): Option[Asset] = inTransaction { log {
-    val addressAsLong = try {
-      IpAddress.toLong(address)
-    } catch {
-      case e: Throwable => return None
+  def findByAddress(address: String): Option[Asset] = inTransaction {
+    log {
+      val addressAsLong = try {
+        IpAddress.toLong(address)
+      } catch {
+        case e: Throwable => return None
+      }
+      from(tableDef, Asset.tableDef)((i, a) =>
+        where(
+          (i.address === addressAsLong) and
+            (i.assetId === a.id))
+          select (a)).headOption
     }
-    from(tableDef, Asset.tableDef)((i,a) =>
-      where(
-        (i.address === addressAsLong) and
-        (i.assetId === a.id)
-      )
-      select(a)
-    ).headOption
-  }}
+  }
 
-  def findInPool(pool: String): List[IpAddresses] = inTransaction { log {
-    from(tableDef)(i =>
-      where(i.pool === pool)
-      select(i)
-    ).toList
-  }}
+  def findInPool(pool: String): List[IpAddresses] = inTransaction {
+    log {
+      from(tableDef)(i =>
+        where(i.pool === pool)
+          select (i)).toList
+    }
+  }
 
   override def get(i: IpAddresses) = Cache.get(findByIdKey(i.id), inTransaction {
     tableDef.lookup(i.id).get
@@ -146,8 +157,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAd
 
   def getPoolsInUse(): Set[String] = Cache.get(findPoolsInUseKey, inTransaction {
     from(tableDef)(i =>
-      select(i.pool)
-    ).distinct.toSet
+      select(i.pool)).distinct.toSet
   })
 
   override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
@@ -165,7 +175,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAd
           val netmask = IpAddress.netmaskFromPad(padded, "0")
           val calc = IpAddressCalc(padded, netmask, None)
           (addressRow.address gte calc.minAddressAsLong) and
-          (addressRow.address lte calc.maxAddressAsLong)
+            (addressRow.address lte calc.maxAddressAsLong)
         } catch {
           case _: Throwable =>
             logger.warn("Totally invalid address: %s".format(address), e)

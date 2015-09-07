@@ -15,11 +15,6 @@ import collins.models.AssetType
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
 
-import collins.controllers.actions.assettype.CreateAction.Messages.fuck
-import collins.controllers.actions.assettype.CreateAction.Messages.invalidLabel
-import collins.controllers.actions.assettype.CreateAction.Messages.invalidName
-import collins.controllers.actions.assettype.DeleteAction.Messages.systemName
-
 /**
  * Update a asset type
  *
@@ -83,7 +78,7 @@ case class UpdateAction(
     }
   )
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(atype) => AssetType.update(atype) match {
         case ok if ok >= 0 => Api.statusResponse(true, Status.Ok)

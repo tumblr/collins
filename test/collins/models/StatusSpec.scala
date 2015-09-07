@@ -5,7 +5,7 @@ import specification._
 import play.api.test.WithApplication
 
 class StatusSpec extends mutable.Specification {
-  
+
   "Status Model Specification".title
 
   args(sequential = true)

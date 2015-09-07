@@ -1,12 +1,10 @@
 package collins.util.views
 
-import play.api.Play
-
 import collins.models.Asset
 import collins.models.asset.AssetView
 import collins.provisioning.ProvisionerConfig
-import collins.softlayer.SoftLayerConfig
 import collins.softlayer.SoftLayer
+import collins.softlayer.SoftLayerConfig
 
 object SoftLayerHelper {
 

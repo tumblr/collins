@@ -2,8 +2,8 @@ package collins.controllers.actions.asset
 
 import scala.concurrent.Future
 
-import play.api.mvc.Result
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.mvc.Result
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -50,7 +50,7 @@ case class GetAction(
       }
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case AssetDataHolder(asset) => handleSuccess(asset)
       case RedirectDataHolder(host) => isHtml match {

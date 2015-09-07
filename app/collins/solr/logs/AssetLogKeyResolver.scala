@@ -7,6 +7,8 @@ import collins.solr.SolrKeyFlag.NotSortable
 import collins.solr.SolrKeyFlag.SingleValued
 import collins.solr.SolrKeyFlag.Sortable
 import collins.solr.SolrKeyFlag.Static
+import collins.solr.SolrKeyFlag.namedboolean2boolean
+import collins.solr.UpperCaseString.string2UpperCaseString
 
 object AssetLogKeyResolver extends SolrKeyResolver {
 
@@ -29,11 +31,10 @@ object AssetLogKeyResolver extends SolrKeyResolver {
     SolrKey("MESSAGE", String, Static, SingleValued, NotSortable),
     SolrKey("CREATED", String, Static, SingleValued, Sortable, Set("DATE")),
     SolrKey("ASSET_ID", Integer, Static, SingleValued, Sortable),
-    SolrKey("ASSET_TAG", String, Static, SingleValued, Sortable), 
-    messageTypeKey
-  )
+    SolrKey("ASSET_TAG", String, Static, SingleValued, Sortable),
+    messageTypeKey)
 
   def docSpecificKey(rawKey: UpperCaseString): Option[SolrKey] = {
-    keys.find{_ matches rawKey}
+    keys.find { _ matches rawKey }
   }
 }

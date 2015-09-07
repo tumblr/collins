@@ -3,12 +3,14 @@ package collins.util
 import java.util.Date
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+
 import scala.collection.JavaConverters.mapAsScalaConcurrentMapConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.immutable.SortedMap
+
 import com.yammer.metrics.core.Timer
 import com.yammer.metrics.scala.Instrumented
-import com.yammer.metrics.scala.{Timer => ScalaTimer}
+import com.yammer.metrics.scala.{ Timer => ScalaTimer }
 import com.yammer.metrics.stats.Snapshot
 
 sealed trait AppStats {
@@ -34,15 +36,14 @@ case class AppTimerStats(name: String, timer: Timer) extends AppStats {
     "Rate.OneMinute" -> timer.oneMinuteRate().toString,
     "Rate.FiveMinute" -> timer.fiveMinuteRate().toString,
     "Rate.FifteenMinute" -> timer.fifteenMinuteRate().toString,
-    "Rate.Unit" -> timer.rateUnit().toString
-  )
+    "Rate.Unit" -> timer.rateUnit().toString)
 }
 
 object Stats extends Instrumented {
   private val appTimers = Set("API", "Web")
-  private val counters = new ConcurrentHashMap[String,AtomicInteger]()
+  private val counters = new ConcurrentHashMap[String, AtomicInteger]()
   private val timers = {
-    val map = new ConcurrentHashMap[String,ScalaTimer]()
+    val map = new ConcurrentHashMap[String, ScalaTimer]()
     appTimers.foreach { timerName =>
       map.put(timerName, metrics.timer(timerName))
     }
@@ -52,19 +53,21 @@ object Stats extends Instrumented {
   val StartupTime = new Date()
 
   def get(): List[AppStats] = {
-    val met = metricsRegistry.allMetrics.asScala.map { case(metricName, metric) =>
-      val name = metricName.getName()
-      if (metric.isInstanceOf[Timer]) {
-        Some(AppTimerStats(name, metric.asInstanceOf[Timer]))
-      } else {
-        None
-      }
-    }.foldLeft(List[AppStats]()) { case(total, current) =>
-      if (current.isDefined) {
-        total ++ List(current.get)
-      } else {
-        total ++ Nil
-      }
+    val met = metricsRegistry.allMetrics.asScala.map {
+      case (metricName, metric) =>
+        val name = metricName.getName()
+        if (metric.isInstanceOf[Timer]) {
+          Some(AppTimerStats(name, metric.asInstanceOf[Timer]))
+        } else {
+          None
+        }
+    }.foldLeft(List[AppStats]()) {
+      case (total, current) =>
+        if (current.isDefined) {
+          total ++ List(current.get)
+        } else {
+          total ++ Nil
+        }
     } ++ List(counterStats)
     val partitioned = met.groupBy(s => appTimers.contains(s.name))
     partitioned.get(true).getOrElse(Nil) ++ partitioned.get(false).getOrElse(Nil)
@@ -73,7 +76,7 @@ object Stats extends Instrumented {
   def time[T](name: String)(f: => T): T = {
     val timer = timers.putIfAbsent(name, metrics.timer(name)) match {
       case null => timers.get(name)
-      case t => t
+      case t    => t
     }
     timer.time {
       f
@@ -84,16 +87,17 @@ object Stats extends Instrumented {
     val key = "%s.%s".format(namespace, name)
     counters.putIfAbsent(key, new AtomicInteger(0)) match {
       case counter: AtomicInteger => counter.incrementAndGet
-      case null => counters.get(key).incrementAndGet
+      case null                   => counters.get(key).incrementAndGet
     }
   }
 
   def apiRequest[T](f: => T): T = time("API")(f)
   def webRequest[T](f: => T): T = time("Web")(f)
-  
+
   private def counterStats: AppStats = {
-    val counterMap: Map[String,String] = counters.asScala.toMap.map { case(k,v) =>
-      k -> v.get.toString
+    val counterMap: Map[String, String] = counters.asScala.toMap.map {
+      case (k, v) =>
+        k -> v.get.toString
     }
     new AppStats {
       val name = "Counters"

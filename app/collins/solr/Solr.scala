@@ -5,14 +5,12 @@ import java.util.Date
 
 import scala.concurrent.Future
 
-import org.apache.solr.client.solrj.SolrClient
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer
 import org.apache.solr.client.solrj.impl.HttpSolrClient
 import org.apache.solr.client.solrj.impl.XMLResponseParser
 import org.apache.solr.core.CoreContainer
 
 import play.api.Logger
-import play.api.Play
 
 import collins.models.Asset
 
@@ -29,7 +27,7 @@ object Solr {
   }
 
   def updateAssetByTag(tag: String) {
-    Asset.findByTag(tag).foreach{updateAsset}
+    Asset.findByTag(tag).foreach { updateAsset }
   }
 
   //TODO: Rename

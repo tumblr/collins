@@ -7,10 +7,10 @@ trait MessageHelperI {
   val parentKey: String
 
   def message(key: String, args: Any*)(implicit lang: Lang): String = {
-    Messages(keyFor(key), args:_*)
+    Messages(keyFor(key), args: _*)
   }
   def messageWithDefault(key: String, default: String, args: Any*)(implicit lang: Lang): String = {
-    val msg = message(key, args:_*)
+    val msg = message(key, args: _*)
     if (msg == keyFor(key)) {
       default
     } else {
@@ -18,7 +18,7 @@ trait MessageHelperI {
     }
   }
   def rootMessage(key: String, args: Any*)(implicit lang: Lang): String = {
-    Messages(key, args:_*)
+    Messages(key, args: _*)
   }
   def keyFor(k: String) = "%s.%s".format(parentKey, k)
   def fuck(implicit lang: Lang): String = fuck(None)(lang)

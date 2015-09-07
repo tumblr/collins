@@ -12,16 +12,16 @@ case class FrameConfig(val name: String, override val source: TypesafeConfigurat
   def title = getString("title")(ConfigValue.Required)
   def style = getString("style", "width: 100%;height: 1200px;")
   def script = getString("script", """
-    function isEnabled(asset) { 
-      return false; 
+    function isEnabled(asset) {
+      return false;
     }
-    
-    function getUrl(asset) { 
+
+    function getUrl(asset) {
       return "";
-    } 
+    }
     """)
   def urlScript = getString("urlScript", """function(asset) { return ""} """)
-  
+
   def validateConfig() {
     if (enabled) {
       title

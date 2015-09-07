@@ -1,7 +1,5 @@
 package collins.controllers.actions.asset
 
-import scala.concurrent.Future
-
 import collins.controllers.Permissions
 import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder

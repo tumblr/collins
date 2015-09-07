@@ -19,13 +19,8 @@ import collins.controllers.validators.ParamValidation
 import collins.models.Asset
 import collins.models.AssetLifecycle
 import collins.models.State
-import collins.models.{Status => AssetStatus}
+import collins.models.{ Status => AssetStatus }
 import collins.util.security.SecuritySpecification
-
-import collins.controllers.actions.asset.UpdateAction.Messages.fuck
-import collins.controllers.actions.asset.UpdateAction.Messages.invalidState
-import collins.controllers.actions.asset.UpdateAction.Messages.invalidStatus
-import collins.controllers.actions.asset.UpdateAction.Messages.rootMessage
 
 object UpdateStatusAction extends ParamValidation {
   val UpdateForm = Form(tuple(
@@ -93,7 +88,7 @@ case class UpdateStatusAction(
     }
   )
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case ActionDataHolder(status, state, reason) =>
         val lifeCycle = new AssetLifecycle(userOption, tattler)

@@ -34,7 +34,7 @@ class AssetApiSpec extends mutable.Specification with ControllerSpec with Resour
 
 
   "The REST API" should {
- 
+
     "During Asset Validation" in new WithApplication {
       "Reject empty asset tags" in new ResponseScope  {
         val request = FakeRequest("GET", "/api/asset/")

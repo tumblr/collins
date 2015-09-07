@@ -6,11 +6,10 @@ import collins.util.config.Configurable
 case class InvalidPowerConfigurationException(message: String, key: Option[String] = None) extends RuntimeException(message)
 
 case class PowerConfiguration(
-  unitsRequired: Int,
-  useAlphabeticNames: Boolean,
-  private val _components: Set[String],
-  private val _uniques: Set[String]
-) extends MessageHelper("powerconfiguration") {
+    unitsRequired: Int,
+    useAlphabeticNames: Boolean,
+    private val _components: Set[String],
+    private val _uniques: Set[String]) extends MessageHelper("powerconfiguration") {
   import PowerConfiguration.Messages._
 
   if (unitsRequired < 0 || unitsRequired > 18)
@@ -61,22 +60,24 @@ object PowerConfiguration extends Configurable {
     unitComponents
     uniqueComponents
     val config = get()
-    PowerUnits().foreach { unit => unit.foreach { component =>
-      component.meta
-    }}
+    PowerUnits().foreach { unit =>
+      unit.foreach { component =>
+        component.meta
+      }
+    }
   }
 
   object Messages extends MessageHelper("powerconfiguration") {
     def InvalidComponent(ct: String) =
       messageWithDefault("unitComponents.invalid",
-                         "Specified unitComponent %s is invalid".format(ct), ct)
+        "Specified unitComponent %s is invalid".format(ct), ct)
     def ComponentLabel(ct: String, idx: String) =
       messageWithDefault(labelFor(ct), defaultLabel(ct, idx), idx)
     val ComponentsUnspecified =
       messageWithDefault("unitComponents.unspecified", "unitComponents not specified but required")
     def InvalidUnique(ut: String) =
       messageWithDefault("uniqueComponents.invalid",
-                         "Specified uniqueComponent %s is invalid".format(ut), ut)
+        "Specified uniqueComponent %s is invalid".format(ut), ut)
     val UnitsRequired =
       messageWithDefault("unitsRequired.range", "unitsRequired must be >= 0 && <= 18")
     def MissingData(key: String, label: String) =
@@ -94,8 +95,7 @@ object PowerConfiguration extends Configurable {
 
   def get(): PowerConfiguration = {
     new PowerConfiguration(
-      unitsRequired, useAlphabeticNames, unitComponents, uniqueComponents
-    )
+      unitsRequired, useAlphabeticNames, unitComponents, uniqueComponents)
   }
 
   def get(cfg: Option[PowerConfiguration]): PowerConfiguration = {

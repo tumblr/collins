@@ -26,7 +26,7 @@ case class FindByAssetAction(
     Right(ActionDataHolder(asset))
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case ActionDataHolder(asset) =>
         val addresses = IpAddresses.findAllByAsset(asset).toJson

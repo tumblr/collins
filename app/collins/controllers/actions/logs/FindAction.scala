@@ -2,9 +2,9 @@ package collins.controllers.actions.logs
 
 import scala.concurrent.Future
 
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsObject
 import play.api.libs.json.Json
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -36,7 +36,7 @@ case class FindAction(
     }.getOrElse(Right(ActionDataHolder(None, pageParams, filter)))
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case adh@ActionDataHolder(asset, params, filter) =>
         val logs = getLogs(adh)

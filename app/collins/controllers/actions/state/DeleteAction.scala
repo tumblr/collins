@@ -2,9 +2,9 @@ package collins.controllers.actions.state
 
 import scala.concurrent.Future
 
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.Api
 import collins.controllers.ResponseData

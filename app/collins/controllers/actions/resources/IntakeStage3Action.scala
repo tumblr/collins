@@ -83,19 +83,19 @@ case class IntakeStage3Action(
     case left => left
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case IntakeDataHolder(chassisTag, rackPosition, customFieldMap, powerMap) => {
         val basicMap = Map(
           ChassisTag.toString -> chassisTag,
           RackPosition.toString -> rackPosition
         )
-  
+
         val updateMap = basicMap ++ customFieldMap ++ powerMap
         // Asset Lifecycle business
         val lifeCycle = new AssetLifecycle(userOption, tattler)
         lifeCycle.updateAsset(definedAsset, updateMap) match {
-  
+
           case Left(error) =>
             handleError(RequestDataHolder.error400(error.getMessage))
           case Right(ok) if ok =>

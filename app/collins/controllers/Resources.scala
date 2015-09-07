@@ -45,7 +45,7 @@ trait Resources extends Controller {
     PageParams(page, size, sort, sortField), operation, Permissions.Resources.Find, this
   )
 
-  def similar(tag: String, page: Int, size: Int, sort: String) = 
+  def similar(tag: String, page: Int, size: Int, sort: String) =
     FindSimilarAction(tag, PageParams(page, size, sort, "sparse"), Permissions.Resources.Find, this)
 
   def intake(id: Long, stage: Int = 1) = stage match {

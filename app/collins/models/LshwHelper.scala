@@ -1,5 +1,7 @@
 package collins.models
 
+import collins.models.AssetMeta.DynamicEnum._
+import collins.models.AssetMeta.Enum._
 import collins.models.lshw.Cpu
 import collins.models.lshw.Disk
 import collins.models.lshw.Memory
@@ -10,11 +12,7 @@ import collins.util.BitStorageUnit
 import collins.util.ByteStorageUnit
 import collins.util.LshwRepresentation
 
-import collins.models.AssetMeta.DynamicEnum._
-
 object LshwHelper extends CommonHelper[LshwRepresentation] {
-  import AssetMeta.Enum._
-  import AssetMeta.DynamicEnum._
 
   // TODO: Is this set actually used anywhere?
   val managedTags = Set(

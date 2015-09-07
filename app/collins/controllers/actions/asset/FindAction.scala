@@ -49,7 +49,7 @@ class FindAction(
           logger.debug("Performing local asset find")
           Asset.find(pageParams, ra, af, op)
         }
-        handleSuccess(results, afdh.details.map(_.isTruthy).getOrElse(true)) 
+        handleSuccess(results, afdh.details.map(_.isTruthy).getOrElse(true))
       } catch {
         case timeout: TimeoutException => {
           handleError(RequestDataHolder.error504(

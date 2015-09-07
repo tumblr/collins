@@ -3,7 +3,7 @@ package collins.util
 import collins.util.config.Feature
 
 import collins.models.Asset
-import collins.models.AssetMeta
+import collins.models.Asset
 import collins.models.AssetMetaValue
 import collins.models.IpAddresses
 import collins.models.IpmiInfo

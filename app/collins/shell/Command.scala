@@ -19,8 +19,7 @@ case class Command(command: Seq[String], logger: Logger) {
     val exitStatus = try {
       process ! ProcessLogger(
         s => stdout.append(s + "\n"),
-        e => stderr.append(e + "\n")
-      )
+        e => stderr.append(e + "\n"))
     } catch {
       case e: Throwable =>
         stderr.append(e.getMessage)

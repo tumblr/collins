@@ -18,12 +18,12 @@ sealed trait StringValueFormat {
   def escapeChars: Boolean = true
 
   val charsToEscape = List(":")
-  def addEscapeChars(value: String) = charsToEscape.foldLeft(value){(newValue, char) => newValue.replace(char, "\\" + char)}
+  def addEscapeChars(value: String) = charsToEscape.foldLeft(value) { (newValue, char) => newValue.replace(char, "\\" + char) }
 
   def format(value: String) = addWildcards(if (escapeChars) addEscapeChars(value) else value)
 }
 case object LWildcard extends StringValueFormat {
-  def addWildcards(value:String) = "*" + value
+  def addWildcards(value: String) = "*" + value
 }
 case object RWildcard extends StringValueFormat {
   def addWildcards(value: String) = value + "*"
@@ -66,7 +66,7 @@ object StringValueFormat {
   val fullWildcardValue = SolrStringValue("*", FullWildcard)
 
   /**
-   * This is some pretty complex logic to handle user queries that include wildcards, 
+   * This is some pretty complex logic to handle user queries that include wildcards,
    * regex markers ^,$, or some combination.  See the unit
    * tests for examples
    *
@@ -83,7 +83,7 @@ object StringValueFormat {
     val e_$ = e("$")
     val states = List(
       (s_*, e_$, 1, 1, LWildcard),
-      (s__*, e__*, 2,2, LRWildcard),
+      (s__*, e__*, 2, 2, LRWildcard),
       (s_*, e_*, 1, 1, LRWildcard),
       (s__*, e_$, 2, 1, LWildcard),
       (s_*, true, 1, 0, LWildcard),
@@ -95,9 +95,8 @@ object StringValueFormat {
       (true, e__*, 0, 2, RWildcard),
       (true, e_*, 0, 1, RWildcard),
       (true, e_$, 0, 1, LWildcard),
-      (true, true, 0,0, Unquoted)
-    )
-    val (_,_, strim, etrim, format) = states.find{x => x._1 && x._2}.get
+      (true, true, 0, 0, Unquoted))
+    val (_, _, strim, etrim, format) = states.find { x => x._1 && x._2 }.get
     try {
       SolrStringValue(rawStr.substring(strim, rawStr.length - (etrim)).trim(), format)
     } catch {

@@ -15,12 +15,12 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.controllers.forms.stateFormat
 import collins.controllers.forms.statusFormat
-import collins.models.State
-import collins.models.{Status => AssetStatus}
 import collins.models.AssetLifecycle
+import collins.models.State
+import collins.models.{ Status => AssetStatus }
 import collins.util.MessageHelper
-import collins.util.views.Maintenance
 import collins.util.security.SecuritySpecification
+import collins.util.views.Maintenance
 import collins.validation.StringUtil
 
 object UpdateForMaintenance {
@@ -83,7 +83,7 @@ case class UpdateForMaintenanceAction(
     }
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case adh@ActionDataHolder(status, description, state) =>
         val lifeCycle = new AssetLifecycle(userOption, tattler)

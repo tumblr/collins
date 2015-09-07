@@ -1,5 +1,6 @@
 package collins.models
 
+import collins.models.AssetMeta.Enum._
 import collins.models.lldp.Chassis
 import collins.models.lldp.ChassisId
 import collins.models.lldp.Interface
@@ -9,10 +10,7 @@ import collins.models.lldp.Vlan
 import collins.models.shared.CommonHelper
 import collins.util.LldpRepresentation
 
-import collins.models.AssetMeta.Enum._
-
 object LldpHelper extends CommonHelper[LldpRepresentation] {
-  import AssetMeta.Enum._
 
   val managedTags = Set(
     LldpInterfaceName,
@@ -38,18 +36,18 @@ object LldpHelper extends CommonHelper[LldpRepresentation] {
       val chassis = interface.chassis
       val port = interface.port
       val vlans = interface.vlans.map { vlan =>
-        Seq(AssetMetaValue(asset_id, LldpVlanId.id, groupId, vlan.id.toString),
-            AssetMetaValue(asset_id, LldpVlanName.id, groupId, vlan.name))
+        Seq(new AssetMetaValue(asset_id, LldpVlanId.id, groupId, vlan.id.toString),
+            new AssetMetaValue(asset_id, LldpVlanName.id, groupId, vlan.name))
       }.flatten
       seq ++ vlans ++ Seq(
-        AssetMetaValue(asset_id, LldpInterfaceName.id, groupId, interface.name),
-        AssetMetaValue(asset_id, LldpChassisName.id, groupId, chassis.name),
-        AssetMetaValue(asset_id, LldpChassisIdType.id, groupId, chassis.id.idType),
-        AssetMetaValue(asset_id, LldpChassisIdValue.id, groupId, chassis.id.value),
-        AssetMetaValue(asset_id, LldpChassisDescription.id, groupId, chassis.description),
-        AssetMetaValue(asset_id, LldpPortIdType.id, groupId, port.id.idType),
-        AssetMetaValue(asset_id, LldpPortIdValue.id, groupId, port.id.value),
-        AssetMetaValue(asset_id, LldpPortDescription.id, groupId, port.description)
+        new AssetMetaValue(asset_id, LldpInterfaceName.id, groupId, interface.name),
+        new AssetMetaValue(asset_id, LldpChassisName.id, groupId, chassis.name),
+        new AssetMetaValue(asset_id, LldpChassisIdType.id, groupId, chassis.id.idType),
+        new AssetMetaValue(asset_id, LldpChassisIdValue.id, groupId, chassis.id.value),
+        new AssetMetaValue(asset_id, LldpChassisDescription.id, groupId, chassis.description),
+        new AssetMetaValue(asset_id, LldpPortIdType.id, groupId, port.id.idType),
+        new AssetMetaValue(asset_id, LldpPortIdValue.id, groupId, port.id.value),
+        new AssetMetaValue(asset_id, LldpPortDescription.id, groupId, port.description)
       )
     }
   }

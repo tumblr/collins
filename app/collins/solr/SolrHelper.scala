@@ -16,6 +16,8 @@ import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.callbacks.Callback
 import collins.models.Asset
+import collins.models.Asset
+import collins.models.AssetLog
 import collins.models.AssetLog
 import collins.solr.CollinsQueryDSL.str2collins
 import collins.solr.Solr.AssetSolrDocument
@@ -94,27 +96,27 @@ object SolrHelper {
       logger.debug("Populating Solr with Assets")
       val assets = Asset.findRaw()
       updateAssets(assets, indexTime)
-      server.deleteByQuery( """SELECT asset WHERE last_indexed < %s""".format(Formatter.solrDateFormat(indexTime)).solr )
+      server.deleteByQuery("""SELECT asset WHERE last_indexed < %s""".format(Formatter.solrDateFormat(indexTime)).solr)
 
       //logs
       logger.debug("Populating Asset Logs")
-      val num = assets.map{asset =>
+      val num = assets.map { asset =>
         val logs = AssetLog.findByAsset(asset)
         updateAssetLogs(logs, indexTime, false)
         logs.size
       }.sum
-      _server.foreach{_.commit()}
+      _server.foreach { _.commit() }
       logger.info("Indexed %d logs".format(num))
       server.deleteByQuery("""SELECT asset_log WHERE last_indexed < %s""".format(Formatter.solrDateFormat(indexTime)).solr)
     }.getOrElse(logger.warn("attempted to populate solr when no server was initialized"))
   }
 
   def updateItems[T](items: Seq[T], serializer: SolrSerializer[T], indexTime: Date, commit: Boolean = true) {
-    _server.map{server =>
-      val docs = items.map{item => prepForInsertion(serializer.serialize(item, indexTime))}
+    _server.map { server =>
+      val docs = items.map { item => prepForInsertion(serializer.serialize(item, indexTime)) }
       if (docs.size > 0) {
         val fuckingJava = new java.util.ArrayList[SolrInputDocument]
-        docs.foreach{doc => fuckingJava.add(doc)}
+        docs.foreach { doc => fuckingJava.add(doc) }
         server.add(fuckingJava)
         if (commit) {
           server.commit()
@@ -136,19 +138,19 @@ object SolrHelper {
   }
 
   def updateAssetLogs(logs: Seq[AssetLog], indexTime: Date, commit: Boolean = true) {
-    updateItems[AssetLog](logs, AssetLogSerializer, indexTime,commit)
+    updateItems[AssetLog](logs, AssetLogSerializer, indexTime, commit)
   }
 
   def terminateSolr() {
-    _server.foreach{
+    _server.foreach {
       case s: EmbeddedSolrServer => s.getCoreContainer.shutdown()
-      case s: HttpSolrClient => s.close()
+      case s: HttpSolrClient     => s.close()
     }
   }
 
   def prepForInsertion(typedMap: AssetSolrDocument): SolrInputDocument = {
     val input = new SolrInputDocument
-    typedMap.foreach{case(key,value) => input.addField(key.resolvedName,value.value)}
+    typedMap.foreach { case (key, value) => input.addField(key.resolvedName, value.value) }
     input
   }
 }

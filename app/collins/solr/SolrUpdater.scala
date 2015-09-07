@@ -16,8 +16,6 @@ import collins.models.AssetLog
 
 import akka.actor.Actor
 
-//TODO: refactor all this
-
 /**
  * The SolrUpdater queues asset updates for batch updating.  Most importantly,
  * if it receives multiple requests of the same asset, it will only update the
@@ -28,8 +26,7 @@ import akka.actor.Actor
 class AssetSolrUpdater extends Actor {
 
   private[this] def newAssetTagSet = Collections.newSetFromMap[String](
-    new ConcurrentHashMap[String,java.lang.Boolean]()
-  )
+    new ConcurrentHashMap[String, java.lang.Boolean]())
 
   private[this] val assetTagsRef = new AtomicReference(newAssetTagSet)
   private[this] val logger = Logger("SolrUpdater")
@@ -50,7 +47,7 @@ class AssetSolrUpdater extends Actor {
     case asset: Asset =>
       assetTagsRef.get.add(asset.tag)
       if (scheduled.compareAndSet(false, true)) {
-        logger.debug("Scheduling reindex of %s within %s".format(asset.tag,SolrConfig.assetBatchUpdateWindow))
+        logger.debug("Scheduling reindex of %s within %s".format(asset.tag, SolrConfig.assetBatchUpdateWindow))
         context.system.scheduler.scheduleOnce(SolrConfig.assetBatchUpdateWindow, self, Reindex)
       } else {
         logger.trace("Ignoring already scheduled reindex of %s".format(asset.tag))

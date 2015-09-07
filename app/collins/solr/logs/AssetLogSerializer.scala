@@ -1,4 +1,3 @@
-
 package collins.solr
 
 import java.util.Date
@@ -19,10 +18,8 @@ object AssetLogSerializer extends SolrSerializer[AssetLog](AssetLogDocType) {
     res("MESSAGE").get -> SolrStringValue(log.message, StrictUnquoted),
     res("MESSAGE_TYPE").get -> SolrStringValue(log.messageType.toString, StrictUnquoted),
     res("ASSET_TAG").get -> SolrStringValue(log.assetTag),
-    res("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(log.created))
-  )
+    res("CREATED").get -> SolrStringValue(Formatter.solrDateFormat(log.created)))
 
   def getUUID(log: AssetLog) = log.id
-
 
 }

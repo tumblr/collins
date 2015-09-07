@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicReference
 
 import play.api.mvc.Results
-import play.api.mvc.Results.{Status => HttpStatus}
+import play.api.mvc.Results.{ Status => HttpStatus }
 
 trait RequestDataHolder {
   type This = RequestDataHolder

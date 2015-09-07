@@ -2,14 +2,15 @@ package collins.controllers.actions.assettype
 
 import scala.concurrent.Future
 
-import play.api.libs.json.Json
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.libs.json.Json
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.models.AssetType
+import collins.models.conversions.AssetTypeFormat
 import collins.util.MessageHelper
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
@@ -64,7 +65,7 @@ case class GetAction(
     Right(ActionDataHolder(None))
   }
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(atype) => atype match {
         case None =>

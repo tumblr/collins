@@ -19,7 +19,7 @@ trait AssetWebApi {
     DeleteAction(tag, true, Permissions.AssetWebApi.DeleteAsset, this)
 
   // POST /asset/:tag/cancel
-  def cancelAsset(tag: String) = Authenticated { user => 
+  def cancelAsset(tag: String) = Authenticated { user =>
     if (AppConfig.ignoreAsset(tag)) {
       Action { implicit req => formatResponseData(
         Api.getErrorMessage("Specified asset has been configured to not permit this operation")

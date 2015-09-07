@@ -1,10 +1,9 @@
 package collins.util.security
 
 case class SecuritySpec(
-  isSecure: Boolean,
-  requiredCredentials: Set[String],
-  securityConcern: String = SecuritySpec.LegacyMarker
-) extends SecuritySpecification {
+    isSecure: Boolean,
+    requiredCredentials: Set[String],
+    securityConcern: String = SecuritySpec.LegacyMarker) extends SecuritySpecification {
   def this(secure: Boolean, creds: Seq[String]) = this(secure, creds.toSet, SecuritySpec.LegacyMarker)
 }
 

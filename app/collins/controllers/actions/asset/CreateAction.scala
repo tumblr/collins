@@ -7,8 +7,8 @@ import play.api.data.Forms.of
 import play.api.data.Forms.optional
 import play.api.data.Forms.text
 import play.api.data.Forms.tuple
-import play.api.mvc.Result
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import play.api.mvc.Result
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -22,7 +22,7 @@ import collins.models.Asset
 import collins.models.AssetLifecycle
 import collins.models.AssetType
 import collins.models.IpmiInfo
-import collins.models.{Status => AssetStatus}
+import collins.models.{ Status => AssetStatus }
 import collins.models.Truthy
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
@@ -106,8 +106,8 @@ case class CreateAction(
         "error" -> rd.error.getOrElse("A tag must be specified")
       ))
   }
-    
-  
+
+
 
   protected def handleSuccess(asset: Asset, ipmi: Option[IpmiInfo]): Result = isHtml match {
     case true =>

@@ -2,15 +2,15 @@ package collins.models.asset
 
 import org.squeryl.PrimitiveTypeMode._
 
-import collins.models.cache.Cache
-
+import collins.callbacks.Callback
+import collins.callbacks.CallbackDatumHolder
+import collins.callbacks.StringDatum
 import collins.models.Asset
 import collins.models.AssetLog
 import collins.models.AssetMetaValue
 import collins.models.IpAddresses
 import collins.models.IpmiInfo
-
-import collins.callbacks.Callback
+import collins.models.cache.Cache
 
 object AssetDeleter {
   def purge(asset: Asset): Boolean = {
@@ -23,7 +23,7 @@ object AssetDeleter {
         deleteAsset(asset)
     }
     if (result) {
-      Callback.fire("asset_purge", tag, null)
+      Callback.fire("asset_purge", CallbackDatumHolder(Some(StringDatum(tag))), CallbackDatumHolder(None))
       Cache.clear()
     }
     result
@@ -45,3 +45,4 @@ object AssetDeleter {
     Asset.delete(asset) >= 0
   }
 }
+

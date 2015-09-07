@@ -5,24 +5,36 @@ import java.util.Date
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-import Solr._
-import org.specs2._
+import org.specs2.mutable
+
+import play.api.test.FakeApplication
+import play.api.test.WithApplication
+
+import collins.models.Asset
 import collins.models.Asset
 import collins.models.AssetFinder
-import collins.models.AssetType
 import collins.models.AssetMeta
+import collins.models.AssetMeta
+import collins.models.AssetMeta.ValueType
+import collins.models.AssetMeta.ValueType.Boolean
+import collins.models.AssetMeta.ValueType.Double
+import collins.models.AssetMeta.ValueType.Integer
+import collins.models.AssetMeta.ValueType.String
+import collins.models.AssetMetaValue
+import collins.models.AssetMetaValue
 import collins.models.AssetSearchParameters
+import collins.models.AssetType
+import collins.models.AssetType
 import collins.models.IpAddresses
 import collins.models.IpmiInfo
 import collins.models.State
+import collins.models.State
 import collins.models.Status
-import collins.models.AssetMetaValue
+import collins.models.Status
 import collins.models.shared.PageParams
+import collins.solr.UpperCaseString.UppercaseString2String
+import collins.solr.UpperCaseString.string2UpperCaseString
 import collins.util.views.Formatter
-
-import play.api.test.WithApplication
-import play.api.test.FakeApplication
-
 
 class MultiSetSpec extends mutable.Specification {
 
@@ -43,7 +55,7 @@ class MultiSetSpec extends mutable.Specification {
       MultiSet().headOption must_== None
       MultiSet(1,2,3,4).headOption must_== Some(1)
     }
-    "toSeq" in { 
+    "toSeq" in {
       MultiSet(1, 2, 2, 3).toSeq must_== Seq(1,2,2,3)
     }
     "equals" in {
@@ -58,7 +70,7 @@ class SolrSpec extends mutable.Specification {
   import AssetMeta.ValueType
 
   args(sequential = true)
-  
+
   "during serialization" should {
     def eqHelper[T](actualSet: Set[T], expectedSet: Set[T]) {
       if (expectedSet != actualSet) {
@@ -155,7 +167,7 @@ class SolrSpec extends mutable.Specification {
       // repopulate solr - HARD CODED TIME - DO THIS BETTER
       Await.result(SolrHelper.populate(), Duration(5, java.util.concurrent.TimeUnit.SECONDS))
     }
-    
+
     "must find asset with state filter" in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
@@ -167,9 +179,9 @@ class SolrSpec extends mutable.Specification {
 
       // this asset is not included in the results
       generateAsset("asset2", AssetType.ServerNode.get, Status.Provisioned.get, Nil, State.Starting.get)
-      
+
       reindex()
-      
+
       val finder = AssetFinder.empty.copy(state = State.Running)
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder)
@@ -179,7 +191,7 @@ class SolrSpec extends mutable.Specification {
         asset.statusId mustEqual Status.Allocated.get.id
       }
     }
-    
+
     "must find asset with meta fields " in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
@@ -187,16 +199,16 @@ class SolrSpec extends mutable.Specification {
 
       val meta = List(
         ("HOST", String, 0, "my_host"))
-        
+
       // create the asset that matches the search
       val assetTag = "asset3"
       generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
 
       // this asset is not included in the results
       generateAsset("asset4", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
-      
+
       reindex()
-      
+
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("HOST", "my_host")
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, None)
       page.items.size mustEqual 1
@@ -205,7 +217,7 @@ class SolrSpec extends mutable.Specification {
         asset.statusId mustEqual Status.Allocated.get.id
       }
     }
-    
+
     "must find asset with meta fields ignoring case" in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
@@ -213,16 +225,16 @@ class SolrSpec extends mutable.Specification {
 
       val meta = List(
         ("CaSe_IgNoRe", String, 0, "Ignore_THIS_case"))
-        
+
       // create the asset that matches the search
       val assetTag = "asset5"
       generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
 
       // this asset is not included in the results
       generateAsset("asset6", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
-      
+
       reindex()
-      
+
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("case_ignore", "IGNORE_THIS_case")
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, None)
       page.items.size mustEqual 1
@@ -231,23 +243,23 @@ class SolrSpec extends mutable.Specification {
         asset.statusId mustEqual Status.Allocated.get.id
       }
     }
-    
+
     "must find asset with meta and regular fields " in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
         "solr.repopulateOnStartup" -> true))) {
 
       val meta = List(("ATTR", String, 0, "ATTRV"))
-        
+
       // create the asset that matches the search
       val assetTag = "asset7"
       generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
 
       // this asset is not included in the results
       generateAsset("asset8", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
-      
+
       reindex()
-      
+
       val finder = AssetFinder.empty.copy(status = Status.Allocated)
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("ATTR", "ATTRV")
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), finder, None)
@@ -257,7 +269,7 @@ class SolrSpec extends mutable.Specification {
         asset.statusId mustEqual Status.Allocated.get.id
       }
     }
-    
+
     "must find asset with and'ing conditional " in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
@@ -265,16 +277,16 @@ class SolrSpec extends mutable.Specification {
 
       val meta = List(("X", String, 0, "X"),
         ("Y", String, 0, "Y"))
-        
+
       // create the asset that matches the search
       val assetTag = "asset9"
       val asset = generateAsset(assetTag, AssetType.ServerNode.get, Status.Allocated.get, meta, State.New.get)
 
       // this asset is not included in the results
       generateAsset("asset10", AssetType.ServerNode.get, Status.Allocated.get, Nil, State.New.get)
-      
+
       reindex()
-      
+
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("X", "X").withMeta("Y", "Y")
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, Some("and"))
       page.items.size mustEqual 1
@@ -283,7 +295,7 @@ class SolrSpec extends mutable.Specification {
         asset.statusId mustEqual Status.Allocated.get.id
       }
     }
-    
+
     "must find asset with or'ing conditional " in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
@@ -296,9 +308,9 @@ class SolrSpec extends mutable.Specification {
       // this asset is *also* included in the results
       val assetTag2 = "asset12"
       generateAsset(assetTag2, AssetType.ServerNode.get, Status.Provisioned.get, List(("U", String, 0, "U")), State.New.get)
-      
+
       reindex()
-      
+
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("T", "T").withMeta("U", "U")
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty, Some("or"))
       page.items.size mustEqual 2
@@ -315,7 +327,7 @@ class SolrSpec extends mutable.Specification {
         asset.getMetaAttributeValue("U") mustEqual Some("U")
       }
     }
-    
+
     "must find asset with partial attribute match " in new WithApplication(FakeApplication(
       additionalConfiguration = Map(
         "solr.enabled" -> true,
@@ -327,9 +339,9 @@ class SolrSpec extends mutable.Specification {
 
       // this asset is not included in the results
       generateAsset("asset14", AssetType.ServerNode.get, Status.Provisioned.get, Nil, State.New.get)
-      
+
       reindex()
-      
+
       val ra = collins.util.AttributeResolver.EmptyResolvedAttributes.withMeta("SPECIFICATION", "FURY")
       val page =  Asset.find(pageParam, (ra.ipmi, ra.assetMeta, ra.ipAddress.toList), AssetFinder.empty)
       page.items.size mustEqual 1
@@ -347,11 +359,11 @@ class SolrSpec extends mutable.Specification {
     metaValues.foreach{case (name, value_type, group_id, value) =>
       val meta = AssetMeta.findOrCreateFromName(name, value_type)
       try {
-        AssetMetaValue.create(AssetMetaValue(asset.id, meta.id, group_id, value))
+        AssetMetaValue.create(new AssetMetaValue(asset.id, meta.id, group_id, value))
       } catch {
         case e: RuntimeException =>
           Thread.sleep(1000)
-          AssetMetaValue.create(AssetMetaValue(asset.id, meta.id, group_id, value))
+          AssetMetaValue.create(new AssetMetaValue(asset.id, meta.id, group_id, value))
       }
     }
     Asset.findById(asset.id).get
@@ -410,7 +422,7 @@ class SolrQuerySpec extends mutable.Specification {
 
       "clean string" in {
         "trim whitespace" in {
-          """ 
+          """
               foo = bar
             """.query.where must_== SolrKeyVal("foo", SolrStringValue("bar"))
          }
@@ -423,7 +435,7 @@ class SolrQuerySpec extends mutable.Specification {
 
     "SolrKey" should {
       "properly convert names to U case" in {
-        val n: String = SolrKey("foo", String, false, false, false).name 
+        val n: String = SolrKey("foo", String, false, false, false).name
         n must_== "FOO"
       }
       "convert aliases to UCASE" in {
@@ -544,7 +556,7 @@ class SolrQuerySpec extends mutable.Specification {
       "!=" in {
         """foosolr != 5""".query.where must_== SolrNotOp(SolrKeyVal("foosolr", SolrStringValue("5", Unquoted)))
       }
-        
+
     }
   }
 
@@ -603,7 +615,7 @@ class SolrQuerySpec extends mutable.Specification {
         S("04:7d:7b:06:8f:f9", StrictUnquoted).traverseQueryString(false) must_== """04\:7d\:7b\:06\:8f\:f9"""
       }
     }
-  } 
+  }
 
 
   "CQL abstract syntax-tree" should {
@@ -733,14 +745,14 @@ class SolrQuerySpec extends mutable.Specification {
 
 
   }
-  
+
   "AssetFinder solr conversion" should {
     "basic conversion" in new WithApplication {
       val somedate = new java.util.Date
       val dateString = collins.util.views.Formatter.solrDateFormat(somedate)
       val afinder = AssetFinder(
-        Some("foosolrtag"), 
-        Status.Allocated, 
+        Some("foosolrtag"),
+        Status.Allocated,
         Some(AssetType.ServerNode.get),
         Some(somedate),
         Some(somedate),
@@ -810,8 +822,8 @@ class SolrQuerySpec extends mutable.Specification {
       val somedate = new java.util.Date
       val dateString = collins.util.views.Formatter.solrDateFormat(somedate)
       val afinder = AssetFinder(
-        Some("footag"), 
-        Some(Status.Allocated.get), 
+        Some("footag"),
+        Some(Status.Allocated.get),
         AssetType.ServerNode,
         Some(somedate),
         Some(somedate),

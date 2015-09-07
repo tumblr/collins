@@ -10,6 +10,7 @@ import play.api.mvc.Results
 import collins.controllers.ApiResponse
 import collins.controllers.actions.SecureAction
 
+
 /**
  * We're using an algebraic data type and partial functions for the routing map to ensure
  * 1 - we don't accidentally route to a non-existant version
@@ -62,18 +63,16 @@ object VersionRouter {
 
   def route[T](requestHeaders: Headers)(routes: ApiVersion => T): T = routeEither(requestHeaders)(routes).fold(
     err => throw new VersionException(err),
-    route => route
-  )
+    route => route)
 
-  def apply(routes: Function1[ApiVersion, SecureAction]): Action[AnyContent] = Action.async {implicit request =>
+  def apply(routes: Function1[ApiVersion, SecureAction]): Action[AnyContent] = Action.async { implicit request =>
     routeEither(request.headers)(routes).fold(
       err => if (OutputType.isHtml(request)) {
         Future.successful(Results.Redirect(collins.app.routes.Resources.index).flashing("error" -> err))
       } else {
         Future.successful(Results.BadRequest(ApiResponse.formatJsonError(err, None)))
       },
-      action => action(request)
-    )
+      action => action(request))
   }
 
 }

@@ -3,8 +3,8 @@ package collins.controllers
 import play.api.data.Form
 import play.api.data.Forms
 import play.api.mvc.Action
-import play.api.mvc.Request
 import play.api.mvc.AnyContent
+import play.api.mvc.Request
 
 import collins.models.User
 import collins.util.security.SecuritySpec
@@ -12,7 +12,7 @@ import collins.util.security.SecuritySpec
 import views.html
 
 object Application extends SecureWebController {
- 
+
   val loginForm = Form(
     Forms.tuple(
       "username" -> Forms.nonEmptyText,
@@ -29,13 +29,13 @@ object Application extends SecureWebController {
         Ok(html.login(loginForm.fill(("","",Some(location.head))).copy(errors = Nil)))
     }
   }
-  
+
   def sanitizeForm(loginForm : Form[(String, String, Option[String])]): Map[String,String] = loginForm.data - "password"
-  
+
   def failedAuth(loginForm : Form[(String, String, Option[String])]) (implicit req: Request[AnyContent]) = {
     BadRequest(html.login(loginForm.withGlobalError("Invalid username or password").copy(data = sanitizeForm(loginForm))))
   }
-  
+
   def successAuth(user: User, location: Option[String]) = {
     location match {
       case Some(location) =>

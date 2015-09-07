@@ -2,11 +2,11 @@ package collins.controllers.actions.ipaddress
 
 import scala.concurrent.Future
 
+import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsArray
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
-import play.api.libs.concurrent.Execution.Implicits.defaultContext
 
 import collins.controllers.ResponseData
 import collins.controllers.SecureController
@@ -28,9 +28,9 @@ case class GetPoolsAction(
 
   override def validate(): Validation = Right(ActionDataHolder(allPools.toBoolean))
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
-      case ActionDataHolder(all) => 
+      case ActionDataHolder(all) =>
         val pools: Set[String] =
           if (all) {
             val set = IpAddresses.AddressConfig.map(_.poolNames).getOrElse(Set())

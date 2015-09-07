@@ -1,8 +1,8 @@
 package collins.controllers.actions.asset
 
-import scala.concurrent.Future
 import scala.collection.immutable.DefaultMap
 import scala.collection.mutable.HashMap
+import scala.concurrent.Future
 
 import play.api.data.Form
 import play.api.data.Forms.longNumber
@@ -22,8 +22,6 @@ import collins.models.AssetMeta.Enum.RackPosition
 import collins.util.MessageHelper
 import collins.util.power.PowerUnits
 import collins.util.security.SecuritySpecification
-
-import collins.controllers.actions.asset.UpdateAction.Messages.message
 
 object UpdateAction extends ParamValidation {
   object Messages extends MessageHelper("asset.update") {
@@ -100,7 +98,7 @@ case class UpdateAction(
     }
   }
 
-  override def execute(rd: RequestDataHolder) = Future { 
+  override def execute(rd: RequestDataHolder) = Future {
     rd match {
       case adh@ActionDataHolder(map) =>
         val lifeCycle = new AssetLifecycle(userOption(), tattler)

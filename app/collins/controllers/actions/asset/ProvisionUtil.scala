@@ -19,26 +19,23 @@ import collins.controllers.actors.ProvisionerResult
 import collins.controllers.actors.ProvisionerRun
 import collins.controllers.actors.ProvisionerTest
 import collins.controllers.forms.truthyFormat
-
 import collins.models.Asset
 import collins.models.AssetLifecycle
 import collins.models.AssetMetaValue
-import collins.models.{Status => AStatus}
+import collins.models.{ Status => AssetStatus }
 import collins.models.Truthy
-
 import collins.provisioning.Provisioner
 import collins.provisioning.ProvisionerRequest
-import collins.provisioning.{ProvisionerRoleData => ProvisionerRole}
-
+import collins.provisioning.{ ProvisionerRoleData => ProvisionerRole }
+import collins.softlayer.SoftLayer
+import collins.softlayer.SoftLayerConfig
 import collins.util.concurrent.BackgroundProcessor
 import collins.util.concurrent.BackgroundProcessor.SendType
 import collins.util.config.Feature
-import collins.softlayer.SoftLayer
-import collins.softlayer.SoftLayerConfig
 
 trait ProvisionUtil { self: SecureAction =>
   import collins.controllers.forms._
-  
+
   type ProvisionForm = Tuple7[
     String, // profile
     String, // contact
@@ -138,7 +135,7 @@ trait ProvisionUtil { self: SecureAction =>
     // and make sure any explicitly set attrs override any that are to be cleared
     clearOnRepurposeAttrs(asset) ++ clearProfileAttrs ++ lowPriorityAttrs ++ highPriorityAttrs
   }
-  
+
   private[this] def clearOnRepurposeAttrs(asset: Asset): Map[String, String] = {
     if (Feature.useWhiteListOnRepurpose) {
       val keepAttributes = Feature.keepSomeMetaOnRepurpose.map(_.name)
@@ -149,7 +146,7 @@ trait ProvisionUtil { self: SecureAction =>
       Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
     }
   }
-  
+
   protected def fieldError(form: Form[ProvisionForm]): Validation = (form match {
     case f if f.error("profile").isDefined => Option("Profile must be specified")
     case f if f.error("contact").isDefined => Option("Contact must be specified")
@@ -235,12 +232,12 @@ trait Provisions extends ProvisionUtil with AssetAction { self: SecureAction =>
       val lifeCycle = new AssetLifecycle(userOption(), tattler)
       lifeCycle.updateAssetAttributes(Asset.findById(asset.id).get, attribs)
     }
-    
+
     BackgroundProcessor.send(ActivationProcessor(slId)(request)) { res =>
       processProvisionAction(res) {
         case true =>
           val newAsset = Asset.findById(asset.id).get
-          Asset.partialUpdate(newAsset, None, AStatus.New.map(_.id))
+          Asset.partialUpdate(newAsset, None, AssetStatus.New.map(_.id))
           setAsset(newAsset)
           tattle("Asset successfully activated", false)
           None

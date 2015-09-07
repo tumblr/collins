@@ -17,8 +17,6 @@ import collins.util.MessageHelper
 import collins.util.security.SecuritySpecification
 import collins.validation.StringUtil
 
-import collins.controllers.actions.assettype.CreateAction.Messages.fuck
-
 object CreateAction {
   object Messages extends MessageHelper("controllers.AssetTypeApi.createAssetType") {
     def inUseName = messageWithDefault("inUseName", "The specified name is already in use")
@@ -83,7 +81,7 @@ case class CreateAction(
     }
   )
 
-  override def execute(rdh: RequestDataHolder) = Future { 
+  override def execute(rdh: RequestDataHolder) = Future {
     rdh match {
       case ActionDataHolder(assettype) => try {
         AssetType.create(assettype) match {

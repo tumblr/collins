@@ -17,7 +17,7 @@ object Feature extends Configurable {
 
   override val namespace = "features"
   override val referenceConfigFilename = "features_reference.conf"
-  val defaultSearchResultColumns = List("TAG","HOSTNAME","PRIMARY_ROLE","STATUS","CREATED","UPDATED")
+  val defaultSearchResultColumns = List("TAG", "HOSTNAME", "PRIMARY_ROLE", "STATUS", "CREATED", "UPDATED")
 
   def allowTagUpdates = getStringSet("allowTagUpdates")
   def allowedServerUpdateStatuses = getStringSet("allowedServerUpdateStatuses").union(Set("MAINTENANCE"))
@@ -28,14 +28,13 @@ object Feature extends Configurable {
     try {
       LogMessageType.withName(lts)
     } catch {
-      case e:Throwable =>
+      case e: Throwable =>
         featureException("defaultLogType", "%s is not a valid log type".format(lts))
     }
   }
   def syslogAsset = Asset.findByTag(getString("syslogAsset", MultiCollinsConfig.thisInstance)).orElse {
     Asset.findByTag("tumblrtag1")
   }.getOrElse {
-    new Exception().printStackTrace()
     throw globalError("neither features.syslogAsset or multicollins.thisInstance were specified")
   }
   def deleteIpmiOnDecommission = getBoolean("deleteIpmiOnDecommission", true)
