@@ -124,5 +124,3 @@ trait ResponseMatchHelpers {
   def haveJsonData() = new JsonDataMatcher {}
 
 }
-
-trait ResponseScope extends Scope with ResponseMatchHelpers

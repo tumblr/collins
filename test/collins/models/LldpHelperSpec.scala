@@ -11,7 +11,7 @@ class LldpHelperSpec extends mutable.Specification {
   "LLDP Helper Specification".title
 
   "The LLDP Helper" should {
-    "Parse and reconstruct data" in new WithApplication {
+    "Parse and reconstruct data" in {
       "with one network interface" in new LldpCommonHelper("lldpctl-single.xml") {
         val lldp = parsed()
         lldp.interfaceCount mustEqual(1)
@@ -39,7 +39,7 @@ class LldpHelperSpec extends mutable.Specification {
     }
   }
 
-  class LldpCommonHelper(txt: String) extends Scope with CommonHelperSpec[LldpRepresentation] {
+  class LldpCommonHelper(txt: String) extends WithApplication with CommonHelperSpec[LldpRepresentation] {
     def getParser(str: String) = new LldpParser(str)
     override def parsed(): LldpRepresentation = getParsed(txt)
   }
