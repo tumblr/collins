@@ -1,7 +1,6 @@
 package collins.callbacks
 
 import org.specs2.mutable
-import org.specs2.specification.Scope
 
 import play.api.test.FakeApplication
 import play.api.test.WithApplication

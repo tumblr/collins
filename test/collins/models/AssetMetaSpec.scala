@@ -12,8 +12,8 @@ class AssetMetaSpec extends mutable.Specification {
 
   "The AssetMeta Model" should {
 
-    "Handle validation" in new WithApplication {
-      "Disallow empty or bad names" in {
+    "Handle validation" in {
+      "Disallow empty or bad names" in new WithApplication {
         val ams = Seq(
           AssetMeta("", -1, "Foo", "Description"),
           AssetMeta("Foo", -1, "Foo", "Description"),
@@ -23,23 +23,24 @@ class AssetMetaSpec extends mutable.Specification {
           am.validate() must throwA[IllegalArgumentException]
           AssetMeta.create(am) must throwA[IllegalArgumentException]
         }
-        true
       }
-      "Disallow empty descriptions" in {
+      "Disallow empty descriptions" in new WithApplication {
         val am = AssetMeta("FOO", -1, "Label", "")
         am.validate() must throwA[IllegalArgumentException]
         AssetMeta.update(am) mustEqual 0
       }
     }
 
-    "Support CRUD Operations" in new WithApplication {
+    "Support CRUD Operations" in {
 
-      "CREATE" in new mockassetmeta {
+      "CREATE" in new WithApplication with mockassetmeta {
         val result = AssetMeta.create(newMeta)
         result.id must beGreaterThan(1L)
       }
 
-      "UPDATE" in new mockassetmeta {
+      "UPDATE" in new WithApplication with mockassetmeta {
+        val result = AssetMeta.create(newMeta)
+        result.id must beGreaterThan(1L)
         val maybeMeta = AssetMeta.findByName(metaName)
         maybeMeta must beSome[AssetMeta]
         val realMeta = maybeMeta.get
@@ -50,7 +51,9 @@ class AssetMetaSpec extends mutable.Specification {
         }.getOrElse(failure("Couldn't find asset meta but expected to"))
       }
 
-      "DELETE" in new mockassetmeta {
+      "DELETE" in new WithApplication with mockassetmeta {
+        val result = AssetMeta.create(newMeta)
+        result.id must beGreaterThan(1L)
         AssetMeta.findByName(metaName).map { a =>
           AssetMeta.delete(a) mustEqual 1
           AssetMeta.findById(a.id) must beNone
@@ -58,24 +61,26 @@ class AssetMetaSpec extends mutable.Specification {
       }
     }
 
-    "Support getters/finders" in new WithApplication {
+    "Support getters/finders" in {
 
-      "findByTag" in new concreteassetmeta {
+      "findByTag" in new WithApplication with concreteassetmeta {
         AssetMeta.findByName(metaName) must beSome[AssetMeta]
       }
 
-      "findAll" in {
+      "findAll" in new WithApplication {
         AssetMeta.findAll().size must be_>=(AssetMeta.Enum.values.size)
       }
 
     } // support getters/finders
 
-    "Support value typeing enforcement" in new WithApplication {
-      "create typed meta" in new numberassetmeta {
+    "Support value typeing enforcement" in {
+      "create typed meta" in new WithApplication with numberassetmeta {
         val result = AssetMeta.create(newMeta)
         result.id must beGreaterThan(1L)
       }
-      "allow numeric value" in new numberassetmeta {
+      "allow numeric value" in new WithApplication with numberassetmeta {
+        val result = AssetMeta.create(newMeta)
+        result.id must beGreaterThan(1L)
         val maybeMeta = AssetMeta.findByName(metaName)
         maybeMeta must beSome[AssetMeta]
         val realMeta = maybeMeta.get
@@ -83,7 +88,9 @@ class AssetMetaSpec extends mutable.Specification {
         AssetMetaValue(whateverAsset, realMeta.id, "123")
         success
       }
-      "reject non-numeric value" in new numberassetmeta {
+      "reject non-numeric value" in new WithApplication with numberassetmeta {
+        val result = AssetMeta.create(newMeta)
+        result.id must beGreaterThan(1L)
         val maybeMeta = AssetMeta.findByName(metaName)
         maybeMeta must beSome[AssetMeta]
         val realMeta = maybeMeta.get
