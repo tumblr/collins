@@ -1,13 +1,10 @@
 package collins.util.parsers
 
-import org.specs2._
-import org.specs2.specification.Scope
 import org.specs2.matcher.Matcher
+import org.specs2.mutable
 
-import play.api.test.WithApplication
 import play.api.test.FakeApplication
-
-import com.typesafe.config.ConfigFactory
+import play.api.test.WithApplication
 
 import collins.util.LshwRepresentation
 

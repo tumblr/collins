@@ -1,12 +1,12 @@
 package collins.controllers
 
-import collins.{FakeRequest, ResponseMatchHelpers}
-import play.api.libs.Files.TemporaryFile
-import org.specs2._
-import specification.Scope
-import matcher.Matcher
-import play.api.test.WithApplication
 import org.specs2.matcher.JsonMatchers
+import org.specs2.mutable
+
+import play.api.test.WithApplication
+
+import collins.FakeRequest
+import collins.ResponseMatchHelpers
 
 class AssetTypeApiSpec extends mutable.Specification with ControllerSpec {
 
