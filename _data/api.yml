@@ -98,10 +98,10 @@ sections:
         permission: controllers.AssetApi.updateAsset
         parameters:
           lshw:
-            type: String
+            type: Option[String]
             description: Only accepted when the asset is Incomplete, Maintenance, or states specified in allowedServerUpdateStatuses. Should be the XML output from running the lshw command on the asset.
           lldp:
-            type: String
+            type: Option[String]
             description: Only accepted when the asset is Incomplete, Maintenance, or states specified in allowedServerUpdateStatuses. Should be the XML output from running the lldp command on the asset.
           groupId:
             type: Option[Int]
