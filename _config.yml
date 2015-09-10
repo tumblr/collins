@@ -7,3 +7,4 @@ exclude:
   - Gemfile.lock
   - Rakefile
   - template.html
+  - vendor
