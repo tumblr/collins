@@ -187,6 +187,7 @@ object Cache extends Cache {
 
   def terminateCache() {
     cache.foreach(_.terminateCache())
+    cache = None
   }
   def stats: Stats = {
     cache.map(_.stats).getOrElse(DisabledStats)

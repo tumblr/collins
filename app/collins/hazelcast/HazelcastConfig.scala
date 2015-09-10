@@ -20,10 +20,6 @@ object HazelcastConfig extends Configurable {
       if (!f.exists() || !f.canRead()) {
         throw new ConfigurationException(f"Cache config file $configFile%s does not exists or is not readable")
       }
-
-      if (members.trim().length() == 0) {
-        throw new ConfigurationException(f"Please specify cache members when clustered, multicast discovery is not supported")
-      }
     }
   }
 }

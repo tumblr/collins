@@ -15,9 +15,14 @@ object HazelcastHelper {
     logger.info(s"Initializing hazelcast, enabled - ${HazelcastConfig.enabled}")
     if (HazelcastConfig.enabled) {
       val config = new FileSystemXmlConfig(HazelcastConfig.configFile)
-      val jc = config.getNetworkConfig().getJoin()
-      jc.getTcpIpConfig().setEnabled(true).addMember(HazelcastConfig.members)
-      logger.trace(f"Instantiating hazelcast instance using members ${HazelcastConfig.members}%s")
+
+      if (!HazelcastConfig.members.isEmpty()) {
+        val jc = config.getNetworkConfig().getJoin()
+        jc.getTcpIpConfig().setEnabled(true).addMember(HazelcastConfig.members)
+        logger.trace(f"Instantiating hazelcast instance using members ${HazelcastConfig.members}%s")
+      } else {
+        logger.warn("Instantiating hazelcast instance on single node, on recommended use case for this deployment is for events.")
+      }
       instance = Some(Hazelcast.newHazelcastInstance(config))
     }
   }
@@ -28,5 +33,6 @@ object HazelcastHelper {
 
   def terminateHazelcast() {
     Hazelcast.shutdownAll()
+    instance = None
   }
 }

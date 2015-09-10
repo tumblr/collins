@@ -27,6 +27,10 @@ object CacheConfig extends Configurable {
         if (!HazelcastConfig.enabled) {
           throw new ConfigurationException("Distributed cache uses hazelcast, please enable and configure it.")
         }
+
+        if (HazelcastConfig.members.isEmpty()) {
+          logger.warn("No cluster members found when instantiating distributed cache, treating as single node cache - use in-memory instead")
+        }
       }
     }
   }
