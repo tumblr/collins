@@ -6,6 +6,8 @@ import play.api.libs.json.JsString
 import play.api.libs.json.Json
 import play.api.test.FakeApplication
 import play.api.test.WithApplication
+import play.api.mvc.AnyContentAsFormUrlEncoded
+import play.api.mvc.AnyContentAsMultipartFormData
 
 import collins.models.Status
 import collins.FakeRequest
@@ -42,6 +44,23 @@ class AssetApiDecomissionSpec extends mutable.Specification with ControllerSpec 
         createAsset() must haveStatus(201)
         val req = FakeRequest("DELETE", assetUrl + "?reason=foo")
         Extract.from(api.deleteAsset(assetTag).apply(req)) must haveStatus(409)
+      }
+      "Cannot permanently delete (nuke) assets not in maintenance" in new WithApplication(FakeApplication(
+        additionalConfiguration = Map(
+          "solr.enabled" -> false))) with AssetApiHelper {
+        override val assetTag = "C0003"
+        createAsset() must haveStatus(201)
+        val req = FakeRequest("DELETE", assetUrl + "?reason=foo&nuke=true")
+        Extract.from(api.deleteAsset(assetTag).apply(req)) must haveStatus(409)
+      }
+      "Permanently delete (nuke) assets that are in maintenance mode" in new WithApplication(FakeApplication(
+        additionalConfiguration = Map(
+          "solr.enabled" -> false))) with AssetApiHelper {
+        override val assetTag = "C0004"
+        createAsset() must haveStatus(201)
+        updateStatus(Status.Maintenance.get, "Move asset to maintenance") must haveStatus(200) 
+        val req = FakeRequest("DELETE", assetUrl + "?reason=foo&nuke=true")
+        Extract.from(api.deleteAsset(assetTag).apply(req)) must haveStatus(200)
       }
     }
   }
