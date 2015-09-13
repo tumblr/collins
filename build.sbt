@@ -8,6 +8,8 @@ Keys.fork in Test := true
 
 javaOptions in Test := Seq("-Dconfig.file=conf/test.conf", "-XX:MaxPermSize=512M", "-Xms512m", "-Xmx512m")
 
+coverageExcludedPackages := "views.html.*;collins.graphs.templates.html.*;collins.controllers.ref.*;collins.controllers.javascript.*;collins.app.ref.*;collins.app.javascript.*;controllers.*;collins.app.*;collins.DbUtil;controllers.javascript.*;controllers.ref.*"
+
 parallelExecution in Test := false
 
 parallelExecution in IntegrationTest := false

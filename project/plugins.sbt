@@ -9,3 +9,5 @@ addSbtPlugin("com.typesafe.play" % "sbt-plugin" % Option(System.getProperty("pla
 
 addSbtPlugin("org.scalastyle" %% "scalastyle-sbt-plugin" % "0.6.0")
 
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.3.3")
+
