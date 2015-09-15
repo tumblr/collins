@@ -734,9 +734,38 @@ sections:
               }
             }
       "asset delete":
-        description: Decommission the specified asset
+        description: Permanently delete the specified asset
         request: DELETE /api/asset/:tag
         permission: controllers.AssetApi.deleteAsset
+        parameters:
+          tag:
+            type: String
+            description: Must be alphanumeric (but can include underscores and dashes) and unique
+          reason:
+            type: String
+            description: The reason the asset is being decommissioned
+          nuke:
+            type: Boolean
+            description: Must be a boolean value, set to true to permanently delete the asset
+        response_codes:
+          200: Asset has been decommissioned
+          404: Asset not found
+          409: Asset not in appropriate status (Cancelled, etc)
+        examples:
+          collins-shell: collins-shell asset delete --reason='Done with you' --tag=tumblrtag30 --nuke=true
+          curl:  curl --basic -u blake:admin:first -d nuke=true -X DELETE http://localhost:9000/api/asset/tumblrtag30
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "SUCCESS": true
+              }
+            }
+      "Decommission asset":
+        description: Decommission the specified asset
+        request: POST /api/asset/:tag
+        permission: controllers.AssetApi.updateAssetStatus
         parameters:
           tag:
             type: String
@@ -749,8 +778,8 @@ sections:
           404: Asset not found
           409: Asset not in appropriate status (Cancelled, etc)
         examples:
-          collins-shell: collins-shell asset delete --reason='Done with you' --tag=tumblrtag30
-          curl:  curl --basic -u blake:admin:first -X DELETE http://localhost:9000/api/asset/tumblrtag30
+          collins-shell: collins-shell asset set_status --status='Decommissioned' --reason='Done with you' --tag=tumblrtag30
+          curl:  curl --basic -u blake:admin:first -d status="Decommissioned" -X POST http://localhost:9000/api/asset/tumblrtag30
         responses:
           json: |
             {
