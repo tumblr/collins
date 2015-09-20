@@ -1,5 +1,6 @@
 package collins.util
 
+import play.api.PlayException
 import play.api.Logger
 
 import collins.models.Asset
@@ -71,12 +72,16 @@ sealed class Tattler(val username: String, val source: LogSource.LogSource) {
   def system(msg: String): AssetLog = {
     try {
       AssetLog.error(
-        Feature.syslogAsset, username, msg, LogFormat.PlainText, LogSource.System).create()
+        syslogAsset, username, msg, LogFormat.PlainText, LogSource.System).create()
     } catch {
       case e: Throwable =>
         logger.error("Failed to create assetlog", e)
         throw e
     }
+  }
+
+  def syslogAsset = Asset.findByTag(Feature.syslogAsset.getOrElse("tumblrtag1")).getOrElse {
+    throw new PlayException("", "neither features.syslogAsset or multicollins.thisInstance were specified")
   }
 }
 

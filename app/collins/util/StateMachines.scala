@@ -3,7 +3,7 @@ package collins.util
 import collins.util.config.Feature
 
 import collins.models.Asset
-import collins.models.Asset
+import collins.models.AssetMeta
 import collins.models.AssetMetaValue
 import collins.models.IpAddresses
 import collins.models.IpmiInfo
@@ -14,6 +14,14 @@ import collins.models.conversions.dateToTimestamp
 import java.util.Date
 
 case class AssetStateMachine(asset: Asset) {
+
+  def keepOnRepurposeMetaIds = {
+    Feature.keepSomeMetaOnRepurpose.flatMap(AssetMeta.findByName(_)).map(_.id)
+  }
+
+  def deleteOnRepurposeMetaIds = {
+    Feature.deleteSomeMetaOnRepurpose.flatMap(AssetMeta.findByName(_)).map(_.id)
+  }
 
   def canDecommission(): Boolean =
     asset.isCancelled || asset.isDecommissioned || asset.isMaintenance || asset.isUnallocated
@@ -34,22 +42,6 @@ case class AssetStateMachine(asset: Asset) {
     }
     if (Feature.deleteMetaOnDecommission) {
       AssetMetaValue.deleteByAsset(asset)
-    } else {
-      if (Feature.useWhiteListOnRepurpose) {
-        if (Feature.keepSomeMetaOnRepurpose.size > 0) {
-          val keepAttributes: Set[Long] = Feature.keepSomeMetaOnRepurpose.map(_.id)
-          val allAttributes: Set[Long] = AssetMetaValue.findByAsset(asset).map(_.getMetaId()).toSet
-          val deleteAttributes = allAttributes -- keepAttributes
-          if (deleteAttributes.size > 0) {
-            AssetMetaValue.deleteByAssetAndMetaId(asset, deleteAttributes)
-          }
-        }
-      } else {
-        if (Feature.deleteSomeMetaOnRepurpose.size > 0) {
-          val deleteAttributes: Set[Long] = Feature.deleteSomeMetaOnRepurpose.map(_.id)
-          AssetMetaValue.deleteByAssetAndMetaId(asset, deleteAttributes)
-        }
-      }
     }
     res
   } else {

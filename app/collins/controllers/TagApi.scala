@@ -29,7 +29,7 @@ trait TagApi {
   def getTagValues(tag: String) = SecureAction { implicit req =>
     val response =
       AssetMeta.findByName(tag).map { m =>
-        if (Feature.encryptedTags.map(_.name).contains(m.name)) {
+        if (Feature.encryptedTags.contains(m.name)) {
           Api.getErrorMessage("Refusing to give backs values for %s".format(m.name))
         } else {
           val s: Set[String] = AssetMetaValue.findByMeta(m).sorted.toSet

@@ -100,7 +100,7 @@
             mv.getName match {
               case "CANCEL_TICKET" => optionDisplay(0, SoftLayerHelper.ticketLink(mv.getValue), mv.getValue)
               case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
-              case encrypted if Feature.encryptedTags.map(_.name).contains(encrypted) => if(user.canSeePasswords) { TagDecorator.decorate(mv) } else { "********" }
+              case encrypted if Feature.encryptedTags.contains(encrypted) => if(user.canSeePasswords) { TagDecorator.decorate(mv) } else { "********" }
               case _ => TagDecorator.decorate(mv)
             }
           }

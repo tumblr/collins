@@ -148,9 +148,13 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     }.left.map(e => handleException(asset, "Error updating status/state for asset", e))
   }
 
+  def allowedServerUpdateStatuses = Feature.allowedServerUpdateStatuses
+    .map { m => Status.findByName(m) }
+    .filter(_.isDefined).map(_.get)
+
   protected def updateServerHardwareMeta(asset: Asset, options: Map[String, String]): AssetLifecycle.Status[Boolean] = {
     // if asset's status is in the allowed statuses for updating, do it
-    if (Feature.allowedServerUpdateStatuses.contains(asset.status)) {
+    if (allowedServerUpdateStatuses.contains(asset.status)) {
       // we will allow updates to lshw/lldp while the machine is in these statuses
       allCatch[Boolean].either {
         Asset.inTransaction {

@@ -45,7 +45,7 @@ object CreateAction {
 
 case class CreateAction(
   assetTag: String,
-  defaultMessageType: LogMessageType.LogMessageType = CreateAction.DefaultMessageType,
+  defaultMessageType: String = CreateAction.DefaultMessageType,
   spec: SecuritySpecification,
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction with ParamValidation {
