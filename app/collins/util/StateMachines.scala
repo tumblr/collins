@@ -15,14 +15,6 @@ import java.util.Date
 
 case class AssetStateMachine(asset: Asset) {
 
-  def keepOnRepurposeMetaIds = {
-    Feature.keepSomeMetaOnRepurpose.flatMap(AssetMeta.findByName(_)).map(_.id)
-  }
-
-  def deleteOnRepurposeMetaIds = {
-    Feature.deleteSomeMetaOnRepurpose.flatMap(AssetMeta.findByName(_)).map(_.id)
-  }
-
   def canDecommission(): Boolean =
     asset.isCancelled || asset.isDecommissioned || asset.isMaintenance || asset.isUnallocated
 
