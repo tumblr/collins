@@ -17,7 +17,7 @@ object MultiCollinsConfig extends Configurable {
     }
   }
   def locationAttribute = getString("locationAttribute", "LOCATION")
-  def thisInstance = getString("thisInstance", "NONE")
+  def thisInstance = getString("thisInstance")
 
   override def validateConfig() {
     if (enabled) {

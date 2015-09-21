@@ -72,7 +72,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] with AssetM
 
   def shouldEncrypt(v: AssetMetaValue): Boolean = {
     try {
-      Feature.encryptedTags.map(_.name).contains(v.meta.name)
+      Feature.encryptedTags.contains(v.meta.name)
     } catch {
       case e: Throwable =>
         logger.error("Caught exception trying to determine whether to encrypt", v)
@@ -245,7 +245,7 @@ object AssetMetaValue extends Schema with BasicModel[AssetMetaValue] with AssetM
       case None =>
       case Some(oValue) =>
         val metaName = newValue.meta.name
-        val newValueS = if (Feature.encryptedTags.map(_.name).contains(metaName)) {
+        val newValueS = if (Feature.encryptedTags.contains(metaName)) {
           val msg = "Value of '%s' was changed".format(metaName)
           InternalTattler.notice(msg, newValue.asset)
         } else {

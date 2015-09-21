@@ -6,6 +6,7 @@ import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
 import collins.models.Asset
+import collins.models.AssetMeta
 import collins.models.AssetMetaValue
 import collins.models.IpAddresses
 import collins.models.IpmiInfo
@@ -65,7 +66,7 @@ case class AllAttributes(
     if (showCreds) {
       mvs
     } else {
-      mvs.filter(mv => !Feature.encryptedTags.map(_.name).contains(mv.getName))
+      mvs.filter(mv => !Feature.encryptedTags.contains(mv.getName))
     }
   }
 

@@ -93,7 +93,7 @@ trait ProvisionUtil { self: SecureAction =>
           .right.map(frole => request.profile.copy(role = frole))
           .right.map(profile => request.copy(profile = profile))
           .right.map { frequest =>
-            ActionDataHolder(asset, frequest, activeBool(activate), attribs(asset, frequest, form))
+            ActionDataHolder(asset, frequest, activeBool(activate), attribsToDelete(asset, frequest, form))
           }
     }
   }
@@ -113,7 +113,7 @@ trait ProvisionUtil { self: SecureAction =>
       None
   }
 
-  protected def attribs(asset: Asset, request: ProvisionerRequest, form: ProvisionForm): Map[String,String] = {
+  protected def attribsToDelete(asset: Asset, request: ProvisionerRequest, form: ProvisionForm): Map[String,String] = {
     val build_contact = form._2
     val suffix = form._3
     val role = request.profile.role
@@ -129,21 +129,16 @@ trait ProvisionUtil { self: SecureAction =>
         "BUILD_CONTACT" -> build_contact
       )
     val lowPriorityAttrs = role.attributes
-    val clearProfileAttrs = role.clear_attributes.map(a => (a -> "")).toMap
+    val clearProfileAttrs = role.clear_attributes.map(_ -> "").toMap
+    val clearOnRepurposeAttrs = Feature.deleteSomeMetaOnRepurpose.map(_ -> "").toMap
+    val keepOnRepurposeAttrs = Feature.keepSomeMetaOnRepurpose
 
     // make sure high priority attrs take precedence over low priority
     // and make sure any explicitly set attrs override any that are to be cleared
-    clearOnRepurposeAttrs(asset) ++ clearProfileAttrs ++ lowPriorityAttrs ++ highPriorityAttrs
-  }
-
-  private[this] def clearOnRepurposeAttrs(asset: Asset): Map[String, String] = {
     if (Feature.useWhiteListOnRepurpose) {
-      val keepAttributes = Feature.keepSomeMetaOnRepurpose.map(_.name)
-      val allAttributes = AssetMetaValue.findByAsset(asset).map(_.getName()).toSet
-      val deleteAttributes = allAttributes -- keepAttributes
-      deleteAttributes.map(s => (s -> "")).toMap
+      clearOnRepurposeAttrs ++ clearProfileAttrs ++ lowPriorityAttrs ++ highPriorityAttrs -- keepOnRepurposeAttrs
     } else {
-      Feature.deleteSomeMetaOnRepurpose.map(_.name).map(s => (s -> "")).toMap
+      clearOnRepurposeAttrs ++ clearProfileAttrs ++ lowPriorityAttrs ++ highPriorityAttrs
     }
   }
 
