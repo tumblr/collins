@@ -80,7 +80,7 @@ sealed class Tattler(val username: String, val source: LogSource.LogSource) {
     }
   }
 
-  def syslogAsset = Asset.findByTag(Feature.syslogAsset.getOrElse("tumblrtag1")).getOrElse {
+  lazy val syslogAsset = Asset.findByTag(Feature.syslogAsset.getOrElse("tumblrtag1")).getOrElse {
     throw new PlayException("", "neither features.syslogAsset or multicollins.thisInstance were specified")
   }
 }
