@@ -24,7 +24,9 @@ class AssetApiProvisionSpec extends mutable.Specification with ControllerSpec wi
       "Set specified attributes" in new WithApplication(FakeApplication(
         additionalConfiguration = Map(
           "solr.enabled" -> false,
-          "provisioner.rate" -> "10/10 seconds"))) with AssetApiHelper {
+          "provisioner.rate" -> "10/10 seconds",
+          "privisioner.command" -> """printf "PC"""",
+          "privisioner.checkCommand" -> """printf "PCC""""))) with AssetApiHelper {
         override val assetTag = "C0001"
         createAsset() must haveStatus(201)
         updateHwInfo() must haveStatus(200)
@@ -48,7 +50,9 @@ class AssetApiProvisionSpec extends mutable.Specification with ControllerSpec wi
       "Only allow provisioning on valid status" in new WithApplication(FakeApplication(
         additionalConfiguration = Map(
           "solr.enabled" -> false,
-          "provisioner.rate" -> "10/10 seconds"))) with AssetApiHelper {
+          "provisioner.rate" -> "10/10 seconds",
+          "privisioner.command" -> """printf "PC"""",
+          "privisioner.checkCommand" -> """printf "PCC""""))) with AssetApiHelper {
         override val assetTag = "C0002"
         createAsset() must haveStatus(201)
         updateHwInfo() must haveStatus(200)
