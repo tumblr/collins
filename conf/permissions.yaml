@@ -117,3 +117,9 @@ permissions:
     - "g=sre"
     - "u=admins"
     - "u=tools"
+  controllers.Firehose.stream:
+    - "g=infra"
+    - "g=ops"
+    - "g=sre"
+    - "u=admins"
+    - "u=tools"

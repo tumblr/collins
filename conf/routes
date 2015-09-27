@@ -42,11 +42,12 @@ GET     /logout                     collins.controllers.Application.logout
 # API
 
 # Generic Functionality
-GET     /api/timestamp                       collins.app.Api.timestamp
+GET     /api/timestamp              collins.app.Api.timestamp
+GET     /api/firehose               collins.app.Api.firehose
 
 # Admin API
-GET     /api/admin/solr                          collins.app.Api.repopulateSolr(waitForCompletion: String ?= "true")
-GET     /api/admin/solr/asset/:tag               collins.app.Api.reindexAsset(tag: String)
+GET     /api/admin/solr             collins.app.Api.repopulateSolr(waitForCompletion: String ?= "true")
+GET     /api/admin/solr/asset/:tag  collins.app.Api.reindexAsset(tag: String)
 
 # IP Address API
 GET     /api/address/pools                   collins.app.Api.getAddressPools(all: String ?= "true")

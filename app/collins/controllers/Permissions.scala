@@ -121,4 +121,8 @@ object Permissions {
     def GetTagValues = spec("getTagValues", AdminSpec)
   }
 
+  object Firehose extends PermSpec("controllers.Firehose") {
+    def Spec = spec(LoggedIn)
+    def Stream = spec("stream", Spec)
+  }
 }
