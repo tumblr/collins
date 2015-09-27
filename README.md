@@ -2,10 +2,11 @@
 
 ## Overview
 
-There is good documentation available at https://tumblr.github.io/collins. The
-documentation below is for developers or people setting up a new instance.
+Published [documentation](https://tumblr.github.io/collins) follows the most [recent release](https://tumblr.github.io/collins/downloads.html) of collins.
 
-The most recent release of collins is available [here](https://tumblr.github.io/collins/downloads.html)
+For documentation on developing, building, general architecture and unreleased changes please *use* the [wiki](https://github.com/tumblr/collins/wiki). This documentation is in flux, currently lacking and constantly being worked on.
+
+All documentation links point to the most recent release.
 
 [![Build Status](https://travis-ci.org/tumblr/collins.png?branch=master)](https://travis-ci.org/tumblr/collins)
 [![Dependency Status](https://www.versioneye.com/user/projects/555e7598393564000d040000/badge.svg?style=flat)](https://www.versioneye.com/user/projects/555e7598393564000d040000)
