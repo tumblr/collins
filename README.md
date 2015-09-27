@@ -4,7 +4,7 @@
 
 Published [documentation](https://tumblr.github.io/collins) follows the most [recent release](https://tumblr.github.io/collins/downloads.html) of collins.
 
-For documentation on developing, building, general architecture and unreleased changes please *use* the [wiki](https://github.com/tumblr/collins/wiki). This documentation is in flux, currently lacking and constantly being worked on.
+For documentation on developing, building, general architecture and unreleased changes **please use the [wiki](https://github.com/tumblr/collins/wiki)**. This documentation is in flux, currently lacking and constantly being worked on.
 
 All documentation links point to the most recent release.
 
