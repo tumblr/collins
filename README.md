@@ -10,7 +10,6 @@ All documentation links point to the most recent release.
 
 [![Build Status](https://travis-ci.org/tumblr/collins.png?branch=master)](https://travis-ci.org/tumblr/collins)
 [![Dependency Status](https://www.versioneye.com/user/projects/555e7598393564000d040000/badge.svg?style=flat)](https://www.versioneye.com/user/projects/555e7598393564000d040000)
-[![Docker Container Status](http://dockeri.co/image/tumblr/collins)](https://registry.hub.docker.com/u/tumblr/collins/)
 
 ## Quickstart
 
