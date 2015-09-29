@@ -13,6 +13,7 @@ import play.api.mvc.Results
 import collins.callbacks.Callback
 import collins.controllers.ApiResponse
 import collins.db.DB
+import collins.firehose.Firehose
 import collins.hazelcast.HazelcastHelper
 import collins.logging.LoggingHelper
 import collins.metrics.MetricsReporter
@@ -46,6 +47,7 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
     setCryptoKey(CryptoConfig.key)
     LoggingHelper.setupLogging(app)
     Callback.setupCallbacks()
+    Firehose.setupFirehose()
     SolrHelper.setupSolr()
     MetricsReporter.setupMetrics()
   }

@@ -1,6 +1,7 @@
 package collins.hazelcast
 
 import play.api.Logger
+import play.api.libs.json.JsValue
 
 import com.hazelcast.config.FileSystemXmlConfig
 import com.hazelcast.core.Hazelcast
@@ -29,6 +30,10 @@ object HazelcastHelper {
 
   def getCache() = {
     instance.map(_.getMap[String, AnyRef]("cache"))
+  }
+
+  def getTopic() = {
+    instance.map(_.getReliableTopic[JsValue]("firehose"))
   }
 
   def terminateHazelcast() {
