@@ -101,7 +101,7 @@ module CollinsShell
     method_option :address, :required => true, :type => :string, :desc => 'IP address'
     method_option :gateway, :required => true, :type => :string, :desc => 'IP gateway'
     method_option :netmask, :required => true, :type => :string, :desc => 'IP netmask'
-    method_option :pool, :type => :string, :desc => 'Name of pool'
+    method_option :pool, :required => true, :type => :string, :desc => 'Name of pool'
     def create
       call_collins get_collins_client, "create address" do |client|
         address = client.ipaddress_update! options.tag, nil,
