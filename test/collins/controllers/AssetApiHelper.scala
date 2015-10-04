@@ -23,7 +23,7 @@ trait AssetApiHelper extends ResponseMatchHelpers with JsonMatchers with Control
   val api = getApi(user)
 
   def waitOnCallbacks() {
-    Thread.sleep(500)
+    Thread.sleep(5000)
   }
   def createAsset() = {
     val createRequest = FakeRequest("PUT", assetUrl)
