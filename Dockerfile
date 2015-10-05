@@ -9,11 +9,11 @@ RUN for dir in /build /build/collins /var/log/collins /var/run/collins; do mkdir
 WORKDIR /build
 # get Play, Collins, build, and deploy it to /opt/collins
 COPY . /build/collins
-RUN wget -q http://downloads.typesafe.com/typesafe-activator/1.3.4/typesafe-activator-1.3.4-minimal.zip -O /build/typesafe-activator-1.3.4-minimal.zip && \
-    unzip -q ./typesafe-activator-1.3.4-minimal.zip && \
+RUN wget -q http://downloads.typesafe.com/typesafe-activator/1.3.6/typesafe-activator-1.3.6-minimal.zip -O /build/typesafe-activator-1.3.6-minimal.zip && \
+    unzip -q ./typesafe-activator-1.3.6-minimal.zip && \
     cd collins && \
     java -version 2>&1 && \
-    PLAY_CMD=/build/activator-1.3.4-minimal/activator ./scripts/package.sh && \
+    PLAY_CMD=/build/activator-1.3.6-minimal/activator ./scripts/package.sh && \
     unzip -q /build/collins/target/collins.zip -d /opt/ && \
     cd / && rm -rf /build && \
     chown -R collins /opt/collins
