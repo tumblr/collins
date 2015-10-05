@@ -48,7 +48,7 @@ Email collins-sm@googlegroups.com or see the mailing list archive at https://gro
 To create a production zip and deploy to production:
   - ensure capistrano 2.15.5 is installed
   - ensure net-ssh < 2.7.0 is installed - versions 2.7.0 and above are broken with our environment
-  - download and unpackage play activator @ ~/src/activator-1.3.4-minimal or define $PLAY_CMD with an alternate location
+  - download and unpackage play activator @ ~/src/activator-1.3.6-minimal or define $PLAY_CMD with an alternate location
   - run `./scripts/package.sh` which will produce `target/collins.zip`
   - run `cap publish:collins` which will upload and link to release to `http://repo.tumblr.net:8888/collins.zip`
   - run `cap ewr01 deploy` to deploy to ewr01 and `cap d2 deploy` to deploy to d2
