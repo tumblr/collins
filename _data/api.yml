@@ -44,17 +44,18 @@ sections:
                   "CREATED": "2012-09-16T18:30:55",
                   "UPDATED": null,
                   "DELETED": null
-                 }
-               "IPMI": {
-                 "ASSET_ID": 2,
-                 "ASSET_TAG": "tumblrtag30",
-                 "IPMI_USERNAME": "root",
-                 "IPMI_PASSWORD": "WqbXjuqWd5MZ01fD",
-                 "IPMI_GATEWAY": "172.16.32.1",
-                 "IPMI_ADDRESS": "172.16.32.20",
-                 "IPMI_NETMASK": "255.255.240.0",
-                 "ID": 2
-               }
+                },
+                "IPMI": {
+                   "ASSET_ID": 2,
+                   "ASSET_TAG": "tumblrtag30",
+                   "IPMI_USERNAME": "root",
+                   "IPMI_PASSWORD": "WqbXjuqWd5MZ01fD",
+                   "IPMI_GATEWAY": "172.16.32.1",
+                   "IPMI_ADDRESS": "172.16.32.20",
+                   "IPMI_NETMASK": "255.255.240.0",
+                   "ID": 2
+                }
+              }
             }
           bash: |
             ASSET_ID=3;
