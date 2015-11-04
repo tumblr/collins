@@ -15,8 +15,8 @@ import collins.util.config.AppConfig
 trait AssetWebApi {
   this: Api with SecureController =>
 
-  def realDeleteAsset(tag: String) =
-    DeleteAction(tag, true, Permissions.AssetWebApi.DeleteAsset, this)
+  def realDeleteAsset(tag: String, nuke: Boolean) =
+    DeleteAction(tag, nuke, Permissions.AssetWebApi.DeleteAsset, this)
 
   // POST /asset/:tag/cancel
   def cancelAsset(tag: String) = Authenticated { user =>
