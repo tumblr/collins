@@ -1552,7 +1552,9 @@ sections:
               "status": "success:ok",
               "data": {
                 "values": [
-                  "chassis tag abc"
+                  "chassis",
+                  "tag",
+                  "abc"
                 ]
               }
             }
