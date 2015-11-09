@@ -668,43 +668,44 @@ sections:
               "status": "success:ok",
               "data": {
                 "Pagination": {
-                "PreviousPage": 0,
-                "CurrentPage": 0,
-                "NextPage": 1,
-                "TotalResults": 435
-              },
-              "Data": [
-                {
-                  "ID": 388,
-                  "TAG": "000915",
-                  "STATE": null,
-                  "STATUS": "Unallocated",
-                  "TYPE": "Server Node",
-                  "CREATED": "2012-04-05T23:40:42",
-                  "UPDATED": "2012-09-14T16:59:53",
-                  "DELETED": null
+                  "PreviousPage": 0,
+                  "CurrentPage": 0,
+                  "NextPage": 1,
+                  "TotalResults": 435
                 },
-                {
-                  "ID": 437,
-                  "TAG": "000919",
-                  "STATE": null,
-                  "STATUS": "Unallocated",
-                  "TYPE": "Server Node",
-                  "CREATED": "2012-04-05T23:42:33",
-                  "UPDATED": "2012-09-14T17:12:22",
-                  "DELETED": null
-                },
-                {
-                  "ID": 391,
-                  "TAG": "000923",
-                  "STATE": null,
-                  "STATUS": "Unallocated",
-                  "TYPE": "Server Node",
-                  "CREATED": "2012-04-05T23:41:03",
-                  "UPDATED": "2012-09-14T17:09:11",
-                  "DELETED": null
-                }
-              ]
+                "Data": [
+                  {
+                    "ID": 388,
+                    "TAG": "000915",
+                    "STATE": null,
+                    "STATUS": "Unallocated",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-04-05T23:40:42",
+                    "UPDATED": "2012-09-14T16:59:53",
+                    "DELETED": null
+                  },
+                  {
+                    "ID": 437,
+                    "TAG": "000919",
+                    "STATE": null,
+                    "STATUS": "Unallocated",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-04-05T23:42:33",
+                    "UPDATED": "2012-09-14T17:12:22",
+                    "DELETED": null
+                  },
+                  {
+                    "ID": 391,
+                    "TAG": "000923",
+                    "STATE": null,
+                    "STATUS": "Unallocated",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-04-05T23:41:03",
+                    "UPDATED": "2012-09-14T17:09:11",
+                    "DELETED": null
+                  }
+                ]
+              }
             }
       "asset delete tag":
         description: Delete a tag associated with an asset
