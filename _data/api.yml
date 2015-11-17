@@ -44,17 +44,18 @@ sections:
                   "CREATED": "2012-09-16T18:30:55",
                   "UPDATED": null,
                   "DELETED": null
-                 }
-               "IPMI": {
-                 "ASSET_ID": 2,
-                 "ASSET_TAG": "tumblrtag30",
-                 "IPMI_USERNAME": "root",
-                 "IPMI_PASSWORD": "WqbXjuqWd5MZ01fD",
-                 "IPMI_GATEWAY": "172.16.32.1",
-                 "IPMI_ADDRESS": "172.16.32.20",
-                 "IPMI_NETMASK": "255.255.240.0",
-                 "ID": 2
-               }
+                },
+                "IPMI": {
+                   "ASSET_ID": 2,
+                   "ASSET_TAG": "tumblrtag30",
+                   "IPMI_USERNAME": "root",
+                   "IPMI_PASSWORD": "WqbXjuqWd5MZ01fD",
+                   "IPMI_GATEWAY": "172.16.32.1",
+                   "IPMI_ADDRESS": "172.16.32.20",
+                   "IPMI_NETMASK": "255.255.240.0",
+                   "ID": 2
+                }
+              }
             }
           bash: |
             ASSET_ID=3;
@@ -667,43 +668,44 @@ sections:
               "status": "success:ok",
               "data": {
                 "Pagination": {
-                "PreviousPage": 0,
-                "CurrentPage": 0,
-                "NextPage": 1,
-                "TotalResults": 435
-              },
-              "Data": [
-                {
-                  "ID": 388,
-                  "TAG": "000915",
-                  "STATE": null,
-                  "STATUS": "Unallocated",
-                  "TYPE": "Server Node",
-                  "CREATED": "2012-04-05T23:40:42",
-                  "UPDATED": "2012-09-14T16:59:53",
-                  "DELETED": null
+                  "PreviousPage": 0,
+                  "CurrentPage": 0,
+                  "NextPage": 1,
+                  "TotalResults": 435
                 },
-                {
-                  "ID": 437,
-                  "TAG": "000919",
-                  "STATE": null,
-                  "STATUS": "Unallocated",
-                  "TYPE": "Server Node",
-                  "CREATED": "2012-04-05T23:42:33",
-                  "UPDATED": "2012-09-14T17:12:22",
-                  "DELETED": null
-                },
-                {
-                  "ID": 391,
-                  "TAG": "000923",
-                  "STATE": null,
-                  "STATUS": "Unallocated",
-                  "TYPE": "Server Node",
-                  "CREATED": "2012-04-05T23:41:03",
-                  "UPDATED": "2012-09-14T17:09:11",
-                  "DELETED": null
-                }
-              ]
+                "Data": [
+                  {
+                    "ID": 388,
+                    "TAG": "000915",
+                    "STATE": null,
+                    "STATUS": "Unallocated",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-04-05T23:40:42",
+                    "UPDATED": "2012-09-14T16:59:53",
+                    "DELETED": null
+                  },
+                  {
+                    "ID": 437,
+                    "TAG": "000919",
+                    "STATE": null,
+                    "STATUS": "Unallocated",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-04-05T23:42:33",
+                    "UPDATED": "2012-09-14T17:12:22",
+                    "DELETED": null
+                  },
+                  {
+                    "ID": 391,
+                    "TAG": "000923",
+                    "STATE": null,
+                    "STATUS": "Unallocated",
+                    "TYPE": "Server Node",
+                    "CREATED": "2012-04-05T23:41:03",
+                    "UPDATED": "2012-09-14T17:09:11",
+                    "DELETED": null
+                  }
+                ]
+              }
             }
       "asset delete tag":
         description: Delete a tag associated with an asset
@@ -1551,7 +1553,9 @@ sections:
               "status": "success:ok",
               "data": {
                 "values": [
-                  "chassis tag abc"
+                  "chassis",
+                  "tag",
+                  "abc"
                 ]
               }
             }
