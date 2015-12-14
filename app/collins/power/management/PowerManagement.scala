@@ -26,6 +26,7 @@ import collins.util.concurrent.BackgroundProcessor
 case class IpmiPowerCommand(
   override val ipmiCommand: String,
   override val ipmiInfo: IpmiInfo,
+  override val assetTag: String,
   override val interval: Duration = 60.seconds,
   verify: Boolean = false,
   userTimeout: Option[FiniteDuration] = None)
@@ -53,7 +54,7 @@ object IpmiPowerCommand {
     case None => ipmiErr(asset)
     case Some(ipmi) =>
       val cmd = commandFor(action)
-      new IpmiPowerCommand(cmd, ipmi)
+      new IpmiPowerCommand(cmd, ipmi, asset.tag)
   }
 }
 

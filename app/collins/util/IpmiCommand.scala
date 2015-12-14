@@ -13,6 +13,7 @@ import collins.util.concurrent.BackgroundProcess
 import collins.util.config.AppConfig
 
 abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
+  val assetTag: String
   val interval: Duration
   var debug: Boolean = false
 
@@ -65,5 +66,6 @@ abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
       .replace("<username>", username)
       .replace("<password>", password)
       .replace("<interval>", interval.toSeconds.toString)
+      .replace("<tag>", assetTag)
   }
 }
