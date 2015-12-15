@@ -17,14 +17,16 @@ abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
   val interval: Duration
   var debug: Boolean = false
 
-  protected def ipmiInfo: IpmiInfo
+  protected def ipmiInfo: Option[IpmiInfo]
   protected def ipmiCommand: String
 
   protected val logger = Logger(getClass)
 
-  protected lazy val (address, username, password) = {
-    val ipmi = ipmiInfo
-    (ipmi.dottedAddress(), ipmi.username, ipmi.decryptedPassword())
+  // just ignore the missing IPMI information and assume empty strings if ipmi info
+  // is missing.
+  protected lazy val (address, username, password) = ipmiInfo match {
+    case None => ("","","")
+    case Some(i) => (i.dottedAddress(), i.username, i.decryptedPassword())
   }
 
   def shouldRun(): Boolean = {

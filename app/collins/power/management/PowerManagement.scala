@@ -25,7 +25,7 @@ import collins.util.concurrent.BackgroundProcessor
 
 case class IpmiPowerCommand(
   override val ipmiCommand: String,
-  override val ipmiInfo: IpmiInfo,
+  override val ipmiInfo: Option[IpmiInfo],
   override val assetTag: String,
   override val interval: Duration = 60.seconds,
   verify: Boolean = false,
@@ -47,14 +47,17 @@ object IpmiPowerCommand {
     case Identify => PMC.identifyCommand
   }
 
-  private def ipmiErr(a: Asset) =
-    throw new IllegalStateException("Could not find IPMI info for asset %s".format(a.tag))
-
   def fromPowerAction(asset: Asset, action: PowerAction) = IpmiInfo.findByAsset(asset) match {
-    case None => ipmiErr(asset)
+    case None =>
+      if (PMC.allowAssetsWithoutIpmi) {
+        val cmd = commandFor(action)
+        new IpmiPowerCommand(cmd, None, asset.tag)
+      } else {
+        throw new IllegalStateException("No IPMI configuration for asset %s".format(asset.tag))
+      }
     case Some(ipmi) =>
       val cmd = commandFor(action)
-      new IpmiPowerCommand(cmd, ipmi, asset.tag)
+      new IpmiPowerCommand(cmd, Some(ipmi), asset.tag)
   }
 }
 

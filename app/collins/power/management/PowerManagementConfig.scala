@@ -51,6 +51,10 @@ object PowerManagementConfig extends Configurable {
 
   def enabled = getBoolean("enabled", false)
   def timeoutMs = getMilliseconds("timeout").getOrElse(10000L)
+  // allowAssetsWithoutIpmi (default: false) - If false, only allow power management of assets
+  // with valid IPMI details. If true, restricts templating of the IPMI commands to
+  // only <tag>.
+  def allowAssetsWithoutIpmi = getBoolean("allowAssetsWithoutIpmi").getOrElse(true)
 
   def powerOffCommand = command(PowerOffKey)
   def powerOnCommand = command(PowerOnKey)
@@ -69,6 +73,7 @@ object PowerManagementConfig extends Configurable {
       disallowStatus
       disallowWhenAllocated
       timeoutMs
+      allowAssetsWithoutIpmi
       RequiredKeys.foreach { key =>
         val cmd = command(key)
         require(cmd.nonEmpty, "powermanagement.commands.%s must not be empty".format(key))
