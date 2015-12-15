@@ -54,7 +54,7 @@ object PowerManagementConfig extends Configurable {
   // allowAssetsWithoutIpmi (default: false) - If false, only allow power management of assets
   // with valid IPMI details. If true, restricts templating of the IPMI commands to
   // only <tag>.
-  def allowAssetsWithoutIpmi = getBoolean("allowAssetsWithoutIpmi").getOrElse(true)
+  def allowAssetsWithoutIpmi = getBoolean("allowAssetsWithoutIpmi").getOrElse(false)
 
   def powerOffCommand = command(PowerOffKey)
   def powerOnCommand = command(PowerOnKey)

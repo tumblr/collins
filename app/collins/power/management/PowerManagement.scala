@@ -20,7 +20,7 @@ import collins.power.PowerState
 import collins.power.RebootHard
 import collins.power.RebootSoft
 import collins.power.Verify
-import collins.util.IpmiCommand
+import collins.util.PowerCommand
 import collins.util.concurrent.BackgroundProcessor
 
 case class IpmiPowerCommand(
@@ -30,7 +30,7 @@ case class IpmiPowerCommand(
   override val interval: Duration = 60.seconds,
   verify: Boolean = false,
   userTimeout: Option[FiniteDuration] = None)
-extends IpmiCommand {
+extends PowerCommand {
   override val timeout = userTimeout.getOrElse(Duration(PowerManagementConfig.timeoutMs, TimeUnit.MILLISECONDS))
 }
 

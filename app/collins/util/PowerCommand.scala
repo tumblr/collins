@@ -12,7 +12,7 @@ import collins.shell.CommandResult
 import collins.util.concurrent.BackgroundProcess
 import collins.util.config.AppConfig
 
-abstract class IpmiCommand extends BackgroundProcess[Option[CommandResult]] {
+abstract class PowerCommand extends BackgroundProcess[Option[CommandResult]] {
   val assetTag: String
   val interval: Duration
   var debug: Boolean = false
