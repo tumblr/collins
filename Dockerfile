@@ -3,11 +3,9 @@ MAINTAINER Gabe Conradi <gabe@tumblr.com>
 
 RUN apt-get update && apt-get install -y zip unzip && rm -r /var/lib/apt/lists/*
 
-ENV ACTIVATOR_VERSION 1.3.7
-
-# get Play, Collins, build, and deploy it to /opt/collins
 COPY . /build/collins
 RUN cd /build && \
+    export ACTIVATOR_VERSION=1.3.7 && \
     wget -q http://downloads.typesafe.com/typesafe-activator/$ACTIVATOR_VERSION/typesafe-activator-$ACTIVATOR_VERSION-minimal.zip -O /build/activator.zip && \
     unzip -q ./activator.zip && \
     cd collins && \
