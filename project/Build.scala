@@ -7,11 +7,8 @@ object ApplicationBuild extends Build {
     val appName         = "collins"
     val appVersion      = "2.0-SNAPSHOT"
 
-    val appDependencies = Seq()
-
     val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
       version := appVersion,
-      libraryDependencies ++= appDependencies,
       TwirlKeys.templateImports ++= Seq(
         "collins.models._", 
         "collins.models.shared._", 
