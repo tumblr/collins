@@ -2062,6 +2062,29 @@ sections:
                 }
               ]
             }
+  firehose:
+    content: api/firehose.html
+    api_sections:
+      "consume firehose":
+        description: Open a connection to receive server-sent events about asset updates
+        request: GET /api/firehose
+        permission: controllers.Firehose.stream
+        note: Output from this endpoint is only available as content type text/event-stream in SSE format
+        response_codes:
+          200: Connection successful
+        examples:
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/firehose
+        responses:
+          SSE: |
+            event: asset_update
+            data: {"name":"asset_update","tag":"tumblrtag30","category":"Asset","data":{"ASSET":{"ID":1,"TAG":"tumblrtag30","STATE":{"ID":3,"STATUS":null,"NAME":"RUNNING","LABEL":"Running","DESCRIPTION":"A service in this state is operational."},"STATUS":"Allocated","TYPE":"SERVER_NODE","CREATED":"2013-08-28T12:51:00","UPDATED":"2015-12-05T19:53:27","DELETED":null}}}
+
+            event: asset_update
+            data: {"name":"asset_update","tag":"tumblrtag31","category":"Asset","data":{"ASSET":{"ID":2,"TAG":"tumblrtag31","STATE":{"ID":3,"STATUS":null,"NAME":"RUNNING","LABEL":"Running","DESCRIPTION":"A service in this state is operational."},"STATUS":"Allocated","TYPE":"SERVER_NODE","CREATED":"2013-08-28T12:51:00","UPDATED":"2015-12-05T19:53:27","DELETED":null}}}
+
+            event: asset_update
+            data: {"name":"asset_update","tag":"tumblrtag32","category":"Asset","data":{"ASSET":{"ID":3,"TAG":"tumblrtag32","STATE":{"ID":3,"STATUS":null,"NAME":"RUNNING","LABEL":"Running","DESCRIPTION":"A service in this state is operational."},"STATUS":"Allocated","TYPE":"SERVER_NODE","CREATED":"2013-08-28T12:51:00","UPDATED":"2015-12-05T19:53:27","DELETED":null}}}
+
   admin:
     content: api/admin.html
     api_sections:
