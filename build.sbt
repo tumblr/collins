@@ -16,6 +16,8 @@ parallelExecution in IntegrationTest := false
 
 scalaVersion := "2.11.7"
 
+autoScalaLibrary := true
+
 scalacOptions ++= Seq("-deprecation","-unchecked", "-feature")
 
 scalacOptions += "-feature"
