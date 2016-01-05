@@ -92,10 +92,13 @@ object SoftLayer extends SoftLayer {
 
   override def activateServer(id: Long): Future[Boolean] = {
     val url = softLayerUrl("/SoftLayer_Hardware_Server/%d/sparePool.json".format(id))
-    val query = JsObject(Seq("parameters" -> JsArray(List(JsString("activate")))))
-    val queryString = Json.stringify(query)
+    val query = Json.obj(
+      "parameters" -> Json.arr(
+         "activate"
+      )
+    )
 
-    val wsUrl = WS.url(url.toString).withHeaders("Content-Type" -> "application/json", "Content-Length" -> queryString.length.toString)
+    val wsUrl = WS.url(url.toString)
 
     wsUrl.post(query).map { res =>
       res.json match {
@@ -109,10 +112,13 @@ object SoftLayer extends SoftLayer {
 
   override def setNote(id: Long, note: String): Future[Boolean] = {
     val url = softLayerUrl("/SoftLayer_Hardware_Server/%d/editObject.json".format(id))
-    val query = JsObject(Seq("parameters" -> JsArray(List(JsObject(Seq("notes" -> JsString(note)))))))
-    val queryString = Json.stringify(query)
+    val query = Json.obj(
+      "parameters" -> Json.arr(
+        Json.obj("notes" -> note)
+      )
+    )
 
-    val request = WS.url(url.toString).withHeaders("Content-Type" -> "application/json", "Content-Length" -> queryString.length.toString)
+    val request = WS.url(url.toString)
     request.put(query).map { r =>
       true
     }.recover {
