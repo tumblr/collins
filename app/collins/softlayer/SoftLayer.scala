@@ -51,18 +51,16 @@ trait SoftLayer {
 
 object SoftLayer extends SoftLayer {
 
+  private val softLayerIdPattern = "^sl-(\\d+)$".r
+
   // start plugin API
-  override def isSoftLayerAsset(asset: Asset): Boolean = {
-    asset.tag.startsWith("sl-")
+  override def isSoftLayerAsset(asset: Asset): Boolean = asset.tag match {
+    case softLayerIdPattern(_*) => true
+    case _ => false
   }
-  override def softLayerId(asset: Asset): Option[Long] = isSoftLayerAsset(asset) match {
-    case true => try {
-      Some(asset.tag.split("-", 2).last.toLong)
-    } catch {
-      case _: Throwable => None
-    }
-    case false => None
-  }
+
+
+  override def softLayerId(asset: Asset): Option[Long] = (softLayerIdPattern findFirstIn asset.tag).map(_.toLong)
 
   private[this] val TicketExtractor = "^.* ([0-9]+).*$".r
 
