@@ -2079,11 +2079,14 @@ sections:
             event: asset_update
             data: {"name":"asset_update","tag":"tumblrtag30","category":"Asset","data":{"ASSET":{"ID":1,"TAG":"tumblrtag30","STATE":{"ID":3,"STATUS":null,"NAME":"RUNNING","LABEL":"Running","DESCRIPTION":"A service in this state is operational."},"STATUS":"Allocated","TYPE":"SERVER_NODE","CREATED":"2013-08-28T12:51:00","UPDATED":"2015-12-05T19:53:27","DELETED":null}}}
 
-            event: asset_update
-            data: {"name":"asset_update","tag":"tumblrtag31","category":"Asset","data":{"ASSET":{"ID":2,"TAG":"tumblrtag31","STATE":{"ID":3,"STATUS":null,"NAME":"RUNNING","LABEL":"Running","DESCRIPTION":"A service in this state is operational."},"STATUS":"Allocated","TYPE":"SERVER_NODE","CREATED":"2013-08-28T12:51:00","UPDATED":"2015-12-05T19:53:27","DELETED":null}}}
+            event: asset_create
+            data: {"name":"asset_create","tag":"tumblrtag31","category":"Asset","data":{"ASSET":{"ID":2,"TAG":"tumblrtag31","STATE":null,"STATUS":"Incomplete","TYPE":"SERVER_NODE","CREATED":"2016-01-13T11:30:37","UPDATED":null,"DELETED":null}}}
 
-            event: asset_update
-            data: {"name":"asset_update","tag":"tumblrtag32","category":"Asset","data":{"ASSET":{"ID":3,"TAG":"tumblrtag32","STATE":{"ID":3,"STATUS":null,"NAME":"RUNNING","LABEL":"Running","DESCRIPTION":"A service in this state is operational."},"STATUS":"Allocated","TYPE":"SERVER_NODE","CREATED":"2013-08-28T12:51:00","UPDATED":"2015-12-05T19:53:27","DELETED":null}}}
+            event: asset_delete
+            data: {"name":"asset_delete","tag":"tumblrtag32","category":"Asset","data":{"ASSET":{"ID":3,"TAG":"tumblrtag32","STATE":{"ID":5,"STATUS":null,"NAME":"TERMINATED","LABEL":"Terminated","DESCRIPTION":"A service in this state has completed execution normally. It does minimal work and consumes minimal resources."},"STATUS":"Decommissioned","TYPE":"SERVER_NODE","CREATED":"2016-01-13T11:38:25","UPDATED":"2016-01-13T11:38:50","DELETED":"2016-01-13T11:39:06"}}}
+
+            event: ipAddresses_create
+            data: {"name":"ipAddresses_create","tag":"tumblrtag30","category":"IpAddress","data":{"ASSET":{"ID":1,"TAG":"tumblrtag30","STATE":null,"STATUS":"Incomplete","TYPE":"SERVER_NODE","CREATED":"2016-01-13T11:41:26","UPDATED":null,"DELETED":null},"ADDRESSES":[{"ASSET_ID":1,"ASSET_TAG":"tumblrtag30","GATEWAY":"172.16.5.1","ADDRESS":"172.16.5.4","NETMASK":"255.255.255.0","POOL":"DEV","ID":1}]}}
 
   admin:
     content: api/admin.html
