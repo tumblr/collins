@@ -212,8 +212,12 @@ authentication.
 </p>
 <p>
 To use mixed authentication, simply specify a list of authentication backends as
-the type. The mixed authentication provider will try each of the methods in the
-order listed and use the first one that returns a successful match.
+the type, and add configuration (as described above) for each of them within the
+authentication block. A simple example can be seen below.
+</p>
+<p>
+The mixed authentication provider will try each of the methods in the order
+listed and use the first one that returns a successful match.
 </p>
 
 <div class="example reference-config">
