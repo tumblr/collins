@@ -201,3 +201,40 @@ users and passwords in <code>scripts/gen_passwords.sh</code>.
   }
 }</pre>
 </div>
+
+<h3>Mixed Authentication</h3>
+
+<p>
+Mixed authentication allows collins to use multiple authentication backends
+simultaneously. An example use-case could be a scenario where real users live in
+LDAP but system users (for automation etc.) are defined using file
+authentication.
+</p>
+<p>
+To use mixed authentication, simply specify a list of authentication backends as
+the type, and add configuration (as described above) for each of them within the
+authentication block. A simple example can be seen below.
+</p>
+<p>
+The mixed authentication provider will try each of the methods in the order
+listed and use the first one that returns a successful match.
+</p>
+
+<div class="example reference-config">
+<pre>authentication {
+  type = "file,ldap"
+
+  file {
+    userfile = "conf/users.conf"
+  }
+
+  ldap {
+    host = "localhost"
+    groupAttribute = "uniqueMember"
+    searchbase = "dc=example,dc=org"
+    usersub = "ou=people"
+    groupsub = "ou=groups"
+  }
+}</pre>
+
+</div>
