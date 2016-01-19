@@ -54,7 +54,7 @@ case class AssetFinder(
       updatedAfter.map(t => "updatedAfter" -> Formatter.dateFormat(t)) ::
       updatedBefore.map(t => "updatedBefore" -> Formatter.dateFormat(t)) ::
       state.map(s => "state" -> s.name) ::
-      query.map { q => "query" -> "UHOH!!!!" } :: //FIXME: need toCQL traversal
+      query.map(q => "query" -> q.traverseQueryString) ::
       Nil)
     items.flatten
   }

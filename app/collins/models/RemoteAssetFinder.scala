@@ -276,7 +276,7 @@ object RemoteAssetFinder {
   /**
    */
   def apply(clients: Seq[RemoteAssetClient], pageParams: PageParams, searchParams: AssetSearchParameters): (Seq[AssetView], Long) = {
-    val key = searchParams.paginationKey + clients.map { _.tag }.mkString("_")
+    val key = searchParams.paginationKey.getOrElse("") + clients.map { _.tag }.mkString("_")
     val stream = Cache.getAs[RemoteAssetStream](key).getOrElse(new RemoteAssetStream(clients, searchParams))
     val results = stream.slice(pageParams.page * pageParams.size, (pageParams.page + 1) * (pageParams.size))
     Cache.set(key, stream, 30)
