@@ -27,8 +27,7 @@ case class CQLQuery(select: SolrDocType, where: SolrExpression) {
  * itself into a Solr Query
  */
 sealed trait SolrQueryComponent {
-  protected[solr] def traverseQueryString(): String = traverseQueryString(true)
-  protected[solr] def traverseQueryString(toplevel: Boolean): String
+  def traverseQueryString(): String
 }
 
 /**
@@ -46,15 +45,15 @@ sealed trait SolrValue {
 abstract class SolrSingleValue(val valueType: ValueType) extends SolrValue with SolrQueryComponent
 
 case class SolrIntValue(value: Int) extends SolrSingleValue(Integer) {
-  def traverseQueryString(toplevel: Boolean) = value.toString
+  def traverseQueryString() = value.toString
 }
 
 case class SolrDoubleValue(value: Double) extends SolrSingleValue(Double) {
-  def traverseQueryString(toplevel: Boolean) = value.toString
+  def traverseQueryString() = value.toString
 }
 
 case class SolrStringValue(value: String, quoteFormat: StringValueFormat = Unquoted) extends SolrSingleValue(String) {
-  def traverseQueryString(toplevel: Boolean) = quoteFormat.format(value)
+  def traverseQueryString() = quoteFormat.format(value)
 
   def quoted = copy(quoteFormat = Quoted)
   def unquoted = copy(quoteFormat = Unquoted)
@@ -66,7 +65,7 @@ case class SolrStringValue(value: String, quoteFormat: StringValueFormat = Unquo
 }
 
 case class SolrBooleanValue(value: Boolean) extends SolrSingleValue(Boolean) {
-  def traverseQueryString(toplevel: Boolean) = if (value) "true" else "false"
+  def traverseQueryString() = if (value) "true" else "false"
 
 }
 
@@ -112,12 +111,12 @@ sealed trait SolrExpression extends SolrQueryComponent {
  */
 sealed trait TypedSolrExpression extends SolrExpression {
   //only type-checked expressions can be turned into solr queries
-  def toSolrQueryString: String = traverseQueryString(true)
+  def toSolrQueryString: String = traverseQueryString()
 }
 
 sealed trait _EmptySolrQuery extends SolrExpression {
   def typeCheck(t: SolrDocType) = Right(TypedEmptySolrQuery)
-  def traverseQueryString(toplevel: Boolean) = "*:*"
+  def traverseQueryString() = "*:*"
 }
 
 case object EmptySolrQuery extends _EmptySolrQuery
@@ -134,10 +133,10 @@ abstract class SolrMultiExpr(exprs: Set[SolrExpression], op: String) extends Sol
   //NOTE -
   def createOp(exprs: Set[SolrExpression]): TypedSolrExpression
 
-  def traverseQueryString(toplevel: Boolean) = {
+  def traverseQueryString() = {
     val e = exprs
-      .map { _.traverseQueryString(false) }.mkString(" %s ".format(op))
-    if (toplevel) e else "(%s)".format(e)
+      .map { _.traverseQueryString() }.mkString(" %s ".format(op))
+    "(%s)".format(e)
   }
 
   def typeCheck(t: SolrDocType) = {
@@ -264,13 +263,13 @@ case class SolrNotOp(expr: SolrExpression) extends SolrSimpleExpr {
 
   def typeCheck(t: SolrDocType) = expr.typeCheck(t).right.map { e => new SolrNotOp(e) with TypedSolrExpression }
 
-  def traverseQueryString(toplevel: Boolean) = "-" + expr.traverseQueryString(false)
+  def traverseQueryString() = "-" + expr.traverseQueryString()
 
 }
 
 case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExpr {
 
-  def traverseQueryString(toplevel: Boolean) = key + ":" + value.traverseQueryString(false)
+  def traverseQueryString() = key + ":" + value.traverseQueryString()
 
   def typeCheck(t: SolrDocType) = typeCheckValue(t, key, value).right.map { case (solrKey, cleanValue) => new SolrKeyVal(solrKey, cleanValue) with TypedSolrExpression }
 
@@ -278,7 +277,7 @@ case class SolrKeyVal(key: String, value: SolrSingleValue) extends SolrSimpleExp
 
 case class SolrKeyRange(key: String, low: Option[SolrSingleValue], high: Option[SolrSingleValue], inclusive: Boolean) extends SolrSimpleExpr {
 
-  def traverseQueryString(toplevel: Boolean) = {
+  def traverseQueryString() = {
     val l = low.map { _.traverseQueryString }.getOrElse("*")
     val h = high.map { _.traverseQueryString }.getOrElse("*")
     if (inclusive) {

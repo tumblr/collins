@@ -662,13 +662,13 @@ class SolrQuerySpec extends mutable.Specification {
 
     "handle character escaping" in {
       "quoted" in {
-        S("04:7d:7b:06:8f:f9", Q).traverseQueryString(false) must_== """"04:7d:7b:06:8f:f9""""
+        S("04:7d:7b:06:8f:f9", Q).traverseQueryString() must_== """"04:7d:7b:06:8f:f9""""
       }
       "wildcard" in {
-        S("04:7d:7b:06:8", R).traverseQueryString(false) must_== """04\:7d\:7b\:06\:8*"""
+        S("04:7d:7b:06:8", R).traverseQueryString() must_== """04\:7d\:7b\:06\:8*"""
       }
       "strict unquoted" in {
-        S("04:7d:7b:06:8f:f9", StrictUnquoted).traverseQueryString(false) must_== """04\:7d\:7b\:06\:8f\:f9"""
+        S("04:7d:7b:06:8f:f9", StrictUnquoted).traverseQueryString() must_== """04\:7d\:7b\:06\:8f\:f9"""
       }
     }
   }
@@ -714,10 +714,10 @@ class SolrQuerySpec extends mutable.Specification {
         """foo = [abc, abd]""".query.where.traverseQueryString must_== """foo:[abc TO abd]"""
       }
       "ANDs" in {
-        """foosolr = 3 AND bar = "abcdef" AND baz = true""".query.where.traverseQueryString must_== """foosolr:"3" AND bar:"abcdef" AND baz:"true""""
+        """foosolr = 3 AND bar = "abcdef" AND baz = true""".query.where.traverseQueryString must_== """(foosolr:"3" AND bar:"abcdef" AND baz:"true")"""
       }
       "ORs" in {
-        """foosolr = 3 OR bar = "abcdef" OR baz = true""".query.where.traverseQueryString must_== """foosolr:"3" OR bar:"abcdef" OR baz:"true""""
+        """foosolr = 3 OR bar = "abcdef" OR baz = true""".query.where.traverseQueryString must_== """(foosolr:"3" OR bar:"abcdef" OR baz:"true")"""
       }
       "NOT" in {
         """NOT foosolr = 3""".query.where.traverseQueryString must_== """-foosolr:"3""""
@@ -726,7 +726,7 @@ class SolrQuerySpec extends mutable.Specification {
         """NOT (foosolr = 3 AND foosolr = 5)""".query.where.traverseQueryString must_== """-(foosolr:"3" AND foosolr:"5")"""
       }
       "nested exprs" in {
-        """(foosolr = 3 OR foosolr = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.where.traverseQueryString must_== """(foosolr:"3" OR foosolr:"4") AND (bar:"true" OR (bar:"false" AND baz:"5"))"""
+        """(foosolr = 3 OR foosolr = 4) AND (bar = true OR (bar = false AND baz = 5))""".query.where.traverseQueryString must_== """((foosolr:"3" OR foosolr:"4") AND (bar:"true" OR (bar:"false" AND baz:"5")))"""
       }
       "support unquoted one-word strings" in {
         """foosolr = bar""".query.where.traverseQueryString must_== """foosolr:"bar""""
