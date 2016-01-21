@@ -18,6 +18,7 @@ object MultiCollinsConfig extends Configurable {
   }
   def locationAttribute = getString("locationAttribute", "LOCATION")
   def thisInstance = getString("thisInstance")
+  def queryCacheTimeout = getInt("queryCacheTimeout", 30)
 
   override def validateConfig() {
     if (enabled) {

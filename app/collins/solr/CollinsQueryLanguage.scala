@@ -27,7 +27,7 @@ case class CQLQuery(select: SolrDocType, where: SolrExpression) {
  * itself into a Solr Query
  */
 sealed trait SolrQueryComponent {
-  protected[solr] def traverseQueryString(): String = traverseQueryString(true)
+  def traverseQueryString(): String = traverseQueryString(true)
   protected[solr] def traverseQueryString(toplevel: Boolean): String
 }
 
