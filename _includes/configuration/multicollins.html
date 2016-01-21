@@ -47,6 +47,11 @@ to do two things.
       <td>String</td>
       <td>The asset tag that is for this specific instanceAssetType. For instance if the collins instance you are configuring is in EWR01, and the remote instance is in JFK01, you should set <code>thisInstance</code> to EWR01.</td>
     </tr>
+    <tr>
+      <td class="inlinecode">queryCacheTimeout</td>
+      <td>Integer</td>
+      <td>The amount of time (in seconds) to cache the query responses from remote collins instances. Defaults to 30 seconds.</td>
+    </tr>
   </tbody>
 </table>
 
@@ -56,6 +61,7 @@ to do two things.
   instanceAssetType = DATA_CENTER
   locationAttribute = LOCATION
   thisInstance = NONE
+  queryCacheTimeout = 30
 }</pre>
 </div>
 
