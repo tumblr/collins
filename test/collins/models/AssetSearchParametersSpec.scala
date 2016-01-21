@@ -3,9 +3,6 @@ package collins.models
 import org.specs2._
 import specification._
 
-import collins.solr.SolrKeyVal
-import collins.solr.SolrStringValue
-
 class AssetSearchParametersSpec extends mutable.Specification {
 
   val EMPTY_RESULT_TUPLE = (Nil, Nil, Nil)
@@ -94,10 +91,6 @@ class AssetSearchParametersSpec extends mutable.Specification {
           AssetFinder.empty,
           None
         ).toSeq.findOne("attribute") must_== Some("ip_address;1.3.5.7")
-      }
-
-      "include CQL query" in {
-        AssetSearchParameters(EMPTY_RESULT_TUPLE, AssetFinder.empty.copy(query = Some(SolrKeyVal("foo", SolrStringValue("bar")))), None).toSeq.findOne("query") must_== Some("foo:\"bar\"")
       }
 
     }
