@@ -56,7 +56,7 @@ case class AssetSearchParameters(
   def toQueryString: Option[String] = {
     val seq = toSeq
     if (seq.size > 0) {
-      Some(seq.map { case (k, v) => "%s=%s".format(k, v) }.mkString("&"))
+      Some(seq.map { case (k, v) => "%s=%s".format(k, URLEncoder.encode(v, "UTF-8")) }.mkString("&"))
     } else {
       None
     }
@@ -107,8 +107,12 @@ class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) 
     //manually build the query string because the Play(Ning) queryString is a
     //Map[String, String] and obviously cannot have two values with the same
     //key name, which is required for attributes
-    val queryString = RemoteAssetClient.createQueryString(params.toSeq ++ page.toSeq)
-
+    val pageString = RemoteAssetClient.createQueryString(page.toSeq)
+    val paramString = params.toQueryString match {
+      case None    => ""
+      case Some(s) => "&" + s
+    }
+    val queryString = pageString + paramString
     val request = WS.url(queryUrl + queryString).withAuth(remoteHost.username,
       remoteHost.password, play.api.libs.ws.WSAuthScheme.BASIC)
 
@@ -276,7 +280,7 @@ object RemoteAssetFinder {
   /**
    */
   def apply(clients: Seq[RemoteAssetClient], pageParams: PageParams, searchParams: AssetSearchParameters): (Seq[AssetView], Long) = {
-    val key = searchParams.paginationKey + clients.map { _.tag }.mkString("_")
+    val key = searchParams.paginationKey.getOrElse("") + clients.map { _.tag }.mkString("_")
     val stream = Cache.getAs[RemoteAssetStream](key).getOrElse(new RemoteAssetStream(clients, searchParams))
     val results = stream.slice(pageParams.page * pageParams.size, (pageParams.page + 1) * (pageParams.size))
     Cache.set(key, stream, 30)

@@ -13,10 +13,6 @@ import collins.models.State
 import collins.models.Status
 import collins.models.Truthy
 import collins.power.PowerAction
-import collins.solr.AssetDocType
-import collins.solr.CQLQuery
-import collins.solr.CollinsQueryParser
-import collins.solr.SolrExpression
 
 package object forms {
 
@@ -85,28 +81,4 @@ package object forms {
     }
     def unbind(key: String, value: AssetSort.Type) = Map(key -> value.toString)
   }
-
-  def parseQuery(qry: String): Either[Throwable, SolrExpression] = {
-    CollinsQueryParser(List(AssetDocType)).parseQuery(qry) match {
-      case Left(_) if Asset.isValidTag(qry) => CollinsQueryParser(List(AssetDocType)).parseQuery("tag=%s".format(qry)) match {
-        case Left(err: String)  => throw new IllegalArgumentException("Invalid cql %s".format(err))
-        case Right(q: CQLQuery) => Right(q.where)
-      }
-      case Left(err: String)  => throw new IllegalArgumentException("Invalid cql %s".format(err))
-      case Right(q: CQLQuery) => Right(q.where)
-    }
-  }
-
-  implicit def SolrExpressionFormat = new Formatter[SolrExpression] {
-    def bind(key: String, data: Map[String, String]) = {
-      Formats.stringFormat.bind(key, data).right.flatMap { qry =>
-        allCatch[SolrExpression]
-          .either(parseQuery(qry.trim).right.get)
-          .left.map(_ => Seq(FormError(key, "query.invalid", Nil)))
-      }
-    }
-    def unbind(key: String, value: SolrExpression) = Map(key -> value.toString)
-  }
-
-
 }
