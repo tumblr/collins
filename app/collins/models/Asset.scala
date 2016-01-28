@@ -266,7 +266,7 @@ object Asset extends Schema with AnormAdapter[Asset] with AssetKeys {
     val findLocations = find(PageParams(0, 50, "ASC", "tag"), AttributeResolver.emptyResultTuple, instanceFinder)
       .items
       .collect { case a: Asset => a }
-      .filter { _.tag != MultiCollinsConfig.thisInstance }
+      .filter(asset => { !MultiCollinsConfig.thisInstance.contains(asset.tag) })
     //iterate over the locations, sending requests to each one and aggregate their results
     val remoteClients = findLocations.flatMap { locationAsset =>
       val locationAttribute = MultiCollinsConfig.locationAttribute
