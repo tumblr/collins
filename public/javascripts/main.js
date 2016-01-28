@@ -235,7 +235,7 @@ $(document).ready(function() {
           var message = response.data.message;
           html += '<div style="font-family: monaco">' + message + '</div>';
           if (details && typeof(details) === "object" && details.message) {
-            html += '<br><div style="font-family: monaco">' + details.message + '</div>';
+            html += '<br><pre><code style="font-family: monaco">' + details.message + '</code></pre>';
           }
           $(elId(errorEl)).empty().append(html).show();
         } else {
