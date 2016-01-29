@@ -79,7 +79,7 @@ module Collins; module Api; module Util
     def http_call uri, &block
       trace("Calling uri #{uri}, waiting for #{timeout_i} seconds")
       begin
-        timeout(timeout_i) {
+        Timeout.timeout(timeout_i) {
           block.call
         }
       rescue Timeout::Error => e
