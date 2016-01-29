@@ -4,7 +4,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Blake Matheny", "Gabe Conradi", "Will Richard"]
-  s.date = "2015-03-17"
+  s.date = "2016-01-29"
   s.description = "Provides ruby support for interacting with the Collins API"
   s.email = ["collins-sm@googlegroups.com","gabe@tumblr.com","will@tumblr.com"]
   s.extra_rdoc_files = [
