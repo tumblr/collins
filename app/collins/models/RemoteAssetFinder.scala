@@ -48,8 +48,8 @@ case class AssetSearchParameters(
   def toSeq: Seq[(String, String)] = {
     val q1: Seq[(String, String)] = (
       params._1.map { case (enum, value) => (enum.toString, value) } ++
-      params._2.map { case (assetMeta, value) => ("attribute" -> "%s;%s".format(assetMeta.name, URLEncoder.encode(value, "UTF-8"))) } ++
-      params._3.map { i => ("attribute" -> ("ip_address;" + URLEncoder.encode(i, "UTF-8"))) }) ++ afinder.toSeq :+ ("details" -> (if (details) "true" else "false"))
+      params._2.map { case (assetMeta, value) => ("attribute" -> "%s;%s".format(assetMeta.name, value)) } ++
+      params._3.map { i => ("attribute" -> ("ip_address;" + i)) }) ++ afinder.toSeq :+ ("details" -> (if (details) "true" else "false"))
     operation.map { op => q1 :+ ("operation" -> op) }.getOrElse(q1)
   }
 
