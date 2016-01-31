@@ -3,6 +3,9 @@ package collins.models
 import org.specs2._
 import specification._
 
+import collins.solr.SolrKeyVal
+import collins.solr.SolrStringValue
+
 class AssetSearchParametersSpec extends mutable.Specification {
 
   val EMPTY_RESULT_TUPLE = (Nil, Nil, Nil)
@@ -93,6 +96,12 @@ class AssetSearchParametersSpec extends mutable.Specification {
         ).toSeq.findOne("attribute") must_== Some("ip_address;1.3.5.7")
       }
 
+      "include CQL query" in {
+        AssetSearchParameters(
+          EMPTY_RESULT_TUPLE,
+          AssetFinder.empty.copy(query = Some("FOO=BAR")),
+          None).toSeq.findOne("query") must_== Some("FOO=BAR")
+      }
     }
 
     "properly url-encode values" in {
@@ -100,8 +109,9 @@ class AssetSearchParametersSpec extends mutable.Specification {
         EMPTY_RESULT_TUPLE.copy(_2 = List((AssetMeta("TEST", -1, "","", 0L), "foo;|bar"))),
         AssetFinder.empty,
         None
-      ).toSeq.findOne("attribute") must_== Some("TEST;foo%3B%7Cbar")
+      ).toQueryString must beSome.which((s: String) => {
+        s contains "attribute=TEST%3Bfoo%3B%7Cbar"
+      })
     }
   }
 }
-
