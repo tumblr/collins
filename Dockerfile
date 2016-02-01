@@ -3,6 +3,9 @@ MAINTAINER Gabe Conradi <gabe@tumblr.com>
 
 RUN apt-get update && apt-get install -y zip unzip && rm -r /var/lib/apt/lists/*
 
+# Solr cores should be stored in a volume, so we arent writing stuff to our rootfs
+VOLUME /opt/collins/conf/solr/cores/collins/data
+
 COPY . /build/collins
 RUN cd /build && \
     export ACTIVATOR_VERSION=1.3.7 && \
