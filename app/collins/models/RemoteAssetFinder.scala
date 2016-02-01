@@ -26,6 +26,7 @@ import collins.solr.SolrOrOp
 import collins.solr.StringValueFormat
 import collins.util.AttributeResolver.ResultTuple
 import collins.util.RemoteCollinsHost
+import collins.util.config.MultiCollinsConfig
 
 /**
  * Just a combination of everything needed to do a search.  Probably should
@@ -279,7 +280,8 @@ object RemoteAssetFinder {
     val key = searchParams.paginationKey + clients.map { _.tag }.mkString("_")
     val stream = Cache.getAs[RemoteAssetStream](key).getOrElse(new RemoteAssetStream(clients, searchParams))
     val results = stream.slice(pageParams.page * pageParams.size, (pageParams.page + 1) * (pageParams.size))
-    Cache.set(key, stream, 30)
+    val timeout = MultiCollinsConfig.queryCacheTimeout
+    Cache.set(key, stream, timeout)
     (results, stream.aggregateTotal)
   }
 
