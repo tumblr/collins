@@ -14,6 +14,9 @@ import collins.solr.SolrKeyVal
 import collins.solr.SolrStringValue
 import collins.solr.StrictUnquoted
 import collins.solr.StringValueFormat
+import collins.solr.CollinsQueryParser
+import collins.solr.AssetDocType
+import collins.solr.CQLQuery
 import collins.util.views.Formatter
 
 case class AssetFinder(
@@ -25,7 +28,7 @@ case class AssetFinder(
     updatedAfter: Option[Date],
     updatedBefore: Option[Date],
     state: Option[State],
-    query: Option[SolrExpression]) {
+    query: Option[String]) {
   def asLogicalBoolean(a: Asset): LogicalBoolean = {
     val tagBool = tag.map((a.tag === _))
     val statusBool = status.map((a.statusId === _.id))
@@ -54,18 +57,27 @@ case class AssetFinder(
       updatedAfter.map(t => "updatedAfter" -> Formatter.dateFormat(t)) ::
       updatedBefore.map(t => "updatedBefore" -> Formatter.dateFormat(t)) ::
       state.map(s => "state" -> s.name) ::
-      query.map { q => "query" -> "UHOH!!!!" } :: //FIXME: need toCQL traversal
+      query.map { "query" -> _ } ::
       Nil)
     items.flatten
   }
 
   def toSolrKeyVals = {
+    val parser = CollinsQueryParser(List(AssetDocType))
     val items = tag.map { t => SolrKeyVal("tag", StringValueFormat.createValueFor(t)) } ::
       status.map { t => SolrKeyVal("status", SolrIntValue(t.id)) } ::
       assetType.map(t => SolrKeyVal("assetType", SolrIntValue(t.id))) ::
       state.map(t => SolrKeyVal("state", SolrIntValue(t.id))) ::
-      query ::
+      query.map(q => parser.parseQuery(q) match {
+        case Left(_) if Asset.isValidTag(q) => parser.parseQuery("tag=%s".format(q)) match {
+          case Left(err: String)  => throw new IllegalArgumentException("Invalid cql %s".format(err))
+          case Right(q: CQLQuery) => q.where
+        }
+        case Left(err: String)  => throw new IllegalArgumentException("Invalid cql %s".format(err))
+        case Right(q: CQLQuery) => q.where
+      }) ::
       Nil
+
     val cOpt = (createdBefore.map { d => SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted) }, createdAfter.map { d => SolrStringValue(Formatter.solrDateFormat(d), StrictUnquoted) }) match {
       case (None, None) => None
       case (bOpt, aOpt) => Some(SolrKeyRange("created", aOpt, bOpt, true))

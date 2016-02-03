@@ -49,15 +49,15 @@ case class AssetSearchParameters(
   def toSeq: Seq[(String, String)] = {
     val q1: Seq[(String, String)] = (
       params._1.map { case (enum, value) => (enum.toString, value) } ++
-      params._2.map { case (assetMeta, value) => ("attribute" -> "%s;%s".format(assetMeta.name, URLEncoder.encode(value, "UTF-8"))) } ++
-      params._3.map { i => ("attribute" -> ("ip_address;" + URLEncoder.encode(i, "UTF-8"))) }) ++ afinder.toSeq :+ ("details" -> (if (details) "true" else "false"))
+      params._2.map { case (assetMeta, value) => ("attribute" -> "%s;%s".format(assetMeta.name, value)) } ++
+      params._3.map { i => ("attribute" -> ("ip_address;" + i)) }) ++ afinder.toSeq :+ ("details" -> (if (details) "true" else "false"))
     operation.map { op => q1 :+ ("operation" -> op) }.getOrElse(q1)
   }
 
   def toQueryString: Option[String] = {
     val seq = toSeq
     if (seq.size > 0) {
-      Some(seq.map { case (k, v) => "%s=%s".format(k, v) }.mkString("&"))
+      Some(seq.map { case (k, v) => "%s=%s".format(k, URLEncoder.encode(v, "UTF-8")) }.mkString("&"))
     } else {
       None
     }
@@ -108,8 +108,12 @@ class HttpRemoteAssetClient(val tag: String, val remoteHost: RemoteCollinsHost) 
     //manually build the query string because the Play(Ning) queryString is a
     //Map[String, String] and obviously cannot have two values with the same
     //key name, which is required for attributes
-    val queryString = RemoteAssetClient.createQueryString(params.toSeq ++ page.toSeq)
-
+    val pageString = RemoteAssetClient.createQueryString(page.toSeq)
+    val paramString = params.toQueryString match {
+      case None    => ""
+      case Some(s) => "&" + s
+    }
+    val queryString = pageString + paramString
     val request = WS.url(queryUrl + queryString).withAuth(remoteHost.username,
       remoteHost.password, play.api.libs.ws.WSAuthScheme.BASIC)
 
@@ -277,7 +281,7 @@ object RemoteAssetFinder {
   /**
    */
   def apply(clients: Seq[RemoteAssetClient], pageParams: PageParams, searchParams: AssetSearchParameters): (Seq[AssetView], Long) = {
-    val key = searchParams.paginationKey + clients.map { _.tag }.mkString("_")
+    val key = searchParams.paginationKey.getOrElse("") + clients.map { _.tag }.mkString("_")
     val stream = Cache.getAs[RemoteAssetStream](key).getOrElse(new RemoteAssetStream(clients, searchParams))
     val results = stream.slice(pageParams.page * pageParams.size, (pageParams.page + 1) * (pageParams.size))
     val timeout = MultiCollinsConfig.queryCacheTimeout

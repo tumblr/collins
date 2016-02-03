@@ -844,7 +844,7 @@ class SolrQuerySpec extends mutable.Specification {
 
     }
     "mix with raw cql query" in new WithApplication {
-      val cql = "foo = bar AND (baz = asdf OR abcdef = 3)".query.where
+      val cql = "foo = bar AND (baz = asdf OR abcdef = 3)"
       val afinder = AssetFinder(
         tag = Some("tagvalue"),
         status = Status.Allocated,
@@ -858,7 +858,7 @@ class SolrQuerySpec extends mutable.Specification {
       val expected = List(
         SolrKeyVal("tag", "tagvalue".unquoted),
         SolrKeyVal("status", SolrIntValue(Status.Allocated.get.id)),
-        cql)
+        cql.query.where)
       afinder.toSolrKeyVals.toSet must_== expected.toSet
     }
 

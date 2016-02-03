@@ -15,6 +15,7 @@ import play.api.libs.json.JsObject
 import play.api.libs.json.JsString
 import play.api.libs.json.JsSuccess
 import play.api.libs.json.JsValue
+import play.api.libs.json.JsNull
 import play.api.libs.json.Json
 
 import collins.models.asset.AssetView
@@ -136,7 +137,10 @@ object conversions {
       (json \ "UPDATED").asOpt[Timestamp],
       (json \ "DELETED").asOpt[Timestamp],
       (json \ "ID").as[Long],
-      (json \ "STATE").asOpt[State].map(_.id).getOrElse(0)))
+      (json \ "STATE") match {
+        case JsNull => State.ANY_STATUS
+        case v: JsValue => v.as[State].id
+      }))
     override def writes(asset: AssetView): JsObject = JsObject(Seq(
       "ID" -> JsNumber(asset.id),
       "TAG" -> JsString(asset.tag),
@@ -234,5 +238,3 @@ sealed private[models] class PossibleRegex(left: StringExpression[String]) {
       .getOrElse(withPrefix)
   }
 }
-
-

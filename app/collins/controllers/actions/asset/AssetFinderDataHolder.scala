@@ -15,7 +15,6 @@ import play.api.mvc.AnyContent
 import play.api.mvc.Request
 
 import collins.controllers.actions.RequestDataHolder
-import collins.controllers.forms.SolrExpressionFormat
 import collins.controllers.forms.stateFormat
 import collins.controllers.forms.statusFormat
 import collins.controllers.forms.truthyFormat
@@ -25,7 +24,6 @@ import collins.models.AssetType
 import collins.models.State
 import collins.models.{ Status => AssetStatus }
 import collins.models.Truthy
-import collins.solr.SolrExpression
 import collins.util.AttributeResolver
 import collins.util.AttributeResolver.{ ResultTuple => ResolvedAttributes }
 import collins.util.MessageHelper
@@ -58,7 +56,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     Option[Date],             // updatedBefore
     Option[Truthy],           // remoteLookup,
     Option[State],            // state
-    Option[SolrExpression]    // query
+    Option[String]            // query
   ]
 
   def finderForm = Form(tuple(
@@ -82,7 +80,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     "updatedBefore" -> optional(date(ISO_8601_FORMAT)),
     "remoteLookup" -> optional(of[Truthy]),
     "state" -> optional(of[State]),
-    "query" -> optional(of[SolrExpression])
+    "query" -> optional(text)
   ))
 
   def processRequest(req: Request[AnyContent]): Either[RequestDataHolder,AssetFinderDataHolder] = {
