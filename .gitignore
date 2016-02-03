@@ -43,3 +43,5 @@ _includes/*
 # jenv java version mgmt
 .java-version
 /.target/
+
+vendor/

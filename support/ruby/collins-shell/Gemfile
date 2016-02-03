@@ -2,21 +2,4 @@ source :rubygems
 
 Encoding.default_external = Encoding::UTF_8
 
-gem 'collins_client', '>= 0.2.10'
-gem 'highline',       '~> 1.6.15'
-gem 'mustache',       '~> 0.99.4'
-gem 'pry',            '~> 0.9.9.6'
-gem 'rubygems-update','~> 1.8.24'
-gem 'terminal-table', '~> 1.4.5'
-gem 'thor',           '~> 0.16.0'
-
-group :development do
-  gem 'jeweler',      '~> 1.8.3'
-  gem 'redcarpet'
-  gem 'rspec',        '~> 2.10.0'
-  gem 'yard',         '~> 0.8'
-end
-
-group :deployment do
-  gem 'capistrano',   '~> 2.15.5'
-end
+gemspec
