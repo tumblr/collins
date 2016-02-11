@@ -1083,6 +1083,61 @@ sections:
                 "MESSAGE": "on"
               }
             }
+      "provisioning profiles":
+        description: Get the available profiles for provisioning
+        request: GET /api/provision/profiles
+        permission: controllers.AssetManagementApi.getProvisioningProfiles
+        response_codes:
+          200: Profiles retreived and returned successfully
+          501: Plugin not enabled
+        examples:
+          collins-shell: collins-shell provision list
+          curl: curl -v -u blake:admin:first --basic http://localhost:9000/api/provision/profiles
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "PROFILES": [
+                  {
+                    "PROFILE": "aaacanode",
+                    "LABEL": "AAA\/CA Server",
+                    "PREFIX": "aaa",
+                    "SUFFIX_ALLOWED": true,
+                    "PRIMARY_ROLE": "INFRA",
+                    "REQUIRES_PRIMARY_ROLE": true,
+                    "POOL": null,
+                    "REQUIRES_POOL": true,
+                    "SECONDARY_ROLE": null,
+                    "REQUIRES_SECONDARY_ROLE": false
+                  },
+                  {
+                    "PROFILE": "adminwebnode",
+                    "LABEL": "Admin Web Server",
+                    "PREFIX": "adminweb",
+                    "SUFFIX_ALLOWED": false,
+                    "PRIMARY_ROLE": "TUMBLR_APP",
+                    "REQUIRES_PRIMARY_ROLE": true,
+                    "POOL": "ADMIN_POOL",
+                    "REQUIRES_POOL": true,
+                    "SECONDARY_ROLE": "ALL",
+                    "REQUIRES_SECONDARY_ROLE": false
+                  },
+                  {
+                    "PROFILE": "appcronnode",
+                    "LABEL": "App Cron Server",
+                    "PREFIX": "app-cron",
+                    "SUFFIX_ALLOWED": false,
+                    "PRIMARY_ROLE": "TUMBLR_APP",
+                    "REQUIRES_PRIMARY_ROLE": true,
+                    "POOL": "UTIL",
+                    "REQUIRES_POOL": true,
+                    "SECONDARY_ROLE": null,
+                    "REQUIRES_SECONDARY_ROLE": false
+                  }
+                ]
+              }
+            }
       "provision an asset":
         description: Provision the specified asset using the specified parameters.
         request: POST /api/provision/:tag
