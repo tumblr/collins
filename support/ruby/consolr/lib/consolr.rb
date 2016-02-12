@@ -2,9 +2,10 @@ $LOAD_PATH.unshift('./lib/')
 
 require 'consolr/version'
 require 'collins_auth'
-require 'net/ping'
 require 'optparse'
 require 'yaml'
+
+require 'consolr/runners'
 
 module Consolr
   class Console
@@ -19,7 +20,7 @@ module Consolr
         File.readable?(File.expand_path(conf, __FILE__)) and File.size(File.expand_path(conf, __FILE__)) > 0
       end
 
-      config_params = begin
+      @config_params = begin
         YAML.load(File.open(File.expand_path(config_file, __FILE__)))
       rescue TypeError => e
         puts "-------"
@@ -36,33 +37,21 @@ module Consolr
         puts "------"
         exit 1
       end
-
-      begin
-        @ipmitool_exec = config_params['ipmitool'] # ipmitool absolute path
-      rescue Exception => e
-        puts e
-        puts "-------"
-        puts "Ensure that the ipmitool's path (#{@ipmitool_exec}) is given in the consolr.yml file and is correct"
-        puts "-------"
-        exit 1
-      end
-
+      #
       # Will be ignored for dangerous actions, no matter what, even with --force
       begin
-        @dangerous_assets = config_params['dangerous_assets']
+        @dangerous_assets = @config_params['dangerous_assets']
       rescue Exception => e
         puts e
         puts "-------"
         puts "Dangerous Assets -- #{dangrous}"
         puts "Please make sure dangerous_assets exists and is valid."
         puts "Supply them in a comma separated list."
-        puts "-------"
-        exit 1
       end
 
       # Dangerous actions wont be run in these status, override with --force
       begin
-        @dangerous_status = config_params['dangerous_status']
+        @dangerous_status = @config_params['dangerous_status']
       rescue Exception => e
         puts e
         puts "-------"
@@ -77,8 +66,6 @@ module Consolr
 
     def start options
       abort("Please pass either the asset tag or hostname") if options[:tag].nil? and options[:hostname].nil?
-
-      abort("Cannot find #{@ipmitool_exec}") unless File.exist?(@ipmitool_exec)
 
       dangerous_body = "Dangerous actions: #{dangerous_actions.join(', ')}\n"\
         "Dangerous status: #{dangerous_status.join(', ')} (override with --force)\n"\
@@ -103,11 +90,16 @@ module Consolr
         abort("Please pass either the hostname OR the tag but not both.")
       end
 
+
       # match assets like vm-67f5eh, zt-*, etc.
       nodes = options[:tag] ? (collins.find :tag => options[:tag]) : (collins.find :hostname => options[:hostname])
       @node = nodes.length == 1 ? nodes.first : abort("Found #{nodes.length} assets, aborting.")
 
-      abort("Cannot ping IP #{@node.ipmi.address} (#{@node.tag})") unless Net::Ping::External.new(@node.ipmi.address).ping?
+      runner = Consolr::Runners::Ipmitool.new @config_params['ipmitool']
+
+      if not runner.verify? @node
+        abort("Cannot verify asset #{@node.hostname} (#{@node.tag})")
+      end
 
       selected_dangerous_actions = dangerous_actions.select { |o| options[o] }
       if dangerous_assets.include?(@node.tag) and selected_dangerous_actions.any?
@@ -121,40 +113,29 @@ module Consolr
       case
       when options[:console]
         puts '--> Opening SOL session (type ~~. to quit)'
-        puts ipmitool_cmd('sol activate')
+        puts runner.console @node
       when options[:kick]
-        puts ipmitool_cmd('sol deactivate')
+        puts runner.kick @node
       when options[:identify]
-        puts ipmitool_cmd('chassis identify')
+        puts runner.identify @node
       when options[:sdr]
-        puts ipmitool_cmd('sdr elist all')
+        puts runner.sdr @node
       when options[:log] == 'list'
-        puts ipmitool_cmd('sel list')
+        puts runner.log_list @node
       when options[:log] == 'clear'
-        puts ipmitool_cmd('sel clear')
+        puts runner.log_clear @node
       when options[:on]
-        puts ipmitool_cmd('power on')
+        puts runner.on @node
       when options[:off]
-        puts ipmitool_cmd('power off')
+        puts runner.off @node
       when options[:reboot]
-        puts ipmitool_cmd('power cycle')
+        puts runner.reboot @node
       else
         begin
-          raise OptionParser::MissingArgument, "specify an action"
-        rescue OptionParser::MissingArgument => e
-          puts e
+          puts "specify an action"
           exit 1
         end
       end
     end
-
-    private
-
-    def ipmitool_cmd action
-      system("#{@ipmitool_exec} -I lanplus -H #{@node.ipmi.address} -U #{@node.ipmi.username} -P #{@node.ipmi.password} #{action}")
-      return $?.exitstatus == 0 ? "SUCCESS" : "FAILED"
-    end
-
   end
-
 end
