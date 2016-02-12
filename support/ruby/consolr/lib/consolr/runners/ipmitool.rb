@@ -1,8 +1,8 @@
-require 'net/ping'
+require 'consolr/runners/runner'
 
 module Consolr
   module Runners
-    class Ipmitool
+    class Ipmitool < Runner
       def initialize config
 				@ipmitool = config['executable']
       end
@@ -55,4 +55,4 @@ module Consolr
     end
   end
 end
-              
+

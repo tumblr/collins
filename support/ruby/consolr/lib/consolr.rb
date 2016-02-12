@@ -5,7 +5,7 @@ require 'collins_auth'
 require 'optparse'
 require 'yaml'
 
-require 'consolr/runners'
+require 'consolr/runners/ipmitool'
 
 module Consolr
   class Console
