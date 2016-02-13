@@ -4,10 +4,18 @@ module Consolr
   module Runners
     class Ipmitool < Runner
       def initialize config
-				@ipmitool = config['executable']
+        @ipmitool = if config.empty?
+                      '/usr/bin/ipmitool'
+                    else
+                      config
+                    end
       end
 
-			def verify? node
+      def can_run? node
+        not (node.ipmi.address.empty? or node.ipmi.username.empty? or node.ipmi.password.empty?)
+      end
+
+			def verify node
       	Net::Ping::External.new(node.ipmi.address).ping?
 			end
 
@@ -16,11 +24,11 @@ module Consolr
       end
 
       def kick node
-        cmd 'sol dectivate', node
+        cmd 'sol deactivate', node
       end
 
       def identify node
-        cmd 'identify', node
+        cmd 'chassis identify', node
       end
 
       def sdr node

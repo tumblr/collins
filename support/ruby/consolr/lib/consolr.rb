@@ -5,7 +5,6 @@ require 'collins_auth'
 require 'optparse'
 require 'yaml'
 
-require 'consolr/runners/ipmitool'
 
 module Consolr
   class Console
@@ -90,14 +89,35 @@ module Consolr
         abort("Please pass either the hostname OR the tag but not both.")
       end
 
+      runners = @config_params.fetch('runners', []).map {|runner|
+        begin
+          require "consolr/runners/#{runner}"
+          Consolr::Runners.const_get(runner.capitalize).new @config_params.fetch(runner, {})
+        rescue NameError => e
+          puts "Could not load runner #{runner.capitalize}, skipping."
+        end
+      }.compact
+
+      # Default to the ipmitool runner for backwards compatibility
+      if runners.empty?
+        require 'consolr/runners/ipmitool'
+        runners = [Consolr::Runners::Ipmitool.new(@config_params.fetch('ipmitool', {}))]
+      end
 
       # match assets like vm-67f5eh, zt-*, etc.
       nodes = options[:tag] ? (collins.find :tag => options[:tag]) : (collins.find :hostname => options[:hostname])
       @node = nodes.length == 1 ? nodes.first : abort("Found #{nodes.length} assets, aborting.")
 
-      runner = Consolr::Runners::Ipmitool.new @config_params['ipmitool']
+      # select the first runner that support the node
+      runner = runners.select {|runner|
+        runner.can_run? @node
+      }.first
 
-      if not runner.verify? @node
+      if runner.nil?
+        abort("No runners available for node #{@node.hostname} (#{@node.tag})")
+      end
+
+      if not runner.verify @node
         abort("Cannot verify asset #{@node.hostname} (#{@node.tag})")
       end
 
