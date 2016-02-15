@@ -55,6 +55,10 @@ module Consolr
         cmd 'power cycle', node
       end
 
+      def status node
+        cmd 'power status', node
+      end
+
       private
       def cmd action, node
         system("#{@ipmitool} -I lanplus -H #{node.ipmi.address} -U #{node.ipmi.username} -P #{node.ipmi.password} #{action}")

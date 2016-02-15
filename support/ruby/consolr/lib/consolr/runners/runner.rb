@@ -46,6 +46,10 @@ module Consolr
       def reboot node
         raise 'reboot is not implemented for this runner'
       end
+
+      def status node
+        raise 'status is not implemented for this runner'
+      end
     end
   end
 end

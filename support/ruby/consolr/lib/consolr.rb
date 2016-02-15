@@ -114,7 +114,7 @@ module Consolr
       }.first
 
       if runner.nil?
-        abort("No runners available for node #{@node.hostname} (#{@node.tag})")
+        abort("No runners available for node #{@node.hostname} (#{@node.tag})")
       end
 
       if not runner.verify @node
@@ -150,6 +150,8 @@ module Consolr
         puts runner.off @node
       when options[:reboot]
         puts runner.reboot @node
+      when options[:status]
+        puts runner.status @node
       else
         begin
           puts "specify an action"
