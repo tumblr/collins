@@ -89,19 +89,18 @@ module Consolr
         abort("Please pass either the hostname OR the tag but not both.")
       end
 
-      runners = @config_params.fetch('runners', []).map {|runner|
-        begin
-          require "consolr/runners/#{runner}"
-          Consolr::Runners.const_get(runner.capitalize).new @config_params.fetch(runner, {})
-        rescue NameError => e
-          puts "Could not load runner #{runner.capitalize}, skipping."
+      if options[:runner].nil?
+        runners = load_runners(@config_params.fetch('runners', []))
+        # Default to the ipmitool runner for backwards compatibility
+        if runners.empty?
+          require 'consolr/runners/ipmitool'
+          runners = [Consolr::Runners::Ipmitool.new(@config_params.fetch('ipmitool', {}))]
         end
-      }.compact
-
-      # Default to the ipmitool runner for backwards compatibility
-      if runners.empty?
-        require 'consolr/runners/ipmitool'
-        runners = [Consolr::Runners::Ipmitool.new(@config_params.fetch('ipmitool', {}))]
+      else
+        runners = load_runners([options[:runner]])
+        if runners.empty?
+          abort('Specified runner could not be loaded. Aborting.')
+        end
       end
 
       # match assets like vm-67f5eh, zt-*, etc.
@@ -162,6 +161,18 @@ module Consolr
           exit 1
         end
       end
+    end
+
+    private
+    def load_runners runners
+      runners.map {|runner|
+        begin
+          require "consolr/runners/#{runner}"
+          Consolr::Runners.const_get(runner.capitalize).new @config_params.fetch(runner, {})
+        rescue NameError, LoadError => e
+          puts "Could not load runner #{runner.capitalize}, skipping."
+        end
+      }.compact
     end
   end
 end
