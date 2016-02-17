@@ -43,8 +43,16 @@ module Consolr
         raise 'power off is not implemented for this runner'
       end
 
+      def soft_off node
+        raise 'soft_off is not implemented for this runner'
+      end
+
       def reboot node
         raise 'reboot is not implemented for this runner'
+      end
+
+      def soft_reboot node
+        raise 'reboot_soft is not implemented for this runner'
       end
 
       def status node

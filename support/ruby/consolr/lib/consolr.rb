@@ -148,8 +148,12 @@ module Consolr
         puts runner.on @node
       when options[:off]
         puts runner.off @node
+      when options[:soft_off]
+        puts runner.soft_off @node
       when options[:reboot]
         puts runner.reboot @node
+      when options[:soft_reboot]
+        puts runner.soft_reboot @node
       when options[:status]
         puts runner.status @node
       else

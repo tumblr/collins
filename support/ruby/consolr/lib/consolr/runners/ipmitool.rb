@@ -55,8 +55,16 @@ module Consolr
         cmd 'power off', node
       end
 
+      def soft_off node
+        cmd 'power soft', node
+      end
+
       def reboot node
         cmd 'power cycle', node
+      end
+
+      def soft_reboot node
+        cmd 'power reset', node
       end
 
       def status node
