@@ -26,6 +26,24 @@ describe Consolr::Console do
     expect { @console.start({:hostname => 'hostname-with-multiple-assets.dc.net'}) }.to raise_error(SystemExit, /Found \d+ assets/)
   end
 
+  it 'loads ipmitool as the default runner' do
+    expect_any_instance_of(Consolr::Runners::Ipmitool).to receive(:initialize)
+    @console.start({:tag => 'safe-allocated-tag', :on => true})
+  end
+
+  it 'prints an error when passed an unknown runner' do
+    expect {
+      @console.start({:tag => 'safe-allocated-tag', :on  => true, :runner => 'bogusrunner'})
+    }.to raise_error SystemExit
+  end
+
+  it 'loads a custom runner when specified' do
+    $LOAD_PATH << 'spec/mocks'
+    require 'consolr/runners/testrunner'
+    expect_any_instance_of(Consolr::Runners::Testrunner).to receive(:initialize)
+    @console.start({:tag => 'safe-allocated-tag', :on => true, :runner => 'testrunner'})
+  end
+
   safe_boolean_actions = {:console => "--> Opening SOL session (type ~~. to quit)\nsol activate", :kick => 'sol deactivate', :identify => 'chassis identify', :sdr => 'sdr elist all', :on => 'power on'}
   dangerous_boolean_actions = {:off => 'power off', :reboot => 'power cycle'}
 
