@@ -20,21 +20,6 @@ so if you use LDAP we recommend running a slave on the collins host.
   </thead>
   <tbody>
     <tr>
-      <td class="inlinecode">cacheCredentials</td>
-      <td>Boolean</td>
-      <td>Defaults to false. If true, credentials will be cached for a configurable duration.</td>
-    </tr>
-    <tr>
-      <td class="inlinecode">cacheTimeout</td>
-      <td>Duration</td>
-      <td>How long to cache a successful authentication for. Defaults to 15 seconds.</td>
-    </tr>
-    <tr>
-      <td class="inlinecode">cachePermissionsTimeout</td>
-      <td>Duration</td>
-      <td>Defaults to 30 seconds. The permissions file won't be reparsed for a minimum of this many seconds.</td>
-    </tr>
-    <tr>
       <td class="inlinecode">type</td>
       <td>String</td>
       <td>Defaults to default, which is the in-memory database. Other valid values are file or ldap</td>
@@ -43,6 +28,11 @@ so if you use LDAP we recommend running a slave on the collins host.
       <td class="inlinecode">permissionsFile</td>
       <td>String</td>
       <td>Path to the YAML file containing the application permissions. There is a sample permissions file below. Every API endpoint has a name associated with it. You can configure per endpoint permissions as well as some feature permissions.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">permissionsCacheSpecification</td>
+      <td>String</td>
+      <td>The guava cache specification to use for the permissions file, as described in <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/cache/CacheBuilderSpec.html">com.google.common.cache.CacheBuilderSpec</a>. Defaults to "expireAfterWrite=30s".</td>
     </tr>
     <tr>
       <td class="inlinecode">adminGroup</td>
@@ -97,11 +87,9 @@ permissions:
 
 <div class="example reference-config">
 <pre>authentication {
-  cacheCredentials = false
-  cacheTimeout = 15 seconds
-  cachePermissionsTimeout = 30 seconds
   type = default
   permissionsFile = "conf/permissions.yaml"
+  permissionsCacheSpecification = "expireAfterWrite=30s"
   adminGroup = [Infra]
 }</pre>
 </div>
@@ -155,6 +143,11 @@ at least RFC 2307, IPA, and the OS X admin server.
       <td>String</td>
       <td>Where to find groups in the LDAP schema</td>
     </tr>
+    <tr>
+      <td class="inlinecode">cacheSpecification</td>
+      <td>String</td>
+      <td>The guava cache specification to use for LDAP, as described in <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/cache/CacheBuilderSpec.html">com.google.common.cache.CacheBuilderSpec</a>. Defaults to "expireAfterWrite=30s".</td>
+    </tr>
   </tbody>
 </table>
 
@@ -167,6 +160,7 @@ at least RFC 2307, IPA, and the OS X admin server.
     searchbase = "dc=example,dc=org"
     usersub = "ou=people"
     groupsub = "ou=groups"
+    cacheSpecification = "expireAfterWrite=30s"
   }
 }</pre>
 </div>
@@ -190,6 +184,11 @@ users and passwords in <code>scripts/gen_passwords.sh</code>.
       <td>String</td>
       <td>The file to look in for auth information</td>
     </tr>
+    <tr>
+      <td class="inlinecode">cacheSpecification</td>
+      <td>String</td>
+      <td>The guava cache specification to use for file-based auth, as described in <a href="http://docs.guava-libraries.googlecode.com/git/javadoc/com/google/common/cache/CacheBuilderSpec.html">com.google.common.cache.CacheBuilderSpec</a>. Defaults to "expireAfterWrite=30s".</td>
+    </tr>
   </tbody>
 </table>
 
@@ -198,6 +197,7 @@ users and passwords in <code>scripts/gen_passwords.sh</code>.
   type = file
   file {
     userfile = "conf/users.conf"
+    cacheSpecification = "expireAfterWrite=30s"
   }
 }</pre>
 </div>
