@@ -15,9 +15,9 @@ module Consolr
         not (node.ipmi.address.empty? or node.ipmi.username.empty? or node.ipmi.password.empty?)
       end
 
-			def verify node
-      	Net::Ping::External.new(node.ipmi.address).ping?
-			end
+      def verify node
+        Net::Ping::External.new(node.ipmi.address).ping?
+      end
 
       def console node
         cmd 'sol activate', node

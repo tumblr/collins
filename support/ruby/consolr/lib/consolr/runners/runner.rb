@@ -7,9 +7,9 @@ module Consolr
         raise 'can_run? is not implemented for this runner'
       end
 
-			def verify node
+      def verify node
         raise 'verify is not implemented for this runner'
-			end
+      end
 
       def console node
         raise 'console is not implemented for this runner'
