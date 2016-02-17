@@ -12,7 +12,11 @@ module Consolr
       end
 
       def can_run? node
-        not (node.ipmi.address.empty? or node.ipmi.username.empty? or node.ipmi.password.empty?)
+        begin
+          not (node.ipmi.address.empty? or node.ipmi.username.empty? or node.ipmi.password.empty?)
+        rescue
+          false
+        end
       end
 
       def verify node
