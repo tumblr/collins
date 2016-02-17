@@ -8,8 +8,6 @@ sections:
     content: configuration/general.html
   authentication:
     content: configuration/authentication.html
-  cache:
-    content: configuration/cache.html
   callbacks:
     content: configuration/callbacks.html
   features:
