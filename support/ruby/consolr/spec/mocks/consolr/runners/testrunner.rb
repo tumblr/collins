@@ -1,7 +1,7 @@
 module Consolr
   module Runners
     class Testrunner < Runner
-      def initialize
+      def initialize config
         true
       end
 

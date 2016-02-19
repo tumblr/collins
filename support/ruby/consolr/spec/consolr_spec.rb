@@ -44,6 +44,22 @@ describe Consolr::Console do
     @console.start({:tag => 'safe-allocated-tag', :on => true, :runner => 'testrunner'})
   end
 
+  it 'selects a runner that supports the node' do
+    $LOAD_PATH << 'spec/mocks'
+    require 'consolr/runners/testrunner'
+    require 'consolr/runners/failrunner'
+    old_config = ENV['CONSOLR_CONFIG']
+    ENV['CONSOLR_CONFIG'] = '../../spec/configs/consolr_runners_rspec.yml'
+
+    console = Consolr::Console.new
+    expect_any_instance_of(Consolr::Runners::Failrunner).to receive(:can_run?).
+      and_return(false)
+    expect_any_instance_of(Consolr::Runners::Testrunner).to receive(:on)
+    console.start({:tag => 'safe-allocated-tag', :on => true})
+
+    ENV['CONSOLR_CONFIG'] = old_config
+  end
+
   safe_boolean_actions = {:console => "--> Opening SOL session (type ~~. to quit)\nsol activate", :kick => 'sol deactivate', :identify => 'chassis identify', :sdr => 'sdr elist all', :on => 'power on'}
   dangerous_boolean_actions = {:off => 'power off', :reboot => 'power cycle'}
 
