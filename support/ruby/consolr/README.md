@@ -62,12 +62,16 @@ Configuration params are searched in these locations --
 An example consolr.yml file
 
 ```    
-ipmitool:  /usr/bin/ipmitool
+runners:
+  ipmitool:  /usr/bin/ipmitool
 dangerous_assets:
   - "007117"
 dangerous_status:
   - "Allocated"
 ```
+
+Consolr will load the runners listed and pick the first runner that says it can
+manage the node in question by running the `can_run?` method of the runner.
 
 ## Running the tool
 
@@ -80,6 +84,54 @@ For a full list of actions, look up the help page
 ```
 $ consolr --help
 ```
+
+## Runners
+Consolr ships with a runner that uses ipmitool to manage servers but there are
+cases where you might want to extend it. For instance to support your favorite
+IaaS provider or a private cloud. In this case, you need to write a custom
+runner and deploy it. The way we do it at Tumblr is to gather our custom runner
+into a gem and install that gem along with consolr. 
+
+A runner is simply a class that extends the `Consolr::Runners::Runner` base
+class and is located in the correct module. A very simple example could look
+like:
+```
+module Consolr
+  module Runners
+    class MyRunner < Runner
+    def initialize
+      // Set up the runner
+    end
+
+    def can_run? node
+      // Should return true if this runner can manage `node`
+    end
+
+    def verify node
+      // Verify that the runner can talk to the node. For instance by pinging
+      // the ipmi interface. 
+    end
+
+    def on node
+      // issue command to power node on
+    end
+
+  end
+end
+```
+All the methods (`on`, `off`) etc. that can be implemented can be seen in the
+`Consolr::Runners::Runner` base class.
+
+In order to package it up as a gem the directory structure should look like
+
+```
+.
+└── lib
+└── consolr
+    └── runners
+        └── myrunner.rb
+```
+You'll also need a gemspec file at the root.
 
 ## Mailing list
 http://groups.google.com/group/collins-sm
