@@ -956,7 +956,7 @@ sections:
             description: The IPMI username - must be at least 1 character
           password:
             type: Option[String]
-            description: The IPMI password - must be at least 8 characters
+            description: The IPMI password - must be between 4 and 20 characters
           address:
             type: Option[String]
             description: IPMI address - dotted quad (IPv4) and unused
