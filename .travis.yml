@@ -7,7 +7,7 @@ before_install: unset SBT_OPTS JVM_OPTS
 # every travis CI has a version of ruby installed
 # that's why we can do this
 before_script:
-  - wget http://downloads.typesafe.com/typesafe-activator/1.3.6/typesafe-activator-1.3.6-minimal.zip
+  - curl -L -o ./typesafe-activator-1.3.6-minimal.zip https://downloads.typesafe.com/typesafe-activator/1.3.6/typesafe-activator-1.3.6-minimal.zip
   - unzip -q typesafe-activator-1.3.6-minimal.zip
   - if $RUN_RUBY; then gem install bundler; fi
 
