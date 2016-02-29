@@ -47,24 +47,19 @@ feature flags are documented below.
       <td>Whether attributes should be deleted on decommission</td>
     </tr>
     <tr>
-      <td class="inlinecode">useWhitelistOnRepurpose</td>
-      <td>Boolean</td>
-      <td>Determines which of deleteSomeMetaOnRepurpose or keepSomeMetaOnRepurpose is used. When true keepSomeMetaOnRepurpose is used.</td>
-    </tr>
-    <tr>
       <td class="inlinecode">deleteSomeMetaOnRepurpose</td>
       <td>Set[String]</td>
       <td>If deleteMetaOnDecommission is false, this is a list of attributes to delete anyhow</td>
     </tr>
     <tr>
-      <td class="inlinecode">keepSomeMetaOnRepurpose</td>
-      <td>Set[String]</td>
-      <td>If useWhitelistOnRepurpose is true, this is a list of attributes to keep</td>
-    </tr>
-    <tr>
       <td class="inlinecode">encryptedTags</td>
       <td>Set[String]</td>
       <td>A list of attributes that should be encrypted</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">hideMeta</td>
+      <td>Set[String]</td>
+      <td>A list of tags to hide from display</td>
     </tr>
     <tr>
       <td class="inlinecode">ignoreDangerousCommands</td>
@@ -77,9 +72,9 @@ feature flags are documented below.
       <td>Whether the web based intake is supported or not</td>
     </tr>
     <tr>
-      <td class="inlinecode">hideMeta</td>
+      <td class="inlinecode">keepSomeMetaOnRepurpose</td>
       <td>Set[String]</td>
-      <td>A list of tags to hide from display</td>
+      <td>If useWhitelistOnRepurpose is true, this is a list of attributes to keep</td>
     </tr>
     <tr>
       <td class="inlinecode">noLogAssets</td>
@@ -100,6 +95,11 @@ feature flags are documented below.
       <td class="inlinecode">sloppyTags</td>
       <td>Boolean</td>
       <td>Should probably be false. Allow every tag to be updated/overwritten/changed no matter what. Normally managed tags can only be updated during certain parts of the asset lifecycle.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">useWhitelistOnRepurpose</td>
+      <td>Boolean</td>
+      <td>Determines which of deleteSomeMetaOnRepurpose or keepSomeMetaOnRepurpose is used. When true keepSomeMetaOnRepurpose is used.</td>
     </tr>
   </tbody>
 </table>
