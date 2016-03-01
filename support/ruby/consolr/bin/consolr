@@ -24,6 +24,7 @@ opt_parser = OptionParser.new do |opt|
   opt.on('-x', '--off',             'turn off node')                           { options[:off] = true }
   opt.on('-X', '--soft-off',        'turn off gracefully (via ACPI)')          { options[:soft_off] = true }
   opt.on('-S', '--status',          'print asset power status')                { options[:status] = true }
+  opt.on('-L', '--sensors',         'print list of sensor values')             { options[:sensors] = true }
   opt.on('--runner RUNNER',         'specify the runner to use')               { |runner| options[:runner] = runner }
 
   opt.on_tail('-h', '--help', 'help') { puts opt; exit 0 }

@@ -71,6 +71,10 @@ module Consolr
         cmd 'power status', node
       end
 
+      def sensors node
+        cmd 'sensor list', node
+      end
+
       private
       def cmd action, node
         system("#{@ipmitool} -I lanplus -H #{node.ipmi.address} -U #{node.ipmi.username} -P #{node.ipmi.password} #{action}")
