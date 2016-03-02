@@ -155,6 +155,8 @@ module Consolr
         puts runner.soft_reboot @node
       when options[:status]
         puts runner.status @node
+      when options[:sensors]
+        puts runner.sensors @node
       else
         begin
           puts "specify an action"

@@ -58,6 +58,10 @@ module Consolr
       def status node
         raise 'status is not implemented for this runner'
       end
+
+      def sensors node
+        raise 'sensors is not implemented for this runner'
+      end
     end
   end
 end
