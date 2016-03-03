@@ -62,6 +62,10 @@ module Consolr
       def sensors node
         raise 'sensors is not implemented for this runner'
       end
+
+      def sol_info node
+        raise 'sol info is not implemented for this runner'
+      end
     end
   end
 end

@@ -75,6 +75,10 @@ module Consolr
         cmd 'sensor list', node
       end
 
+      def sol_info node
+        cmd 'session info active', node
+      end
+
       private
       def cmd action, node
         system("#{@ipmitool} -I lanplus -H #{node.ipmi.address} -U #{node.ipmi.username} -P #{node.ipmi.password} #{action}")
