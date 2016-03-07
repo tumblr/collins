@@ -157,6 +157,8 @@ module Consolr
         puts runner.status @node
       when options[:sensors]
         puts runner.sensors @node
+      when options[:get_sol_info]
+        puts runner.sol_info @node
       else
         begin
           puts "specify an action"

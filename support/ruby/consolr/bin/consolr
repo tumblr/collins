@@ -12,6 +12,7 @@ opt_parser = OptionParser.new do |opt|
   opt.on('-c', '--console',         'console into node via SOL')               { options[:console] = true }
   opt.on('-d', '--dangerous',       'list dangerous stuff')                    { options[:dangerous] = true }
   opt.on('-f', '--force',           'force run dangerous actions')             { options[:force] = true }
+  opt.on('-g', '--get-sol-info',    'get Serial Over LAN (SOL) info')          { options[:get_sol_info] = true }
   opt.on('-H', '--hostname ASSET',  'asset hostname')                          { |hostname| options[:hostname] = hostname }
   opt.on('-i', '--identify',        'turn on chassis UID')                     { options[:identify] = true }
   opt.on('-k', '--kick',            'kick if someone is hogging the console')  { options[:kick] = true }
