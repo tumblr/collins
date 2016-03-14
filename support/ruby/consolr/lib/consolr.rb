@@ -12,11 +12,19 @@ module Consolr
     attr_reader :ipmitool_exec, :dangerous_assets, :dangerous_status, :dangerous_actions, :options, :opt_parser
 
     def initialize
-      config_file = [ENV['CONSOLR_CONFIG'],
-                      '~/.consolr.yml', '~/.consolr.yaml',
-                      '/etc/consolr.yml', '/etc/consolr.yaml',
-                      '/var/db/consolr.yml', '/var/db/consolr.yaml'].compact.find do |conf|
-        File.readable?(File.expand_path(conf, __FILE__)) and File.size(File.expand_path(conf, __FILE__)) > 0
+      potential_config_paths = [ENV['CONSOLR_CONFIG'],
+                                '~/.consolr.yml', '~/.consolr.yaml',
+                                '/etc/consolr.yml', '/etc/consolr.yaml',
+                                '/var/db/consolr.yml', '/var/db/consolr.yaml']
+      config_file = potential_config_paths.compact.find do |conf|
+        begin
+          expanded_path = File.expand_path(conf, __FILE__)
+          File.readable?(expand_path) and File.size(expand_path) > 0
+        rescue ArgumentError
+          # if $HOME is not set, or if `~` cannot be expanded, `expand_path` will throw and ArgumentError
+          # in that case, just go to the next potential config file - this one obviously will not work
+          false
+        end
       end
 
       @config_params = begin
