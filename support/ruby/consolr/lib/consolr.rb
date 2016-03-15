@@ -19,7 +19,7 @@ module Consolr
       config_file = potential_config_paths.compact.find do |conf|
         begin
           expanded_path = File.expand_path(conf, __FILE__)
-          File.readable?(expand_path) and File.size(expand_path) > 0
+          File.readable?(expanded_path) and File.size(expanded_path) > 0
         rescue ArgumentError
           # if $HOME is not set, or if `~` cannot be expanded, `expand_path` will throw and ArgumentError
           # in that case, just go to the next potential config file - this one obviously will not work
