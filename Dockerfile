@@ -1,13 +1,14 @@
-FROM java:8-jdk
+FROM java:8-jre
 MAINTAINER Gabe Conradi <gabe@tumblr.com>
-
-RUN apt-get update && apt-get install -y zip unzip && rm -r /var/lib/apt/lists/*
 
 # Solr cores should be stored in a volume, so we arent writing stuff to our rootfs
 VOLUME /opt/collins/conf/solr/cores/collins/data
 
 COPY . /build/collins
-RUN cd /build && \
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y openjdk-8-jdk zip unzip && \
+    rm -r /var/lib/apt/lists/* && \
+    cd /build && \
     export ACTIVATOR_VERSION=1.3.7 && \
     wget -q http://downloads.typesafe.com/typesafe-activator/$ACTIVATOR_VERSION/typesafe-activator-$ACTIVATOR_VERSION-minimal.zip -O /build/activator.zip && \
     unzip -q ./activator.zip && \
@@ -15,7 +16,13 @@ RUN cd /build && \
     java -version 2>&1 && \
     PLAY_CMD=/build/activator-$ACTIVATOR_VERSION-minimal/activator ./scripts/package.sh && \
     unzip -q /build/collins/target/collins.zip -d /opt/ && \
-    cd / && rm -rf /build
+    cd / && rm -rf /build && \
+    rm -rf /root/.ivy2 && \
+    rm -rf /root/.sbt && \
+    apt-get remove -y --purge openjdk-8-jdk && \
+    apt-get autoremove --purge -y && \
+    apt-get clean && \
+    rm /var/log/dpkg.log
 
 WORKDIR /opt/collins
 
