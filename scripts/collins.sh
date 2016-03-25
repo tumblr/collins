@@ -13,6 +13,7 @@
 APP_NAME="collins"
 APP_HOME="/usr/local/$APP_NAME/current"
 LOG_HOME='/var/log'
+LISTEN_ADDRESS="0.0.0.0"
 LISTEN_PORT=8080
 FILE_LIMIT=8192
 COLLINS_USER="collins"
@@ -34,7 +35,7 @@ DEBUG_OPTS="-XX:ErrorFile=${LOG_HOME}/$APP_NAME/java_error%p.log -XX:+HeapDumpOn
 # Check for config overrides
 [ -f /etc/sysconfig/collins ] && . /etc/sysconfig/collins
 
-APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
+APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.address=${LISTEN_ADDRESS} -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
 DNS_OPTS="-Dnetworkaddress.cache.ttl=1 -Dnetworkaddress.cache.negative.ttl=1"
 JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $PERMGEN_OPTS $GC_LOGGING_OPTS $GC_LOG $HEAP_OPTS $DEBUG_OPTS"
 

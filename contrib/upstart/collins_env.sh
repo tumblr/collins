@@ -1,7 +1,8 @@
 APP_NAME="collins"
 APP_HOME="/usr/local/$APP_NAME/current"
+LISTEN_ADDRESS="0.0.0.0"
 LISTEN_PORT=9000
-APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
+APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.address=${LISTEN_ADDRESS} -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
 DNS_OPTS="-Dnetworkaddress.cache.ttl=1 -Dnetworkaddress.cache.negative.ttl=1"
 JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=3333 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 GC_OPTS="-XX:+CMSClassUnloadingEnabled"
