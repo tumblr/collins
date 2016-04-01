@@ -43,27 +43,36 @@ Redhat Flavors
 # gem install consolr
 ```
 
-- Setting up a configuration file
+### Configuration
 
-Configuration file is where consolr looks for the location of ipmitool.
-If you have assets where you don't want users changing things, just add the 
+The configuration file is where consolr looks for what runners you have enabled
+and what parameters should be passed for them. To configure your runners add
+them to the `runners` array. For any runner you have, you can add another root
+key to the config object with parameters for that runner.
+
+If you have assets where you don't want users changing things, just add the
 asset in the dangerous assets list. Consolr will safeguard it.
 
-Consolr authenticates with Collins through [collins-auth](https://github.com/tumblr/collins/tree/master/support/ruby/collins-auth). So 
+Consolr authenticates with Collins through [collins-auth](https://github.com/tumblr/collins/tree/master/support/ruby/collins-auth). So
 one would want collins.yml file to be set up as well.
 
-Configuration params are searched in these locations -- 
+Configuration params are searched in these locations:
 
--- ENV['CONSOLR_CONFIG']
--- $HOME/.consolr.yml
--- /etc/consolr.yml
--- /var/db/consolr.yml
+1. `ENV['CONSOLR_CONFIG']`
+2. `$HOME/.consolr.yml`
+3. `/etc/consolr.yml`
+4. `/var/db/consolr.yml`
 
 An example consolr.yml file
 
-```    
+```
 runners:
-  ipmitool:  /usr/bin/ipmitool
+  - ipmitool
+  - customrunner
+ipmitool: /usr/bin/ipmitool
+customrunner:
+  user: admin
+  password: s3cr3t
 dangerous_assets:
   - "007117"
 dangerous_status:
