@@ -285,7 +285,9 @@ object RemoteAssetFinder {
     val stream = Cache.getAs[RemoteAssetStream](key).getOrElse(new RemoteAssetStream(clients, searchParams))
     val results = stream.slice(pageParams.page * pageParams.size, (pageParams.page + 1) * (pageParams.size))
     val timeout = MultiCollinsConfig.queryCacheTimeout
-    Cache.set(key, stream, timeout)
+    if (MultiCollinsConfig.cacheEnabled) {
+      Cache.set(key, stream, timeout)
+    }
     (results, stream.aggregateTotal)
   }
 
