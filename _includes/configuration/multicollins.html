@@ -50,7 +50,12 @@ to do two things.
     <tr>
       <td class="inlinecode">queryCacheTimeout</td>
       <td>Integer</td>
-      <td>The amount of time (in seconds) to cache the query responses from remote collins instances. Defaults to 30 seconds.</td>
+      <td>The amount of time (in seconds) to cache the query responses from remote collins instances. A value of 0 will result in values never expiring from the cache, which you probably do not want. Defaults to 30 seconds.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">cacheEnabled</td>
+      <td>Boolean</td>
+      <td>Optionally enable or disable the multicollins cache.  True, meaning enabled, by default.</td>
     </tr>
   </tbody>
 </table>
@@ -62,6 +67,7 @@ to do two things.
   locationAttribute = LOCATION
   thisInstance = NONE
   queryCacheTimeout = 30
+  cacheEnabled = true
 }</pre>
 </div>
 
