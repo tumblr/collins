@@ -127,11 +127,11 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
   * For a range 0L..20L, used addresses List(17,18,19,20), the result will be None (allocate from beginning)
   */
   protected def getCurrentLowestLocalMaxAddress(calc: IpAddressCalc)(implicit scope: Option[String]): Option[Long] = inTransaction {
-    val minAddress = calc.minAddressAsLong
+    val startAddress = calc.startAddressAsLong
     val maxAddress = calc.maxAddressAsLong
     val sortedAddresses = from(tableDef)(t =>
       where(
-        (t.address gte minAddress) and
+        (t.address gte startAddress) and
           (t.address lte maxAddress))
         select (t.address)
         orderBy (t.address asc)).toSeq

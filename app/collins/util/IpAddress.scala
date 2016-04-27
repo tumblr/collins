@@ -113,7 +113,7 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
     case None => startAt match {
       case Some(start) => IpAddress.toLong(start)
       case None =>
-        startAddressAsLong + 1
+        minAddressAsLong + 1
     }
   }
   // next consumable IP from address. Skips unusable addresses (broadcast=.255, network=.0)
