@@ -57,7 +57,7 @@ case class GetPoolsAction(
         "NETWORK" -> JsString(formatNetworkAddress(pool.network)),
         "START_ADDRESS" -> JsString(pool.startAddress.getOrElse("Unspecified")),
         "SPECIFIED_GATEWAY" -> JsString(pool.gateway.getOrElse("Unspecified")),
-        "GATEWAY" -> JsString(pool.ipCalc.minAddress),
+        "GATEWAY" -> JsString(pool.gateway.getOrElse(pool.ipCalc.minAddress)),
         "BROADCAST" -> JsString(pool.ipCalc.broadcastAddress),
         "POSSIBLE_ADDRESSES" -> JsNumber(pool.ipCalc.addressCount)
       )

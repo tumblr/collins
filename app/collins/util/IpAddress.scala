@@ -99,7 +99,7 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
   def lastOctetInRange: Long = IpAddress.lastOctet(maxAddressAsLong)
   def startAddress: String = startAt.getOrElse(minAddress)
   def startAddressAsLong = IpAddress.toLong(startAddress)
-  def minAddress: String = startAt.getOrElse(subnetInfo.getLowAddress())
+  def minAddress: String = subnetInfo.getLowAddress()
   def minAddressAsLong = IpAddress.toLong(minAddress)
   def maxAddress: String = subnetInfo.getHighAddress()
   def maxAddressAsLong = IpAddress.toLong(maxAddress)
@@ -113,7 +113,7 @@ case class IpAddressCalc(network: String, startAt: Option[String] = None) {
     case None => startAt match {
       case Some(start) => IpAddress.toLong(start)
       case None =>
-        minAddressAsLong + 1
+        startAddressAsLong + 1
     }
   }
   // next consumable IP from address. Skips unusable addresses (broadcast=.255, network=.0)
