@@ -4,11 +4,7 @@ module Consolr
   module Runners
     class Ipmitool < Runner
       def initialize config
-        @ipmitool = if config.empty?
-                      '/usr/bin/ipmitool'
-                    else
-                      config
-                    end
+        @ipmitool = config.empty? ? 'ipmitool' : config
       end
 
       def can_run? node
