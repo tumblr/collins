@@ -14,6 +14,10 @@
       <li><strong>Power Off</strong> - Power off the server, without grace (like pressing the power button)</li>
       <li><strong>Power On</strong> - Power up chassis</li>
       <li><strong>Power Off Graceful</strong> - Initiate soft-shutdown of OS via ACPI</li>
+      <li><strong>Next Boot PXE</strong> - Set next boot of this asset to PXE (Manual reboot is still required).</li>
+      <li><strong>Next Boot DISK</strong> - Set next boot of this asset to Local Hard Disk (Manual reboot is still required).</li>
+      <li><strong>Next Boot PXE PERSISTENT</strong> - Set next boot of this asset to PXE PERSISTENT (Manual reboot is still required).</li>
+      <li><strong>Next Boot DISK PERSISTENT</strong> - Set next boot of this asset to Local Hard Disk PERSISTENT (Manual reboot is still required).</li>
     </ul>
     <p>If that all sounds good, pick a reboot type and then click the button below</p>
     @formFieldRow {
@@ -26,6 +30,10 @@
           <option value="powerOff">Power Off</option>
           <option value="powerOn">Power On</option>
           <option value="powerSoft">Power Off Graceful</option>
+          <option value="nextBootPxe">Next Boot PXE (manual reboot required).</option>
+          <option value="nextBootDisk">Next Boot DISK (manual reboot required).</option>
+          <option value="nextBootPxePersistent">Next Boot PXE PERSISTENT (manual reboot required).</option>
+          <option value="nextBootDiskPersistent">Next Boot DISK PERSISTENT (manual reboot required).</option>
         </select>
       }
     }
