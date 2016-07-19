@@ -97,36 +97,9 @@ module Consolr
         abort("Please pass either the hostname OR the tag but not both.")
       end
 
-      if options[:runner].nil?
-        runners = load_runners(@config_params.fetch('runners', []))
-        # Default to the ipmitool runner for backwards compatibility
-        if runners.empty?
-          require 'consolr/runners/ipmitool'
-          runners = [Consolr::Runners::Ipmitool.new(@config_params.fetch('ipmitool', {}))]
-        end
-      else
-        runners = load_runners([options[:runner]])
-        if runners.empty?
-          abort('Specified runner could not be loaded. Aborting.')
-        end
-      end
-
       # match assets like vm-67f5eh, zt-*, etc.
       nodes = options[:tag] ? (collins.find :tag => options[:tag]) : (collins.find :hostname => options[:hostname])
       @node = nodes.length == 1 ? nodes.first : abort("Found #{nodes.length} assets, aborting.")
-
-      # select the first runner that support the node
-      runner = runners.select {|runner|
-        runner.can_run? @node
-      }.first
-
-      if runner.nil?
-        abort("No runners available for node #{@node.hostname} (#{@node.tag})")
-      end
-
-      if not runner.verify @node
-        abort("Cannot verify asset #{@node.hostname} (#{@node.tag})")
-      end
 
       selected_dangerous_actions = dangerous_actions.select { |o| options[o] }
       if dangerous_assets.include?(@node.tag) and selected_dangerous_actions.any?
@@ -137,54 +110,83 @@ module Consolr
         abort "Cannot run dangerous commands on #{@node.hostname} (#{@node.tag} - #{@node.status}) because it is in a protected status. This can be overridden with the --force flag\n#{dangerous_body}"
       end
 
-      case
-      when options[:console]
-        puts '--> Opening SOL session (type ~~. to quit)'
-        puts runner.console @node
-      when options[:kick]
-        puts runner.kick @node
-      when options[:identify]
-        puts runner.identify @node
-      when options[:sdr]
-        puts runner.sdr @node
-      when options[:log] == 'list'
-        puts runner.log_list @node
-      when options[:log] == 'clear'
-        puts runner.log_clear @node
-      when options[:on]
-        puts runner.on @node
-      when options[:off]
-        puts runner.off @node
-      when options[:soft_off]
-        puts runner.soft_off @node
-      when options[:reboot]
-        puts runner.reboot @node
-      when options[:soft_reboot]
-        puts runner.soft_reboot @node
-      when options[:status]
-        puts runner.status @node
-      when options[:sensors]
-        puts runner.sensors @node
-      when options[:get_sol_info]
-        puts runner.sol_info @node
-      else
-        begin
-          puts "specify an action"
-          exit 1
-        end
+      # use the command line runner, if it was provided
+      runner_names = [options[:runner]].compact
+
+      # if no runner specified on command line, use the runners from the config
+      if runner_names.empty?
+        runner_names = @config_params.fetch('runners', []).compact
       end
+
+      # if neither of the above is true, default to using ipmitool
+      if runner_names.empty?
+        runner_names = ['ipmitool']
+      end
+
+      # select the first runner that support the node
+      runner_names.each do |runner_name|
+
+        # load the runner
+        begin
+          require "consolr/runners/#{runner_name}"
+          runner = Consolr::Runners.const_get(runner_name.capitalize).new @config_params.fetch(runner_name, {})
+        rescue NameError, LoadError => e
+          puts "Could not load runner #{runner_name.capitalize}, skipping."
+          next
+        end
+
+        # if this runner can't work for this node, try the next runner
+        if not runner.can_run? @node
+          next
+        end
+
+        if not runner.verify @node
+          abort("Cannot verify asset #{@node.hostname} (#{@node.tag})")
+        end
+
+        # run the command!
+        case
+        when options[:console]
+          puts '--> Opening SOL session (type ~~. to quit)'
+          puts runner.console @node
+        when options[:kick]
+          puts runner.kick @node
+        when options[:identify]
+          puts runner.identify @node
+        when options[:sdr]
+          puts runner.sdr @node
+        when options[:log] == 'list'
+          puts runner.log_list @node
+        when options[:log] == 'clear'
+          puts runner.log_clear @node
+        when options[:on]
+          puts runner.on @node
+        when options[:off]
+          puts runner.off @node
+        when options[:soft_off]
+          puts runner.soft_off @node
+        when options[:reboot]
+          puts runner.reboot @node
+        when options[:soft_reboot]
+          puts runner.soft_reboot @node
+        when options[:status]
+          puts runner.status @node
+        when options[:sensors]
+          puts runner.sensors @node
+        when options[:get_sol_info]
+          puts runner.sol_info @node
+        else
+          begin
+            abort("specify an action")
+          end
+        end
+        # everything worked!
+        exit 0
+      end
+
+      # if we got here, all the runners did not work for this node
+      abort("No runners available for node #{@node.hostname} (#{@node.tag})")
     end
 
-    private
-    def load_runners runners
-      runners.map {|runner|
-        begin
-          require "consolr/runners/#{runner}"
-          Consolr::Runners.const_get(runner.capitalize).new @config_params.fetch(runner, {})
-        rescue NameError, LoadError => e
-          puts "Could not load runner #{runner.capitalize}, skipping."
-        end
-      }.compact
-    end
   end
 end
