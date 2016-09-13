@@ -8,6 +8,8 @@ sections:
     content: configuration/general.html
   authentication:
     content: configuration/authentication.html
+  cache:
+    content: configuration/cache.html
   callbacks:
     content: configuration/callbacks.html
   features:
@@ -20,8 +22,6 @@ sections:
     content: configuration/ipmi.html
   monitoring:
     content: configuration/monitoring.html
-  "thread pools":
-    content: configuration/thread_pools.html
   multicollins:
     content: configuration/multicollins.html
   "node classifier":
@@ -38,3 +38,5 @@ sections:
     content: configuration/solr.html
   "tag decorators":
     content: configuration/tag_decorators.html
+  "thread pools":
+      content: configuration/thread_pools.html
