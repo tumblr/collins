@@ -161,7 +161,7 @@ match is found.
     <tr>
       <td class="inlinecode">lshw.defaultNicCapacity</td>
       <td>Long</td>
-      <td>If the network interface capacity can not be found, fallback to this value. Specified in bits. No default value.</td>
+      <td>When parsing NIC capicity collins tries a few things.  It first uses the <span class="inlinecode">capacity</span> value, if it is found.  If not, it uses the <span class="inlinecode">size</span> value, if it is found.  If neither <span class="inlinecode">capacity</span> or <span class="inlinecode">size</span> are found, it then looks in the product name for the string '<span class="inlinecode">10-gig</span>'.  If it finds that string, it assumes the size is 10000000000 bits.  If none of these succeed, it will use the <span class="inlinecode">lshw.defaultNicCapacity</span> value. This configuration is specified in bits, and there is no default value.  If this value is not set, and collins tries to use it, it will throw an exception and fail to parse the LSHW data.</td>
     </tr>
     <tr>
       <td class="inlinecode">lshw.flashProduct</td>
