@@ -36,40 +36,6 @@ parsers.text.maxLength=1048576
 evolutionplugin = disabled</pre>
 </div>
 
-<h2>Concurrency</h2>
-
-<p>
-These configuration aspects manage various concurrency components of the system. This will dictate
-how much work Collins can do at any given time.
-</p>
-
-<table class="table table-condensed table-hover">
-  <thead>
-    <tr>
-      <th>Key</th><th>Type</th><th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td class="inlinecode">concurrency.actorCount</td>
-      <td>Integer</td>
-      <td>The number of actors to spin up to handle async processing of things like provisioning and power status. This defaults to the number of CPUs * 2.</td>
-    </tr>
-    <tr>
-      <td class="inlinecode">concurrency.timeout</td>
-      <td>Duration</td>
-      <td>The maximum amount of time to allow a process to run. This defaults to 2 seconds but generally different plugins allow you to specify different timeouts.</td>
-    </tr>
-  </tbody>
-</table>
-
-<div class="example example-config">
-<pre>concurrency {
-  actorCount = 48
-  timeout = 10 seconds
-}</pre>
-</div>
-
 <h2>Crypto</h2>
 
 <p>

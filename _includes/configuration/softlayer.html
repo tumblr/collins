@@ -43,6 +43,20 @@ ID.
       <td>Set[String]</td>
       <td>Assets with any of these status can be cancelled.</td>
     </tr>
+    <tr>
+        <td class="inlinecode">cancelRequestTimeoutMs</td>
+        <td>Duration</td>
+        <td>
+            Timeout for canceling of a softlayer server. Defaults to 10 seconds.
+        </td>
+    </tr>
+    <tr>
+        <td class="inlinecode">activationRequestTimeoutMs</td>
+        <td>Duration</td>
+        <td>
+            Timeout for activation of a softlayer server. Defaults to 10 seconds.
+        </td>
+    </tr>
   </tbody>
 </table>
 
@@ -52,6 +66,8 @@ ID.
   username = "jimbob123"
   password = "lkajsdlkjaas09823lkajdslkajsd"
   allowedCancelStatus = [Unallocated, Allocated, Maintenance]
+  cancelRequestTimeout = 10 seconds
+  activationRequestTimeout = 10 seconds
 }</pre>
 </div>
 
