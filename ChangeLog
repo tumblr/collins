@@ -1,3 +1,99 @@
+2.0.0   2016/09/20
+
+	Collins 2.0.0 is finally released!  As of this release, we will start following semantic versioning (http://semver.org/).  There
+	have been some non-backwards compatible changes to collins' functionality and configuration settings, but nothing that will
+	be too difficult to upgrade.
+
+	Here are some highlights of what has changed since the last release:
+
+	Event firehose
+	Refactor of collins' caching logic, to safely support HA
+	Improved LDAP authentication configuration
+	Python collins client
+	Consolr gem, for executing IPMI commands on collins assets
+	Upgraded to play 2.3.9
+
+	Thanks to @MaximeDevalland, @Primer42, @andrewjkerr, @baloo, @byxorna, @davidblum, @defect, @funzoneq,
+	@gtorre, @maddalab, @schallert, @sushruta and @unclejack for their contributions!
+
+	And here are all the pull requests included in this release, in the order they were merged to master
+
+	- Ipmi validation #309 @maddalab
+	- Fix collins-notify for ruby 2.2.0 #310 @byxorna
+	- my bad, i didnt build the gem after adopting feedback #311 @byxorna
+	- collins_client clean up #307 @defect
+	- Fix the error message displayed when login fails #314 @maddalab
+	- Fix issue with invoking authentication twice #316 @maddalab
+	- Remove use of async result during asset cancel request #319 @maddalab
+	- Minor: A Two-Tuple of Options where only one of the tuple elements is Some at a time is an either #320 @maddalab
+	- Update play to 2.3.9 #322 @maddalab
+	- Minor: Upgrade solr and httpcomponents version #321 @maddalab
+	- Set IPMI Password minLength to 4 #327 @MaximeDevalland
+	- Use a hostname deploy (useful for standbys) #328 @maddalab
+	- Minor: Styling using bootswatch themes #325 @maddalab
+	- Use the tryAuthCache method to avoid making auth queries continously. #332 @maddalab
+	- Fix the color scheme #333 @Primer42
+	- cleanup the dockerfile some #334 @byxorna
+	- Bug: Avoid recursive (stack overflowing) error with ldap auth #335 @maddalab
+	- Update README.md to use correct GitHub Pages URL #336 @andrewjkerr
+	- Rethink use of Guava cache using play's plugin architecture #337 @maddalab
+	- added input search field in top bar #330 @MaximeDevalland
+	- fixed input search, was returning all results #343 @MaximeDevalland
+	- fix asset_log.created_by to be varchar(255) #342 @byxorna
+	- Changes to search bar #344 @maddalab
+	- Added a new gem - consolr wrapping on top on IPMI Tool #346 @sushruta
+	- Ensure only 1 instance of auth provider is ever created #348 @maddalab
+	- api delete endpoint #349 @gtorre
+	- Fixing relative paths and missing bracket #351 @funzoneq
+	- Reintroduce caching into models #350 @maddalab
+	- Handle leading/trailing white space in top search bar field. #352 @maddalab
+	- Only fetch the required fields from solr. #353 @maddalab
+	- Adding additional stats. #354 @maddalab
+	- Instrumenting with more stats #355 @maddalab
+	- Instrumenting with stats around the serialization of json. #356 @maddalab
+	- Minor cleanups #357 @maddalab
+	- Fix collins-client gem unit tests #361 @gtorre
+	- travis improvments #360 @Primer42
+	- Consolr dangerous asset behavior and unit tests #359 @Primer42
+	- Will fix use whitelist on repurpose de base #365 @Primer42
+	- Introducing hazel cast for clustered operation of collins #367 @maddalab
+	- Fix some specs that were not using the right scope #368 @maddalab
+	- Addressing issue with specification scope for a couple of tests. #369 @maddalab
+	- Running the cache spec for both In-memory and Distributed  #370 @maddalab
+	- adding unit tests for delete (nuke) action #372 @gtorre
+	- Added scoverage based coverage reports.  #373 @maddalab
+	- bump versions in build.sbt, h2, solr, mysql-connector, snakeyaml, jsoup, bootstrap #374 @maddalab
+	- Address the setting of attributes and handling of whitelisted attribs when provisioning #376 @maddalab
+	- Minor tweaks from changes to support useWhitelistOnRepurpose. #377 @maddalab
+	- Implement a firehose for events #379 @maddalab
+	- Enable asset distance test #381 @maddalab
+	- Upgrade activator to 1.3.6 from 1.3.4 #382 @maddalab
+	- [ipmi] allow templating of asset tag in config #386 @schallert
+	- Gabe optional ipmi power restrictions #388 @byxorna
+	- update dockerfile to jdk8 and cleanup build #390 @byxorna
+	- Refactor/scalaish #392 @baloo
+	- Include solr query string in cache key #396 @defect
+	- Revert "Include solr query string in cache key" #400 @defect
+	- fix timeout deprecation warning in collins client request #406 @byxorna
+	- add volume for solr cores #402 @byxorna
+	- Make remote query cache timeout configurable #401 @defect
+	- Fix multi-collins queries #407 @defect
+	- Collins-shell fix dependencies #408 @Primer42
+	- format provisioning errors less shittily #405 @byxorna
+	- Consolr updates #412 @defect
+	- Travis runs are having trouble with the http -> https redirect #420 @Primer42
+	- Remove toplevel parameter from solr #397 @defect
+	- change all instances of 2015 to 2016 #413 @sushruta
+	- Add support for sensor reading #423 @defect
+	- add a flag for consolor to print SOL info #424 @sushruta
+	- Gracefully handle when HOME is not set by making consolr bypass those config files #425 @Primer42
+	- Fix minor typo in my last consolr PR #426 @Primer42
+	- Dockerfile: use the JRE image, not JDK #419 @unclejack
+	- [consolr] readme: update reference config #431 @schallert
+	- Updated minAddress to respect startAt #432 @davidblum
+	- add /usr array of java_home locations #440 @davidblum
+	- Add a parameter to disable the multicollins cache #437 @Primer42
+
 1.3.0	2014/09/10
 
 	Moved to Play 2.0.8
@@ -16,7 +112,7 @@
 	Restrict provisioning based on hardware configuration
 
 	Special thanks to @discordianfish @matthiasr @dallasmarlow @rednuopxivrec @skottler and @asheepapart for their contributions!
-	
+
 	And here are all the pull requests in this release, in no particular order
 
 	* Gabe dockerfile #208 @byxorna
