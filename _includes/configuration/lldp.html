@@ -1,0 +1,31 @@
+<p class="lead">Configuration for importing LLDP data</p>
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">lldp</span>
+</p>
+
+<p>
+Collins accepts XML output from <span class="inlinecode">lldpctl</span> in order
+to store data about which switch an asset is connected to.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">requireVlanName</td>
+      <td>Boolean</td>
+      <td>If true, throw an error if the LLDP data submitted does not contain a
+      VLAN name. Defaults to true.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>lldp {
+     requireVlanName = true
+}</pre>
+</div>
