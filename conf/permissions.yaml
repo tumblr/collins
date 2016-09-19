@@ -10,7 +10,7 @@ users:
 permissions:
   feature.noRateLimit:
     - "u=tools"
-  feature.canSeePasswords:
+  feature.canSeeEncryptedTags:
     - "u=admins"
     - "u=tools"
     - "g=infra"
