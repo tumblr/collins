@@ -1273,7 +1273,17 @@ sections:
             {
               "status": "success:created",
               "data": {
-                "SUCCESS": true
+                "SUCCESS": true,
+                "Data": {
+                  "ID": 2,
+                  "ASSET_TAG": "tumblrtag1",
+                  "CREATED": "2016-09-16T16:48:40",
+                  "CREATED_BY": "blake",
+                  "FORMAT": "text/plain",
+                  "SOURCE": "API",
+                  "TYPE": "DEBUG",
+                  "MESSAGE": "Hello World"
+                }
               }
             }
       "log get":
@@ -1335,6 +1345,42 @@ sections:
                   }
                 ]
               }
+            }
+      "log get id":
+        description: Get a log by its ID number
+        request: GET /api/log/:id
+        permissions: controllers.AssetLogApi.Get
+        parameters:
+          id:
+            type: Integer
+            description: The unique log ID to retrieve
+        response_codes:
+          200: Log successfully retrieved
+          404: Log could not be found
+        examples:
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/log/42
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "Pagination": {
+                "PreviousPage": 0,
+                "CurrentPage": 0,
+                "NextPage": 1,
+                "TotalResults": 1
+              },
+              "Data": [
+                {
+                  "ID": 42,
+                  "ASSET_TAG": "sl-102313",
+                  "CREATED": "2012-02-08T04:05:06",
+                  "FORMAT": "text/plain",
+                  "SOURCE": "API",
+                  "TYPE": "DEBUG",
+                  "MESSAGE": "hello world log"
+                }
+              ]}
             }
       "log get all":
         description: Get all log data, not bound to a specific asset
