@@ -20,6 +20,8 @@ sections:
     content: configuration/ipam.html
   ipmi:
     content: configuration/ipmi.html
+  lldp:
+    content: configuration/lldp.html
   monitoring:
     content: configuration/monitoring.html
   multicollins:
