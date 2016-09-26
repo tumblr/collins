@@ -18,6 +18,13 @@ if [ ! -f $PLAY_CMD ]; then
   exit 1
 fi
 
+java_version=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
+echo "Building using java version $java_version"
+if [[ ! "$java_version" =~ "1.7" ]] && [[ ! $FORCE_BUILD == "true" ]]; then
+    echo "Collins should only be built with java version 1.7.  If you really know what you are doing, set the FORCE_BUILD enviornment variable to 'true'"
+    exit 1
+fi
+
 if [ $DEBUG -eq 0 ]; then
   rm -rf target/universal
   $PLAY_CMD clean compile stage
