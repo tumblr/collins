@@ -16,6 +16,8 @@ permissions:
     - "g=infra"
     - "g=ops"
     - "g=sre"
+  feature.canWriteEncryptedTags:
+    - "u=admins"
   controllers.Admin:
     - "g=infra"
     - "g=ops"

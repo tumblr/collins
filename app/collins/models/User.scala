@@ -37,6 +37,12 @@ abstract class User(val username: String, val password: String) {
     }
     canSeeEncryptedTags || canSeePasswords
   }
+  def canWriteEncryptedTags(): Boolean = {
+    AuthenticationProvider.permissions("feature.canWriteEncryptedTags") match {
+      case None => false
+      case _ => Permissions.please(this, Permissions.Feature.CanWriteEncryptedTags)
+    }
+  }
 
   def isAdmin(): Boolean = hasRole("infra")
   def toMap(): Map[String, String] = Map(
