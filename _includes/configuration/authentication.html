@@ -46,7 +46,8 @@ so if you use LDAP we recommend running a slave on the collins host.
 The permissions example below creates two user groups, admins and tools. User groups are just named groups of users
 that are stored in the YAML file. This is useful for people authenticating with flat files or if you want to store
 some group information here. The admins user group has two users, alan and bmatheny. The tools user group has three
-users. There are two feature permissions specified, one for rate limiting and the other for who can see passwords.
+users. There are two feature permissions specified, one for rate limiting and the other for who can see encrypted tags,
+like passwords.
 The last permission is for the powerStatus API endpoint and is open to a broader group of users. Every API permission
 name is documented in the API documentation.
 </p>
@@ -70,7 +71,7 @@ users:
 permissions:
   feature.noRateLimit:
     - "u=tools"
-  feature.canSeePasswords:
+  feature.canSeeEncryptedTags:
     - "u=admins"
     - "u=tools"
     - "g=infra"
