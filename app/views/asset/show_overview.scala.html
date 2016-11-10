@@ -100,7 +100,7 @@
             mv.getName match {
               case "CANCEL_TICKET" => optionDisplay(0, SoftLayerHelper.ticketLink(mv.getValue), mv.getValue)
               case "DISK_STORAGE_TOTAL" => optionDisplay(1, Some(mv.getValue), mv.getValue)
-              case encrypted if Feature.encryptedTags.contains(encrypted) => if(user.canSeePasswords) { TagDecorator.decorate(mv) } else { "********" }
+              case encrypted if Feature.encryptedTags.contains(encrypted) => if(user.canSeeEncryptedTags) { TagDecorator.decorate(mv) } else { "********" }
               case _ => TagDecorator.decorate(mv)
             }
           }
@@ -196,7 +196,7 @@
           <td>Hyperthreading Enabled</td>
           <td>@{if (aa.lshw.hasHyperthreadingEnabled) "Yes" else "No"}</td>
         </tr>
-  
+
         <tr>
           <th colspan="3">Memory</th>
         </tr>
@@ -220,7 +220,7 @@
           <td>Unused Memory Banks</td>
           <td>@aa.lshw.memoryBanksUnused</td>
         </tr>
-  
+
         <tr>
           <th colspan="3">Disks</th>
         </tr>
@@ -244,7 +244,7 @@
           <td>Has PCIe Flash Disk</td>
           <td>@{if (aa.lshw.hasFlashStorage) "Yes" else "No"}</td>
         </tr>
-  
+
         <tr>
           <th colspan="3">Network</th>
         </tr>
@@ -258,7 +258,7 @@
           <td>Has 10Gb Interface</td>
           <td>@{if (aa.lshw.has10GbNic) "Yes" else "No"}</td>
         </tr>
-  
+
         <tr>
           <th colspan="3">Power</th>
         </tr>

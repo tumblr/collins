@@ -20,7 +20,30 @@ abstract class User(val username: String, val password: String) {
     case false => None
   }
   def isEmpty(): Boolean = username.isEmpty && password.isEmpty && roles.isEmpty
-  def canSeePasswords(): Boolean = Permissions.please(this, Permissions.Feature.CanSeePasswords)
+  def canSeeEncryptedTags(): Boolean = {
+    // We want to rename canSeePasswords to canSeeEncryptedTags
+    // but want to keep backwards compatibility
+    // Try to use canSeePasswords if it is set, else fall back to canSeePasswords
+    //
+    // All permissions default to true, so we need to test if the permission is configured,
+    // and only use it if it is.
+    val canSeePasswords = AuthenticationProvider.permissions("feature.canSeePasswords") match {
+      case None => false
+      case _ => Permissions.please(this, Permissions.Feature.CanSeePasswords)
+    }
+    val canSeeEncryptedTags = AuthenticationProvider.permissions("feature.canSeeEncryptedTags") match {
+      case None => false
+      case _ => Permissions.please(this, Permissions.Feature.CanSeeEncryptedTags)
+    }
+    canSeeEncryptedTags || canSeePasswords
+  }
+  def canWriteEncryptedTags(): Boolean = {
+    AuthenticationProvider.permissions("feature.canWriteEncryptedTags") match {
+      case None => false
+      case _ => Permissions.please(this, Permissions.Feature.CanWriteEncryptedTags)
+    }
+  }
+
   def isAdmin(): Boolean = hasRole("infra")
   def toMap(): Map[String, String] = Map(
     User.ID -> id().toString(),

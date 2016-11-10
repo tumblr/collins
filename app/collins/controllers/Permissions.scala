@@ -26,6 +26,8 @@ object Permissions {
 
   object Feature extends PermSpec("feature") {
     def CanSeePasswords = spec("canSeePasswords", AdminSpec)
+    def CanSeeEncryptedTags = spec("canSeeEncryptedTags", AdminSpec)
+    def CanWriteEncryptedTags = spec("canWriteEncryptedTags", AdminSpec)
     def NoRateLimit = spec("noRateLimit", AdminSpec)
   }
 

@@ -10,12 +10,14 @@ users:
 permissions:
   feature.noRateLimit:
     - "u=tools"
-  feature.canSeePasswords:
+  feature.canSeeEncryptedTags:
     - "u=admins"
     - "u=tools"
     - "g=infra"
     - "g=ops"
     - "g=sre"
+  feature.canWriteEncryptedTags:
+    - "u=admins"
   controllers.Admin:
     - "g=infra"
     - "g=ops"

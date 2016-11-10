@@ -68,7 +68,7 @@ case class GetAction(
   }
 
   protected def handleSuccess(asset: Asset): Result = {
-    val display = asset.getAllAttributes.exposeCredentials(user.canSeePasswords)
+    val display = asset.getAllAttributes.exposeCredentials(user.canSeeEncryptedTags)
     isHtml match {
       case true =>
         Status.Ok(html.asset.show(display, user)(flash, request))
@@ -78,4 +78,3 @@ case class GetAction(
   }
 
 }
-

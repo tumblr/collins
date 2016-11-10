@@ -6,6 +6,8 @@ import scala.util.control.Exception.allCatch
 
 import play.api.Logger
 
+import collins.controllers.Permissions
+
 import collins.models.conversions.dateToTimestamp
 import collins.models.logs.LogFormat
 import collins.models.logs.LogSource
@@ -123,6 +125,13 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
         opts.find(kv => restricted(kv._1)).map(kv =>
           return Left(new Exception("Attribute %s is restricted".format(kv._1))))
       }
+
+      opts.find(kv => Feature.encryptedTags.contains(kv._1)).map(kv =>
+        if (user.isDefined &&  !user.get.canWriteEncryptedTags) {
+          return Left(new Exception("You do not have permission to write encrypted tags"))
+        }
+      )
+
       Asset.inTransaction {
         MetaWrapper.createMeta(asset, opts, groupId)
         Asset.partialUpdate(asset, Some(new Date().asTimestamp), status, state)
@@ -190,6 +199,12 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1))))
 
+    filtered.find(kv => Feature.encryptedTags.contains(kv._1)).map(kv =>
+      if (user.isDefined && !user.get.canWriteEncryptedTags) {
+        return Left(new Exception("You do not have permission to write encrypted tags"))
+      }
+    )
+
     allCatch[Boolean].either {
       val values = Seq(AssetMetaValue(asset, RackPosition, rackpos)) ++
         PowerUnits.toMetaValues(units, asset, options)
@@ -221,6 +236,13 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
     val filtered = options.filter(kv => !requiredKeys(kv._1))
     filtered.find(kv => AssetLifecycleConfig.isRestricted(kv._1)).map(kv =>
       return Left(new Exception("Attribute %s is restricted".format(kv._1))))
+
+    filtered.find(kv => Feature.encryptedTags.contains(kv._1)).map(kv =>
+      if (user.isDefined && !user.get.canWriteEncryptedTags) {
+        return Left(new Exception("You do not have permission to write encrypted tags"))
+      }
+    )
+
     val lshwParser = new LshwParser(lshw)
     val lldpParser = new LldpParser(lldp)
 
