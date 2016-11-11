@@ -97,7 +97,7 @@ sections:
         description: Update an asset
         request: POST /api/asset/:tag
         permission: controllers.AssetApi.updateAsset
-        note: If you are setting an encrypted tag, you must also have the features.canWriteEncryptedTags permission. See the <a href="configuration.html#features">features documentation</a> for more information.
+        note: If you are setting an encrypted tag, you must also have the feature.canWriteEncryptedTags permission. See the <a href="configuration.html#features">features documentation</a> for more information.
         parameters:
           lshw:
             type: Option[String]
@@ -183,7 +183,7 @@ sections:
         description: Get an asset by tag
         request: GET /api/asset/:tag
         permission: controllers.AssetApi.getAsset
-        note: If the asset has encrypted tags, they will be hidden unless you have the features.canSeeEncryptedTags permission. See the <a href="configuration.html#features">features documentation</a> for more information.
+        note: If the asset has encrypted tags, they will be hidden unless you have the feature.canSeeEncryptedTags permission. See the <a href="configuration.html#features">features documentation</a> for more information.
         parameters:
           tag:
             type: String
