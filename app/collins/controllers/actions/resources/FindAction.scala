@@ -7,9 +7,12 @@ import collins.controllers.actions.ActionHelper
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.asset.AssetFinderDataHolder
 import collins.controllers.actions.asset.{ FindAction => AssetFindAction }
+import collins.models.IpmiInfo
+import collins.models.Asset
 import collins.models.asset.AssetView
 import collins.models.shared.Page
 import collins.models.shared.PageParams
+import collins.util.config.Feature
 import collins.util.security.SecuritySpecification
 
 case class FindAction(
@@ -38,7 +41,15 @@ case class FindAction(
         val rmap = requestMap.filterNot(kv => ignores.contains(kv._1))
         // If the only thing specified was the tag, and intake is allowed, go through intake
         if (rmap.contains("tag") && rmap.size == 1 && assetIntakeAllowed(asset).isEmpty)
-          Redirect(collins.app.routes.Resources.intake(asset.id, 1))
+          if (!Feature.intakeIpmiOptional)
+            Redirect(collins.app.routes.Resources.intake(asset.id, 1))
+          else
+          IpmiInfo.findByAsset(asset.asInstanceOf[Asset]) match {
+            case Some(ipmi) =>
+              Redirect(collins.app.routes.Resources.intake(asset.id, 1))
+            case None =>
+              Redirect(collins.app.routes.Resources.intake(asset.id, 2))
+          }
         else
           Status.Redirect(asset.remoteHost.getOrElse("") + collins.app.routes.CookieApi.getAsset(p.items(0).tag))
       case n =>

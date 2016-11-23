@@ -30,6 +30,7 @@ object Feature extends Configurable {
   def encryptedTags = getStringSet("encryptedTags")
   def keepSomeMetaOnRepurpose = getStringSet("keepSomeMetaOnRepurpose", Set())
   def intakeSupported = getBoolean("intakeSupported", true)
+  def intakeIpmiOptional = getBoolean("intakeIpmiOptional", false)
   def ignoreDangerousCommands = getStringSet("ignoreDangerousCommands")
   def hideMeta = getStringSet("hideMeta")
   def noLogAssets = getStringSet("noLogAssets")
