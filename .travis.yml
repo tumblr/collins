@@ -1,3 +1,4 @@
+dist: trusty
 sudo: false
 language: scala
 # Activator & Travis image SBT conflicts
@@ -42,7 +43,7 @@ script:
   - if $RUN_RUBY; then cd support/ruby/$GEM_NAME; bundle install --path ./vendor/bundle; bundle exec rake; fi
   # cleanup travis trick from
   # http://www.scala-sbt.org/0.13/docs/Travis-CI-with-sbt.html#%28Experimental%29+Reusing+Ivy+cache
-  - find $HOME/.sbt -name "*.lock" | xargs rm
-  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+  - find $HOME/.sbt -name "*.lock" -delete
+  - find $HOME/.ivy2 -name "ivydata-*.properties" -delete
 notifications:
   irc: "chat.freenode.net#collins"
