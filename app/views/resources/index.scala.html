@@ -3,6 +3,7 @@
 @import helper._
 @import collins.util.views.OptionSorter
 @import collins.util.config.MultiCollinsConfig
+@import collins.util.config.Feature
 @import util._
 
 @basicFormatter(asset: AssetMeta, index: Int) = {
@@ -130,10 +131,26 @@
             }
           }
 
+          @if(Feature.intakeSupported) {
+            @formFieldRow {
+              @formLabelInline("redirectIntake", "Intake Redirect")
+              @formInputInline {
+                <div class="checkbox" style="display:inline-block;">
+                  <label>
+                  <input type="checkbox" id="redirectIntake" name="redirectIntake" value="true" tabindex="511"> Intake Redirect
+                  </label>
+                </div>
+                <span class="help-inline">
+                  <i class="glyphicon glyphicon-question-sign" data-rel="tooltip" title="Redirect to intake screen if query returns single asset with status New"></i>
+                </span>
+              }
+            }
+          }
+
           @formFieldRow {
             @formLabelInline("query","CQL Query")
             @formInputInline {
-              <textarea name="query" class="form-control" rows="4" tabindex="511" title="Enter a CQL query here.  This will be AND'ed with any other search parameters you select" placeholder="CQL Query"></textarea>
+              <textarea name="query" class="form-control" rows="4" tabindex="512" title="Enter a CQL query here.  This will be AND'ed with any other search parameters you select" placeholder="CQL Query"></textarea>
             }
           }
           </div>

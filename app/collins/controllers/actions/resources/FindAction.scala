@@ -1,6 +1,7 @@
 package collins.controllers.actions.resources
 
 import play.api.mvc.Result
+import play.api.Logger
 
 import collins.controllers.SecureController
 import collins.controllers.actions.ActionHelper
@@ -28,16 +29,15 @@ case class FindAction(
   }
 
   // WARNING - Do not change the logic around the Redirect to intake without knowing what it does
-  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
+  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean, redirectIntake: Boolean): Result = {
     p.size match {
       case 0 =>
         Redirect(collins.app.routes.Resources.index).flashing("message" -> AssetMessages.noMatch)
       case 1 =>
         val asset = p.items(0)
-        val ignores = Set("operation")
-        val rmap = requestMap.filterNot(kv => ignores.contains(kv._1))
-        // If the only thing specified was the tag, and intake is allowed, go through intake
-        if (rmap.contains("tag") && rmap.size == 1 && assetIntakeAllowed(asset).isEmpty)
+        Logger.logger.warn("redirectIntake: %b, assetIntakeAllowed: %b".format(redirectIntake, assetIntakeAllowed(asset).isEmpty))
+        // If redirectIntake is true and intake is allowed, go through intake
+        if (redirectIntake && assetIntakeAllowed(asset).isEmpty)
           Redirect(collins.app.routes.Resources.intake(asset.id, 1))
         else
           Status.Redirect(asset.remoteHost.getOrElse("") + collins.app.routes.CookieApi.getAsset(p.items(0).tag))

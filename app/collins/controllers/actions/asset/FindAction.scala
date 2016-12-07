@@ -40,7 +40,7 @@ class FindAction(
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
     case afdh: AssetFinderDataHolder =>
-      val AssetFinderDataHolder(af, ra, op, de, rl) = afdh
+      val AssetFinderDataHolder(af, ra, op, de, rl, ri) = afdh
       try {
         val results = if (MultiCollinsConfig.enabled && rl.map(_.isTruthy).getOrElse(false)) {
           logger.debug("Performing remote asset find")
@@ -49,7 +49,7 @@ class FindAction(
           logger.debug("Performing local asset find")
           Asset.find(pageParams, ra, af, op)
         }
-        handleSuccess(results, afdh.details.map(_.isTruthy).getOrElse(true))
+        handleSuccess(results, afdh.details.map(_.isTruthy).getOrElse(true), afdh.redirectIntake.map(_.isTruthy).getOrElse(false))
       } catch {
         case timeout: TimeoutException => {
           handleError(RequestDataHolder.error504(

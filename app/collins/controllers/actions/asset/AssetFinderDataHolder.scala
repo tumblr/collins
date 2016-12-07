@@ -35,7 +35,8 @@ case class AssetFinderDataHolder(
   attributes: ResolvedAttributes,
   operation: Option[String],
   details: Option[Truthy],
-  remoteLookup: Option[Truthy]
+  remoteLookup: Option[Truthy],
+  redirectIntake: Option[Truthy]
 ) extends RequestDataHolder
 
 object AssetFinderDataHolder extends MessageHelper("assetfinder") with AttributeHelper {
@@ -43,7 +44,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
 
   val Operations = Set("and","or")
 
-  type DataForm = Tuple13[
+  type DataForm = Tuple14[
     Option[String],           // tag
     Option[List[String]],     // attribute
     Option[String],           // operation
@@ -55,6 +56,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     Option[Date],             // updatedAfter
     Option[Date],             // updatedBefore
     Option[Truthy],           // remoteLookup,
+    Option[Truthy],           // redirectIntake,
     Option[State],            // state
     Option[String]            // query
   ]
@@ -79,6 +81,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     "updatedAfter" -> optional(date(ISO_8601_FORMAT)),
     "updatedBefore" -> optional(date(ISO_8601_FORMAT)),
     "remoteLookup" -> optional(of[Truthy]),
+    "redirectIntake" -> optional(of[Truthy]),
     "state" -> optional(of[State]),
     "query" -> optional(text)
   ))
@@ -102,7 +105,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
 
   protected def fromForm(form: DataForm, data: Map[String,Seq[String]]): AssetFinderDataHolder = {
     val (
-      tag, attributes, operation, astatus, atype, details, cafter, cbefore, uafter, ubefore, remoteLookup, state, query
+      tag, attributes, operation, astatus, atype, details, cafter, cbefore, uafter, ubefore, remoteLookup, redirectIntake, state, query
     ) = form
     val attribs = AttributeResolver(mapAttributes(attributes.filter(_.nonEmpty), AttributeMap.fromMap(data)))
     val afinder = AssetFinder(tag, astatus, atype, cafter, cbefore, uafter, ubefore, state, query)
@@ -111,7 +114,8 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
       attribs,
       cleanedOperation(operation),
       details,
-      remoteLookup
+      remoteLookup,
+      redirectIntake
     )
   }
 
@@ -131,6 +135,7 @@ object AssetFinderDataHolder extends MessageHelper("assetfinder") with Attribute
     case e if e.error("operation").isDefined => message("operation.invalid")
     case e if e.error("details").isDefined => rootMessage("error.truthy", "details")
     case e if e.error("remoteLookup").isDefined => rootMessage("error.truthy", "remoteLookup")
+    case e if e.error("redirectIntake").isDefined => rootMessage("error.truthy", "redirectIntake")
     case e if e.error("state").isDefined => rootMessage("asset.state.invalid")
     case e if e.error("query").isDefined => message("query.invalid")
     case n => "Unexpected error occurred"

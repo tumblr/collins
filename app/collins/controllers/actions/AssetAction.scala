@@ -72,14 +72,14 @@ trait AssetAction {
 trait AssetResultsAction {
   this: SecureAction =>
 
-  protected def handleSuccess(p: Page[AssetView], details: Boolean) = isHtml match {
+  protected def handleSuccess(p: Page[AssetView], details: Boolean, redirectIntake: Boolean) = isHtml match {
     case true =>
-      handleWebSuccess(p, details)
+      handleWebSuccess(p, details, redirectIntake)
     case false =>
       handleApiSuccess(p, details)
   }
 
-  protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
+  protected def handleWebSuccess(p: Page[AssetView], details: Boolean, redirectIntake: Boolean): Result = {
     Api.errorResponse(NotImplementedError.toString, NotImplementedError.status().get)
   }
 

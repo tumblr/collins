@@ -85,13 +85,13 @@ case class FindSimilarAction(
           assetType = AssetType.ServerNode
         )
         Logger.logger.debug(finder.status.toString)
-        handleSuccess(Asset.findSimilar(asset, page, finder, sortType.getOrElse(AssetSort.Distribution)),details.map{_.isTruthy}.getOrElse(false))
+        handleSuccess(Asset.findSimilar(asset, page, finder, sortType.getOrElse(AssetSort.Distribution)), details.map{_.isTruthy}.getOrElse(false), false)
       }
     }
   }
 
 
-  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean): Result = {
+  override protected def handleWebSuccess(p: Page[AssetView], details: Boolean, redirectIntake: Boolean): Result = {
     p.size match {
       case 0 =>
         Status.Redirect(collins.app.routes.CookieApi.getAsset(assetTag)).flashing("message" -> AssetMessages.noMatch)
