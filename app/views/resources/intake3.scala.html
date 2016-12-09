@@ -2,6 +2,7 @@
 
 @import twitterBootstrap._
 @import helper._
+@import collins.util.config.Feature
 @import collins.util.views.ListHelper.getPowerComponentsInOrder
 @import util._
 @import AssetMeta.Enum.{ChassisTag, RackPosition, ServiceTag}
@@ -50,8 +51,7 @@
       @f.forField(ChassisTag.toString) { field =>
         @formLabelInline(field.name, "Chassis Tag")
         @formInputInline {
-          <input disabled id="@field.name" class="form-control" placeholder="@field.value.getOrElse("")">
-          <input type="hidden" name="@field.name" value="@field.value.getOrElse("")">
+          <input @if(!Feature.intakeChassisTagOptional){disabled} id="@ChassisTag.toString" name="@ChassisTag.toString" class="form-control" value="@field.value.getOrElse("")">
         }
       }
     }

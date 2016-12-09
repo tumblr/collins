@@ -13,12 +13,14 @@ import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.controllers.forms.truthyFormat
+import collins.models.AssetMeta.Enum.ChassisTag
 import collins.models.Truthy
 import collins.power.Identify
 import collins.power.management.IpmiPowerCommand
 import collins.power.management.PowerManagement
 import collins.power.management.PowerManagementConfig
 import collins.util.concurrent.BackgroundProcessor
+import collins.util.config.Feature
 import collins.util.security.SecuritySpecification
 
 case class IntakeStage1Action(
@@ -44,9 +46,20 @@ case class IntakeStage1Action(
 
   override def execute(rd: RequestDataHolder) = rd match {
     case ActionDataHolder(light) if light.toBoolean =>
-      Future {  Status.Ok(
-        views.html.resources.intake2(definedAsset, IntakeStage2Action.dataForm)(flash, request)
-      ) }
+      Future {
+        definedAsset.getMetaAttribute(ChassisTag.toString, 10) match {
+          case Nil => {
+            Feature.intakeChassisTagOptional match {
+              case true =>
+                Status.Ok(views.html.resources.intake3(definedAsset, IntakeStage3Action.dataForm)(flash, request))
+              case false =>
+                Status.Ok(views.html.resources.intake2(definedAsset, IntakeStage2Action.dataForm)(flash, request))
+            }
+          }
+          case default =>
+            Status.Ok(views.html.resources.intake2(definedAsset, IntakeStage2Action.dataForm)(flash, request))
+        }
+      }
     case dummy => PowerManagementConfig.enabled match {
       case false =>
         Future { Status.Ok(views.html.help(Help.PowerManagementDisabled)(flash, request)) }

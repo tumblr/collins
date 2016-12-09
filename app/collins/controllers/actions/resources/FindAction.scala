@@ -9,6 +9,7 @@ import collins.controllers.actions.asset.AssetFinderDataHolder
 import collins.controllers.actions.asset.{ FindAction => AssetFindAction }
 import collins.models.IpmiInfo
 import collins.models.Asset
+import collins.models.AssetMeta.Enum.ChassisTag
 import collins.models.asset.AssetView
 import collins.models.shared.Page
 import collins.models.shared.PageParams
@@ -48,7 +49,17 @@ case class FindAction(
             case Some(ipmi) =>
               Redirect(collins.app.routes.Resources.intake(asset.id, 1))
             case None =>
-              Redirect(collins.app.routes.Resources.intake(asset.id, 2))
+              asset.getMetaAttributeValue(ChassisTag.toString) match {
+                case None =>
+                  Feature.intakeChassisTagOptional match {
+                    case true => // If chassis tag is missing and option, skip to final step
+                      Redirect(collins.app.routes.Resources.intake(asset.id, 3))
+                    case false =>
+                      Redirect(collins.app.routes.Resources.intake(asset.id, 2))
+                  }
+                case default =>
+                  Redirect(collins.app.routes.Resources.intake(asset.id, 2))
+              }
           }
         else
           Status.Redirect(asset.remoteHost.getOrElse("") + collins.app.routes.CookieApi.getAsset(p.items(0).tag))

@@ -31,6 +31,7 @@ object Feature extends Configurable {
   def keepSomeMetaOnRepurpose = getStringSet("keepSomeMetaOnRepurpose", Set())
   def intakeSupported = getBoolean("intakeSupported", true)
   def intakeIpmiOptional = getBoolean("intakeIpmiOptional", false)
+  def intakeChassisTagOptional = getBoolean("intakeChassisTagOptional", false)
   def ignoreDangerousCommands = getStringSet("ignoreDangerousCommands")
   def hideMeta = getStringSet("hideMeta")
   def noLogAssets = getStringSet("noLogAssets")

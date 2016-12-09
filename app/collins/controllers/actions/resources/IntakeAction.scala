@@ -6,6 +6,7 @@ import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
 import collins.models.AssetMeta.Enum.ChassisTag
 import collins.util.MessageHelperI
+import collins.util.config.Feature
 import collins.validation.StringUtil
 
 trait IntakeAction extends AssetAction with MessageHelperI {
@@ -37,7 +38,10 @@ trait IntakeAction extends AssetAction with MessageHelperI {
     case Some(chassisTag) =>
       definedAsset.getMetaAttribute(ChassisTag.toString, 10) match {
         case Nil =>
-          Left(RequestDataHolder.error400(chassisNotFoundMessage))
+          Feature.intakeChassisTagOptional match {
+            case true => Right(tag)
+            case false => Left(RequestDataHolder.error400(chassisNotFoundMessage))
+          }
         case head :: Nil if head.getValue != chassisTag =>
           Left(RequestDataHolder.error400(chassisMismatchMessage(head.getValue, chassisTag)))
         case head :: Nil =>
@@ -45,8 +49,7 @@ trait IntakeAction extends AssetAction with MessageHelperI {
         case head :: tail =>
           Left(RequestDataHolder.error400(chassisMultipleMessage))
       }
-  }
-
+    }
   protected def chassisInvalidMessage =
     messageWithDefault("chassisInvalid", "Invalid chassis tag specified")
   protected def chassisMismatchMessage(expectedTag: String, actualTag: String) =
