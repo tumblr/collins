@@ -223,7 +223,7 @@ module Collins
       "Asset(id = #{id}, tag = #{tag}, status = #{status}, type = #{type}, created = #{created_t}, updated = #{updated_t}, ipmi = #{ipmi_i}, state = #{state.to_s})"
     end
 
-    def respond_to? name
+    def respond_to? name, include_all=false
       if extract(extras, "ATTRIBS", "0", name.to_s.upcase).nil? then
         super
       else
