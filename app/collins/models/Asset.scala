@@ -255,7 +255,7 @@ object Asset extends Schema with AnormAdapter[Asset] with AssetKeys {
   def findMulti(page: PageParams, params: AttributeResolver.ResultTuple, afinder: AssetFinder, operation: Option[String], details: Boolean): Page[AssetView] = {
     val instanceFinder = AssetFinder(
       tag = None,
-      status = None,
+      status = Status.Allocated,
       createdAfter = None,
       createdBefore = None,
       updatedAfter = None,
