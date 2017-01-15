@@ -3,6 +3,7 @@ package collins.controllers.actions.ipaddress
 import scala.concurrent.Future
 
 import play.api.data.Form
+import play.api.data.Forms.tuple
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
@@ -22,26 +23,32 @@ case class DeleteAction(
   assetTag: String,
   spec: SecuritySpecification,
   handler: SecureController
-) extends SecureAction(spec, handler) with AssetAction with ParamValidation {
+) extends SecureAction(spec, handler) with AssetAction with ParamValidation with AddressActionHelper {
 
-  case class ActionDataHolder(asset: Asset, pool: Option[String]) extends RequestDataHolder
+  case class ActionDataHolder(asset: Asset, pool: Option[String], address: Option[String]) extends RequestDataHolder
 
-  val dataForm = Form(
-    "pool" -> validatedOptionalText(1)
-  )
+  val dataForm = Form(tuple(
+    "pool" -> validatedOptionalText(1),
+    "address" -> validatedOptionalText(1)
+  ))
 
   override def validate(): Validation = withValidAsset(assetTag) { asset =>
-    val pool: Option[String] = dataForm.bindFromRequest()(request).fold(
-      err => None,
-      str => str
-    )
-    Right(ActionDataHolder(asset, pool))
+    val (pool, address): Tuple2[Option[String], Option[String]] = dataForm.bindFromRequest()(request).get
+    address match {
+      case Some(ip: String) => withValidAddress(ip) { validAddress => 
+        Right(ActionDataHolder(asset, pool, address))
+      }
+      case None => Right(ActionDataHolder(asset, pool, None))
+    }
   }
 
   override def execute(rd: RequestDataHolder) = Future {
     rd match {
-      case ActionDataHolder(asset, pool) =>
-        val deleted = IpAddresses.deleteByAssetAndPool(asset, pool)
+      case ActionDataHolder(asset, pool, address) =>
+        val deleted = address match {
+          case Some(ip: String) => IpAddresses.deleteByAssetAndAddress(asset, ip)
+          case None => IpAddresses.deleteByAssetAndPool(asset, pool)
+        }
         tattler.notice("Deleted %d IP addresses".format(deleted), asset)
         ResponseData(Status.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
     }
