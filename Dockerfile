@@ -6,7 +6,7 @@ VOLUME /opt/collins/conf/solr/cores/collins/data
 
 COPY . /build/collins
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y openjdk-8-jdk zip unzip && \
+    apt-get install --no-install-recommends -y openjdk-8-jdk zip unzip ipmitool && \
     rm -r /var/lib/apt/lists/* && \
     cd /build && \
     export ACTIVATOR_VERSION=1.3.7 && \
