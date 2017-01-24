@@ -31,9 +31,12 @@ case class PowerStatusAction(
   }
   override protected def onSuccess(s: CommandResult): ResponseData = {
     logSuccessfulPowerEvent()
-    val status = s.stdout.contains("on") match {
-      case true => "on"
-      case false => "off"
+    val result = s.stdout
+    val status = "error"
+    if (result.contains("Chassis Power is on")) {
+      val status = "on"
+    } else if (result.contains("Chassis Power is off")) {
+      val status = "off"
     }
     ResponseData(Status.Ok, JsObject(Seq("MESSAGE" -> JsString(status))))
   }
