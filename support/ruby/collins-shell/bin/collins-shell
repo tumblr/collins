@@ -11,7 +11,7 @@ end
 
 $:.unshift File.join File.dirname(__FILE__), *%w[.. lib]
 # Allows us to use a dev version of collins-client if needed
-$:.unshift File.join File.dirname(__FILE__), *%w[.. .. ruby collins-client lib]
+$:.unshift File.join File.dirname(__FILE__), *%w[.. .. collins-client lib]
 %w[collins_shell collins_shell/cli].each {|f| require f}
 
 begin
