@@ -9,4 +9,5 @@ GC_LOG_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -
 GC_LOG="-Xloggc:/var/log/$APP_NAME/gc.log"
 HEAP_OPTS="-XX:MaxPermSize=384m"
 DEBUG_OPTS="-XX:ErrorFile=/var/log/$APP_NAME/java_error%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/collinsDump.hprof"
-JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $GC_OPTS $GC_LOG_OPTS $GC_LOG $HEAP_OPTS $DEBUG_OPTS"
+EXTRA_OPTS=""
+JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $GC_OPTS $GC_LOG_OPTS $GC_LOG $HEAP_OPTS $DEBUG_OPTS $EXTRA_OPTS"

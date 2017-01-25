@@ -30,20 +30,21 @@ GC_LOGGING_OPTS="-XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStam
 GC_LOG="-Xloggc:${LOG_HOME}/$APP_NAME/gc.log -XX:+UseGCLogFileRotation"
 JMX_OPTS="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=3333 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false"
 DEBUG_OPTS="-XX:ErrorFile=${LOG_HOME}/$APP_NAME/java_error%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/collinsDump.hprof"
+EXTRA_OPTS=""
 
 # Check for config overrides
 [ -f /etc/sysconfig/collins ] && . /etc/sysconfig/collins
 
 APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
 DNS_OPTS="-Dnetworkaddress.cache.ttl=1 -Dnetworkaddress.cache.negative.ttl=1"
-JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $PERMGEN_OPTS $GC_LOGGING_OPTS $GC_LOG $HEAP_OPTS $DEBUG_OPTS"
+JAVA_OPTS="-server $APP_OPTS $DNS_OPTS $JMX_OPTS $PERMGEN_OPTS $GC_LOGGING_OPTS $GC_LOG $HEAP_OPTS $DEBUG_OPTS $EXTRA_OPTS"
 
 PID_DIRECTORY="/var/run/$APP_NAME"
 pidfile="$PID_DIRECTORY/$APP_NAME.pid"
 
-# Ensures the PID_DIRECTORY exists in order to survive hard reboots. 
+# Ensures the PID_DIRECTORY exists in order to survive hard reboots.
 if [[ ! -d $PID_DIRECTORY ]] ; then
-  mkdir -p $PID_DIRECTORY 
+  mkdir -p $PID_DIRECTORY
 fi
 
 function running() {
