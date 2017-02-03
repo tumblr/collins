@@ -49,7 +49,10 @@ case class DeleteAction(
           case Some(ip: String) => IpAddresses.deleteByAssetAndAddress(asset, ip)
           case None => IpAddresses.deleteByAssetAndPool(asset, pool)
         }
-        tattler.notice("Deleted %d IP addresses".format(deleted), asset)
+        address match {
+          case Some(ip: String) if deleted > 0 => tattler.notice("Deleted IP address %s".format(address), asset)
+          case _ => tattler.notice("Deleted %d IP addresses".format(deleted), asset)
+        }
         ResponseData(Status.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
     }
   }
