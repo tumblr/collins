@@ -47,6 +47,7 @@ Email collins-sm@googlegroups.com or see the mailing list archive at https://gro
 
 To create a production zip and deploy to production:
 
+  - Check Collins Runbook on internal wiki for environment specific considerations
   - ensure capistrano 2.15.5 is installed
   - ensure net-ssh < 2.7.0 is installed - versions 2.7.0 and above are broken with our environment
   - download the minimal package for play activator 1.3.6 from [here](https://downloads.typesafe.com/typesafe-activator/1.3.6/typesafe-activator-1.3.6-minimal.zip). Unpackage it into ~/src/activator-1.3.6-minimal or define $PLAY_CMD with an alternate location
