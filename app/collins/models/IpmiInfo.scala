@@ -73,13 +73,12 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     i.gateway is (indexed),
     i.netmask is (indexed)))
 
-  // TODO: make this take the IPMI network name
-  def createForAsset(asset: Asset): IpmiInfo = inTransaction {
+  def createForAsset(asset: Asset, scope: Option[String]): IpmiInfo = inTransaction {
     val assetId = asset.id
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
     createWithRetry(10) { attempt =>
-      val (gateway, address, netmask) = getNextAvailableAddress()(None)
+      val (gateway, address, netmask) = getNextAvailableAddress()(scope)
       val ipmiInfo = IpmiInfo(
         assetId, username, password, gateway, address, netmask)
       tableDef.insert(ipmiInfo)

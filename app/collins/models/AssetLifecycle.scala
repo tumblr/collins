@@ -63,7 +63,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
       val res = Asset.inTransaction {
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
-          case true  => Some(IpmiInfo.createForAsset(asset))
+          case true  => Some(IpmiInfo.createForAsset(asset, None))  // assume default network scope
           case false => None
         }
         Solr.updateAsset(asset)

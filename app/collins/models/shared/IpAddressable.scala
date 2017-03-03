@@ -79,8 +79,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
 
   def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long, Long, Long] = {
     //this is used by ip allocation without pools (i.e. IPMI)
-    // TODO: fixme to take a network scope
-    val network = getNetwork
+    val network = getNetwork()(scope)
     val startAt = overrideStart.orElse(getStartAddress)
     val calc = IpAddressCalc(network, startAt)
     val gateway: Long = getGateway().getOrElse(calc.minAddressAsLong)
