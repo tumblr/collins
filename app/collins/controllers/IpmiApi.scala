@@ -35,6 +35,8 @@ trait IpmiApi {
       }
     }
   }
+
+  // TODO: extend form to include the ipmi network name if desired
   val IPMI_FORM = Form(
     mapping(
       "username" -> optional(text(1)),
@@ -47,7 +49,6 @@ trait IpmiApi {
 
   def updateIpmi(tag: String) = SecureAction { implicit req =>
     Api.withAssetFromTag(tag) { asset =>
-      val ipmiInfo = IpmiInfo.findByAsset(asset)
       IPMI_FORM.bindFromRequest.fold(
         hasErrors => {
           val error = hasErrors.errors.map { _.message }.mkString(", ")
@@ -55,20 +56,36 @@ trait IpmiApi {
         },
         ipmiForm => {
           try {
-            val newInfo = ipmiForm.merge(asset, ipmiInfo)
-            val (status, success) = newInfo.id match {
-              case update if update > 0 =>
-                IpmiInfo.update(newInfo) match {
-                  case 0 => (Results.Conflict, false)
-                  case _ => (Results.Ok, true)
+            ipmiForm match {
+              // if form is empty, generate new info for the asset
+              case IpmiForm(None, None, None, None, None) => IpmiInfo.findByAsset(asset) match {
+                case Some(ipmiinfo) =>
+                  Left(Api.getErrorMessage("Asset already has IPMI details, cannot generate new IPMI details", Results.BadRequest))
+                case None =>
+                  //TODO: ensure this is POST to create new details, not PUT!
+                  //TODO(gabe) make sure asset does not already have IPMI created, because this
+                  // implies we want to create new IPMI details
+                  val info = IpmiInfo.findByAsset(asset)
+                  val newInfo = IpmiInfo.createForAsset(asset)
+                  Right(ResponseData(Results.Created, JsObject(Seq("SUCCESS" -> JsBoolean(true)))))
                 }
-              case _ =>
-                (Results.Created, IpmiInfo.create(newInfo).id > 0)
-            }
-            if (status == Results.Conflict) {
-              Left(Api.getErrorMessage("Unable to update IPMI information",status))
-            } else {
-              Right(ResponseData(status, JsObject(Seq("SUCCESS" -> JsBoolean(success)))))
+              case _ => {
+                val newInfo = ipmiForm.merge(asset, IpmiInfo.findByAsset(asset))
+                val (status, success) = newInfo.id match {
+                  case update if update > 0 =>
+                    IpmiInfo.update(newInfo) match {
+                      case 0 => (Results.Conflict, false)
+                      case _ => (Results.Ok, true)
+                    }
+                  case _ =>
+                    (Results.Created, IpmiInfo.create(newInfo).id > 0)
+                }
+                if (status == Results.Conflict) {
+                  Left(Api.getErrorMessage("Unable to update IPMI information",status))
+                } else {
+                  Right(ResponseData(status, JsObject(Seq("SUCCESS" -> JsBoolean(success)))))
+                }
+              }
             }
           } catch {
             case e: SQLException =>
