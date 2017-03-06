@@ -139,14 +139,12 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     IpmiConfig.genUsername(asset)
   }
 
-  override def getConfig(scope: Option[String]): Option[AddressPool] = {
-    // TODO: need to figure out how to return the proper network here. !!!!!!!!!!!!!!!!!!!!!!!
-    // get should be an IpAddressConfig?
-    logger.error("!!!! %s !!!!".format(scope))
-    IpmiConfig.pools.get(poolName(scope.getOrElse(_.defaultPool)))
-    //get.flatMap(scope.getOrElse(_.defaultPool))
-    //get(_.defaultPool) //.flatMap(scope.getOrElse(_.defaultPool))
-  }
+  override def getConfig(scope: Option[String]): Option[AddressPool] = IpmiConfig.get.flatMap(
+    addressPool => scope match {
+      case Some(p) => addressPool.pool(p)
+      case None    => addressPool.defaultPool
+    }
+  )
 
   // Converts our query parameters to fragments and parameters for a query
   private[this] def collectParams(ipmi: Seq[Tuple2[Enum, String]], ipmiRow: IpmiInfo): LogicalBoolean = {

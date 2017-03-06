@@ -71,7 +71,7 @@ trait IpmiApi {
                   Left(Api.getErrorMessage("Asset already has IPMI details, cannot generate new IPMI details", Results.BadRequest))
                 case None => IpmiInfo.getConfig(poolOption) match {
                   case None =>
-                    Left(Api.getErrorMessage("Invalid IPMI pool %s specified".format(poolOption), Results.BadRequest))
+                    Left(Api.getErrorMessage("Invalid IPMI pool %s specified".format(poolOption.getOrElse("default")), Results.BadRequest))
                   case Some(AddressPool(poolName, _, _, _)) =>
                     // make sure asset does not already have IPMI created, because this
                     // implies we want to create new IPMI details
