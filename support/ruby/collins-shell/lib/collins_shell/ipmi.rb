@@ -32,7 +32,7 @@ module CollinsShell
     method_option :pool, :type => :string, :required => false, :desc => 'IPMI pool'
     def generate
       call_collins get_collins_client, "generate ipmi" do |client|
-        ipmi = client.ipmi_allocate options.tag, pool => options.pool
+        ipmi = client.ipmi_allocate options.tag, :pool => options.pool
         if ipmi then
           asset = client.get options.tag
           CollinsShell::Ipmi.print_ipmi asset.ipmi
