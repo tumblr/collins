@@ -18,6 +18,9 @@ sections:
           generate_ipmi:
             type: Option[Boolean]
             description: "True or false. Defaults to true if <code>asset_type</code> is <code>SERVER_NODE</code>"
+          ipmi_pool:
+            type: Option[String]
+            description: If provided, this overrides the default IPMI pool to allocate OOB IP from. This only takes effect if `generate_ipmi=true`. Default is empty, which uses whatever the currently configured IPMI address pool is.
           status:
             type: Option[Status]
             description: A valid status, if specified. Defaults to Incomplete.
@@ -26,10 +29,15 @@ sections:
             description: One of SERVER_NODE, SERVER_CHASSIS, RACK, SWITCH, ROUTER, POWER_CIRCUIT or POWER_STRIP. Defaults to SERVER_NODE. If additional asset types are added to the database, they can also be specified.
         response_codes:
           201: Asset was successfully created
+          400: IPMI pool provided does not exist
           409: Asset with specified tag already exists
         examples:
           collins-shell:  collins-shell asset create --tag=TAG [--ipmi=(true|false) --status=STATUS --type=TYPE]
           curl:  curl --basic -u blake:admin:first -X PUT http://localhost:9000/api/asset/tumblrtag30
+          collins-client-ruby: |
+            c.create!('test01', generate_ipmi: true)  # default IPMI pool
+            c.create!('test02', generate_ipmi: true, ipmi_pool: 'OOB-POD03')
+            c.create!('config_vip', type: :configuration, generate_ipmi: false, status: :allocated)
         responses:
           json: |
             {
@@ -947,8 +955,27 @@ sections:
   "asset managment":
     content: api/asset_mgmt.html
     api_sections:
-      "ipmi managment":
-        description: Create or update IPMI data
+      "IPMI configuration generate":
+        description: Generate IPMI configuration on an asset without IPMI details
+        request: PUT /api/asset/:tag/ipmi
+        permission: controllers.IpmiApi.generateIpmi
+        note: Pool is an optional parameter. If not specified, this behaves identically to how the asset create endpoint works when generate_ipmi is enabled.
+        parameters:
+          pool:
+            type: Option[String]
+            description: The IPMI pool to allocate address from
+        response_codes:
+          201: IPMI information successfully created
+          400: IPMI pool provided does not exist
+        examples:
+          collins-shell: |
+            collins-shell ipmi generate --pool=OOB-POD02 --tag=tumblrtag2
+          collins-client-ruby: "collins.ipmi_allocate('tumblrtag2', pool: 'OOB-POD02')"
+          curl: |
+            curl --basic -u blake:admin:first http://localhost:9000/api/asset/tumblrtag3/ipmi
+            curl --basic -u blake:admin:first -d pool=OOB-POD02 http://localhost:9000/api/asset/tumblrtag2/ipmi
+      "IPMI configuration update":
+        description: Update IPMI configuration on an asset
         request: POST /api/asset/:tag/ipmi
         permission: controllers.IpmiApi.updateIpmi
         note:  This is one of the few API endpoints that will both create and/or update a resource. This will likely change in the future (PUT for create, POST for update). If you are creating IPMI info, all parameters below are required. If you are updating IPMI info, at least one parameter must be specified.
