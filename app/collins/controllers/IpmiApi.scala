@@ -13,6 +13,7 @@ import play.api.mvc.Results
 
 import collins.models.Asset
 import collins.models.IpmiInfo
+import collins.models.shared.AddressPool
 import collins.util.IpAddress
 
 trait IpmiApi {
@@ -68,14 +69,18 @@ trait IpmiApi {
               case IpmiCreateForm(poolOption) => IpmiInfo.findByAsset(asset) match {
                 case Some(ipmiinfo) =>
                   Left(Api.getErrorMessage("Asset already has IPMI details, cannot generate new IPMI details", Results.BadRequest))
-                case None =>
-                  // make sure asset does not already have IPMI created, because this
-                  // implies we want to create new IPMI details
-                  val info = IpmiInfo.findByAsset(asset)
-                  val newInfo = IpmiInfo.createForAsset(asset, poolOption) // TODO use poolOption here
-                  tattler(None).notice("Generated IPMI configuration: IP %s, Netmask %s, Gateway %s".format(
-                    newInfo.dottedAddress, newInfo.dottedNetmask, newInfo.dottedGateway), asset)
-                  Right(ResponseData(Results.Created, JsObject(Seq("SUCCESS" -> JsBoolean(true)))))
+                case None => IpmiInfo.getConfig(poolOption) match {
+                  case None =>
+                    Left(Api.getErrorMessage("Invalid IPMI pool %s specified".format(poolOption), Results.BadRequest))
+                  case Some(AddressPool(poolName, _, _, _)) =>
+                    // make sure asset does not already have IPMI created, because this
+                    // implies we want to create new IPMI details
+                    val info = IpmiInfo.findByAsset(asset)
+                    val newInfo = IpmiInfo.createForAsset(asset, poolOption)
+                    tattler(None).notice("Generated IPMI configuration from %s: IP %s, Netmask %s, Gateway %s".format(
+                      poolName, newInfo.dottedAddress, newInfo.dottedNetmask, newInfo.dottedGateway), asset)
+                    Right(ResponseData(Results.Created, JsObject(Seq("SUCCESS" -> JsBoolean(true)))))
+                }
               }
             }
           } catch {

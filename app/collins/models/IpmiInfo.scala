@@ -78,7 +78,7 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
     createWithRetry(10) { attempt =>
-      val (gateway, address, netmask) = getNextAvailableAddress()(scope)
+      val (gateway, address, netmask) = getNextAvailableAddress(scope)
       val ipmiInfo = IpmiInfo(
         assetId, username, password, gateway, address, netmask)
       tableDef.insert(ipmiInfo)
@@ -139,8 +139,13 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     IpmiConfig.genUsername(asset)
   }
 
-  override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
-    IpmiConfig.get.flatMap(_.defaultPool)
+  override def getConfig(scope: Option[String]): Option[AddressPool] = {
+    // TODO: need to figure out how to return the proper network here. !!!!!!!!!!!!!!!!!!!!!!!
+    // get should be an IpAddressConfig?
+    logger.error("!!!! %s !!!!".format(scope))
+    IpmiConfig.pools.get(poolName(scope.getOrElse(_.defaultPool)))
+    //get.flatMap(scope.getOrElse(_.defaultPool))
+    //get(_.defaultPool) //.flatMap(scope.getOrElse(_.defaultPool))
   }
 
   // Converts our query parameters to fragments and parameters for a query
