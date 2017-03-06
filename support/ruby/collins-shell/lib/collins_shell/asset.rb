@@ -20,9 +20,14 @@ module CollinsShell
     method_option :ipmi, :type => :boolean, :desc => 'Generate IPMI data'
     method_option :status, :type => :string, :desc => 'Status of asset'
     method_option :type, :type => :string, :desc => 'Asset type'
+    method_option :ipmi_pool, :type => :string, :desc => 'IPMI pool'
     def create
       call_collins get_collins_client, "create asset" do |client|
-        asset = client.create! options.tag, :generate_ipmi => options.ipmi, :status => options.status, :type => options.type
+        asset = client.create!(options.tag,
+          :generate_ipmi => options.ipmi,
+          :status => options.status,
+          :type => options.type,
+          :ipmi_pool => options.ipmi_pool)
         print_find_results asset, nil
       end
     end
