@@ -1,4 +1,4 @@
-FROM java:8-jre
+FROM openjdk:8-jre
 MAINTAINER Gabe Conradi <gabe@tumblr.com>
 
 # Solr cores should be stored in a volume, so we arent writing stuff to our rootfs
@@ -6,7 +6,7 @@ VOLUME /opt/collins/conf/solr/cores/collins/data
 
 COPY . /build/collins
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y openjdk-8-jdk zip unzip ipmitool && \
+    apt-get install --no-install-recommends -y openjdk-8-jdk openjdk-8-jdk-headless zip unzip ipmitool && \
     rm -r /var/lib/apt/lists/* && \
     cd /build && \
     export ACTIVATOR_VERSION=1.3.7 && \
@@ -19,7 +19,7 @@ RUN apt-get update && \
     cd / && rm -rf /build && \
     rm -rf /root/.ivy2 && \
     rm -rf /root/.sbt && \
-    apt-get remove -y --purge openjdk-8-jdk && \
+    apt-get remove -y --purge openjdk-8-jdk openjdk-8-jdk-headless && \
     apt-get autoremove --purge -y && \
     apt-get clean && \
     rm /var/log/dpkg.log
