@@ -29,8 +29,8 @@ module CollinsShell
     desc 'generate', 'generate new IPMI address and creds'
     use_collins_options
     use_tag_option(true)
-    method_option :pool, :type => :string, :optional => true, :desc => 'IPMI pool'
-    def create
+    method_option :pool, :type => :string, :required => false, :desc => 'IPMI pool'
+    def generate
       call_collins get_collins_client, "generate ipmi" do |client|
         ipmi = client.ipmi_allocate options.tag, pool => options.pool
         if ipmi then

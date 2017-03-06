@@ -56,7 +56,7 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.summary = 'Shell for Collins API'
 
-  s.add_runtime_dependency('collins_client', '~> 0.2.11')
+  s.add_runtime_dependency('collins_client', '~> 0.2.20')
   s.add_runtime_dependency('highline','~> 1.6.15')
   s.add_runtime_dependency('mustache','~> 0.99.4')
   s.add_runtime_dependency('pry','~> 0.9.9.6')
