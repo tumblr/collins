@@ -64,7 +64,7 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
           case true  => IpmiInfo.getConfig(ipmiPool) match {
-            case None => throw new IllegalArgumentException("Invalid IPMI pool %s specified".format(ipmiPool.getOrElse("default")))
+            case None => throw new Exception("Invalid IPMI pool %s specified".format(ipmiPool.getOrElse("default")))
             case _    => Some(IpmiInfo.createForAsset(asset, ipmiPool))
           }
           case false => None
