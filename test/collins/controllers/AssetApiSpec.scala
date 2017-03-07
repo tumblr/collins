@@ -54,7 +54,7 @@ class AssetApiSpec extends mutable.Specification with ControllerSpec with Resour
         result must haveStatus(201)
         result must haveJsonData.which { s =>
           s must /("data") */ ("ASSET") / ("STATUS" -> "Incomplete")
-          s must /("data") */ ("IPMI") / ("IPMI_GATEWAY" -> "172.16.16.1")
+          s must /("data") */ ("IPMI") / ("IPMI_GATEWAY" -> "172.16.32.1")
           s must /("data") */ ("IPMI") / ("IPMI_NETMASK" -> "255.255.240.0")
         }
       }
