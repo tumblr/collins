@@ -1748,7 +1748,7 @@ sections:
               }
             }
       "delete an address":
-        description: Delete all addresses associated with a given tag, optionally associated with a pool
+        description: Delete addresses associated with a given tag: either all addresses, those associated with a specified pool, or a single address.
         request: DELETE /api/asset/:tag/addresses
         permission: controllers.IpAddressApi.purgeAddresses
         parameters:
@@ -1758,6 +1758,9 @@ sections:
           pool:
             type: Option[String]
             description: If specified, only addresses associated with the given pool are deleted. Otherwise, all addresses are deleted.
+          address:
+            type: Option[String]
+            description: If specified, delete only the given address. Otherwise, all addresses are deleted.
         response_codes:
           200: Address deleted
           404: Invalid asset specified
