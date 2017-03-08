@@ -1748,7 +1748,7 @@ sections:
               }
             }
       "delete an address":
-        description: Delete addresses associated with a given tag: either all addresses, those associated with a specified pool, or a single address.
+        description: "Delete addresses associated with a given tag: either all addresses, those associated with a specified pool, or a single address."
         request: DELETE /api/asset/:tag/addresses
         permission: controllers.IpAddressApi.purgeAddresses
         parameters:
