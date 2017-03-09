@@ -24,7 +24,7 @@ class IpamApiSpec extends mutable.Specification with ControllerSpec {
         s must /("data") */("POOLS") */ ("START_ADDRESS" -> "172.16.56.5")
         s must /("data") */("POOLS") */ ("BROADCAST" -> "172.16.56.255")
         s must /("data") */("POOLS") */ ("POSSIBLE_ADDRESSES" -> 254)
-      }
+     }
     }
     "Support creating an address starting with start address" in new WithApplication with AssetApiHelper {
       override val assetTag = "tumblrtag42"

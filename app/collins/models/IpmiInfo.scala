@@ -73,6 +73,8 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     i.gateway is (indexed),
     i.netmask is (indexed)))
 
+  lazy val AddressConfig = IpmiConfig.get()
+
   def createForAsset(asset: Asset): IpmiInfo = inTransaction {
     val assetId = asset.id
     val username = getUsername(asset)

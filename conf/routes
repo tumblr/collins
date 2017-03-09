@@ -58,6 +58,9 @@ PUT     /api/asset/:tag/address              collins.app.Api.allocateAddress(tag
 POST    /api/asset/:tag/address              collins.app.Api.updateAddress(tag: String)
 DELETE  /api/asset/:tag/addresses            collins.app.Api.purgeAddresses(tag: String)
 
+# IPMI API
+GET     /api/ipmi/pools             collins.app.Api.getIpmiAddressPools
+
 # Log API
 PUT     /api/asset/:tag/log         collins.app.Api.submitLogData(tag: String)
 GET     /api/asset/:tag/logs        collins.app.Api.getAssetLogData(tag: String, page: Int ?= 0, size: Int ?= 10, sort: String ?= "DESC", filter: String ?= "")

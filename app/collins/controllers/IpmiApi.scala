@@ -11,7 +11,10 @@ import play.api.libs.json.JsBoolean
 import play.api.libs.json.JsObject
 import play.api.mvc.Results
 
+import collins.controllers.actions.ipmi.GetPoolsAction
+
 import collins.models.Asset
+import collins.models.Truthy
 import collins.models.IpmiInfo
 import collins.util.IpAddress
 
@@ -84,5 +87,9 @@ trait IpmiApi {
       suc => formatResponseData(suc)
     )
   }(Permissions.IpmiApi.UpdateIpmi)
+
+  // GET /api/ipmi/pools
+  def getIpmiAddressPools() =
+    GetPoolsAction(Permissions.IpmiApi.GetAddressPools, this)
 
 }
