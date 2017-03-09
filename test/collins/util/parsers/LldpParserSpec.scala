@@ -58,6 +58,17 @@ class LldpParserSpec extends mutable.Specification {
       }
     }
 
+    "missing vlan-id ok" in new LldpParserHelper("lldpctl-no-vlan-id.xml"){
+      val parseResult = parsed()
+      parseResult must beRight
+      parseResult.right.toOption must beSome.which { rep =>
+        rep.interfaceCount mustEqual (1)
+        rep.vlanNames.toSet mustEqual (Set("fake"))
+        rep.vlanIds.toSet mustEqual (Set(0))
+      }
+    }
+
+
     "Parse XML with four network interfaces" in new LldpParserHelper("lldpctl-four-nic.xml") {
       val parseResult = parsed()
       parseResult must beRight
@@ -71,6 +82,20 @@ class LldpParserSpec extends mutable.Specification {
           "oob-switch013.ewr01", "re0.access-switch01.ewr01", "re0.access-switch02.ewr01"))
         rep.vlanNames.toSet mustEqual (Set("EWR-PROVISIONING", "OOB-NETWORK", "OOB-POWER", "OOB-SERVERS"))
         rep.vlanIds.toSet mustEqual (Set(104, 115, 114, 108))
+      }
+    }
+
+    "Parse XML with optional fields" in {
+      "Missing vlan-id" in new LldpParserHelper("lldpctl-bad.xml") {
+        // missing vlan-id is acceptable, for compatibility with odd switches that
+        // do not report a vlan-id despite being configured
+        val invalidXml = getResource(filename)
+        override def getParseResults(data: String): Either[Throwable, LldpRepresentation] = {
+          getParser(data).parse()
+        }
+        val s = """<vlan label="VLAN" vlan-id="106" pvid="yes">DFW-LOGGING</vlan>"""
+        val r = """<vlan label="VLAN" pvid="yes">DFW-LOGGING</vlan>"""
+        getParseResults(invalidXml.replace(s, r)) must beRight
       }
     }
 
@@ -163,15 +188,7 @@ class LldpParserSpec extends mutable.Specification {
         val r = """<vlan label="VLAN" vlan-id="106" pvid="yes"/>"""
         getParseResults(invalidXml.replace(s, r)) must beLeft
       }
-      "Missing vlan id" in new LldpParserHelper("lldpctl-bad.xml") {
-        val invalidXml = getResource(filename)
-        override def getParseResults(data: String): Either[Throwable, LldpRepresentation] = {
-          getParser(data).parse()
-        }
-        val s = """<vlan label="VLAN" vlan-id="106" pvid="yes">DFW-LOGGING</vlan>"""
-        val r = """<vlan label="VLAN" pvid="yes">DFW-LOGGING</vlan>"""
-        getParseResults(invalidXml.replace(s, r)) must beLeft
-      }
+      
     }
   }
 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lldp label="LLDP neighbors">
+ <interface label="Interface" name="eth0" via="LLDP" rid="1" age="0 day, 00:11:06">
+  <chassis label="Chassis">
+   <id label="ChassisID" type="mac">???</id>
+   <name label="SysName">system name</name>
+   <descr label="SysDescr">system desc</descr>
+   <capability label="Capability" type="Bridge" enabled="on"/>
+   <capability label="Capability" type="Router" enabled="on"/>
+  </chassis>
+  <port label="Port">
+   <id label="PortID" type="local">Port ID here</id>
+   <descr label="PortDescr">Port Description Here</descr>
+   <mfs label="MFS">1514</mfs>
+   <auto-negotiation label="PMD autoneg" supported="yes" enabled="yes">
+    <advertised label="Adv" type="40000Base-T" hd="yes" fd="yes"/>
+    <current label="MAU oper type">unknown</current>
+   </auto-negotiation>
+  </port>
+  <vlan label="VLAN" pvid="yes">fake</vlan>
+  <lldp-med label="LLDP-MED">
+   <device-type label="Device Type">Network Connectivity Device</device-type>
+   <capability label="Capability" type="Capabilities"/>
+   <capability label="Capability" type="Policy"/>
+   <capability label="Capability" type="Location"/>
+   <capability label="Capability" type="MDI/PSE"/>
+  </lldp-med>
+ </interface>
+</lldp>
