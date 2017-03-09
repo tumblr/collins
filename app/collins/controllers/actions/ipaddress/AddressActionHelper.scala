@@ -27,10 +27,8 @@ trait AddressActionHelper { self: SecureAction =>
       ))
     }
 
-  def convertPoolName(name: String, emptyToDef: Boolean = false) = name match {
-    case default if default.equalsIgnoreCase(IpAddressConfig.DefaultPoolName) =>
-      ""
-    case empty if empty.isEmpty && emptyToDef =>
+  def convertPoolName(name: String) = name match {
+    case empty if empty.isEmpty =>
       IpAddressConfig.DefaultPoolName
     case other => other.toUpperCase
   }
