@@ -1,39 +1,16 @@
 <p class="lead">Display trending data</p>
+<div>
+  <p><span class="label label-warning">WARNING</span> The graph namespace has been deprecated in favor of the more flexible and generic <a href="#views">views</a> namespace</p>
+</div>
 <h2>Overview <small><span class="label label-info">Namespace</span> <span class="inlinecode">graph</span></small></h2>
 
-<ul class="thumbnails">
-  <li class="col-md-4">
-    <p>
-    Collins has an easy to implement plugin for graph and trending systems. The
-    graph plugin will display embedded graphs or charts for assets, or just links to
-    those systems (depending on the graph plugin). Once enabled, you will find an additional
-    tab on the asset details screen named 'Graphs' with all the configured information
-    available in it.
-    </p>
+<p>Collins has an easy to implement plugin for graph and trending systems, which can be extended to support any framed in HTML content. The graph plugin will display embedded graphs or charts for assets, or just links to those systems (depending on the graph plugin). Once enabled, you will find an additional tab on the asset details screen named 'Graphs' with all the configured information available in it.</p>
 
-    <p>
-    There is currently support for Fibr,
-    the <a href="http://opentsdb.net/">OpenTSDB</a> visualization tool
-    we built at Tumblr
-    and <a href="http://ganglia.info/">ganglia</a>. While there are
-    plans to open source fibr in the near future, it is likely an
-    early November release.
-    </p>
+<p>There is currently support for Fibr, the <a href="http://opentsdb.net/">OpenTSDB</a> visualization tool we built at Tumblr (currently closed source!), and <a href="http://ganglia.info/">ganglia</a>. There are no plans to opensource Fibr at this time.</p>
 
-    <p>
-    Because graph plugins are easy to implement, we hope that the community will
-    contribute plugins for other common similar systems such as graphite, or munin.
-    </p>
-
-    <p>
-    If you are interested in building and contributing a plugin and have any questions, please
-    feel free to reach out on the mailing list.
-    </p>
-  </li>
-  <li class="col-md-5">
-    <a href="img/asset_graph.png" class="thumbnail" target="_blank"><img src="img/asset_graph.png" alt="Asset trending"></a>
-  </li>
-</ul>
+<p>
+  <a href="img/asset_graph.png" class="thumbnail" target="_blank"><img src="img/asset_graph.png" alt="Asset trending"></a>
+</p>
 
 <table class="table table-condensed table-hover">
   <thead>
@@ -60,32 +37,9 @@
   </tbody>
 </table>
 
-<div class="example reference-config">
-<pre>graph {
-  class = "collins.graphs.FibrGraphs"
-  enabled = false
-  cacheSpecification = "maximumSize=2000,expireAfterWrite=60s"
-
-  FibrGraphs {
-    annotations = [deploy]
-    customMetrics = {}
-    defaultMetrics = [
-      SYS/LOAD,
-      SYS/MEM,
-      SYS/NET,
-      SYS/PROC,
-      SYS/IO-UTIL
-    ]
-    timeframe = 1 hour
-    url = "http://fibr.d2.tumblr.net"
-}</pre>
-</div>
-
 <h3>Fibr Graphs <small><span class="label label-info">Namespace</span> <span class="inlinecode">graph.FibrGraphs</span></small></h3>
 
-<p>
-At Tumblr, Fibr is our primary trending, graphing, and systems visualization tool. There is more information
-on <a href="tools.html#fibr">fibr</a> in the tool document.
+<p>At Tumblr, Fibr is our primary trending, graphing, and systems visualization tool. NOTE: this has been deprecated in favor of the more generalized framing system.
 </p>
 
 <table class="table table-condensed table-hover">
@@ -159,21 +113,11 @@ matching <code>MEMCACHE*</code> will additionally display memcache specific metr
 
 <h3>Ganglia Graphs <small><span class="label label-info">Namespace</span> <span class="inlinecode">graph.GangliaGraphs</span></small></h3>
 
-<ul class="thumbnails">
-  <li class="col-md-4">
-    <p>
-      <a href="http://ganglia.info/">Ganglia</a> is a distributed
-      metrics generation, collection, and visualization system.  Collins
-      integration relies on
-      recent <a href="https://github.com/ganglia/ganglia-web/blob/master/docs/ad-hoc-views.mdown">ad-hoc-views</a>
-      support.
-    </p>
+<p>
+  <a href="http://ganglia.info/">Ganglia</a> is a distributed metrics generation, collection, and visualization system. Collins integration relies on recent <a href="https://github.com/ganglia/ganglia-web/blob/master/docs/ad-hoc-views.mdown">ad-hoc-views</a> support.
+</p>
 
-  </li>
-  <li class="col-md-5">
-    <a href="img/ganglia_asset_graph.png" class="thumbnail" target="_blank"><img src="img/ganglia_asset_graph.png" alt="Ganglia graph example"></a>
-  </li>
-</ul>
+<p><a href="img/ganglia_asset_graph.png" class="thumbnail" target="_blank"><img src="img/ganglia_asset_graph.png" alt="Ganglia graph example"></a></p>
 
 <table class="table table-condensed table-hover">
   <thead>

@@ -14,13 +14,15 @@ sections:
     content: configuration/callbacks.html
   features:
     content: configuration/features.html
+  views:
+    content: configuration/views.html
   graphs:
     content: configuration/graphs.html
-  "ip address":
+  "IP address":
     content: configuration/ipam.html
-  ipmi:
+  IPMI:
     content: configuration/ipmi.html
-  lldp:
+  LLDP:
     content: configuration/lldp.html
   monitoring:
     content: configuration/monitoring.html
