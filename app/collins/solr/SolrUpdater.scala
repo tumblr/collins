@@ -66,8 +66,10 @@ class AssetSolrUpdater extends Actor {
 
 class AssetLogSolrUpdater extends Actor {
 
+  // TODO(gabe): perform batch updating on asset logs as well to prevent as much churn in solr
   def receive = {
-    case log: AssetLog => SolrHelper.updateAssetLogs(List(log), new Date)
+    case log: AssetLog =>
+      SolrHelper.updateAssetLogs(List(log), new Date)
   }
 
 }

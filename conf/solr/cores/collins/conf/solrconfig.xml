@@ -181,22 +181,32 @@
          If the updateLog is enabled, then it's highly recommended to
          have some sort of hard autoCommit to limit the log size.
       -->
-     <autoCommit> 
-       <maxTime>${solr.autoCommit.maxTime:15000}</maxTime> 
-       <openSearcher>false</openSearcher> 
+     <autoCommit>
+       <maxTime>${solr.autoCommit.maxTime:15000}</maxTime>
+       <maxDocs>${solr.autoCommit.maxDocs:100}</maxDocs>
+       <openSearcher>false</openSearcher>
      </autoCommit>
 
-    <!-- softAutoCommit is like autoCommit except it causes a
-         'soft' commit which only ensures that changes are visible
-         but does not ensure that data is synced to disk.  This is
-         faster and more near-realtime friendly than a hard commit.
+     <!-- SoftAutoCommit
+
+         Perform a 'soft' commit automatically under certain conditions.
+         This commit avoids ensuring that data is synched to disk.
+
+         maxDocs - Maximum number of documents to add since the last
+                   soft commit before automaticly triggering a new soft commit.
+
+         maxTime - Maximum amount of time in ms that is allowed to pass
+                   since a document was added before automaticly
+                   triggering a new soft commit.
       -->
-     <autoSoftCommit> 
-       <maxTime>${solr.autoSoftCommit.maxTime:-1}</maxTime> 
+
+     <autoSoftCommit>
+       <!--<maxTime>1000</maxTime>-->
+       <maxTime>${solr.autoSoftCommit.maxTime:1000}</maxTime>
      </autoSoftCommit>
 
   </updateHandler>
-  
+
   <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
        Query section - these settings control query time things like caches
        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->

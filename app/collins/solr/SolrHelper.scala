@@ -102,7 +102,7 @@ object SolrHelper {
       logger.debug("Populating Asset Logs")
       val num = assets.map { asset =>
         val logs = AssetLog.findByAsset(asset)
-        updateAssetLogs(logs, indexTime, false)
+        updateAssetLogs(logs, indexTime)
         logs.size
       }.sum
       _server.foreach { _.commit() }
@@ -111,14 +111,20 @@ object SolrHelper {
     }.getOrElse(logger.warn("attempted to populate solr when no server was initialized"))
   }
 
-  def updateItems[T](items: Seq[T], serializer: SolrSerializer[T], indexTime: Date, commit: Boolean = true) {
+  def updateItems[T](items: Seq[T], serializer: SolrSerializer[T], indexTime: Date) = {
     _server.map { server =>
       val docs = items.map { item => prepForInsertion(serializer.serialize(item, indexTime)) }
       if (docs.size > 0) {
         val fuckingJava = new java.util.ArrayList[SolrInputDocument]
         docs.foreach { doc => fuckingJava.add(doc) }
+
+        // old synchronous commit calls
+        /*
         server.add(fuckingJava)
-        if (commit) {
+        logger.error(("Added %d %s documents to be indexed".format(
+          fuckingJava.size,
+          serializer.docType.name.toLowerCase, items.head.toString)))
+        if (true) {
           server.commit()
           if (items.size == 1) {
             logger.debug(("Indexed %s: %s".format(serializer.docType.name.toLowerCase, items.head.toString)))
@@ -126,6 +132,15 @@ object SolrHelper {
             logger.info("Indexed %d %ss".format(docs.size, serializer.docType.name.toLowerCase))
           }
         }
+        */
+
+        // new commitWithin to lighten load on solr
+        server.add(fuckingJava, SolrConfig.commitWithin)
+        logger.error(("Added %d %s documents to be indexed within %d ms".format(
+          fuckingJava.size,
+          serializer.docType.name.toLowerCase,
+          SolrConfig.commitWithin)))
+        // dont explicitly commit, let solr figure it out
       } else {
         logger.warn("No items to index!")
       }
@@ -133,13 +148,9 @@ object SolrHelper {
 
   }
 
-  def updateAssets(assets: Seq[Asset], indexTime: Date, commit: Boolean = true) {
-    updateItems[Asset](assets, AssetSerializer, indexTime, commit)
-  }
+  def updateAssets(assets: Seq[Asset], indexTime: Date) = updateItems[Asset](assets, AssetSerializer, indexTime)
 
-  def updateAssetLogs(logs: Seq[AssetLog], indexTime: Date, commit: Boolean = true) {
-    updateItems[AssetLog](logs, AssetLogSerializer, indexTime, commit)
-  }
+  def updateAssetLogs(logs: Seq[AssetLog], indexTime: Date) = updateItems[AssetLog](logs, AssetLogSerializer, indexTime)
 
   def terminateSolr() {
     _server.foreach {

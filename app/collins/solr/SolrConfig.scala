@@ -32,6 +32,7 @@ object SolrConfig extends Configurable {
   def socketTimeout = getInt("socketTimeout", 1000)
   def connectionTimeout = getInt("connectionTimeout", 5000)
   def maxTotalConnections = getInt("maxTotalConnections", 100)
+  def commitWithin = getInt("commitWithinMs", 1000)
   def defaultMaxConnectionsPerHost = getInt("defaultMaxConnectionsPerHost", 100)
   def assetBatchUpdateWindow = getInt("assetBatchUpdateWindowMs", 10) milliseconds
 
