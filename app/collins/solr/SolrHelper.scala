@@ -140,7 +140,9 @@ object SolrHelper {
           fuckingJava.size,
           serializer.docType.name.toLowerCase,
           SolrConfig.commitWithin)))
-        // dont explicitly commit, let solr figure it out
+        // dont explicitly hard commit, let solr figure it out and make docs available
+        // to be searched ASAP. commit(boolean waitFlush, boolean waitSearcher, boolean softCommit)
+        server.commit(false, false, true)
       } else {
         logger.warn("No items to index!")
       }
