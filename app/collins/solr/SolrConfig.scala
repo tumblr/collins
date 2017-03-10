@@ -34,7 +34,7 @@ object SolrConfig extends Configurable {
   def maxTotalConnections = getInt("maxTotalConnections", 100)
   def commitWithin = getInt("commitWithinMs", 1000)
   def defaultMaxConnectionsPerHost = getInt("defaultMaxConnectionsPerHost", 100)
-  def assetBatchUpdateWindow = getInt("assetBatchUpdateWindowMs", 10) milliseconds
+  def assetBatchUpdateWindow = getInt("assetBatchUpdateWindowMs", 100) milliseconds
 
   override protected def validateConfig() {
     if (enabled) {
