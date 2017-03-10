@@ -118,10 +118,10 @@ object SolrHelper {
         val fuckingJava = new java.util.ArrayList[SolrInputDocument]
         docs.foreach { doc => fuckingJava.add(doc) }
         server.add(fuckingJava, SolrConfig.commitWithin)
-        logger.error(("Added %d %s documents to be indexed within %d ms".format(
+        logger.debug("Added %d %s documents to be indexed within %d ms".format(
           fuckingJava.size,
           serializer.docType.name.toLowerCase,
-          SolrConfig.commitWithin)))
+          SolrConfig.commitWithin))
         // dont explicitly hard commit, let solr figure it out and make docs available
         // to be searched ASAP. commit(boolean waitFlush, boolean waitSearcher, boolean softCommit)
         server.commit(false, false, true)
