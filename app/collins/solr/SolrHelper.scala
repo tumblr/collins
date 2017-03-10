@@ -117,24 +117,6 @@ object SolrHelper {
       if (docs.size > 0) {
         val fuckingJava = new java.util.ArrayList[SolrInputDocument]
         docs.foreach { doc => fuckingJava.add(doc) }
-
-        // old synchronous commit calls
-        /*
-        server.add(fuckingJava)
-        logger.error(("Added %d %s documents to be indexed".format(
-          fuckingJava.size,
-          serializer.docType.name.toLowerCase, items.head.toString)))
-        if (true) {
-          server.commit()
-          if (items.size == 1) {
-            logger.debug(("Indexed %s: %s".format(serializer.docType.name.toLowerCase, items.head.toString)))
-          } else {
-            logger.info("Indexed %d %ss".format(docs.size, serializer.docType.name.toLowerCase))
-          }
-        }
-        */
-
-        // new commitWithin to lighten load on solr
         server.add(fuckingJava, SolrConfig.commitWithin)
         logger.error(("Added %d %s documents to be indexed within %d ms".format(
           fuckingJava.size,
