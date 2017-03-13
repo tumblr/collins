@@ -90,7 +90,7 @@ class LldpParserSpec extends mutable.Specification {
     }
 
     "Parse XML with optional fields" in {
-      "Missing vlan-id" in new LldpParserHelper("lldpctl-bad.xml") {
+      "Missing vlan-id" in new LldpParserHelper("lldpctl-bad.xml", Map("lldp.requireVlanId" -> "false")) {
         // missing vlan-id is acceptable, for compatibility with odd switches that
         // do not report a vlan-id despite being configured
         val invalidXml = getResource(filename)

@@ -71,7 +71,7 @@ class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
       // some switches don't report a vlan-id, despite a VLAN being configured
       // on an interface. Lets be flexible here and allow it to be empty.
       case (vseq, vlan) =>
-        val idOpt = Option(vlan \ "@vlan-id" text)
+        val idOpt = Option(vlan \ "@vlan-id" text).filter(_.nonEmpty)
         val name = vlan.text
         if (LldpConfig.requireVlanName) {
           requireNonEmpty((name -> "vlan name"))
