@@ -18,8 +18,14 @@ to store data about which switch an asset is connected to.
     <tr>
       <td class="inlinecode">requireVlanName</td>
       <td>Boolean</td>
+      <td>If true, throw an error if the LLDP data submitted contains any
+      VLANs without a name attribute. Defaults to true.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">requireVlanId</td>
+      <td>Boolean</td>
       <td>If true, throw an error if the LLDP data submitted does not contain a
-      VLAN name. Defaults to true.</td>
+      VLAN with a <code>vlan-id</code> attribute. Defaults to false.</td>
     </tr>
   </tbody>
 </table>
@@ -27,5 +33,6 @@ to store data about which switch an asset is connected to.
 <div class="example reference-config">
 <pre>lldp {
      requireVlanName = true
+     requireVlanId   = false
 }</pre>
 </div>
