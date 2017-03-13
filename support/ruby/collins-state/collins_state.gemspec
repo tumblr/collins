@@ -34,9 +34,9 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'escape', '~> 0.0.4'
 
   s.add_development_dependency 'rspec', '~> 2.99'
-  s.add_development_dependency 'yard'
-  s.add_development_dependency 'redcarpet'
-  s.add_development_dependency 'webmock'
+  s.add_development_dependency 'yard', '~> 0.8.7'
+  s.add_development_dependency 'redcarpet', '~> 3.2'
+  s.add_development_dependency 'webmock', '~> 1.21'
   s.add_development_dependency 'bundler'
   s.add_development_dependency 'simplecov'
   s.add_development_dependency 'rake', '~> 10.5'
