@@ -15,7 +15,7 @@ tagdecorators {
   }
   decorators {
     APPLICATION_SHA.decorator    = "&lt;a target=\"_blank\" href=\"https://scm.site.net/commit/{value}\"&gt;{value}&lt;/a&gt;"
-    CONTACT.decorator       = "&lt;a href=\"mailto:{value}\"&gt;{value}&lt;/a&gt;"
+    CONTACT.decorator = "&lt;a href=\"https://yourcompany.slack.com/messages/{value}\"&gt;{value}&lt;/a&gt;"
     CONTACT_NOTES.decorator = "&lt;a target=\"_blank\" href=\"{value}\"&gt;{value}&lt;/a&gt;"
     RACK_POSITION {
       decorator = ${tagdecorators.templates.search}
@@ -24,6 +24,10 @@ tagdecorators {
       between = "-"
     }
     NODECLASS.decorator = ${tagdecorators.templates.search}
+    POOL.decorator = ${tagdecorators.templates.search}
+    PRIMARY_ROLE.decorator = ${tagdecorators.templates.search}
+    SECONDARY_ROLE.decorator = ${tagdecorators.templates.search}
+    BUILD_CONTACT.decorator = "&lt;a href=\"https://yourcompany.slack.com/messages/{value}\"&gt;{value}&lt;/a&gt;"
     IP_ADDRESS {
       decorator="&lt;a href=\"ssh://{value}\"&gt;>{value}&lt;/a&gt;"
       between=", "

@@ -1,0 +1,108 @@
+<p class="lead">Generic framing support for external tools</p>
+<h2>Overview <small><span class="label label-info">Namespace</span> <span class="inlinecode">views</span></small></h2>
+
+<p>In order to generically support external utilities to provide supplemental data for assets, a generic view system was implemented to allow operators to frame in arbitrary sites. This supplants <a href="#graphs">the graphs plugin</a>, and is used to provide easy access to tooling like Grafana, Nagios/Icinga, Prometheus, etc.</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">frames</td>
+      <td>Map[String]Frame</td>
+      <td>A map of frames to conditionally evaluate on any given asset. See examples.</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">enabled</td>
+      <td>Boolean</td>
+      <td>Defaults to false</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Frames <small><span class="label label-info">Namespace</span> <span class="inlinecode">views.frames</span></small></h3>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">enabled</td>
+      <td>Boolean</td>
+      <td>Enable this frame or not (default false)</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">title</td>
+      <td>String</td>
+      <td>Title to display on asset tab bar</td>
+    </tr>
+    <tr>
+      <td class="inlinecode">style</td>
+      <td>String</td>
+      <td>HTML style tag to apply to the iframe. A good default is <code>width: 100%;height: 1200px;</code></td>
+    </tr>
+    <tr>
+      <td class="inlinecode">script</td>
+      <td>String</td>
+      <td>JS script to inject into the view to determine what the URL is to frame in, and how to decide if the tab should be marked as active or not. You can specify <code>function isEnabled(jsonObj)</code> and <code>function getUrl(jsonObj)</code>. See examples.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example example-config">
+<pre>
+views {
+  enabled = true
+  frames = {
+		# frame in grafana
+    graph {
+      enabled = true
+      title = "Grafana"
+      style = "width: 100%;height: 1200px;"
+      script = """
+        // if the asset is a server, and has a hostname, enable this tab
+        function isEnabled(inp) {
+          var obj = JSON.parse(inp);
+          return ((obj.ASSET.TYPE === "SERVER_NODE" || obj.ASSET.TYPE === "SWITCH") && ("HOSTNAME" in obj.ATTRIBS[0]));
+        }
+
+        // all assets use the host-stats dashboard
+        function getUrl(inp) {
+          var obj = JSON.parse(inp);
+          var dash = "host-stats"
+          if (obj.ASSET.TYPE === "SWITCH") {
+            dash = "switch-stats";
+          }
+          return "https://grafana.company.net/dashboard/db/" + dash + "?var-hostname=" + obj.ATTRIBS[0]["HOSTNAME"];
+        }
+      """
+    }
+
+    # frame in nagios
+    monitoring {
+      enabled = true
+      title = "Nagios"
+      style = "width: 100%;height: 1200px;"
+      script = """
+        function isEnabled(inp) {
+          var obj = JSON.parse(inp);
+          return ((obj.ASSET.STATUS === "SERVER_NODE") && ("HOSTNAME" in obj.ATTRIBS[0]));
+        }
+        function getUrl(inp) {
+          var obj = JSON.parse(inp);
+          return "https://nagios.company.net/nagiosxi/includes/components/xicore/status.php?show=hostdetail&host=" + obj.ATTRIBS[0]["HOSTNAME"];
+        }
+      """
+    }
+  }
+}
+</pre>
+</div>
+
+<p>The above example configures 2 tabs. One frames in Grafana, showing a different dashboard depending on if the asset is a Server or Switch. The other frames in Nagios for the Server asset. This can be trivially extended to support PagerDuty, Prometheus, Alertmanager, Sensu, and any other monitoring, graphing, or alerting system. All that is required is the ability to parameterize the URL to the system with some identifying attribute of the host (hostname, IP, asset tag, etc).</p>
