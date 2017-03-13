@@ -24,13 +24,15 @@
         }
         @if(aa.addresses.size > 0) {
         <tr>
-          <th>Ip Addresses</th>
+          <th><strong>IP Addresses</strong></th>
           <td>@TagDecorator.decorate("IP_ADDRESS", aa.addresses.map(_.dottedAddress).toList, ", ")</td>
           <td>Primary IP Addresses</td>
         </tr>
         }
         <tr>
-          <th>Asset Tag</th>
+          <th>
+            <strong data-rel="tooltip" title="" data-original-title="TAG">Asset Tag</strong>
+          </th>
           @if(SoftLayerConfig.enabled && SoftLayer.isSoftLayerAsset(aa.asset)) {
             @slLink(aa.asset, aa.asset.tag)
           } else {
@@ -40,7 +42,7 @@
         </tr>
         <tr>
           @defining(aa.asset.nodeClass){ nodeclass =>
-          <th>Classification</th>
+          <th><strong>Classification</strong> <a href="https://tumblr.github.io/collins/configuration.html#node classifier"><i class="glyphicon glyphicon-question-sign" data-rel="tooltip" title="" data-original-title="Asset classification according to node classifier"></i></a></th>
           <td>
             <span>
               @nodeclass.map { nc =>
@@ -60,12 +62,12 @@
           }
         </tr>
         <tr>
-          <th>Asset Type</th>
+          <th><strong>Asset Type<strong> <a href="https://tumblr.github.io/collins/concepts.html#assets"><i class="glyphicon glyphicon-question-sign"></i></a></th>
           <td>@aa.asset.assetType.label</td>
           <td></td>
         </tr>
         <tr class="@statusClassFromAsset(aa.asset)">
-          <td><strong>Asset Status</strong></td>
+          <td><strong>Asset Status</strong> <a href="https://tumblr.github.io/collins/concepts.html#status & state"><i class="glyphicon glyphicon-question-sign"></i></a></td>
           <td>@aa.asset.getStatusName</td>
           @if(aa.asset.isMaintenance) {
             <td><a href="#user-log-section"><span class="label label-primary">See Notes</span></a> @aa.asset.status.description</td>
@@ -76,7 +78,7 @@
 @if(aa.asset.stateId != 0) {
   @State.findById(aa.asset.stateId).map { state =>
         <tr>
-          <th>Asset State</th>
+          <th><strong>Asset State</strong> <a href="https://tumblr.github.io/collins/concepts.html#status & state"><i class="glyphicon glyphicon-question-sign"></i></a></th>
           <td>@state.label</td>
           <td>@state.description</td>
         </tr>
@@ -94,7 +96,12 @@
         </tr>
         @MetaValueOrderer.order(aa.mvs.filter(_.getName() != "HOSTNAME")).map { case(size, mv) =>
         <tr>
-          <th>@mv.getLabel() @if(size > 1 || mv.getGroupId() != 0){(@mv.getGroupId())}</th>
+          <th>
+            <span @if(mv.getLabel().toUpperCase != mv.getName()){
+            data-rel="tooltip" title="" data-original-title="@mv.getName() @if(size > 1 || mv.getGroupId() != 0){(@mv.getGroupId())}"
+          }>@mv.getLabel() @if(size > 1 || mv.getGroupId() != 0){(@mv.getGroupId())}
+            </span>
+          </th>
           <td>
           @{
             mv.getName match {
