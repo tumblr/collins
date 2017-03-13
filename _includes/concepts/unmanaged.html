@@ -1,0 +1,70 @@
+<h3>Manual Tags</h3>
+<p>These tags are key value pairs used by humans to coordinate activity. Generally, they reflect some static-ish attributes about a system (for example, <code>HAS_GPU=true</code> could be used to signal to systems that an asset contains at least one GPU. More commonly, humans set these tags on assets in a transitive manner, to mark and later query for a set of assets to work on. For example, a user may mark 20 assets with <code>CLAIMED=gabe</code> and later query for assets with <code>CLAIMED=gabe</code> to reprovision these hosts into new roles.</p>
+
+<h3>Automated Tags</h3>
+<p>These are unmanaged tags, that are maintained/updated by automated processes.</p>
+
+<h4>General Purpose Automated Tags</h4>
+<p>Non-tumblr specific automated tags, although some of the tools may be Tumblr specific.</p>
+<table class="table-hover table-condensed">
+  <thead>
+    <tr><td>Tag</td><td>Populated By</td><td>Description</td></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">HOSTNAME</td>
+      <td>your provisioning system</td>
+      <td>Populated when an asset successfully starts the provisioning process. Automation can generate a new hostname based on roles/pools, etc.</td>
+    </tr>
+
+    <tr>
+      <td class="inlinecode">NODECLASS</td>
+      <td>your provisioning system</td>
+      <td>Populated when an asset successfully starts the provisioning process. This can be used by the puppet master to resolve the nodeclass for a host in the external node classifier.</td>
+    </tr>
+
+    <tr>
+      <td class="inlinecode">CONTACT</td>
+      <td>collins at provision time</td>
+      <td>When a user provisions an asset the specified <code>CONTACT</code> is populated. This is used for notification of maintenance, provisioning being done, etc.</td>
+    </tr>
+
+    <tr>
+      <td class="inlinecode">PRIMARY_ROLE</td>
+      <td>collins</td>
+      <td>When a user provisions an asset the chosen <code>PRIMARY_ROLE</code> is populated. This is used to communicate the intended purpose of the asset (CACHE, DATABASE, HADOOP, PROXY, WEB, etc)</td>
+    </tr>
+
+    <tr>
+      <td class="inlinecode">POOL</td>
+      <td>collins</td>
+      <td>Populated along with <code>PRIMARY_ROLE</code>, this tag is used to communicate the functional pool the asset should participate in, e.g. MEMCACHE_POST_POOL</td>
+    </tr>
+
+    <tr>
+      <td class="inlinecode">SECONDARY_ROLE</td>
+      <td>collins</td>
+      <td>Populated along with <code>PRIMARY_ROLE</code>, this tag is used to communicate some secondary role such as MASTER, SLAVE, or a deployment group (such as WEB_A, WEB_B).</td>
+    </tr>
+
+    <tr>
+      <td class="inlinecode">SYSTEM_USERNAME</td>
+      <td>your provisioning system</td>
+      <td>You can specify the administrative username here.</td>
+    </tr>
+
+    <tr>
+      <td class="inlinecode">SYSTEM_PASSWORD</td>
+      <td>your provisioning system</td>
+      <td>Randomly generate new root passwords at provision time. You can use something like puppet to enforce the password as well.</td>
+    </tr>
+
+    <tr>
+      <td class="inlinecode">MAINTENANCE_TICKET</td>
+      <td>collins</td>
+      <td>If the asset is in maintenance mode, this can show the ticket created to track the hardware's repair</td>
+    </tr>
+
+  </tbody>
+</table>
+

@@ -9,8 +9,8 @@ sections:
   tags:
     content: concepts/tags.html
     subsections:
+      unmanaged: concepts/unmanaged.html
       managed: concepts/managed.html
-      automated: concepts/automated.html
   "status & state":
     content: concepts/status_and_state.html
   logs:

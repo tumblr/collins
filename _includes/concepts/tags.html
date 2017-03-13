@@ -1,11 +1,5 @@
 <p class="lead">Multi-dimensional key/values for an asset</p>
-<p>
-  The most fundamentally important concept in collins is that of a tag. A tag consists of a key (such as <code>TOTAL_DISK_SPACE_BYTES</code>),
-  a value (such as <code>536870912000</code>) and a dimension (such as <code>0</code>). Tags are what provide most of the flexibility within
-  collins. If you set a new tag on an asset and that tag does not yet exist, it will be available to query on and immediately available to
-  query on. If you set a new tag value using the same dimension, the old value will be overwritten. All tag changes, including deletes, are logged
-  as part of the asset audit trail.
-</p>
+<p>The most fundamentally important concept in collins is that of a tag. A tag is a key value pair, with an optional dimension index. For example, <code>PORT</code> tag has a default index of <code>0</code>, but could be N-dimensional as you define multiple <code>PORT</code> tags with different dimensions. You are not limited by a predefined set of tags for your assets! If you tag an asset with a new tag <code>FRESHNESS=9000</code>, it will be immediately available to query. If you set a new tag value using the same dimension, the old value will be overwritten. All tag changes, including deletes, are logged as part of the asset audit trail.</p>
 
 <h2>Tag Types</h2>
 <p>
@@ -30,22 +24,19 @@
 </dl>
 
 <h2>Dimensions</h2>
-<p>
-  A dimension can be any integer value (including a timestamp) and is typically used for grouping things together. You can imagine the disks of a host being described lik\
-  e:
-</p>
+<p>By default, a simple tag has the <code>"0"</code> dimension. A dimension can be any integer value (including a timestamp) and is typically used for grouping things together. You can imagine the disks of a host being described like</p>
 <pre><code>{
-    "0": {
+  "0": {
     "DEV_NAME": "/dev/sda",
     "TOTAL_DISK_SPACE_BYTES": 536870912000,
     "DISK_TYPE": "SATA"
-    },
-    "1": {
+  },
+  "1": {
     "DEV_NAME": "/dev/sdb",
     "TOTAL_DISK_SPACE_BYTES": 0,
     "DISK_TYPE": "CD-ROM"
-    }
-    }</code></pre>
+  }
+}</code></pre>
 <p>
   This information tells you that the asset has two disks (one sata, one cd-rom) and tells you a bit about each physical disk. The value of
   the dimension in this case is just to logically group things together, and possibly to provide some ordering. You could also however
@@ -53,7 +44,5 @@
   some arbitrary event where the timestamp is the dimension used. It's up to you.
 </p>
 
-<h2>Tags</h2>
-<p>
-  The flexible nature of the tag approach used with Collins dictates that agreed upon convention is required.
-</p>
+<h3>Tag Conventions</h3>
+<p>The flexible and free-form nature of using user-defined tags to drive automation and add semantic value to Assets in Collins dictates that users agree upon some conventions for tag usage. For example, if you use the <code>PUPPET_ENVIRONMENT</code> tag to override which puppet environment an asset will use when running puppet, external automation should be put in place to ensure environments are cleaned up after use, and that assets do not remain in non-production environments for too long.</p>
