@@ -6,6 +6,10 @@ sections:
     content: tools/overview.html
   sdk:
     content: tools/sdk.html
+  configs:
+    content: tools/configs.html
+  "collins-cli":
+    content: tools/collins_cli.html
   "collins shell":
     content: tools/collins_shell.html
   genesis:
