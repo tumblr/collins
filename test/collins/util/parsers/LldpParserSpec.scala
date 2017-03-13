@@ -58,7 +58,7 @@ class LldpParserSpec extends mutable.Specification {
       }
     }
 
-    "missing vlan-id ok" in new LldpParserHelper("lldpctl-no-vlan-id.xml"){
+    "missing vlan-id ok when !lldp.requireVlanId" in new LldpParserHelper("lldpctl-no-vlan-id.xml", Map("lldp.requireVlanId" -> "false")){
       val parseResult = parsed()
       parseResult must beRight
       parseResult.right.toOption must beSome.which { rep =>
@@ -66,6 +66,10 @@ class LldpParserSpec extends mutable.Specification {
         rep.vlanNames.toSet mustEqual (Set("fake"))
         rep.vlanIds.toSet mustEqual (Set(0))
       }
+    }
+    "missing vlan-id not ok when lldp.requireVlanId" in new LldpParserHelper("lldpctl-no-vlan-id.xml", Map("lldp.requireVlanId" -> "true")){
+      val parseResult = parsed()
+      parseResult must beLeft
     }
 
 
