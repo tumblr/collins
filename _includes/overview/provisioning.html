@@ -1,10 +1,5 @@
-<p>
-  For provisioning purposes you'll want to search for hosts that are unallocated. Do not allocate hosts in any other state.
-</p>
-<p>
-  To provision a host just click the 'Provision Server' link in the actions drop down. You will be presented with a dialog
-  like the following:
-</p>
+<p>For provisioning purposes you'll want to search for hosts that are unallocated (or sometimes maintenance), as they are not already claimed and in production. Do not provision hosts in any other state!</p>
+<p>To provision a host just click the 'Provision Server' link in the actions drop down. Assets in Allocated are not able to be provisioned until you move them into maintenance or unallocated. You will be presented with a dialog like the following:</p>
 <div class="row">
   <div class="col-md-6">
     <a href="img/asset_provision.png" target="_blank" class="thumbnail">
@@ -18,14 +13,15 @@
   play. If something is optional (such as secondary role in this dialog) and you're unsure, just leave it unspecified.
 </p>
 <p>
-  When you're ready just click the 'Provision Server' button. This takes 30-60 seconds to return. During this process we
+  When you're ready just click the 'Provision Server' button. During this process, the provisioning system will 
   verify any required settings for the specified host and reboot it onto a reinstall image. Once control is returned to
   you, the dialog will close and you should notice that the primary role, pool, nodeclass, contact and some other options
-  have been changed to reflect the settings you specified. Also note that the status has changed from Incomplete to Provisioning.
+  have been changed to reflect the settings you specified. Also note that the status has changed from Unallocated to Provisioning.
 </p>
 <p>
-  Once the initial provisioning has successfully completed (the remaining steps, such as puppet and func cleanup), you'll
-  see a hipchat notification in the builds room. Once the machine is fully provisioned, the status will change automatically
-  to provisioned. In the near future we'll use the contact tag to again notify you that the machine has finished the
-  provisioning process.
+  With external automation in place (not provided by collins!), the completion of provisioning (base OS image) can notify you
+  in Hipchat or Slack. This manifests as a machine being moved into a "Provisioned" status. The remaining steps, such as any 
+  application of business logic via config management tooling, are up to your Collins administrator to set up. Once the machine
+  is fully provisioned, your site's automation can automatically move an asset into Allocated, once healthchecks and other sanity
+  checks have been performed.
 </p>
