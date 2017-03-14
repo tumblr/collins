@@ -1,11 +1,9 @@
 <p class="lead">Manage multiple collins configs easily<p>
-<h2>Overview</h2>
-
-<p>Configs to use collins tools are YAML files, which are generally stored in your home directory in <code>~/.collins.yml</code>. Example configuration looks like:</p>
+<p>Configs to use collins tools are YAML files, which are generally stored in your home directory in <code>~/.collins.yml</code>. Example configuration for the <code>jfk01</code> datacenter looks like:</p>
 
 <div class="example example-config">
 <pre>---
-host: https://collins.example.org
+host: https://collins.jfk01.example.org
 username: "joeuser"
 password: "secret"
 timeout: 30</pre>
@@ -13,6 +11,7 @@ timeout: 30</pre>
 
 <p>The <a href="https://github.com/tumblr/collins/tree/master/support/ruby/collins-auth">collins-auth</a> gem uses a default search path for configs in order: ENV['COLLINS_CLIENT_CONFIG'], ~/.collins.yml, /etc/collins.yml, /var/db/collins.yml.</p>
 
+<h2>Switching Instances</h2>
 <p>If you have multiple Collins sites and need to frequently switch between collins configurations when using <code>collins-cli</code>, add the following snippet to your <code>.bashrc</code>:</p>
 
 <pre>
@@ -30,8 +29,8 @@ collinsdc() {
 }
 </pre>
 
-<h2>Usage</h2>
-<p>You can keep multiple configs for each collins instance at <code>~/.collins.yml.<datacenter></code>, and switch between them</p>
+<h3>Usage</h3>
+<p>You can keep multiple configs for each collins instance at <code>~/.collins.yml.&lt;datacenter&gt;</code>, and switch between them easily. (Example is using <a href="https://rubygems.org/gems/collins-cli">collins-cli</a> gem.)</p>
 
 <div class="example">
 <pre>

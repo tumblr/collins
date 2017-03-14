@@ -1,22 +1,27 @@
 <p class="lead">Simple CLI access to Collins</p>
 <h2>Overview</h2>
 
-<p>The Rubygem <code>collins-cli</code> allows you to interact with Collins from the command line. This includes changing attributes, provisioning machines, allocating IPs, maintenance-moding machines, etc. Source is at <a href="https://github.com/byxorna/collins-cli">github.com/byxorna/collins-cli</a>.
+<p>The Rubygem <code>collins-cli</code> allows you to interact with Collins from the command line. This includes changing attributes, provisioning machines, allocating IPs, maintenance-moding machines, etc. Download the gem from <a href="https://rubygems.org/gems/collins-cli">collins-cli</a> on Rubygems.org. The source can be found at <a href="https://github.com/byxorna/collins-cli">github.com/byxorna/collins-cli</a>.
 </p>
 
 <h2>Installation</h2>
 <pre>
 $ gem install collins-cli
-$ collins -h
 </pre>
 
 <h2>Setup</h2>
-<p><code>collins-cli</code> uses <code>Collins::Authenticator</code>, so it looks for a configuration file in <code>~/.collins.yml</code>.</p>
+<p><code>collins-cli</code> uses <code>Collins::Authenticator</code>, so it looks for a configuration file in <code>~/.collins.yml</code>. See <a href="#configs">configs</a> to setup configurations.</p>
 
-<div class="example example-config">
-<pre>---
-host: https://collins.example.org
-username: "joeuser"
-password: "secret"
-timeout: 30</pre>
-</div>
+<h2>Usage</h2>
+<p>Check out <a href="https://github.com/byxorna/collins-cli">github.com/byxorna/collins-cli</a> for documentation</p>
+<pre>
+$ collins -h
+Usage: collins &lt;command&gt; [options]
+Available commands:
+  query, find:        Search for assets in Collins
+  modify, set:        Add and remove attributes, change statuses, and log to assets
+  log:                Display log messages on assets
+  provision:          Provision assets
+  power:              Control and show power status
+  ip, address, ipmi:  Allocate IPs, update IPMI info
+</pre>
