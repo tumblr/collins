@@ -12,7 +12,7 @@ object ServerBase {
       (json \ "DESCRIPTION").as[String],
       (json \ "PRODUCT").as[String],
       (json \ "VENDOR").as[String],
-      (json \ "SERIAL").as[String]))
+      (json \ "SERIAL").asOpt[String]))
     override def writes(serverbase: ServerBase) = JsObject(Seq(
       "DESCRIPTION" -> Json.toJson(serverbase.description),
       "PRODUCT" -> Json.toJson(serverbase.product),
@@ -22,7 +22,7 @@ object ServerBase {
 }
 
 case class ServerBase(
-    description: String = "", product: String = "", vendor: String = "", serial: String = "") extends LshwAsset {
+    description: String = "", product: String = "", vendor: String = "", serial: Option[String] = None) extends LshwAsset {
   import ServerBase._
   override def toJsValue() = Json.toJson(this)
 

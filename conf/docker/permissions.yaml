@@ -16,6 +16,8 @@ permissions:
     - "g=infra"
     - "g=ops"
     - "g=sre"
+  feature.canWriteEncryptedTags:
+    - "u=admins"
   controllers.Admin:
     - "g=infra"
     - "g=ops"
@@ -38,6 +40,12 @@ permissions:
     - "u=admins"
     - "u=tools"
   controllers.AssetApi.updateAsset:
+    - "g=infra"
+    - "g=ops"
+    - "g=sre"
+    - "u=admins"
+    - "u=tools"
+  controllers.AssetApi.updateAssetStatus:
     - "g=infra"
     - "g=ops"
     - "g=sre"
@@ -103,5 +111,17 @@ permissions:
     - "g=ops"
     - "g=sre"
     - "g=platform"
+    - "u=admins"
+    - "u=tools"
+  controllers.IpmiApi.updateIpmi:
+    - "g=infra"
+    - "g=ops"
+    - "g=sre"
+    - "u=admins"
+    - "u=tools"
+  controllers.Firehose.stream:
+    - "g=infra"
+    - "g=ops"
+    - "g=sre"
     - "u=admins"
     - "u=tools"

@@ -17,7 +17,6 @@ _site
 RUNNING_PID
 conf/solr/cores/collins/data
 .DS_Store
-Gemfile.lock
 
 .cache-main
 .cache-tests
