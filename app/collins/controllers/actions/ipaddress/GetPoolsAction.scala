@@ -53,7 +53,7 @@ case class GetPoolsAction(
   protected def toJsonList(pools: Set[AddressPool]): JsArray = JsArray(
     pools.toList.map { pool =>
       val seq = Seq(
-        "NAME" -> JsString(convertPoolName(pool.name, true)),
+        "NAME" -> JsString(convertPoolName(pool.name)),
         "NETWORK" -> JsString(formatNetworkAddress(pool.network)),
         "START_ADDRESS" -> JsString(pool.startAddress.getOrElse("Unspecified")),
         "SPECIFIED_GATEWAY" -> JsString(pool.gateway.getOrElse("Unspecified")),
