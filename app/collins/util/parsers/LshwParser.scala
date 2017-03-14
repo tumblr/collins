@@ -184,13 +184,14 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
     // the correct element
     if ((elem \ "@class" text).toString == "system") {
       val asset = getAsset(elem)
-      val serial = (elem \ "serial" text)
+      // serial may be missing, so be flexible here and allow it to be absent
+      val serial = (elem \ "serial" headOption).map(_.text)
       ServerBase(asset.description, asset.product, asset.vendor, serial)
     } // To spice things up, sometimes we get <list>$everything</list>
     // instead of just $everything
     else if (((elem \ "node") \ "@class" text) == "system") {
       val asset = getAsset(elem \ "node")
-      val serial = (elem \ "serial" text)
+      val serial = (elem \ "serial" headOption).map(_.text)
       ServerBase(asset.description, asset.product, asset.vendor, serial)
     } else {
       throw MalformedAttributeException("Expected root class=system node attribute")

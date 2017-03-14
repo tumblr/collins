@@ -67,16 +67,21 @@ class LldpParser(txt: String) extends CommonParser[LldpRepresentation](txt) {
   }
 
   protected def findVlans(seq: NodeSeq): Seq[Vlan] = {
+    // TODO(gabe): make this less brittle and handle missing vlan-id
     (seq \\ "vlan").foldLeft(Seq[Vlan]()) {
+      // some switches don't report a vlan-id, despite a VLAN being configured
+      // on an interface. Lets be flexible here and allow it to be empty.
       case (vseq, vlan) =>
-        val id = Option(vlan \ "@vlan-id" text).filter(_.nonEmpty).getOrElse("")
+        val idOpt = Option(vlan \ "@vlan-id" text).filter(_.nonEmpty)
         val name = vlan.text
         if (LldpConfig.requireVlanName) {
-          requireNonEmpty((id -> "vlan-id"), (name -> "vlan name"))
-        } else {
-          requireNonEmpty((id -> "vlan-id"))
+          requireNonEmpty((name -> "vlan name"))
         }
-        Vlan(id.toInt, name) +: vseq
+        if (LldpConfig.requireVlanId) {
+          requireNonEmpty((idOpt.getOrElse("") -> "vlan id"))
+        }
+        val id = idOpt.map(_.toInt).getOrElse(0)
+        Vlan(id, name) +: vseq
     }
   }
 
