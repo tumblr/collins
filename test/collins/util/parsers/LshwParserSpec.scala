@@ -50,7 +50,7 @@ class LshwParserSpec extends mutable.Specification {
 
           rep.base.product mustEqual "PowerEdge C6105 (N/A)"
           rep.base.vendor mustEqual "Winbond Electronics"
-          rep.base.serial mustEqual "FZ1NXQ1"
+          rep.base.serial.get mustEqual "FZ1NXQ1"
         }
       } // with a 10-gig card
 
@@ -385,6 +385,19 @@ class LshwParserSpec extends mutable.Specification {
       } // B.02.12 format
 
     } // Parse softlayer supermicro (Intel) lshw output"
+
+    "Handle missing fields in LSHW" in {
+      "No base serial" in new LshwParserHelper("missing-base-serial.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.base.product mustEqual "Virtual Machine (None)"
+          rep.base.vendor mustEqual "Microsoft Corporation"
+          rep.base.serial mustEqual None
+          rep.base.description mustEqual "Desktop Computer"
+        }
+      }
+    }
 
     "Parse Dell LSHW Output" in {
       "R620 LSHW Output" in new LshwParserHelper("lshw-dell-r620-single-cpu.xml") {
