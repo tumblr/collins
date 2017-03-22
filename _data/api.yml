@@ -1842,6 +1842,34 @@ sections:
                 ]
               }
             }
+      "get IPMI address pools":
+        description: Return ipmi pools that are configured
+        request: GET /api/ipmi/pools
+        permission: controllers.IpmiApi.GetAddressPools
+        note: If no IPMI pools are configured the parent level ipmi block settings are returned with a pool name of default. In the case of the parent level IPMI block being set as well pools defined only the pools will be returned due to some legacy code around ipmi pool loading.
+        response_codes:
+          200: Pools found
+        examples:
+          collins-shell: collins-shell ipmi pools
+          curl: curl --basic -u blake:admin:first http://localhost:9000/api/ipmi/pools
+        responses:
+          json: |
+            {
+              "status": "success:ok",
+              "data": {
+                "POOLS": [
+                  {
+                    "NAME": "OOB-POD01",
+                    "NETWORK": "172.16.32.0/20",
+                    "START_ADDRESS": "172.16.32.20",
+                    "SPECIFIED_GATEWAY": "Unspecified",
+                    "GATEWAY": "172.16.32.1",
+                    "BROADCAST": "172.16.47.255",
+                    "POSSIBLE_ADDRESSES": 4094
+                  }
+                ]
+              }
+            }
       "asset addresses":
          description: Return addresses associated with an asset
          request: GET /api/asset/:tag/addresses
