@@ -4,22 +4,28 @@ They can be things like Routers and Switches, or Servers, Chassis, Configuration
 Datacenter, or even user-defined types for your specific needs. Assets primarily consist of:</p>
 <dl>
   <dt>Asset Tag</dt>
-  <dd>A tag is a unique, immutable, alphanumeric sequence of characters associated with the asset. These are arbitrary but nearly all API calls for interacting with assets will reference this tag. For servers, these are generally burned into the FRU/DMI and identify the asset. For physical assets, it is very useful to mark the asset tag on the outside of the device.</dd>
+  <dd>A tag is a unique, immutable, alphanumeric sequence of characters associated with the asset.
+ These are arbitrary but nearly all API calls for interacting with assets will reference this tag.
+ For servers, these are generally burned into the FRU/DMI and identify the asset. For physical assets,
+ it is very useful to mark the asset tag on the outside of the device.</dd>
 
   <dt>Status</dt>
   <dd>Indicates the current lifecycle phase of the asset. More details in <a href="#status & state">Status & State</a></dd>
 
   <dt>State</dt>
-  <dd>Indicates a phase (status) specific state of the asset. Operators can define arbitrary states with <a href="/api.html#state">the API</a>. More details in the next section.</dd>
+  <dd>Indicates a phase (status) specific state of the asset. Operators can define arbitrary states with
+  <a href="/api.html#state">the API</a>. More details in the next section.</dd>
 
   <dt>Type</dt>
   <dd>Describes the type of the asset. Of primary interest to most users will be server nodes and configurations.</dd>
 
   <dt>Tags</dt>
-  <dd>User defined key value pairs that are associated with an asset. These can be used for grouping assets in queries, performing conditional automation actions, informing business logic during provisioning, etc.</dd>
+  <dd>Also known as attributes, these are user defined key value pairs that are associated with an asset. These can be
+  used for grouping assets in queries, performing conditional automation actions, informing business logic during provisioning, etc.</dd>
 </dl>
 
 <p>New asset types can be created via the <a href="/api.html#asset type">Asset Type API</a>. The preconfigured types that Collins ships with are:</p>
+
 <ul>
   <li>Server Node</li>
   <li>Rack</li>

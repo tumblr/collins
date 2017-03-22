@@ -1,5 +1,11 @@
 <p class="lead">Multi-dimensional key/values for an asset</p>
-<p>The most fundamentally important concept in collins is that of a tag. A tag is a key value pair, with an optional dimension index. For example, <code>PORT</code> tag has a default index of <code>0</code>, but could be N-dimensional as you define multiple <code>PORT</code> tags with different dimensions. You are not limited by a predefined set of tags for your assets! If you tag an asset with a new tag <code>FRESHNESS=9000</code>, it will be immediately available to query. If you set a new tag value using the same dimension, the old value will be overwritten. All tag changes, including deletes, are logged as part of the asset audit trail.</p>
+<p>The most fundamentally important concept in collins is that of a tag. A tag is a key value pair,
+with an optional dimension index. For example, <code>PORT</code> tag has a default index of <code>0</code>,
+but could be N-dimensional as you define multiple <code>PORT</code> tags with different dimensions. You are
+not limited by a predefined set of tags for your assets! If you tag an asset with a new tag
+<code>FRESHNESS=9000</code>, it will be immediately available to query. If you set a new tag value using the
+same dimension, the old value will be overwritten. All tag changes, including deletes, are logged as part of
+the asset audit trail.</p>
 
 <h2>Tag Types</h2>
 <p>
@@ -8,23 +14,29 @@
 <dl>
   <dt>Managed</dt>
   <dd>
-    Tags that are not user managable (such as CPU speed) and can only be set or changed during certain lifecycle events, such as the server intake process.
-    These tags can not be changed, updated or deleted by a user. This is enforced in the software.
+    Tags that are not user managable (such as CPU speed) and can only be set or changed during certain
+    lifecycle events, such as the server intake process updating LSHW/LLDP information. These tags can
+    not be changed, updated or deleted by a user through the normal tag API. This is enforced in Collins.
   </dd>
   <dt>Automated</dt>
   <dd>
     Tags that are managed by external automated processes such as server provisioning.
     Although these can technically be set/changed by users via the API, convention dictates that they should not be.
+    It is up to you to set expectations, and manage automated tags in your automation software. For example, tags
+    in <code>deleteSomeMetaOnRepurpose</code> (see <a href="/configuration.html#features">Features Configuration</a>)
+    can be used to automatically wipe specific automated tags when an asset is reprovisioned.
   </dd>
   <dt>Unmanaged</dt>
   <dd>
-    Tags set by a user via some api interaction (most likely), but probably on a manual basis. In some cases these may be part of an automated process,
-    but some user-interaction will dictate the tag value. These are typically used for things like notes, links, testing, etc.
+    Tags set by a user via some api interaction (most likely), but probably on a manual basis. In some cases
+    these may be part of an automated process, but some user-interaction will dictate the tag value. These
+    are typically used for things like notes, links, testing, etc.
   </dd>
 </dl>
 
 <h2>Dimensions</h2>
-<p>By default, a simple tag has the <code>"0"</code> dimension. A dimension can be any integer value (including a timestamp) and is typically used for grouping things together. You can imagine the disks of a host being described like</p>
+<p>By default, a simple tag has the <code>"0"</code> dimension. A dimension can be any integer value (including
+a timestamp) and is typically used for grouping things together. You can imagine the disks of a host being described like</p>
 <pre><code>{
   "0": {
     "DEV_NAME": "/dev/sda",
@@ -45,4 +57,8 @@
 </p>
 
 <h3>Tag Conventions</h3>
-<p>The flexible and free-form nature of using user-defined tags to drive automation and add semantic value to Assets in Collins dictates that users agree upon some conventions for tag usage. For example, if you use the <code>PUPPET_ENVIRONMENT</code> tag to override which puppet environment an asset will use when running puppet, external automation should be put in place to ensure environments are cleaned up after use, and that assets do not remain in non-production environments for too long.</p>
+<p>The flexible and free-form nature of using user-defined tags to drive automation and add semantic value to Assets
+in Collins dictates that users agree upon some conventions for tag usage. For example, if you use the
+<code>PUPPET_ENVIRONMENT</code> tag to override which puppet environment an asset will use when running puppet,
+external automation should be put in place to ensure environments are cleaned up after use, and that assets do not
+remain in non-production environments for too long.</p>
