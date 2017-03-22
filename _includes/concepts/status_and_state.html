@@ -1,15 +1,24 @@
 <p class="lead">Status and state describe the current phase of the lifecycle of an asset.</p>
 
 <h2>Status</h2>
-<p>The lifecycle (from birth to death) of an asset are described in terms of its status. The possible status values are fixed and can not be managed via the API. While all available status values are listed below, the descriptions given are primarily indiciative of their meanings for a server. A non-server asset type such as a configuration may only ever be allocate d or decommissioned, for instance. The status values described below also give some specific insight into the Tumblr intake process for hardware.
+<p>The lifecycle (from birth to death) of an asset are described in terms of its
+status. The possible status values are fixed and can not be managed via the API.
+While all available status values are listed below, the descriptions given are
+primarily indiciative of their meanings for a server. A non-server asset type
+such as a configuration may only ever be allocate d or decommissioned, for
+instance. The status values described below also give some specific insight into
+the Tumblr intake process for hardware.
 </p>
 
 <h4 id="incomplete">Incomplete</h4>
-  <p>Host not yet ready for use. It has been powered on and entered in Collins but the automated induction process is still being performed.</p>
+  <p>Host not yet ready for use. It has been powered on and entered in Collins
+  but the automated induction process is still being performed.</p>
 <h4 id="new">New</h4>
-  <p>Host has completed the automated induction process and is waiting for an onsite tech to complete physical intake</p>
+  <p>Host has completed the automated induction process and is waiting for an
+  onsite tech to complete physical intake</p>
 <h4 id="unallocated">Unallocated</h4>
-  <p>Host has completed intake process and is ready for use (eg available resource for provisioning into a role)</p>
+  <p>Host has completed intake process and is ready for use (eg available
+  resource for provisioning into a role)</p>
 <h4 id="provisioning">Provisioning</h4>
     <p>Host has started provisioning process but has not yet completed it</p>
 <h4 id="provisioned">Provisioned</h4>
@@ -17,29 +26,61 @@
 <h4 id="allocated">Allocated</h4>
   <p>This asset is in what should likely be considered a production state</p>
 <h4 id="cancelled">Cancelled</h4>
-  <p>Asset is no longer needed and is awaiting decommissioning (typically only associated with SoftLayer and other transient cloud-provided assets)</p>
+  <p>Asset is no longer needed and is awaiting decommissioning (typically only
+  associated with SoftLayer and other transient cloud-provided assets)</p>
 <h4 id="decommissioned">Decommissioned</h4>
   <p>Asset has completed the outtake process and can no longer be managed</p>
 <h4 id="maintenance">Maintenance</h4>
-  <p>Asset is undergoing some kind of maintenance and should not be considered for production use</p>
+  <p>Asset is undergoing some kind of maintenance and should not be considered
+  for production use</p>
 
-<p>The status transition should not generally happen by hand. Automated processes should drive status changes, not people. In fact, the collins UI only allows you to change the status by taking an action (e.g. cancelling an asset or putting it into maintenance).</p>
+<p>The status transition should not generally happen by hand. Automated
+processes should drive status changes, not people. In fact, the collins UI only
+allows you to change the status by taking an action (e.g. cancelling an asset or
+putting it into maintenance).</p>
 
 <h2>State</h2>
 <p>
-  While the status of an asset describes where it is in a discrete lifecycle, the state describes a lifecycle specific to a status. For example,
-  a server that is in maintenance may have a state of <code>HARDWARE_PROBLEM</code> or <code>HARDWARE_UPGRADE</code>. Also note that those states
-  are not appropriate for healthy (non-maintenance) assets, and so these states are restricted to assets with a status of
-  <code>Maintenance</code>. New states may be defined with <a href="/api.html#state">this API</a>.
+  While the status of an asset describes where it is in a discrete lifecycle,
+  the state describes a lifecycle specific to a status. For example, a server
+  that is in maintenance may have a state of <code>HARDWARE_PROBLEM</code> or
+  <code>HARDWARE_UPGRADE</code>. Also note that those states are not appropriate
+  for healthy (non-maintenance) assets, and so these states are restricted to
+  assets with a status of <code>Maintenance</code>. New states may be defined
+  with <a href="/api.html#state">this API</a>.
 </p>
 <p>
-  A state can be either a system state, or a non-system state. System states can not be modified or destroyed. Non-system states can be
-  modified and destroyed. Via the API you can only create non-system states, although support for adding system states may be added in
-  the future. A state can be bound to a status (such as the case of <code>HARDWARE_PROBLEM</code>), or can be used with any status
-  (such as the case of <code>RUNNING</code>). The out of the box available states are described below.
+  A state can be either a system state, or a non-system state. System states can
+  not be modified or destroyed. Non-system states can be modified and destroyed.
+  Via the API you can only create non-system states, although support for adding
+  system states may be added in the future. A state can be bound to a status
+  (such as the case of <code>HARDWARE_PROBLEM</code>), or can be used with any
+  status (such as the case of <code>RUNNING</code>). The out of the box available
+  states are described below.
 </p>
 <div id="state-table" class="accordion-body ">
   {% include states.html %}
 </div>
 
-<p>A useful example of another state could be <code>Allocated:DRAINING</code>. This state could reflect an asset is currently taking production traffic and should continue to be monitored, but signals to loadbalancers and resource managers to stop routing new jobs/requests to this asset. Once the asset is fully drained of jobs, an automated process could move it from <code>Allocated:DRAINING</code> into a <code>Maintenance</code> state to pull it out of rotation fully.</p>
+<p>A few useful examples of user-defined states are as follows:</p>
+<h4>Provisioned:PENDING_ALLOCATION</h4>
+<p><code>Provisioned:PENDING_ALLOCATION</code> could represent the state an asset
+enters when it has finished its automated provisioning (i.e. base OS imaging, 
+configuration management application, and application deployments), but has not
+yet been validated to be healthy in external monitoring systems. For example,
+an "Allocator" script could collect all assets that are <code>Provisioned:PENDING_ALLOCATION</code>
+and perform validation checks on them (are they in DNS? are they pingable? SSH?
+are metrics being collected in Prometheus? Are all alerts in Prometheus green?).
+When health is verified, then the Allocator can move the asset into <code>Allocated</code>
+where it will be automatically pulled into service discovery/load balancers.</p>
+<h4>Allocated:DRAINING</h4>
+<p>Another useful state could be <code>Allocated:DRAINING</code>. This state could
+reflect an asset is currently taking production traffic and should continue to
+be monitored, but signals to loadbalancers and resource managers to stop routing
+new jobs/requests to this asset. This is especially useful for Hadoop Datanodes.
+Once the asset is fully drained of jobs, an automated process could move it from
+<code>Allocated:DRAINING</code> into a <code>Maintenance</code> state to pull it
+out of rotation fully. At Tumblr, we use these states to programmatically generate
+HDFS <code>dfs.hosts</code> and <code>dfs.exclude</code> lists to dynamically
+manage the participating members of the Hadoop cluster, and automatically Decommission
+any asset in <code>Allocated:DRAINING</code>.</p>
