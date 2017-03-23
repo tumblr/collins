@@ -24,6 +24,7 @@ Gem::Specification.new do |s|
     "lib/collins/api/asset_type.rb",
     "lib/collins/api/attributes.rb",
     "lib/collins/api/ip_address.rb",
+    "lib/collins/api/ipmi.rb",
     "lib/collins/api/logging.rb",
     "lib/collins/api/management.rb",
     "lib/collins/api/tag.rb",

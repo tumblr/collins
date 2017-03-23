@@ -62,6 +62,20 @@ module CollinsShell
       end
     end
 
+    desc 'pools', 'find all ipmi pools that are defined'
+    use_collins_options
+    def pools
+      call_collins get_collins_client, "ipmi pools" do |client|
+        # NAME, NETWORK, START_ADDRESS, SPECIFIED_GATEWAY, GATEWAY, BROADCAST, POSSIBLE_ADDRESSES
+        header = [["Pool","Network","Gateway","Broadcast","Possible Addresses","Start Address","Specified Gateway"]]
+        rows = client.ipmi_pools.map do |pool|
+          [pool["NAME"], pool["NETWORK"], pool["GATEWAY"], pool["BROADCAST"], pool["POSSIBLE_ADDRESSES"],
+            pool["START_ADDRESS"], pool["SPECIFIED_GATEWAY"]]
+        end
+        print_table header + rows
+      end
+    end
+
   end
 
 end
