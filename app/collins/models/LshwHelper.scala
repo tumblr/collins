@@ -12,6 +12,8 @@ import collins.util.BitStorageUnit
 import collins.util.ByteStorageUnit
 import collins.util.LshwRepresentation
 
+import scala.collection.immutable.SortedMap 
+
 object LshwHelper extends CommonHelper[LshwRepresentation] {
 
   // TODO: Is this set actually used anywhere?
@@ -43,7 +45,7 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
   }
 
   def reconstruct(asset: Asset, assetMeta: Seq[MetaWrapper]): Reconstruction = {
-    val metaMap = assetMeta.groupBy { _.getGroupId }
+    val metaMap = SortedMap(assetMeta.groupBy { _.getGroupId }.toSeq.sortBy(_._1): _*)
     val (cpus,postCpuMap) = reconstructCpu(metaMap)
     val (memory,postMemoryMap) = reconstructMemory(postCpuMap)
     val (nics,postNicMap) = reconstructNics(postMemoryMap)
