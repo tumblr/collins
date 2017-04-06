@@ -13,12 +13,15 @@ import play.api.mvc.Results
 
 import collins.models.Asset
 import collins.models.IpmiInfo
+import collins.models.shared.AddressPool
 import collins.util.IpAddress
 
 trait IpmiApi {
   this: Api with SecureController =>
 
-  case class IpmiForm(username: Option[String], password: Option[String], address: Option[String], gateway: Option[String], netmask: Option[String]) {
+  case class IpmiCreateForm(pool: Option[String])
+
+  case class IpmiUpdateForm(username: Option[String], password: Option[String], address: Option[String], gateway: Option[String], netmask: Option[String]) {
     def merge(asset: Asset, ipmi: Option[IpmiInfo]): IpmiInfo = {
       ipmi.map { info =>
         val iu: IpmiInfo = username.map(u => info.copy(username = u)).getOrElse(info)
@@ -35,27 +38,77 @@ trait IpmiApi {
       }
     }
   }
-  val IPMI_FORM = Form(
+
+  // TODO: extend form to include the ipmi network name if desired
+  val IPMI_UPDATE_FORM = Form(
     mapping(
       "username" -> optional(text(1)),
       "password" -> optional(text(minLength=4, maxLength=20)),
       "address" -> optional(text(7)),
       "gateway" -> optional(text(7)),
       "netmask" -> optional(text(7))
-    )(IpmiForm.apply)(IpmiForm.unapply)
+    )(IpmiUpdateForm.apply)(IpmiUpdateForm.unapply)
   )
 
-  def updateIpmi(tag: String) = SecureAction { implicit req =>
+  val IPMI_CREATE_FORM = Form(
+    mapping(
+      "pool" -> optional(text(1))
+    )(IpmiCreateForm.apply)(IpmiCreateForm.unapply)
+  )
+
+  def generateIpmi(tag: String) = SecureAction { implicit req =>
     Api.withAssetFromTag(tag) { asset =>
-      val ipmiInfo = IpmiInfo.findByAsset(asset)
-      IPMI_FORM.bindFromRequest.fold(
+      IPMI_CREATE_FORM.bindFromRequest.fold(
         hasErrors => {
           val error = hasErrors.errors.map { _.message }.mkString(", ")
           Left(Api.getErrorMessage("Data submission error: %s".format(error)))
         },
         ipmiForm => {
           try {
-            val newInfo = ipmiForm.merge(asset, ipmiInfo)
+            ipmiForm match {
+              case IpmiCreateForm(poolOption) => IpmiInfo.findByAsset(asset) match {
+                case Some(ipmiinfo) =>
+                  Left(Api.getErrorMessage("Asset already has IPMI details, cannot generate new IPMI details", Results.BadRequest))
+                case None => IpmiInfo.getConfig(poolOption) match {
+                  case None =>
+                    Left(Api.getErrorMessage("Invalid IPMI pool %s specified".format(poolOption.getOrElse("default")), Results.BadRequest))
+                  case Some(AddressPool(poolName, _, _, _)) =>
+                    // make sure asset does not already have IPMI created, because this
+                    // implies we want to create new IPMI details
+                    val info = IpmiInfo.findByAsset(asset)
+                    val newInfo = IpmiInfo.createForAsset(asset, poolOption)
+                    tattler(None).notice("Generated IPMI configuration from %s: IP %s, Netmask %s, Gateway %s".format(
+                      poolName, newInfo.dottedAddress, newInfo.dottedNetmask, newInfo.dottedGateway), asset)
+                    Right(ResponseData(Results.Created, JsObject(Seq("SUCCESS" -> JsBoolean(true)))))
+                }
+              }
+            }
+          } catch {
+            case e: SQLException =>
+              Left(Api.getErrorMessage("Possible duplicate IPMI Address",
+                Results.Status(StatusValues.CONFLICT)))
+            case e: Throwable =>
+              Left(Api.getErrorMessage("Incomplete form submission: %s".format(e.getMessage)))
+          }
+        }
+      )
+    }.fold(
+      err => formatResponseData(err),
+      suc => formatResponseData(suc)
+    )
+  }(Permissions.IpmiApi.GenerateIpmi)
+
+
+  def updateIpmi(tag: String) = SecureAction { implicit req =>
+    Api.withAssetFromTag(tag) { asset =>
+      IPMI_UPDATE_FORM.bindFromRequest.fold(
+        hasErrors => {
+          val error = hasErrors.errors.map { _.message }.mkString(", ")
+          Left(Api.getErrorMessage("Data submission error: %s".format(error)))
+        },
+        ipmiForm => {
+          try {
+            val newInfo = ipmiForm.merge(asset, IpmiInfo.findByAsset(asset))
             val (status, success) = newInfo.id match {
               case update if update > 0 =>
                 IpmiInfo.update(newInfo) match {
@@ -68,6 +121,8 @@ trait IpmiApi {
             if (status == Results.Conflict) {
               Left(Api.getErrorMessage("Unable to update IPMI information",status))
             } else {
+              tattler(None).notice("Updated IPMI configuration: IP %s, Netmask %s, Gateway %s".format(
+                newInfo.dottedAddress, newInfo.dottedNetmask, newInfo.dottedGateway), asset)
               Right(ResponseData(status, JsObject(Seq("SUCCESS" -> JsBoolean(success)))))
             }
           } catch {

@@ -43,7 +43,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
   def storageName: String
 
   // abstract
-  protected def getConfig()(implicit scope: Option[String]): Option[AddressPool]
+  protected def getConfig(scope: Option[String]): Option[AddressPool]
 
   protected[this] val logger = Logger.logger
 
@@ -77,15 +77,15 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
     tableDef.where(a => a.assetId === asset.id).headOption
   })
 
-  def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long, Long, Long] = {
+  def getNextAvailableAddress(scope: Option[String], overrideStart: Option[String] = None): Tuple3[Long, Long, Long] = {
     //this is used by ip allocation without pools (i.e. IPMI)
-    val network = getNetwork
-    val startAt = overrideStart.orElse(getStartAddress)
+    val network = getNetwork(scope)
+    val startAt = overrideStart.orElse(getStartAddress(scope))
     val calc = IpAddressCalc(network, startAt)
-    val gateway: Long = getGateway().getOrElse(calc.minAddressAsLong)
+    val gateway: Long = getGateway(scope).getOrElse(calc.minAddressAsLong)
     val netmask: Long = calc.netmaskAsLong
     // look for the local maximum address (i.e. the last used address in a continuous sequence from startAddress)
-    val localMax: Option[Long] = getCurrentLowestLocalMaxAddress(calc)
+    val localMax: Option[Long] = getCurrentLowestLocalMaxAddress(calc, scope)
     val address: Long = calc.nextAvailableAsLong(localMax)
     (gateway, address, netmask)
   }
@@ -126,7 +126,7 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
   * For a range 0L..20L, used addresses List(5,6,7,8,19,20), the result will be Some(8)
   * For a range 0L..20L, used addresses List(17,18,19,20), the result will be None (allocate from beginning)
   */
-  protected def getCurrentLowestLocalMaxAddress(calc: IpAddressCalc)(implicit scope: Option[String]): Option[Long] = inTransaction {
+  protected def getCurrentLowestLocalMaxAddress(calc: IpAddressCalc, scope: Option[String]): Option[Long] = inTransaction {
     val startAddress = calc.startAddressAsLong
     val maxAddress = calc.maxAddressAsLong
     val sortedAddresses = from(tableDef)(t =>
@@ -150,18 +150,18 @@ trait IpAddressStorage[T <: IpAddressable] extends Schema with AnormAdapter[T] w
     localMaximaAddresses.headOption
   }
 
-  protected def getGateway()(implicit scope: Option[String]): Option[Long] = getConfig() match {
+  protected def getGateway(scope: Option[String]): Option[Long] = getConfig(scope) match {
     case None => None
     case Some(config) => config.gateway match {
       case Some(value) => Option(IpAddress.toLong(value))
       case None        => None
     }
   }
-  protected def getNetwork()(implicit scope: Option[String]): String = getConfig() match {
+  protected def getNetwork(scope: Option[String]): String = getConfig(scope) match {
     case None         => throw new RuntimeException("no %s configuration found".format(getClass.getName))
     case Some(config) => config.network
   }
-  protected def getStartAddress()(implicit scope: Option[String]): Option[String] = getConfig() match {
+  protected def getStartAddress(scope: Option[String]): Option[String] = getConfig(scope) match {
     case None    => None
     case Some(c) => c.startAddress
   }

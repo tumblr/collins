@@ -95,6 +95,7 @@ object Permissions {
   object IpmiApi extends PermSpec("controllers.IpmiApi") {
     def Spec = spec(AdminSpec)
     def UpdateIpmi = spec("updateIpmi", Spec)
+    def GenerateIpmi = spec("generateIpmi", Spec)
   }
 
   object IpAddressApi extends PermSpec("controllers.IpAddressApi") {

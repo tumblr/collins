@@ -102,7 +102,7 @@ class SolrSpec extends mutable.Specification {
       val asset = generateAsset(assetTag, assetType, status, meta, state)
       val indexTime = new Date
       val addresses = IpAddresses.createForAsset(asset, 2, Some("DEV"))
-      val ipmi = IpmiInfo.createForAsset(asset)
+      val ipmi = IpmiInfo.createForAsset(asset, None)
 
       //alldoc keys are not added to the KEYS field
       val allDoc = Map(

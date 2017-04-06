@@ -56,15 +56,20 @@ class AssetLifecycle(user: Option[User], tattler: Tattler) {
 
   private[this] val logger = Logger.logger
 
-  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, status: Option[Status]): AssetLifecycle.Status[AssetLifecycle.AssetIpmi] = {
+  def createAsset(tag: String, assetType: AssetType, generateIpmi: Boolean, ipmiPool: Option[String], status: Option[Status]): AssetLifecycle.Status[AssetLifecycle.AssetIpmi] = {
     import IpmiInfo.Enum._
     try {
       val _status = status.getOrElse(Status.Incomplete.get)
+      if (generateIpmi && IpmiInfo.getConfig(ipmiPool).isEmpty) {
+        return Left(new Exception("Invalid IPMI pool %s specified".format(ipmiPool.getOrElse("default"))))
+      }
       val res = Asset.inTransaction {
         val asset = Asset.create(Asset(tag, _status, assetType))
         val ipmi = generateIpmi match {
-          case true  => Some(IpmiInfo.createForAsset(asset))
-          case false => None
+          // we can assume the ipmiPool is valid, because we already checked it
+          // before the transaction began
+          case true => Some(IpmiInfo.createForAsset(asset, ipmiPool))
+          case _    => None
         }
         Solr.updateAsset(asset)
         (asset, ipmi)

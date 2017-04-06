@@ -8,6 +8,7 @@ module Collins; module Api
       asset = get_asset_or_tag asset_or_tag
       parameters = {
         :generate_ipmi => get_option(:generate_ipmi, options, false),
+        :ipmi_pool => get_option(:ipmi_pool, options, nil),
         :status => get_option(:status, options, asset.status),
         :type => get_option(:type, options, asset.type)
       }

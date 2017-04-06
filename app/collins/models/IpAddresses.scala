@@ -70,26 +70,26 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAd
     }
   }
 
-  override def getNextAvailableAddress(overrideStart: Option[String] = None)(implicit scope: Option[String]): Tuple3[Long, Long, Long] = {
+  override def getNextAvailableAddress(scope: Option[String], overrideStart: Option[String] = None): Tuple3[Long, Long, Long] = {
     throw new UnsupportedOperationException("getNextAvailableAddress not supported")
   }
 
-  def getNextAddress(iteration: Int)(implicit scope: Option[String]): Tuple3[Long, Long, Long] = {
-    val network = getNetwork
-    val startAt = getStartAddress
+  def getNextAddress(iteration: Int, scope: Option[String]): Tuple3[Long, Long, Long] = {
+    val network = getNetwork(scope)
+    val startAt = getStartAddress(scope)
     val calc = IpAddressCalc(network, startAt)
-    val gateway: Long = getGateway().getOrElse(calc.minAddressAsLong)
+    val gateway: Long = getGateway(scope).getOrElse(calc.minAddressAsLong)
     val netmask: Long = calc.netmaskAsLong
-    val currentMax: Option[Long] = getCurrentLowestLocalMaxAddress(calc)
+    val currentMax: Option[Long] = getCurrentLowestLocalMaxAddress(calc, scope)
     val address: Long = calc.nextAvailableAsLong(currentMax)
     (gateway, address, netmask)
   }
 
   def createForAsset(asset: Asset, scope: Option[String]): IpAddresses = inTransaction {
     val assetId = asset.id
-    val cfg = getConfig()(scope)
+    val cfg = getConfig(scope)
     val ipAddresses = createWithRetry(10) { attempt =>
-      val (gateway, address, netmask) = getNextAddress(attempt)(scope)
+      val (gateway, address, netmask) = getNextAddress(attempt, scope)
       logger.debug("trying to use address %s".format(IpAddress.toString(address)))
       val ipAddresses = IpAddresses(assetId, gateway, address, netmask, scope.getOrElse(""))
       super.create(ipAddresses)
@@ -160,7 +160,7 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAd
       select(i.pool)).distinct.toSet
   })
 
-  override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
+  override protected def getConfig(scope: Option[String]): Option[AddressPool] = {
     AddressConfig.flatMap(cfg => scope.flatMap(cfg.pool(_)).orElse(cfg.defaultPool))
   }
 

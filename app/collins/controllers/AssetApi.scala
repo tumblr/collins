@@ -26,7 +26,7 @@ trait AssetApi {
     FindAction(PageParams(page, size, sort, sortField), Permissions.AssetApi.GetAssets, this)
 
   // PUT /api/asset/:tag
-  def createAsset(tag: String) = CreateAction(Some(tag), None, Permissions.AssetApi.CreateAsset, this)
+  def createAsset(tag: String) = CreateAction(Some(tag), None, None, Permissions.AssetApi.CreateAsset, this)
 
   // POST /api/asset/:tag
   def updateAsset(tag: String) = UpdateRequestRouter {
