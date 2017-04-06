@@ -1,0 +1,67 @@
+<p class="lead">Manage multiple collins configs easily<p>
+
+<h3>Collins DC Helper</h3>
+
+<p>Configs to use collins tools are YAML files, which are generally stored in your home directory in <code>~/.collins.yml</code>. The <code>collins-cli</code> gem allows you to create and manage these configurations. For example, to create a new config for a Collins instance in jfk01:</p>
+
+<div class="example">
+<pre>
+$ gem install collins-cli
+$ collins dc --new jfk01 --host https://collins.jfk01.company.com
+Enter username (default: gabe):
+Enter password:
+Now, select the Collins instance "jfk01" with 'collins dc jfk01' to access Collins
+$ cat ~/.collins.yml.jfk01
+---
+:host: https://collins.jfk01.company.com
+:username: gabe
+:password: 'foo'
+:timeout: 120
+$ collins dc jfk01
+$ ls -la ~/.collins.yml
+lrwxr-xr-x  1 gabe  staff  31 Mar 15 13:44 /Users/gabe/.collins.yml -> /Users/gabe/.collins.yml.jfk01
+$ collins dc -l
+jfk01 *
+ewr01
+sfo01
+</pre>
+</div>
+
+<p>If you have multiple Collins sites and need to frequently switch between collins configurations when using <code>collins-cli</code>, there is a handy helper to change between configs: <code>collins dc jfk01</code>. This will link <code>~/.collins.yml</code> to point to <code>~/.collins.yml.jfk01</code>. Now all future collins queries will use the jfk01 configuration.</p>
+<p>You can also list your configured instances with <code>collins dc -l</code>.</p>
+
+<p><span class="label label-info">NOTE:</span> Any utility using the <a href="https://github.com/tumblr/collins/tree/master/support/ruby/collins-auth">collins-auth</a> gem uses a default search path for configs in order: <code>ENV['COLLINS_CLIENT_CONFIG'], ~/.collins.yml, /etc/collins.yml, /var/db/collins.yml</code>.</p>
+
+<h3>Bash Helper</h3>
+
+<p><span class="label label-warning">WARNING:</span> It is recommended to use <code>collins dc</code> as described above instead of this Bash function.</p>
+<p>The following snippet of <code>bash</code> provides a limited subset of what <code>collins dc</code> does in the <code>collins-cli</code> gem. Add this to your <code>.bashrc</code></p>
+
+<pre>
+collinsdc() {
+  if [[ -z $1 ]] ; then
+    l=$(basename $(readlink ~/.collins.yml))
+    echo "${l##.collins.yml.}"
+  else
+    if [[ ! -f ~/.collins.yml.$1 ]] ; then
+      echo "No collins config found for $1" >&2
+      return 2
+    fi
+    ln -sfn ~/.collins.yml.$1 ~/.collins.yml && echo "Using collins config for $1"
+  fi
+}
+</pre>
+
+<p>You can keep multiple configs for each collins instance at <code>~/.collins.yml.&lt;datacenter&gt;</code>, and switch between them easily. (Example is using <a href="https://rubygems.org/gems/collins-cli">collins-cli</a> gem.)</p>
+
+<div class="example">
+<pre>
+$ ls .collins.yml.*
+.collins.yml.dc1 .collins.yml.dc2 .collins.yml.dc3 .collins.yml.local
+$ collinsdc
+dc1
+$ collinsdc dc2
+$ collins find -p FOO
+...find assets in dc2...
+</pre>
+</div>
