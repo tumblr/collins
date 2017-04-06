@@ -75,12 +75,12 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
 
   lazy val AddressConfig = IpmiConfig.get()
 
-  def createForAsset(asset: Asset): IpmiInfo = inTransaction {
+  def createForAsset(asset: Asset, scope: Option[String]): IpmiInfo = inTransaction {
     val assetId = asset.id
     val username = getUsername(asset)
     val password = generateEncryptedPassword()
     createWithRetry(10) { attempt =>
-      val (gateway, address, netmask) = getNextAvailableAddress()(None)
+      val (gateway, address, netmask) = getNextAvailableAddress(scope)
       val ipmiInfo = IpmiInfo(
         assetId, username, password, gateway, address, netmask)
       tableDef.insert(ipmiInfo)
@@ -141,9 +141,12 @@ object IpmiInfo extends IpAddressStorage[IpmiInfo] with IpAddressKeys[IpmiInfo] 
     IpmiConfig.genUsername(asset)
   }
 
-  override protected def getConfig()(implicit scope: Option[String]): Option[AddressPool] = {
-    IpmiConfig.get.flatMap(_.defaultPool)
-  }
+  override def getConfig(scope: Option[String]): Option[AddressPool] = IpmiConfig.get.flatMap(
+    addressPool => scope match {
+      case Some(p) => addressPool.pool(p)
+      case None    => addressPool.defaultPool
+    }
+  )
 
   // Converts our query parameters to fragments and parameters for a query
   private[this] def collectParams(ipmi: Seq[Tuple2[Enum, String]], ipmiRow: IpmiInfo): LogicalBoolean = {

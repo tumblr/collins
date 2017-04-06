@@ -30,6 +30,7 @@ import collins.validation.StringUtil
 case class CreateAction(
   _assetTag: Option[String],
   _assetType: Option[String],
+  _ipmiPool: Option[String],
   spec: SecuritySpecification,
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction {
@@ -37,19 +38,21 @@ case class CreateAction(
   case class ActionDataHolder(
     assetTag: String,
     generateIpmi: Boolean,
+    ipmiPool: Option[String],
     assetType: AssetType,
     assetStatus: Option[AssetStatus]
   ) extends RequestDataHolder
 
   lazy val dataHolder: Either[RequestDataHolder,ActionDataHolder] = Form(tuple(
     "generate_ipmi" -> optional(of[Truthy]),
+    "ipmi_pool" -> optional(text),
     "type" -> optional(of[AssetType]),
     "status" -> optional(of[AssetStatus]),
     "tag" -> optional(text(1))
   )).bindFromRequest()(request).fold(
     err => Left(RequestDataHolder.error400(fieldError(err))),
     tuple => {
-      val (generate, atype, astatus, tag) = tuple
+      val (generate, ipmiPool, atype, astatus, tag) = tuple
       val assetType = _assetType.flatMap(a => AssetType.findByName(a)).orElse(atype).orElse(AssetType.ServerNode)
       val atString = assetType.map(_.name).getOrElse("Unknown")
       val assetTag = getString(_assetTag, tag)
@@ -61,6 +64,7 @@ case class CreateAction(
         Right(ActionDataHolder(
           assetTag,
           generate.map(_.toBoolean).getOrElse(AssetType.isServerNode(assetType.get)),
+          ipmiPool,
           assetType.get,
           astatus
         ))
@@ -82,9 +86,9 @@ case class CreateAction(
   }
 
   override def execute(rd: RequestDataHolder) = Future { rd match {
-    case ActionDataHolder(assetTag, genIpmi, assetType, assetStatus) =>
+    case ActionDataHolder(assetTag, genIpmi, ipmiPool, assetType, assetStatus) =>
       val lifeCycle = new AssetLifecycle(userOption(), tattler)
-      lifeCycle.createAsset(assetTag, assetType, genIpmi, assetStatus) match {
+      lifeCycle.createAsset(assetTag, assetType, genIpmi, ipmiPool, assetStatus) match {
         case Left(throwable) =>
           handleError(
             RequestDataHolder.error500("Could not create asset: %s".format(throwable.getMessage))
@@ -118,6 +122,7 @@ case class CreateAction(
 
   protected def fieldError(f: Form[_]) = f match {
     case e if e.error("generate_ipmi").isDefined => "generate_ipmi requires a boolean value"
+    case e if e.error("ipmi_pool").isDefined => "ipmi_pool requires a string value"
     case e if e.error("type").isDefined => "Invalid asset type specified"
     case e if e.error("status").isDefined => "Invalid status specified"
     case e if e.error("tag").isDefined => "Asset tag must not be empty"
@@ -126,7 +131,7 @@ case class CreateAction(
 
   protected def assetTypeString(rd: RequestDataHolder): Option[String] = rd match {
     // FIXME ServerNode not a valid create type via UI
-    case ActionDataHolder(_, _, at, _) => Some(at.name)
+    case ActionDataHolder(_, _, _, at, _) => Some(at.name)
     case s if s.string("assetType").isDefined => s.string("assetType")
     case o => None
   }

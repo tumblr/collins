@@ -34,8 +34,9 @@ trait Resources extends Controller {
     }
   }(Permissions.Resources.CreateForm)
 
+  // TODO(gabe) should we display a dropdown for selecting the IPMI pool?
   def createAsset(atype: String) = CreateAction(
-    None, Some(atype), Permissions.Resources.CreateAsset, this
+    None, Some(atype), None, Permissions.Resources.CreateAsset, this
   )
 
   /**

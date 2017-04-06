@@ -79,6 +79,20 @@ module Collins; module Api
       end
     end
 
+    # allocate IPMI address/creds on an asset in a given pool, and handles
+    # generating username/password, like a normal asset creation with IPMI.
+    # omit pool option for default IPMI pool
+    def ipmi_allocate asset_or_tag, options = {}
+      asset = get_asset_or_tag asset_or_tag
+      parameters = { :pool => get_option(:pool, options, nil) }
+      parameters = select_non_empty_parameters parameters
+      logger.debug("Allocating IPMI details on asset #{asset.tag} with parameters #{parameters.inspect}")
+      http_put("/api/asset/#{asset.tag}/ipmi", parameters, asset.location) do |response|
+        parse_response response, :expects => [201], :as => :status
+      end
+    end
+
+
   end # module Management
 
 end; end

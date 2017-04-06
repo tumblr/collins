@@ -70,6 +70,7 @@ GET     /api/log/:id                collins.app.Api.getLogData(id: Int)
 
 # Asset management API
 POST    /api/asset/:tag/ipmi        collins.app.Api.updateIpmi(tag: String)
+PUT     /api/asset/:tag/ipmi        collins.app.Api.generateIpmi(tag: String)
 POST    /api/asset/:tag/power       collins.app.Api.powerManagement(tag: String)
 GET     /api/asset/:tag/power       collins.app.Api.powerStatus(tag: String)
 POST    /api/provision/:tag         collins.app.Api.provisionAsset(tag: String)

@@ -26,6 +26,22 @@ module CollinsShell
       puts([ipmi.address,ipmi.gateway,ipmi.netmask,ipmi.username,ipmi.password].join(','))
     end
 
+    desc 'generate', 'generate new IPMI address and creds'
+    use_collins_options
+    use_tag_option(true)
+    method_option :pool, :type => :string, :required => false, :desc => 'IPMI pool'
+    def generate
+      call_collins get_collins_client, "generate ipmi" do |client|
+        ipmi = client.ipmi_allocate options.tag, :pool => options.pool
+        if ipmi then
+          asset = client.get options.tag
+          CollinsShell::Ipmi.print_ipmi asset.ipmi
+        else
+          say_error "generate IPMI address"
+        end
+      end
+    end
+
     desc 'create', 'create a new IPMI address for the specified asset'
     use_collins_options
     use_tag_option(true)

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    collins_shell (0.2.23)
+    collins_shell (0.2.24)
       collins_client (~> 0.2.11)
       highline (~> 1.6.15)
       mustache (~> 0.99.4)
