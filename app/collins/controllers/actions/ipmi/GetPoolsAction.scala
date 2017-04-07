@@ -1,4 +1,4 @@
-package collins.controllers.actions.ipaddress
+package collins.controllers.actions.ipmi
 
 import scala.concurrent.Future
 
@@ -12,33 +12,33 @@ import collins.controllers.ResponseData
 import collins.controllers.SecureController
 import collins.controllers.actions.RequestDataHolder
 import collins.controllers.actions.SecureAction
-import collins.models.IpAddresses
-import collins.models.Truthy
+import collins.controllers.actions.ipaddress.AddressActionHelper
+import collins.models.IpmiInfo
 import collins.models.shared.AddressPool
 import collins.util.security.SecuritySpecification
 
-// Get pools, all or just those in use
 case class GetPoolsAction(
-  allPools: Truthy,
   spec: SecuritySpecification,
   handler: SecureController
 ) extends SecureAction(spec, handler) with AddressActionHelper {
 
-  case class ActionDataHolder(all: Boolean) extends RequestDataHolder
+  case class ActionDataHolder(pools: Set[String]) extends RequestDataHolder
 
-  override def validate(): Validation = Right(ActionDataHolder(allPools.toBoolean))
+  override def validate(): Validation = {
+    var pools: Set[String] =
+      IpmiInfo.AddressConfig.filter(_.poolNames.isEmpty) match {
+        case Set => IpmiInfo.AddressConfig.map(_.poolNames).getOrElse(Set(""))
+        case _ => Set(IpmiInfo.AddressConfig.flatMap(_.defaultPoolName).getOrElse(""))
+      }
+
+    Right(ActionDataHolder(pools))
+  }
 
   override def execute(rd: RequestDataHolder) = Future {
     rd match {
-      case ActionDataHolder(all) =>
-        val pools: Set[String] =
-          if (all) {
-            val set = IpAddresses.AddressConfig.map(_.poolNames).getOrElse(Set())
-            set | IpAddresses.getPoolsInUse()
-          } else {
-            IpAddresses.getPoolsInUse()
-          }
+      case ActionDataHolder(pools) => {
         format(pools)
+      }
     }
   }
 
@@ -73,8 +73,24 @@ case class GetPoolsAction(
     case g => g
   }
 
-  protected def toAddressPools(pools: Set[String]): Set[AddressPool] =
-    IpAddresses.AddressConfig.map { cfg =>
+  protected def toAddressPools(pools: Set[String]): Set[AddressPool] = {
+   // Check to see if a default pool is configured from the parent level
+   // ipmi config block. If no ipmi pools are configured the default pool
+   // will be returned under the pool name DEFAULT. If pools are configured
+   // any ipmi configuration at the parent level will be ignored. This is
+   // because we can't ensure that you have not overwritten the DEFAULT pool
+   // in one of your pools or have set the defaultPool param which would cause
+   // duplicate pools to be returned. The parent level ipmi config would
+   // not be accessible anyway due to the way default pool is checked for
+   // in the IpAddressConfig class.
+   val defaultPool: Option[AddressPool] =
+     IpmiInfo.AddressConfig.map(_.pools.isEmpty).getOrElse(false) match {
+       case true => IpmiInfo.AddressConfig.flatMap(_.defaultPool)
+       case _ => None
+     }
+
+   val poolSet: Set[AddressPool] =
+    IpmiInfo.AddressConfig.map { cfg =>
       pools.map { pool =>
         cfg.pool(pool).getOrElse {
           val poolName = AddressPool.poolName(pool)
@@ -82,4 +98,11 @@ case class GetPoolsAction(
         }
       }
     }.getOrElse(Set())
+
+    defaultPool.isDefined match {
+      case true => Set(defaultPool.get)
+      case _ => poolSet
+    }
+  }
+
 }

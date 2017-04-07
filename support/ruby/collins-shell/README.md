@@ -56,6 +56,7 @@ Supported commands and subcommands are:
         update
     ipmi
         create
+        pool
         update
     latest
     log

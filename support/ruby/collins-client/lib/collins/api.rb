@@ -4,6 +4,7 @@ require 'collins/api/asset_state'
 require 'collins/api/asset_type'
 require 'collins/api/attributes'
 require 'collins/api/ip_address'
+require 'collins/api/ipmi'
 require 'collins/api/logging'
 require 'collins/api/management'
 require 'collins/api/tag'
@@ -108,6 +109,7 @@ module Collins
     include Collins::Api::AssetType
     include Collins::Api::Attributes
     include Collins::Api::IpAddress
+    include Collins::Api::Ipmi
     include Collins::Api::Logging
     include Collins::Api::Management
     include Collins::Api::Tag
