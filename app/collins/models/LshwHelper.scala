@@ -94,13 +94,16 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
 
 
   protected def reconstructGpu(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Gpu] = {
-    val gpuSeq = meta.get(0).map { seq =>
-      val gpuCount = finder(seq, GpuCount, _.toInt, 0)
-      val gpuDescription = finder(seq, GpuDescription, _.toString, "")
-      (0 until gpuCount).map { id =>
-        Gpu(gpuDescription, "", "")
-      }.toSeq
-    }.getOrElse(Nil)
+    val gpuSeq = meta.foldLeft(Seq[Gpu]()) { case (seq, map) =>
+      val groupId = map._1
+      val wrapSeq = map._2
+      val descr = finder(wrapSeq, GpuDescription, _.toString, "")
+      if (descr.isEmpty) {
+        seq
+      } else {
+        Gpu(descr, "", "") +: seq
+      }
+    }
     val filteredMeta = meta.map { case(groupId, metaSeq) =>
       val newSeq = filterNot(
         metaSeq,
@@ -119,6 +122,7 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       val groupId = run._1
       val total = run._2
       val res: Seq[AssetMetaValue] = Seq(
+        AssetMetaValue(asset, GpuCount.id, groupId, lshw.gpuCount.toString),
         AssetMetaValue(asset, GpuDescription.id, groupId, "%s - %s".format(gpu.product, gpu.vendor))
       )   
       (groupId + 1, total ++ res)
