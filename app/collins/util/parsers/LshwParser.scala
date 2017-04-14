@@ -2,6 +2,7 @@ package collins.util.parsers
 
 import collins.models.lshw.LshwAsset
 import collins.models.lshw.Cpu
+import collins.models.lshw.Gpu
 import collins.models.lshw.Memory
 import collins.models.lshw.Disk
 import collins.models.lshw.Nic
@@ -25,10 +26,11 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
 
   val wildcard: PartialFunction[NodeSeq, LshwAsset] = { case _ => null }
   lazy val matcher = cpuMatcher.orElse(
-    memMatcher.orElse(
-      diskMatcher.orElse(
-        nicMatcher.orElse(
-          wildcard))))
+    gpuMatcher.orElse(
+      memMatcher.orElse(
+        diskMatcher.orElse(
+          nicMatcher.orElse(
+            wildcard)))))
 
   override def parse(): Either[Throwable, LshwRepresentation] = {
     val xml = try {
@@ -40,10 +42,11 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
     }
     val rep = try {
       val base = getBaseInfo(xml)
-      getCoreNodes(xml).foldLeft(LshwRepresentation(Nil, Nil, Nil, Nil, base)) {
+      getCoreNodes(xml).foldLeft(LshwRepresentation(Nil, Nil, Nil, Nil, Nil, base)) {
         case (holder, node) =>
           matcher(node) match {
             case c: Cpu    => holder.copy(cpus = c +: holder.cpus)
+            case g: Gpu    => holder.copy(gpus = g +: holder.gpus)
             case m: Memory => holder.copy(memory = m.copy(bank = holder.memory.size) +: holder.memory)
             case d: Disk   => holder.copy(disks = d +: holder.disks)
             case n: Nic    => holder.copy(nics = n +: holder.nics)
@@ -77,6 +80,13 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
         throw AttributeNotFoundException("Could not find cpu configuration.setting.threads")
       }).toInt
       Cpu(cores, threads, speed, asset.description, asset.product, asset.vendor)
+  }
+
+  val gpuMatcher: PartialFunction[NodeSeq, Gpu] = {
+    case n if ((n \ "@class" text) == "display") => {
+      val asset = getAsset(n)
+      Gpu(asset.description, asset.product, asset.vendor)
+    }
   }
 
   val memMatcher: PartialFunction[NodeSeq, Memory] = {

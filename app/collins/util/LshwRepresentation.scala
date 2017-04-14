@@ -8,6 +8,7 @@ import play.api.libs.json.Json
 
 import collins.models.lshw.Cpu
 import collins.models.lshw.Cpu.CpuFormat
+import collins.models.lshw.Gpu
 import collins.models.lshw.Disk
 import collins.models.lshw.Disk.DiskFormat
 import collins.models.lshw.Memory
@@ -19,10 +20,11 @@ import collins.models.lshw.ServerBase.ServerbaseFormat
 
 object LshwRepresentation {
   def empty(): LshwRepresentation = {
-    new LshwRepresentation(Seq(), Seq(), Seq(), Seq(), new ServerBase)
+    new LshwRepresentation(Seq(), Seq(), Seq(), Seq(), Seq(), new ServerBase)
   }
   implicit object LshwFormat extends Format[LshwRepresentation] {
     import Cpu._
+    import Gpu._
     import Disk._
     import Memory._
     import Nic._
@@ -30,12 +32,14 @@ object LshwRepresentation {
     import Json.toJson
     override def reads(json: JsValue) = JsSuccess(LshwRepresentation(
       (json \ "CPU").as[Seq[Cpu]],
+      (json \ "GPU").as[Seq[Gpu]],
       (json \ "MEMORY").as[Seq[Memory]],
       (json \ "NIC").as[Seq[Nic]],
       (json \ "DISK").as[Seq[Disk]],
       (json \ "BASE").as[ServerBase]))
     override def writes(lshw: LshwRepresentation) = JsObject(Seq(
       "CPU" -> Json.toJson(lshw.cpus),
+      "GPU" -> Json.toJson(lshw.gpus),
       "MEMORY" -> Json.toJson(lshw.memory),
       "NIC" -> Json.toJson(lshw.nics),
       "DISK" -> Json.toJson(lshw.disks),
@@ -45,6 +49,7 @@ object LshwRepresentation {
 
 case class LshwRepresentation(
     cpus: Seq[Cpu],
+    gpus: Seq[Gpu],
     memory: Seq[Memory],
     nics: Seq[Nic],
     disks: Seq[Disk],
@@ -60,6 +65,8 @@ case class LshwRepresentation(
       total + cpu.threads
   }
   def cpuSpeed: Double = cpus.sortBy(_.speedGhz).lastOption.map(_.speedGhz).getOrElse(0.0)
+
+  def gpuCount: Int = gpus.size
 
   def totalMemory: ByteStorageUnit = memory.foldLeft(new ByteStorageUnit(0)) {
     case (total, mem) =>
@@ -105,6 +112,7 @@ case class LshwRepresentation(
         (cpuCoreCount == other.cpuCoreCount) &&
         (cpuThreadCount == other.cpuThreadCount) &&
         (cpuSpeed == other.cpuSpeed) &&
+        (gpuCount == other.gpuCount) &&
         (totalMemory.inBytes == other.totalMemory.inBytes) &&
         (memoryBanksUsed == other.memoryBanksUsed) &&
         (memoryBanksUnused == other.memoryBanksUnused) &&

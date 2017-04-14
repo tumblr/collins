@@ -73,6 +73,23 @@
     </tbody>
   </table>
 
+  <h4>GPU <small>Collected GPU Information</small></h4>
+  <table class="table table-bordered table-hover table-condensed">
+    <thead>
+      <tr>
+        <th>Id</th><th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+    @aa.lshw.gpus.zipWithIndex.map { case(cpu,id) =>
+      <tr>
+        <th>@id</th>
+        <td>@cpu.description</td> <!-- vendor? -->
+      </tr>
+    }
+    </tbody>
+  </table>
+
   <h4>Memory <small>Collected Memory Information</small></h4>
   <table class="table table-bordered table-hover table-condensed">
     <thead>

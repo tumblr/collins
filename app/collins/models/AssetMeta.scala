@@ -198,6 +198,10 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
     val NicName = Value(32, "INTERFACE_NAME")
     // DO NOT USE - Deprecated
     val NicAddress = Value(33, "INTERFACE_ADDRESS")
+
+    //I know this says Deprecated, but I'm unsure of where to define Gpu vars
+    val GpuCount = Value(34, "GPU_COUNT")
+    val GpuDescription = Value(35, "GPU_DESCRIPTION")
   }
 
   // Post enum fields, enum is not safe to extend with new values

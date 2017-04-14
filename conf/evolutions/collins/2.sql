@@ -58,6 +58,9 @@ INSERT INTO asset_meta VALUES (31, 'LLDP_VLAN_NAME', -1, 'LLDP VLANE Name', 'VLA
 INSERT INTO asset_meta VALUES (32, 'INTERFACE_NAME', -1, 'Interface Name', 'Name of physical interface, e.g. eth0');
 INSERT INTO asset_meta VALUES (33, 'INTERFACE_ADDRESS', 0, 'IP Address', 'Address on interface, e.g. 10.0.0.1');
 
+INSERT INTO asset_meta VALUES (34, 'GPU_COUNT', -1, 'GPU Count', 'Number of physical GPUs in asset');
+INSERT INTO asset_meta VALUES (35, 'GPU_DESCRIPTION', -1, 'GPU Description', 'GPU description, vendor labels');
+
 INSERT INTO asset VALUES (1, 'tumblrtag1', 7, 1, CURRENT_TIMESTAMP, null, null);
 
 -- gateway 10.0.0.1, ip address 10.0.0.2, netmask /19 = 255.255.224.0
