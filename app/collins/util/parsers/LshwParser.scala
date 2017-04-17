@@ -83,7 +83,7 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
   }
 
   val gpuMatcher: PartialFunction[NodeSeq, Gpu] = {
-    case n if ((n \ "@class" text) == "display") => {
+    case n if ((n \ "@class" text) == "display" && (n \\ "vendor" text).contains("NVIDIA Corporation")) => {
       val asset = getAsset(n)
       Gpu(asset.description, asset.product, asset.vendor)
     }

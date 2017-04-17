@@ -122,7 +122,6 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       val groupId = run._1
       val total = run._2
       val res: Seq[AssetMetaValue] = Seq(
-        AssetMetaValue(asset, GpuCount.id, groupId, lshw.gpuCount.toString),
         AssetMetaValue(asset, GpuDescription.id, groupId, "%s - %s".format(gpu.product, gpu.vendor))
       )   
       (groupId + 1, total ++ res)
