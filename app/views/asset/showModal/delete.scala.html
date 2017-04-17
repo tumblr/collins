@@ -4,7 +4,7 @@
 
 @container("delete-asset", "assetDeleteLabel") {
   @header("Delete Asset", Some("Warning"))
-  @form(collins.app.routes.CookieApi.realDeleteAsset(aa.asset.tag), Symbol("data-form") -> "true", Symbol("data-error") -> "deleteError", Symbol("data-modal") -> "delete-asset", Symbol("data-refresh") -> ".window") {
+  @form(collins.app.routes.CookieApi.realDeleteAsset(aa.asset.tag,true), Symbol("data-form") -> "true", Symbol("data-error") -> "deleteError", Symbol("data-modal") -> "delete-asset", Symbol("data-refresh") -> ".window") {
   <div class="modal-body">
     <p>Deleting this asset will</p>
     <ul>
