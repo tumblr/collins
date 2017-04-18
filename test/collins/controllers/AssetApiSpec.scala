@@ -33,7 +33,7 @@ class AssetApiSpec extends mutable.Specification with ControllerSpec with Resour
         additionalConfiguration = Map(
           "solr.enabled" -> false))) with AssetApiHelper {
         override val assetTag = "B0001"
-        val request = FakeRequest("PUT", assetUrl)
+        val request = FakeRequest("GET", "/api/asset/")
         Extract.from(api.createAsset("").apply(request)) must haveStatus(400)
       }
 
