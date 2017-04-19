@@ -9,6 +9,7 @@ import play.api.libs.json.Json
 import collins.models.lshw.Cpu
 import collins.models.lshw.Cpu.CpuFormat
 import collins.models.lshw.Gpu
+import collins.models.lshw.Gpu.GpuFormat
 import collins.models.lshw.Disk
 import collins.models.lshw.Disk.DiskFormat
 import collins.models.lshw.Memory
