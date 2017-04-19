@@ -11,7 +11,7 @@
 
 
 APP_NAME="collins"
-APP_HOME="/usr/local/$APP_NAME/current"
+APP_HOME="/opt/$APP_NAME"
 LOG_HOME='/var/log'
 LISTEN_PORT=8080
 FILE_LIMIT=8192
@@ -33,7 +33,18 @@ DEBUG_OPTS="-XX:ErrorFile=${LOG_HOME}/$APP_NAME/java_error%p.log -XX:+HeapDumpOn
 EXTRA_OPTS=""
 
 # Check for config overrides
-[ -f /etc/sysconfig/collins ] && . /etc/sysconfig/collins
+DISTRO=$(lsb_release -d | awk '{print $2}')
+
+case $DISTRO in
+    Ubuntu|Debian)
+        [ -r /etc/default/collins ] && . /etc/default/collins
+	;;
+    CentOS|Red)
+	[ -r /etc/sysconfig/collins ] && . /etc/sysconfig/collins
+	;;
+    *)
+	;;
+esac
 
 APP_OPTS="-Dconfig.file=$APP_HOME/conf/production.conf -Dhttp.port=${LISTEN_PORT} -Dlogger.file=$APP_HOME/conf/logger.xml"
 DNS_OPTS="-Dnetworkaddress.cache.ttl=1 -Dnetworkaddress.cache.negative.ttl=1"
@@ -65,7 +76,7 @@ function find_java() {
   if [ ! -z "$JAVA_HOME" ]; then
     return
   fi
-  for dir in /opt/jdk /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home /usr/java/default /usr; do
+  for dir in /opt/jdk /usr/lib/jvm/default /usr/lib/jvm/java-6-oracle /usr/lib/jvm/java-7-oracle /usr/java/default /usr /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home ; do
     if [ -x $dir/bin/java ]; then
       JAVA_HOME=$dir
       break
@@ -78,9 +89,17 @@ find_java
 initialize_db() {
   declare db_username="$1";
   declare db_password="$2";
+  declare db_host="$3";
+  declare db_name="$4";
 
   echo "Initializing collins database on localhost..."
 
+  if [ -z "$db_host" ]; then
+    read -p "Collins Database Host: " db_host
+  fi
+  if [ -z "$db_name" ]; then
+    read -p "Collins Database Name: " db_name
+  fi
   if [ -z "$db_username" ]; then
     read -p "Collins Database Username: " db_username
   fi
@@ -91,11 +110,13 @@ initialize_db() {
   fi
 
   echo "Please enter mysql root password. Press <enter> for none."
-  mysql -u root -p -e 'CREATE DATABASE IF NOT EXISTS collins;'
+  mysql -u root -h $db_host -p -e "CREATE DATABASE IF NOT EXISTS $db_name;"
 
-  echo "Granting privs to collins user on localhost..."
-  echo "Please enter mysql root password. Press <enter> for none."
-  mysql -u root -p -e "GRANT ALL PRIVILEGES ON collins.* to $db_username@'127.0.0.1' IDENTIFIED BY '$db_password';"
+  echo "Creating $db_username database user on $db_host..."
+  mysql -u root -h $db_host -p -e "CREATE USER '$db_username'@'%' IDENTIFIED BY '$db_password';"
+
+  echo "Granting privs to $db_username database user on $db_host..."
+  mysql -u root -h $db_host -p -e "GRANT ALL PRIVILEGES ON $db_name.* to $db_username@'%';"
 }
 
 evolve_db() {
@@ -108,7 +129,7 @@ evolve_db() {
 
 case "$1" in
   initdb)
-    initialize_db "$2" "$3"
+    initialize_db "$2" "$3" "$4" "$5"
     evolve_db
   ;;
 
@@ -211,7 +232,7 @@ case "$1" in
 
   *)
     echo "Usage: $0 {start|stop|restart|status|initdb|evolvedb}"
-    echo "Note: 'initdb' can optionally be passed a username followed by a password to initialize the db"
+    echo "Note: 'initdb' can optionally be passed a username, password, host and database name to initialize the db"
     exit 1
   ;;
 esac

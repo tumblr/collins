@@ -1,6 +1,6 @@
 #!/bin/bash
 
-URL="http://localhost:9000/api/asset"
+URL="http://localhost:8080/api/asset"
 LshwFiles="10g
 amd-opteron-wonky
 b0214
