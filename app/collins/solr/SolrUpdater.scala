@@ -73,7 +73,6 @@ class AssetLogSolrUpdater extends Actor {
   val scheduled = new AtomicBoolean(false)
   case object Reindex
 
-  // TODO(gabe): perform batch updating on asset logs as well to prevent as much churn in solr
   def receive = {
     case log: AssetLog =>
       logsRef.get.add(log)
