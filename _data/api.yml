@@ -429,6 +429,16 @@ sections:
                       }
                     ]
                   },
+                  "CLASSIFICATION": {
+                    "ID": 3,
+                    "TAG": "dell_r610",
+                    "STATE": null,
+                    "STATUS": "Incomplete",
+                    "TYPE": "CONFIGURATION",
+                    "CREATED": "2017-04-21T14:47:37",
+                    "UPDATED": "2017-04-21T14:48:08",
+                    "DELETED": null
+                  },
                   "LLDP": {
                     "INTERFACES": [
                       {
