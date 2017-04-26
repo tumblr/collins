@@ -81,10 +81,10 @@
       </tr>
     </thead>
     <tbody>
-    @aa.lshw.gpus.zipWithIndex.map { case(cpu,id) =>
+    @aa.lshw.gpus.zipWithIndex.map { case(gpu,id) =>
       <tr>
         <th>@id</th>
-        <td>@cpu.description</td> <!-- vendor? -->
+        <td>@gpu.description</td>
       </tr>
     }
     </tbody>
