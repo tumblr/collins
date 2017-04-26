@@ -22,8 +22,6 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     CpuThreads,
     CpuSpeedGhz,
     CpuDescription,
-    GpuCount,
-    GpuDescription,
     MemorySizeBytes,
     MemoryDescription,
     MemorySizeTotal,
@@ -96,7 +94,7 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     val gpuSeq = meta.foldLeft(Seq[Gpu]()) { case (seq, map) =>
       val groupId = map._1
       val wrapSeq = map._2
-      val descr = finder(wrapSeq, GpuDescription, _.toString, "")
+      val descr = amfinder(wrapSeq, GpuDescription, _.toString, "")
       if (descr.isEmpty) {
         seq
       } else {

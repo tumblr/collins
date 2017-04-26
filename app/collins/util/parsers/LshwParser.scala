@@ -9,6 +9,7 @@ import collins.models.lshw.Nic
 import collins.models.lshw.ServerBase
 
 import collins.util.config.LshwConfig
+import collins.util.config.GpuConfig
 import collins.util.LshwRepresentation
 import collins.util.ByteStorageUnit
 import collins.util.BitStorageUnit
@@ -83,7 +84,7 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
   }
 
   val gpuMatcher: PartialFunction[NodeSeq, Gpu] = {
-    case n if ((n \ "@class" text) == "display" && (n \\ "vendor" text).contains("NVIDIA Corporation")) => {
+    case n if ((n \ "@class" text) == "display" && GpuConfig.gpuVendors.exists(s => (n \\ "vendor" text).contains(s))) => {
       val asset = getAsset(n)
       Gpu(asset.description, asset.product, asset.vendor)
     }
