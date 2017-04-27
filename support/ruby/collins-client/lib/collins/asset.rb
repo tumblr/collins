@@ -193,6 +193,15 @@ module Collins
       extract(extras, "HARDWARE", "CPU") || []
     end
 
+    # @return [Fixnum] Number of GPU's found
+    def gpu_count
+      (extract(extras, "HARDWARE", "GPU") || []).length
+    end
+    # @return [Array<Hash>] GPU information
+    def gpus
+      extract(extras, "HARDWARE", "GPU") || []
+    end
+
     # @return [Array<Hash>] Disk information
     def disks
       extract(extras, "HARDWARE", "DISK") || []
