@@ -10,6 +10,7 @@ trait CommonHelper[T] {
   type FilteredSeq[T1] = Tuple2[Seq[T1], Map[Int, Seq[MetaWrapper]]]
 
   val managedTags: Set[AssetMeta.Enum]
+  val managedDynamicTags: Set[AssetMeta] = Set()
 
   /**
    * Construct an appropriate AssetMetaValue sequence from the representation
@@ -27,7 +28,7 @@ trait CommonHelper[T] {
   def updateAsset(asset: Asset, rep: T): Boolean = {
     val mvs = construct(asset, rep)
     if (!managedTags.isEmpty) {
-      AssetMetaValue.deleteByAssetAndMetaId(asset, managedTags.map(_.id.toLong))
+      AssetMetaValue.deleteByAssetAndMetaId(asset, ((managedTags.map(_.id.toLong) ++ managedDynamicTags.map(_.id))))
     }
 
     mvs.size == AssetMetaValue.create(mvs)
