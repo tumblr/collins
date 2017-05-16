@@ -35,6 +35,8 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     DiskStorageTotal
   )
 
+  override val managedDynamicTags = AssetMeta.DynamicEnum.getLshwValues()
+
   def construct(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     collectCpus(asset, lshw) ++
       collectGpus(asset, lshw) ++

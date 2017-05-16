@@ -212,5 +212,9 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
     def getValues(): Seq[AssetMeta] = {
       Seq(BaseDescription, BaseProduct, BaseVendor, BaseSerial, GpuCount, GpuDescription)
     }
+
+    def getLshwValues(): Set[AssetMeta] = {
+      Set(BaseDescription, BaseProduct, BaseVendor, BaseSerial, GpuCount, GpuDescription)
+    }
   }
 }
