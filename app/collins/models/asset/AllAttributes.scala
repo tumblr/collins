@@ -73,6 +73,7 @@ case class AllAttributes(
   def toJsValue(): JsValue = {
     val outSeq = Seq(
       "ASSET" -> asset.toJsValue,
+      "CLASSIFICATION" -> Json.toJson(asset.nodeClass),
       "HARDWARE" -> lshw.toJsValue,
       "CLASSIFICATION" -> Json.toJson(asset.nodeClass), 
       "LLDP" -> lldp.toJsValue,
