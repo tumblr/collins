@@ -74,6 +74,7 @@ case class AllAttributes(
     val outSeq = Seq(
       "ASSET" -> asset.toJsValue,
       "HARDWARE" -> lshw.toJsValue,
+      "CLASSIFICATION" -> Json.toJson(asset.nodeClass), 
       "LLDP" -> lldp.toJsValue,
       "IPMI" -> Json.toJson(ipmi),
       "ADDRESSES" -> Json.toJson(addresses),
