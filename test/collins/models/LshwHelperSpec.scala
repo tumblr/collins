@@ -88,7 +88,14 @@ class LshwHelperSpec extends mutable.Specification {
         LshwHelper.updateAsset(asset, parsed())
         asset.getMetaAttribute(AssetMeta.Enum.DiskType.toString) must beNone
       }
-      "with an NVIDIA GPU" in new LshwCommonHelper("lshw-gpu.xml") {
+      "with a dual NVIDIA GPU" in new LshwCommonHelper("lshw-gpu.xml") {
+        val lshw = parsed()
+        val stub = getStub()
+        val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
+        val reconstructed = LshwHelper.reconstruct(stub, metaValue2metaWrapper(constructed))._1
+        lshw mustEqual reconstructed
+      }
+      "with a single NVIDIA GPU" in new LshwCommonHelper("lshw-dell.xml") {
         val lshw = parsed()
         val stub = getStub()
         val constructed: Seq[AssetMetaValue] = LshwHelper.construct(stub, lshw)
