@@ -96,17 +96,18 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     val gpuSeq = meta.foldLeft(Seq[Gpu]()) { case (seq, map) =>
       val groupId = map._1
       val wrapSeq = map._2
-      val descr = amfinder(wrapSeq, GpuDescription, _.toString, "")
-      if (descr.isEmpty) {
+      val product = amfinder(wrapSeq, GpuProduct, _.toString, "")
+      val vendor= amfinder(wrapSeq, GpuVendor, _.toString, "")
+      if (product.isEmpty || vendor.isEmpty) {
         seq
       } else {
-        Gpu(descr, "", "") +: seq
+        Gpu("", product, vendor) +: seq
       }
     }
     val filteredMeta = meta.map { case(groupId, metaSeq) =>
       val newSeq = filterNot(
         metaSeq,
-        Set(GpuDescription.id)
+        Set(GpuProduct.id, GpuVendor.id)
       )
       groupId -> newSeq
     }
@@ -121,7 +122,8 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       val groupId = run._1
       val total = run._2
       val res: Seq[AssetMetaValue] = Seq(
-        AssetMetaValue(asset, GpuDescription.id, groupId, "%s - %s".format(gpu.product, gpu.vendor))
+        AssetMetaValue(asset, GpuProduct.id, groupId, gpu.product.toString),
+        AssetMetaValue(asset, GpuVendor.id, groupId, gpu.vendor.toString)
       )   
       (groupId + 1, total ++ res)
     }._2

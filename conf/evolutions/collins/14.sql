@@ -2,10 +2,10 @@
 
 # --- !Ups
 
-INSERT INTO asset_meta (name, priority, label, description) VALUES ('GPU_COUNT', -1, 'GPU Count', 'Number of physical GPUs in asset');
-INSERT INTO asset_meta (name, priority, label, description) VALUES ('GPU_DESCRIPTION', -1, 'GPU Description', 'GPU description, vendor labels');
+INSERT INTO asset_meta (name, priority, label, description) VALUES ('GPU_PRODUCT', -1, 'GPU Product', 'GPU product (description of GPU)');
+INSERT INTO asset_meta (name, priority, label, description) VALUES ('GPU_VENDOR', -1, 'GPU Vendor', 'GPU vendor');
 
 # --- !Downs
 
-DELETE FROM asset_meta WHERE name ='GPU_COUNT'
-DELETE FROM asset_meta WHERE name ='GPU_DESCRIPTION'
+DELETE FROM asset_meta WHERE name ='GPU_VENDOR'
+DELETE FROM asset_meta WHERE name ='GPU_PRODUCT'
