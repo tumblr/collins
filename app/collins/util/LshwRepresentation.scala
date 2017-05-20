@@ -91,8 +91,11 @@ case class LshwRepresentation(
   }
 
   def nicCount: Int = nics.size
+  def nicsBySpeed = nics.groupBy { _.speed }
+  // NOTE(gabe): these has*GbNic methods are deprecated. Please use nicsBySpeed instead
   def hasGbNic: Boolean = nics.find { _.speed.inGigabits == 1 }.map { _ => true }.getOrElse(false)
   def has10GbNic: Boolean = nics.find { _.speed.inGigabits == 10 }.map { _ => true }.getOrElse(false)
+
   def macAddresses: Seq[String] = nics.map { _.macAddress }
 
   def toJsValue() = Json.toJson(this)
