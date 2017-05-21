@@ -260,10 +260,10 @@
           <td>Total Interfaces</td>
           <td>@aa.lshw.nicCount</td>
         </tr>
-        @aa.lshw.nicsBySpeed.map { case(speed,nics) =>
+        @aa.lshw.nicsBySpeedGb.map { case(speedGb,nics) =>
         <tr>
           <td></td>
-          <td>@{speed.inGigabits}G Interfaces</td>
+          <td>@{speedGb}G Interfaces</td>
           <td>@{nics.size}</td>
         </tr>
         }

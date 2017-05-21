@@ -43,8 +43,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.diskCount mustEqual 6
 
           rep.nicCount mustEqual 3
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beTrue
+          rep.nicsBySpeedGb(1).size mustEqual 2
+          rep.nicsBySpeedGb(10).size mustEqual 1
           rep.macAddresses must have length 3
           rep.macAddresses must beNonEmptyStringSeq
 
@@ -59,8 +59,8 @@ class LshwParserSpec extends mutable.Specification {
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
           rep.nicCount mustEqual 4
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beTrue
+          rep.nicsBySpeedGb(1).size mustEqual 2
+          rep.nicsBySpeedGb(10).size mustEqual 2
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
 
@@ -91,8 +91,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalUsableStorage.toHuman mustEqual "5.46 TB"
 
           rep.nicCount mustEqual 2
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 2
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
         }
@@ -120,8 +120,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalUsableStorage.toHuman mustEqual "931.52 GB"
 
           rep.nicCount mustEqual 6
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 6
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 6
           rep.macAddresses must beNonEmptyStringSeq
         }
@@ -149,8 +149,9 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalUsableStorage.toHuman mustEqual "931.52 GB"
 
           rep.nicCount mustEqual 6
-          rep.hasGbNic must beTrue
-          rep.has10GbNic aka "has 10 gig card" must beTrue // picked up from default in config
+          rep.nicsBySpeedGb(1).size mustEqual 5
+          // collins should assume 10g capacity for the nic that isnt reporting it
+          rep.nicsBySpeedGb(10).size mustEqual 1
           rep.macAddresses must have length 6
           rep.macAddresses must beNonEmptyStringSeq
         }
@@ -178,8 +179,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.diskCount mustEqual 4
 
           rep.nicCount mustEqual 2
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 2
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
         }
@@ -206,8 +207,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.diskCount mustEqual 3
 
           rep.nicCount mustEqual 4
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 4
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
 
@@ -234,8 +235,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.diskCount mustEqual 2
 
           rep.nicCount mustEqual 6
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 6
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 6
           rep.macAddresses must beNonEmptyStringSeq
         }
@@ -259,8 +260,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.diskCount mustEqual 3
 
           rep.nicCount mustEqual 4
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 4
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
         }
@@ -287,8 +288,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.hasCdRom must beFalse
 
           rep.nicCount mustEqual 2
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 2
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
 
@@ -349,8 +350,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.hasCdRom must beTrue
 
           rep.nicCount mustEqual 4
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 4
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
         }
@@ -377,8 +378,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.hasCdRom must beTrue
 
           rep.nicCount mustEqual 4
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 4
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
         }
@@ -415,8 +416,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.memoryBanksTotal mustEqual 24
 
           rep.nicCount mustEqual 4
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 4
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
 
@@ -446,8 +447,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.totalUsableStorage.toHuman mustEqual "381.94 GB"
 
           rep.nicCount mustEqual 4
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 4
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 4
           rep.macAddresses must beNonEmptyStringSeq
         }
@@ -470,8 +471,8 @@ class LshwParserSpec extends mutable.Specification {
           rep.memoryBanksTotal mustEqual 12
 
           rep.nicCount mustEqual 2
-          rep.hasGbNic must beTrue
-          rep.has10GbNic must beFalse
+          rep.nicsBySpeedGb(1).size mustEqual 2
+          rep.nicsBySpeedGb get 10 must beNone
           rep.macAddresses must have length 2
           rep.macAddresses must beNonEmptyStringSeq
 
