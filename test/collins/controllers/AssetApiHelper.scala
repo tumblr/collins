@@ -54,10 +54,10 @@ trait AssetApiHelper extends ResponseMatchHelpers with JsonMatchers with Control
     result
   }
 
-  def updateHwInfo(lshwXml: String = "lshw-basic.xml") = {
+  def updateHwInfo(lshwXml: String = "lshw-basic.xml", lldpXml: String = "lldpctl-two-nic.xml") = {
     // update hw details (lshw / lldp) - cannot proceed without this
     val lshwData = getResource(lshwXml)
-    val lldpData = getResource("lldpctl-two-nic.xml")
+    val lldpData = getResource(lldpXml)
     val dummy = Seq[FilePart[TemporaryFile]]()
     val mdf = MultipartFormData(Map(
       "lshw" -> Seq(lshwData),
