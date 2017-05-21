@@ -201,7 +201,6 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
   }
 
   // Post enum fields, enum is not safe to extend with new values
-  type DynamicEnum = AssetMeta
   object DynamicEnum {
     val BaseDescription = findOrCreateFromName("BASE_DESCRIPTION")
     val BaseProduct = findOrCreateFromName("BASE_PRODUCT")
