@@ -257,15 +257,16 @@
         </tr>
         <tr>
           <td></td>
-          <td>Interfaces</td>
+          <td>Total Interfaces</td>
           <td>@aa.lshw.nicCount</td>
         </tr>
+        @aa.lshw.nicsBySpeedGb.map { case(speedGb,nics) =>
         <tr>
           <td></td>
-          <td>Has 10Gb Interface</td>
-          <td>@{if (aa.lshw.has10GbNic) "Yes" else "No"}</td>
+          <td>@{speedGb}G Interfaces</td>
+          <td>@{nics.size}</td>
         </tr>
-
+        }
         <tr>
           <th colspan="3">Power</th>
         </tr>

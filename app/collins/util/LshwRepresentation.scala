@@ -91,12 +91,15 @@ case class LshwRepresentation(
   }
 
   def nicCount: Int = nics.size
-  def hasGbNic: Boolean = nics.find { _.speed.inGigabits == 1 }.map { _ => true }.getOrElse(false)
-  def has10GbNic: Boolean = nics.find { _.speed.inGigabits == 10 }.map { _ => true }.getOrElse(false)
+  def nicsBySpeedGb = nics.groupBy { _.speed.inGigabits }
+
   def macAddresses: Seq[String] = nics.map { _.macAddress }
 
   def toJsValue() = Json.toJson(this)
 
+  // TODO(gabe): this method only performs squinty eye comparison. it will
+  // falsely report 2 lshw as equal if they have the same number of 1g nics
+  // but different mac addresses. FIXME
   override def equals(that: Any) = that match {
     case other: LshwRepresentation =>
       (macAddresses.sorted == other.macAddresses.sorted) &&
@@ -114,9 +117,7 @@ case class LshwRepresentation(
         (hasFlashStorage == other.hasFlashStorage) &&
         (totalFlashStorage.inBytes == other.totalFlashStorage.inBytes) &&
         (totalUsableStorage.inBytes == other.totalUsableStorage.inBytes) &&
-        (nicCount == other.nicCount) &&
-        (hasGbNic == other.hasGbNic) &&
-        (has10GbNic == other.has10GbNic)
+        (nicCount == other.nicCount)
     case _ => false
   }
 }
