@@ -113,7 +113,6 @@ case class LshwRepresentation(
         (cpuCoreCount == other.cpuCoreCount) &&
         (cpuThreadCount == other.cpuThreadCount) &&
         (cpuSpeed == other.cpuSpeed) &&
-        (gpuCount == other.gpuCount) &&
         (totalMemory.inBytes == other.totalMemory.inBytes) &&
         (memoryBanksUsed == other.memoryBanksUsed) &&
         (memoryBanksUnused == other.memoryBanksUnused) &&
