@@ -29,7 +29,7 @@ class AssetSolrUpdater extends Actor {
     new ConcurrentHashMap[String, java.lang.Boolean]())
 
   private[this] val assetTagsRef = new AtomicReference(newAssetTagSet)
-  private[this] val logger = Logger("SolrUpdater")
+  private[this] val logger = Logger("AssetSolrUpdater")
 
   //mutex to prevent multiple concurrent scheduler calls
   val scheduled = new AtomicBoolean(false)
@@ -66,8 +66,29 @@ class AssetSolrUpdater extends Actor {
 
 class AssetLogSolrUpdater extends Actor {
 
+  private[this] def newLogSet = Collections.newSetFromMap[AssetLog](
+    new ConcurrentHashMap[AssetLog, java.lang.Boolean]())
+  private[this] val logsRef = new AtomicReference(newLogSet)
+  private[this] val logger = Logger("AssetLogSolrUpdater")
+  val scheduled = new AtomicBoolean(false)
+  case object Reindex
+
   def receive = {
-    case log: AssetLog => SolrHelper.updateAssetLogs(List(log), new Date)
+    case log: AssetLog =>
+      logsRef.get.add(log)
+      if (scheduled.compareAndSet(false, true)) {
+        logger.debug("Scheduling reindex of log %d within %s".format(log.id, SolrConfig.assetBatchUpdateWindow))
+        context.system.scheduler.scheduleOnce(SolrConfig.assetBatchUpdateWindow, self, Reindex)
+      } else {
+        logger.trace("Ignoring already scheduled reindex of log %d".format(log.id))
+      }
+    case Reindex =>
+      if (scheduled.get == true) {
+        val logs = logsRef.getAndSet(newLogSet).asScala.toSeq
+        logger.debug("Got Reindex task, working on %d logs".format(logs.size))
+        SolrHelper.updateAssetLogs(logs, new Date)
+        scheduled.set(false)
+      }
   }
 
 }

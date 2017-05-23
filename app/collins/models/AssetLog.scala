@@ -87,6 +87,11 @@ case class AssetLog(
 
   @Transient
   lazy val assetTag: String = asset.tag
+  // TODO(gabe): if this log is indexed (serialized first) before solr is
+  // updated with the asset document, this will throw! This can happen when
+  // creating a new asset then immediately performing some attribute sets
+  // which create logs.
+  // See https://github.com/tumblr/collins/issues/528
   @Transient
   lazy val asset: Asset = Asset.findById(assetId).get
 
