@@ -96,6 +96,14 @@ describe Collins::Asset do
     end
   end
 
+  context "assets with GPUs should have" do
+    subject { Collins::Asset.from_json(CollinsFixture.full_asset_with_gpu(true)) }
+
+    it "#gpu_count" do
+      subject.gpu_count.should == 2
+    end
+  end
+
   context "Update" do
     it "lshw is not an attribute" do
       ["lshw","LSHW"].each do |name|

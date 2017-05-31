@@ -3,6 +3,7 @@ package collins.models
 import collins.models.AssetMeta.DynamicEnum._
 import collins.models.AssetMeta.Enum._
 import collins.models.lshw.Cpu
+import collins.models.lshw.Gpu
 import collins.models.lshw.Disk
 import collins.models.lshw.Memory
 import collins.models.lshw.Nic
@@ -34,8 +35,11 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     DiskStorageTotal
   )
 
+  override val managedDynamicTags = AssetMeta.DynamicEnum.getLshwValues()
+
   def construct(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     collectCpus(asset, lshw) ++
+      collectGpus(asset, lshw) ++
       collectMemory(asset, lshw) ++
       collectNics(asset, lshw) ++
       collectDisks(asset, lshw) ++
@@ -45,11 +49,12 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
   def reconstruct(asset: Asset, assetMeta: Seq[MetaWrapper]): Reconstruction = {
     val metaMap = assetMeta.groupBy { _.getGroupId }
     val (cpus,postCpuMap) = reconstructCpu(metaMap)
-    val (memory,postMemoryMap) = reconstructMemory(postCpuMap)
+    val (gpus,postGpuMap) = reconstructGpu(postCpuMap)
+    val (memory,postMemoryMap) = reconstructMemory(postGpuMap)
     val (nics,postNicMap) = reconstructNics(postMemoryMap)
     val (disks,postDiskMap) = reconstructDisks(postNicMap)
     val (base,postBaseMap) = reconstructBase(postDiskMap)
-    (LshwRepresentation(cpus, memory, nics, disks, base.headOption.getOrElse(ServerBase())), postBaseMap.values.flatten.toSeq)
+    (LshwRepresentation(cpus, gpus, memory, nics, disks, base.headOption.getOrElse(ServerBase())), postBaseMap.values.flatten.toSeq)
   }
 
   protected def reconstructCpu(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Cpu] = {
@@ -72,6 +77,7 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
     }
     (cpuSeq, filteredMeta)
   }
+
   protected def collectCpus(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     if (lshw.cpuCount < 1) {
       return Seq()
@@ -84,6 +90,43 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       AssetMetaValue(asset, CpuSpeedGhz.id, cpu.speedGhz.toString),
       AssetMetaValue(asset, CpuDescription.id, "%s %s".format(cpu.product, cpu.vendor))
     )
+  }
+
+  protected def reconstructGpu(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Gpu] = {
+    val gpuSeq = meta.foldLeft(Seq[Gpu]()) { case (seq, map) =>
+      val groupId = map._1
+      val wrapSeq = map._2
+      val product = amfinder(wrapSeq, GpuProduct, _.toString, "")
+      val vendor= amfinder(wrapSeq, GpuVendor, _.toString, "")
+      if (product.isEmpty || vendor.isEmpty) {
+        seq
+      } else {
+        Gpu("", product, vendor) +: seq
+      }
+    }
+    val filteredMeta = meta.map { case(groupId, metaSeq) =>
+      val newSeq = filterNot(
+        metaSeq,
+        Set(GpuProduct.id, GpuVendor.id)
+      )
+      groupId -> newSeq
+    }
+    (gpuSeq, filteredMeta)
+  }
+
+  protected def collectGpus(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
+    if (lshw.gpuCount < 1) {
+      return Seq()
+    }
+    lshw.gpus.foldLeft((0,Seq[AssetMetaValue]())) { case (run,gpu) =>
+      val groupId = run._1
+      val total = run._2
+      val res: Seq[AssetMetaValue] = Seq(
+        AssetMetaValue(asset, GpuProduct.id, groupId, gpu.product.toString),
+        AssetMetaValue(asset, GpuVendor.id, groupId, gpu.vendor.toString)
+      )   
+      (groupId + 1, total ++ res)
+    }._2
   }
 
   protected def reconstructMemory(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[Memory] = {

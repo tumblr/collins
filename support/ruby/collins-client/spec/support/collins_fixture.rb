@@ -30,6 +30,9 @@ module CollinsFixture
   def basic_log json=false
     get_fixture_data 'basic_log.json', json
   end
+  def full_asset_with_gpu json=false
+    get_fixture_data 'full_asset_with_gpu.json', json
+  end
 
   def data name
     File.read(fixture_file(name))
