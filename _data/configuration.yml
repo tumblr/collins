@@ -20,6 +20,8 @@ sections:
     content: configuration/graphs.html
   "IP address":
     content: configuration/ipam.html
+  GPUs:
+    content: configuration/gpus.html
   IPMI:
     content: configuration/ipmi.html
   LLDP:

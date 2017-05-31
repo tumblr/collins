@@ -1,0 +1,32 @@
+<p class="lead">Collecting GPU information</p>
+<p>
+<span class="label label-info">Namespace</span> <span class="inlinecode">gpu</span>
+</p>
+
+<p>
+GPU information can be stored in collins by adding GPU vendors to a whitelist. By default, any NVIDIA GPUs (PCI vendor = <code>"NVIDIA Corporation"</code>) will be parsed from lshw XML data and added to collins.
+Additional vendors can be added by updating the configuration with their PCI vendor information.
+</p>
+
+<table class="table table-condensed table-hover">
+  <thead>
+    <tr>
+      <th>Key</th><th>Type</th><th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="inlinecode">supportedVendorStrings</td>
+      <td>Set[String]</td>
+      <td>PCI vendor strings to whitelist when parsing LSHW output. Defaults to <code>["NVIDIA Corporation"]</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="example reference-config">
+<pre>gpu {
+
+  supportedVendorStrings = ["NVIDIA Corporation", "Advanced Micro Devices, Inc. [AMD/ATI]"]
+
+}</pre>
+</div>
