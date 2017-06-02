@@ -3,7 +3,10 @@ package collins.controllers
 import collins._
 import org.specs2._
 import specification._
+import com.typesafe.config._
+import play.api.Configuration
 import play.api.test.WithApplication
+import play.api.test.FakeApplication
 import org.specs2.matcher.JsonMatchers
 
 class IpmiApiSpec extends mutable.Specification with ControllerSpec {
@@ -13,7 +16,7 @@ class IpmiApiSpec extends mutable.Specification with ControllerSpec {
   args(sequential = true)
 
   "the REST API" should {
-    "Support getting ipmi pools" in new WithApplication with AssetApiHelper {
+    "Support getting multiple ipmi pools" in new WithApplication with AssetApiHelper {
       override val assetTag = "tumblrtag42"
       val getRequest = FakeRequest("GET", "/api/ipmi/pools")
       val getResult = Extract.from(api.getIpmiAddressPools.apply(getRequest))
@@ -23,6 +26,12 @@ class IpmiApiSpec extends mutable.Specification with ControllerSpec {
         s must /("data") */("POOLS") */ ("GATEWAY" -> "172.16.32.1")
         s must /("data") */("POOLS") */ ("START_ADDRESS" -> "172.16.32.20")
         s must /("data") */("POOLS") */ ("BROADCAST" -> "172.16.47.255")
+        s must /("data") */("POOLS") */ ("POSSIBLE_ADDRESSES" -> 4094)
+
+        s must /("data") */("POOLS") */ ("NAME" -> "OOB-POD02")
+        s must /("data") */("POOLS") */ ("GATEWAY" -> "172.99.32.1")
+        s must /("data") */("POOLS") */ ("START_ADDRESS" -> "172.99.32.20")
+        s must /("data") */("POOLS") */ ("BROADCAST" -> "172.99.47.255")
         s must /("data") */("POOLS") */ ("POSSIBLE_ADDRESSES" -> 4094)
       }
     }
