@@ -3,10 +3,7 @@ package collins.controllers
 import collins._
 import org.specs2._
 import specification._
-import com.typesafe.config._
-import play.api.Configuration
 import play.api.test.WithApplication
-import play.api.test.FakeApplication
 import org.specs2.matcher.JsonMatchers
 
 class IpmiApiSpec extends mutable.Specification with ControllerSpec {
