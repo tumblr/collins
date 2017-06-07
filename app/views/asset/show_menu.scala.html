@@ -5,7 +5,7 @@
 @import collins.util.views.{Maintenance, SoftLayerHelper, OptionSorter, ProvisionerHelper, Summary, TagDecorator, Titler}
 @import collins.provisioning.ProvisionerConfig
 @import collins.provisioning.Provisioner
-@import collins.graphs.GraphView
+@import collins.graphs.{GraphConfig, GraphView}
 @import collins.frames.{ViewsConfig, FrameView}
 @import collins.controllers.Permissions
 
@@ -71,10 +71,12 @@
 	        }
         </ul>
       </li>
-      @if(GraphView.isGraphable(aa.asset)) {
-        <li><a href="#graph-info" data-toggle="pill">Graphs</a></li>
-      } else {
-        <li class="disabled" data-rel="tooltip" data-original-title="This asset is not graphable"><a href="javascript:void(0);">Graphs</a></li>
+      @if(GraphConfig.enabled) {
+        @if(GraphView.isGraphable(aa.asset)) {
+          <li><a href="#graph-info" data-toggle="pill">Graphs</a></li>
+        } else {
+          <li class="disabled" data-rel="tooltip" data-original-title="This asset is not graphable"><a href="javascript:void(0);">Graphs</a></li>
+        }
       }
       @if(ViewsConfig.enabled) {
         @for(specs <- FrameView.getViewSpecs(aa)) {
