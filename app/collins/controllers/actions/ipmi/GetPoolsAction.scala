@@ -26,9 +26,9 @@ case class GetPoolsAction(
 
   override def validate(): Validation = {
     var pools: Set[String] =
-      IpmiInfo.AddressConfig.filter(_.poolNames.isEmpty) match {
-        case Set => IpmiInfo.AddressConfig.map(_.poolNames).getOrElse(Set(""))
-        case _ => Set(IpmiInfo.AddressConfig.flatMap(_.defaultPoolName).getOrElse(""))
+      IpmiInfo.AddressConfig.map(_.poolNames) match {
+        case x if !x.isEmpty  => x.getOrElse(Set())
+        case _                => Set(IpmiInfo.AddressConfig.flatMap(_.defaultPoolName).getOrElse(""))
       }
 
     Right(ActionDataHolder(pools))
