@@ -32,6 +32,9 @@ env:
   - RUN_SCALA=true RUN_RUBY=false
 matrix:
   include:
+    # make sure we run the scala builds
+    - jdk: oraclejdk7
+      env: RUN_RUBY=false RUN_SCALA=true
     - jdk: oraclejdk7
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-client
     - jdk: oraclejdk7
