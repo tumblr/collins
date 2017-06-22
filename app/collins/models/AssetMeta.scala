@@ -216,9 +216,5 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
     def getLshwValues(): Set[AssetMeta] = {
       Set(BaseDescription, BaseProduct, BaseVendor, BaseSerial, GpuProduct, GpuVendor)
     }
-
-    def getLshwValues(): Set[AssetMeta] = {
-      Set(BaseDescription, BaseProduct, BaseVendor, BaseSerial)
-    }
   }
 }
