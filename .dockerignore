@@ -1,6 +1,9 @@
 .git
 _site
-target
 support
 vendor
 project/target
+project/project
+target/collins
+target/scala-2.11
+target/universal
