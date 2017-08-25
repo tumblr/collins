@@ -250,6 +250,13 @@
           <td>SCSI Storage</td>
           <td>@aa.lshw.totalStorage.toHuman</td>
         </tr>
+	@if(aa.lshw.hasFlashStorage) {
+        <tr>
+          <td></td>
+          <td>Flash Storage</td>
+	  <td>@(aa.lshw.totalFlashStorage.toHuman)</td>
+        </tr>
+	}
         <tr>
           <td></td>
           <td>Total Storage</td>
