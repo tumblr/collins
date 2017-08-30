@@ -186,6 +186,35 @@ class LshwParserSpec extends mutable.Specification {
         }
       }
 
+      "with a nvme flash card" in new LshwParserHelper("lshw-nvme.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.cpuCount mustEqual 2
+          rep.cpuCoreCount mustEqual 12
+          rep.hasHyperthreadingEnabled must beFalse
+          rep.cpuSpeed must beCloseTo(2.3, 0.1)
+
+          rep.totalMemory.inGigabytes must beCloseTo(32L, 1)
+          rep.memoryBanksUsed mustEqual 4
+          rep.memoryBanksUnused mustEqual 8
+          rep.memoryBanksTotal mustEqual 12
+
+          rep.hasFlashStorage must beTrue
+          rep.totalFlashStorage.toHuman mustEqual "1.27 TB"
+          rep.totalUsableStorage.toHuman mustEqual "1.55 TB"
+
+          rep.totalStorage.toHuman mustEqual "278.46 GB"
+          rep.diskCount mustEqual 4
+
+          rep.nicCount mustEqual 2
+          rep.nicsBySpeedGb(1).size mustEqual 2
+          rep.nicsBySpeedGb get 10 must beNone
+          rep.macAddresses must have length 2
+          rep.macAddresses must beNonEmptyStringSeq
+        }
+      }
+
     } // Parse dell (AMD) lshw output
 
     "Parse different versioned formats" in {
