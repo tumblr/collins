@@ -206,15 +206,31 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
     val BaseProduct = findOrCreateFromName("BASE_PRODUCT")
     val BaseVendor = findOrCreateFromName("BASE_VENDOR")
     val BaseSerial = findOrCreateFromName("BASE_SERIAL")
+    val BaseMotherboard = findOrCreateFromName("BASE_MOTHERBOARD")
+    val BaseFirmware = findOrCreateFromName("BASE_FIRMWARE")
     val GpuProduct= findOrCreateFromName("GPU_PRODUCT")
     val GpuVendor = findOrCreateFromName("GPU_VENDOR")
 
     def getValues(): Seq[AssetMeta] = {
-      Seq(BaseDescription, BaseProduct, BaseVendor, BaseSerial, GpuProduct, GpuVendor)
+      Seq(BaseDescription,
+          BaseProduct,
+          BaseVendor,
+          BaseSerial,
+          BaseMotherboard,
+          BaseFirmware,
+          GpuProduct,
+          GpuVendor)
     }
 
     def getLshwValues(): Set[AssetMeta] = {
-      Set(BaseDescription, BaseProduct, BaseVendor, BaseSerial, GpuProduct, GpuVendor)
+      Set(BaseDescription,
+          BaseProduct,
+          BaseVendor,
+          BaseSerial,
+          BaseMotherboard,
+          BaseFirmware,
+          GpuProduct,
+          GpuVendor)
     }
   }
 }

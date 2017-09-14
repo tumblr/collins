@@ -253,17 +253,19 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
 
   protected def reconstructBase(meta: Map[Int, Seq[MetaWrapper]]): FilteredSeq[ServerBase] = {
     val baseSeq = meta.get(0).map { seq =>
+      val baseMotherboard = amfinder(seq, BaseMotherboard, _.toString, "")
+      val baseFirmware = amfinder(seq, BaseFirmware, _.toString, "")
       val baseDescription = amfinder(seq, BaseDescription, _.toString, "")
       val baseProduct = amfinder(seq, BaseProduct, _.toString, "")
       val baseVendor = amfinder(seq, BaseVendor, _.toString, "")
       val baseSerial = amfinder(seq, BaseSerial, x => if (x.isEmpty) { None } else { Some(x) }, None)
-      Seq(ServerBase(baseDescription, baseProduct, baseVendor, baseSerial))
+      Seq(ServerBase(baseMotherboard, baseFirmware, baseDescription, baseProduct, baseVendor, baseSerial))
     }.getOrElse(Nil)
 
     val filteredMeta = meta.map { case(groupId, metaSeq) =>
       val newSeq = filterNot(
         metaSeq,
-        Set(BaseDescription.id, BaseProduct.id, BaseVendor.id, BaseSerial.id)
+        Set(BaseMotherboard.id, BaseFirmware.id, BaseDescription.id, BaseProduct.id, BaseVendor.id, BaseSerial.id)
       )
       groupId -> newSeq
     }
@@ -273,6 +275,8 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
   protected def collectBase(asset: Asset, lshw: LshwRepresentation): Seq[AssetMetaValue] = {
     val base = lshw.base
     val expectedAttrs = Seq(
+      AssetMetaValue(asset, BaseMotherboard.id, base.motherboard),
+      AssetMetaValue(asset, BaseFirmware.id, base.firmware),
       AssetMetaValue(asset, BaseDescription.id, base.description),
       AssetMetaValue(asset, BaseProduct.id, base.product),
       AssetMetaValue(asset, BaseVendor.id, base.vendor)

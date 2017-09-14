@@ -197,13 +197,29 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
       val asset = getAsset(elem)
       // serial may be missing, so be flexible here and allow it to be absent
       val serial = (elem \ "serial" headOption).map(_.text)
-      ServerBase(asset.description, asset.product, asset.vendor, serial)
+      val motherboard = (elem \ "node" \ "product").headOption match {
+        case Some(x) => x.text
+        case None    => ""
+      }
+      val firmware = (elem \ "node" \ "node" \ "version").headOption match {
+        case Some(x) => x.text
+        case None    => ""
+      }
+      ServerBase(motherboard, firmware, asset.description, asset.product, asset.vendor, serial)
     } // To spice things up, sometimes we get <list>$everything</list>
     // instead of just $everything
     else if (((elem \ "node") \ "@class" text) == "system") {
       val asset = getAsset(elem \ "node")
       val serial = (elem \ "serial" headOption).map(_.text)
-      ServerBase(asset.description, asset.product, asset.vendor, serial)
+      val motherboard = (elem \ "node" \ "node" \ "product").headOption match {
+        case Some(x) => x.text
+        case None    => ""
+      }
+      val firmware = (elem \ "node" \ "node" \ "node" \ "version").headOption match {
+        case Some(x) => x.text
+        case None    => ""
+      }
+      ServerBase(motherboard, firmware, asset.description, asset.product, asset.vendor, serial)
     } else {
       throw MalformedAttributeException("Expected root class=system node attribute")
     }
