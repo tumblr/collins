@@ -550,8 +550,9 @@ class LshwParserSpec extends mutable.Specification {
         val parseResults = parsed()
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
-          rep.base.motherboard mustEqual "0M91XC"
-          rep.base.firmware mustEqual "1.9.5"
+          rep.base.motherboard.get mustEqual "0M91XC"
+          rep.base.firmware.get mustEqual "1.9.5"
+          rep.base.firmwaredate.get mustEqual "12/22/2016"
         }
       }
 
@@ -559,8 +560,9 @@ class LshwParserSpec extends mutable.Specification {
         val parseResults = parsed()
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
-          rep.base.motherboard mustEqual "X8DTN"
-          rep.base.firmware mustEqual "080016"
+          rep.base.motherboard.get mustEqual "X8DTN"
+          rep.base.firmware.get mustEqual "080016"
+          rep.base.firmwaredate.get mustEqual "03/17/2011"
         }
       }
 
@@ -568,17 +570,19 @@ class LshwParserSpec extends mutable.Specification {
         val parseResults = parsed()
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
-          rep.base.motherboard mustEqual "001V46"
-          rep.base.firmware mustEqual "1.7.6"
+          rep.base.motherboard.get mustEqual "001V46"
+          rep.base.firmware.get mustEqual "1.7.6"
+          rep.base.firmwaredate.get mustEqual "04/21/2011"
         }
       }
 
-      "from a HP server that doesn't haven a motherboard version" in new LshwParserHelper("lshw-amd-opteron-wonky.xml") {
+      "from a HP server that doesn't have a motherboard version" in new LshwParserHelper("lshw-amd-opteron-wonky.xml") {
         val parseResults = parsed()
         parseResults must beRight
         parseResults.right.toOption must beSome.which { rep =>
-          rep.base.motherboard mustEqual ""
-          rep.base.firmware mustEqual "A24 (02/04/2011)"
+          rep.base.motherboard must beNone
+          rep.base.firmware.get mustEqual "A24 (02/04/2011)"
+          rep.base.firmwaredate must beNone
         }
       }
     }

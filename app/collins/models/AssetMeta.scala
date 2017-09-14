@@ -208,6 +208,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
     val BaseSerial = findOrCreateFromName("BASE_SERIAL")
     val BaseMotherboard = findOrCreateFromName("BASE_MOTHERBOARD")
     val BaseFirmware = findOrCreateFromName("BASE_FIRMWARE")
+    val BaseFirmwareDate = findOrCreateFromName("BASE_FIRMWAREDATE")
     val GpuProduct= findOrCreateFromName("GPU_PRODUCT")
     val GpuVendor = findOrCreateFromName("GPU_VENDOR")
 
@@ -218,6 +219,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
           BaseSerial,
           BaseMotherboard,
           BaseFirmware,
+          BaseFirmwareDate,
           GpuProduct,
           GpuVendor)
     }
@@ -229,6 +231,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
           BaseSerial,
           BaseMotherboard,
           BaseFirmware,
+          BaseFirmwareDate,
           GpuProduct,
           GpuVendor)
     }
