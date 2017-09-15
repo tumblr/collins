@@ -1,4 +1,4 @@
-# --- Add GPU information to asset_meta
+# --- Add System motherboard, firmware and firmware release date to asset_meta
 
 # --- !Ups
 
