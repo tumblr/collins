@@ -56,4 +56,4 @@ libraryDependencies ++= Seq(
   "org.webjars" % "jquery" % "2.1.4",
   "com.hazelcast" % "hazelcast" % "3.5.2",
   ws
-)
+) :+ filters

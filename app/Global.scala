@@ -1,15 +1,10 @@
 import scala.concurrent.Future
-
 import play.api.Application
 import play.api.GlobalSettings
 import play.api.Logger
 import play.api.Mode
 import play.api.Play
-import play.api.mvc.Handler
-import play.api.mvc.RequestHeader
-import play.api.mvc.Result
-import play.api.mvc.Results
-
+import play.api.mvc._
 import collins.callbacks.Callback
 import collins.controllers.ApiResponse
 import collins.db.DB
@@ -30,8 +25,9 @@ import collins.util.config.Registry
 import collins.util.security.AuthenticationAccessor
 import collins.util.security.AuthenticationProvider
 import collins.util.security.AuthenticationProviderConfig
+import play.filters.csrf._
 
-object Global extends GlobalSettings with AuthenticationAccessor with CryptoAccessor {
+object Global extends WithFilters(new OptionalCSRFFilter(CSRFFilter())) with GlobalSettings with AuthenticationAccessor with CryptoAccessor {
   private[this] val logger = Logger.logger
 
   override def beforeStart(app: Application) {
@@ -78,11 +74,12 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
 
   override def onError(request: RequestHeader, ex: Throwable): Future[Result] = {
     logger.warn("Unhandled exception", ex)
-    val debugOutput = Play.maybeApplication.map {
-      case app if app.mode == Mode.Dev => true
-      case app if app.mode == Mode.Test => true
+    val debugOutput = Play.maybeApplication match {
+      case Some(Mode.Dev) => true
+      case Some(Mode.Test) => true
       case _ => false
-    }.getOrElse(true)
+    }
+
     val status = Results.InternalServerError
     val err = if (debugOutput) Some(ex) else None
     OutputType(request) match {
@@ -152,5 +149,18 @@ object Global extends GlobalSettings with AuthenticationAccessor with CryptoAcce
       }
     }
     authen
+  }
+}
+
+class OptionalCSRFFilter(filter: CSRFFilter) extends EssentialFilter {
+
+  override def apply(nextFilter: EssentialAction): EssentialAction = new EssentialAction {
+
+    //thanks to dominik dorn for the writeup on exlusion filters
+    //more here: https://dominikdorn.com/2014/07/playframework-2-3-global-csrf-protection-disable-csrf-selectively/
+    override def apply(rh: RequestHeader) = {
+      val chainedFilter = filter.apply(nextFilter)
+      if (rh.path.startsWith("/api/")) nextFilter(rh) else chainedFilter(rh)
+    }
   }
 }
