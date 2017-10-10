@@ -1,3 +1,39 @@
+# 2.2.0 2017/10/11
+
+This version of Collins includes an important security patch, as well as several new features and bug fixes.
+
+The security patch is adding CSRF protection to the various forms of the Collins web UI. Currently, if an attacker can guess (or bruteforce) the asset tags of nodes he or she would be able to create assets, decommission assets, put assets in maintenance, etc. by getting a logged in user to visit a webpage. More information can be found in the [pull request (#570)](https://github.com/tumblr/collins/pull/570).
+
+Here is the full list of merged pull request since the last release. Many thanks to everyone who contributed!
+
+- Trying to revive the tests #491 @discordianfish
+- Fix "respond_to? is old fashion" warning #501 @william-richard
+- Only query allocated remote assets #498 @william-richard
+- Added docs explaining how to cut a collins release #503 @william-richard
+- Add ipmitool to container #506 @michaeljs1990
+- Fix relative path to collins-client in collins-shell bin #504 @ssgelm
+- Add EXTRA_OPTS for extra java options which do not fit other types #507 @vhp
+- pin rake for collins-state gem #516 @byxorna
+- Make base_serial optional in LSHW parsing #517 @byxorna
+- make default docker permissions.yaml synchronized with latest changes #494 @byxorna
+- make vlan-id attribute optional in lldp #523 @byxorna
+- Fix unit tests for CI travis #531 @byxorna
+- AddressPool name conversion should always handle defaultPoolName correctly #527 @byxorna
+- IPMI network allocations API with pool support #513 @byxorna
+- Add IPMI pools to /api/address/pools endpoint #521 @michaeljs1990
+- Add Classification to asset API #538 @michaeljs1990
+- Show overview broken out by interface capacities #548 @byxorna
+- Tuning for Solr to improve indexing latency #529 @byxorna
+- Add gpu support #537 @jyundt
+- Adding methods to python client. #456 @ytjohn
+- Fix ipmi pool api #554 @michaeljs1990
+- Dynamic Enum Fix #547 @michaeljs1990
+- Fix duplicate getLshwValues definition #560 @byxorna
+- Add logo and favicon #563 @defect
+- Add support for NVMe disks in LSHW #565 @defect
+- Don't show Graphs tabs if plugin is disabled #556 @defect
+- CSRF protection for web forms #570 @defect
+
 # 2.1.0 2016/11/17
 
 Collins 2.1.0 has a very important security patch.
