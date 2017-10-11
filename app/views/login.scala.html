@@ -53,6 +53,7 @@
           @loginForm("location").value.map { value =>
           <input type="hidden" name="location" value="@value">
           }
+          @helper.CSRF.formField
         }
       </div>
     </div>

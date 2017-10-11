@@ -89,6 +89,7 @@
             <input class="input-medium form-control" type="text" name="username" placeholder="Username">
             <input class="input-medium form-control" type="password" name="password" placeholder="Password">
             <button class="btn btn-default" type="submit">Sign in</button>
+	    @helper.CSRF.formField
           </form>
         </div>
       </div>
