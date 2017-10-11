@@ -24,22 +24,38 @@ desc: Collins Releases
           <h1>Downloads</h1>
         </div>
         <ul>
+            <li>2017/10/11 - <a href="https://github.com/tumblr/collins/releases/download/v2.2.0/collins-v2.2.0.zip">2.2.0</a></li>
+	    <p>Version 2.2.0 adds important CSRF protection to the forms in the web UI. This is in order to mitigate CSRF vulnerability in Collins that could let an attacker modify or create assets by getting an authenticated user to visit an external page and guessing or bruteforcing the asset tags.</p>
+
+	    <p>Some other highlights are:</p>
+	    <ul class="task-list">
+              <li>Pool-based IPMI address allocation</li>
+              <li>Support for GPUs and NVMe cards</li>
+              <li>Flashy favicon</li>
+	    </ul>
+
+	    <p><a href="https://github.com/tumblr/collins/releases/tag/v2.2.0">The release notes</a> contains a complete list of changes.</p>
+
+            <li>2016/11/28 - <a href="https://github.com/tumblr/collins/releases/download/v2.1.0/collins-v2.1.0.zip">2.1.0</a></li>
+	    <p>Collins 2.1.0 has a very important security patch.</p>
+	    <p>Collins has a feature that allows you to encrypt certain attributes on every asset. It also had a permission that restricted which users could read those encrypted tags. It did NOT have a permission that restricted which users could modify encrypted tags.</p>
+	    <p><a href="https://github.com/tumblr/collins/releases/tag/v2.1.0">This changelog</a> contains a longer description of the problem.</p>
+
             <li>2016/09/19 - <a href="https://github.com/tumblr/collins/releases/download/v2.0.0/collins-v2.0.0.zip">2.0.0</a></li>
             <p>
                 Major highlights:
 
-                <ul class="task-list">
-                    <li> Event firehose</li>
-                    <li>Refactor of collins' caching logic, to safely support HA</li>
-                    <li>Improved LDAP authentication configuration</li>
-                    <li>Python collins client</li>
-                    <li>Consolr gem, for executing IPMI commands on collins assets</li>
-                    <li>Upgraded to play 2.3.9</li>
-                </ul>
+            <ul class="task-list">
+              <li> Event firehose</li>
+              <li>Refactor of collins' caching logic, to safely support HA</li>
+              <li>Improved LDAP authentication configuration</li>
+              <li>Python collins client</li>
+              <li>Consolr gem, for executing IPMI commands on collins assets</li>
+              <li>Upgraded to play 2.3.9</li>
+            </ul>
 
-                <a href="https://github.com/tumblr/collins/releases/tag/v2.0.0">This changelog</a> contains a complete list of changes.
-            </p>
-            </li>
+            <a href="https://github.com/tumblr/collins/releases/tag/v2.0.0">This changelog</a> contains a complete list of changes.
+          </p>
 	  <li>2014/09/10 - <a href="releases/collins-1.3.0.zip">1.3.0</a></li>
 	    <p>
 	      Moved to Play 2.0.8<br>
