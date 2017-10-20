@@ -544,6 +544,47 @@ class LshwParserSpec extends mutable.Specification {
         }
       }
     }
-       
+
+    "Identify Motherboard and Firmware info" in {
+      "from a Dell workstation" in new LshwParserHelper("lshw-dell.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.base.motherboard.get mustEqual "0M91XC"
+          rep.base.firmware.get mustEqual "1.9.5"
+          rep.base.firmwaredate.get mustEqual "12/22/2016"
+        }
+      }
+
+      "from a Supermicro server" in new LshwParserHelper("lshw-intel.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.base.motherboard.get mustEqual "X8DTN"
+          rep.base.firmware.get mustEqual "080016"
+          rep.base.firmwaredate.get mustEqual "03/17/2011"
+        }
+      }
+
+      "from the dynamic enum server lshw" in new LshwParserHelper("lshw-basic-dynamic-enums.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.base.motherboard.get mustEqual "001V46"
+          rep.base.firmware.get mustEqual "1.7.6"
+          rep.base.firmwaredate.get mustEqual "04/21/2011"
+        }
+      }
+
+      "from a HP server that doesn't have a motherboard version" in new LshwParserHelper("lshw-amd-opteron-wonky.xml") {
+        val parseResults = parsed()
+        parseResults must beRight
+        parseResults.right.toOption must beSome.which { rep =>
+          rep.base.motherboard must beNone
+          rep.base.firmware.get mustEqual "A24 (02/04/2011)"
+          rep.base.firmwaredate must beNone
+        }
+      }
+    }
   } // The LSHW parser should
 }
