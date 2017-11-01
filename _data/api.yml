@@ -677,6 +677,9 @@ sections:
           tag:
             type: String
             description: Must be alphanumeric (but can include underscores and dashes) and unique
+          onlyUnallocated:
+            type: Option[Boolean]
+            description: If true, return only assets that are in unallocated state. Defaults to true.
         response_codes:
           200: Zero or more assets successfully found
         examples:
