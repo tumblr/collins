@@ -9,7 +9,6 @@ For documentation on developing, building, general architecture and unreleased c
 All documentation links point to the most recent release.
 
 [![Build Status](https://travis-ci.org/tumblr/collins.png?branch=master)](https://travis-ci.org/tumblr/collins)
-[![Dependency Status](https://www.versioneye.com/user/projects/555e7598393564000d040000/badge.svg?style=flat)](https://www.versioneye.com/user/projects/555e7598393564000d040000)
 
 ## Quickstart
 
