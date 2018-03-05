@@ -38,6 +38,8 @@ matrix:
     - jdk: oraclejdk7
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-client
     - jdk: oraclejdk7
+      env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-shell
+    - jdk: oraclejdk7
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-state
     - jdk: oraclejdk7
       env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=consolr
