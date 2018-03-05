@@ -15,7 +15,7 @@ class Float
   end
 end
 
-class Fixnum
+class Integer
 
   def to_human_size
     return "0 Bytes" if (self == 0)

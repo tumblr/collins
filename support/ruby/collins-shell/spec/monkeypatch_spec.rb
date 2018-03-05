@@ -34,7 +34,7 @@ describe Float do
   end
 end
 
-describe Fixnum do
+describe Integer do
   describe '#to_human_size' do
     {
       0 => '0 Bytes',
