@@ -53,7 +53,7 @@ GEM
     slop (2.4.4)
     terminal-table (1.4.5)
     thor (0.16.0)
-    yard (0.8.3)
+    yard (0.9.12)
 
 PLATFORMS
   ruby
@@ -63,7 +63,7 @@ DEPENDENCIES
   collins_shell!
   redcarpet
   rspec (~> 2.10.0)
-  yard (~> 0.8)
+  yard (~> 0.9)
 
 BUNDLED WITH
-   1.13.6
+   1.15.4
