@@ -61,7 +61,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency('mustache','~> 0.99.4')
   s.add_runtime_dependency('pry','~> 0.9.9.6')
   s.add_runtime_dependency('terminal-table','~> 1.4.5')
-  s.add_runtime_dependency('thor','~> 0.16.0')
+  s.add_runtime_dependency('thor','~> 0.19.0')
 
   s.add_development_dependency('rspec','~> 2.10.0')
   s.add_development_dependency('redcarpet')
