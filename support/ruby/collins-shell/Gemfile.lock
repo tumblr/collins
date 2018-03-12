@@ -7,7 +7,7 @@ PATH
       mustache (~> 0.99.4)
       pry (~> 0.9.9.6)
       terminal-table (~> 1.4.5)
-      thor (~> 0.16.0)
+      thor (~> 0.19.0)
 
 GEM
   remote: http://rubygems.org/
@@ -100,7 +100,7 @@ GEM
     semver2 (3.4.2)
     slop (2.4.4)
     terminal-table (1.4.5)
-    thor (0.16.0)
+    thor (0.19.4)
     thread_safe (0.3.6)
     yard (0.9.12)
 
