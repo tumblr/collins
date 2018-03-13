@@ -113,8 +113,8 @@ DEPENDENCIES
   jeweler
   rake
   redcarpet
-  rspec
-  yard (~> 0.8)
+  rspec (~> 2.10.0)
+  yard (~> 0.9)
 
 BUNDLED WITH
    1.16.1
