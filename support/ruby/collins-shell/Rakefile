@@ -55,10 +55,17 @@ task :all => ["version:bump:patch", :publish] do
   puts("Done!")
 end
 
-task :default => :yard
+require 'rspec/core'
+require 'rspec/core/rake_task'
+RSpec::Core::RakeTask.new(:spec) do |spec|
+  spec.fail_on_error = true
+  spec.pattern = FileList['spec/**/*_spec.rb']
+end
 
 require 'yard'
 YARD::Rake::YardocTask.new do |t|
   t.files = ['lib/**/*.rb']
   t.options = ['--markup', 'markdown']
 end
+
+task :default => [:yard, :spec]

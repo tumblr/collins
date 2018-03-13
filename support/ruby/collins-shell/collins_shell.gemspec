@@ -63,8 +63,10 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency('terminal-table','~> 1.4.5')
   s.add_runtime_dependency('thor','~> 0.19.0')
 
-  s.add_development_dependency('rspec','~> 2.10.0')
+  s.add_development_dependency('rspec')
   s.add_development_dependency('redcarpet')
   s.add_development_dependency('yard','~> 0.8')
   s.add_development_dependency('capistrano','~> 2.15.5')
+  s.add_development_dependency('rake')
+  s.add_development_dependency('jeweler')
 end
