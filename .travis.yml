@@ -27,25 +27,8 @@ jdk:
   - oraclejdk7
 scala:
   - 2.11.1
-# this will make sure we run each of the scala and ruby tests once
-env:
-  - RUN_SCALA=true RUN_RUBY=false
-matrix:
-  include:
-    # make sure we run the scala builds
-    - jdk: oraclejdk7
-      env: RUN_RUBY=false RUN_SCALA=true
-    - jdk: oraclejdk7
-      env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-client
-    - jdk: oraclejdk7
-      env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-shell
-    - jdk: oraclejdk7
-      env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=collins-state
-    - jdk: oraclejdk7
-      env: RUN_RUBY=true RUN_SCALA=false GEM_NAME=consolr
 script:
-  - if $RUN_SCALA; then activator-1.3.6-minimal/activator test; fi
-  - if $RUN_RUBY; then cd support/ruby/$GEM_NAME; bundle install --path ./vendor/bundle; bundle exec rake; fi
+  - activator-1.3.6-minimal/activator test
   # cleanup travis trick from
   # http://www.scala-sbt.org/0.13/docs/Travis-CI-with-sbt.html#%28Experimental%29+Reusing+Ivy+cache
   - find $HOME/.sbt -name "*.lock" -delete
