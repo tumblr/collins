@@ -7,9 +7,11 @@ permissions system. Some features also have specific permissions.
 </p>
 
 <p>
-Collins comes bundled with a small in memory authentication mechanism for testing, file based
-authentication, and LDAP based authentication. We do recommend running a slave on the collins host
-in order to be resiliant to large outages where the usual LDAP infrastructure might be unavailable
+Collins comes bundled with a small in-memory authentication mechanism for testing, file based
+authentication for small or simple installations, and LDAP based authentication for large
+or enterprise installations. If using LDAP we recommend running an LDAP slave on the collins
+node itself in order to be resilient to large outages where the usual LDAP infrastructure
+might be unavailable.
 </p>
 
 <table class="table table-condensed table-hover">
