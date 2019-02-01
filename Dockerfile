@@ -30,7 +30,7 @@ COPY --from=dev /build /build
 
 # Copy source and build package
 COPY . /build/collins
-RUN PLAY_CMD=/build/activator-${activator_version}-minimal/activator FORCE_BUILD=true ./scripts/package.sh
+RUN PLAY_CMD=/build/activator-${activator_version}-minimal/activator ./scripts/package.sh
 
 # Production stage with just the build artifacts and configs
 FROM openjdk:8-jre AS production
