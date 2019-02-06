@@ -18,10 +18,11 @@ if [ ! -f $PLAY_CMD ]; then
   exit 1
 fi
 
-java_version=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')
+# Extract java major version (e.g. 8 for 1.8.0)
+java_version=$(java -version 2>&1 | head -1 | sed -E 's/.*1\.([0-9]+).0.*/\1/')
 echo "Building using java version $java_version"
-if [[ ! "$java_version" =~ "1.7" ]] && [[ ! $FORCE_BUILD == "true" ]]; then
-    echo "Collins should only be built with java version 1.7.  If you really know what you are doing, set the FORCE_BUILD enviornment variable to 'true'"
+if [[ "$java_version" > "8" ]] && [[ ! $FORCE_BUILD == "true" ]]; then
+    echo "Collins has not been tested with java versions newer than 8.  If you still want to build with this version, set the FORCE_BUILD enviornment variable to 'true'"
     exit 1
 fi
 
