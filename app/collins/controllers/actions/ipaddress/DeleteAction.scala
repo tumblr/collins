@@ -3,6 +3,7 @@ package collins.controllers.actions.ipaddress
 import scala.concurrent.Future
 
 import play.api.data.Form
+import play.api.data.Forms
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import play.api.libs.json.JsNumber
 import play.api.libs.json.JsObject
@@ -24,24 +25,31 @@ case class DeleteAction(
   handler: SecureController
 ) extends SecureAction(spec, handler) with AssetAction with ParamValidation {
 
-  case class ActionDataHolder(asset: Asset, pool: Option[String]) extends RequestDataHolder
+  case class ActionDataHolder(asset: Asset, pool: Option[String], address: Option[String]) extends RequestDataHolder
 
   val dataForm = Form(
-    "pool" -> validatedOptionalText(1)
+    Forms.tuple(
+      "pool" -> validatedOptionalText(1),
+      "address" -> validatedOptionalText(1)
+    )
   )
 
   override def validate(): Validation = withValidAsset(assetTag) { asset =>
-    val pool: Option[String] = dataForm.bindFromRequest()(request).fold(
-      err => None,
+    val (pool, address) : (Option[String], Option[String]) = dataForm.bindFromRequest()(request).fold(
+      err => (None, None),
       str => str
     )
-    Right(ActionDataHolder(asset, pool))
+    Right(ActionDataHolder(asset, pool, address))
   }
 
   override def execute(rd: RequestDataHolder) = Future {
     rd match {
-      case ActionDataHolder(asset, pool) =>
-        val deleted = IpAddresses.deleteByAssetAndPool(asset, pool)
+      case ActionDataHolder(asset, pool, address) =>
+        val deleted = if (address.isDefined) {
+          IpAddresses.deleteByAssetAndAddress(asset, address)
+        } else {
+          IpAddresses.deleteByAssetAndPool(asset, pool)
+        }
         tattler.notice("Deleted %d IP addresses".format(deleted), asset)
         ResponseData(Status.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
     }
