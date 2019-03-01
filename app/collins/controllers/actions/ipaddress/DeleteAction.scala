@@ -43,15 +43,22 @@ case class DeleteAction(
   }
 
   override def execute(rd: RequestDataHolder) = Future {
-    rd match {
-      case ActionDataHolder(asset, pool, address) =>
-        val deleted = if (address.isDefined) {
-          IpAddresses.deleteByAssetAndAddress(asset, address)
-        } else {
-          IpAddresses.deleteByAssetAndPool(asset, pool)
-        }
-        tattler.notice("Deleted %d IP addresses".format(deleted), asset)
-        ResponseData(Status.Ok, JsObject(Seq("DELETED" -> JsNumber(deleted))))
+    val deleted = rd match {
+      case ActionDataHolder(asset, None, None) => 
+        Right(asset, IpAddresses.deleteByAssetAndPool(asset, None))
+      case ActionDataHolder(asset, None, Some(address)) => 
+        Right(asset, IpAddresses.deleteByAssetAndAddress(asset, Some(address)))
+      case ActionDataHolder(asset, Some(pool), None) => 
+        Right(asset, IpAddresses.deleteByAssetAndPool(asset, Some(pool)))
+      case ActionDataHolder(asset, Some(pool), Some(address)) => 
+        Left(RequestDataHolder.error400("both pool and address can not be set"))
+    }
+
+    deleted match {
+      case Right((asset, num)) =>
+        tattler.notice("Deleted %d IP addresses".format(num), asset)
+        ResponseData(Status.Ok, JsObject(Seq("DELETED" -> JsNumber(num))))
+      case Left(err) => handleError(err)
     }
   }
 }
