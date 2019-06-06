@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import base64
 import logging
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
 
 import grequests
 try:
@@ -23,15 +22,19 @@ class CollinsClient:
         self.passwd = passwd
         self.host = host
 
-    def async_update_asset(self, tag, params={}):
+    def async_update_asset(self, tag, params=None):
+        if params is None:
+            params = {}
         url = "/api/asset/%s" % tag
         return grequests.post(self.host+url, auth=(self.username, self.passwd), data=params)
 
-    def async_asset_finder(self, params={}):
+    def async_asset_finder(self, params=None):
+        if params is None:
+            params = {}
         url = "/api/assets"
         return grequests.get(self.host+url, auth=(self.username, self.passwd), params=params)
 
-    def assets(self, params={}):
+    def assets(self, params=None):
         """
         Finds assets matching the following criteria:
             attribute - string, optional. Specified as keyname;valuename. keyname can be a reserved meta tag such as CPU_COUNT, MEMORY_SIZE_BYTES, etc.
@@ -44,29 +47,35 @@ class CollinsClient:
 
             #TODO add pagination support
         """
+        if params is None:
+            params = {}
         url = "/api/assets"
         response = self._query("get", url, params)
         return response
 
-    def create_asset(self, tag, params={}):
+    def create_asset(self, tag, params=None):
         """
         """
+        if params is None:
+            params = {}
         url = "/api/asset/%s" % tag
         response = self._query("put", url, params)
         return response
 
-    def update_asset(self, tag, params={}):
+    def update_asset(self, tag, params=None):
         """
         """
+        if params is None:
+            params = {}
         url = "/api/asset/%s" % tag
         response = self._query("post", url, params)
         return response
 
-
-
-    def delete_asset(self, tag, params={}):
+    def delete_asset(self, tag, params=None):
         """
         """
+        if params is None:
+            params = {}
         url = "/api/asset/%s" % tag
         response = self._query("delete", url, params)
         return response
@@ -74,38 +83,45 @@ class CollinsClient:
     def delete_asset_attribute(self, tag, attribute):
         """
         """
-
         url = "/api/asset/%s/attribute/%s" % (tag, attribute)
         response = self._query("delete", url, {})
         return response
 
-    def asset_finder(self, params={}):
+    def asset_finder(self, params=None):
+        if params is None:
+            params = {}
         url = "/api/assets"
         response = self._query("get", url, params)
         return response
 
-    def asset_info(self, tag, params={}):
+    def asset_info(self, tag, params=None):
         """
         """
+        if params is None:
+            params = {}
         url = "/api/asset/%s" % tag
         response = self._query("get", url, params)
         return response
 
-    def assets_logs(self, tag, params={}):
+    def assets_logs(self, tag, params=None):
         """
         """
-        url = "/api/asset/%s/logs" % (tag)
+        if params is None:
+            params = {}
+        url = "/api/asset/%s/logs" % tag
         response = self._query("get", url, params)
         return response
 
-    def create_assets_log(self, tag, params={}):
+    def create_assets_log(self, tag, params=None):
         """
         """
-        url = "/api/asset/%s/log" % (tag)
+        if params is None:
+            params = {}
+        url = "/api/asset/%s/log" % tag
         response = self._query("put", url, params)
+        return response
 
     def ping(self):
-
         url = "/api/ping"
         response = self._query("get", url, {})
         return response
@@ -124,7 +140,6 @@ class CollinsClient:
             201 	Asset type was successfully created
             409 	Asset type with specified name already exists
         """
-
         url = "/api/assettype/{0}".format(name)
         params = {'label': label}
         response = self._query("put", url, params)
@@ -144,7 +159,6 @@ class CollinsClient:
             200 	Asset type updated successfully
             404 	The specified asset type was not found
         """
-
         url = "/api/assettype/{0}".format(name)
         params = {}
         if label:
@@ -168,7 +182,6 @@ class CollinsClient:
             200 	Asset type was found
             404 	Asset type could not be found
         """
-
         url = "/api/assettype/{0}".format(name)
         response = self._query("get", url)
         return response
@@ -190,7 +203,6 @@ class CollinsClient:
             409 	System asset types cannot be deleted
             500 	Asset type unable to be deleted (Assets of this type still exist?)
         """
-
         url = "/api/assettype/{0}".format(name)
         response = self._query("delete", url)
         return response
@@ -203,31 +215,33 @@ class CollinsClient:
         """
         try:
             response = self.create_assettype(name, label)
-        except urllib2.HTTPError as e:
+        except urllib.error.HTTPError as e:
             if e.code == 409:
-                response = {u'status': u'success:exists',
-                            u'data': {u'SUCCESS': True}}
+                response = {'status': 'success:exists',
+                            'data': {'SUCCESS': True}}
 
         return response
 
-    def ensure_asset(self, tag, params={}):
+    def ensure_asset(self, tag, params=None):
         """ Ensure asset exists
         :param tag: Unique asset tag
         :param params: dict
         :return: dict
         """
+        if params is None:
+            params = {}
         try:
             response = self.create_asset(tag, params)
-        except urllib2.HTTPError as e:
+        except urllib.error.HTTPError as e:
             if e.code == 409:
-                response = dict(status=u'success:exists',
-                                data={u'SUCCESS': True})
+                response = dict(status='success:exists',
+                                data={'SUCCESS': True})
             else:
-                response = dict(status=u'failure:{0}'.format(e.code),
-                                data={u'SUCCESS': False})
+                response = dict(status='failure:{0}'.format(e.code),
+                                data={'SUCCESS': False})
 
         if not response['status'].startswith('success'):
-            log.warn(response['status'])
+            log.warning(response['status'])
 
         return response
 
@@ -240,18 +254,18 @@ class CollinsClient:
 
         update = True
         old = None
-        if 'ATTRIBS' in old_record['data'].keys():
+        if 'ATTRIBS' in list(old_record['data'].keys()):
 
             # If no attributes have ever been stored, [u'0'] doesn't
             # exist.
             log.debug(len(old_record['data']['ATTRIBS']))
 
             if len(old_record['data']['ATTRIBS']) > 0:
-                attribs = old_record['data']['ATTRIBS'][u'0']
+                attribs = old_record['data']['ATTRIBS']['0']
             else:
                 attribs = {}
 
-            if key.upper() in attribs.keys():
+            if key.upper() in list(attribs.keys()):
                 old = attribs[key.upper()]
                 if old == value:
                     update = False
@@ -266,20 +280,21 @@ class CollinsClient:
         else:
             log.debug('{0}: No change to {1}, no update needed'.format(tag, key))
 
-    def _query(self, method, url, params={}):
+    def _query(self, method, url, params=None):
         """
         """
-        handle = urllib2.build_opener(urllib2.HTTPHandler)
+        if params is None:
+            params = {}
+        handle = urllib.request.build_opener(urllib.request.HTTPHandler)
         # Eventually making this a little more robust
         if method in ['post', 'put']:
-            request = urllib2.Request(self.host+url, data=urllib.urlencode(params, doseq=True))
+            request = urllib.request.Request(self.host+url, data=urllib.parse.urlencode(params, doseq=True))
         else:
             if params:
-               url += "?" + urllib.urlencode(params, doseq=True)
-            request = urllib2.Request(self.host+url)
-
-        authstring = base64.encodestring("%s:%s" % (self.username, self.passwd)).strip()
-        request.add_header("Authorization", "Basic %s" % authstring)
+               url += "?" + urllib.parse.urlencode(params, doseq=True)
+            request = urllib.request.Request(self.host+url)
+        authstring = base64.encodebytes(('%s:%s' % (self.username, self.passwd)).encode('ascii')).strip()
+        request.add_header("Authorization", "Basic %s" % authstring.decode('ascii'))
 
         # Python does not support case statements
         # This will override the request method, defaulting to get
