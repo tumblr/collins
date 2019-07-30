@@ -108,6 +108,12 @@ object IpAddresses extends IpAddressStorage[IpAddresses] with IpAddressKeys[IpAd
     res
   }
 
+  def deleteByAssetAndAddress(asset: Asset, address: String): Int = inTransaction {
+    val addressAsLong = IpAddress.toLong(address)
+    val res = tableDef.deleteWhere(i => i.assetId === asset.id and i.address === addressAsLong)
+    res
+  }
+
   def findAssetsByAddress(page: PageParams, addys: Seq[String], finder: AssetFinder): Page[AssetView] = {
     def whereClause(assetRow: Asset, addressRow: IpAddresses) = {
       where(
