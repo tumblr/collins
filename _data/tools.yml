@@ -12,5 +12,7 @@ sections:
     content: tools/collins_cli.html
   "collins shell":
     content: tools/collins_shell.html
+  "collins-go-cli":
+    content: tools/collins_go_cli.html
   genesis:
     content: tools/genesis.html

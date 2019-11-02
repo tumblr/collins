@@ -1,0 +1,50 @@
+<p class="lead">Simple CLI access to Collins in Golang</p>
+<h2>Overview</h2>
+
+<p><code>collins-go-cli</code> allows you to interact with Collins from the command line. This includes changing attributes, provisioning machines, allocating IPs, maintenance-moding machines, etc. Download it from <a href="https://github.com/michaeljs1990/collins-go-cli/releases">collins-go-cli</a> on Github or if you have golang installed you can <code>go get -u cgit.xrt0x.com/xrt0x/collins-go-cli/cmd/collins</code>. The source can be found at <a href="https://github.com/michaeljs1990/collins-go-cli">github.com/michaeljs1990/collins-go-cli</a>.
+
+<h2>Installation</h2>
+<pre>
+$ go get -u cgit.xrt0x.com/xrt0x/collins-go-cli/cmd/collins
+</pre>
+
+<p>or curl any of the prebuilt binaries from the release page selecting for the appropriate OS.</p>
+
+<pre>
+$ curl -L -o collins https://github.com/michaeljs1990/collins-go-cli/releases/download/2.0.0/collins_linux_amd64
+</pre>
+
+<h2>Setup</h2>
+<p>See <a href="#configs">configs</a> to setup configurations.</p>
+
+<h2>Usage</h2>
+<p>Check out <a href="https://github.com/michaeljs1990/collins-go-cli">github.com/michaeljs1990/collins-go-cli</a> for documentation</p>
+<pre>
+$ collins -h
+NAME:
+   collins - Interface with http://tumblr.github.io/collins/
+
+USAGE:
+   collins [global options] command [command options] [arguments...]
+
+VERSION:
+   master (4b825dc642cb6eb9a060e54bf8d69288fbee4904)
+
+COMMANDS:
+     query, find               Search for assets in Collins
+     modify, set               Add and remove attributes, change statuses, and log to assets
+     log                       Display log messages on assets
+     provision                 Provision assets
+     power                     Control and show power status
+     ipam, address, ipaddress  Allocate and delete IPs, show IP pools
+     state, status             Show and manage states and statuses via State API
+     datacenter, dc            Manage multiple Collins configurations
+     help, h                   Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --timeout value           Timeout in seconds (0 == forever) (default: 0)
+   --debug                   Print some extra info to stderr when running commands
+   -C value, --config value  Use specific Collins config yaml for client
+   --help, -h                show help
+   --version, -v             print the version
+</pre>
