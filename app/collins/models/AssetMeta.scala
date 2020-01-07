@@ -211,6 +211,7 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
     val BaseFirmwareDate = findOrCreateFromName("BASE_FIRMWAREDATE")
     val GpuProduct= findOrCreateFromName("GPU_PRODUCT")
     val GpuVendor = findOrCreateFromName("GPU_VENDOR")
+    val DiskLogicalName = findOrCreateFromName("DISK_LOGICAL_NAME")
 
     def getValues(): Seq[AssetMeta] = {
       Seq(BaseDescription,
@@ -221,7 +222,8 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
           BaseFirmware,
           BaseFirmwareDate,
           GpuProduct,
-          GpuVendor)
+          GpuVendor,
+          DiskLogicalName)
     }
 
     def getLshwValues(): Set[AssetMeta] = {
@@ -233,7 +235,8 @@ object AssetMeta extends Schema with AnormAdapter[AssetMeta] with AssetMetaKeys 
           BaseFirmware,
           BaseFirmwareDate,
           GpuProduct,
-          GpuVendor)
+          GpuVendor,
+          DiskLogicalName)
     }
   }
 }
