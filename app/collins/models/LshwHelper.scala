@@ -218,17 +218,18 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       val diskSize = finder(wrapSeq, DiskSizeBytes, _.toLong, 0L)
       val diskType = finder(wrapSeq, DiskType, {s => Some(Disk.Type.withName(s))}, None)
       val descr = finder(wrapSeq, DiskDescription, _.toString, "")
+      val logicalName = amfinder(wrapSeq, DiskLogicalName, _.toString, "")
       if (diskSize == 0L && diskType.isEmpty && descr.isEmpty) {
         seq
       } else {
         val size = ByteStorageUnit(diskSize)
-        Disk(size, diskType.get, descr, "", "") +: seq
+        Disk(size, diskType.get, descr, "", "", logicalName) +: seq
       }
     }
     val filteredMeta = meta.map { case(groupId, metaSeq) =>
       val newSeq = filterNot(
         metaSeq,
-        Set(DiskSizeBytes.id, DiskType.id, DiskDescription.id)
+        Set(DiskSizeBytes.id, DiskType.id, DiskDescription.id, DiskLogicalName.id)
       )
       groupId -> newSeq
     }
@@ -244,7 +245,8 @@ object LshwHelper extends CommonHelper[LshwRepresentation] {
       (groupId + 1, total ++ Seq(
         AssetMetaValue(asset, DiskSizeBytes.id, groupId, disk.size.inBytes.toString),
         AssetMetaValue(asset, DiskType.id, groupId, disk.diskType.toString),
-        AssetMetaValue(asset, DiskDescription.id, groupId, "%s %s".format(disk.vendor, disk.product))
+        AssetMetaValue(asset, DiskDescription.id, groupId, "%s %s".format(disk.vendor, disk.product)),
+        AssetMetaValue(asset, DiskLogicalName.id, groupId, disk.logicalname)
       ))
     }._2
     val diskSummary = AssetMetaValue(asset, DiskStorageTotal.id, lshw.totalUsableStorage.inBytes.toString)

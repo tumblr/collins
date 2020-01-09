@@ -118,11 +118,13 @@ class LshwParser(txt: String) extends CommonParser[LshwRepresentation](txt) {
         case noSize if noSize.isEmpty => ByteStorageUnit(0)
         case size                     => ByteStorageUnit(size.toLong)
       }
-      Disk(size, _type, asset.description, asset.product, asset.vendor)
+      val logicalname = (n \ "logicalname" text)
+      Disk(size, _type, asset.description, asset.product, asset.vendor, logicalname)
     case n if ((n \ "@class" text) == "memory" || (n \ "@class" text) == "storage") && LshwConfig.flashProducts.exists(s => (n \ "product" text).toLowerCase.contains(s)) =>
       val asset = getAsset(n)
       val size = ByteStorageUnit(LshwConfig.flashSize)
-      Disk(size, Disk.Type.Flash, asset.description, asset.product, asset.vendor)
+      val logicalname = (n \ "logicalname" text)
+      Disk(size, Disk.Type.Flash, asset.description, asset.product, asset.vendor, logicalname)
   }
 
   private val defaultNicCapacity = LshwConfig.defaultNicCapacity
