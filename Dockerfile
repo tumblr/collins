@@ -5,7 +5,7 @@ FROM openjdk:8-jdk AS dev
 ARG activator_version
 WORKDIR /build
 # install prereqs
-RUN wget -q http://downloads.typesafe.com/typesafe-activator/${activator_version}/typesafe-activator-${activator_version}-minimal.zip -O /build/activator.zip && \
+RUN wget -q https://downloads.typesafe.com/typesafe-activator/${activator_version}/typesafe-activator-${activator_version}-minimal.zip -O /build/activator.zip && \
     unzip -q ./activator.zip
 
 WORKDIR /build/collins
