@@ -1,7 +1,7 @@
 resolvers ++= Seq(
     DefaultMavenRepository,
-    Resolver.url("Play", url("http://download.playframework.org/ivy-releases/"))(Resolver.ivyStylePatterns),
-    "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
+    Resolver.url("Play", url("https://downloads.lightbend.com/ivy-releases/"))(Resolver.ivyStylePatterns),
+    "Typesafe Repository" at "https://repo.typesafe.com/typesafe/releases/",
     "Sontype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 
